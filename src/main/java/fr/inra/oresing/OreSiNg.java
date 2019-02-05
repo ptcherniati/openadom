@@ -29,7 +29,7 @@ public class OreSiNg {
                 .enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .registerModule(new JavaTimeModule())
-//                .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CASE)
+                .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CASE)
         ;
         return mapper;
     }

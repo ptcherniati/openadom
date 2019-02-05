@@ -1,0 +1,120 @@
+references:
+  especes:
+    lineToSkip: 1
+    separator: ";"
+    columns:
+      esp_nom:
+      esp_definition_fr:
+      esp_definition_en:
+
+  projet:
+    lineToSkip: 1
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      definition_fr:
+      definition_en:
+
+  sites:
+    lineToSkip: 1
+    columns:
+      tze_type_nom:
+      zet_nom_key:
+      zet_nom_fr:
+      zet_nom_en:
+      zet_description_fr:
+      zet_description_en:
+      zet_chemin_parent:
+
+  themes:
+    lineToSkip: 1
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+
+  type de fichiers:
+    lineToSkip: 1
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+
+  type_de_sites:
+    lineToSkip: 1
+    columns:
+      tze_nom_key:
+      tze_nom_fr:
+      tze_nom_en:
+      tze_definition_fr:
+      tze_definition_en:
+
+  types_de_donnees_par_themes_de_sites_et_projet:
+    lineToSkip: 1
+    columns:
+      nom du projet:
+      nom du site:
+      nom du thème:
+      nom du type de données:
+
+  unites:
+    lineToSkip: 1
+    columns:
+      code_key:
+      code_fr:
+      code_en:
+      nom_key:
+      nom_fr:
+      nom_en:
+
+  valeurs_qualitatives:
+    lineToSkip: 1
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      valeur_key:
+      valeur_fr:
+      valeur_en:
+
+  variables:
+    lineToSkip: 1
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      definition_fr:
+      definition_en:
+      isQualitative:
+
+  variables_et_unites_par_types_de_donnees:
+    lineToSkip: 1
+    columns:
+      nom du type de données:
+      nom de la variable:
+      nom de l'unité:
+
+dataset:
+  pem:
+    lineToSkip: 4
+    separator: ";"
+    references:
+      Projet:
+        linkedTo: projet;nom_key
+      site:
+        linkedTo: sites;zet_nom_key
+      plateforme:
+      date:
+        type: DATE
+        pattern: dd/MM/yyyy
+      espece:
+        linkedTo: especes;esp_nom
+    data:
+      Couleur des individus:
+      Nombre d'individus:
+        type: INTEGER

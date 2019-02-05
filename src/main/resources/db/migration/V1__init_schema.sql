@@ -1,20 +1,29 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- check les foreign key pour le colonne references de la table data
-CREATE OR REPLACE FUNCTION fk_check(targetTable TEXT, uid UUID[])
+CREATE OR REPLACE FUNCTION refs_check(application UUID, refValue TEXT[])
 RETURNS BOOLEAN AS $$
 DECLARE
     result TEXT;
 BEGIN
-    -- TODO
-    EXECUTE format('select count(id) > 0 from %s where id = $1;', targetTable) INTO result USING uid;
+    EXECUTE 'select count(id) = array_length($2, 1) from ReferenceValue where application=$1 AND refValue = ANY ($2);' INTO result USING application, uid;
+    RETURN result;
+END;
+$$ language 'plpgsql';
+
+CREATE OR REPLACE FUNCTION name_check(application UUID, targetColumn TEXT, val TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    result TEXT;
+BEGIN
+    EXECUTE format('select count(id) > 0 from Application where id=$1 AND $2 = ANY (%s);', targetColumn) INTO result USING application, val;
     RETURN result;
 END;
 $$ language 'plpgsql';
 
 create domain EntityId as uuid NOT NULL DEFAULT gen_random_uuid();
 create domain EntityRef as uuid NOT NULL;
-create domain ListEntityRef as uuid[] NOT NULL;
+create domain ListRefValue as TEXT[] NOT NULL;
 create domain DateOrNow as timestamp DEFAULT current_timestamp;
 
 create table BinaryFile (
@@ -31,31 +40,37 @@ create table Application (
     creationDate DateOrNow,
     updateDate DateOrNow,
     name Text,
-    config EntityRef REFERENCES BinaryFile(id)
+    referenceType TEXT[], -- liste des types de references existantes
+    dataType TEXT[],      -- liste des types de data existants
+    configuration jsonb,  -- le fichier de configuration sous forme json
+    configFile uuid REFERENCES BinaryFile(id) -- can be null
 );
 
-create table ReferenceType (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    application EntityRef REFERENCES Application(id),
-    description jsonb,
-    binaryFile EntityRef REFERENCES BinaryFile(id)
-);
+CREATE INDEX application_referenceType_gin_idx ON application USING gin (referenceType);
+CREATE INDEX application_dataType_gin_idx ON application USING gin (dataType);
 
 create table ReferenceValue (
     id EntityId PRIMARY KEY,
     creationDate DateOrNow,
     updateDate DateOrNow,
-    referenceType EntityRef REFERENCES ReferenceType(id),
-    label Text
+    application EntityRef REFERENCES Application(id),
+    referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
+--    columnDataMapping hstore,
+    refValues jsonb,
+    binaryFile EntityRef REFERENCES BinaryFile(id)
 );
+
+--CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
+CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
 
 create table Data (
     id EntityId PRIMARY KEY,
     creationDate DateOrNow,
     updateDate DateOrNow,
-    binaryFile EntityRef REFERENCES BinaryFile(id),
-    refs ListEntityRef CHECK(fk_check('ReferenceValue', refs)),
-    jsonData jsonb[]
+    application EntityRef REFERENCES Application(id),
+    dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
+    refs ListRefValue CHECK(refs_check(application, refs)),
+    data TEXT,
+    accuracy jsonb,
+    binaryFile EntityRef REFERENCES BinaryFile(id)
 );

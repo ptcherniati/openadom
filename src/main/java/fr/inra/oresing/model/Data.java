@@ -14,4 +14,5 @@ public class Data extends OreSiEntity {
     private UUID binaryFile;
     private List<UUID> refs;
     private String jsonData;
+    private String jsonAccuracy;
 }

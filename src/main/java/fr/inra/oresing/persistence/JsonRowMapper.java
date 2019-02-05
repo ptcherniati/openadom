@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,6 +27,14 @@ public class JsonRowMapper<T> implements RowMapper<T> {
             return result;
         } catch (ClassNotFoundException | IOException eee) {
             throw new SQLException("Can't convert result from database to object", eee);
+        }
+    }
+
+    public String toJson(T e) {
+        try {
+            return jsonMapper.writeValueAsString(e);
+        } catch (JsonProcessingException eee) {
+            throw new IllegalArgumentException("Can't convert argument to json: " + e, eee);
         }
     }
 }

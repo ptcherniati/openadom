@@ -1,9 +1,13 @@
 package fr.inra.oresing;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,11 +19,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OreSiUtils {
+
     private static Pattern patternField = Pattern.compile("^(?:get|set|is)?(.)(.*)");
+    private static ObjectMapper json = new ObjectMapper();
+
+
+    public static String toJson(Object o) {
+        try {
+            return json.writeValueAsString(o);
+        } catch (JsonProcessingException eee) {
+            throw new IllegalArgumentException("Can't convert argument to json: " + o, eee);
+        }
+    }
+
 
     public static Map<String, Object> mapOf(SerializableSupplier... getter) {
         return Stream.of(getter)
-                .collect(Collectors.toMap(OreSiUtils::fieldOf, SerializableSupplier::get));
+                .collect(HashMap::new, (m, v)->m.put(OreSiUtils.fieldOf(v), v.get()), HashMap::putAll);
     }
 
     public static <T> String[] fieldsOf(SerializableSupplier<T> ...getters) {

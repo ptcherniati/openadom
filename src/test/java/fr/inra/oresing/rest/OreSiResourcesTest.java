@@ -30,7 +30,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -59,51 +62,65 @@ public class OreSiResourcesTest {
 
     @Test
     public void addApplication() throws Exception {
+        URL resource = getClass().getResource("/data/monsore.yaml");
+        try (InputStream in = resource.openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
-        MockMultipartFile firstFile = new MockMultipartFile("data", "filename.txt", "text/plain", "some csv".getBytes());
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/applications/monsore")
+                    .file(configuration))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
 
-        String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
-                        .file(firstFile))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                .andReturn().getResponse().getContentAsString();
+            String appId = JsonPath.parse(response).read("$.id");
 
-        String fileId = JsonPath.parse(response).read("$.id");
+            response = mockMvc.perform(get("/applications/" + appId)
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    // id
+                    .andExpect(jsonPath("$.id", Is.is(appId)))
+                    .andReturn().getResponse().getContentAsString();
 
-        Application app = new Application();
-        app.setName("monsore");
-        app.setConfig(UUID.fromString(fileId));
+            Application app2 = objectMapper.readValue(response, Application.class);
 
-        response = mockMvc.perform(post("/applications")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(app)))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                // id
-                .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                .andReturn().getResponse().getContentAsString();
+            Date now = new Date();
+            Assert.assertEquals("monsore", app2.getName());
+            Assert.assertEquals(List.of("especes","projet","sites","themes","type de fichiers","type_de_sites","types_de_donnees_par_themes_de_sites_et_projet","unites","valeurs_qualitatives","variables","variables_et_unites_par_types_de_donnees"), app2.getReferenceType());
+            Assert.assertEquals(List.of("pem"), app2.getDataType());
 
-        String appId = JsonPath.parse(response).read("$.id");
 
-        response = mockMvc.perform(get("/applications/" + appId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                // id
-                .andExpect(jsonPath("$.id", Is.is(appId)))
-                .andReturn().getResponse().getContentAsString();
+            // Ajout de referentiel
+            resource = getClass().getResource("/data/refdatas/especes.csv");
+            try (InputStream refStream = resource.openStream()) {
+                MockMultipartFile refFile = new MockMultipartFile("file", "especes.csv", "text/plain", refStream);
 
-        Application app2 = objectMapper.readValue(response, Application.class);
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/applications/monsore/references/especes")
+                        .file(refFile))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
 
-        Date now = new Date();
-        Assert.assertNotNull(app2.getCreationDate());
-        Assert.assertNotNull(app2.getUpdateDate());
-        Assert.assertTrue(deepFieldEquals(app, app2, OreSiUtils.fieldsOf(app::getCreationDate, app::getUpdateDate)));
+                String refFileId = JsonPath.parse(response).read("$.id");
+
+                response = mockMvc.perform(get("/applications/monsore/references/especes/esp_nom")
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andReturn().getResponse().getContentAsString();
+
+                System.out.println(response);
+                List refs = objectMapper.readValue(response, List.class);
+                System.out.println(refs);
+            }
+        }
     }
 
-    boolean deepFieldEquals(Object o1, Object o2, String ... excludes) {
-        Map<String, Object> map1 = objectMapper.convertValue(o1, new TypeReference<Map>() { });
-        Map<String, Object> map2 = objectMapper.convertValue(o2, new TypeReference<Map>() { });
+    boolean deepFieldEquals(Object o1, Object o2, String... excludes) {
+        Map<String, Object> map1 = objectMapper.convertValue(o1, new TypeReference<Map>() {
+        });
+        Map<String, Object> map2 = objectMapper.convertValue(o2, new TypeReference<Map>() {
+        });
         Stream.of(excludes)
                 .peek(map1::remove)
                 .forEach(map2::remove);

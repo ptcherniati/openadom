@@ -1,0 +1,3 @@
+nom_key;nom_fr;nom_en;definition_fr;definition_en;isQualitative
+nombre_d_individus;Nombre d'individus;Number of individuals;Nombre d'individus;Number of individuals;false
+couleur_des_individus;Couleur des individus;color of individuals;Couleur des individus;individuals' colors;true
