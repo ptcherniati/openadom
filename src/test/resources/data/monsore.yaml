@@ -101,20 +101,39 @@ references:
 
 dataset:
   pem:
-    lineToSkip: 4
+    lineToSkip: 3
     separator: ";"
     references:
-      Projet:
-        linkedTo: projet;nom_key
+      projet:
+        checker:
+          name: Reference
+          params:
+            caseSensitive: false
+            refType: projet
       site:
-        linkedTo: sites;zet_nom_key
+        checker:
+          name: Reference
+          params:
+            caseSensitive: false
+            refType: sites
+            column: zet_nom_key
       plateforme:
       date:
-        type: DATE
-        pattern: dd/MM/yyyy
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
       espece:
-        linkedTo: especes;esp_nom
+        checker:
+          name: Reference
+          params:
+            caseSensitive: false
+            refType: especes
+            column: esp_nom
     data:
       Couleur des individus:
       Nombre d'individus:
-        type: INTEGER
+        checker:
+          name: Integer
+          params:
+            default: 0

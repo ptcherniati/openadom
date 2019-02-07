@@ -8,6 +8,7 @@ import lombok.ToString;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -17,12 +18,6 @@ public class Configuration {
     public static Configuration read(byte[] file) throws IOException {
         YAMLMapper mapper = new YAMLMapper();
         Configuration result = mapper.readValue(file, Configuration.class);
-        return result;
-    }
-
-    public static Configuration fromJson(String json) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        Configuration result = mapper.readValue(json, Configuration.class);
         return result;
     }
 
@@ -54,19 +49,21 @@ public class Configuration {
     @Setter
     @ToString
     static public class ColumnDescription {
-        private String linkedTo;
-        private Type type;
-        private String pattern;
+        private CheckerDescription checker;
     }
 
     @Getter
     @Setter
     @ToString
-    static public class DataDescription {
-        private Type type;
-        private String pattern;
-        /** par defaut si vide il faut utiliser le meme nom que la data pour la colonne */
-        private LinkedHashMap<String, ColumnDescription> dataColumns;
-        private LinkedHashMap<String, ColumnDescription> accuracyColumns;
+    static public class CheckerDescription {
+        private String name;
+        private Map<String, String> params;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class DataDescription extends ColumnDescription {
+        private LinkedHashMap<String, ColumnDescription> accuracy = new LinkedHashMap<>();
     }
 }

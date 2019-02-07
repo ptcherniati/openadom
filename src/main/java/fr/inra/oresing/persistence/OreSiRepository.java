@@ -34,8 +34,8 @@ public class OreSiRepository {
                     + " RETURNING id";
 
     private static final String DATA_UPSERT =
-            "INSERT INTO Data (id, application, dataType, refs, data, accuracy, binaryFile) SELECT id, application, dataType, refs, data, accuracy, binaryFile FROM json_populate_record(NULL::Data, :json::json) "
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, refs=EXCLUDED.refs, data=EXCLUDED.data, accuracy=EXCLUDED.accuracy, binaryFile=EXCLUDED.binaryFile"
+            "INSERT INTO Data (id, application, dataType, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, refsLinkedTo, dataValues, binaryFile FROM json_populate_record(NULL::Data, :json::json) "
+                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
                     + " RETURNING id";
 
     private static final String SELECT_APPLICATION =
@@ -50,6 +50,9 @@ public class OreSiRepository {
             "SELECT refValues->>'%s' FROM "
                     + ReferenceValue.class.getSimpleName() + " t WHERE application=:applicationId::uuid AND referenceType=:refType";
 
+    private static final String SELECT_DATA =
+            "SELECT '" + Data.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
+                    + Data.class.getSimpleName() + " t WHERE application=:applicationId::uuid AND dataType=:dataType";
 
     private static final String TEMPLATE_SELECT_ALL = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t";
     private static final String TEMPLATE_SELECT_BY_ID = TEMPLATE_SELECT_ALL + " WHERE id=:id";
@@ -140,5 +143,12 @@ public class OreSiRepository {
         List<String> result = namedParameterJdbcTemplate.queryForList(query,  new MapSqlParameterSource("applicationId", applicationId).addValue("refType", refType), String.class);
         return result;
     }
+
+    public List<Data> findData(UUID applicationId, String dataType) {
+        String query = SELECT_DATA;
+        List result = namedParameterJdbcTemplate.query(query,  new MapSqlParameterSource("applicationId", applicationId).addValue("dataType", dataType), jsonRowMapper);
+        return (List<Data>) result;
+    }
+
 
 }

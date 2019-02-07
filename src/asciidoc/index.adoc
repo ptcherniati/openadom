@@ -2,8 +2,4 @@
 
 All examplee output for a service running at http://localhost:8080:
 
-.request
-include::{snippets}/home/http-request.adoc[]
-
-.response
-include::{snippets}/home/http-response.adoc[]
+operation::index[snippets='curl-request,http-request,http-response']

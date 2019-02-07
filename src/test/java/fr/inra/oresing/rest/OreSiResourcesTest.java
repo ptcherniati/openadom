@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.OreSiUtils;
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.ReferenceValue;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
 import org.hamcrest.core.Is;
@@ -27,19 +24,16 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,10 +49,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class OreSiResourcesTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private MockMvc mockMvc;
 
     @Test
     public void addApplication() throws Exception {
@@ -66,7 +60,7 @@ public class OreSiResourcesTest {
         try (InputStream in = resource.openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
-            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/applications/monsore")
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                     .file(configuration))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -74,7 +68,7 @@ public class OreSiResourcesTest {
 
             String appId = JsonPath.parse(response).read("$.id");
 
-            response = mockMvc.perform(get("/applications/" + appId)
+            response = mockMvc.perform(get("/api/v1/applications/" + appId)
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -86,32 +80,59 @@ public class OreSiResourcesTest {
 
             Date now = new Date();
             Assert.assertEquals("monsore", app2.getName());
-            Assert.assertEquals(List.of("especes","projet","sites","themes","type de fichiers","type_de_sites","types_de_donnees_par_themes_de_sites_et_projet","unites","valeurs_qualitatives","variables","variables_et_unites_par_types_de_donnees"), app2.getReferenceType());
+            Assert.assertEquals(List.of("especes", "projet", "sites", "themes", "type de fichiers", "type_de_sites", "types_de_donnees_par_themes_de_sites_et_projet", "unites", "valeurs_qualitatives", "variables", "variables_et_unites_par_types_de_donnees"), app2.getReferenceType());
             Assert.assertEquals(List.of("pem"), app2.getDataType());
 
 
+            Map<String, String> referentielFiles = new HashMap<>();
+            referentielFiles.put("especes", "especes.csv");
+            referentielFiles.put("projet", "projet.csv");
+            referentielFiles.put("sites", "sites.csv");
+            referentielFiles.put("themes", "themes.csv");
+            referentielFiles.put("type de fichiers", "type_de_fichiers.csv");
+            referentielFiles.put("type_de_sites", "type_de_sites.csv");
+            referentielFiles.put("types_de_donnees_par_themes_de_sites_et_projet", "types_de_donnees_par_themes_de_sites_et_projet.csv");
+            referentielFiles.put("unites", "unites.csv");
+            referentielFiles.put("valeurs_qualitatives", "valeurs_qualitatives.csv");
+            referentielFiles.put("variables", "variables.csv");
+            referentielFiles.put("variables_et_unites_par_types_de_donnees", "variables_et_unites_par_types_de_donnees.csv");
+
             // Ajout de referentiel
-            resource = getClass().getResource("/data/refdatas/especes.csv");
-            try (InputStream refStream = resource.openStream()) {
-                MockMultipartFile refFile = new MockMultipartFile("file", "especes.csv", "text/plain", refStream);
+            for (Map.Entry<String, String> e : referentielFiles.entrySet()) {
+                resource = getClass().getResource("/data/refdatas/" + e.getValue());
+                try (InputStream refStream = resource.openStream()) {
+                    MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/applications/monsore/references/especes")
-                        .file(refFile))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
+                    response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/" + e.getKey())
+                            .file(refFile))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                            .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                    String refFileId = JsonPath.parse(response).read("$.id");
+                }
+            }
 
-                response = mockMvc.perform(get("/applications/monsore/references/especes/esp_nom")
+            response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes/esp_nom")
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                     .andReturn().getResponse().getContentAsString();
 
+            List refs = objectMapper.readValue(response, List.class);
+            Assert.assertFalse(refs.isEmpty());
+
+            // ajout de data
+            resource = getClass().getResource("/data/data-pem.csv");
+            try (InputStream refStream = resource.openStream()) {
+                MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                        .file(refFile))
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString();
+
                 System.out.println(response);
-                List refs = objectMapper.readValue(response, List.class);
-                System.out.println(refs);
             }
         }
     }

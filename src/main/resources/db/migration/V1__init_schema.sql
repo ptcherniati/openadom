@@ -1,12 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- check les foreign key pour le colonne references de la table data
-CREATE OR REPLACE FUNCTION refs_check(application UUID, refValue TEXT[])
+CREATE OR REPLACE FUNCTION refs_check(application UUID, refValues UUID[])
 RETURNS BOOLEAN AS $$
 DECLARE
     result TEXT;
 BEGIN
-    EXECUTE 'select count(id) = array_length($2, 1) from ReferenceValue where application=$1 AND refValue = ANY ($2);' INTO result USING application, uid;
+    EXECUTE 'select count(id) = array_length($2, 1) from ReferenceValue where application=$1 AND id = ANY ($2);' INTO result USING application, refValues;
     RETURN result;
 END;
 $$ language 'plpgsql';
@@ -23,7 +23,7 @@ $$ language 'plpgsql';
 
 create domain EntityId as uuid NOT NULL DEFAULT gen_random_uuid();
 create domain EntityRef as uuid NOT NULL;
-create domain ListRefValue as TEXT[] NOT NULL;
+create domain ListEntityRef as uuid[] NOT NULL;
 create domain DateOrNow as timestamp DEFAULT current_timestamp;
 
 create table BinaryFile (
@@ -55,7 +55,6 @@ create table ReferenceValue (
     updateDate DateOrNow,
     application EntityRef REFERENCES Application(id),
     referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
---    columnDataMapping hstore,
     refValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );
@@ -69,8 +68,7 @@ create table Data (
     updateDate DateOrNow,
     application EntityRef REFERENCES Application(id),
     dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
-    refs ListRefValue CHECK(refs_check(application, refs)),
-    data TEXT,
-    accuracy jsonb,
+    refsLinkedTo ListEntityRef CHECK(refs_check(application, refsLinkedTo)),
+    dataValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );

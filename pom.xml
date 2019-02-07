@@ -52,8 +52,8 @@
 
     <scm>
         <connection>scm:git:git@gitlab.codelutin.com:inra/si-ore-ng.git</connection>
-        <developerConnection>git@gitlab.codelutin.com:inra/si-ore-ng.git</developerConnection>
-        <url>git@gitlab.codelutin.com:inra/si-ore-ng.git</url>
+        <developerConnection>scm:git:git@gitlab.codelutin.com:inra/si-ore-ng.git</developerConnection>
+        <url>https://gitlab.codelutin.com/inra/si-ore-ng</url>
     </scm>
 
     <properties>
@@ -69,6 +69,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
         <flyway-spring-test.version>5.2.1</flyway-spring-test.version>
+        <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
     </properties>
 
     <dependencies>
@@ -110,6 +111,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
@@ -127,11 +133,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.restdocs</groupId>
-            <artifactId>spring-restdocs-mockmvc</artifactId>
-            <scope>test</scope>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>${springfox-swagger2.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>${springfox-swagger2.version}</version>
+        </dependency>
     </dependencies>
 
 
@@ -151,27 +162,6 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.asciidoctor</groupId>
-                <artifactId>asciidoctor-maven-plugin</artifactId>
-                <version>1.5.7.1</version>
-                <executions>
-                    <execution>
-                        <id>generate-docs</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                        <configuration>
-                            <sourceDocumentName>index.adoc</sourceDocumentName>
-                            <backend>html</backend>
-                            <attributes>
-                                <snippets>${project.build.directory}/rest-api</snippets>
-                            </attributes>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
