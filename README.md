@@ -14,6 +14,8 @@ Reste à faire
 - le service Rest de stockage de fichier annexe
 - l'interface de persistence de fichier annexe
 - lors du parsing des fichiers CSV reporter la ligne de l'erreur
+- sortir en flux les exports (pas de representation string intermédiaire)
+- compresser les fichiers en base
 
 Fait
 ====

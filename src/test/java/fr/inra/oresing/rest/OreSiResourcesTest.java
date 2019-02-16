@@ -183,6 +183,19 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
         }
 
+        // restitution de data csv
+        resource = getClass().getResource("/data/compare/export.csv");
+        try (InputStream in = resource.openStream()) {
+            String csvCompare = new String(in.readAllBytes());
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
+                    .cookie(authCookie)
+                    .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().isOk())
+//                    .andExpect(content().string(csvCompare))
+                    .andReturn().getResponse().getContentAsString();
+            System.out.println(response);
+        }
+
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
         resource = getClass().getResource("/data/monsore-bad.yaml");
         try (InputStream in = resource.openStream()) {

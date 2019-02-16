@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -9,6 +10,7 @@ import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.OreSiRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -161,17 +164,23 @@ public class OreSiResources {
             return ResponseEntity.notFound().build();
         }
         Application app = opt.get();
+
+        String outColumn = params.getFirst("outColumn");
+        params.remove("outColumn");
         List<Map<String, String>> list = service.findData(app, dataType, params);
 
         String result = "";
         if (list.size() > 0) {
             CsvSchema.Builder schemaBuilder = CsvSchema.builder();
-            list.get(0).keySet().forEach(e -> {
-                schemaBuilder.addColumn(e);
-            });
+            if (StringUtils.isNotBlank(outColumn)) {
+                Stream.of(outColumn.split(";")).forEach(schemaBuilder::addColumn);
+            } else {
+                list.get(0).keySet().forEach(schemaBuilder::addColumn);
+            }
             CsvSchema schema = schemaBuilder.setUseHeader(true).setColumnSeparator(';').build();
 
             CsvMapper mapper = new CsvMapper();
+            mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
             result = mapper.writer(schema).writeValueAsString(list);
         }
         return ResponseEntity.ok(result);
