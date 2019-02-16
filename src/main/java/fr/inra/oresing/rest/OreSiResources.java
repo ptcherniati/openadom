@@ -1,5 +1,8 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
@@ -11,10 +14,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,7 +75,7 @@ public class OreSiResources {
         return opt.map(Application::getConfigFile).map(this::getFile).orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file) throws IOException {
         Optional<Application> opt = repo.findApplication(nameOrId);
         if (opt.isEmpty()) {
@@ -138,15 +141,40 @@ public class OreSiResources {
         return opt.map(Application::getDataType).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Data>> getAllData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType) {
+    public ResponseEntity<List<Map<String, String>>> getAllDataJson(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) {
         Optional<Application> opt = repo.findApplication(nameOrId);
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Application app = opt.get();
-        List<Data> list = repo.findData(app.getId(), dataType);
+        List<Map<String, String>> list = service.findData(app, dataType, params);
         return ResponseEntity.ok(list);
+    }
+
+    /** export as CSV */
+    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> getAllDataCsv(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
+        Optional<Application> opt = repo.findApplication(nameOrId);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Application app = opt.get();
+        List<Map<String, String>> list = service.findData(app, dataType, params);
+
+        String result = "";
+        if (list.size() > 0) {
+            CsvSchema.Builder schemaBuilder = CsvSchema.builder();
+            list.get(0).keySet().forEach(e -> {
+                schemaBuilder.addColumn(e);
+            });
+            CsvSchema schema = schemaBuilder.setUseHeader(true).setColumnSeparator(';').build();
+
+            CsvMapper mapper = new CsvMapper();
+            result = mapper.writer(schema).writeValueAsString(list);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)

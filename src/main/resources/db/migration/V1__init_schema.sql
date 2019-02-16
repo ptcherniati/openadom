@@ -1,5 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+DROP ROLE IF EXISTS "anonymous";
+CREATE ROLE "anonymous";
+
 -- check les foreign key pour le colonne references de la table data
 CREATE OR REPLACE FUNCTION refs_check(application UUID, refValues UUID[])
 RETURNS BOOLEAN AS $$
@@ -72,3 +75,5 @@ create table Data (
     dataValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );
+
+ALTER TABLE Data ENABLE ROW LEVEL SECURITY;

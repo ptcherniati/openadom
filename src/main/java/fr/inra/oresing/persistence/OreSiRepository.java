@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,18 +63,21 @@ public class OreSiRepository {
     @Autowired
     private JsonRowMapper<OreSiEntity> jsonRowMapper;
 
-    @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     private Map<Class, String> sqlUpsert;
 
-    public OreSiRepository() {
+    public OreSiRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         sqlUpsert = Map.of(
                 BinaryFile.class, BINARYFILE_UPSERT,
                 Application.class, APPLICATION_UPSERT,
                 ReferenceValue.class, REFERENCEVALUE_UPSERT,
                 Data.class, DATA_UPSERT
         );
+
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        // pour force la recuperation petit a petit et pas tout en meme temps (probleme memoire)
+        namedParameterJdbcTemplate.getJdbcTemplate().setFetchSize(1000);
     }
 
     public UUID store(OreSiEntity e) {
@@ -144,11 +148,24 @@ public class OreSiRepository {
         return result;
     }
 
-    public List<Data> findData(UUID applicationId, String dataType) {
+    public List<Data> findData(UUID applicationId, String dataType, List<UUID> ... nuppletRefs) {
+        MapSqlParameterSource args =
+                new MapSqlParameterSource("applicationId", applicationId)
+                        .addValue("dataType", dataType);
+
+        List<String> condition = new LinkedList<>();
+        for (List<UUID> nuppletRef : nuppletRefs) {
+            int size = condition.size();
+            condition.add(String.format("refslinkedto && ARRAY(select json_array_elements_text(:json%s::json))::uuid[]", size));
+            args.addValue("json" + size, jsonRowMapper.toJson(nuppletRef));
+
+        }
         String query = SELECT_DATA;
-        List result = namedParameterJdbcTemplate.query(query,  new MapSqlParameterSource("applicationId", applicationId).addValue("dataType", dataType), jsonRowMapper);
+        if (condition.size() > 0) {
+            query += " AND " + String.join(" AND ", condition);
+        }
+        List result = namedParameterJdbcTemplate.query(query,  args, jsonRowMapper);
         return (List<Data>) result;
     }
-
 
 }
