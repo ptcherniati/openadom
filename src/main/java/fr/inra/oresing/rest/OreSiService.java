@@ -7,9 +7,11 @@ import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
+import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -31,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,10 +49,11 @@ public class OreSiService {
     private CheckerFactory checkerFactory;
 
     @Transactional
-    protected UUID storeFile(MultipartFile file) throws IOException {
-        authRepository.setRole(OreSiContext.get().getRole());
+    protected UUID storeFile(Application app, MultipartFile file) throws IOException {
+        authRepository.setRole(OreSiContext.get().getUser());
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
+        binaryFile.setApplication(app.getId());
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
@@ -61,23 +63,32 @@ public class OreSiService {
 
     @Transactional
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
-        authRepository.setRole(OreSiContext.get().getRole());
+        OreSiUser user = OreSiContext.get().getUser();
+
+        authRepository.setRole(user);
         Application app = new Application();
         app.setName(name);
         UUID result = repo.store(app);
 
         changeApplicationConfiguration(app, configurationFile);
 
+        // on repasse admin pour la creation des roles associes a la nouvelle application
+        authRepository.setRoleAdmin();
+        String role = authRepository.createRightForApplication(app);
+
+        // on met l'utilisateur courant dans dans le group admin de cette application
+        authRepository.addUserRight(user, app.getId(), ApplicationRight.ADMIN);
+
         return result;
     }
 
     @Transactional
     public UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
-        authRepository.setRole(OreSiContext.get().getRole());
+        authRepository.setRole(OreSiContext.get().getUser());
         // on essaie de parser le fichier, si tout ce passe bien, on remplace ou ajoute le fichier
 
         UUID oldConfigId = app.getConfigFile();
-        UUID confId = storeFile(configurationFile);
+        UUID confId = storeFile(app, configurationFile);
 
         app.setConfigFile(confId);
         repo.store(app);
@@ -98,8 +109,8 @@ public class OreSiService {
 
     @Transactional
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
-        authRepository.setRole(OreSiContext.get().getRole());
-        UUID fileId = storeFile(file);
+        authRepository.setRole(OreSiContext.get().getUser());
+        UUID fileId = storeFile(app, file);
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
@@ -127,10 +138,6 @@ public class OreSiService {
                     }).collect(Collectors.toList());
 
             refs.forEach(repo::store);
-
-            // on repasse admin pour la creation des roles associes au nouvelle valeur
-            authRepository.resetRole();
-            refs.forEach(authRepository::createRightForReference);
         }
 
         return fileId;
@@ -145,8 +152,8 @@ public class OreSiService {
 
     @Transactional
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {
-        authRepository.setRole(OreSiContext.get().getRole());
-        UUID fileId = storeFile(file);
+        authRepository.setRole(OreSiContext.get().getUser());
+        UUID fileId = storeFile(app, file);
 
         // recuperation de la configuration pour ce type de donnees
         Configuration conf = app.getConfiguration();
@@ -222,7 +229,7 @@ public class OreSiService {
     }
 
     public List<Map<String, String>> findData(Application app, String dataType, MultiValueMap<String, String> params) {
-        authRepository.setRole(OreSiContext.get().getRole());
+        authRepository.setRole(OreSiContext.get().getUser());
 
         // recuperation de la configuration pour ce type de donnees
         Configuration conf = app.getConfiguration();

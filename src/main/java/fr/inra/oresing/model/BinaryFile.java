@@ -6,11 +6,13 @@ import lombok.ToString;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @ToString(callSuper = true)
 public class BinaryFile extends OreSiEntity {
+    private UUID application;
     private String name;
     private long size;
     private byte[] data;

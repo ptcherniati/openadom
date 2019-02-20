@@ -31,36 +31,19 @@ public class AuthRespositoryTest {
 
     @Test
     public void testSetRole() {
-        authRepository.setRole("anonymous");
+        authRepository.setRole(null);
     }
 
     @Test
-    public void testCreateAndLogin() {
+    public void testCreateAndLogin() throws Throwable {
         String login = "toto@codelutin.com";
         String password = "xxxx";
         OreSiUser user = authRepository.createUser(login, password);
-        Assert.assertEquals(login, user.getName());
+        Assert.assertEquals(login, user.getLogin());
         user = authRepository.login(login, password);
-        Assert.assertEquals(login, user.getName());
-        authRepository.setRole(login);
+        Assert.assertEquals(login, user.getLogin());
+        authRepository.setRole(user);
         authRepository.resetRole();
-        authRepository.removeUser(login);
-    }
-
-    @Test
-    public void testCreateRefRole() {
-        UUID refId = UUID.randomUUID();
-        UUID appId = UUID.randomUUID();
-
-        Application app = new Application();
-        app.setId(appId);
-
-        ReferenceValue ref = new ReferenceValue();
-        ref.setId(refId);
-        ref.setReferenceType("country");
-        ref.setApplication(appId);
-
-        authRepository.createRightForReference(ref);
-        authRepository.removeRightForReference(ref);
+        authRepository.removeUser(user.getId());
     }
 }

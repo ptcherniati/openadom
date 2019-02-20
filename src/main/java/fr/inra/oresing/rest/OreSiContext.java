@@ -12,7 +12,8 @@ public class OreSiContext {
     private static final InheritableThreadLocal<OreSiContext> context = new InheritableThreadLocal<>();
 
     @Getter
-    private String role;
+    private OreSiUser user;
+
     @Getter
     private String clientCorrelationId;
 
@@ -29,7 +30,7 @@ public class OreSiContext {
     }
 
     public static void setUser(OreSiUser user) {
-        set(new OreSiContext(user.getName(), get().getClientCorrelationId()));
+        set(new OreSiContext(user, get().getClientCorrelationId()));
     }
 
 }

@@ -5,6 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OreSiUser {
-    private String name;
+public class OreSiUser extends OreSiEntity {
+    private String login;
+    private String password;
 }

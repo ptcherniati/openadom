@@ -1,8 +1,12 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.inra.oresing.model.OreSiUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -21,7 +25,6 @@ import java.util.stream.Stream;
 @Component
 public class AuthHandler implements HandlerInterceptor {
 
-    public static final String ANONYMOUS = "anonymous";
     public static final String JWT_TOKEN = "si-ore-jwt";
     public static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
 
@@ -29,6 +32,9 @@ public class AuthHandler implements HandlerInterceptor {
 
     @Value("${jwt.expiration:3600}")
     private int jwtExpiration;
+
+    @Autowired
+    private ObjectMapper json;
 
     public AuthHandler(@Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret) {
         while (jwtSecret.length() < 32) {
@@ -44,10 +50,10 @@ public class AuthHandler implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String clientCorrelationId = request.getHeader(HTTP_CORRELATION_ID);
-        String role = getRole(request).orElse(ANONYMOUS);
-        log.debug("preHandle for " + role);
+        OreSiUser user = getRole(request).orElse(null);
+        log.debug("preHandle for " + user);
 
-        OreSiContext context = new OreSiContext(role, clientCorrelationId);
+        OreSiContext context = new OreSiContext(user, clientCorrelationId);
         OreSiContext.set(context);
 
         return true;
@@ -59,18 +65,18 @@ public class AuthHandler implements HandlerInterceptor {
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
         log.debug("postHandle for " + OreSiContext.get());
-        Cookie cookie = createCookie();
-        response.addCookie(cookie);
+        Optional<Cookie> cookie = createCookie();
+        cookie.ifPresent(response::addCookie);
         OreSiContext.reset();
     }
 
-    protected Optional<String> getRole(HttpServletRequest request) {
+    protected Optional<OreSiUser> getRole(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return Optional.empty();
         }
 
-        Optional<String> result = Stream.of(cookies)
+        Optional<OreSiUser> result = Stream.of(cookies)
                 .filter(cookie -> JWT_TOKEN.equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .map(this::getRoleFromJwt)
@@ -80,28 +86,37 @@ public class AuthHandler implements HandlerInterceptor {
         return result;
     }
 
-    protected String getRoleFromJwt(String token) {
+    protected OreSiUser getRoleFromJwt(String token) {
         try {
-            return Jwts.parser()
+            String jsonUser = Jwts.parser()
                     .setSigningKey(key)
                     .parseClaimsJws(token)
                     .getBody().getSubject();
+            OreSiUser user = json.readValue(jsonUser, OreSiUser.class);
+            return user;
         } catch (Exception eee) {
             log.error("can't decode jwt token: " + token);
             return null;
         }
     }
 
-    protected Cookie createCookie() {
-        String token = Jwts.builder()
-                .setSubject(OreSiContext.get().getRole())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpiration * 1000))
-                .signWith(key)
-                .compact();
-        Cookie result = new Cookie(JWT_TOKEN, token);
-        result.setHttpOnly(true);
+    protected Optional<Cookie> createCookie() {
+        try {
+            String jsonUser = json.writeValueAsString(OreSiContext.get().getUser());
 
-        return result;
+            String token = Jwts.builder()
+                    .setSubject(jsonUser)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date((new Date()).getTime() + jwtExpiration * 1000))
+                    .signWith(key)
+                    .compact();
+            Cookie result = new Cookie(JWT_TOKEN, token);
+            result.setHttpOnly(true);
+
+            return Optional.of(result);
+        } catch (JsonProcessingException eee) {
+            log.error("can't create cookie: ", eee);
+            return Optional.empty();
+        }
     }
 }
