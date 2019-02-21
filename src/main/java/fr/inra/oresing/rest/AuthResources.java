@@ -19,7 +19,7 @@ public class AuthResources {
     protected AuthRepository authRepository;
 
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    public OreSiUser login(@RequestParam("login") String login, @RequestParam("password") String password) {
+    public OreSiUser login(@RequestParam("login") String login, @RequestParam("password") String password) throws Throwable {
         OreSiUser result = authRepository.login(login, password);
         // l'authentification a fonctionne, on change dans le context
         OreSiContext.setUser(result);

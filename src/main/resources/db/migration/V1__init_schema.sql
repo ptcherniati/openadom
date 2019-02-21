@@ -1,6 +1,20 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "chkpass";
 
+CREATE OR REPLACE FUNCTION fk_check(targetTable TEXT, uid UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    result TEXT;
+BEGIN
+    IF uid is null THEN
+        RETURN true;
+    ELSE
+        EXECUTE format('select count(id) > 0 from %s where id = $1;', targetTable) INTO result USING uid;
+        RETURN result;
+    END IF;
+END;
+$$ language 'plpgsql';
+
 -- check les foreign key pour le colonne references de la table data
 CREATE OR REPLACE FUNCTION refs_check(application UUID, refValues UUID[])
 RETURNS BOOLEAN AS $$
@@ -35,6 +49,20 @@ create table OreSiUser (
     password chkpass
 );
 
+create table Application (
+    id EntityId PRIMARY KEY,
+    creationDate DateOrNow,
+    updateDate DateOrNow,
+    name Text,
+    referenceType TEXT[], -- liste des types de references existantes
+    dataType TEXT[],      -- liste des types de data existants
+    configuration jsonb,  -- le fichier de configuration sous forme json
+    configFile uuid CHECK(fk_check('BinaryFile', configFile))-- can be null
+);
+
+CREATE INDEX application_referenceType_gin_idx ON application USING gin (referenceType);
+CREATE INDEX application_dataType_gin_idx ON application USING gin (dataType);
+
 create table BinaryFile (
     id EntityId PRIMARY KEY,
     creationDate DateOrNow,
@@ -44,20 +72,6 @@ create table BinaryFile (
     size INT,
     data bytea
 );
-
-create table Application (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    name Text,
-    referenceType TEXT[], -- liste des types de references existantes
-    dataType TEXT[],      -- liste des types de data existants
-    configuration jsonb,  -- le fichier de configuration sous forme json
-    configFile uuid REFERENCES BinaryFile(id) -- can be null
-);
-
-CREATE INDEX application_referenceType_gin_idx ON application USING gin (referenceType);
-CREATE INDEX application_dataType_gin_idx ON application USING gin (dataType);
 
 create table ReferenceValue (
     id EntityId PRIMARY KEY,
@@ -108,6 +122,14 @@ ALTER TABLE BinaryFile ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Application ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Data ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "applicationCreator_Application_insert" ON Application AS PERMISSIVE
+            FOR INSERT TO "applicationCreator"
+            WITH CHECK ( true );
+
+CREATE POLICY "applicationCreator_Application_select" ON Application AS PERMISSIVE
+            FOR SELECT TO "applicationCreator"
+            USING ( true );
 
 -- creation d'un utilisateur de test qui a le droit de creer des applications
 -- on passe superadmin pour simuler la creation via un appel rest

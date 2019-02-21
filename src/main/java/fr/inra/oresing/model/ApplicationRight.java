@@ -1,6 +1,7 @@
 package fr.inra.oresing.model;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
@@ -15,12 +16,13 @@ public enum ApplicationRight {
     RESTRICTED_READER("SELECT", "SELECT", "SELECT", "SELECT");
 
     private static final String sql =
-            "CREATE POLICY %3s_%2$s ON %2s"+ // nom policy, table
+            "CREATE POLICY \"%3$s_%2$s\" ON %2$s"+ // nom policy, table
             "    AS PERMISSIVE" +
             "    FOR %4$s" + // action
-            "    TO %3$s" + //  role
-            "    USING ( %5$s = %1$s )" + // field, appId
-            "    WITH CHECK ( %5$s = %1$s )"; // field, appId
+            "    TO \"%3$s\"" + //  role
+            "    USING ( %5$s = '%1$s' )"; // field, appId
+    private static final String sqlWithCheck =
+            "    WITH CHECK ( %5$s = '%1$s' )"; // field, appId
 
     private String appAction;
     private String fileAction;
@@ -31,7 +33,20 @@ public enum ApplicationRight {
         return appId.toString() + "_" + name();
     }
 
+    public String getAllSql(UUID appId) {
+        return String.join(";",
+                getSqlApplication(appId),
+                getSqlBinaryFile(appId),
+                getSqlReferenceValue(appId),
+                getSqlData(appId)
+        );
+    }
+
     public String getSqlApplication(UUID appId) {
+        String query = sql;
+        if (!StringUtils.equalsAnyIgnoreCase("SELECT", "DELETE")) {
+            query += sqlWithCheck;
+        }
         return String.format(sql, appId, "Application", getRole(appId), appAction, "id");
     }
 

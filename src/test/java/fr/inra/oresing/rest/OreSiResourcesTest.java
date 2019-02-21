@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.persistence.AuthRepository;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
 import org.hamcrest.core.Is;
@@ -56,18 +58,31 @@ public class OreSiResourcesTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private AuthRepository authRepository;
+
     @Test
     public void addApplication() throws Exception {
         String appId;
 
+        OreSiUser user = authRepository.createUser("poussin", "xxxxxxxx");
+
         Cookie authCookie = mockMvc.perform(post("/api/v1/login")
-                .param("login", "dbuser")
+                .param("login", "poussin")
                 .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHandler.JWT_TOKEN);
 
         URL resource = getClass().getResource("/data/monsore.yaml");
         try (InputStream in = resource.openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+
+            // on a pas le droit de creer de nouvelle application
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(status().is4xxClientError());
+
+            authRepository.addUserRightCreateApplication(user.getId());
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                     .file(configuration)

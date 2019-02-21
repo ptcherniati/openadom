@@ -20,8 +20,8 @@ import java.util.UUID;
 public class OreSiRepository {
 
     private static final String BINARYFILE_UPSERT =
-            "INSERT INTO BinaryFile (id, name, size, data) SELECT id, name, size, data FROM json_populate_record(NULL::BinaryFile, :json::json) "
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, name=EXCLUDED.name, size=EXCLUDED.size, data=EXCLUDED.data"
+            "INSERT INTO BinaryFile (id, application, name, size, data) SELECT id, application, name, size, data FROM json_populate_record(NULL::BinaryFile, :json::json) "
+                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, name=EXCLUDED.name, size=EXCLUDED.size, data=EXCLUDED.data"
                     + " RETURNING id";
 
     private static final String APPLICATION_UPSERT =

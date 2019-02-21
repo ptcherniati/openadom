@@ -4,7 +4,6 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.model.ReferenceValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -20,12 +19,13 @@ public class AuthRepository {
 
     private static final String ANONYMOUS = "anonymous";
     private static final String SUPERADMIN = "superadmin";
+    private static final String APPLICATION_CREATOR = "applicationCreator";
 
     private static final String RESET_ROLE = "RESET ROLE";
     private static final String SET_ROLE = "SET LOCAL ROLE \":role\"";
     private static final String CREATE_ROLE = "CREATE ROLE \":role\"";
     private static final String REMOVE_ROLE = "DROP ROLE \":role\"";
-    private static final String ADD_USER_IN_ROLE = "GRANT :role TO :user";
+    private static final String ADD_USER_IN_ROLE = "GRANT \":role\" TO \":user\"";
 
     private static final String USER_UPSERT =
             "INSERT INTO OreSiUser (id, login, password) SELECT id, login, password FROM json_populate_record(NULL::OreSiUser, :json::json)"
@@ -105,19 +105,25 @@ public class AuthRepository {
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
 
         return result;
+    }
 
+    public void addUserRightCreateApplication(UUID userId) {
+        addUserInRole(userId.toString(), APPLICATION_CREATOR);
     }
 
     /**
      * Ajout des droits a un utilisateur
-     * @param user l'utilisateur a qui il faut ajouter des droits
+     * @param userId l'utilisateur a qui il faut ajouter des droits
      * @param appId l'application pour lequel on veut lui ajouter des droits
      * @param right le droit qu'on veut lui donner
      */
-    public void addUserRight(OreSiUser user, UUID appId, ApplicationRight right) {
-        // TODO
-        String query = ADD_USER_IN_ROLE;
-        namedParameterJdbcTemplate.update(query, new MapSqlParameterSource("role", right.getRole(appId)).addValue("user", user));
+    public void addUserRight(UUID userId, UUID appId, ApplicationRight right) {
+        addUserInRole(userId.toString(), right.getRole(appId));
+    }
+
+    protected void addUserInRole(String userId, String role) {
+        String query = ADD_USER_IN_ROLE.replaceAll(":role", role).replaceAll(":user", userId);
+        namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
     @Transactional
@@ -135,31 +141,22 @@ public class AuthRepository {
     }
 
     /**
-     * Permet de créer un nouveau role
-     * @return role name used for this ReferenceValue
-     */
-    public String createRightForReference(ReferenceValue ref) {
-        String role = ref.getId().toString();
-        String sql = CREATE_ROLE.replaceAll(":role", role);
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
-        return role;
-    }
-
-    /**
      * @return role name used for this application
      */
-    public String createRightForApplication(Application app) {
-        String role = app.getId().toString();
-        String sql = CREATE_ROLE.replaceAll(":role", role);
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
-        return role;
-    }
-
-    public void removeRightForReference(ReferenceValue ref) {
-        removeRole(ref.getId().toString());
+    @Transactional
+    public void createRightForApplication(Application app) {
+        for (ApplicationRight r : ApplicationRight.values()) {
+            String role = r.getRole(app.getId());
+            String sql = CREATE_ROLE.replaceAll(":role", role);
+            namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
+            namedParameterJdbcTemplate.execute(r.getAllSql(app.getId()), PreparedStatement::execute);
+        }
     }
 
     public void removeRightForApplication(Application app) {
-        removeRole(app.getId().toString());
+        for (ApplicationRight r : ApplicationRight.values()) {
+            String role = r.getRole(app.getId());
+            removeRole(role);
+        }
     }
 }

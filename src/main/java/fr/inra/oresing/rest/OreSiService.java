@@ -16,7 +16,9 @@ import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
@@ -63,23 +65,32 @@ public class OreSiService {
 
     @Transactional
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
-        OreSiUser user = OreSiContext.get().getUser();
+        try {
+            OreSiUser user = OreSiContext.get().getUser();
 
-        authRepository.setRole(user);
-        Application app = new Application();
-        app.setName(name);
-        UUID result = repo.store(app);
+            authRepository.setRole(user);
+            Application app = new Application();
+            app.setName(name);
+            UUID result = repo.store(app);
 
-        changeApplicationConfiguration(app, configurationFile);
+            // on repasse admin pour la creation des roles associes a la nouvelle application
+            authRepository.resetRole();
+            authRepository.createRightForApplication(app);
 
-        // on repasse admin pour la creation des roles associes a la nouvelle application
-        authRepository.setRoleAdmin();
-        String role = authRepository.createRightForApplication(app);
+            // on met l'utilisateur courant dans dans le group admin de cette application
+            authRepository.addUserRight(user.getId(), app.getId(), ApplicationRight.ADMIN);
 
-        // on met l'utilisateur courant dans dans le group admin de cette application
-        authRepository.addUserRight(user, app.getId(), ApplicationRight.ADMIN);
+            // on enregistre le fichier sous l'identite de l'utilisateur
+            authRepository.setRole(user);
+            changeApplicationConfiguration(app, configurationFile);
 
-        return result;
+            return result;
+        } catch (BadSqlGrammarException eee) {
+            if (StringUtils.contains(eee.getMessage(), "permission denied")) {
+                throw new SecurityException(eee);
+            }
+            throw eee;
+        }
     }
 
     @Transactional
