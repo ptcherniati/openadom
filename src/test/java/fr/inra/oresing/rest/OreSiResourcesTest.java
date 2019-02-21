@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.AuthRepository;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
@@ -34,10 +36,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -94,8 +98,7 @@ public class OreSiResourcesTest {
             appId = JsonPath.parse(response).read("$.id");
         }
 
-
-        String response = mockMvc.perform(get("/api/v1/applications/" + appId)
+        String response = mockMvc.perform(get("/api/v1/applications/{appId}", appId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authCookie))
                 .andExpect(status().isOk())
@@ -131,7 +134,7 @@ public class OreSiResourcesTest {
             try (InputStream refStream = resource.openStream()) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/" + e.getKey())
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
                         .file(refFile)
                         .cookie(authCookie))
                         .andExpect(status().isCreated())
@@ -174,12 +177,25 @@ public class OreSiResourcesTest {
 
         System.out.println(response);
 
+        // creation d'un user qui aura le droit de lire les données
+        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
+        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
+                appId, ApplicationRight.READER.name(), reader.getId().toString())
+//                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk());
+
+        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+                .param("login", "UnReader")
+                .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHandler.JWT_TOKEN);
+
         // restitution de data json
         resource = getClass().getResource("/data/compare/export.json");
         try (InputStream in = resource.openStream()){
             String jsonCompare = new String(in.readAllBytes());
             response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
-                    .cookie(authCookie)
+                    .cookie(authReaderCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().json(jsonCompare))
@@ -191,7 +207,7 @@ public class OreSiResourcesTest {
         try (InputStream in = resource.openStream()) {
             String csvCompare = new String(in.readAllBytes());
             response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
-                    .cookie(authCookie)
+                    .cookie(authReaderCookie)
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     .andExpect(content().string(csvCompare))
@@ -203,7 +219,44 @@ public class OreSiResourcesTest {
         try (InputStream in = resource.openStream()) {
             String csvCompare = new String(in.readAllBytes());
             response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
-                    .cookie(authCookie)
+                    .cookie(authReaderCookie)
+                    .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(csvCompare))
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        // recuperation de l'id du referentiel
+        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes?esp_nom=LPF")
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        ReferenceValue[] refEspeces = objectMapper.readValue(response, ReferenceValue[].class);
+        UUID refId = Stream.of(refEspeces).map(ReferenceValue::getId).findFirst().orElseThrow();
+
+        // creation d'un user qui aura le droit de lire les données mais pas certain referenciel
+        OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
+        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
+                appId, ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie)
+                .content("[\"" + refId + "\"]"))
+                .andExpect(status().isOk());
+
+        Cookie authRestrictedReaderCookie = mockMvc.perform(post("/api/v1/login")
+                .param("login", "UnPetitReader")
+                .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHandler.JWT_TOKEN);
+
+        // restitution de data csv
+        resource = getClass().getResource("/data/compare/exportColumnRestrictedReader.csv");
+        try (InputStream in = resource.openStream()) {
+            String csvCompare = new String(in.readAllBytes());
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
+                    .cookie(authRestrictedReaderCookie)
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     .andExpect(content().string(csvCompare))

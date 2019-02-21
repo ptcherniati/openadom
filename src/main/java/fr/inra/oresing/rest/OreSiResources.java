@@ -6,9 +6,10 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +44,9 @@ public class OreSiResources {
 
     @Autowired
     private OreSiRepository repo;
+
+    @Autowired
+    private AuthRepository authRepo;
 
     @Autowired
     private OreSiService service;
@@ -94,20 +100,60 @@ public class OreSiResources {
         }
     }
 
+    /**
+     * Ajout un utilisateur pour l'application
+     *
+     * @param nameOrId l'id ou le nom de l'application
+     * @param role le role que doit prendre l'utilisateur, le role doit être un des roles de {@link ApplicationRight}
+     * @param userId l'identifiant de l'utilisateur a ajouter
+     * @param excludedReference les UUID des valeurs de referenciel qui ne peuvent pas etre lu par cette utilisateur
+     * ce parametre n'est pris en compte que si role est {@link ApplicationRight#RESTRICTED_READER}
+     * @return ok (200)
+     */
+    @PutMapping(value = "/applications/{nameOrId}/users/{role}/{userId}")
+    public ResponseEntity addUserForApplication(@PathVariable("nameOrId") String nameOrId,
+                                  @PathVariable("role") String role,
+                                  @PathVariable("userId") UUID userId,
+                                  @RequestBody(required = false) UUID[] excludedReference) {
+        Optional<Application> opt = repo.findApplication(nameOrId);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Application app = opt.get();
+        ApplicationRight appRole = ApplicationRight.valueOf(StringUtils.upperCase(role));
+        authRepo.addUserRight(userId, app.getId(), appRole, excludedReference);
+
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Liste les noms des types de referenciels disponible
+     * @param nameOrId l'id ou le nom de l'application
+     * @return un tableau de chaine
+     */
     @GetMapping(value = "/applications/{nameOrId}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listNameReferences(@PathVariable("nameOrId") String nameOrId) {
         Optional<Application> opt = repo.findApplication(nameOrId);
         return opt.map(Application::getReferenceType).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Liste toutes les valeurs possibles pour un type de referenciel
+     * @param nameOrId l'id ou le nom de l'application
+     * @param refType le type du referenciel
+     * @return un tableau de chaine
+     */
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ReferenceValue>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType) {
+    public ResponseEntity<List<ReferenceValue>> listReferences(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("refType") String refType,
+            @RequestParam MultiValueMap<String, String> params) {
         Optional<Application> opt = repo.findApplication(nameOrId);
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Application app = opt.get();
-        List<ReferenceValue> list = repo.findReference(app.getId(), refType);
+        List<ReferenceValue> list = repo.findReference(app.getId(), refType, params);
         return ResponseEntity.ok(list);
     }
 

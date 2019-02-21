@@ -5,16 +5,21 @@ import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.ReferenceValue;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Component
 public class OreSiRepository {
@@ -44,8 +49,8 @@ public class OreSiRepository {
             + Application.class.getSimpleName() + " t WHERE id::text=:nameOrId or name=:nameOrId";
 
     private static final String SELECT_REFERENCE =
-            "SELECT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
-                    + ReferenceValue.class.getSimpleName() + " t WHERE application=:applicationId::uuid AND referenceType=:refType";
+            "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
+                    + ReferenceValue.class.getSimpleName() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
 
     private static final String TEMPLATE_SELECT_REFERENCE_COLUMN =
             "SELECT refValues->>'%s' FROM "
@@ -137,8 +142,41 @@ public class OreSiRepository {
     }
 
     public List<ReferenceValue> findReference(UUID applicationId, String refType) {
+        return findReference(applicationId, refType, new LinkedMultiValueMap<>());
+    }
+
+    /**
+     *
+     * @param applicationId l'id de l'application
+     * @param refType le type du referenciel
+     * @param params les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
+     * @return la liste qui satisfont aux criteres
+     */
+    public List<ReferenceValue> findReference(UUID applicationId, String refType, MultiValueMap<String, String> params) {
         String query = SELECT_REFERENCE;
-        List result = namedParameterJdbcTemplate.query(query,  new MapSqlParameterSource("applicationId", applicationId).addValue("refType", refType), jsonRowMapper);
+        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", applicationId)
+                .addValue("refType", refType);
+
+        AtomicInteger i = new AtomicInteger();
+        // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
+        String cond = params.entrySet().stream().flatMap(e -> {
+            String k = e.getKey();
+            if (StringUtils.equalsAnyIgnoreCase("any", k)) {
+                return e.getValue().stream().map(v -> {
+                    String arg = ":arg" + i.getAndIncrement();
+                    paramSource.addValue(arg, v);
+                    return "kv.value=" + arg;
+                });
+            } else {
+                return e.getValue().stream().map(v -> "t.refvalues @> '{\"" + k + "\":\"" + v + "\"}'::jsonb");
+            }
+        }).collect(Collectors.joining(" OR "));
+
+        if (StringUtils.isNotBlank(cond)) {
+            cond = " AND (" + cond + ")";
+        }
+
+        List result = namedParameterJdbcTemplate.query(query + cond, paramSource, jsonRowMapper);
         return (List<ReferenceValue>) result;
     }
 

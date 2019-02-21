@@ -239,6 +239,7 @@ public class OreSiService {
         return fileId;
     }
 
+    @Transactional
     public List<Map<String, String>> findData(Application app, String dataType, MultiValueMap<String, String> params) {
         authRepository.setRole(OreSiContext.get().getUser());
 
