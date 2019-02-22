@@ -17,7 +17,8 @@ Reste à faire
   - lors du parsing des fichiers CSV reporter la ligne de l'erreur
   - sortir en flux les exports (pas de representation string intermédiaire)
   - compresser les fichiers en base
-
+  - faire en sorte que la suppression de données de référence ne soit pas possible si elles sont utilisées
+  
 Fait
 ====
 

@@ -95,7 +95,7 @@ public class AuthHandler implements HandlerInterceptor {
             OreSiUser user = json.readValue(jsonUser, OreSiUser.class);
             return user;
         } catch (Exception eee) {
-            log.error("can't decode jwt token: " + token);
+            log.error("can't decode jwt token: " + token, eee);
             return null;
         }
     }

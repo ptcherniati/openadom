@@ -65,6 +65,12 @@ public class OreSiResources {
         }
     }
 
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Application> getApplications() {
+        List<Application> result = repo.findAll(Application.class);
+        return result;
+    }
+
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createApplication(@PathVariable("name") String name, @RequestParam("file") MultipartFile file) throws IOException {
         UUID result = service.createApplication(name, file);
@@ -203,8 +209,20 @@ public class OreSiResources {
     }
 
     /** export as CSV */
+    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> getAllDataCsvForce(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("dataType") String dataType,
+            @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
+        return getAllDataCsv(nameOrId, dataType, params);
+    }
+
+    /** export as CSV */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> getAllDataCsv(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
+    public ResponseEntity<String> getAllDataCsv(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("dataType") String dataType,
+            @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
         Optional<Application> opt = repo.findApplication(nameOrId);
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();

@@ -1,4 +1,5 @@
 import Login from './Login.vue.js';
+import Application from './Application.vue.js';
 
 new Vue({
   el: '#app',
@@ -6,6 +7,6 @@ new Vue({
       message: 'Hello Vue!'
     },
   components: {
-    Login
+    Login, Application
   }
 });

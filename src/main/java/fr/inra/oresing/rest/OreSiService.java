@@ -46,7 +46,7 @@ public class OreSiService {
 
     @Autowired
     private AuthRepository authRepository;
-    
+
     @Autowired
     private CheckerFactory checkerFactory;
 
@@ -133,7 +133,7 @@ public class OreSiService {
         CsvSchema schema = schemaBuilder.setColumnSeparator(ref.getSeparator()).build();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
-            for (int i=0 ; i < ref.getLineToSkip(); i++) {
+            for (int i = 0; i < ref.getLineToSkip(); i++) {
                 reader.readLine();
             }
 
@@ -198,7 +198,7 @@ public class OreSiService {
         List<String> error = new LinkedList<>();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
-            for (int i=0 ; i < dataSet.getLineToSkip(); i++) {
+            for (int i = 0; i < dataSet.getLineToSkip(); i++) {
                 reader.readLine();
             }
 
@@ -214,7 +214,7 @@ public class OreSiService {
                         }
                         Object result = checker.check(v);
                         if (checker instanceof ReferenceChecker) {
-                            refsLinkedTo.add((UUID)result);
+                            refsLinkedTo.add((UUID) result);
                         }
                     } catch (CheckerException eee) {
                         log.debug("Validation problem", eee);
@@ -242,7 +242,6 @@ public class OreSiService {
     @Transactional
     public List<Map<String, String>> findData(Application app, String dataType, MultiValueMap<String, String> params) {
         authRepository.setRole(OreSiContext.get().getUser());
-
         // recuperation de la configuration pour ce type de donnees
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
@@ -271,11 +270,15 @@ public class OreSiService {
 
     protected UUID getRefid(Map<String, Checker> checkers, String refType, String value) {
         try {
-            Checker checker = checkers.get(refType);
-            if (checker == null ) {
-                throw new IllegalArgumentException(refType + " has no reference table");
+            try{
+                return UUID.fromString(value);
+            } catch (IllegalArgumentException eee) {
+                Checker checker = checkers.get(refType);
+                if (checker == null) {
+                    throw new IllegalArgumentException(refType + " has no reference table");
+                }
+                return checker.check(value);
             }
-            return checker.check(value);
         } catch (CheckerException eee) {
             throw new IllegalArgumentException(eee);
         }
