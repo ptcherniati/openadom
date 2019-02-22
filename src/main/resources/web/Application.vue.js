@@ -36,8 +36,7 @@ template: `
      </option>
    </select>
    <input type="text" v-model="outColumn"></input>
-   <a v-bind:href="exportUrl">Download</a>
-   <button v-on:click="exportCSV">Export</button>
+   <a target="_blank" v-bind:href="'/api/v1/applications/'+this.application.id+'/data/'+this.dataType+'/csv?'+this.selectedRefs.map(r => r.referenceType + '=' + r.id).join('&')+'&outColumn='+this.outColumn">Download</a>
   </div>
 </div>
 `,
@@ -92,27 +91,6 @@ template: `
     },
     addRefValue() {
       this.selectedRefs = this.selectedRefs.concat(this.refValue);
-      let refs = this.selectedRefs.map(r => r.referenceType + '=' + r.id).join("&")
-      this.exportUrl = `/api/v1/applications/${this.application.id}/data/${this.dataType}/csv?${refs}&outColumn=${this.outColumn}`;
-    },
-    exportCSV() {
-        let refs = this.selectedRef.map(r => r.referenceType + '=' + r.id).join("&")
-        fetch(`/api/v1/applications/${this.application.id}/data/${this.dataType}?{refs}&outColumn={outColumn}`,
-          {method: "GET",
-           headers: {
-             'Accept': 'text/plain'
-           }})
-          .then(response => {
-            if(response.ok) {
-              console.log("app loading ok");
-              return response.text;
-            } else {
-              throw new Error("Can't load application." + response.status);
-            }
-          })
-          .then(json => {this.refValues = json})
-          .catch(error => console.error("login ko", error));
-
     }
   }
 }
