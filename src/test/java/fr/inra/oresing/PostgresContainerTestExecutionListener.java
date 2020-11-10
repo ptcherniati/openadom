@@ -22,8 +22,8 @@ public class PostgresContainerTestExecutionListener implements TestExecutionList
 
     @Override
     public void beforeTestClass(TestContext testContext) {
-        if (log.isTraceEnabled()) {
-            log.trace("démarre un conteneur postgresql disponible à l'adresse " + postgreSQLContainer.getJdbcUrl());
+        if (log.isInfoEnabled()) {
+            log.info("démarre un conteneur postgresql disponible à l'adresse " + postgreSQLContainer.getJdbcUrl());
         }
         postgreSQLContainer.start();
     }
