@@ -21,6 +21,6 @@ maven:
   stage: build
   script: mvn --batch-mode clean package
   rules:
-    - if: '$CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
     - docker
