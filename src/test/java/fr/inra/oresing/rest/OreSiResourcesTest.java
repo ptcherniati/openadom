@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.PostgresContainerTestExecutionListener;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiUser;
@@ -51,6 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class,
+        PostgresContainerTestExecutionListener.class,
         FlywayTestExecutionListener.class})
 @Rollback
 @FlywayTest

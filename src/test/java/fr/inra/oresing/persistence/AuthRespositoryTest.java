@@ -1,9 +1,8 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.Application;
+import fr.inra.oresing.PostgresContainerTestExecutionListener;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.model.ReferenceValue;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.Assert;
@@ -16,11 +15,10 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.UUID;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class,
+        PostgresContainerTestExecutionListener.class,
         FlywayTestExecutionListener.class})
 @Rollback
 @FlywayTest
