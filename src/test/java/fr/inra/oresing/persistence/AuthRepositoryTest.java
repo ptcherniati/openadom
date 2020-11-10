@@ -22,7 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
         FlywayTestExecutionListener.class})
 @Rollback
 @FlywayTest
-public class AuthRespositoryTest {
+public class AuthRepositoryTest {
 
     @Autowired
     private AuthRepository authRepository;
