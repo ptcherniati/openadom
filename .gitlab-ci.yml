@@ -20,7 +20,5 @@ maven:
   image: registry.nuiton.org/codelutin/dockerfiles:maven-release-mvn3-6-3-openjdk11
   stage: build
   script: mvn --batch-mode clean package
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
     - docker
