@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 public class AuthHelper {
 
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
-    public static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
 
     private final Key key;
 
@@ -45,9 +44,6 @@ public class AuthHelper {
     }
 
     public Optional<OreSiUser> initContext(HttpServletRequest request) {
-        String clientCorrelationId = request.getHeader(HTTP_CORRELATION_ID);
-        OreSiContext.get().setClientCorrelationId(clientCorrelationId);
-
         Cookie[] cookies = request.getCookies();
         if (ArrayUtils.isEmpty(cookies)) {
             if (log.isDebugEnabled()) {
@@ -62,18 +58,12 @@ public class AuthHelper {
                 .findAny()
                 .orElseThrow(() -> new OreSiTechnicalException("cookie attendu dans " + request));
         OreSiUser user = getRoleFromJwt(cookie);
-        OreSiContext.get().setUser(user);
-
         return Optional.of(user);
     }
 
     public void refreshCookie(HttpServletResponse response, OreSiUser oreSiUser) {
         Cookie cookie = newCookie(oreSiUser);
         response.addCookie(cookie);
-    }
-
-    public void cleanContext() {
-        OreSiContext.reset();
     }
 
     private OreSiUser getRoleFromJwt(Cookie cookie) {
