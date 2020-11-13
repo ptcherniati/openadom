@@ -25,11 +25,11 @@ public class AuthResources {
 
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public OreSiUser login(HttpServletResponse response, @RequestParam("login") String login, @RequestParam("password") String password) throws Throwable {
-        OreSiUser result = authRepository.login(login, password);
-        // l'authentification a fonctionne, on change dans le context
-        OreSiContext.setUser(result);
-        authHelper.refreshCookie(response);
-        return result;
+        OreSiUser oreSiUser = authRepository.login(login, password);
+        // l'authentification a fonctionné, on change dans le context
+        authHelper.refreshCookie(response, oreSiUser);
+        OreSiContext.get().setUser(oreSiUser);
+        return oreSiUser;
     }
 
     @DeleteMapping(value = "/logout")

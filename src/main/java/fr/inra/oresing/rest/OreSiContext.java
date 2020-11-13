@@ -1,20 +1,19 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.OreSiUser;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
+@Getter
+@Setter
 @ToString
-@AllArgsConstructor
 public class OreSiContext {
 
     private static final InheritableThreadLocal<OreSiContext> context = new InheritableThreadLocal<>();
 
-    @Getter
     private OreSiUser user;
 
-    @Getter
     private String clientCorrelationId;
 
     public static void reset() {
@@ -22,15 +21,15 @@ public class OreSiContext {
     }
 
     public static OreSiContext get() {
-        return context.get();
+        OreSiContext oreSiContext = context.get();
+        if (oreSiContext == null) {
+            oreSiContext = new OreSiContext();
+            context.set(oreSiContext);
+        }
+        return oreSiContext;
     }
 
-    public static void set(OreSiContext c) {
-        context.set(c);
+    public void setUser(OreSiUser user) {
+        this.user = user;
     }
-
-    public static void setUser(OreSiUser user) {
-        set(new OreSiContext(user, get().getClientCorrelationId()));
-    }
-
 }

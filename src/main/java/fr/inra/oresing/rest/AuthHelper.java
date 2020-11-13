@@ -2,10 +2,14 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
+import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.OreSiUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,9 +17,9 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -23,93 +27,88 @@ import java.util.stream.Stream;
 @Component
 public class AuthHelper {
 
-    public static final String JWT_TOKEN = "si-ore-jwt";
+    public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     public static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
 
-    private Key key;
+    private final Key key;
 
     @Value("${jwt.expiration:3600}")
     private int jwtExpiration;
 
     @Autowired
-    private ObjectMapper json;
+    private ObjectMapper objectMapper;
 
     public AuthHelper(@Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret) {
-        while (jwtSecret.length() < 32) {
-            jwtSecret += "0";
-        }
-        byte[] keyBytes = jwtSecret.getBytes();
+        String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
+        byte[] keyBytes = secureEnoughJwtSecret.getBytes();
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public void initContext(HttpServletRequest request) {
+    public Optional<OreSiUser> initContext(HttpServletRequest request) {
         String clientCorrelationId = request.getHeader(HTTP_CORRELATION_ID);
-        OreSiUser user = getRole(request).orElse(null);
-        log.debug("preHandle for " + user);
+        OreSiContext.get().setClientCorrelationId(clientCorrelationId);
 
-        OreSiContext context = new OreSiContext(user, clientCorrelationId);
-        OreSiContext.set(context);
+        Cookie[] cookies = request.getCookies();
+        if (ArrayUtils.isEmpty(cookies)) {
+            if (log.isDebugEnabled()) {
+                log.debug("aucun cookie détecté dans la requête, c'est possible si on est sur login");
+            }
+            String pathInfo = request.getPathInfo();
+            Preconditions.checkState(pathInfo.endsWith("/login"), "tentative d'accéder à " + pathInfo + " sans cookie");
+            return Optional.empty();
+        }
+        Cookie cookie = Stream.of(cookies)
+                .filter(aCookie -> JWT_COOKIE_NAME.equals(aCookie.getName()))
+                .findAny()
+                .orElseThrow(() -> new OreSiTechnicalException("cookie attendu dans " + request));
+        OreSiUser user = getRoleFromJwt(cookie);
+        OreSiContext.get().setUser(user);
+
+        return Optional.of(user);
     }
 
-    public void refreshCookie(HttpServletResponse response) {
-        // refresh cookie
-        Optional<Cookie> cookie = createCookie();
-        cookie.ifPresent(response::addCookie);
+    public void refreshCookie(HttpServletResponse response, OreSiUser oreSiUser) {
+        Cookie cookie = newCookie(oreSiUser);
+        response.addCookie(cookie);
     }
 
     public void cleanContext() {
         OreSiContext.reset();
     }
 
-    protected Optional<OreSiUser> getRole(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return Optional.empty();
+    private OreSiUser getRoleFromJwt(Cookie cookie) {
+        String token = cookie.getValue();
+        String json = Jwts.parser()
+                .setSigningKey(key)
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+        OreSiUser oreSiUser;
+        try {
+            oreSiUser = objectMapper.readValue(json, OreSiUser.class);
+        } catch (IOException e) {
+            throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
         }
-
-        Optional<OreSiUser> result = Stream.of(cookies)
-                .filter(cookie -> JWT_TOKEN.equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .map(this::getRoleFromJwt)
-                .filter(Objects::nonNull)
-                .findFirst();
-
-        return result;
+        return oreSiUser;
     }
 
-    protected OreSiUser getRoleFromJwt(String token) {
+    private Cookie newCookie(OreSiUser oreSiUser) {
+        String json;
         try {
-            String jsonUser = Jwts.parser()
-                    .setSigningKey(key)
-                    .parseClaimsJws(token)
-                    .getBody().getSubject();
-            OreSiUser user = json.readValue(jsonUser, OreSiUser.class);
-            return user;
-        } catch (Exception eee) {
-            log.error("can't decode jwt token: " + token, eee);
-            return null;
+            json = objectMapper.writeValueAsString(oreSiUser);
+        } catch (JsonProcessingException e) {
+            throw new OreSiTechnicalException("impossible de sérialiser " + oreSiUser + " avec " + objectMapper, e);
         }
-    }
-
-    protected Optional<Cookie> createCookie() {
-        try {
-            String jsonUser = json.writeValueAsString(OreSiContext.get().getUser());
-
-            String token = Jwts.builder()
-                    .setSubject(jsonUser)
-                    .setIssuedAt(new Date())
-                    .setExpiration(new Date((new Date()).getTime() + jwtExpiration * 1000))
-                    .signWith(key)
-                    .compact();
-            Cookie result = new Cookie(JWT_TOKEN, token);
-            result.setPath("/");
-            result.setHttpOnly(true);
-
-            return Optional.of(result);
-        } catch (JsonProcessingException eee) {
-            log.error("can't create cookie: ", eee);
-            return Optional.empty();
-        }
+        String token = Jwts.builder()
+                .setSubject(json)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpiration * 1000))
+                .signWith(key)
+                .compact();
+        Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        return cookie;
     }
 
 }

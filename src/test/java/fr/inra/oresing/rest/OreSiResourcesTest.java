@@ -74,7 +74,7 @@ public class OreSiResourcesTest {
         Cookie authCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "poussin")
                 .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_TOKEN);
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         URL resource = getClass().getResource("/data/monsore.yaml");
         try (InputStream in = resource.openStream()) {
@@ -188,7 +188,7 @@ public class OreSiResourcesTest {
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "UnReader")
                 .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_TOKEN);
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         // restitution de data json
         resource = getClass().getResource("/data/compare/export.json");
@@ -249,7 +249,7 @@ public class OreSiResourcesTest {
         Cookie authRestrictedReaderCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "UnPetitReader")
                 .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_TOKEN);
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         // restitution de data csv
         resource = getClass().getResource("/data/compare/exportColumnRestrictedReader.csv");
