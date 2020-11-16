@@ -2,13 +2,12 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.OreSiUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,21 +43,35 @@ public class AuthHelper {
     }
 
     public Optional<OreSiUser> initContext(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (ArrayUtils.isEmpty(cookies)) {
-            if (log.isDebugEnabled()) {
-                log.debug("aucun cookie détecté dans la requête, c'est possible si on est sur login");
-            }
-            String pathInfo = request.getPathInfo();
-            Preconditions.checkState(pathInfo.endsWith("/login"), "tentative d'accéder à " + pathInfo + " sans cookie");
-            return Optional.empty();
-        }
-        Cookie cookie = Stream.of(cookies)
+        Cookie[] cookies = ObjectUtils.firstNonNull(request.getCookies(), new Cookie[]{});
+        Optional<Cookie> cookie = Stream.of(cookies)
                 .filter(aCookie -> JWT_COOKIE_NAME.equals(aCookie.getName()))
                 .findAny()
-                .orElseThrow(() -> new OreSiTechnicalException("cookie attendu dans " + request));
-        OreSiUser user = getRoleFromJwt(cookie);
-        return Optional.of(user);
+                .or(() -> {
+                    if (log.isDebugEnabled()) {
+                        log.debug("aucun cookie d'authenfication détecté dans la requête");
+                    }
+                    String requestURI = request.getRequestURI();
+                    if (requestURI.equals("/api/v1/login")) {
+                        // on laisse passer, c'est un demande d'authentification, il est normal de ne pas trouver de cookie à ce stade
+                    } else if (requestURI.startsWith("/api")) {
+                        throw new IllegalStateException("tentative d'accéder à " + requestURI + " sans fournir de cookie d'authentification");
+                    } else if (requestURI.equals("/")) {
+                        // on laisse passer (?)
+                    } else if (requestURI.contains("swagger")) {
+                        // on laisse passer, il s'agit de consulter la documentation swagger
+                    } else if (requestURI.equals("/error")) {
+                        // on laisse passer, il s'agit d'accéder à la page qui s'affiche en cas d'erreur
+                    } else if (requestURI.startsWith("/static/")) {
+                        // on laisse passer, il s'agit d'accéder au frontend
+                    } else if (requestURI.startsWith("/webjars")) {
+                        // on laisse passer, il s'agit d'accéder au frontend
+                    } else {
+                        throw new IllegalArgumentException("pas de cookie pour accéder à " + requestURI + " (?)");
+                    }
+                    return Optional.empty();
+                });
+        return cookie.map(this::getRoleFromJwt);
     }
 
     public void refreshCookie(HttpServletResponse response, OreSiUser oreSiUser) {
