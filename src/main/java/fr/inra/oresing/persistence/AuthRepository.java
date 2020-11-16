@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.OreSiUserRole;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiEntity;
@@ -19,10 +20,6 @@ import java.util.stream.Stream;
 
 @Component
 public class AuthRepository {
-
-    private static final String ANONYMOUS = "anonymous";
-    private static final String SUPERADMIN = "superadmin";
-    private static final String APPLICATION_CREATOR = "applicationCreator";
 
     private static final String RESET_ROLE = "RESET ROLE";
     private static final String SET_ROLE = "SET LOCAL ROLE \":role\"";
@@ -64,24 +61,17 @@ public class AuthRepository {
      */
     @Transactional
     public void setRoleAdmin() {
-        // faire attention au SQL injection
-        String sql = SET_ROLE.replaceAll(":role", SUPERADMIN);
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
+        setRole(OreSiUserRole.superadmin());
     }
 
     /**
      * Prend le role du user passe en parametre, les requetes suivant ne pourra
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
-     * @param user
      */
     @Transactional
-    public void setRole(OreSiUser user) {
-        String role = ANONYMOUS;
-        if (user != null) {
-            role = user.getId().toString();
-        }
+    public void setRole(OreSiUserRole userRole) {
         // faire attention au SQL injection
-        String sql = SET_ROLE.replaceAll(":role", role);
+        String sql = SET_ROLE.replaceAll(":role", userRole.getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
@@ -113,7 +103,7 @@ public class AuthRepository {
                 query, new MapSqlParameterSource("json", json), UUID.class);
         result.setId(id);
 
-        String sql = CREATE_ROLE.replaceAll(":role", id.toString());
+        String sql = CREATE_ROLE.replaceAll(":role", OreSiUserRole.forUser(result).getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
 
         return result;
@@ -121,7 +111,7 @@ public class AuthRepository {
 
     @Transactional
     public void addUserRightCreateApplication(UUID userId) {
-        addUserInRole(userId.toString(), APPLICATION_CREATOR);
+        addUserInRole(userId.toString(), OreSiUserRole.applicationCreator().getAsSqlRole());
     }
 
     /**

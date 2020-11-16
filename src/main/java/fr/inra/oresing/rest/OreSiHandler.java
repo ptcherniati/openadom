@@ -1,6 +1,6 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.OreSiRequestClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -31,11 +30,13 @@ public class OreSiHandler implements HandlerInterceptor {
      * Si un utilisateur est authentifié, on enregistre son rôle de le contexte
      */
     private void handleAuthentication(HttpServletRequest request, HttpServletResponse response) {
-        Optional<OreSiUser> oreSiUser = authHelper.initContext(request);
-        oreSiUser.ifPresent(authenticatedUser -> {
-            authHelper.refreshCookie(response, authenticatedUser);
-            OreSiContext.get().setUser(authenticatedUser);
-        });
+        OreSiRequestClient requestClient = authHelper.initContext(request);
+        if (requestClient.isAnonymous()) {
+            // rien à faire
+        } else {
+            authHelper.refreshCookie(response, requestClient);
+        }
+        OreSiApiRequestContext.get().setRequestClient(requestClient);
     }
 
     /**
@@ -43,13 +44,13 @@ public class OreSiHandler implements HandlerInterceptor {
      */
     private void handleCorrelation(HttpServletRequest request, HttpServletResponse response) {
         String clientCorrelationId = request.getHeader(HTTP_CORRELATION_ID);
-        OreSiContext.get().setClientCorrelationId(clientCorrelationId);
+        OreSiApiRequestContext.get().setClientCorrelationId(clientCorrelationId);
     }
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
-        log.debug("postHandle for " + OreSiContext.get());
-        OreSiContext.reset();
+        log.debug("postHandle for " + OreSiApiRequestContext.get());
+        OreSiApiRequestContext.reset();
     }
 
 }

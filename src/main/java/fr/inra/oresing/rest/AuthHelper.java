@@ -2,8 +2,8 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.model.OreSiUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -42,65 +41,43 @@ public class AuthHelper {
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public Optional<OreSiUser> initContext(HttpServletRequest request) {
+    public OreSiRequestClient initContext(HttpServletRequest request) {
         Cookie[] cookies = ObjectUtils.firstNonNull(request.getCookies(), new Cookie[]{});
-        Optional<Cookie> cookie = Stream.of(cookies)
+        OreSiRequestClient requestClient = Stream.of(cookies)
                 .filter(aCookie -> JWT_COOKIE_NAME.equals(aCookie.getName()))
                 .findAny()
-                .or(() -> {
-                    if (log.isDebugEnabled()) {
-                        log.debug("aucun cookie d'authenfication détecté dans la requête");
-                    }
-                    String requestURI = request.getRequestURI();
-                    if (requestURI.equals("/api/v1/login")) {
-                        // on laisse passer, c'est un demande d'authentification, il est normal de ne pas trouver de cookie à ce stade
-                    } else if (requestURI.startsWith("/api")) {
-                        throw new IllegalStateException("tentative d'accéder à " + requestURI + " sans fournir de cookie d'authentification");
-                    } else if (requestURI.equals("/")) {
-                        // on laisse passer (?)
-                    } else if (requestURI.contains("swagger")) {
-                        // on laisse passer, il s'agit de consulter la documentation swagger
-                    } else if (requestURI.equals("/error")) {
-                        // on laisse passer, il s'agit d'accéder à la page qui s'affiche en cas d'erreur
-                    } else if (requestURI.startsWith("/static/")) {
-                        // on laisse passer, il s'agit d'accéder au frontend
-                    } else if (requestURI.startsWith("/webjars")) {
-                        // on laisse passer, il s'agit d'accéder au frontend
-                    } else {
-                        throw new IllegalArgumentException("pas de cookie pour accéder à " + requestURI + " (?)");
-                    }
-                    return Optional.empty();
-                });
-        return cookie.map(this::getRoleFromJwt);
+                .map(this::getRequestClientFromJwt)
+                .orElse(OreSiRequestClient.anonymous());
+        return requestClient;
     }
 
-    public void refreshCookie(HttpServletResponse response, OreSiUser oreSiUser) {
-        Cookie cookie = newCookie(oreSiUser);
+    public void refreshCookie(HttpServletResponse response, OreSiRequestClient requestClient) {
+        Cookie cookie = newCookie(requestClient);
         response.addCookie(cookie);
     }
 
-    private OreSiUser getRoleFromJwt(Cookie cookie) {
+    private OreSiRequestClient getRequestClientFromJwt(Cookie cookie) {
         String token = cookie.getValue();
         String json = Jwts.parser()
                 .setSigningKey(key)
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-        OreSiUser oreSiUser;
+        OreSiRequestClient requestClient;
         try {
-            oreSiUser = objectMapper.readValue(json, OreSiUser.class);
+            requestClient = objectMapper.readValue(json, OreSiRequestClient.class);
         } catch (IOException e) {
             throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
         }
-        return oreSiUser;
+        return requestClient;
     }
 
-    private Cookie newCookie(OreSiUser oreSiUser) {
+    private Cookie newCookie(OreSiRequestClient requestClient) {
         String json;
         try {
-            json = objectMapper.writeValueAsString(oreSiUser);
+            json = objectMapper.writeValueAsString(requestClient);
         } catch (JsonProcessingException e) {
-            throw new OreSiTechnicalException("impossible de sérialiser " + oreSiUser + " avec " + objectMapper, e);
+            throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
         String token = Jwts.builder()
                 .setSubject(json)
