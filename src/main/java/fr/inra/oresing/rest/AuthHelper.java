@@ -2,8 +2,9 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.inra.oresing.OreSiRequestClient;
+import fr.inra.oresing.JwtCookieValue;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.OreSiUserRequestClient;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -42,41 +44,42 @@ public class AuthHelper {
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public OreSiRequestClient initContext(HttpServletRequest request) {
+    public Optional<OreSiUserRequestClient> initContext(HttpServletRequest request) {
         Cookie[] cookies = ObjectUtils.firstNonNull(request.getCookies(), new Cookie[]{});
-        OreSiRequestClient requestClient = Stream.of(cookies)
+        return Stream.of(cookies)
                 .filter(aCookie -> JWT_COOKIE_NAME.equals(aCookie.getName()))
                 .findAny()
-                .map(this::getRequestClientFromJwt)
-                .orElse(OreSiRequestClient.anonymous());
-        return requestClient;
+                .map(this::getRequestClientFromJwt);
     }
 
-    public void refreshCookie(HttpServletResponse response, OreSiRequestClient requestClient) {
+    public void refreshCookie(HttpServletResponse response, OreSiUserRequestClient requestClient) {
         Cookie cookie = newCookie(requestClient);
         response.addCookie(cookie);
     }
 
-    private OreSiRequestClient getRequestClientFromJwt(Cookie cookie) {
+    private OreSiUserRequestClient getRequestClientFromJwt(Cookie cookie) {
         String token = cookie.getValue();
         String json = Jwts.parser()
                 .setSigningKey(key)
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-        OreSiRequestClient requestClient;
+        OreSiUserRequestClient requestClient;
         try {
-            requestClient = objectMapper.readValue(json, OreSiRequestClient.class);
+            JwtCookieValue jwtCookieValue = objectMapper.readValue(json, JwtCookieValue.class);
+            requestClient = jwtCookieValue.getRequestClient();
         } catch (IOException e) {
             throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
         }
         return requestClient;
     }
 
-    private Cookie newCookie(OreSiRequestClient requestClient) {
+    private Cookie newCookie(OreSiUserRequestClient requestClient) {
         String json;
         try {
-            json = objectMapper.writeValueAsString(requestClient);
+            JwtCookieValue jwtCookieValue = new JwtCookieValue();
+            jwtCookieValue.setRequestClient(requestClient);
+            json = objectMapper.writeValueAsString(jwtCookieValue);
         } catch (JsonProcessingException e) {
             throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }

@@ -1,6 +1,8 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.OreSiAnonymousRequestClient;
 import fr.inra.oresing.OreSiRequestClient;
+import fr.inra.oresing.OreSiUserRequestClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -30,11 +33,19 @@ public class OreSiHandler implements HandlerInterceptor {
      * Si un utilisateur est authentifié, on enregistre son rôle de le contexte
      */
     private void handleAuthentication(HttpServletRequest request, HttpServletResponse response) {
-        OreSiRequestClient requestClient = authHelper.initContext(request);
-        if (requestClient.isAnonymous()) {
-            // rien à faire
+
+        // l'utiliateur authentifié, le cas échéant
+        Optional<OreSiUserRequestClient> userRequestClient = authHelper.initContext(request);
+
+        // s'il est authentifié, on met à jours son cookie
+        userRequestClient.ifPresent(authenticatedUser -> authHelper.refreshCookie(response, authenticatedUser));
+
+        // quoiqu'il en soit, on doit avoir un role pour accéder à la base
+        OreSiRequestClient requestClient;
+        if (userRequestClient.isPresent()) {
+            requestClient = userRequestClient.get();
         } else {
-            authHelper.refreshCookie(response, requestClient);
+            requestClient = OreSiAnonymousRequestClient.ANONYMOUS;
         }
         OreSiApiRequestContext.get().setRequestClient(requestClient);
     }

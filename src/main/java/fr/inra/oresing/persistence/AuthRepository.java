@@ -1,10 +1,17 @@
 package fr.inra.oresing.persistence;
 
-import fr.inra.oresing.OreSiUserRole;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
+import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
+import fr.inra.oresing.persistence.roles.OreSiRole;
+import fr.inra.oresing.persistence.roles.OreSiRoleManagedByApplication;
+import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
+import fr.inra.oresing.persistence.roles.OreSiRoleToBeGranted;
+import fr.inra.oresing.persistence.roles.OreSiRoleWeCanGrantOtherRolesTo;
+import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -64,7 +71,7 @@ public class AuthRepository {
      */
     @Transactional
     public void setRoleAdmin() {
-        setRole(OreSiUserRole.superadmin());
+        setRole(OreSiRole.superAdmin());
     }
 
     /**
@@ -72,9 +79,9 @@ public class AuthRepository {
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
      */
     @Transactional
-    public void setRole(OreSiUserRole userRole) {
+    public void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
         // faire attention au SQL injection
-        String sql = SET_ROLE.replaceAll(":role", userRole.getAsSqlRole());
+        String sql = SET_ROLE.replaceAll(":role", roleToAccessDatabase.getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
@@ -107,16 +114,20 @@ public class AuthRepository {
         result.setId(id);
 
         OreSiUserRole userRole = getUserRole(result);
-        String sql = CREATE_ROLE.replaceAll(":role", userRole.getAsSqlRole());
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
+        createRole(userRole);
 
         return result;
+    }
+
+    private void createRole(OreSiRoleManagedByApplication roleManagedByApplication) {
+        String sql = CREATE_ROLE.replaceAll(":role", roleManagedByApplication.getAsSqlRole());
+        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
     @Transactional
     public void addUserRightCreateApplication(UUID userId) {
         OreSiUserRole roleToModify = getUserRole(userId);
-        OreSiUserRole roleToAdd = OreSiUserRole.applicationCreator();
+        OreSiApplicationCreatorRole roleToAdd = OreSiRole.applicationCreator();
         addUserInRole(roleToModify, roleToAdd);
     }
 
@@ -129,7 +140,7 @@ public class AuthRepository {
     @Transactional
     public void addUserRight(UUID userId, UUID appId, ApplicationRight right, UUID... excludedReference) {
         OreSiUserRole roleToModify = getUserRole(userId);
-        OreSiUserRole roleToAdd = right.getRole(appId);
+        OreSiRightOnApplicationRole roleToAdd = right.getRole(appId);
         if (right == ApplicationRight.ADMIN) {
             addUserInRoleAsAdmin(roleToModify, roleToAdd);
         } else {
@@ -150,14 +161,14 @@ public class AuthRepository {
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    protected void addUserInRole(OreSiUserRole roleToModify, OreSiUserRole roleToAdd) {
+    protected void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
         String query = ADD_USER_IN_ROLE
                 .replaceAll(":role", roleToAdd.getAsSqlRole())
                 .replaceAll(":user", roleToModify.getAsSqlRole());
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    protected void addUserInRoleAsAdmin(OreSiUserRole roleToModify, OreSiUserRole roleToAdd) {
+    protected void addUserInRoleAsAdmin(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
         String query = ADD_USER_IN_ROLE_AS_ADMIN
                 .replaceAll(":role", roleToAdd.getAsSqlRole())
                 .replaceAll(":user", roleToModify.getAsSqlRole());
@@ -183,9 +194,9 @@ public class AuthRepository {
     }
 
     @Transactional
-    public void removeRole(OreSiUserRole role) {
+    public void removeRole(OreSiRoleManagedByApplication roleManagedByApplication) {
         // faire attention au SQL injection
-        String sql = REMOVE_ROLE.replaceAll(":role", role.getAsSqlRole());
+        String sql = REMOVE_ROLE.replaceAll(":role", roleManagedByApplication.getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
@@ -198,18 +209,17 @@ public class AuthRepository {
 
         // creation de tous les roles pour l'application
         for (ApplicationRight r : ApplicationRight.values()) {
-            OreSiUserRole role = r.getRole(appId);
-            String sql = CREATE_ROLE.replaceAll(":role", role.getAsSqlRole());
-            namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
+            OreSiRightOnApplicationRole role = r.getRole(appId);
+            createRole(role);
             namedParameterJdbcTemplate.execute(r.getAllSql(appId), PreparedStatement::execute);
         }
 
         // ajout du role admin dans tous les autres role pour qu'il puisse ajouter des users dedans
         EnumSet<ApplicationRight> rights = EnumSet.allOf(ApplicationRight.class);
         rights.remove(ApplicationRight.ADMIN);
-        OreSiUserRole roleToModify = ApplicationRight.ADMIN.getRole(appId);
+        OreSiRightOnApplicationRole roleToModify = ApplicationRight.ADMIN.getRole(appId);
         for (ApplicationRight r : rights) {
-            OreSiUserRole roleToAdd = r.getRole(appId);
+            OreSiRightOnApplicationRole roleToAdd = r.getRole(appId);
             addUserInRoleAsAdmin(roleToModify, roleToAdd);
         }
     }
@@ -217,7 +227,7 @@ public class AuthRepository {
     @Transactional
     public void removeRightForApplication(Application app) {
         for (ApplicationRight r : ApplicationRight.values()) {
-            OreSiUserRole role = r.getRole(app.getId());
+            OreSiRightOnApplicationRole role = r.getRole(app.getId());
             removeRole(role);
         }
     }

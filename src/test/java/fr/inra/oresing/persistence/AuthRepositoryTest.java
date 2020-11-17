@@ -1,7 +1,8 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.OreSiUserRole;
+import fr.inra.oresing.persistence.roles.OreSiRole;
+import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.model.OreSiUser;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
@@ -28,7 +29,7 @@ public class AuthRepositoryTest {
 
     @Test
     public void testSetRole() {
-        authRepository.setRole(OreSiUserRole.anonymous());
+        authRepository.setRole(OreSiRole.anonymous());
     }
 
     @Test

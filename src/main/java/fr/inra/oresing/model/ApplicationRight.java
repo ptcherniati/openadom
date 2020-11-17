@@ -1,6 +1,6 @@
 package fr.inra.oresing.model;
 
-import fr.inra.oresing.OreSiUserRole;
+import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,8 +36,8 @@ public enum ApplicationRight {
     private String refAction;
     private String dataAction;
 
-    public OreSiUserRole getRole(UUID appId) {
-        return OreSiUserRole.forRightOnApplication(appId, this);
+    public OreSiRightOnApplicationRole getRole(UUID appId) {
+        return OreSiRightOnApplicationRole.forRightOnApplication(appId, this);
     }
 
     public String getAllSql(UUID appId) {

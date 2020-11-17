@@ -3,7 +3,7 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import fr.inra.oresing.OreSiRequestClient;
-import fr.inra.oresing.OreSiUserRole;
+import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
@@ -68,7 +68,7 @@ public class OreSiService {
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
         try {
             OreSiRequestClient requestClient = OreSiApiRequestContext.get().getRequestClient();
-            OreSiUserRole userRole = requestClient.getRole();
+            OreSiRoleToAccessDatabase userRole = requestClient.getRole();
 
             authRepository.setRole(userRole);
             Application app = new Application();
