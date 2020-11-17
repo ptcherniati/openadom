@@ -1,6 +1,5 @@
 package fr.inra.oresing;
 
-import fr.inra.oresing.model.OreSiUser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -51,16 +50,11 @@ public class OreSiRequestClient {
         return ANONYMOUS_SINGLETON;
     }
 
-    private static OreSiRequestClient forUser(UUID id, OreSiUserRole role) {
+    public static OreSiRequestClient forUser(UUID id, OreSiUserRole role) {
         OreSiRequestClient newOreSiRequestClient = new OreSiRequestClient();
         newOreSiRequestClient.setId(id);
         newOreSiRequestClient.setRole(role);
         return newOreSiRequestClient;
-    }
-
-    public static OreSiRequestClient forUser(OreSiUser oreSiUser) {
-        OreSiUserRole userRole = OreSiUserRole.forUser(oreSiUser);
-        return forUser(oreSiUser.getId(), userRole);
     }
 
     public boolean isAnonymous() {

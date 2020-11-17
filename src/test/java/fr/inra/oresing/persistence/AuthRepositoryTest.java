@@ -39,7 +39,8 @@ public class AuthRepositoryTest {
         Assert.assertEquals(login, user.getLogin());
         user = authRepository.login(login, password);
         Assert.assertEquals(login, user.getLogin());
-        authRepository.setRole(OreSiUserRole.forUser(user));
+        OreSiUserRole userRole = authRepository.getUserRole(user);
+        authRepository.setRole(userRole);
         authRepository.resetRole();
         authRepository.removeUser(user.getId());
     }

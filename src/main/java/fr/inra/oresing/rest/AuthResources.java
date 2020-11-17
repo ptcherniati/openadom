@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiRequestClient;
+import fr.inra.oresing.OreSiUserRole;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,8 @@ public class AuthResources {
     public OreSiUser login(HttpServletResponse response, @RequestParam("login") String login, @RequestParam("password") String password) throws Throwable {
         OreSiUser oreSiUser = authRepository.login(login, password);
         // l'authentification a fonctionné, on change dans le context
-        OreSiRequestClient requestClient = OreSiRequestClient.forUser(oreSiUser);
+        OreSiUserRole userRole = authRepository.getUserRole(oreSiUser);
+        OreSiRequestClient requestClient = OreSiRequestClient.forUser(oreSiUser.getId(), userRole);
         authHelper.refreshCookie(response, requestClient);
         OreSiApiRequestContext.get().setRequestClient(requestClient);
         return oreSiUser;

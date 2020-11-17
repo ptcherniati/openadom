@@ -106,7 +106,8 @@ public class AuthRepository {
                 query, new MapSqlParameterSource("json", json), UUID.class);
         result.setId(id);
 
-        String sql = CREATE_ROLE.replaceAll(":role", OreSiUserRole.forUser(result).getAsSqlRole());
+        OreSiUserRole userRole = getUserRole(result);
+        String sql = CREATE_ROLE.replaceAll(":role", userRole.getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
 
         return result;
@@ -114,8 +115,7 @@ public class AuthRepository {
 
     @Transactional
     public void addUserRightCreateApplication(UUID userId) {
-        OreSiUser user = getOreSiUser(userId);
-        OreSiUserRole roleToModify = OreSiUserRole.forUser(user);
+        OreSiUserRole roleToModify = getUserRole(userId);
         OreSiUserRole roleToAdd = OreSiUserRole.applicationCreator();
         addUserInRole(roleToModify, roleToAdd);
     }
@@ -128,8 +128,7 @@ public class AuthRepository {
      */
     @Transactional
     public void addUserRight(UUID userId, UUID appId, ApplicationRight right, UUID... excludedReference) {
-        OreSiUser user = getOreSiUser(userId);
-        OreSiUserRole roleToModify = OreSiUserRole.forUser(user);
+        OreSiUserRole roleToModify = getUserRole(userId);
         OreSiUserRole roleToAdd = right.getRole(appId);
         if (right == ApplicationRight.ADMIN) {
             addUserInRoleAsAdmin(roleToModify, roleToAdd);
@@ -171,7 +170,8 @@ public class AuthRepository {
         SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
         int count = namedParameterJdbcTemplate.update(DELETE_USER, sqlParameterSource);
         if (count > 0) {
-            removeRole(OreSiUserRole.forUser(oreSiUser));
+            OreSiUserRole userRoleToDelete = getUserRole(oreSiUser);
+            removeRole(userRoleToDelete);
         }
     }
 
@@ -220,5 +220,16 @@ public class AuthRepository {
             OreSiUserRole role = r.getRole(app.getId());
             removeRole(role);
         }
+    }
+
+    @Transactional
+    public OreSiUserRole getUserRole(UUID userId) {
+        OreSiUser user = getOreSiUser(userId);
+        return getUserRole(user);
+    }
+
+    @Transactional
+    public OreSiUserRole getUserRole(OreSiUser user) {
+        return OreSiUserRole.forUser(user);
     }
 }
