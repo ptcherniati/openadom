@@ -114,7 +114,10 @@ public class AuthRepository {
 
     @Transactional
     public void addUserRightCreateApplication(UUID userId) {
-        addUserInRole(userId.toString(), OreSiUserRole.applicationCreator());
+        OreSiUser user = getOreSiUser(userId);
+        OreSiUserRole roleToModify = OreSiUserRole.forUser(user);
+        OreSiUserRole roleToAdd = OreSiUserRole.applicationCreator();
+        addUserInRole(roleToModify, roleToAdd);
     }
 
     /**
@@ -125,46 +128,58 @@ public class AuthRepository {
      */
     @Transactional
     public void addUserRight(UUID userId, UUID appId, ApplicationRight right, UUID... excludedReference) {
+        OreSiUser user = getOreSiUser(userId);
+        OreSiUserRole roleToModify = OreSiUserRole.forUser(user);
+        OreSiUserRole roleToAdd = right.getRole(appId);
         if (right == ApplicationRight.ADMIN) {
-            addUserInRoleAsAdmin(userId.toString(), right.getRole(appId));
+            addUserInRoleAsAdmin(roleToModify, roleToAdd);
         } else {
-            addUserInRole(userId.toString(), right.getRole(appId));
+            addUserInRole(roleToModify, roleToAdd);
         }
         if (right == ApplicationRight.RESTRICTED_READER && excludedReference != null) {
-            createPolicy(userId, excludedReference);
+            createPolicy(roleToModify, excludedReference);
         }
     }
 
-    protected void createPolicy(UUID userId, UUID... excludedReference) {
+    protected void createPolicy(OreSiUserRole userRole, UUID... excludedReference) {
         String uuids = Stream.of(excludedReference)
                 .map(uuid -> "'" + uuid + "'::uuid")
                 .collect(Collectors.joining(","));
         String query = CREATE_SELECT_POLICY
-                .replaceAll(":user", userId.toString())
+                .replaceAll(":user", userRole.getAsSqlRole())
                 .replaceAll(":uuids", uuids);
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    protected void addUserInRole(String userId, OreSiUserRole role) {
-        String query = ADD_USER_IN_ROLE.replaceAll(":role", role.getAsSqlRole()).replaceAll(":user", userId);
+    protected void addUserInRole(OreSiUserRole roleToModify, OreSiUserRole roleToAdd) {
+        String query = ADD_USER_IN_ROLE
+                .replaceAll(":role", roleToAdd.getAsSqlRole())
+                .replaceAll(":user", roleToModify.getAsSqlRole());
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    protected void addUserInRoleAsAdmin(String userId, OreSiUserRole role) {
-        String query = ADD_USER_IN_ROLE_AS_ADMIN.replaceAll(":role", role.getAsSqlRole()).replaceAll(":user", userId);
+    protected void addUserInRoleAsAdmin(OreSiUserRole roleToModify, OreSiUserRole roleToAdd) {
+        String query = ADD_USER_IN_ROLE_AS_ADMIN
+                .replaceAll(":role", roleToAdd.getAsSqlRole())
+                .replaceAll(":user", roleToModify.getAsSqlRole());
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
     @Transactional
     public void removeUser(UUID userId) {
+        OreSiUser oreSiUser = getOreSiUser(userId);
         SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
-        OreSiUser oreSiUser = (OreSiUser) namedParameterJdbcTemplate.query(SELECT_USER, sqlParameterSource, jsonRowMapper).stream()
-                .findAny()
-                .orElseThrow(() -> new IllegalArgumentException("ne peut pas supprimer l'utilisateur " + userId + " car il n'existe pas en base"));
         int count = namedParameterJdbcTemplate.update(DELETE_USER, sqlParameterSource);
         if (count > 0) {
             removeRole(OreSiUserRole.forUser(oreSiUser));
         }
+    }
+
+    private OreSiUser getOreSiUser(UUID userId) {
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
+        return (OreSiUser) namedParameterJdbcTemplate.query(SELECT_USER, sqlParameterSource, jsonRowMapper).stream()
+                    .findAny()
+                    .orElseThrow(() -> new IllegalArgumentException("l'utilisateur " + userId + " n'existe pas en base"));
     }
 
     @Transactional
@@ -192,8 +207,10 @@ public class AuthRepository {
         // ajout du role admin dans tous les autres role pour qu'il puisse ajouter des users dedans
         EnumSet<ApplicationRight> rights = EnumSet.allOf(ApplicationRight.class);
         rights.remove(ApplicationRight.ADMIN);
+        OreSiUserRole roleToModify = ApplicationRight.ADMIN.getRole(appId);
         for (ApplicationRight r : rights) {
-            addUserInRoleAsAdmin(ApplicationRight.ADMIN.getRole(appId).getAsSqlRole(), r.getRole(appId));
+            OreSiUserRole roleToAdd = r.getRole(appId);
+            addUserInRoleAsAdmin(roleToModify, roleToAdd);
         }
     }
 
