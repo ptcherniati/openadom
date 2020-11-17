@@ -8,6 +8,7 @@ import fr.inra.oresing.model.OreSiUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,9 @@ public class AuthRepository {
                     + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, login=EXCLUDED.login, password=EXCLUDED.password"
                     + " RETURNING id";
 
-    private static final String SELECT_USER = "SELECT '" + OreSiUser.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM OreSiUser t WHERE login=:login AND password=:password";
+    private static final String SELECT_USER_FOR_AUTHENTICATION = "SELECT '" + OreSiUser.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM OreSiUser t WHERE login=:login AND password=:password";
+
+    private static final String SELECT_USER = "SELECT '" + OreSiUser.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM OreSiUser t WHERE id=:id";
 
     private static final String DELETE_USER = "DELETE FROM OreSiUser WHERE id=:id";
 
@@ -81,7 +84,7 @@ public class AuthRepository {
      */
     @Transactional
     public OreSiUser login(String login, String password) throws Throwable {
-        String query = SELECT_USER;
+        String query = SELECT_USER_FOR_AUTHENTICATION;
         Optional result = namedParameterJdbcTemplate.query(query,
                 new MapSqlParameterSource("login", login).addValue("password", password), jsonRowMapper).stream().findFirst();
         return (OreSiUser)result.orElseThrow(SecurityException::new);
@@ -111,7 +114,7 @@ public class AuthRepository {
 
     @Transactional
     public void addUserRightCreateApplication(UUID userId) {
-        addUserInRole(userId.toString(), OreSiUserRole.applicationCreator().getAsSqlRole());
+        addUserInRole(userId.toString(), OreSiUserRole.applicationCreator());
     }
 
     /**
@@ -142,28 +145,32 @@ public class AuthRepository {
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    protected void addUserInRole(String userId, String role) {
-        String query = ADD_USER_IN_ROLE.replaceAll(":role", role).replaceAll(":user", userId);
+    protected void addUserInRole(String userId, OreSiUserRole role) {
+        String query = ADD_USER_IN_ROLE.replaceAll(":role", role.getAsSqlRole()).replaceAll(":user", userId);
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    protected void addUserInRoleAsAdmin(String userId, String role) {
-        String query = ADD_USER_IN_ROLE_AS_ADMIN.replaceAll(":role", role).replaceAll(":user", userId);
+    protected void addUserInRoleAsAdmin(String userId, OreSiUserRole role) {
+        String query = ADD_USER_IN_ROLE_AS_ADMIN.replaceAll(":role", role.getAsSqlRole()).replaceAll(":user", userId);
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
     @Transactional
     public void removeUser(UUID userId) {
-        String query = DELETE_USER;
-        int count = namedParameterJdbcTemplate.update(query, new MapSqlParameterSource("id", userId));
-        if (count > 0)
-        removeRole(userId.toString());
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
+        OreSiUser oreSiUser = (OreSiUser) namedParameterJdbcTemplate.query(SELECT_USER, sqlParameterSource, jsonRowMapper).stream()
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("ne peut pas supprimer l'utilisateur " + userId + " car il n'existe pas en base"));
+        int count = namedParameterJdbcTemplate.update(DELETE_USER, sqlParameterSource);
+        if (count > 0) {
+            removeRole(OreSiUserRole.forUser(oreSiUser));
+        }
     }
 
     @Transactional
-    public void removeRole(String role) {
+    public void removeRole(OreSiUserRole role) {
         // faire attention au SQL injection
-        String sql = REMOVE_ROLE.replaceAll(":role", role);
+        String sql = REMOVE_ROLE.replaceAll(":role", role.getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
@@ -176,8 +183,8 @@ public class AuthRepository {
 
         // creation de tous les roles pour l'application
         for (ApplicationRight r : ApplicationRight.values()) {
-            String role = r.getRole(appId);
-            String sql = CREATE_ROLE.replaceAll(":role", role);
+            OreSiUserRole role = r.getRole(appId);
+            String sql = CREATE_ROLE.replaceAll(":role", role.getAsSqlRole());
             namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
             namedParameterJdbcTemplate.execute(r.getAllSql(appId), PreparedStatement::execute);
         }
@@ -186,14 +193,14 @@ public class AuthRepository {
         EnumSet<ApplicationRight> rights = EnumSet.allOf(ApplicationRight.class);
         rights.remove(ApplicationRight.ADMIN);
         for (ApplicationRight r : rights) {
-            addUserInRoleAsAdmin(ApplicationRight.ADMIN.getRole(appId), r.getRole(appId));
+            addUserInRoleAsAdmin(ApplicationRight.ADMIN.getRole(appId).getAsSqlRole(), r.getRole(appId));
         }
     }
 
     @Transactional
     public void removeRightForApplication(Application app) {
         for (ApplicationRight r : ApplicationRight.values()) {
-            String role = r.getRole(app.getId());
+            OreSiUserRole role = r.getRole(app.getId());
             removeRole(role);
         }
     }

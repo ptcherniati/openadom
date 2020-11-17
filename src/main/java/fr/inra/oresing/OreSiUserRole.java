@@ -1,9 +1,12 @@
 package fr.inra.oresing;
 
+import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiUser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -39,6 +42,11 @@ public class OreSiUserRole {
         OreSiUserRole newUserRole = new OreSiUserRole();
         newUserRole.setAsSqlRole(asSqlRole);
         return newUserRole;
+    }
+
+    public static OreSiUserRole forRightOnApplication(UUID applicationId, ApplicationRight applicationRight) {
+        String rightAsSqlRole = applicationId.toString() + "_" + applicationRight.name();
+        return forSqlRole(rightAsSqlRole);
     }
 
     public boolean isAnonymous() {

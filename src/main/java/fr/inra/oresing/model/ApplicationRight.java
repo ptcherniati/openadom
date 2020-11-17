@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.OreSiUserRole;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,8 +36,8 @@ public enum ApplicationRight {
     private String refAction;
     private String dataAction;
 
-    public String getRole(UUID appId) {
-        return appId.toString() + "_" + name();
+    public OreSiUserRole getRole(UUID appId) {
+        return OreSiUserRole.forRightOnApplication(appId, this);
     }
 
     public String getAllSql(UUID appId) {
@@ -53,18 +54,18 @@ public enum ApplicationRight {
         if (!StringUtils.equalsAnyIgnoreCase("SELECT", "DELETE")) {
             query += sqlWithCheck;
         }
-        return String.format(sql, appId, "Application", getRole(appId), appAction, "id");
+        return String.format(sql, appId, "Application", getRole(appId).getAsSqlRole(), appAction, "id");
     }
 
     public String getSqlBinaryFile(UUID appId) {
-        return String.format(sql, appId, "BinaryFile", getRole(appId), fileAction, "application");
+        return String.format(sql, appId, "BinaryFile", getRole(appId).getAsSqlRole(), fileAction, "application");
     }
 
     public String getSqlReferenceValue(UUID appId) {
-        return String.format(sql, appId, "ReferenceValue", getRole(appId), refAction, "application");
+        return String.format(sql, appId, "ReferenceValue", getRole(appId).getAsSqlRole(), refAction, "application");
     }
 
     public String getSqlData(UUID appId) {
-        return String.format(sql, appId, "Data", getRole(appId), dataAction, "application");
+        return String.format(sql, appId, "Data", getRole(appId).getAsSqlRole(), dataAction, "application");
     }
 }
