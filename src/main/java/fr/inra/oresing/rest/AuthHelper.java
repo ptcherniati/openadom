@@ -9,6 +9,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -79,10 +80,11 @@ public class AuthHelper {
         } catch (JsonProcessingException e) {
             throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
+        Date issuedAt = new Date();
         String token = Jwts.builder()
                 .setSubject(json)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpiration * 1000))
+                .setIssuedAt(issuedAt)
+                .setExpiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
                 .signWith(key)
                 .compact();
         Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
