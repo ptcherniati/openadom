@@ -2,7 +2,6 @@ package fr.inra.oresing.model;
 
 import fr.inra.oresing.OreSiUserRole;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
@@ -22,19 +21,17 @@ public enum ApplicationRight {
     READER("SELECT", "SELECT", "SELECT", "SELECT"),
     RESTRICTED_READER("SELECT", "SELECT", "SELECT", "SELECT");
 
-    private static final String sql =
+    private static final String SQL =
             "CREATE POLICY \"%3$s_%2$s\" ON %2$s"+ // nom policy, table
             "    AS PERMISSIVE" +
             "    FOR %4$s" + // action
             "    TO \"%3$s\"" + //  role
             "    USING ( %5$s = '%1$s' )"; // field, appId
-    private static final String sqlWithCheck =
-            "    WITH CHECK ( %5$s = '%1$s' )"; // field, appId
 
-    private String appAction;
-    private String fileAction;
-    private String refAction;
-    private String dataAction;
+    private final String appAction;
+    private final String fileAction;
+    private final String refAction;
+    private final String dataAction;
 
     public OreSiUserRole getRole(UUID appId) {
         return OreSiUserRole.forRightOnApplication(appId, this);
@@ -50,22 +47,18 @@ public enum ApplicationRight {
     }
 
     public String getSqlApplication(UUID appId) {
-        String query = sql;
-        if (!StringUtils.equalsAnyIgnoreCase("SELECT", "DELETE")) {
-            query += sqlWithCheck;
-        }
-        return String.format(sql, appId, "Application", getRole(appId).getAsSqlRole(), appAction, "id");
+        return String.format(SQL, appId, "Application", getRole(appId).getAsSqlRole(), appAction, "id");
     }
 
     public String getSqlBinaryFile(UUID appId) {
-        return String.format(sql, appId, "BinaryFile", getRole(appId).getAsSqlRole(), fileAction, "application");
+        return String.format(SQL, appId, "BinaryFile", getRole(appId).getAsSqlRole(), fileAction, "application");
     }
 
     public String getSqlReferenceValue(UUID appId) {
-        return String.format(sql, appId, "ReferenceValue", getRole(appId).getAsSqlRole(), refAction, "application");
+        return String.format(SQL, appId, "ReferenceValue", getRole(appId).getAsSqlRole(), refAction, "application");
     }
 
     public String getSqlData(UUID appId) {
-        return String.format(sql, appId, "Data", getRole(appId).getAsSqlRole(), dataAction, "application");
+        return String.format(SQL, appId, "Data", getRole(appId).getAsSqlRole(), dataAction, "application");
     }
 }
