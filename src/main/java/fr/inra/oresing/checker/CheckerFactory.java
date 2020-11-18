@@ -1,5 +1,6 @@
 package fr.inra.oresing.checker;
 
+import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -8,7 +9,6 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,15 +27,19 @@ public class CheckerFactory {
         this.checkers = checkers.stream().collect(Collectors.toMap(c -> c.getName().toLowerCase(), c -> c.getClass()));
     }
 
-    public Checker getChecker(Configuration.CheckerDescription desc, UUID applicationId) {
-        Checker result = getChecker(desc.getName());
+    public Checker getChecker(Configuration.ColumnDescription columnDescription, Application application) {
+        if (columnDescription == null || columnDescription.getChecker() == null) {
+            return getChecker("Dummy");
+        }
+        Configuration.CheckerDescription checkerDescription = columnDescription.getChecker();
+        Checker result = getChecker(checkerDescription.getName());
 
         Map<String, String> params = new HashMap<>();
-        if (desc.getParams() != null) {
-            params.putAll(desc.getParams());
+        if (checkerDescription.getParams() != null) {
+            params.putAll(checkerDescription.getParams());
         }
 
-        params.put(Checker.PARAM_APPLICATION, applicationId.toString());
+        params.put(Checker.PARAM_APPLICATION, application.getId().toString());
         result.setParam(params);
 
         return result;

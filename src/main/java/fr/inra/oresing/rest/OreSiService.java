@@ -156,13 +156,6 @@ public class OreSiService {
         return fileId;
     }
 
-    private Checker getChecker(Configuration.ColumnDescription desc, Application app) {
-        if (desc == null || desc.getChecker() == null) {
-            return checkerFactory.getChecker("Dummy");
-        }
-        return checkerFactory.getChecker(desc.getChecker(), app.getId());
-    }
-
     @Transactional
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {
         authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
@@ -175,16 +168,16 @@ public class OreSiService {
         // ajout des contraintes sur les champs de type referenciel
         Map<String, Checker> checkers = new HashMap<>();
         for (Map.Entry<String, Configuration.ColumnDescription> e : dataSet.getReferences().entrySet()) {
-            checkers.put(e.getKey(), getChecker(e.getValue(), app));
+            checkers.put(e.getKey(), checkerFactory.getChecker(e.getValue(), app));
         }
 
         // ajout des contraintes sur les champs de data
         for (Map.Entry<String, Configuration.DataDescription> e : dataSet.getData().entrySet()) {
-            checkers.put(e.getKey(), getChecker(e.getValue(), app));
+            checkers.put(e.getKey(), checkerFactory.getChecker(e.getValue(), app));
             if (e.getValue() != null) {
                 // ajout de contraintes sur les champs de precisions
                 for (Map.Entry<String, Configuration.ColumnDescription> a : e.getValue().getAccuracy().entrySet()) {
-                    checkers.put(a.getKey(), getChecker(a.getValue(), app));
+                    checkers.put(a.getKey(), checkerFactory.getChecker(a.getValue(), app));
                 }
             }
         }
@@ -252,7 +245,7 @@ public class OreSiService {
         Map<String, Checker> checkers = new HashMap<>();
 
         for (Map.Entry<String, Configuration.ColumnDescription> e : dataSet.getReferences().entrySet()) {
-            Checker checker = getChecker(e.getValue(), app);
+            Checker checker = checkerFactory.getChecker(e.getValue(), app);
             if (checker instanceof ReferenceChecker) {
                 checkers.put(e.getKey(), checker);
             }
