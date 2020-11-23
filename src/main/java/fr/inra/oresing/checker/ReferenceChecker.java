@@ -72,4 +72,15 @@ public class ReferenceChecker implements Checker {
         return result;
     }
 
+    public String getRefType() {
+        return refType;
+    }
+
+    public String getColumn() {
+        return column;
+    }
+
+    public boolean isCaseSensitive() {
+        return caseSensitive;
+    }
 }
