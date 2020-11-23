@@ -33,7 +33,6 @@ import javax.servlet.http.Cookie;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -65,6 +64,9 @@ public class OreSiResourcesTest {
     @Autowired
     private AuthRepository authRepository;
 
+    @Autowired
+    private Fixtures fixtures;
+
     @Test
     public void addApplication() throws Exception {
         String appId;
@@ -76,7 +78,7 @@ public class OreSiResourcesTest {
                 .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
-        URL resource = getClass().getResource("/data/monsore.yaml");
+        URL resource = getClass().getResource(fixtures.getApplicationConfigurationResourceName());
         try (InputStream in = resource.openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
@@ -114,24 +116,9 @@ public class OreSiResourcesTest {
         Assert.assertEquals(List.of("especes", "projet", "sites", "themes", "type de fichiers", "type_de_sites", "types_de_donnees_par_themes_de_sites_et_projet", "unites", "valeurs_qualitatives", "variables", "variables_et_unites_par_types_de_donnees"), app2.getReferenceType());
         Assert.assertEquals(List.of("pem"), app2.getDataType());
 
-
-        Map<String, String> referentielFiles = new HashMap<>();
-        referentielFiles.put("especes", "especes.csv");
-        referentielFiles.put("projet", "projet.csv");
-        referentielFiles.put("sites", "sites.csv");
-        referentielFiles.put("themes", "themes.csv");
-        referentielFiles.put("type de fichiers", "type_de_fichiers.csv");
-        referentielFiles.put("type_de_sites", "type_de_sites.csv");
-        referentielFiles.put("types_de_donnees_par_themes_de_sites_et_projet", "types_de_donnees_par_themes_de_sites_et_projet.csv");
-        referentielFiles.put("unites", "unites.csv");
-        referentielFiles.put("valeurs_qualitatives", "valeurs_qualitatives.csv");
-        referentielFiles.put("variables", "variables.csv");
-        referentielFiles.put("variables_et_unites_par_types_de_donnees", "variables_et_unites_par_types_de_donnees.csv");
-
         // Ajout de referentiel
-        for (Map.Entry<String, String> e : referentielFiles.entrySet()) {
-            resource = getClass().getResource("/data/refdatas/" + e.getValue());
-            try (InputStream refStream = resource.openStream()) {
+        for (Map.Entry<String, String> e : fixtures.getReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
@@ -156,7 +143,7 @@ public class OreSiResourcesTest {
         Assert.assertFalse(refs.isEmpty());
 
         // ajout de data
-        resource = getClass().getResource("/data/data-pem.csv");
+        resource = getClass().getResource(fixtures.getPemDataResourceName());
         try (InputStream refStream = resource.openStream()) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
 
