@@ -12,11 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@Transactional
 public class RelationalService {
 
     @Autowired
@@ -51,7 +54,7 @@ public class RelationalService {
     }
 
     private void createViews(Application app) {
-//        authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
+        authRepository.setRoleForClient();
 
         Map<String, String> sqlViewPerDatasetNames = getSqlViewPerDatasetNames(app);
         for (Map.Entry<String, String> entry : sqlViewPerDatasetNames.entrySet()) {
@@ -161,5 +164,10 @@ public class RelationalService {
         }
 
         return sqlViewPerDatasetNames;
+    }
+
+    public List<Map<String, Object>> readView() {
+        authRepository.setRoleForClient();
+        return namedParameterJdbcTemplate.queryForList("select * from pem", Collections.emptyMap());
     }
 }

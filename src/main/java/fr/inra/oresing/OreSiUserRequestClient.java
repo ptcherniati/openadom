@@ -16,4 +16,10 @@ public class OreSiUserRequestClient implements OreSiRequestClient {
 
     private OreSiUserRole role;
 
+    public static OreSiUserRequestClient of(UUID userId, OreSiUserRole userRole) {
+        OreSiUserRequestClient newRequestClient = new OreSiUserRequestClient();
+        newRequestClient.setId(userId);
+        newRequestClient.setRole(userRole);
+        return newRequestClient;
+    }
 }

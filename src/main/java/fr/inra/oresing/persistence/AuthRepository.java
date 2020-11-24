@@ -12,6 +12,7 @@ import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.persistence.roles.OreSiRoleToBeGranted;
 import fr.inra.oresing.persistence.roles.OreSiRoleWeCanGrantOtherRolesTo;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.OreSiApiRequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -67,6 +68,15 @@ public class AuthRepository {
     }
 
     /**
+     * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
+     */
+    @Transactional
+    public void setRoleForClient() {
+        OreSiRoleToAccessDatabase roleToAccessDatabase = OreSiApiRequestContext.get().getRequestClient().getRole();
+        setRole(roleToAccessDatabase);
+    }
+
+    /**
      * Prend le role du superadmin qui a le droit de tout faire
      */
     @Transactional
@@ -79,7 +89,7 @@ public class AuthRepository {
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
      */
     @Transactional
-    public void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
+    void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
         // faire attention au SQL injection
         String sql = SET_ROLE.replaceAll(":role", roleToAccessDatabase.getAsSqlRole());
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);

@@ -30,9 +30,7 @@ public class AuthResources {
         OreSiUser oreSiUser = authRepository.login(login, password);
         // l'authentification a fonctionné, on change dans le context
         OreSiUserRole userRole = authRepository.getUserRole(oreSiUser);
-        OreSiUserRequestClient requestClient = new OreSiUserRequestClient();
-        requestClient.setId(oreSiUser.getId());
-        requestClient.setRole(userRole);
+        OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(oreSiUser.getId(), userRole);
         authHelper.refreshCookie(response, requestClient);
         OreSiApiRequestContext.get().setRequestClient(requestClient);
         return oreSiUser;

@@ -2,11 +2,14 @@ package fr.inra.oresing.rest;
 
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.OreSiRequestClient;
+import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,8 +29,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.servlet.http.Cookie;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,9 +49,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class RelationalServiceTest {
 
     @Autowired
-    private OreSiService oreSiService;
-
-    @Autowired
     private RelationalService relationalService;
 
     @Autowired
@@ -60,15 +60,17 @@ public class RelationalServiceTest {
     @Autowired
     private Fixtures fixtures;
 
-    private UUID userId;
+    private OreSiUserRequestClient applicationCreatorRequestClient;
+
+    private OreSiRequestClient restrictedReaderRequestClient;
 
     @Before
     public void createApplication() throws Exception {
         String aPassword = "xxxxxxxx";
         String aLogin = "poussin";
         OreSiUser user = authRepository.createUser(aLogin, aPassword);
-        userId = user.getId();
-        authRepository.addUserRightCreateApplication(userId);
+        applicationCreatorRequestClient = OreSiUserRequestClient.of(user.getId(), authRepository.getUserRole(user));
+        authRepository.addUserRightCreateApplication(user.getId());
         Cookie authCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", aLogin)
                 .param("password", aPassword))
@@ -117,6 +119,7 @@ public class RelationalServiceTest {
         String refId = JsonPath.parse(response).read("$[0].id");
 
         OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
+        restrictedReaderRequestClient = OreSiUserRequestClient.of(restrictedReader.getId(), authRepository.getUserRole(restrictedReader));
         mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
                 fixtures.getApplicationName(), ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -127,9 +130,16 @@ public class RelationalServiceTest {
 
     @Test
     public void testCreateViews() {
-//        OreSiUserRole userRole = authRepository.getUserRole(userId);
-//        new OreSiUserRequestClient();
-//        authRepository.setRole(OreSiApiRequestContext.get().setRequestClient(OreSiUserRequestClient;userRole));
+        OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+
         relationalService.createViews(fixtures.getApplicationName());
+
+        List<Map<String, Object>> viewContent = relationalService.readView();
+        Assert.assertEquals(306, viewContent.size());
+
+        // TODO brendan 24/11/2020 vérifier qu'on a pas de référentiel LPF
+//        OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+//        List<Map<String, Object>> restrictedViewContent = relationalService.readView();
+
     }
 }

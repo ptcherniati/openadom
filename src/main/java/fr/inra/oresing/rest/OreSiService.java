@@ -15,7 +15,6 @@ import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +52,7 @@ public class OreSiService {
 
     @Transactional
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
-        authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
+        authRepository.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
         binaryFile.setApplication(app.getId());
@@ -67,10 +66,7 @@ public class OreSiService {
     @Transactional
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
         try {
-            OreSiRequestClient requestClient = OreSiApiRequestContext.get().getRequestClient();
-            OreSiRoleToAccessDatabase userRole = requestClient.getRole();
-
-            authRepository.setRole(userRole);
+            authRepository.setRoleForClient();
             Application app = new Application();
             app.setName(name);
             UUID result = repo.store(app);
@@ -80,10 +76,11 @@ public class OreSiService {
             authRepository.createRightForApplication(app);
 
             // on met l'utilisateur courant dans dans le group admin de cette application
+            OreSiRequestClient requestClient = OreSiApiRequestContext.get().getRequestClient();
             authRepository.addUserRight(requestClient.getId(), app.getId(), ApplicationRight.ADMIN);
 
             // on enregistre le fichier sous l'identite de l'utilisateur
-            authRepository.setRole(userRole);
+            authRepository.setRoleForClient();
             changeApplicationConfiguration(app, configurationFile);
 
             return result;
@@ -97,7 +94,7 @@ public class OreSiService {
 
     @Transactional
     public UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
-        authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
+        authRepository.setRoleForClient();
         // on essaie de parser le fichier, si tout ce passe bien, on remplace ou ajoute le fichier
 
         UUID oldConfigId = app.getConfigFile();
@@ -122,7 +119,7 @@ public class OreSiService {
 
     @Transactional
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
-        authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
+        authRepository.setRoleForClient();
         UUID fileId = storeFile(app, file);
 
         Configuration conf = app.getConfiguration();
@@ -158,7 +155,7 @@ public class OreSiService {
 
     @Transactional
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {
-        authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
+        authRepository.setRoleForClient();
         UUID fileId = storeFile(app, file);
 
         // recuperation de la configuration pour ce type de donnees
@@ -236,7 +233,7 @@ public class OreSiService {
 
     @Transactional
     public List<Map<String, String>> findData(Application app, String dataType, MultiValueMap<String, String> params) {
-        authRepository.setRole(OreSiApiRequestContext.get().getRequestClient().getRole());
+        authRepository.setRoleForClient();
         // recuperation de la configuration pour ce type de donnees
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
