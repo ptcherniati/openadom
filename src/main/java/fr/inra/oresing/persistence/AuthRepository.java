@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
+@Transactional
 public class AuthRepository {
 
     private static final String RESET_ROLE = "RESET ROLE";
@@ -61,7 +62,6 @@ public class AuthRepository {
     /**
      * Reprend le role de l'utilisateur utilisé pour la connexion à la base de données
      */
-    @Transactional
     public void resetRole() {
         namedParameterJdbcTemplate.execute(RESET_ROLE,
                 PreparedStatement::execute);
@@ -70,7 +70,6 @@ public class AuthRepository {
     /**
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
      */
-    @Transactional
     public void setRoleForClient() {
         OreSiRoleToAccessDatabase roleToAccessDatabase = OreSiApiRequestContext.get().getRequestClient().getRole();
         setRole(roleToAccessDatabase);
@@ -79,7 +78,6 @@ public class AuthRepository {
     /**
      * Prend le role du superadmin qui a le droit de tout faire
      */
-    @Transactional
     public void setRoleAdmin() {
         setRole(OreSiRole.superAdmin());
     }
@@ -88,7 +86,6 @@ public class AuthRepository {
      * Prend le role du user passe en parametre, les requetes suivant ne pourra
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
      */
-    @Transactional
     void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
         // faire attention au SQL injection
         String sql = SET_ROLE.replaceAll(":role", roleToAccessDatabase.getAsSqlRole());
@@ -99,7 +96,6 @@ public class AuthRepository {
      * verifie que l'utilisateur existe et que son mot de passe est le bon
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
      */
-    @Transactional
     public OreSiUser login(String login, String password) throws Throwable {
         String query = SELECT_USER_FOR_AUTHENTICATION;
         Optional result = namedParameterJdbcTemplate.query(query,
@@ -111,7 +107,6 @@ public class AuthRepository {
      * Permet de créer un nouvel utilisateur
      * @return l'objet OreSiUser qui vient d'être créé
      */
-    @Transactional
     public OreSiUser createUser(String login, String password) {
         OreSiUser result = new OreSiUser();
         result.setLogin(login);
@@ -134,7 +129,6 @@ public class AuthRepository {
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
-    @Transactional
     public void addUserRightCreateApplication(UUID userId) {
         OreSiUserRole roleToModify = getUserRole(userId);
         OreSiApplicationCreatorRole roleToAdd = OreSiRole.applicationCreator();
@@ -147,7 +141,6 @@ public class AuthRepository {
      * @param appId l'application pour lequel on veut lui ajouter des droits
      * @param right le droit qu'on veut lui donner
      */
-    @Transactional
     public void addUserRight(UUID userId, UUID appId, ApplicationRight right, UUID... excludedReference) {
         OreSiUserRole roleToModify = getUserRole(userId);
         OreSiRightOnApplicationRole roleToAdd = right.getRole(appId);
@@ -185,7 +178,6 @@ public class AuthRepository {
         namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
     }
 
-    @Transactional
     public void removeUser(UUID userId) {
         OreSiUser oreSiUser = getOreSiUser(userId);
         SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
@@ -203,7 +195,6 @@ public class AuthRepository {
                     .orElseThrow(() -> new IllegalArgumentException("l'utilisateur " + userId + " n'existe pas en base"));
     }
 
-    @Transactional
     public void removeRole(OreSiRoleManagedByApplication roleManagedByApplication) {
         // faire attention au SQL injection
         String sql = REMOVE_ROLE.replaceAll(":role", roleManagedByApplication.getAsSqlRole());
@@ -213,7 +204,6 @@ public class AuthRepository {
     /**
      * @return role name used for this application
      */
-    @Transactional
     public void createRightForApplication(Application app) {
         UUID appId = app.getId();
 
@@ -234,7 +224,6 @@ public class AuthRepository {
         }
     }
 
-    @Transactional
     public void removeRightForApplication(Application app) {
         for (ApplicationRight r : ApplicationRight.values()) {
             OreSiRightOnApplicationRole role = r.getRole(app.getId());
@@ -242,13 +231,11 @@ public class AuthRepository {
         }
     }
 
-    @Transactional
     public OreSiUserRole getUserRole(UUID userId) {
         OreSiUser user = getOreSiUser(userId);
         return getUserRole(user);
     }
 
-    @Transactional
     public OreSiUserRole getUserRole(OreSiUser user) {
         return OreSiUserRole.forUser(user);
     }

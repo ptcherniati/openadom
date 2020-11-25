@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@Transactional
 public class OreSiService {
 
     @Autowired
@@ -50,7 +51,6 @@ public class OreSiService {
     @Autowired
     private CheckerFactory checkerFactory;
 
-    @Transactional
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
         authRepository.setRoleForClient();
         // creation du fichier
@@ -63,7 +63,6 @@ public class OreSiService {
         return result;
     }
 
-    @Transactional
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
         try {
             authRepository.setRoleForClient();
@@ -92,7 +91,6 @@ public class OreSiService {
         }
     }
 
-    @Transactional
     public UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
         authRepository.setRoleForClient();
         // on essaie de parser le fichier, si tout ce passe bien, on remplace ou ajoute le fichier
@@ -117,7 +115,6 @@ public class OreSiService {
         return confId;
     }
 
-    @Transactional
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
         authRepository.setRoleForClient();
         UUID fileId = storeFile(app, file);
@@ -153,7 +150,6 @@ public class OreSiService {
         return fileId;
     }
 
-    @Transactional
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {
         authRepository.setRoleForClient();
         UUID fileId = storeFile(app, file);
@@ -231,7 +227,6 @@ public class OreSiService {
         return fileId;
     }
 
-    @Transactional
     public List<Map<String, String>> findData(Application app, String dataType, MultiValueMap<String, String> params) {
         authRepository.setRoleForClient();
         // recuperation de la configuration pour ce type de donnees
