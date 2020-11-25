@@ -58,6 +58,9 @@ public class RelationalServiceTest {
     @Autowired
     private Fixtures fixtures;
 
+    @Autowired
+    private OreSiApiRequestContext request;
+
     private OreSiUserRequestClient applicationCreatorRequestClient;
 
     private OreSiRequestClient restrictedReaderRequestClient;
@@ -128,7 +131,7 @@ public class RelationalServiceTest {
 
     @Test
     public void testCreateViews() {
-        OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+        request.setRequestClient(applicationCreatorRequestClient);
 
         relationalService.createViews(fixtures.getApplicationName());
 

@@ -4,28 +4,22 @@ import fr.inra.oresing.OreSiRequestClient;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 @Getter
 @Setter
 @ToString
+@Component
+@RequestScope
 public class OreSiApiRequestContext {
-
-    private static final InheritableThreadLocal<OreSiApiRequestContext> context = new InheritableThreadLocal<>();
 
     private OreSiRequestClient requestClient;
 
     private String clientCorrelationId;
 
-    public static void reset() {
-        context.set(null);
-    }
-
-    public static OreSiApiRequestContext get() {
-        OreSiApiRequestContext oreSiContext = context.get();
-        if (oreSiContext == null) {
-            oreSiContext = new OreSiApiRequestContext();
-            context.set(oreSiContext);
-        }
-        return oreSiContext;
+    public void reset() {
+        setRequestClient(null);
+        setClientCorrelationId(null);
     }
 }

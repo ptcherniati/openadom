@@ -25,6 +25,9 @@ public class AuthResources {
     @Autowired
     protected AuthRepository authRepository;
 
+    @Autowired
+    private OreSiApiRequestContext request;
+
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public OreSiUser login(HttpServletResponse response, @RequestParam("login") String login, @RequestParam("password") String password) throws Throwable {
         OreSiUser oreSiUser = authRepository.login(login, password);
@@ -32,13 +35,13 @@ public class AuthResources {
         OreSiUserRole userRole = authRepository.getUserRole(oreSiUser);
         OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(oreSiUser.getId(), userRole);
         authHelper.refreshCookie(response, requestClient);
-        OreSiApiRequestContext.get().setRequestClient(requestClient);
+        request.setRequestClient(requestClient);
         return oreSiUser;
     }
 
     @DeleteMapping(value = "/logout")
     public ResponseEntity logout() {
-        OreSiApiRequestContext.reset();
+        request.reset();
         return ResponseEntity.ok().build();
     }
 

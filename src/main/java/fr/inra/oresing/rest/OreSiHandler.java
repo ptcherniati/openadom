@@ -22,6 +22,9 @@ public class OreSiHandler implements HandlerInterceptor {
     @Autowired
     private AuthHelper authHelper;
 
+    @Autowired
+    private OreSiApiRequestContext requestContext;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         handleCorrelation(request, response);
@@ -47,7 +50,7 @@ public class OreSiHandler implements HandlerInterceptor {
         } else {
             requestClient = OreSiAnonymousRequestClient.ANONYMOUS;
         }
-        OreSiApiRequestContext.get().setRequestClient(requestClient);
+        requestContext.setRequestClient(requestClient);
     }
 
     /**
@@ -55,13 +58,13 @@ public class OreSiHandler implements HandlerInterceptor {
      */
     private void handleCorrelation(HttpServletRequest request, HttpServletResponse response) {
         String clientCorrelationId = request.getHeader(HTTP_CORRELATION_ID);
-        OreSiApiRequestContext.get().setClientCorrelationId(clientCorrelationId);
+        requestContext.setClientCorrelationId(clientCorrelationId);
     }
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
-        log.debug("postHandle for " + OreSiApiRequestContext.get());
-        OreSiApiRequestContext.reset();
+        log.debug("postHandle for " + requestContext);
+        requestContext.reset();
     }
 
 }
