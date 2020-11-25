@@ -1,9 +1,9 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import fr.inra.oresing.model.OreSiUser;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.Assert;
@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.SpringBootDependencyInjectionTestExecutionListener;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -20,7 +19,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(classes = OreSiNg.class)
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class,
         FlywayTestExecutionListener.class})
-@Rollback
 @FlywayTest
 public class AuthRepositoryTest {
 
