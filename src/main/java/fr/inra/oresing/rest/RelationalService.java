@@ -72,54 +72,82 @@ public class RelationalService {
         UUID appId = application.getId();
 
         for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
+            String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
 
-            Set<String> selectClauseElements = new LinkedHashSet<>();
-            Set<String> fromClauseJoinElements = new LinkedHashSet<>();
+            {
+                Set<String> selectClauseElements = new LinkedHashSet<>();
+                Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
-            String dataTableName = SqlSchema.main().data().getSqlIdentifier();
-            for (Map.Entry<String, Configuration.ColumnDescription> referenceEntry : datasetDescription.getReferences().entrySet()) {
-                Configuration.ColumnDescription columnDescription = referenceEntry.getValue();
-                Checker checker = checkerFactory.getChecker(columnDescription, application);
-                if (checker instanceof ReferenceChecker) {
-                    String referenceType = ((ReferenceChecker) checker).getRefType();  // especes
-                    String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
+                String dataTableName = SqlSchema.main().data().getSqlIdentifier();
+                for (Map.Entry<String, Configuration.ColumnDescription> referenceEntry : datasetDescription.getReferences().entrySet()) {
+                    Configuration.ColumnDescription columnDescription = referenceEntry.getValue();
+                    Checker checker = checkerFactory.getChecker(columnDescription, application);
+                    if (checker instanceof ReferenceChecker) {
+                        String referenceType = ((ReferenceChecker) checker).getRefType();  // especes
+                        String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
-                    // left outer join "sites" on data.refsLinkedTo::uuid[] @> ARRAY["sites"."sites_id"::uuid]
-                    String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                    selectClauseElements.add(quotedViewName);
-                    fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
+                        String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
+                        selectClauseElements.add(quotedViewName + "." + quotedViewIdColumnName);
+                        fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
+                    }
                 }
+
+                String quotedDatasetName = quoteSqlIdentifier(datasetName);
+                selectClauseElements.add(quotedDatasetName + ".*");
+                String selectClause = "select " + String.join(", ", selectClauseElements);
+
+                String dataColumnsAsSchema = datasetDescription.getData().keySet().stream()
+                        .map(this::quoteSqlIdentifier)
+                        .map(quotedColumnName -> quotedColumnName + " text")
+                        .collect(Collectors.joining(", ", "(", ")"));
+
+                String schemaDeclaration = quotedDatasetName + dataColumnsAsSchema;
+
+                String fromClause = "from " + dataTableName + " "
+                        + Joiner.on(" ").join(fromClauseJoinElements)
+                        + ", jsonb_to_record(data.dataValues) as " + schemaDeclaration;
+
+                String whereClause = "where data.application = '" + appId + "'::uuid and data.dataType = '" + datasetName + "'";
+
+                String viewSql = String.join("\n", selectClause, fromClause, whereClause);
+
+                SqlTable view = sqlSchema.forDataset(datasetName);
+                createView(view, viewSql);
             }
 
-            String datasetName = entry.getKey();
-            String quotedDatasetName = quoteSqlIdentifier(datasetName);
-            selectClauseElements.add(quotedDatasetName);
-            String selectClause = "select " + selectClauseElements.stream()
-                    .map(quotedTableName -> quotedTableName + ".*")
-                    .collect(Collectors.joining(", "));
+            {
+                Set<String> selectClauseElements = new LinkedHashSet<>();
+                Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
-            Set<String> dataColumns = new LinkedHashSet<>();
-            dataColumns.addAll(datasetDescription.getData().keySet());
-            dataColumns.addAll(datasetDescription.getReferences().keySet());
-            String dataColumnsAsSchema = dataColumns.stream()
-                    .map(this::quoteSqlIdentifier)
-                    .map(quotedColumnName -> quotedColumnName + " text")
-                    .collect(Collectors.joining(", ", "(", ")"));
+                String dataTableName = sqlSchema.forDataset(datasetName).getSqlIdentifier();
+                for (Map.Entry<String, Configuration.ColumnDescription> referenceEntry : datasetDescription.getReferences().entrySet()) {
+                    Configuration.ColumnDescription columnDescription = referenceEntry.getValue();
+                    Checker checker = checkerFactory.getChecker(columnDescription, application);
+                    if (checker instanceof ReferenceChecker) {
+                        String referenceType = ((ReferenceChecker) checker).getRefType();  // especes
+                        String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
-            // exemple "pem"("date" text, "site" text, "espece" text, "projet" text, "plateforme" text, "Nombre d'individus" text, "Couleur des individus" text)
-            String schemaDeclaration = quotedDatasetName + dataColumnsAsSchema;
+                        String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
+                        selectClauseElements.add(quotedViewName + ".*");
+                        fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + "." + quotedViewIdColumnName + " = " + quotedViewName + "." + quotedViewIdColumnName);
+                    }
+                }
 
-            String fromClause = "from " + dataTableName + " "
-                    + Joiner.on(" ").join(fromClauseJoinElements)
-                    + ", jsonb_to_record(data.dataValues) as " + schemaDeclaration;
+                datasetDescription.getData().keySet().stream()
+                        .map(column -> sqlSchema.forDataset(datasetName).getSqlIdentifier() + "." + quoteSqlIdentifier(column))
+                        .forEach(selectClauseElements::add);
 
-            String whereClause = "where data.application = '" + appId + "'::uuid";
+                String selectClause = "select " + String.join(", ", selectClauseElements);
 
-            String viewSql = String.join("\n", selectClause, fromClause, whereClause);
+                String fromClause = "from " + sqlSchema.forDataset(datasetName).getSqlIdentifier() + " "
+                        + Joiner.on(" ").join(fromClauseJoinElements);
 
-            SqlTable view = sqlSchema.forDataset(datasetName);
-            createView(view, viewSql);
+                String viewSql = String.join("\n", selectClause, fromClause);
+
+                SqlTable view = sqlSchema.forDenormalizedDataset(datasetName);
+                createView(view, viewSql);
+            }
         }
     }
 
