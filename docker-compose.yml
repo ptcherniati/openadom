@@ -9,3 +9,20 @@ services:
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=xxxxxxxx
       - POSTGRES_DB=ore-si
+    networks:
+      - default
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "8083:80"
+    volumes:
+      - ./docker-pg-servers.json:/pgadmin4/servers.json
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "si-ore-developpement@list.forge.codelutin.com"
+      PGADMIN_DEFAULT_PASSWORD: "test"
+    networks:
+      - default
+    depends_on:
+      - postgresql
+    links:
+      - postgresql:pg

@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Instance PG locale",
+            "Group": "Peu importe",
+            "Port": 5432,
+            "Username": "dbuser",
+            "Host": "pg",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres"
+        }
+    }
+}
