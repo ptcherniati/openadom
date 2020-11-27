@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Joiner;
-import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
@@ -74,23 +73,21 @@ public class RelationalService {
         for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
             String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
+            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetDescription);
 
             {
                 Set<String> selectClauseElements = new LinkedHashSet<>();
                 Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
                 String dataTableName = SqlSchema.main().data().getSqlIdentifier();
-                for (Map.Entry<String, Configuration.ColumnDescription> referenceEntry : datasetDescription.getReferences().entrySet()) {
-                    Configuration.ColumnDescription columnDescription = referenceEntry.getValue();
-                    Checker checker = checkerFactory.getChecker(columnDescription, application);
-                    if (checker instanceof ReferenceChecker) {
-                        String referenceType = ((ReferenceChecker) checker).getRefType();  // especes
-                        String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
-                        String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                        selectClauseElements.add(quotedViewName + "." + quotedViewIdColumnName);
-                        fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
-                    }
+                for (ReferenceChecker referenceChecker : referenceCheckers) {
+                    String referenceType = referenceChecker.getRefType();  // especes
+                    String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
+
+                    String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
+                    selectClauseElements.add(quotedViewName + "." + quotedViewIdColumnName);
+                    fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
                 }
 
                 String quotedDatasetName = quoteSqlIdentifier(datasetName);
@@ -121,21 +118,18 @@ public class RelationalService {
                 Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
                 String dataTableName = sqlSchema.forDataset(datasetName).getSqlIdentifier();
-                for (Map.Entry<String, Configuration.ColumnDescription> referenceEntry : datasetDescription.getReferences().entrySet()) {
-                    Configuration.ColumnDescription columnDescription = referenceEntry.getValue();
-                    Checker checker = checkerFactory.getChecker(columnDescription, application);
-                    if (checker instanceof ReferenceChecker) {
-                        String referenceType = ((ReferenceChecker) checker).getRefType();  // especes
-                        String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
-                        String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                        selectClauseElements.add(quotedViewName + ".*");
-                        fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + "." + quotedViewIdColumnName + " = " + quotedViewName + "." + quotedViewIdColumnName);
-                    }
+                for (ReferenceChecker referenceChecker : referenceCheckers) {
+                    String referenceType = referenceChecker.getRefType();  // especes
+                    String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
+
+                    String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
+                    selectClauseElements.add(quotedViewName + ".*");
+                    fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + "." + quotedViewIdColumnName + " = " + quotedViewName + "." + quotedViewIdColumnName);
                 }
 
                 datasetDescription.getData().keySet().stream()
-                        .map(column -> sqlSchema.forDataset(datasetName).getSqlIdentifier() + "." + quoteSqlIdentifier(column))
+                        .map(column -> dataTableName + "." + quoteSqlIdentifier(column))
                         .forEach(selectClauseElements::add);
 
                 String selectClause = "select " + String.join(", ", selectClauseElements);
