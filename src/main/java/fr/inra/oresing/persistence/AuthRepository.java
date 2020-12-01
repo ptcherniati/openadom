@@ -35,10 +35,7 @@ public class AuthRepository {
     private static final String SET_ROLE = "SET LOCAL ROLE \":role\"";
     private static final String CREATE_ROLE = "CREATE ROLE \":role\"";
     private static final String REMOVE_ROLE = "DROP ROLE \":role\"";
-    private static final String CREATE_SELECT_POLICY =
-            "CREATE POLICY \":user_Data_select\" ON Data AS RESTRICTIVE" +
-            "            FOR SELECT TO \":user\"" +
-            "            USING ( NOT refsLinkedTo && ARRAY[:uuids] );";
+
     private static final String ADD_USER_IN_ROLE = "GRANT \":role\" TO \":user\"";
     private static final String ADD_USER_IN_ROLE_AS_ADMIN = "GRANT \":role\" TO \":user\" WITH ADMIN OPTION";
 
@@ -158,10 +155,27 @@ public class AuthRepository {
         String uuids = Stream.of(excludedReference)
                 .map(uuid -> "'" + uuid + "'::uuid")
                 .collect(Collectors.joining(","));
-        String query = CREATE_SELECT_POLICY
-                .replaceAll(":user", userRole.getAsSqlRole())
-                .replaceAll(":uuids", uuids);
-        namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
+        String usingExpression = "NOT refsLinkedTo && ARRAY[:uuids]".replaceAll(":uuids", uuids);
+        SqlPolicy sqlPolicy = new SqlPolicy(
+                SqlSchema.main().data(),
+                SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
+                SqlPolicy.Statement.SELECT,
+                userRole,
+                usingExpression);
+        createPolicy(sqlPolicy);
+    }
+
+    private void createPolicy(SqlPolicy sqlPolicy) {
+        String createPolicySql = String.format(
+                "CREATE POLICY %s ON %s AS %s FOR %s TO %s USING (%s)",
+                sqlPolicy.getSqlIdentifier(),
+                sqlPolicy.getTable().getSqlIdentifier(),
+                sqlPolicy.getPermissiveOrRestrictive().name(),
+                sqlPolicy.getStatement().name(),
+                sqlPolicy.getRole().getSqlIdentifier(),
+                sqlPolicy.getUsingExpression()
+        );
+        namedParameterJdbcTemplate.execute(createPolicySql, PreparedStatement::execute);
     }
 
     protected void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {

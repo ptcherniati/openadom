@@ -87,7 +87,6 @@ public class RelationalService {
                 namedParameterJdbcTemplate.execute("ALTER TABLE " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
                 for (ApplicationRight applicationRight : ApplicationRight.values()) {
                     OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(app.getId());
-                    applicationRight.getAllSql()
                     namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
                     namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
                 }
