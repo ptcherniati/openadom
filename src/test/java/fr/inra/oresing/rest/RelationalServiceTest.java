@@ -132,7 +132,7 @@ public class RelationalServiceTest {
 
         relationalService.createViews(fixtures.getApplicationName());
 
-        List<Map<String, Object>> viewContent = relationalService.readView();
+        List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
         Assert.assertEquals(306, viewContent.size());
 
         // TODO brendan 24/11/2020 vérifier qu'on a pas de référentiel LPF

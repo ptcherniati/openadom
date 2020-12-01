@@ -13,6 +13,7 @@ import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
 import fr.inra.oresing.persistence.SqlTable;
 import fr.inra.oresing.persistence.WithSqlIdentifier;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,16 +60,35 @@ public class RelationalService {
     }
 
     private void createViews(Application app) {
-        authRepository.setRoleForClient();
+        authRepository.resetRole();
 
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app);
-        OreSiRightOnApplicationRole schemaOwner = ApplicationRight.ADMIN.getRole(app.getId());
-        createSchema(sqlSchema, schemaOwner);
-        createViewsForReferences(sqlSchema, app);
-        createViewsForDatasets(sqlSchema, app);
+        OreSiRightOnApplicationRole owner = ApplicationRight.ADMIN.getRole(app.getId());
+        String schemaName = sqlSchema.getSqlIdentifier();
+        namedParameterJdbcTemplate.execute("DROP SCHEMA " + schemaName, PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("CREATE SCHEMA " + schemaName + " AUTHORIZATION " + owner.getSqlIdentifier(), PreparedStatement::execute);
+
+        List<ViewCreationCommand> views = new LinkedList<>();
+        views.addAll(createViewsForReferences(sqlSchema, app));
+        views.addAll(createViewsForDatasets(sqlSchema, app));
+        for (ViewCreationCommand viewCreationCommand : views) {
+            String viewFqn = viewCreationCommand.getView().getSqlIdentifier();
+            String viewSql = viewCreationCommand.getSql();
+            namedParameterJdbcTemplate.execute("CREATE VIEW " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
+            namedParameterJdbcTemplate.execute("ALTER VIEW " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
+        }
+
+        for (ApplicationRight applicationRight : ApplicationRight.values()) {
+            OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(app.getId());
+            namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+            namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName +  " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+        }
     }
 
-    private void createViewsForDatasets(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
+    private List<ViewCreationCommand> createViewsForDatasets(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
+
+        List<ViewCreationCommand> views = new LinkedList<>();
+
         UUID appId = application.getId();
 
         for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
@@ -110,7 +131,7 @@ public class RelationalService {
                 String viewSql = String.join("\n", selectClause, fromClause, whereClause);
 
                 SqlTable view = sqlSchema.forDataset(datasetName);
-                createView(view, viewSql);
+                views.add(new ViewCreationCommand(view, viewSql));
             }
 
             {
@@ -140,28 +161,15 @@ public class RelationalService {
                 String viewSql = String.join("\n", selectClause, fromClause);
 
                 SqlTable view = sqlSchema.forDenormalizedDataset(datasetName);
-                createView(view, viewSql);
+                views.add(new ViewCreationCommand(view, viewSql));
             }
         }
+        return views;
     }
 
-    private void createView(SqlTable view, String viewSql) {
-        String viewFqn = view.getSqlIdentifier();
-        String createStatementSql = "CREATE VIEW " + viewFqn + " AS (" + viewSql + ")";
-        namedParameterJdbcTemplate.execute(createStatementSql, Collections.emptyMap(), PreparedStatement::execute);
-    }
-
-    private void createSchema(SqlSchemaForRelationalViewsForApplication sqlSchema, OreSiRightOnApplicationRole ownerRole) {
-        authRepository.resetRole();
-        String schemaName = sqlSchema.getSqlIdentifier();
-        String owner = ownerRole.getSqlIdentifier();
-        namedParameterJdbcTemplate.execute("DROP SCHEMA " + schemaName, PreparedStatement::execute);
-        namedParameterJdbcTemplate.execute("CREATE SCHEMA " + schemaName + " AUTHORIZATION " + owner, PreparedStatement::execute);
-        authRepository.setRoleForClient();
-    }
-
-    private void createViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
+    private List<ViewCreationCommand> createViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
         UUID appId = app.getId();
+        List<ViewCreationCommand> views = new LinkedList<>();
         for (Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
             String referenceType = entry.getKey();
             Set<String> columns = entry.getValue().getColumns().keySet();
@@ -184,8 +192,9 @@ public class RelationalService {
                 log.trace("pour le référentiel " + referenceType + ", la requête pour avoir un vue relationnelle des données JSON est " + referenceView);
             }
 
-            createView(sqlSchema.forReferenceType(referenceType), referenceView);
+            views.add(new ViewCreationCommand(sqlSchema.forReferenceType(referenceType), referenceView));
         }
+        return views;
     }
 
     @Deprecated
@@ -193,8 +202,20 @@ public class RelationalService {
         return WithSqlIdentifier.escapeSqlIdentifier(sqlIdentifier);
     }
 
-    public List<Map<String, Object>> readView() {
+    public List<Map<String, Object>> readView(String appName, String dataset) {
         authRepository.setRoleForClient();
-        return namedParameterJdbcTemplate.queryForList("select * from monsore.pem", Collections.emptyMap());
+        Application application = repo.findApplication(appName)
+                .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appName));
+        SqlTable view = SqlSchema.forRelationalViewsOf(application).forDataset(dataset);
+        return namedParameterJdbcTemplate.queryForList("select * from " + view.getSqlIdentifier(), Collections.emptyMap());
+    }
+
+    @Value
+    private static class ViewCreationCommand {
+
+        SqlTable view;
+
+        String sql;
+
     }
 }
