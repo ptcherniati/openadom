@@ -47,25 +47,25 @@ public class RelationalService {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public void createViews(String appName) {
+    public void createViews(String appName, ViewStrategy viewStrategy) {
         Application app = repo.findApplication(appName)
                 .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appName));
-        createViews(app);
+        createViews(app, viewStrategy);
     }
 
-    public void createViews(UUID appId) {
+    public void createViews(UUID appId, ViewStrategy viewStrategy) {
         Application app = repo.findApplication(appId.toString())
                 .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appId));
-        createViews(app);
+        createViews(app, viewStrategy);
     }
 
-    private void createViews(Application app) {
+    private void createViews(Application app, ViewStrategy viewStrategy) {
         authRepository.resetRole();
 
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app);
         OreSiRightOnApplicationRole owner = ApplicationRight.ADMIN.getRole(app.getId());
         String schemaName = sqlSchema.getSqlIdentifier();
-        namedParameterJdbcTemplate.execute("DROP SCHEMA " + schemaName, PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE", PreparedStatement::execute);
         namedParameterJdbcTemplate.execute("CREATE SCHEMA " + schemaName + " AUTHORIZATION " + owner.getSqlIdentifier(), PreparedStatement::execute);
 
         List<ViewCreationCommand> views = new LinkedList<>();
@@ -74,14 +74,26 @@ public class RelationalService {
         for (ViewCreationCommand viewCreationCommand : views) {
             String viewFqn = viewCreationCommand.getView().getSqlIdentifier();
             String viewSql = viewCreationCommand.getSql();
-            namedParameterJdbcTemplate.execute("CREATE VIEW " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
-            namedParameterJdbcTemplate.execute("ALTER VIEW " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
-        }
-
-        for (ApplicationRight applicationRight : ApplicationRight.values()) {
-            OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(app.getId());
-            namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-            namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName +  " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+            if (viewStrategy == ViewStrategy.VIEW) {
+                namedParameterJdbcTemplate.execute("CREATE VIEW " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
+                namedParameterJdbcTemplate.execute("ALTER VIEW " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
+                for (ApplicationRight applicationRight : ApplicationRight.values()) {
+                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(app.getId());
+                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+                }
+            } else if (viewStrategy == ViewStrategy.TABLE) {
+                namedParameterJdbcTemplate.execute("CREATE TABLE " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
+                namedParameterJdbcTemplate.execute("ALTER TABLE " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
+                for (ApplicationRight applicationRight : ApplicationRight.values()) {
+                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(app.getId());
+                    applicationRight.getAllSql()
+                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+                }
+            } else {
+                throw new IllegalArgumentException("stratégie " + viewStrategy);
+            }
         }
     }
 
@@ -217,5 +229,9 @@ public class RelationalService {
 
         String sql;
 
+    }
+
+    enum ViewStrategy {
+        VIEW, TABLE
     }
 }

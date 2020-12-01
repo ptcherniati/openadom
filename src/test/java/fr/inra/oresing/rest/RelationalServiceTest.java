@@ -129,15 +129,33 @@ public class RelationalServiceTest {
     @Test
     public void testCreateViews() {
         OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+        relationalService.createViews(fixtures.getApplicationName(), RelationalService.ViewStrategy.VIEW);
 
-        relationalService.createViews(fixtures.getApplicationName());
+        {
+            OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+            List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
+            Assert.assertEquals(306, viewContent.size());
+        }
 
-        List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
-        Assert.assertEquals(306, viewContent.size());
+        {
+            OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+            List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
+            Assert.assertEquals(306, restrictedViewContent.size());
+        }
 
-        // TODO brendan 24/11/2020 vérifier qu'on a pas de référentiel LPF
-//        OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
-//        List<Map<String, Object>> restrictedViewContent = relationalService.readView();
+        OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+        relationalService.createViews(fixtures.getApplicationName(), RelationalService.ViewStrategy.TABLE);
 
+        {
+            OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+            List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
+            Assert.assertEquals(306, viewContent.size());
+        }
+
+        {
+            OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+            List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
+            Assert.assertEquals(306, restrictedViewContent.size());
+        }
     }
 }
