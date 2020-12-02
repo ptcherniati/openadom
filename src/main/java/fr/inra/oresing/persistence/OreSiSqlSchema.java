@@ -15,6 +15,14 @@ public enum OreSiSqlSchema implements SqlSchema {
         return new SqlTable(MAIN, "referenceValue");
     }
 
+    public SqlTable application() {
+        return new SqlTable(MAIN, "application");
+    }
+
+    public SqlTable binaryFile() {
+        return new SqlTable(MAIN, "binaryFile");
+    }
+
     @Override
     public String getSqlIdentifier() {
         return "public";

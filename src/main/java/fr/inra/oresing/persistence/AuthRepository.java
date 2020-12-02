@@ -22,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -221,11 +223,27 @@ public class AuthRepository {
     public void createRightForApplication(Application app) {
         UUID appId = app.getId();
 
+        Map<ApplicationRight, Map<SqlTable, SqlPolicy.Statement>> statementPerTablePerRights = Map.of(
+                ApplicationRight.ADMIN, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.ALL, SqlSchema.main().binaryFile(), SqlPolicy.Statement.ALL, SqlSchema.main().referenceValue(), SqlPolicy.Statement.ALL, SqlSchema.main().data(), SqlPolicy.Statement.ALL),
+                ApplicationRight.WRITER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.ALL, SqlSchema.main().referenceValue(), SqlPolicy.Statement.ALL, SqlSchema.main().data(), SqlPolicy.Statement.ALL),
+                ApplicationRight.DATA_WRITER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.SELECT, SqlSchema.main().referenceValue(), SqlPolicy.Statement.SELECT, SqlSchema.main().data(), SqlPolicy.Statement.ALL),
+                ApplicationRight.READER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.SELECT, SqlSchema.main().referenceValue(), SqlPolicy.Statement.SELECT, SqlSchema.main().data(), SqlPolicy.Statement.SELECT),
+                ApplicationRight.RESTRICTED_READER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.SELECT, SqlSchema.main().referenceValue(), SqlPolicy.Statement.SELECT, SqlSchema.main().data(), SqlPolicy.Statement.SELECT)
+        );
+
         // creation de tous les roles pour l'application
-        for (ApplicationRight r : ApplicationRight.values()) {
+        for (Map.Entry<ApplicationRight, Map<SqlTable, SqlPolicy.Statement>> entry : statementPerTablePerRights.entrySet()) {
+            ApplicationRight r = entry.getKey();
+            Map<SqlTable, SqlPolicy.Statement> policyStatementPerTables = entry.getValue();
             OreSiRightOnApplicationRole role = r.getRole(appId);
             createRole(role);
-            namedParameterJdbcTemplate.execute(r.getAllSql(appId), PreparedStatement::execute);
+            SqlPolicy.PermissiveOrRestrictive permissive = SqlPolicy.PermissiveOrRestrictive.PERMISSIVE;
+            Set.of(
+                    new SqlPolicy(SqlSchema.main().application(), permissive, policyStatementPerTables.get(SqlSchema.main().application()), role, "id = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().binaryFile(), permissive, policyStatementPerTables.get(SqlSchema.main().binaryFile()), role, "application = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().referenceValue(), permissive, policyStatementPerTables.get(SqlSchema.main().referenceValue()), role, "application = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().data(), permissive, policyStatementPerTables.get(SqlSchema.main().data()), role, "application = '" + appId.toString() + "'")
+            ).forEach(this::createPolicy);
         }
 
         // ajout du role admin dans tous les autres role pour qu'il puisse ajouter des users dedans

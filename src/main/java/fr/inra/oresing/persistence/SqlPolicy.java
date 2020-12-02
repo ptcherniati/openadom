@@ -1,11 +1,9 @@
 package fr.inra.oresing.persistence;
 
-import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import lombok.Builder;
+import fr.inra.oresing.persistence.roles.OreSiRole;
 import lombok.Value;
 
 @Value
-@Builder
 public class SqlPolicy implements WithSqlIdentifier {
 
     SqlTable table;
@@ -14,7 +12,7 @@ public class SqlPolicy implements WithSqlIdentifier {
 
     Statement statement;
 
-    OreSiUserRole role;
+    OreSiRole role;
 
     String usingExpression;
 
@@ -23,11 +21,11 @@ public class SqlPolicy implements WithSqlIdentifier {
         return WithSqlIdentifier.escapeSqlIdentifier(String.join("_", role.getAsSqlRole(), table.getName(), statement.name()));
     }
 
-    enum PermissiveOrRestrictive {
+    public enum PermissiveOrRestrictive {
         PERMISSIVE, RESTRICTIVE
     }
 
-    enum Statement {
-        SELECT
+    public enum Statement {
+        ALL, SELECT, INSERT, UPDATE, DELETE
     }
 }
