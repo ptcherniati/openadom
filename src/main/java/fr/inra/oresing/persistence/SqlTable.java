@@ -1,18 +1,13 @@
 package fr.inra.oresing.persistence;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Value;
 
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
-@Getter
-@ToString
+@Value
 public class SqlTable {
 
-    private final SqlSchema schema;
+    SqlSchema schema;
 
-    private final String name;
+    String name;
 
     public String getSqlIdentifier() {
         return getSchema().getSqlIdentifier() + "." + WithSqlIdentifier.escapeSqlIdentifier(getName());

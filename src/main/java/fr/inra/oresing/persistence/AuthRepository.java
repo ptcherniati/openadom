@@ -167,7 +167,7 @@ public class AuthRepository {
         createPolicy(sqlPolicy);
     }
 
-    private void createPolicy(SqlPolicy sqlPolicy) {
+    public void createPolicy(SqlPolicy sqlPolicy) {
         String createPolicySql = String.format(
                 "CREATE POLICY %s ON %s AS %s FOR %s TO %s USING (%s)",
                 sqlPolicy.getSqlIdentifier(),
@@ -237,13 +237,13 @@ public class AuthRepository {
             Map<SqlTable, SqlPolicy.Statement> policyStatementPerTables = entry.getValue();
             OreSiRightOnApplicationRole role = r.getRole(appId);
             createRole(role);
-            SqlPolicy.PermissiveOrRestrictive permissive = SqlPolicy.PermissiveOrRestrictive.PERMISSIVE;
-            Set.of(
-                    new SqlPolicy(SqlSchema.main().application(), permissive, policyStatementPerTables.get(SqlSchema.main().application()), role, "id = '" + appId.toString() + "'"),
-                    new SqlPolicy(SqlSchema.main().binaryFile(), permissive, policyStatementPerTables.get(SqlSchema.main().binaryFile()), role, "application = '" + appId.toString() + "'"),
-                    new SqlPolicy(SqlSchema.main().referenceValue(), permissive, policyStatementPerTables.get(SqlSchema.main().referenceValue()), role, "application = '" + appId.toString() + "'"),
-                    new SqlPolicy(SqlSchema.main().data(), permissive, policyStatementPerTables.get(SqlSchema.main().data()), role, "application = '" + appId.toString() + "'")
-            ).forEach(this::createPolicy);
+            Set<SqlPolicy> sqlPolicies = Set.of(
+                    new SqlPolicy(SqlSchema.main().application(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().application()), role, "id = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().binaryFile(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().binaryFile()), role, "application = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().referenceValue(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().referenceValue()), role, "application = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().data(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().data()), role, "application = '" + appId.toString() + "'")
+            );
+            sqlPolicies.forEach(this::createPolicy);
         }
 
         // ajout du role admin dans tous les autres role pour qu'il puisse ajouter des users dedans

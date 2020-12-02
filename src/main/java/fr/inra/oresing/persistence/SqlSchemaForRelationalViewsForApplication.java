@@ -1,22 +1,20 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import fr.inra.oresing.rest.ViewStrategy;
+import lombok.Value;
 import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
-@Getter
-@ToString
+@Value
 public class SqlSchemaForRelationalViewsForApplication implements SqlSchema {
 
-    private final Application application;
+    Application application;
+
+    ViewStrategy viewStrategy;
 
     @Override
     public String getSqlIdentifier() {
-        return WithSqlIdentifier.escapeSqlIdentifier(application.getName());
+        return WithSqlIdentifier.escapeSqlIdentifier(String.join("_", application.getName(), viewStrategy.name()));
     }
 
     public SqlTable forDataset(String datasetName) {

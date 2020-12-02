@@ -30,6 +30,7 @@ import javax.servlet.http.Cookie;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,6 +62,8 @@ public class RelationalServiceTest {
     private OreSiUserRequestClient applicationCreatorRequestClient;
 
     private OreSiRequestClient restrictedReaderRequestClient;
+
+    private String excludedReferenceId;
 
     @Before
     public void createApplication() throws Exception {
@@ -114,7 +117,7 @@ public class RelationalServiceTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
-        String refId = JsonPath.parse(response).read("$[0].id");
+        excludedReferenceId = JsonPath.parse(response).read("$[0].id");
 
         OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
         restrictedReaderRequestClient = OreSiUserRequestClient.of(restrictedReader.getId(), authRepository.getUserRole(restrictedReader));
@@ -122,40 +125,72 @@ public class RelationalServiceTest {
                 fixtures.getApplicationName(), ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authCookie)
-                .content("[\"" + refId + "\"]"))
+                .content("[\"" + excludedReferenceId + "\"]"))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void testCreateViews() {
-        OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
-        relationalService.createViews(fixtures.getApplicationName(), RelationalService.ViewStrategy.VIEW);
+        try {
+            relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
+        } catch (Exception e) {
+            // ignore
+        }
 
-        {
+        try {
             OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
-            List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
-            Assert.assertEquals(306, viewContent.size());
+            relationalService.createViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
+
+            {
+                OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+                List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.VIEW);
+                Assert.assertEquals(306, viewContent.size());
+            }
+
+            {
+                OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+                List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.VIEW);
+                Assert.assertEquals(306, restrictedViewContent.size());
+            }
+        } finally {
+            try {
+                relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
+            } catch (Exception e) {
+                // ignore
+            }
         }
+    }
 
-        {
-            OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
-            List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
-            Assert.assertEquals(306, restrictedViewContent.size());
+    @Test
+    public void testCreateViewsAsTables() {
+        try {
+            relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
+        } catch (Exception e) {
+            // ignore
         }
-
-        OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
-        relationalService.createViews(fixtures.getApplicationName(), RelationalService.ViewStrategy.TABLE);
-
-        {
+        try {
             OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
-            List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
-            Assert.assertEquals(306, viewContent.size());
-        }
+            relationalService.createViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
 
-        {
-            OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
-            List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem");
-            Assert.assertEquals(306, restrictedViewContent.size());
+            {
+                OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+                List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.TABLE);
+                Assert.assertEquals(306, viewContent.size());
+            }
+
+            relationalService.addRestrictedUser(restrictedReaderRequestClient.getRole(), Set.of(excludedReferenceId), fixtures.getApplicationName(), ViewStrategy.TABLE);
+
+            {
+                OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+                List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.TABLE);
+                Assert.assertEquals(261, restrictedViewContent.size());
+            }
+        } finally {
+            try {
+                relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
+            } catch (Exception e) {
+                // ignore
+            }
         }
     }
 }
