@@ -1,7 +1,3 @@
-include:
-  - project: 'codelutin/ci'
-    file: '/ci.yml'
-
 # Pour l'utilisation de testcontainers
 # https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
 services:
