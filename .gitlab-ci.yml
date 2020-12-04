@@ -13,7 +13,7 @@ stages:
   - build
 
 maven:
-  image: registry.nuiton.org/codelutin/dockerfiles:maven-release-mvn3-6-3-openjdk11
+  image: maven:3.6.3-openjdk-11
   stage: build
   script: mvn --batch-mode clean package
   tags:
