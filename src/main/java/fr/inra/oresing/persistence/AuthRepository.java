@@ -22,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,10 +37,7 @@ public class AuthRepository {
     private static final String SET_ROLE = "SET LOCAL ROLE \":role\"";
     private static final String CREATE_ROLE = "CREATE ROLE \":role\"";
     private static final String REMOVE_ROLE = "DROP ROLE \":role\"";
-    private static final String CREATE_SELECT_POLICY =
-            "CREATE POLICY \":user_Data_select\" ON Data AS RESTRICTIVE" +
-            "            FOR SELECT TO \":user\"" +
-            "            USING ( NOT refsLinkedTo && ARRAY[:uuids] );";
+
     private static final String ADD_USER_IN_ROLE = "GRANT \":role\" TO \":user\"";
     private static final String ADD_USER_IN_ROLE_AS_ADMIN = "GRANT \":role\" TO \":user\" WITH ADMIN OPTION";
 
@@ -158,10 +157,27 @@ public class AuthRepository {
         String uuids = Stream.of(excludedReference)
                 .map(uuid -> "'" + uuid + "'::uuid")
                 .collect(Collectors.joining(","));
-        String query = CREATE_SELECT_POLICY
-                .replaceAll(":user", userRole.getAsSqlRole())
-                .replaceAll(":uuids", uuids);
-        namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
+        String usingExpression = "NOT refsLinkedTo && ARRAY[:uuids]".replaceAll(":uuids", uuids);
+        SqlPolicy sqlPolicy = new SqlPolicy(
+                SqlSchema.main().data(),
+                SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
+                SqlPolicy.Statement.SELECT,
+                userRole,
+                usingExpression);
+        createPolicy(sqlPolicy);
+    }
+
+    public void createPolicy(SqlPolicy sqlPolicy) {
+        String createPolicySql = String.format(
+                "CREATE POLICY %s ON %s AS %s FOR %s TO %s USING (%s)",
+                sqlPolicy.getSqlIdentifier(),
+                sqlPolicy.getTable().getSqlIdentifier(),
+                sqlPolicy.getPermissiveOrRestrictive().name(),
+                sqlPolicy.getStatement().name(),
+                sqlPolicy.getRole().getSqlIdentifier(),
+                sqlPolicy.getUsingExpression()
+        );
+        namedParameterJdbcTemplate.execute(createPolicySql, PreparedStatement::execute);
     }
 
     protected void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
@@ -207,11 +223,27 @@ public class AuthRepository {
     public void createRightForApplication(Application app) {
         UUID appId = app.getId();
 
+        Map<ApplicationRight, Map<SqlTable, SqlPolicy.Statement>> statementPerTablePerRights = Map.of(
+                ApplicationRight.ADMIN, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.ALL, SqlSchema.main().binaryFile(), SqlPolicy.Statement.ALL, SqlSchema.main().referenceValue(), SqlPolicy.Statement.ALL, SqlSchema.main().data(), SqlPolicy.Statement.ALL),
+                ApplicationRight.WRITER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.ALL, SqlSchema.main().referenceValue(), SqlPolicy.Statement.ALL, SqlSchema.main().data(), SqlPolicy.Statement.ALL),
+                ApplicationRight.DATA_WRITER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.SELECT, SqlSchema.main().referenceValue(), SqlPolicy.Statement.SELECT, SqlSchema.main().data(), SqlPolicy.Statement.ALL),
+                ApplicationRight.READER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.SELECT, SqlSchema.main().referenceValue(), SqlPolicy.Statement.SELECT, SqlSchema.main().data(), SqlPolicy.Statement.SELECT),
+                ApplicationRight.RESTRICTED_READER, Map.of(SqlSchema.main().application(), SqlPolicy.Statement.SELECT, SqlSchema.main().binaryFile(), SqlPolicy.Statement.SELECT, SqlSchema.main().referenceValue(), SqlPolicy.Statement.SELECT, SqlSchema.main().data(), SqlPolicy.Statement.SELECT)
+        );
+
         // creation de tous les roles pour l'application
-        for (ApplicationRight r : ApplicationRight.values()) {
+        for (Map.Entry<ApplicationRight, Map<SqlTable, SqlPolicy.Statement>> entry : statementPerTablePerRights.entrySet()) {
+            ApplicationRight r = entry.getKey();
+            Map<SqlTable, SqlPolicy.Statement> policyStatementPerTables = entry.getValue();
             OreSiRightOnApplicationRole role = r.getRole(appId);
             createRole(role);
-            namedParameterJdbcTemplate.execute(r.getAllSql(appId), PreparedStatement::execute);
+            Set<SqlPolicy> sqlPolicies = Set.of(
+                    new SqlPolicy(SqlSchema.main().application(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().application()), role, "id = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().binaryFile(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().binaryFile()), role, "application = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().referenceValue(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().referenceValue()), role, "application = '" + appId.toString() + "'"),
+                    new SqlPolicy(SqlSchema.main().data(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, policyStatementPerTables.get(SqlSchema.main().data()), role, "application = '" + appId.toString() + "'")
+            );
+            sqlPolicies.forEach(this::createPolicy);
         }
 
         // ajout du role admin dans tous les autres role pour qu'il puisse ajouter des users dedans

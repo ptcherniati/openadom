@@ -7,8 +7,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -51,4 +53,15 @@ public class CheckerFactory {
         return result;
     }
 
+    public Set<ReferenceChecker> getReferenceCheckers(Application application, Configuration.DatasetDescription datasetDescription) {
+        Set<ReferenceChecker> referenceCheckers = new LinkedHashSet<>();
+        for (Configuration.ColumnDescription columnDescription : datasetDescription.getReferences().values()) {
+            Checker checker = getChecker(columnDescription, application);
+            if (checker instanceof ReferenceChecker) {
+                ReferenceChecker referenceChecker = (ReferenceChecker) checker;
+                referenceCheckers.add(referenceChecker);
+            }
+        }
+        return referenceCheckers;
+    }
 }

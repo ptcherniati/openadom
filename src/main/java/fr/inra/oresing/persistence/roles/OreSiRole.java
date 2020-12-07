@@ -1,6 +1,8 @@
 package fr.inra.oresing.persistence.roles;
 
-public interface OreSiRole {
+import fr.inra.oresing.persistence.WithSqlIdentifier;
+
+public interface OreSiRole extends WithSqlIdentifier {
 
     static OreSiAnonymousRole anonymous() {
         return OreSiAnonymousRole.ANONYMOUS;
@@ -15,4 +17,9 @@ public interface OreSiRole {
     }
 
     String getAsSqlRole();
+
+    @Override
+    default String getSqlIdentifier() {
+        return WithSqlIdentifier.escapeSqlIdentifier(getAsSqlRole());
+    }
 }
