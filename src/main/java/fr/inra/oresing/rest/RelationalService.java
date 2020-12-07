@@ -102,6 +102,8 @@ public class RelationalService {
                     namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
                     namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
                 }
+
+                // TODO reste à poser des contraintes de clés étrangères et des indexes
             } else {
                 throw new IllegalArgumentException("stratégie " + viewStrategy);
             }
