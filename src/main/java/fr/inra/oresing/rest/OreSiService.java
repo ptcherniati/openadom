@@ -51,6 +51,9 @@ public class OreSiService {
     @Autowired
     private CheckerFactory checkerFactory;
 
+    @Autowired
+    private OreSiApiRequestContext request;
+
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
         authRepository.setRoleForClient();
         // creation du fichier
@@ -75,7 +78,7 @@ public class OreSiService {
             authRepository.createRightForApplication(app);
 
             // on met l'utilisateur courant dans dans le group admin de cette application
-            OreSiRequestClient requestClient = OreSiApiRequestContext.get().getRequestClient();
+            OreSiRequestClient requestClient = request.getRequestClient();
             authRepository.addUserRight(requestClient.getId(), app.getId(), ApplicationRight.ADMIN);
 
             // on enregistre le fichier sous l'identite de l'utilisateur

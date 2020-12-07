@@ -61,6 +61,9 @@ public class RelationalServiceTest {
     @Autowired
     private Fixtures fixtures;
 
+    @Autowired
+    private OreSiApiRequestContext request;
+
     private OreSiUserRequestClient applicationCreatorRequestClient;
 
     private OreSiRequestClient restrictedReaderRequestClient;
@@ -140,17 +143,17 @@ public class RelationalServiceTest {
         }
 
         try {
-            OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+            request.setRequestClient(applicationCreatorRequestClient);
             relationalService.createViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
 
             {
-                OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+                request.setRequestClient(applicationCreatorRequestClient);
                 List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.VIEW);
                 Assert.assertEquals(306, viewContent.size());
             }
 
             {
-                OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+                request.setRequestClient(restrictedReaderRequestClient);
                 List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.VIEW);
                 Assert.assertEquals(306, restrictedViewContent.size());
             }
@@ -171,11 +174,11 @@ public class RelationalServiceTest {
             // ignore
         }
         try {
-            OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+            request.setRequestClient(applicationCreatorRequestClient);
             relationalService.createViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
 
             {
-                OreSiApiRequestContext.get().setRequestClient(applicationCreatorRequestClient);
+                request.setRequestClient(applicationCreatorRequestClient);
                 List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.TABLE);
                 Assert.assertEquals(306, viewContent.size());
             }
@@ -183,7 +186,7 @@ public class RelationalServiceTest {
             relationalService.addRestrictedUser(restrictedReaderRequestClient.getRole(), Set.of(excludedReferenceId), fixtures.getApplicationName(), ViewStrategy.TABLE);
 
             {
-                OreSiApiRequestContext.get().setRequestClient(restrictedReaderRequestClient);
+                request.setRequestClient(restrictedReaderRequestClient);
                 List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.TABLE);
                 Assert.assertEquals(261, restrictedViewContent.size());
             }

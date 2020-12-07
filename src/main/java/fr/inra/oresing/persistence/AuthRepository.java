@@ -58,6 +58,9 @@ public class AuthRepository {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    @Autowired
+    private OreSiApiRequestContext request;
+
     /**
      * Reprend le role de l'utilisateur utilisé pour la connexion à la base de données
      */
@@ -70,7 +73,7 @@ public class AuthRepository {
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
      */
     public void setRoleForClient() {
-        OreSiRoleToAccessDatabase roleToAccessDatabase = OreSiApiRequestContext.get().getRequestClient().getRole();
+        OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClient().getRole();
         setRole(roleToAccessDatabase);
     }
 
