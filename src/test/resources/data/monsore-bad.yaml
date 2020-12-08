@@ -132,3 +132,4 @@ dataset:
       Nombre d'individus:
         checker:
           name: Integer
+    timeScopeColumn: date

@@ -16,9 +16,12 @@ public class DateChecker implements Checker {
 
     private DateParser dateParser;
 
+    private String pattern;
+
     @Override
     public void setParam(Map<String, String> params) {
-        dateParser = FastDateFormat.getInstance(params.get(PARAM_PATTERN));
+        pattern = params.get(PARAM_PATTERN);
+        dateParser = FastDateFormat.getInstance(pattern);
     }
 
     @Override
@@ -30,5 +33,9 @@ public class DateChecker implements Checker {
             throw new CheckerException(String.format("Can't parse date '%s' with pattern '%s'", value, dateParser.getPattern()), eee);
         }
 
+    }
+
+    public String getPattern() {
+        return pattern;
     }
 }

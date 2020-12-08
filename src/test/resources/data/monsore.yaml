@@ -137,3 +137,4 @@ dataset:
           name: Integer
           params:
             default: 0
+    timeScopeColumn: date

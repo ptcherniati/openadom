@@ -1,6 +1,5 @@
 package fr.inra.oresing.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,6 +42,7 @@ public class Configuration {
         private char quote = '"';
         private LinkedHashMap<String, ColumnDescription> references;
         private LinkedHashMap<String, DataDescription> data;
+        private String timeScopeColumn;
     }
 
     @Getter

@@ -2,10 +2,13 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Sets;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
+import fr.inra.oresing.checker.DateChecker;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ApplicationRight;
@@ -35,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -114,9 +118,38 @@ public class OreSiService {
 
         app.setConfiguration(conf);
 
+        checkConfiguration(app);
+
         repo.store(app);
 
         return confId;
+    }
+
+    private void checkConfiguration(Application app) {
+        Configuration conf = app.getConfiguration();
+        for (Map.Entry<String, Configuration.DatasetDescription> entry : conf.getDataset().entrySet()) {
+            String datasetName = entry.getKey();
+            Configuration.DatasetDescription datasetDescription = entry.getValue();
+            String timeScopeColumn = datasetDescription.getTimeScopeColumn();
+            if (StringUtils.isBlank(timeScopeColumn)) {
+                throw new IllegalArgumentException("il faut indiquer la colonne dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
+            }
+            Set<String> knownColumns = Sets.union(datasetDescription.getData().keySet(), datasetDescription.getReferences().keySet()).immutableCopy();
+            if (!knownColumns.contains(timeScopeColumn)) {
+                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetName);
+            }
+            Configuration.ColumnDescription timeScopeColumnDescription = MoreObjects.firstNonNull(
+                    datasetDescription.getData().get(timeScopeColumn),
+                    datasetDescription.getReferences().get(timeScopeColumn)
+            );
+            Checker timeScopeColumnChecker = checkerFactory.getChecker(timeScopeColumnDescription, app);
+            if (timeScopeColumnChecker instanceof DateChecker) {
+                String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
+                if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
+                    throw new IllegalArgumentException("ne sait pas traiter le format " + pattern + ". Les formats acceptés sont " + LocalDateTimeRange.getKnownPatterns());
+                }
+            }
+        }
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
@@ -189,6 +222,9 @@ public class OreSiService {
 
         List<String> error = new LinkedList<>();
 
+        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getTimeScopeColumn());
+        String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
             for (int i = 0; i < dataSet.getLineToSkip(); i++) {
                 reader.readLine();
@@ -214,13 +250,16 @@ public class OreSiService {
                     }
                 });
 
+                String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
+                LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
+
                 Data e = new Data();
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedTo);
                 e.setDataValues(values);
-                e.setTimeScope(LocalDateTimeRange.always());
+                e.setTimeScope(timeScope);
                 repo.store(e);
             });
         }
