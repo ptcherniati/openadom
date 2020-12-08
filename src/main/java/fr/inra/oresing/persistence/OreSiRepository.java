@@ -40,8 +40,8 @@ public class OreSiRepository {
                     + " RETURNING id";
 
     private static final String DATA_UPSERT =
-            "INSERT INTO Data (id, application, dataType, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, refsLinkedTo, dataValues, binaryFile FROM json_populate_record(NULL::Data, :json::json) "
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
+            "INSERT INTO Data (id, application, dataType, timeScope, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, timeScope, refsLinkedTo, dataValues, binaryFile FROM json_populate_record(NULL::Data, :json::json) "
+                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, timeScope=EXCLUDED.timeScope, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
                     + " RETURNING id";
 
     private static final String SELECT_APPLICATION =

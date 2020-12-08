@@ -92,6 +92,7 @@ create table Data (
     updateDate DateOrNow,
     application EntityRef REFERENCES Application(id),
     dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
+    timeScope tsrange NOT NULL,
     refsLinkedTo ListEntityRef CHECK(refs_check(application, refsLinkedTo)),
     dataValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)

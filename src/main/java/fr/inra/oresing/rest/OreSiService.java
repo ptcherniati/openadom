@@ -12,6 +12,7 @@ import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
+import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -219,6 +220,7 @@ public class OreSiService {
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedTo);
                 e.setDataValues(values);
+                e.setTimeScope(LocalDateTimeRange.always());
                 repo.store(e);
             });
         }
