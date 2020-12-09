@@ -1,3 +1,5 @@
+image: docker:19.03.12
+
 # Pour l'utilisation de testcontainers
 # https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
 services:
@@ -8,6 +10,11 @@ variables:
   DOCKER_HOST: "tcp://docker:2375"
   # Improve performance with overlayfs.
   DOCKER_DRIVER: overlay2
+  # Depuis la version 18.09, l'image docker dind génère un certificat TLS, et pour le bon fonctionnement des services, ce certificat doit être partagé par l'ensemble de ces derniers !
+  # Le lien ci-dessous explique la procédure à suivre au niveau des runners afin de partager le certificat généré sous forme d'un volume :
+  # https://about.gitlab.com/releases/2019/07/31/docker-in-docker-with-docker-19-dot-03/
+  # comme on a pas accès à la configuration des runners, on désactive explicitement la génération d'un certificat TLS
+  DOCKER_TLS_CERTDIR: ""
 
 stages:
   - build
