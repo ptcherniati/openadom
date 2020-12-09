@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/v1")
-public class AuthResources {
+public class AuthenticationResources {
 
     @Autowired
     private AuthHelper authHelper;
