@@ -63,15 +63,39 @@ public class LocalDateTimeRange {
     }
 
     public static LocalDateTimeRange forYear(Year year) {
-        LocalDateTime lowerBound = year.atMonthDay(MonthDay.of(Month.JANUARY, 1)).atTime(0, 0, 0);
-        LocalDateTime upperBound = year.atMonthDay(MonthDay.of(Month.DECEMBER, 31)).atTime(0, 0, 0);
-        return new LocalDateTimeRange(Range.closedOpen(lowerBound, upperBound));
+        LocalDate fromDay = year.atMonthDay(MonthDay.of(Month.JANUARY, 1));
+        LocalDate toDay = year.atMonthDay(MonthDay.of(Month.DECEMBER, 31));
+        return between(fromDay, toDay);
     }
 
     public static LocalDateTimeRange forDay(LocalDate localDate) {
-        LocalDateTime lowerBound = localDate.atTime(0, 0, 0);
-        LocalDateTime upperBound = localDate.plusDays(1).atTime(0, 0, 0);
+        return between(localDate, localDate.plusDays(1));
+    }
+
+    public static LocalDateTimeRange between(LocalDate fromDay, LocalDate toDay) {
+        LocalDateTime lowerBound = fromDay.atTime(0, 0, 0);
+        LocalDateTime upperBound = toDay.atTime(0, 0, 0);
+        return between(lowerBound, upperBound);
+    }
+
+    public static LocalDateTimeRange since(LocalDate since) {
+        return since(since.atTime(0, 0, 0));
+    }
+
+    public static LocalDateTimeRange until(LocalDate until) {
+        return until(until.atTime(0, 0, 0));
+    }
+
+    public static LocalDateTimeRange between(LocalDateTime lowerBound, LocalDateTime upperBound) {
         return new LocalDateTimeRange(Range.closedOpen(lowerBound, upperBound));
+    }
+
+    public static LocalDateTimeRange since(LocalDateTime since) {
+        return new LocalDateTimeRange(Range.atLeast(since));
+    }
+
+    public static LocalDateTimeRange until(LocalDateTime until) {
+        return new LocalDateTimeRange(Range.lessThan(until));
     }
 
     public static LocalDateTimeRange parseSql(String sqlExpression) {
