@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest;
 
-import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
@@ -165,13 +164,7 @@ public class AuthorizationResourcesTest {
                     .cookie(authReaderCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-//                    .andExpect(MockMvcResultMatchers.jsonPath("$[*].date"))
-//                    .andExpect(jsonPath("$[*].date").value()))
                     .andReturn().getResponse().getContentAsString();
-            net.minidev.json.JSONArray dates = JsonPath.parse(json).read("$[*].date");
-
-
-            //Assert.assertEquals(Set.of("02/01/1984"), dates);
 
             System.out.println(json);
         }
