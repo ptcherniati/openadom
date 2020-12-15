@@ -1,8 +1,11 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.Application;
 import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -25,10 +28,15 @@ public class AuthorizationResources {
     @Autowired
     private OreSiApiRequestContext request;
 
+    @Autowired
+    private OreSiRepository repository;
+
     @PostMapping(value = "/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public OreSiAuthorization addAuthorization(@RequestBody OreSiAuthorization authorization) {
         OreSiUserRole userRole = authRepository.getUserRole(authorization.getUserId());
         Set<String> usingExpressionElements = new LinkedHashSet<>();
+
+        Application application = repository.findApplication(authorization.getApplicationNameOrId()).orElseThrow();
 
         authorization.getTimeScope().ifPresent(timeScope -> {
             String timeScopeSqlExpression = timeScope.toSqlExpression();
@@ -48,13 +56,16 @@ public class AuthorizationResources {
                 .collect(Collectors.joining(" AND "));
 
         SqlPolicy sqlPolicy = new SqlPolicy(
-                SqlSchema.main().data(),
+                SqlSchema.forApplication(application).data(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 userRole,
                 usingExpression
         );
+
+        authRepository.addUserInRole(userRole, OreSiRightOnApplicationRole.readerOn(application));
         authRepository.createPolicy(sqlPolicy);
+
         return authorization;
     }
 }

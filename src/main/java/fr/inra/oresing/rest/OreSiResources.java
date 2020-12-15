@@ -6,7 +6,6 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.AuthRepository;
@@ -21,8 +20,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -106,31 +103,21 @@ public class OreSiResources {
         }
     }
 
-    /**
-     * Ajout un utilisateur pour l'application
-     *
-     * @param nameOrId l'id ou le nom de l'application
-     * @param role le role que doit prendre l'utilisateur, le role doit être un des roles de {@link ApplicationRight}
-     * @param userId l'identifiant de l'utilisateur a ajouter
-     * @param excludedReference les UUID des valeurs de referenciel qui ne peuvent pas etre lu par cette utilisateur
-     * ce parametre n'est pris en compte que si role est {@link ApplicationRight#RESTRICTED_READER}
-     * @return ok (200)
-     */
-    @PutMapping(value = "/applications/{nameOrId}/users/{role}/{userId}")
-    public ResponseEntity addUserForApplication(@PathVariable("nameOrId") String nameOrId,
-                                  @PathVariable("role") String role,
-                                  @PathVariable("userId") UUID userId,
-                                  @RequestBody(required = false) UUID[] excludedReference) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
-        ApplicationRight appRole = ApplicationRight.valueOf(StringUtils.upperCase(role));
-        authRepo.addUserRight(userId, app.getId(), appRole, excludedReference);
-
-        return ResponseEntity.ok().build();
-    }
+//    @PutMapping(value = "/applications/{nameOrId}/users/{role}/{userId}")
+//    public ResponseEntity addUserForApplication(@PathVariable("nameOrId") String nameOrId,
+//                                  @PathVariable("role") String role,
+//                                  @PathVariable("userId") UUID userId,
+//                                  @RequestBody(required = false) UUID[] excludedReference) {
+//        Optional<Application> opt = repo.findApplication(nameOrId);
+//        if (opt.isEmpty()) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        Application app = opt.get();
+//        ApplicationRight appRole = ApplicationRight.valueOf(StringUtils.upperCase(role));
+//        authRepo.addUserRight(userId, app.getId(), appRole, excludedReference);
+//
+//        return ResponseEntity.ok().build();
+//    }
 
     /**
      * Liste les noms des types de referenciels disponible

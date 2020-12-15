@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -80,7 +79,7 @@ public class RelationalService {
         ViewStrategy viewStrategy = schemaCreationCommand.getViewStrategy();
         String schemaName = schemaCreationCommand.getSchema().getSqlIdentifier();
         UUID appId = schemaCreationCommand.getApplication().getId();
-        OreSiRightOnApplicationRole owner = ApplicationRight.ADMIN.getRole(appId);
+        OreSiRightOnApplicationRole owner = OreSiRightOnApplicationRole.adminOn(schemaCreationCommand.getApplication());
         namedParameterJdbcTemplate.execute("CREATE SCHEMA " + schemaName + " AUTHORIZATION " + owner.getSqlIdentifier(), PreparedStatement::execute);
         for (ViewCreationCommand viewCreationCommand : schemaCreationCommand.getViews()) {
             String viewFqn = viewCreationCommand.getView().getSqlIdentifier();
@@ -88,20 +87,20 @@ public class RelationalService {
             if (viewStrategy == ViewStrategy.VIEW) {
                 namedParameterJdbcTemplate.execute("CREATE VIEW " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
                 namedParameterJdbcTemplate.execute("ALTER VIEW " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
-                for (ApplicationRight applicationRight : ApplicationRight.values()) {
-                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
-                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-                }
+//                for (ApplicationRight applicationRight : ApplicationRight.values()) {
+//                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
+//                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+//                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+//                }
             } else if (viewStrategy == ViewStrategy.TABLE) {
                 namedParameterJdbcTemplate.execute("CREATE TABLE " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
                 namedParameterJdbcTemplate.execute("ALTER TABLE " + viewFqn + " ENABLE ROW LEVEL SECURITY", PreparedStatement::execute);
                 namedParameterJdbcTemplate.execute("ALTER TABLE " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
-                for (ApplicationRight applicationRight : ApplicationRight.values()) {
-                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
-                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-                }
+//                for (ApplicationRight applicationRight : ApplicationRight.values()) {
+//                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
+//                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+//                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
+//                }
 
                 // TODO reste à poser des contraintes de clés étrangères et des indexes
             } else {

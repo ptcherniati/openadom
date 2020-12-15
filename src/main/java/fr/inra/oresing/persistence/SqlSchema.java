@@ -12,4 +12,8 @@ public interface SqlSchema extends WithSqlIdentifier {
     static SqlSchemaForRelationalViewsForApplication forRelationalViewsOf(Application application, ViewStrategy viewStrategy) {
         return new SqlSchemaForRelationalViewsForApplication(application, viewStrategy);
     }
+
+    static SqlSchemaForApplication forApplication(Application application) {
+        return new SqlSchemaForApplication(application);
+    }
 }

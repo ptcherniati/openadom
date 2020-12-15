@@ -16,12 +16,12 @@ END;
 $$ language 'plpgsql';
 
 -- check les foreign key pour le colonne references de la table data
-CREATE OR REPLACE FUNCTION refs_check(application UUID, refValues UUID[])
+CREATE OR REPLACE FUNCTION refs_check(aSchema text, application UUID, refValues UUID[])
 RETURNS BOOLEAN AS $$
 DECLARE
     result TEXT;
 BEGIN
-    EXECUTE 'select count(id) = array_length($2, 1) from ReferenceValue where application=$1 AND id = ANY ($2);' INTO result USING application, refValues;
+    EXECUTE 'select count(id) = array_length($2, 1) from ' || aSchema || '.ReferenceValue where application=$1 AND id = ANY ($2);' INTO result USING application, refValues;
     RETURN result;
 END;
 $$ language 'plpgsql';
@@ -57,46 +57,11 @@ create table Application (
     referenceType TEXT[], -- liste des types de references existantes
     dataType TEXT[],      -- liste des types de data existants
     configuration jsonb,  -- le fichier de configuration sous forme json
-    configFile uuid CHECK(fk_check('BinaryFile', configFile))-- can be null
+    configFile uuid CHECK(fk_check(name || '.BinaryFile', configFile))-- can be null
 );
 
 CREATE INDEX application_referenceType_gin_idx ON application USING gin (referenceType);
 CREATE INDEX application_dataType_gin_idx ON application USING gin (dataType);
-
-create table BinaryFile (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    application EntityRef REFERENCES Application(id),
-    name Text,
-    size INT,
-    data bytea
-);
-
-create table ReferenceValue (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    application EntityRef REFERENCES Application(id),
-    referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
-    refValues jsonb,
-    binaryFile EntityRef REFERENCES BinaryFile(id)
-);
-
---CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
-CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
-
-create table Data (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    application EntityRef REFERENCES Application(id),
-    dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
-    timeScope tsrange NOT NULL,
-    refsLinkedTo ListEntityRef CHECK(refs_check(application, refsLinkedTo)),
-    dataValues jsonb,
-    binaryFile EntityRef REFERENCES BinaryFile(id)
-);
 
 DROP ROLE IF EXISTS "anonymous";
 CREATE ROLE "anonymous";
@@ -104,25 +69,15 @@ CREATE ROLE "anonymous";
 DROP ROLE IF EXISTS "superadmin";
 CREATE ROLE "superadmin" WITH CREATEROLE;
 
-GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Application TO "superadmin" WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
 
-DROP ROLE IF EXISTS "applicationCreator";
 CREATE ROLE "applicationCreator";
 
 GRANT INSERT, UPDATE ON Application TO "applicationCreator";
 
-GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
-GRANT SELECT,         UPDATE, DELETE, REFERENCES ON Application TO public;
-GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
-GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
+GRANT SELECT, UPDATE, DELETE, REFERENCES ON Application TO public;
 
-ALTER TABLE BinaryFile ENABLE ROW LEVEL SECURITY;
-ALTER TABLE Application ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;
-ALTER TABLE Data ENABLE ROW LEVEL SECURITY;
+--ALTER TABLE Application ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "applicationCreator_Application_insert" ON Application AS PERMISSIVE
             FOR INSERT TO "applicationCreator"

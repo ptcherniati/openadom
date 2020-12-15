@@ -17,9 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class,
-        FlywayTestExecutionListener.class})
-@FlywayTest
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
 public class AuthRepositoryTest {
 
     @Autowired

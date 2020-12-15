@@ -1,11 +1,11 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.ReferenceValue;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,74 +13,42 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Component
-public class OreSiRepository {
-
-    private static final String BINARYFILE_UPSERT =
-            "INSERT INTO BinaryFile (id, application, name, size, data) SELECT id, application, name, size, data FROM json_populate_record(NULL::BinaryFile, :json::json) "
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, name=EXCLUDED.name, size=EXCLUDED.size, data=EXCLUDED.data"
-                    + " RETURNING id";
+public class OreSiRepository implements InitializingBean {
 
     private static final String APPLICATION_UPSERT =
             "INSERT INTO Application (id, name, referenceType, dataType, configuration, configFile) SELECT id, name, referenceType, dataType, configuration, configFile FROM json_populate_record(NULL::Application, :json::json)"
                     + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, name=EXCLUDED.name, referenceType=EXCLUDED.referenceType, dataType=EXCLUDED.dataType, configuration=EXCLUDED.configuration, configFile=EXCLUDED.configFile"
                     + " RETURNING id";
 
-    private static final String REFERENCEVALUE_UPSERT =
-            "INSERT INTO ReferenceValue (id, application, referenceType, refValues, binaryFile) SELECT id, application, referenceType, refValues, binaryFile FROM json_populate_record(NULL::ReferenceValue, :json::json) "
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, referenceType=EXCLUDED.referenceType, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
-                    + " RETURNING id";
-
-    private static final String DATA_UPSERT =
-            "INSERT INTO Data (id, application, dataType, timeScope, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, timeScope, refsLinkedTo, dataValues, binaryFile FROM json_populate_record(NULL::Data, :json::json) "
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, timeScope=EXCLUDED.timeScope, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
-                    + " RETURNING id";
-
     private static final String SELECT_APPLICATION =
             "SELECT '" + Application.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
             + Application.class.getSimpleName() + " t WHERE id::text=:nameOrId or name=:nameOrId";
 
-    private static final String SELECT_REFERENCE =
-            "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
-                    + ReferenceValue.class.getSimpleName() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
-
-    private static final String TEMPLATE_SELECT_REFERENCE_COLUMN =
-            "SELECT refValues->>'%s' FROM "
-                    + ReferenceValue.class.getSimpleName() + " t WHERE application=:applicationId::uuid AND referenceType=:refType";
-
-    private static final String SELECT_DATA =
-            "SELECT '" + Data.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
-                    + Data.class.getSimpleName() + " t WHERE application=:applicationId::uuid AND dataType=:dataType";
-
     private static final String TEMPLATE_SELECT_ALL = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t";
     private static final String TEMPLATE_SELECT_BY_ID = TEMPLATE_SELECT_ALL + " WHERE id=:id";
 
-    private static final String TEMPLATE_DELETE = "DELETE FROM %s WHERE id=:id";
+    @Autowired
+    private BeanFactory beanFactory;
 
     @Autowired
     private JsonRowMapper<OreSiEntity> jsonRowMapper;
 
+    @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    private Map<Class, String> sqlUpsert;
+    private Map<Class, String> sqlUpsert = Map.of(
+            Application.class, APPLICATION_UPSERT
+    );
 
-    public OreSiRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
-        sqlUpsert = Map.of(
-                BinaryFile.class, BINARYFILE_UPSERT,
-                Application.class, APPLICATION_UPSERT,
-                ReferenceValue.class, REFERENCEVALUE_UPSERT,
-                Data.class, DATA_UPSERT
-        );
-
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+    @Override
+    public void afterPropertiesSet() {
         // pour force la recuperation petit a petit et pas tout en meme temps (probleme memoire)
         namedParameterJdbcTemplate.getJdbcTemplate().setFetchSize(1000);
     }
@@ -89,39 +57,11 @@ public class OreSiRepository {
         if (e.getId() == null) {
             e.setId(UUID.randomUUID());
         }
-        String query = sqlUpsert.get(e.getClass());
+        String query = Objects.requireNonNull(sqlUpsert.get(e.getClass()));
         String json = jsonRowMapper.toJson(e);
         UUID result = namedParameterJdbcTemplate.queryForObject(
                 query, new MapSqlParameterSource("json", json), UUID.class);
         return result;
-    }
-
-    /**
-     * Supprime un objet dans la base
-     * @param clazz la classe de l'objet a supprimer
-     * @param id l'identifiant de l'objet a supprimer (peut-etre null, dans ce cas, rien n'est supprimer)
-     * @return vrai si un objet a été supprimé
-     */
-    protected boolean delete(Class<? extends OreSiEntity> clazz, UUID id) {
-        String query = String.format(TEMPLATE_DELETE, clazz.getSimpleName());
-        int count = namedParameterJdbcTemplate.update(query, new MapSqlParameterSource("id", id));
-        return count > 0;
-    }
-
-    public boolean deleteBinaryFile(UUID id) {
-        return delete(BinaryFile.class, id);
-    }
-
-    public boolean deleteApplication(UUID id) {
-        return delete(Application.class, id);
-    }
-
-    public boolean deleteReferenceValue(UUID id) {
-        return delete(ReferenceValue.class, id);
-    }
-
-    public boolean deleteData(UUID id) {
-        return delete(Data.class, id);
     }
 
     public <E extends OreSiEntity> List<E> findAll(Class<E> entityType) {
@@ -153,57 +93,24 @@ public class OreSiRepository {
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findReference(UUID applicationId, String refType, MultiValueMap<String, String> params) {
-        String query = SELECT_REFERENCE;
-        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", applicationId)
-                .addValue("refType", refType);
-
-        AtomicInteger i = new AtomicInteger();
-        // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
-        String cond = params.entrySet().stream().flatMap(e -> {
-            String k = e.getKey();
-            if (StringUtils.equalsAnyIgnoreCase("any", k)) {
-                return e.getValue().stream().map(v -> {
-                    String arg = ":arg" + i.getAndIncrement();
-                    paramSource.addValue(arg, v);
-                    return "kv.value=" + arg;
-                });
-            } else {
-                return e.getValue().stream().map(v -> "t.refvalues @> '{\"" + k + "\":\"" + v + "\"}'::jsonb");
-            }
-        }).collect(Collectors.joining(" OR "));
-
-        if (StringUtils.isNotBlank(cond)) {
-            cond = " AND (" + cond + ")";
-        }
-
-        List result = namedParameterJdbcTemplate.query(query + cond, paramSource, jsonRowMapper);
-        return (List<ReferenceValue>) result;
+        Application application = findApplication(applicationId.toString()).orElseThrow();
+        ApplicationRepository applicationRepository = getRepository(application);
+        return applicationRepository.findReference(applicationId, refType, params);
     }
 
     public List<String> findReferenceValue(UUID applicationId, String refType, String column) {
-        String query = String.format(TEMPLATE_SELECT_REFERENCE_COLUMN, column);
-        List<String> result = namedParameterJdbcTemplate.queryForList(query,  new MapSqlParameterSource("applicationId", applicationId).addValue("refType", refType), String.class);
-        return result;
+        Application application = findApplication(applicationId.toString()).orElseThrow();
+        ApplicationRepository applicationRepository = getRepository(application);
+        return applicationRepository.findReferenceValue(applicationId, refType, column);
     }
 
     public List<Data> findData(UUID applicationId, String dataType, List<UUID> ... nuppletRefs) {
-        MapSqlParameterSource args =
-                new MapSqlParameterSource("applicationId", applicationId)
-                        .addValue("dataType", dataType);
-
-        List<String> condition = new LinkedList<>();
-        for (List<UUID> nuppletRef : nuppletRefs) {
-            int size = condition.size();
-            condition.add(String.format("refslinkedto && ARRAY(select json_array_elements_text(:json%s::json))::uuid[]", size));
-            args.addValue("json" + size, jsonRowMapper.toJson(nuppletRef));
-
-        }
-        String query = SELECT_DATA;
-        if (condition.size() > 0) {
-            query += " AND " + String.join(" AND ", condition);
-        }
-        List result = namedParameterJdbcTemplate.query(query,  args, jsonRowMapper);
-        return (List<Data>) result;
+        Application application = findApplication(applicationId.toString()).orElseThrow();
+        ApplicationRepository applicationRepository = getRepository(application);
+        return applicationRepository.findData(applicationId, dataType, nuppletRefs);
     }
 
+    public ApplicationRepository getRepository(Application application) {
+        return beanFactory.getBean(ApplicationRepository.class, application);
+    }
 }

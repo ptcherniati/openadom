@@ -5,8 +5,6 @@ import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
-import org.flywaydb.test.FlywayTestExecutionListener;
-import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,16 +28,13 @@ import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class,
-        FlywayTestExecutionListener.class})
-@FlywayTest
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
 public class AuthorizationResourcesTest {
 
     @Autowired
@@ -140,9 +135,7 @@ public class AuthorizationResourcesTest {
             mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                     .cookie(authReaderCookie)
                     .accept(MediaType.TEXT_PLAIN))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string(""))
-                    .andReturn().getResponse().getContentAsString();
+                    .andExpect(status().is4xxClientError());
         }
 
         {

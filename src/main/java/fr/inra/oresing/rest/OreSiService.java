@@ -4,34 +4,43 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
-import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateChecker;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
+import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.Location;
+import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -59,6 +68,12 @@ public class OreSiService {
     @Autowired
     private OreSiApiRequestContext request;
 
+    @Autowired
+    private DataSource dataSource;
+
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
         authRepository.setRoleForClient();
         // creation du fichier
@@ -67,27 +82,43 @@ public class OreSiService {
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
-        UUID result = repo.store(binaryFile);
+        UUID result = repo.getRepository(app).store(binaryFile);
         return result;
     }
 
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
         try {
-            authRepository.setRoleForClient();
             Application app = new Application();
             app.setName(name);
+
+            SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
+            org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
+            flywayConfiguration.setDataSource(dataSource);
+            flywayConfiguration.setSchemas(sqlSchemaForApplication.getSqlIdentifier());
+            flywayConfiguration.setLocations(new Location("classpath:migration/application"));
+            flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
+            Flyway flyway = new Flyway(flywayConfiguration);
+            flyway.migrate();
+
+            OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
+            OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
+
+            authRepository.createRole(adminOnApplicationRole);
+            authRepository.createRole(readerOnApplicationRole);
+
+            namedParameterJdbcTemplate.execute("ALTER SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+            namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " TO " + readerOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+
+            namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.data().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+            namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.referenceValue().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+            namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.binaryFile().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+
+            OreSiUserRole creator = authRepository.getUserRole(request.getRequestClient().getId());
+            authRepository.addUserInRole(creator, adminOnApplicationRole);
+
+            authRepository.setRoleForClient();
             UUID result = repo.store(app);
 
-            // on repasse admin pour la creation des roles associes a la nouvelle application
-            authRepository.resetRole();
-            authRepository.createRightForApplication(app);
-
-            // on met l'utilisateur courant dans dans le group admin de cette application
-            OreSiRequestClient requestClient = request.getRequestClient();
-            authRepository.addUserRight(requestClient.getId(), app.getId(), ApplicationRight.ADMIN);
-
-            // on enregistre le fichier sous l'identite de l'utilisateur
-            authRepository.setRoleForClient();
             changeApplicationConfiguration(app, configurationFile);
 
             return result;
@@ -110,7 +141,8 @@ public class OreSiService {
         repo.store(app);
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
-        repo.deleteBinaryFile(oldConfigId);
+        ApplicationRepository applicationRepository = repo.getRepository(app);
+        applicationRepository.deleteBinaryFile(oldConfigId);
 
         Configuration conf = Configuration.read(configurationFile.getBytes());
         app.setReferenceType(new ArrayList<>(conf.getReferences().keySet()));
@@ -164,6 +196,7 @@ public class OreSiService {
             schemaBuilder.addColumn(e.getKey());
         });
         CsvSchema schema = schemaBuilder.setColumnSeparator(ref.getSeparator()).build();
+        ApplicationRepository applicationRepository = repo.getRepository(app);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
             for (int i = 0; i < ref.getLineToSkip(); i++) {
@@ -181,7 +214,7 @@ public class OreSiService {
                         return e;
                     }).collect(Collectors.toList());
 
-            refs.forEach(repo::store);
+            refs.forEach(applicationRepository::store);
         }
 
         return fileId;
@@ -225,6 +258,8 @@ public class OreSiService {
         DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getTimeScopeColumn());
         String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
 
+        ApplicationRepository applicationRepository = repo.getRepository(app);
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
             for (int i = 0; i < dataSet.getLineToSkip(); i++) {
                 reader.readLine();
@@ -260,7 +295,7 @@ public class OreSiService {
                 e.setRefsLinkedTo(refsLinkedTo);
                 e.setDataValues(values);
                 e.setTimeScope(timeScope);
-                repo.store(e);
+                applicationRepository.store(e);
             });
         }
 

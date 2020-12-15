@@ -1,14 +1,10 @@
 package fr.inra.oresing.rest;
 
-import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
-import fr.inra.oresing.model.ApplicationRight;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
-import org.flywaydb.test.FlywayTestExecutionListener;
-import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -19,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.SpringBootDependencyInjection
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -33,19 +28,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class,
-        FlywayTestExecutionListener.class})
-@FlywayTest
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
 @Ignore("ces tests cassent le build à cause de la création / suppression de schémas SQL qui sont mal cloisonnées")
 public class RelationalServiceTest {
 
@@ -109,29 +98,29 @@ public class RelationalServiceTest {
                     .andExpect(MockMvcResultMatchers.status().isCreated());
         }
 
-        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
-        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
-                fixtures.getApplicationName(), ApplicationRight.READER.name(), reader.getId().toString())
-                .cookie(authCookie))
-                .andExpect(status().isOk());
-
-        String response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes?esp_nom=LPF")
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-
-        excludedReferenceId = JsonPath.parse(response).read("$[0].id");
-
-        OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
-        restrictedReaderRequestClient = OreSiUserRequestClient.of(restrictedReader.getId(), authRepository.getUserRole(restrictedReader));
-        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
-                fixtures.getApplicationName(), ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie)
-                .content("[\"" + excludedReferenceId + "\"]"))
-                .andExpect(status().isOk());
+//        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
+//        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
+//                fixtures.getApplicationName(), ApplicationRight.READER.name(), reader.getId().toString())
+//                .cookie(authCookie))
+//                .andExpect(status().isOk());
+//
+//        String response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes?esp_nom=LPF")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .cookie(authCookie))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+//                .andReturn().getResponse().getContentAsString();
+//
+//        excludedReferenceId = JsonPath.parse(response).read("$[0].id");
+//
+//        OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
+//        restrictedReaderRequestClient = OreSiUserRequestClient.of(restrictedReader.getId(), authRepository.getUserRole(restrictedReader));
+//        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
+//                fixtures.getApplicationName(), ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .cookie(authCookie)
+//                .content("[\"" + excludedReferenceId + "\"]"))
+//                .andExpect(status().isOk());
     }
 
     @Test

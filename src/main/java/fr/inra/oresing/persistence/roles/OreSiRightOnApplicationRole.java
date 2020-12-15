@@ -1,28 +1,32 @@
 package fr.inra.oresing.persistence.roles;
 
-import fr.inra.oresing.model.ApplicationRight;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import fr.inra.oresing.model.Application;
+import lombok.Value;
 
 import java.util.UUID;
 
-@AllArgsConstructor
-@Getter
-@ToString
+@Value
 public class OreSiRightOnApplicationRole implements OreSiRoleManagedByApplication, OreSiRoleToBeGranted, OreSiRoleWeCanGrantOtherRolesTo {
 
-    private final UUID applicationId;
+    UUID applicationId;
 
-    private final ApplicationRight right;
+    String profile;
 
-    public static OreSiRightOnApplicationRole forRightOnApplication(UUID applicationId, ApplicationRight applicationRight) {
-        return new OreSiRightOnApplicationRole(applicationId, applicationRight);
+    public static OreSiRightOnApplicationRole adminOn(Application application) {
+        return adminOn(application.getId());
+    }
+
+    public static OreSiRightOnApplicationRole adminOn(UUID applicationId) {
+        return new OreSiRightOnApplicationRole(applicationId, "admin");
+    }
+
+    public static OreSiRightOnApplicationRole readerOn(Application application) {
+        return new OreSiRightOnApplicationRole(application.getId(), "reader");
     }
 
     @Override
     public String getAsSqlRole() {
-        String rightAsSqlRole = getApplicationId().toString() + "_" + getRight().name();
+        String rightAsSqlRole = getApplicationId().toString() + "_" + profile;
         return rightAsSqlRole;
     }
 

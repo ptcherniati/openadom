@@ -7,10 +7,12 @@ public enum OreSiSqlSchema implements SqlSchema {
      */
     MAIN;
 
+    @Deprecated
     public SqlTable data() {
         return new SqlTable(MAIN, "data");
     }
 
+    @Deprecated
     public SqlTable referenceValue() {
         return new SqlTable(MAIN, "referenceValue");
     }
@@ -19,6 +21,7 @@ public enum OreSiSqlSchema implements SqlSchema {
         return new SqlTable(MAIN, "application");
     }
 
+    @Deprecated
     public SqlTable binaryFile() {
         return new SqlTable(MAIN, "binaryFile");
     }
