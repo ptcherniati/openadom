@@ -151,7 +151,7 @@ public class RelationalService {
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
-            String dataTableName = SqlSchema.main().data().getSqlIdentifier();
+            String dataTableName = SqlSchema.forApplication(application).data().getSqlIdentifier();
 
             for (ReferenceChecker referenceChecker : referenceCheckers) {
                 String referenceType = referenceChecker.getRefType();  // especes
@@ -245,7 +245,7 @@ public class RelationalService {
             String schemaDeclaration = quotedReferenceType + columnsAsSchema;
 
             String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-            String referenceValueTableName = SqlSchema.main().referenceValue().getSqlIdentifier();
+            String referenceValueTableName = SqlSchema.forApplication(app).referenceValue().getSqlIdentifier();
             String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", " + quotedReferenceType + ".* "
                     + " from " + referenceValueTableName + ", jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
                     + " where referenceType = '" + referenceType + "' and application = '" + appId + "'::uuid";

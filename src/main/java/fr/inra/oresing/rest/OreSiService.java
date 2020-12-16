@@ -18,6 +18,7 @@ import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
@@ -105,6 +106,22 @@ public class OreSiService {
 
             authRepository.createRole(adminOnApplicationRole);
             authRepository.createRole(readerOnApplicationRole);
+
+            authRepository.createPolicy(new SqlPolicy(
+                    SqlSchema.main().application(),
+                    SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                    SqlPolicy.Statement.ALL,
+                    adminOnApplicationRole,
+                    "name = '" + name + "'"
+            ));
+
+//            authRepository.createPolicy(new SqlPolicy(
+//                    SqlSchema.main().application(),
+//                    SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+//                    SqlPolicy.Statement.SELECT,
+//                    readerOnApplicationRole,
+//                    "name = '" + name + "'"
+//            ));
 
             namedParameterJdbcTemplate.execute("ALTER SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
             namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " TO " + readerOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
@@ -348,5 +365,11 @@ public class OreSiService {
         } catch (CheckerException eee) {
             throw new IllegalArgumentException(eee);
         }
+    }
+
+    public List<Application> getApplications() {
+        authRepository.setRoleForClient();
+        List<Application> result = repo.findAll(Application.class);
+        return result;
     }
 }

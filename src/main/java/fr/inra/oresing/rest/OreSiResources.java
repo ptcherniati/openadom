@@ -8,7 +8,6 @@ import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +42,6 @@ public class OreSiResources {
     private OreSiRepository repo;
 
     @Autowired
-    private AuthRepository authRepo;
-
-    @Autowired
     private OreSiService service;
 
     @GetMapping(value = "/files/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -64,8 +60,7 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Application> getApplications() {
-        List<Application> result = repo.findAll(Application.class);
-        return result;
+        return service.getApplications();
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)

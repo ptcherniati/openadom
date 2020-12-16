@@ -5,6 +5,7 @@ import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,6 +133,20 @@ public class AuthorizationResourcesTest {
 //        fixtures.getApplicationName(), ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString()
 
         {
+            String response = mockMvc.perform(get("/api/v1/applications")
+                            .cookie(authCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("monsore"));
+        }
+
+        {
+            String response = mockMvc.perform(get("/api/v1/applications")
+                            .cookie(authReaderCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("monsore"));
+        }
+
+        {
             mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                     .cookie(authReaderCookie)
                     .accept(MediaType.TEXT_PLAIN))
@@ -150,6 +165,13 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
             System.out.println(response);
+        }
+
+        {
+            String response = mockMvc.perform(get("/api/v1/applications")
+                    .cookie(authReaderCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("monsore"));
         }
 
         {

@@ -77,7 +77,7 @@ GRANT INSERT, UPDATE ON Application TO "applicationCreator";
 
 GRANT SELECT, UPDATE, DELETE, REFERENCES ON Application TO public;
 
---ALTER TABLE Application ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Application ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "applicationCreator_Application_insert" ON Application AS PERMISSIVE
             FOR INSERT TO "applicationCreator"
