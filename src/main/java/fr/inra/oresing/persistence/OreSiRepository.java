@@ -4,6 +4,7 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.rest.NoSuchApplicationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,9 +77,21 @@ public class OreSiRepository implements InitializingBean {
         return (Optional<E>)result;
     }
 
-    public Optional<Application> findApplication(String nameOrId) {
+    public Application findApplication(String nameOrId) {
+        return tryFindApplication(nameOrId).orElseThrow(() -> new NoSuchApplicationException(nameOrId));
+    }
+
+    public Optional<Application> tryFindApplication(String nameOrId) {
         Optional result = namedParameterJdbcTemplate.query(SELECT_APPLICATION, new MapSqlParameterSource("nameOrId", nameOrId), jsonRowMapper).stream().findFirst();
-        return (Optional<Application>)result;
+        return (Optional<Application>) result;
+    }
+
+    public Optional<Application> tryFindApplication(UUID nameOrId) {
+        return tryFindApplication(nameOrId.toString());
+    }
+
+    public Application findApplication(UUID applicationId) {
+        return findApplication(applicationId.toString());
     }
 
     public List<ReferenceValue> findReference(UUID applicationId, String refType) {
@@ -93,19 +106,19 @@ public class OreSiRepository implements InitializingBean {
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findReference(UUID applicationId, String refType, MultiValueMap<String, String> params) {
-        Application application = findApplication(applicationId.toString()).orElseThrow();
+        Application application = findApplication(applicationId);
         ApplicationRepository applicationRepository = getRepository(application);
         return applicationRepository.findReference(applicationId, refType, params);
     }
 
     public List<String> findReferenceValue(UUID applicationId, String refType, String column) {
-        Application application = findApplication(applicationId.toString()).orElseThrow();
+        Application application = findApplication(applicationId);
         ApplicationRepository applicationRepository = getRepository(application);
         return applicationRepository.findReferenceValue(applicationId, refType, column);
     }
 
     public List<Data> findData(UUID applicationId, String dataType, List<UUID> ... nuppletRefs) {
-        Application application = findApplication(applicationId.toString()).orElseThrow();
+        Application application = findApplication(applicationId);
         ApplicationRepository applicationRepository = getRepository(application);
         return applicationRepository.findData(applicationId, dataType, nuppletRefs);
     }

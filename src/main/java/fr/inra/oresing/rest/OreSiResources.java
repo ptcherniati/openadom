@@ -72,30 +72,26 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Application> getApplication(@PathVariable("nameOrId") String nameOrId) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        return opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        Application application = service.getApplication(nameOrId);
+        return ResponseEntity.ok(application);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getConfiguration(@PathVariable("nameOrId") String nameOrId) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        return opt.map(Application::getConfigFile).map(this::getFile).orElse(ResponseEntity.notFound().build());
+        Application application = service.getApplication(nameOrId);
+        UUID configFileId = application.getConfigFile();
+        return getFile(configFileId);
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file) throws IOException {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
-        if (!file.isEmpty()) {
-            UUID result = service.changeApplicationConfiguration(app, file);
-            String uri = UriUtils.encodePath(String.format("/applications/%s/configuration/%s", nameOrId, result), Charset.defaultCharset());
-            return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
-        } else {
+        if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
+        Application app = service.getApplication(nameOrId);
+        UUID result = service.changeApplicationConfiguration(app, file);
+        String uri = UriUtils.encodePath(String.format("/applications/%s/configuration/%s", nameOrId, result), Charset.defaultCharset());
+        return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }
 
 //    @PutMapping(value = "/applications/{nameOrId}/users/{role}/{userId}")
@@ -121,8 +117,8 @@ public class OreSiResources {
      */
     @GetMapping(value = "/applications/{nameOrId}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listNameReferences(@PathVariable("nameOrId") String nameOrId) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        return opt.map(Application::getReferenceType).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        Application application = service.getApplication(nameOrId);
+        return ResponseEntity.ok(application.getReferenceType());
     }
 
     /**
@@ -136,33 +132,21 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("refType") String refType,
             @RequestParam MultiValueMap<String, String> params) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
+        Application app = service.getApplication(nameOrId);
         List<ReferenceValue> list = repo.findReference(app.getId(), refType, params);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
+        Application app = service.getApplication(nameOrId);
         List<String> list = repo.findReferenceValue(app.getId(), refType, column);
         return ResponseEntity.ok(list);
     }
 
     @PostMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createReference(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @RequestParam("file") MultipartFile file) throws IOException {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
+        Application app = service.getApplication(nameOrId);
         if (!file.isEmpty()) {
             UUID result = service.addReference(app, refType, file);
             String uri = UriUtils.encodePath(String.format("/applications/%s/references/%s", nameOrId, refType), Charset.defaultCharset());
@@ -174,18 +158,14 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listDataType(@PathVariable("nameOrId") String nameOrId) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        return opt.map(Application::getDataType).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        Application application = service.getApplication(nameOrId);
+        return ResponseEntity.ok(application.getDataType());
     }
 
     /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, String>>> getAllDataJson(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
+        Application app = service.getApplication(nameOrId);
         List<Map<String, String>> list = service.findData(app, dataType, params);
         return ResponseEntity.ok(list);
     }
@@ -205,11 +185,7 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
+        Application app = service.getApplication(nameOrId);
 
         String outColumn = params.getFirst("outColumn");
         params.remove("outColumn");
@@ -234,11 +210,7 @@ public class OreSiResources {
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam("file") MultipartFile file) throws IOException, CheckerException {
-        Optional<Application> opt = repo.findApplication(nameOrId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Application app = opt.get();
+        Application app = service.getApplication(nameOrId);
         if (!file.isEmpty()) {
             UUID result = service.addData(app, dataType, file);
             String uri = UriUtils.encodePath(String.format("/applications/%s/references/%s", nameOrId, dataType), Charset.defaultCharset());

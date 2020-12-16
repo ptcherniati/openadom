@@ -7,7 +7,6 @@ import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.persistence.AuthRepository;
-import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
@@ -41,7 +40,7 @@ public class RelationalService {
     private AuthRepository authRepository;
 
     @Autowired
-    private OreSiRepository repo;
+    private OreSiService service;
 
     @Autowired
     private CheckerFactory checkerFactory;
@@ -50,14 +49,12 @@ public class RelationalService {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public void createViews(String appName, ViewStrategy viewStrategy) {
-        Application app = repo.findApplication(appName)
-                .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appName));
+        Application app = service.getApplication(appName);
         createViews(app, viewStrategy);
     }
 
     public void createViews(UUID appId, ViewStrategy viewStrategy) {
-        Application app = repo.findApplication(appId.toString())
-                .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appId));
+        Application app = service.getApplication(appId.toString());
         createViews(app, viewStrategy);
     }
 
@@ -69,8 +66,7 @@ public class RelationalService {
 
     public void dropViews(String appName, ViewStrategy viewStrategy) {
         authRepository.resetRole();
-        Application app = repo.findApplication(appName)
-                .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appName));
+        Application app = service.getApplication(appName);
         SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
         drop(schemaCreationCommand);
     }
@@ -266,16 +262,14 @@ public class RelationalService {
 
     public List<Map<String, Object>> readView(String appName, String dataset, ViewStrategy viewStrategy) {
         authRepository.setRoleForClient();
-        Application application = repo.findApplication(appName)
-                .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appName));
+        Application application = service.getApplication(appName);
         SqlTable view = SqlSchema.forRelationalViewsOf(application, viewStrategy).forDataset(dataset);
         return namedParameterJdbcTemplate.queryForList("select * from " + view.getSqlIdentifier(), Collections.emptyMap());
     }
 
     public void addRestrictedUser(OreSiRoleToAccessDatabase role, Set<String> excludedReferenceIds, String appName, ViewStrategy viewStrategy) {
         authRepository.resetRole();
-        Application app = repo.findApplication(appName)
-                .orElseThrow(() -> new IllegalArgumentException("il n'existe pas d'application " + appName));
+        Application app = service.getApplication(appName);
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
         List<ViewCreationCommand> viewCreationCommands = new LinkedList<>();
         viewCreationCommands.addAll(getViewsForReferences(sqlSchema, app));

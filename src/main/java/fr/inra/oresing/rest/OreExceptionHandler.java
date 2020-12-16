@@ -30,4 +30,9 @@ public class OreExceptionHandler {
         }
         throw badSqlGrammarException;
     }
+
+    @ExceptionHandler(value = NoSuchApplicationException.class)
+    public ResponseEntity<String> handle(NoSuchApplicationException noSuchApplicationException) {
+        return ResponseEntity.badRequest().body(noSuchApplicationException.getMessage());
+    }
 }

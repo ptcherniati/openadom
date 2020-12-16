@@ -29,7 +29,6 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,32 +88,37 @@ public class OreSiService {
     }
 
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
-        try {
-            Application app = new Application();
-            app.setName(name);
 
-            SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
-            org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
-            flywayConfiguration.setDataSource(dataSource);
-            flywayConfiguration.setSchemas(sqlSchemaForApplication.getSqlIdentifier());
-            flywayConfiguration.setLocations(new Location("classpath:migration/application"));
-            flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
-            Flyway flyway = new Flyway(flywayConfiguration);
-            flyway.migrate();
+        authRepository.setRoleForClient();
+        Application app = new Application();
+        app.setName(name);
+        UUID result = repo.store(app);
+        changeApplicationConfiguration(app, configurationFile);
 
-            OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
-            OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
+        authRepository.resetRole();
 
-            authRepository.createRole(adminOnApplicationRole);
-            authRepository.createRole(readerOnApplicationRole);
+        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
+        org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
+        flywayConfiguration.setDataSource(dataSource);
+        flywayConfiguration.setSchemas(sqlSchemaForApplication.getSqlIdentifier());
+        flywayConfiguration.setLocations(new Location("classpath:migration/application"));
+        flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
+        Flyway flyway = new Flyway(flywayConfiguration);
+        flyway.migrate();
 
-            authRepository.createPolicy(new SqlPolicy(
-                    SqlSchema.main().application(),
-                    SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                    SqlPolicy.Statement.ALL,
-                    adminOnApplicationRole,
-                    "name = '" + name + "'"
-            ));
+        OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
+        OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
+
+        authRepository.createRole(adminOnApplicationRole);
+        authRepository.createRole(readerOnApplicationRole);
+
+        authRepository.createPolicy(new SqlPolicy(
+                SqlSchema.main().application(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                SqlPolicy.Statement.ALL,
+                adminOnApplicationRole,
+                "name = '" + name + "'"
+        ));
 
 //            authRepository.createPolicy(new SqlPolicy(
 //                    SqlSchema.main().application(),
@@ -123,28 +128,17 @@ public class OreSiService {
 //                    "name = '" + name + "'"
 //            ));
 
-            namedParameterJdbcTemplate.execute("ALTER SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
-            namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " TO " + readerOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("ALTER SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " TO " + readerOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
 
-            namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.data().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
-            namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.referenceValue().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
-            namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.binaryFile().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.data().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.referenceValue().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.binaryFile().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
 
-            OreSiUserRole creator = authRepository.getUserRole(request.getRequestClient().getId());
-            authRepository.addUserInRole(creator, adminOnApplicationRole);
+        OreSiUserRole creator = authRepository.getUserRole(request.getRequestClient().getId());
+        authRepository.addUserInRole(creator, adminOnApplicationRole);
 
-            authRepository.setRoleForClient();
-            UUID result = repo.store(app);
-
-            changeApplicationConfiguration(app, configurationFile);
-
-            return result;
-        } catch (BadSqlGrammarException eee) {
-            if (StringUtils.contains(eee.getMessage(), "permission denied")) {
-                throw new SecurityException(eee);
-            }
-            throw eee;
-        }
+        return result;
     }
 
     public UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
@@ -371,5 +365,15 @@ public class OreSiService {
         authRepository.setRoleForClient();
         List<Application> result = repo.findAll(Application.class);
         return result;
+    }
+
+    public Application getApplication(String nameOrId) {
+        authRepository.setRoleForClient();
+        return repo.findApplication(nameOrId);
+    }
+
+    public Optional<Application> tryFindApplication(String nameOrId) {
+        authRepository.setRoleForClient();
+        return repo.tryFindApplication(nameOrId);
     }
 }
