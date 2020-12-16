@@ -89,11 +89,8 @@ public class OreSiService {
 
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
 
-        authRepository.setRoleForClient();
         Application app = new Application();
         app.setName(name);
-        UUID result = repo.store(app);
-        changeApplicationConfiguration(app, configurationFile);
 
         authRepository.resetRole();
 
@@ -120,13 +117,13 @@ public class OreSiService {
                 "name = '" + name + "'"
         ));
 
-//            authRepository.createPolicy(new SqlPolicy(
-//                    SqlSchema.main().application(),
-//                    SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-//                    SqlPolicy.Statement.SELECT,
-//                    readerOnApplicationRole,
-//                    "name = '" + name + "'"
-//            ));
+        authRepository.createPolicy(new SqlPolicy(
+                SqlSchema.main().application(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                SqlPolicy.Statement.SELECT,
+                readerOnApplicationRole,
+                "name = '" + name + "'"
+        ));
 
         namedParameterJdbcTemplate.execute("ALTER SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
         namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " TO " + readerOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
@@ -137,6 +134,10 @@ public class OreSiService {
 
         OreSiUserRole creator = authRepository.getUserRole(request.getRequestClient().getId());
         authRepository.addUserInRole(creator, adminOnApplicationRole);
+
+        authRepository.setRoleForClient();
+        UUID result = repo.store(app);
+        changeApplicationConfiguration(app, configurationFile);
 
         return result;
     }
