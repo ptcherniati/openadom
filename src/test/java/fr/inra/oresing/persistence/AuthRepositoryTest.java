@@ -1,11 +1,10 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.PostgresContainerTestExecutionListener;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import org.flywaydb.test.FlywayTestExecutionListener;
-import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,7 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, PostgresContainerTestExecutionListener.class})
 public class AuthRepositoryTest {
 
     @Autowired

@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.PostgresContainerTestExecutionListener;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = OreSiNg.class)
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, PostgresContainerTestExecutionListener.class})
 public class OreSiResourcesTest {
 
     @Autowired

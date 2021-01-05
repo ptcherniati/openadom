@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.PostgresContainerTestExecutionListener;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
 import org.junit.Assert;
@@ -34,7 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(classes = OreSiNg.class)
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, PostgresContainerTestExecutionListener.class})
 @Ignore("ces tests cassent le build à cause de la création / suppression de schémas SQL qui sont mal cloisonnées")
 public class RelationalServiceTest {
 
