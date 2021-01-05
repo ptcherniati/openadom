@@ -14,6 +14,8 @@ import java.util.UUID;
 public class Data extends OreSiEntity {
     private UUID application;
     private String dataType;
+    private String rowId;
+    private String dataGroup;
     private LocalDateTimeRange timeScope;
     private List<UUID> refsLinkedTo;
     private Map<String, String> dataValues;

@@ -27,6 +27,8 @@ create table Data (
     updateDate DateOrNow,
     application EntityRef REFERENCES Application(id),
     dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
+    rowId TEXT NOT NULL,
+    dataGroup TEXT NOT NULL,
     timeScope tsrange NOT NULL,
     refsLinkedTo ListEntityRef CHECK(refs_check('${applicationSchema}', application, refsLinkedTo)),
     dataValues jsonb,

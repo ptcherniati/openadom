@@ -2,8 +2,10 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
@@ -298,9 +300,14 @@ public class OreSiService {
                 String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
                 LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
+                String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
+
+
                 Data e = new Data();
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
+                e.setRowId(rowId);
+                e.setDataGroup("all");
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedTo);
                 e.setDataValues(values);
