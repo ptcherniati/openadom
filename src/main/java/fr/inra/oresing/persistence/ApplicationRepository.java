@@ -15,7 +15,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -157,23 +156,12 @@ public class ApplicationRepository implements InitializingBean {
         return result;
     }
 
-    public List<Data> findData(UUID applicationId, String dataType, List<UUID> ... nuppletRefs) {
+    public List<Data> findData(String dataType) {
         MapSqlParameterSource args =
-                new MapSqlParameterSource("applicationId", applicationId)
+                new MapSqlParameterSource("applicationId", application.getId())
                         .addValue("dataType", dataType);
-
-        List<String> condition = new LinkedList<>();
-        for (List<UUID> nuppletRef : nuppletRefs) {
-            int size = condition.size();
-            condition.add(String.format("refslinkedto && ARRAY(select json_array_elements_text(:json%s::json))::uuid[]", size));
-            args.addValue("json" + size, jsonRowMapper.toJson(nuppletRef));
-
-        }
         String query = "SELECT '" + Data.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
                 + schema.data().getSqlIdentifier() + " t WHERE application=:applicationId::uuid AND dataType=:dataType";
-        if (condition.size() > 0) {
-            query += " AND " + String.join(" AND ", condition);
-        }
         List result = namedParameterJdbcTemplate.query(query,  args, jsonRowMapper);
         return (List<Data>) result;
     }

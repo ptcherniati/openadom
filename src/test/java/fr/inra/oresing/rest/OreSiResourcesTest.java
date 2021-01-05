@@ -1,6 +1,8 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
@@ -166,40 +168,62 @@ public class OreSiResourcesTest {
 //                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         // restitution de data json
-        resource = getClass().getResource("/data/compare/export.json");
-        try (InputStream in = resource.openStream()){
-            String jsonCompare = new String(in.readAllBytes());
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
+        {
+            String expectedJson = Resources.toString(getClass().getResource("/data/compare/export.json"), Charsets.UTF_8);
+            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(content().json(jsonCompare))
+                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
         }
 
         // restitution de data csv
-        resource = getClass().getResource("/data/compare/export.csv");
-        try (InputStream in = resource.openStream()) {
-            String csvCompare = new String(in.readAllBytes());
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
+        {
+            String expectedCsv = Resources.toString(getClass().getResource("/data/compare/export.csv"), Charsets.UTF_8);
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                     .cookie(authCookie)
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
-                    .andExpect(content().string(csvCompare))
+                    .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
         }
 
-        // restitution de data csv
-        resource = getClass().getResource("/data/compare/exportColumn.csv");
-        try (InputStream in = resource.openStream()) {
-            String csvCompare = new String(in.readAllBytes());
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
-                    .cookie(authCookie)
-                    .accept(MediaType.TEXT_PLAIN))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string(csvCompare))
-                    .andReturn().getResponse().getContentAsString();
-        }
+//        // restitution de data json
+//        resource = getClass().getResource("/data/compare/export.json");
+//        try (InputStream in = resource.openStream()) {
+//            String jsonCompare = new String(in.readAllBytes());
+//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
+//                    .cookie(authCookie)
+//                    .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().json(jsonCompare))
+//                    .andReturn().getResponse().getContentAsString();
+//        }
+//
+//        // restitution de data csv
+//        resource = getClass().getResource("/data/compare/export.csv");
+//        try (InputStream in = resource.openStream()) {
+//            String csvCompare = new String(in.readAllBytes());
+//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
+//                    .cookie(authCookie)
+//                    .accept(MediaType.TEXT_PLAIN))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().string(csvCompare))
+//                    .andReturn().getResponse().getContentAsString();
+//        }
+
+//        // restitution de data csv
+//        resource = getClass().getResource("/data/compare/exportColumn.csv");
+//        try (InputStream in = resource.openStream()) {
+//            String csvCompare = new String(in.readAllBytes());
+//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
+//                    .cookie(authCookie)
+//                    .accept(MediaType.TEXT_PLAIN))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().string(csvCompare))
+//                    .andReturn().getResponse().getContentAsString();
+//        }
 
 //        // recuperation de l'id du referentiel
 //        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes?esp_nom=LPF")

@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
@@ -46,7 +45,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -318,48 +316,15 @@ public class OreSiService {
         return fileId;
     }
 
-    public List<Map<String, String>> findData(Application app, String dataType, MultiValueMap<String, String> params) {
+    public List<Map<String, String>> findData(String applicationNameOrId, String dataType) {
         authRepository.setRoleForClient();
-        // recuperation de la configuration pour ce type de donnees
-        Configuration conf = app.getConfiguration();
-        Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
-
-        // ajout des contraintes sur les champs de type referenciel
-        Map<String, Checker> checkers = new HashMap<>();
-
-        for (Map.Entry<String, Configuration.ColumnDescription> e : dataSet.getReferences().entrySet()) {
-            Checker checker = checkerFactory.getChecker(e.getValue(), app);
-            if (checker instanceof ReferenceChecker) {
-                checkers.put(e.getKey(), checker);
-            }
-        }
-
-        List<UUID>[] nuppletRefs = params.entrySet().stream()
-                .map(e -> e.getValue().stream().map(value -> getRefid(checkers, e.getKey(), value))
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
-                .toArray(List[]::new);
-
-        List<Data> data = repo.findData(app.getId(), dataType, nuppletRefs);
-        List<Map<String, String>> result = data.stream().map(Data::getDataValues).collect(Collectors.toList());
-
+        Application app = getApplication(applicationNameOrId);
+        ApplicationRepository applicationRepository = repo.getRepository(app);
+        List<Data> data = applicationRepository.findData(dataType);
+        List<Map<String, String>> result = data.stream()
+                .map(Data::getDataValues)
+                .collect(Collectors.toList());
         return result;
-    }
-
-    protected UUID getRefid(Map<String, Checker> checkers, String refType, String value) {
-        try {
-            try{
-                return UUID.fromString(value);
-            } catch (IllegalArgumentException eee) {
-                Checker checker = checkers.get(refType);
-                if (checker == null) {
-                    throw new IllegalArgumentException(refType + " has no reference table");
-                }
-                return checker.check(value);
-            }
-        } catch (CheckerException eee) {
-            throw new IllegalArgumentException(eee);
-        }
     }
 
     public List<Application> getApplications() {

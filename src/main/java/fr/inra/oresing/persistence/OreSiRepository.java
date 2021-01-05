@@ -1,7 +1,6 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.rest.NoSuchApplicationException;
@@ -115,12 +114,6 @@ public class OreSiRepository implements InitializingBean {
         Application application = findApplication(applicationId);
         ApplicationRepository applicationRepository = getRepository(application);
         return applicationRepository.findReferenceValue(applicationId, refType, column);
-    }
-
-    public List<Data> findData(UUID applicationId, String dataType, List<UUID> ... nuppletRefs) {
-        Application application = findApplication(applicationId);
-        ApplicationRepository applicationRepository = getRepository(application);
-        return applicationRepository.findData(applicationId, dataType, nuppletRefs);
     }
 
     public ApplicationRepository getRepository(Application application) {

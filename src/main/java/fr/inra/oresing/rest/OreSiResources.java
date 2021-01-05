@@ -9,7 +9,6 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.OreSiRepository;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -165,8 +163,7 @@ public class OreSiResources {
     /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, String>>> getAllDataJson(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) {
-        Application app = service.getApplication(nameOrId);
-        List<Map<String, String>> list = service.findData(app, dataType, params);
+        List<Map<String, String>> list = service.findData(nameOrId, dataType);
         return ResponseEntity.ok(list);
     }
 
@@ -185,20 +182,12 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
-        Application app = service.getApplication(nameOrId);
-
-        String outColumn = params.getFirst("outColumn");
-        params.remove("outColumn");
-        List<Map<String, String>> list = service.findData(app, dataType, params);
+        List<Map<String, String>> list = service.findData(nameOrId, dataType);
 
         String result = "";
         if (list.size() > 0) {
             CsvSchema.Builder schemaBuilder = CsvSchema.builder();
-            if (StringUtils.isNotBlank(outColumn)) {
-                Stream.of(outColumn.split(";")).forEach(schemaBuilder::addColumn);
-            } else {
-                list.get(0).keySet().forEach(schemaBuilder::addColumn);
-            }
+            list.get(0).keySet().forEach(schemaBuilder::addColumn);
             CsvSchema schema = schemaBuilder.setUseHeader(true).setColumnSeparator(';').build();
 
             CsvMapper mapper = new CsvMapper();
