@@ -156,14 +156,20 @@ public class ApplicationRepository implements InitializingBean {
         return result;
     }
 
-    public List<Data> findData(String dataType) {
+    public List<Map<String, String>> findData(String dataType) {
+        String toMergeDataGroupsQuery = " SELECT rowId, jsonb_object_agg(dataValues) as values"
+                                      + " FROM " + schema.data().getSqlIdentifier()
+                                      + " WHERE application = :applicationId::uuid AND dataType = :dataType"
+                                      + " GROUP BY rowId"
+                                      ;
+        String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
+                + " SELECT '" + Map.class.getName() + "' AS \"@class\", to_jsonb(values) AS json"
+                + " FROM my_data";
         MapSqlParameterSource args =
                 new MapSqlParameterSource("applicationId", application.getId())
                         .addValue("dataType", dataType);
-        String query = "SELECT '" + Data.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
-                + schema.data().getSqlIdentifier() + " t WHERE application=:applicationId::uuid AND dataType=:dataType";
         List result = namedParameterJdbcTemplate.query(query,  args, jsonRowMapper);
-        return (List<Data>) result;
+        return (List<Map<String, String>>) result;
     }
 
 }

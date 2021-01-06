@@ -2,10 +2,9 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.hash.Hashing;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
@@ -300,19 +299,27 @@ public class OreSiService {
                 String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
                 LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
-                String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
+                // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
+                String rowId = UUID.randomUUID().toString();
 
+                for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataSet.getDataGroups().entrySet()) {
+                    String dataGroup = entry.getKey();
+                    Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
-                Data e = new Data();
-                e.setBinaryFile(fileId);
-                e.setDataType(dataType);
-                e.setRowId(rowId);
-                e.setDataGroup("all");
-                e.setApplication(app.getId());
-                e.setRefsLinkedTo(refsLinkedTo);
-                e.setDataValues(values);
-                e.setTimeScope(timeScope);
-                applicationRepository.store(e);
+                    Set<String> columnsIncludedInDataGroup = dataGroupDescription.getData().keySet();
+                    Map<String, String> dataGroupValues = Maps.filterKeys(values, columnsIncludedInDataGroup::contains);
+
+                    Data e = new Data();
+                    e.setBinaryFile(fileId);
+                    e.setDataType(dataType);
+                    e.setRowId(rowId);
+                    e.setDataGroup(dataGroup);
+                    e.setApplication(app.getId());
+                    e.setRefsLinkedTo(refsLinkedTo);
+                    e.setDataValues(dataGroupValues);
+                    e.setTimeScope(timeScope);
+                    applicationRepository.store(e);
+                }
             });
         }
 
@@ -327,11 +334,8 @@ public class OreSiService {
         authRepository.setRoleForClient();
         Application app = getApplication(applicationNameOrId);
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        List<Data> data = applicationRepository.findData(dataType);
-        List<Map<String, String>> result = data.stream()
-                .map(Data::getDataValues)
-                .collect(Collectors.toList());
-        return result;
+        List<Map<String, String>> data = applicationRepository.findData(dataType);
+        return data;
     }
 
     public List<Application> getApplications() {

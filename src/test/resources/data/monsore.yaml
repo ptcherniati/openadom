@@ -130,11 +130,17 @@ dataset:
             caseSensitive: false
             refType: especes
             column: esp_nom
-    data:
-      Couleur des individus:
-      Nombre d'individus:
-        checker:
-          name: Integer
-          params:
-            default: 0
+    dataGroups:
+      qualitatif:
+        label: "Données qualitatives"
+        data:
+          Couleur des individus:
+      quantitatif:
+        label: "Données quantitatives"
+        data:
+          Nombre d'individus:
+            checker:
+              name: Integer
+              params:
+                default: 0
     timeScopeColumn: date

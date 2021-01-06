@@ -87,6 +87,8 @@ CREATE POLICY "applicationCreator_Application_select" ON Application AS PERMISSI
             FOR SELECT TO "applicationCreator"
             USING ( true );
 
+CREATE AGGREGATE jsonb_object_agg(jsonb) (SFUNC = 'jsonb_concat', STYPE = jsonb, INITCOND = '{}');
+
 -- creation d'un utilisateur de test qui a le droit de creer des applications
 -- on passe superadmin pour simuler la creation via un appel rest
 --SET ROLE "superadmin";

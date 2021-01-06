@@ -263,31 +263,31 @@ public class OreSiResourcesTest {
 //        }
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
-        resource = getClass().getResource("/data/monsore-bad.yaml");
-        try (InputStream in = resource.openStream()) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
-
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/configuration")
-                    .file(configuration)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated())
-                    .andReturn().getResponse().getContentAsString();
-        }
-
-
-        // ajout de data (echoue)
-        resource = getClass().getResource("/data/data-pem.csv");
-        try (InputStream refStream = resource.openStream()) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                    .file(refFile)
-                    .cookie(authCookie))
-                    .andExpect(status().is4xxClientError())
-                    .andReturn().getResponse().getContentAsString();
-
-            System.out.println(response);
-        }
+//        resource = getClass().getResource("/data/monsore-bad.yaml");
+//        try (InputStream in = resource.openStream()) {
+//            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+//
+//            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/configuration")
+//                    .file(configuration)
+//                    .cookie(authCookie))
+//                    .andExpect(status().isCreated())
+//                    .andReturn().getResponse().getContentAsString();
+//        }
+//
+//
+//        // ajout de data (echoue)
+//        resource = getClass().getResource("/data/data-pem.csv");
+//        try (InputStream refStream = resource.openStream()) {
+//            MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
+//
+//            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+//                    .file(refFile)
+//                    .cookie(authCookie))
+//                    .andExpect(status().is4xxClientError())
+//                    .andReturn().getResponse().getContentAsString();
+//
+//            System.out.println(response);
+//        }
     }
 
 }

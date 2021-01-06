@@ -41,8 +41,22 @@ public class Configuration {
         private char separator = ';';
         private char quote = '"';
         private LinkedHashMap<String, ColumnDescription> references;
-        private LinkedHashMap<String, DataDescription> data;
+        private LinkedHashMap<String, DataGroupDescription> dataGroups;
         private String timeScopeColumn;
+
+        /**
+         * @deprecated à supprimer, c'est pour la rétro-compatibilité avant la mise en place des groupes
+         */
+        @Deprecated
+        public Map<String, DataDescription> getData() {
+            LinkedHashMap<String, DataDescription> data = new LinkedHashMap<>();
+            if (dataGroups != null) {
+                for (DataGroupDescription value : dataGroups.values()) {
+                    data.putAll(value.getData());
+                }
+            }
+            return data;
+        }
     }
 
     @Getter
@@ -58,6 +72,14 @@ public class Configuration {
     static public class CheckerDescription {
         private String name;
         private Map<String, String> params;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class DataGroupDescription extends ColumnDescription {
+        private String label;
+        private LinkedHashMap<String, DataDescription> data;
     }
 
     @Getter
