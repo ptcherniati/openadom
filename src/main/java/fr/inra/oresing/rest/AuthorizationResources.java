@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -50,6 +51,14 @@ public class AuthorizationResources {
 
             // String usingExpression = "refsLinkedTo <@ " + referenceIdsArray;
         }
+
+        String dataSet = authorization.getDataset();
+        String dataGroup = authorization.getDataGroup();
+
+        Preconditions.checkArgument(application.getConfiguration().getDataset().containsKey(dataSet));
+        Preconditions.checkArgument(application.getConfiguration().getDataset().get(dataSet).getDataGroups().containsKey(dataGroup));
+
+        usingExpressionElements.add("application = '" + application.getId() + "'::uuid AND dataType = '" + dataSet + "' AND dataGroup = '" + dataGroup + "'");
 
         String usingExpression = usingExpressionElements.stream()
                 .map(statement -> "(" + statement + ")")

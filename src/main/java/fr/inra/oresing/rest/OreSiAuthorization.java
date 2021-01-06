@@ -17,6 +17,10 @@ public class OreSiAuthorization {
 
     String applicationNameOrId;
 
+    String dataset;
+
+    String dataGroup;
+
     Set<UUID> referenceIds;
 
     LocalDate fromDay;
