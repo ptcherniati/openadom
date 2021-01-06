@@ -16,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
+@DirtiesContext
 @Ignore("ces tests cassent le build à cause de la création / suppression de schémas SQL qui sont mal cloisonnées")
 public class RelationalServiceTest {
 
