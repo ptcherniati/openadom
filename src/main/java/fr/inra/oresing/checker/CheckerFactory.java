@@ -55,7 +55,7 @@ public class CheckerFactory {
 
     public Set<ReferenceChecker> getReferenceCheckers(Application application, Configuration.DatasetDescription datasetDescription) {
         Set<ReferenceChecker> referenceCheckers = new LinkedHashSet<>();
-        for (Configuration.ColumnDescription columnDescription : datasetDescription.getReferences().values()) {
+        for (Configuration.ColumnDescription columnDescription : datasetDescription.getData().values()) {
             Checker checker = getChecker(columnDescription, application);
             if (checker instanceof ReferenceChecker) {
                 ReferenceChecker referenceChecker = (ReferenceChecker) checker;

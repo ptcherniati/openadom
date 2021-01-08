@@ -40,7 +40,6 @@ public class Configuration {
         private int lineToSkip = 0;
         private char separator = ';';
         private char quote = '"';
-        private LinkedHashMap<String, ColumnDescription> references;
         private LinkedHashMap<String, DataGroupDescription> dataGroups;
         private String timeScopeColumn;
 
@@ -48,8 +47,8 @@ public class Configuration {
          * @deprecated à supprimer, c'est pour la rétro-compatibilité avant la mise en place des groupes
          */
         @Deprecated
-        public Map<String, DataDescription> getData() {
-            LinkedHashMap<String, DataDescription> data = new LinkedHashMap<>();
+        public Map<String, ColumnDescription> getData() {
+            LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
             if (dataGroups != null) {
                 for (DataGroupDescription value : dataGroups.values()) {
                     data.putAll(value.getData());
@@ -64,6 +63,7 @@ public class Configuration {
     @ToString
     static public class ColumnDescription {
         private CheckerDescription checker;
+        private LinkedHashMap<String, ColumnDescription> accuracy = new LinkedHashMap<>();
     }
 
     @Getter
@@ -77,15 +77,8 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    static public class DataGroupDescription extends ColumnDescription {
+    static public class DataGroupDescription {
         private String label;
-        private LinkedHashMap<String, DataDescription> data;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class DataDescription extends ColumnDescription {
-        private LinkedHashMap<String, ColumnDescription> accuracy = new LinkedHashMap<>();
+        private LinkedHashMap<String, ColumnDescription> data;
     }
 }

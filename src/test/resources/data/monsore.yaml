@@ -103,34 +103,36 @@ dataset:
   pem:
     lineToSkip: 3
     separator: ";"
-    references:
-      projet:
-        checker:
-          name: Reference
-          params:
-            caseSensitive: false
-            refType: projet
-      site:
-        checker:
-          name: Reference
-          params:
-            caseSensitive: false
-            refType: sites
-            column: zet_nom_key
-      plateforme:
-      date:
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-      espece:
-        checker:
-          name: Reference
-          params:
-            caseSensitive: false
-            refType: especes
-            column: esp_nom
     dataGroups:
+      referentiel:
+        label: "Référentiel"
+        data:
+          projet:
+            checker:
+              name: Reference
+              params:
+                caseSensitive: false
+                refType: projet
+          site:
+            checker:
+              name: Reference
+              params:
+                caseSensitive: false
+                refType: sites
+                column: zet_nom_key
+          plateforme:
+          date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          espece:
+            checker:
+              name: Reference
+              params:
+                caseSensitive: false
+                refType: especes
+                column: esp_nom
       qualitatif:
         label: "Données qualitatives"
         data:

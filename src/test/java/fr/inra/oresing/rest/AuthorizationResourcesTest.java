@@ -183,7 +183,15 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            System.out.println(json);
+            // contrôle sur la fenêtre temporelle
+//            Assert.assertFalse(json.contains("01/01/1984"));
+//            Assert.assertTrue(json.contains("02/01/1984"));
+//            Assert.assertTrue(json.contains("03/01/1984"));
+//            Assert.assertFalse(json.contains("04/01/1984"));
+
+            // contrôle sur le groupe de données
+            Assert.assertFalse(json.contains("Couleur des individus"));
+            Assert.assertTrue(json.contains("Nombre d'individus"));
         }
     }
 }

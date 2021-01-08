@@ -2,9 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
@@ -177,14 +175,10 @@ public class OreSiService {
             if (StringUtils.isBlank(timeScopeColumn)) {
                 throw new IllegalArgumentException("il faut indiquer la colonne dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
             }
-            Set<String> knownColumns = Sets.union(datasetDescription.getData().keySet(), datasetDescription.getReferences().keySet()).immutableCopy();
-            if (!knownColumns.contains(timeScopeColumn)) {
+            if (!datasetDescription.getData().containsKey(timeScopeColumn)) {
                 throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetName);
             }
-            Configuration.ColumnDescription timeScopeColumnDescription = MoreObjects.firstNonNull(
-                    datasetDescription.getData().get(timeScopeColumn),
-                    datasetDescription.getReferences().get(timeScopeColumn)
-            );
+            Configuration.ColumnDescription timeScopeColumnDescription = datasetDescription.getData().get(timeScopeColumn);
             Checker timeScopeColumnChecker = checkerFactory.getChecker(timeScopeColumnDescription, app);
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
@@ -239,14 +233,8 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
 
-        // ajout des contraintes sur les champs de type referenciel
         Map<String, Checker> checkers = new HashMap<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> e : dataSet.getReferences().entrySet()) {
-            checkers.put(e.getKey(), checkerFactory.getChecker(e.getValue(), app));
-        }
-
-        // ajout des contraintes sur les champs de data
-        for (Map.Entry<String, Configuration.DataDescription> e : dataSet.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.ColumnDescription> e : dataSet.getData().entrySet()) {
             checkers.put(e.getKey(), checkerFactory.getChecker(e.getValue(), app));
             if (e.getValue() != null) {
                 // ajout de contraintes sur les champs de precisions
