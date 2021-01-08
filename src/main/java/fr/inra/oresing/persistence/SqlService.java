@@ -80,12 +80,12 @@ public class SqlService {
     }
 
     public void createRole(OreSiRoleManagedByApplication roleManagedByApplication) {
-        String sql = "CREATE ROLE \"" + roleManagedByApplication.getAsSqlRole() + "\"";
+        String sql = "CREATE ROLE " + roleManagedByApplication.getSqlIdentifier() + "";
         execute(sql);
     }
 
     public void dropRole(OreSiRoleManagedByApplication roleManagedByApplication) {
-        String sql = "DROP ROLE \"" + roleManagedByApplication.getAsSqlRole() + "\"";
+        String sql = "DROP ROLE " + roleManagedByApplication.getSqlIdentifier() + "";
         execute(sql);
     }
 
@@ -101,8 +101,8 @@ public class SqlService {
 
     private void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd, boolean withAdminOption) {
         String withAdminOptionClause = withAdminOption ? " WITH ADMIN OPTION" : "";
-        String sql = "GRANT \"" + roleToAdd.getAsSqlRole() + "\""
-                     + " TO \"" + roleToModify.getAsSqlRole() + "\""
+        String sql = "GRANT " + roleToAdd.getSqlIdentifier() + ""
+                     + " TO " + roleToModify.getSqlIdentifier() + ""
                      + withAdminOptionClause;
         execute(sql);
     }
@@ -112,7 +112,7 @@ public class SqlService {
     }
 
     public void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
-        String sql = "SET LOCAL ROLE \"" + roleToAccessDatabase.getAsSqlRole() + "\"";
+        String sql = "SET LOCAL ROLE " + roleToAccessDatabase.getSqlIdentifier();
         execute(sql);
     }
 

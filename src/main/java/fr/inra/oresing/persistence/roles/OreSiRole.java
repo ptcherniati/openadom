@@ -20,6 +20,6 @@ public interface OreSiRole extends WithSqlIdentifier {
 
     @Override
     default String getSqlIdentifier() {
-        return WithSqlIdentifier.escapeSqlIdentifier(getAsSqlRole());
+        return "\"" + getAsSqlRole() + "\"";
     }
 }
