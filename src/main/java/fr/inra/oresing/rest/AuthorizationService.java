@@ -5,6 +5,7 @@ import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,9 @@ import java.util.stream.Collectors;
 @Component
 @Transactional
 public class AuthorizationService {
+
+    @Autowired
+    private SqlService db;
 
     @Autowired
     private AuthRepository authRepository;
@@ -67,8 +71,8 @@ public class AuthorizationService {
                 usingExpression
         );
 
-        authRepository.addUserInRole(userRole, OreSiRightOnApplicationRole.readerOn(application));
-        authRepository.createPolicy(sqlPolicy);
+        db.addUserInRole(userRole, OreSiRightOnApplicationRole.readerOn(application));
+        db.createPolicy(sqlPolicy);
 
         return authorization;
     }

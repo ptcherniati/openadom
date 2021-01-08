@@ -4,10 +4,7 @@ import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.persistence.roles.OreSiRoleManagedByApplication;
 import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
-import fr.inra.oresing.persistence.roles.OreSiRoleToBeGranted;
-import fr.inra.oresing.persistence.roles.OreSiRoleWeCanGrantOtherRolesTo;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,18 +14,12 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.PreparedStatement;
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
 @Transactional
 public class AuthRepository {
-
-    private static final String RESET_ROLE = "RESET ROLE";
-    private static final String SET_ROLE = "SET LOCAL ROLE \":role\"";
-    private static final String CREATE_ROLE = "CREATE ROLE \":role\"";
-    private static final String REMOVE_ROLE = "DROP ROLE \":role\"";
 
     private static final String USER_UPSERT =
             "INSERT INTO OreSiUser (id, login, password) SELECT id, login, password FROM json_populate_record(NULL::OreSiUser, :json::json)"
@@ -48,14 +39,16 @@ public class AuthRepository {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Autowired
+    private SqlService db;
+
+    @Autowired
     private OreSiApiRequestContext request;
 
     /**
      * Reprend le role de l'utilisateur utilisé pour la connexion à la base de données
      */
     public void resetRole() {
-        namedParameterJdbcTemplate.execute(RESET_ROLE,
-                PreparedStatement::execute);
+        db.resetRole();
     }
 
     /**
@@ -78,9 +71,7 @@ public class AuthRepository {
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
      */
     void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
-        // faire attention au SQL injection
-        String sql = SET_ROLE.replaceAll(":role", roleToAccessDatabase.getAsSqlRole());
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
+        db.setRole(roleToAccessDatabase);
     }
 
     /**
@@ -110,51 +101,15 @@ public class AuthRepository {
         result.setId(id);
 
         OreSiUserRole userRole = getUserRole(result);
-        createRole(userRole);
+        db.createRole(userRole);
 
         return result;
-    }
-
-    public void createRole(OreSiRoleManagedByApplication roleManagedByApplication) {
-        String sql = CREATE_ROLE.replaceAll(":role", roleManagedByApplication.getAsSqlRole());
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
     public void addUserRightCreateApplication(UUID userId) {
         OreSiUserRole roleToModify = getUserRole(userId);
         OreSiApplicationCreatorRole roleToAdd = OreSiRole.applicationCreator();
-        addUserInRole(roleToModify, roleToAdd);
-    }
-
-    public void createPolicy(SqlPolicy sqlPolicy) {
-        String createPolicySql = String.format(
-                "CREATE POLICY %s ON %s AS %s FOR %s TO %s USING (%s)",
-                sqlPolicy.getSqlIdentifier(),
-                sqlPolicy.getTable().getSqlIdentifier(),
-                sqlPolicy.getPermissiveOrRestrictive().name(),
-                sqlPolicy.getStatement().name(),
-                sqlPolicy.getRole().getSqlIdentifier(),
-                sqlPolicy.getUsingExpression()
-        );
-        namedParameterJdbcTemplate.execute(createPolicySql, PreparedStatement::execute);
-    }
-
-    public void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
-        boolean withAdminOption = false;
-        addUserInRole(roleToModify, roleToAdd, withAdminOption);
-    }
-
-    public void addUserInRoleAsAdmin(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
-        boolean withAdminOption = true;
-        addUserInRole(roleToModify, roleToAdd, withAdminOption);
-    }
-
-    private void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd, boolean withAdminOption) {
-        String withAdminOptionClause = withAdminOption ? " WITH ADMIN OPTION" : "";
-        String query = ("GRANT \":role\" TO \":user\"" + withAdminOptionClause)
-                .replaceAll(":role", roleToAdd.getAsSqlRole())
-                .replaceAll(":user", roleToModify.getAsSqlRole());
-        namedParameterJdbcTemplate.execute(query, PreparedStatement::execute);
+        db.addUserInRole(roleToModify, roleToAdd);
     }
 
     public void removeUser(UUID userId) {
@@ -163,7 +118,7 @@ public class AuthRepository {
         int count = namedParameterJdbcTemplate.update(DELETE_USER, sqlParameterSource);
         if (count > 0) {
             OreSiUserRole userRoleToDelete = getUserRole(oreSiUser);
-            removeRole(userRoleToDelete);
+            db.dropRole(userRoleToDelete);
         }
     }
 
@@ -172,12 +127,6 @@ public class AuthRepository {
         return (OreSiUser) namedParameterJdbcTemplate.query(SELECT_USER, sqlParameterSource, jsonRowMapper).stream()
                     .findAny()
                     .orElseThrow(() -> new IllegalArgumentException("l'utilisateur " + userId + " n'existe pas en base"));
-    }
-
-    public void removeRole(OreSiRoleManagedByApplication roleManagedByApplication) {
-        // faire attention au SQL injection
-        String sql = REMOVE_ROLE.replaceAll(":role", roleManagedByApplication.getAsSqlRole());
-        namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
 
     public OreSiUserRole getUserRole(UUID userId) {

@@ -20,6 +20,7 @@ import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,6 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,7 +38,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -70,7 +69,7 @@ public class OreSiService {
     private DataSource dataSource;
 
     @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private SqlService db;
 
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
         authRepository.setRoleForClient();
@@ -103,10 +102,10 @@ public class OreSiService {
         OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
         OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
 
-        authRepository.createRole(adminOnApplicationRole);
-        authRepository.createRole(readerOnApplicationRole);
+        db.createRole(adminOnApplicationRole);
+        db.createRole(readerOnApplicationRole);
 
-        authRepository.createPolicy(new SqlPolicy(
+        db.createPolicy(new SqlPolicy(
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
@@ -114,7 +113,7 @@ public class OreSiService {
                 "name = '" + name + "'"
         ));
 
-        authRepository.createPolicy(new SqlPolicy(
+        db.createPolicy(new SqlPolicy(
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
@@ -122,15 +121,15 @@ public class OreSiService {
                 "name = '" + name + "'"
         ));
 
-        namedParameterJdbcTemplate.execute("ALTER SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
-        namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + sqlSchemaForApplication.getSqlIdentifier() + " TO " + readerOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
+        db.grantUsage(sqlSchemaForApplication, readerOnApplicationRole);
 
-        namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.data().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
-        namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.referenceValue().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
-        namedParameterJdbcTemplate.execute("ALTER TABLE " + sqlSchemaForApplication.binaryFile().getSqlIdentifier() + " OWNER TO " + adminOnApplicationRole.getSqlIdentifier(), PreparedStatement::execute);
+        db.setTableOwner(sqlSchemaForApplication.data(), adminOnApplicationRole);
+        db.setTableOwner(sqlSchemaForApplication.referenceValue(), adminOnApplicationRole);
+        db.setTableOwner(sqlSchemaForApplication.binaryFile(), adminOnApplicationRole);
 
         OreSiUserRole creator = authRepository.getUserRole(request.getRequestClient().getId());
-        authRepository.addUserInRole(creator, adminOnApplicationRole);
+        db.addUserInRole(creator, adminOnApplicationRole);
 
         authRepository.setRoleForClient();
         UUID result = repo.store(app);

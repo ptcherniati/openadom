@@ -10,6 +10,7 @@ import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.SqlTable;
 import fr.inra.oresing.persistence.WithSqlIdentifier;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
@@ -21,7 +22,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -35,6 +35,9 @@ import java.util.stream.Collectors;
 @Component
 @Transactional
 public class RelationalService {
+
+    @Autowired
+    private SqlService db;
 
     @Autowired
     private AuthRepository authRepository;
@@ -73,25 +76,24 @@ public class RelationalService {
 
     private void create(SchemaCreationCommand schemaCreationCommand) {
         ViewStrategy viewStrategy = schemaCreationCommand.getViewStrategy();
-        String schemaName = schemaCreationCommand.getSchema().getSqlIdentifier();
         UUID appId = schemaCreationCommand.getApplication().getId();
         OreSiRightOnApplicationRole owner = OreSiRightOnApplicationRole.adminOn(schemaCreationCommand.getApplication());
-        namedParameterJdbcTemplate.execute("CREATE SCHEMA " + schemaName + " AUTHORIZATION " + owner.getSqlIdentifier(), PreparedStatement::execute);
+        db.createSchema(schemaCreationCommand.getSchema(), owner);
         for (ViewCreationCommand viewCreationCommand : schemaCreationCommand.getViews()) {
-            String viewFqn = viewCreationCommand.getView().getSqlIdentifier();
+            SqlTable view = viewCreationCommand.getView();
             String viewSql = viewCreationCommand.getSql();
             if (viewStrategy == ViewStrategy.VIEW) {
-                namedParameterJdbcTemplate.execute("CREATE VIEW " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
-                namedParameterJdbcTemplate.execute("ALTER VIEW " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
+                db.createView(view, viewSql);
+                db.setViewOwner(view, owner);
 //                for (ApplicationRight applicationRight : ApplicationRight.values()) {
 //                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
 //                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
 //                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
 //                }
             } else if (viewStrategy == ViewStrategy.TABLE) {
-                namedParameterJdbcTemplate.execute("CREATE TABLE " + viewFqn + " AS (" + viewSql + ")", PreparedStatement::execute);
-                namedParameterJdbcTemplate.execute("ALTER TABLE " + viewFqn + " ENABLE ROW LEVEL SECURITY", PreparedStatement::execute);
-                namedParameterJdbcTemplate.execute("ALTER TABLE " + viewFqn + " OWNER TO " + owner.getSqlIdentifier(), PreparedStatement::execute);
+                db.createTable(view, viewSql);
+                db.enableRowLevelSecurity(view);
+                db.setTableOwner(view, owner);
 //                for (ApplicationRight applicationRight : ApplicationRight.values()) {
 //                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
 //                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
@@ -109,16 +111,16 @@ public class RelationalService {
         ViewStrategy viewStrategy = schemaCreationCommand.getViewStrategy();
         List<ViewCreationCommand> reverse = Lists.reverse(schemaCreationCommand.getViews());
         for (ViewCreationCommand viewCreationCommand : reverse) {
+            SqlTable view = viewCreationCommand.getView();
             if (viewStrategy == ViewStrategy.VIEW) {
-                namedParameterJdbcTemplate.execute("DROP VIEW " + viewCreationCommand.getView().getSqlIdentifier(), PreparedStatement::execute);
+                db.dropView(view);
             } else if (viewStrategy == ViewStrategy.TABLE) {
-                namedParameterJdbcTemplate.execute("DROP TABLE " + viewCreationCommand.getView().getSqlIdentifier(), PreparedStatement::execute);
+                db.dropTable(view);
             } else {
                 throw new IllegalArgumentException("stratégie " + viewStrategy);
             }
         }
-        String schemaName = schemaCreationCommand.getSchema().getSqlIdentifier();
-        namedParameterJdbcTemplate.execute("DROP SCHEMA " + schemaName, PreparedStatement::execute);
+        db.dropSchema(schemaCreationCommand.getSchema());
     }
 
     private SchemaCreationCommand getSchemaCreationCommand(Application app, ViewStrategy viewStrategy) {
@@ -281,7 +283,7 @@ public class RelationalService {
                                    + excludedReferenceIds.stream().map(excludedReferenceId -> "'" + excludedReferenceId + "'::uuid").collect(Collectors.joining(", ", "ARRAY[", "]"))
                                    ;
             SqlPolicy sqlPolicy = new SqlPolicy(viewCreationCommand.getView(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, SqlPolicy.Statement.SELECT, role, "(" + usingExpression + ") is false");
-            authRepository.createPolicy(sqlPolicy);
+            db.createPolicy(sqlPolicy);
         }
     }
 
