@@ -171,7 +171,7 @@ public class OreSiResourcesTest {
 
         // restitution de data json
         {
-            String expectedJson = Resources.toString(getClass().getResource("/data/compare/export.json"), Charsets.UTF_8);
+            String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
@@ -182,7 +182,7 @@ public class OreSiResourcesTest {
 
         // restitution de data csv
         {
-            String expectedCsv = Resources.toString(getClass().getResource("/data/compare/export.csv"), Charsets.UTF_8);
+            String expectedCsv = Resources.toString(getClass().getResource("/data/monsore/compare/export.csv"), Charsets.UTF_8);
             String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                     .cookie(authCookie)
                     .accept(MediaType.TEXT_PLAIN))

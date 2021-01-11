@@ -13,7 +13,7 @@ public class ConfigurationTest {
 
     @Test
     public void testReadConfiguration() throws IOException {
-        URL resource = getClass().getResource("/data/monsore.yaml");
+        URL resource = getClass().getResource("/data/monsore/monsore.yaml");
         try (InputStream in = resource.openStream()){
             byte[] file = in.readAllBytes();
             Configuration conf = Configuration.read(file);
