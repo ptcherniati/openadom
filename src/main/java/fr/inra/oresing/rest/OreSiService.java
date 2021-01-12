@@ -25,6 +25,7 @@ import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
@@ -41,6 +42,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -269,8 +272,10 @@ public class OreSiService {
             }
 
             CsvMapper mapper = new CsvMapper();
-            mapper.readerFor(Map.class).with(schema).readValues(reader).forEachRemaining(line -> {
-                Map<String, String> values = (Map<String, String>) line;
+            Iterator<Map<String, String>> records = mapper.readerFor(Map.class).with(schema).readValues(reader);
+            Stream<Map<String, String>> lines = Streams.stream(records);
+            lines.forEach(line -> {
+                Map<String, String> values = line;
                 List<UUID> refsLinkedTo = new ArrayList<>();
                 values.forEach((k, v) -> {
                     try {
