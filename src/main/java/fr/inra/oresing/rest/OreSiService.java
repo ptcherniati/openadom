@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -266,6 +267,51 @@ public class OreSiService {
 
         ApplicationRepository applicationRepository = repo.getRepository(app);
 
+        Consumer<Map<String, String>> lineConsumer = line -> {
+            Map<String, String> values = line;
+            List<UUID> refsLinkedTo = new ArrayList<>();
+            values.forEach((k, v) -> {
+                try {
+                    Checker checker = checkers.get(k);
+                    if (checker == null) {
+                        throw new CheckerException(String.format("Unknown column: '%s'", k));
+                    }
+                    Object result = checker.check(v);
+                    if (checker instanceof ReferenceChecker) {
+                        refsLinkedTo.add((UUID) result);
+                    }
+                } catch (CheckerException eee) {
+                    log.debug("Validation problem", eee);
+                    error.add(eee.getMessage());
+                }
+            });
+
+            String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
+            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
+
+            // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
+            String rowId = UUID.randomUUID().toString();
+
+            for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataSet.getDataGroups().entrySet()) {
+                String dataGroup = entry.getKey();
+                Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
+
+                Set<String> columnsIncludedInDataGroup = dataGroupDescription.getData().keySet();
+                Map<String, String> dataGroupValues = Maps.filterKeys(values, columnsIncludedInDataGroup::contains);
+
+                Data e = new Data();
+                e.setBinaryFile(fileId);
+                e.setDataType(dataType);
+                e.setRowId(rowId);
+                e.setDataGroup(dataGroup);
+                e.setApplication(app.getId());
+                e.setRefsLinkedTo(refsLinkedTo);
+                e.setDataValues(dataGroupValues);
+                e.setTimeScope(timeScope);
+                applicationRepository.store(e);
+            }
+        };
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
             for (int i = 0; i < dataSet.getLineToSkip(); i++) {
                 reader.readLine();
@@ -274,50 +320,7 @@ public class OreSiService {
             CsvMapper mapper = new CsvMapper();
             Iterator<Map<String, String>> records = mapper.readerFor(Map.class).with(schema).readValues(reader);
             Stream<Map<String, String>> lines = Streams.stream(records);
-            lines.forEach(line -> {
-                Map<String, String> values = line;
-                List<UUID> refsLinkedTo = new ArrayList<>();
-                values.forEach((k, v) -> {
-                    try {
-                        Checker checker = checkers.get(k);
-                        if (checker == null) {
-                            throw new CheckerException(String.format("Unknown column: '%s'", k));
-                        }
-                        Object result = checker.check(v);
-                        if (checker instanceof ReferenceChecker) {
-                            refsLinkedTo.add((UUID) result);
-                        }
-                    } catch (CheckerException eee) {
-                        log.debug("Validation problem", eee);
-                        error.add(eee.getMessage());
-                    }
-                });
-
-                String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
-                LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
-
-                // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
-                String rowId = UUID.randomUUID().toString();
-
-                for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataSet.getDataGroups().entrySet()) {
-                    String dataGroup = entry.getKey();
-                    Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
-
-                    Set<String> columnsIncludedInDataGroup = dataGroupDescription.getData().keySet();
-                    Map<String, String> dataGroupValues = Maps.filterKeys(values, columnsIncludedInDataGroup::contains);
-
-                    Data e = new Data();
-                    e.setBinaryFile(fileId);
-                    e.setDataType(dataType);
-                    e.setRowId(rowId);
-                    e.setDataGroup(dataGroup);
-                    e.setApplication(app.getId());
-                    e.setRefsLinkedTo(refsLinkedTo);
-                    e.setDataValues(dataGroupValues);
-                    e.setTimeScope(timeScope);
-                    applicationRepository.store(e);
-                }
-            });
+            lines.forEach(lineConsumer);
         }
 
         if (!error.isEmpty()) {
