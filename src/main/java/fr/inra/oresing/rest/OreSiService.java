@@ -39,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -153,7 +154,11 @@ public class OreSiService {
         applicationRepository.deleteBinaryFile(oldConfigId);
 
         Configuration conf = Configuration.read(configurationFile.getBytes());
-        app.setReferenceType(new ArrayList<>(conf.getReferences().keySet()));
+        if (conf.getReferences() == null) {
+            app.setReferenceType(Collections.emptyList());
+        } else {
+            app.setReferenceType(new ArrayList<>(conf.getReferences().keySet()));
+        }
         app.setDataType(new ArrayList<>(conf.getDataset().keySet()));
 
         app.setConfiguration(conf);
