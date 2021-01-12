@@ -70,7 +70,7 @@ public class OreSiResourcesTest {
                 .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
-        URL resource = getClass().getResource(fixtures.getApplicationConfigurationResourceName());
+        URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
         try (InputStream in = resource.openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
@@ -109,7 +109,7 @@ public class OreSiResourcesTest {
         Assert.assertEquals(List.of("pem"), app2.getDataType());
 
         // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getReferentielFiles().entrySet()) {
+        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 

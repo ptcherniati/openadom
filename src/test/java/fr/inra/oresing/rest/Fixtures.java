@@ -8,15 +8,15 @@ import java.util.Map;
 @Component
 public class Fixtures {
 
-    public String getApplicationName() {
+    public String getMonsoreApplicationName() {
         return "monsore";
     }
 
-    public String getApplicationConfigurationResourceName() {
+    public String getMonsoreApplicationConfigurationResourceName() {
         return "/data/monsore/monsore.yaml";
     }
 
-    public Map<String, String> getReferentielFiles() {
+    public Map<String, String> getMonsoreReferentielFiles() {
         Map<String, String> referentielFiles = new HashMap<>();
         referentielFiles.put("especes", "/data/monsore/refdatas/especes.csv");
         referentielFiles.put("projet", "/data/monsore/refdatas/projet.csv");

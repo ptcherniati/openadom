@@ -71,7 +71,7 @@ public class AuthorizationResourcesTest {
                 .param("login", aLogin)
                 .param("password", aPassword))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getApplicationConfigurationResourceName())) {
+        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMonsoreApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                     .file(configuration)
@@ -80,7 +80,7 @@ public class AuthorizationResourcesTest {
         }
 
         // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getReferentielFiles().entrySet()) {
+        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())

@@ -72,7 +72,7 @@ public class RelationalServiceTest {
                 .param("login", aLogin)
                 .param("password", aPassword))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getApplicationConfigurationResourceName())) {
+        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMonsoreApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                     .file(configuration)
@@ -81,7 +81,7 @@ public class RelationalServiceTest {
         }
 
         // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getReferentielFiles().entrySet()) {
+        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
@@ -128,29 +128,29 @@ public class RelationalServiceTest {
     @Test
     public void testCreateViews() {
         try {
-            relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
+            relationalService.dropViews(fixtures.getMonsoreApplicationName(), ViewStrategy.VIEW);
         } catch (Exception e) {
             // ignore
         }
 
         try {
             request.setRequestClient(applicationCreatorRequestClient);
-            relationalService.createViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
+            relationalService.createViews(fixtures.getMonsoreApplicationName(), ViewStrategy.VIEW);
 
             {
                 request.setRequestClient(applicationCreatorRequestClient);
-                List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.VIEW);
+                List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getMonsoreApplicationName(), "pem", ViewStrategy.VIEW);
                 Assert.assertEquals(306, viewContent.size());
             }
 
             {
                 request.setRequestClient(restrictedReaderRequestClient);
-                List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.VIEW);
+                List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getMonsoreApplicationName(), "pem", ViewStrategy.VIEW);
                 Assert.assertEquals(306, restrictedViewContent.size());
             }
         } finally {
             try {
-                relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.VIEW);
+                relationalService.dropViews(fixtures.getMonsoreApplicationName(), ViewStrategy.VIEW);
             } catch (Exception e) {
                 // ignore
             }
@@ -160,30 +160,30 @@ public class RelationalServiceTest {
     @Test
     public void testCreateViewsAsTables() {
         try {
-            relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
+            relationalService.dropViews(fixtures.getMonsoreApplicationName(), ViewStrategy.TABLE);
         } catch (Exception e) {
             // ignore
         }
         try {
             request.setRequestClient(applicationCreatorRequestClient);
-            relationalService.createViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
+            relationalService.createViews(fixtures.getMonsoreApplicationName(), ViewStrategy.TABLE);
 
             {
                 request.setRequestClient(applicationCreatorRequestClient);
-                List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.TABLE);
+                List<Map<String, Object>> viewContent = relationalService.readView(fixtures.getMonsoreApplicationName(), "pem", ViewStrategy.TABLE);
                 Assert.assertEquals(306, viewContent.size());
             }
 
-            relationalService.addRestrictedUser(restrictedReaderRequestClient.getRole(), Set.of(excludedReferenceId), fixtures.getApplicationName(), ViewStrategy.TABLE);
+            relationalService.addRestrictedUser(restrictedReaderRequestClient.getRole(), Set.of(excludedReferenceId), fixtures.getMonsoreApplicationName(), ViewStrategy.TABLE);
 
             {
                 request.setRequestClient(restrictedReaderRequestClient);
-                List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getApplicationName(), "pem", ViewStrategy.TABLE);
+                List<Map<String, Object>> restrictedViewContent = relationalService.readView(fixtures.getMonsoreApplicationName(), "pem", ViewStrategy.TABLE);
                 Assert.assertEquals(261, restrictedViewContent.size());
             }
         } finally {
             try {
-                relationalService.dropViews(fixtures.getApplicationName(), ViewStrategy.TABLE);
+                relationalService.dropViews(fixtures.getMonsoreApplicationName(), ViewStrategy.TABLE);
             } catch (Exception e) {
                 // ignore
             }
