@@ -38,6 +38,7 @@ public class Configuration {
     @ToString
     static public class DatasetDescription {
         private int lineToSkip = 0;
+        private int lineToSkipAfterHeader = 0;
         private char separator = ';';
         private char quote = '"';
         private LinkedHashMap<String, DataGroupDescription> dataGroups;

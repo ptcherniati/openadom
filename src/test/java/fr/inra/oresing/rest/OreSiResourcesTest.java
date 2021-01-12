@@ -8,9 +8,11 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -32,6 +35,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,8 +47,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = OreSiNg.class)
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
-@DirtiesContext
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OreSiResourcesTest {
 
     @Autowired
@@ -59,16 +63,23 @@ public class OreSiResourcesTest {
     @Autowired
     private Fixtures fixtures;
 
-    @Test
-    public void addApplication() throws Exception {
-        String appId;
+    private Cookie authCookie;
 
+    private UUID userId;
+
+    @Before
+    public void createUser() throws Exception {
         OreSiUser user = authRepository.createUser("poussin", "xxxxxxxx");
-
-        Cookie authCookie = mockMvc.perform(post("/api/v1/login")
+        userId = user.getId();
+        authCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "poussin")
                 .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+    }
+
+    @Test
+    public void addApplicationMonsore() throws Exception {
+        String appId;
 
         URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
         try (InputStream in = resource.openStream()) {
@@ -79,8 +90,7 @@ public class OreSiResourcesTest {
                     .file(configuration)
                     .cookie(authCookie))
                     .andExpect(status().is4xxClientError());
-
-            authRepository.addUserRightCreateApplication(user.getId());
+            authRepository.addUserRightCreateApplication(userId);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                     .file(configuration)
@@ -289,6 +299,91 @@ public class OreSiResourcesTest {
 //                    .andReturn().getResponse().getContentAsString();
 //
 //            System.out.println(response);
+//        }
+    }
+
+    @Test
+    public void addApplicationAcbb() throws Exception {
+        authRepository.addUserRightCreateApplication(userId);
+
+        String appId;
+        URL resource = getClass().getResource(fixtures.getAcbbApplicationConfigurationResourceName());
+        try (InputStream in = resource.openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+
+            appId = JsonPath.parse(response).read("$.id");
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getAcbbReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                String refFileId = JsonPath.parse(response).read("$.id");
+            }
+        }
+
+//        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes/esp_nom")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .cookie(authCookie))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+//                .andReturn().getResponse().getContentAsString();
+//
+//        List refs = objectMapper.readValue(response, List.class);
+//        Assert.assertFalse(refs.isEmpty());
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            System.out.println(response);
+        }
+
+        // restitution de data json
+        {
+//            String expectedJson = Resources.toString(getClass().getResource("/data/acbb/compare/export.json"), Charsets.UTF_8);
+            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+//                    .andExpect(content().json(expectedJson))
+                    .andReturn().getResponse().getContentAsString();
+
+            Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
+            System.out.println(actualJson);
+        }
+
+        // restitution de data csv
+//        {
+////            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
+//            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
+//                    .cookie(authCookie)
+//                    .accept(MediaType.TEXT_PLAIN))
+//                    .andExpect(status().isOk())
+////                    .andExpect(content().string(expectedCsv))
+//                    .andReturn().getResponse().getContentAsString();
+//            Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
 //        }
     }
 

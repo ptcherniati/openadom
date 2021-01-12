@@ -331,6 +331,7 @@ public class OreSiService {
                 Iterators.advance(linesIterator, dataSet.getLineToSkip());
                 CSVRecord headerRow = linesIterator.next();
                 ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+                Iterators.advance(linesIterator, dataSet.getLineToSkipAfterHeader());
                 Stream<Map<String, String>> lines = Streams.stream(csvParser).map(record -> {
                     Iterator<String> currentHeader = columns.iterator();
                     Map<String, String> row = new LinkedHashMap<>();

@@ -35,4 +35,18 @@ public class Fixtures {
     public String getPemDataResourceName() {
         return "/data/monsore/data-pem.csv";
     }
+
+    public String getAcbbApplicationConfigurationResourceName() {
+        return "/data/acbb/acbb.yaml";
+    }
+
+    public Map<String, String> getAcbbReferentielFiles() {
+        Map<String, String> referentielFiles = new HashMap<>();
+        //referentielFiles.put("especes", "/data/monsore/refdatas/especes.csv");
+        return referentielFiles;
+    }
+
+    public String getFluxToursDataResourceName() {
+        return "/data/acbb/Flux_tours.csv";
+    }
 }

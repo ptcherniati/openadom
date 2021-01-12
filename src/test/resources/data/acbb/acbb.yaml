@@ -1,0 +1,30 @@
+references:
+dataset:
+  flux_tours:
+    lineToSkip: 7
+    lineToSkipAfterHeader: 3
+    separator: ";"
+    dataGroups:
+      all:
+        label: "Toutes les données"
+        data:
+          date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          heure:
+          CO2:
+          H2O:
+          ZL:
+          Fc:
+          qc1:
+          H:
+          qc2:
+          LE:
+          qc3:
+          t:
+          qc4:
+          u*:
+          Fc gf:
+    timeScopeColumn: date
