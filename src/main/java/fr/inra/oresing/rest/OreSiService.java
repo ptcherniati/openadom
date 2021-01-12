@@ -2,6 +2,9 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
@@ -24,6 +27,9 @@ import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
@@ -38,11 +44,13 @@ import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -312,15 +320,39 @@ public class OreSiService {
             }
         };
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
-            for (int i = 0; i < dataSet.getLineToSkip(); i++) {
-                reader.readLine();
+        boolean useBetterCsvParser = true;
+        if (useBetterCsvParser) {
+            CSVFormat csvFormat = CSVFormat.DEFAULT
+                    .withDelimiter(';')
+                    .withSkipHeaderRecord();
+            try (InputStream csv = file.getInputStream()) {
+                CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+                Iterator<CSVRecord> linesIterator = csvParser.iterator();
+                Iterators.advance(linesIterator, dataSet.getLineToSkip());
+                CSVRecord headerRow = linesIterator.next();
+                ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+                Stream<Map<String, String>> lines = Streams.stream(csvParser).map(record -> {
+                    Iterator<String> currentHeader = columns.iterator();
+                    Map<String, String> row = new LinkedHashMap<>();
+                    record.forEach(column -> {
+                        String header = currentHeader.next();
+                        row.put(header, column);
+                    });
+                    return row;
+                });
+                lines.forEach(lineConsumer);
             }
+        } else {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
+                for (int i = 0; i < dataSet.getLineToSkip(); i++) {
+                    reader.readLine();
+                }
 
-            CsvMapper mapper = new CsvMapper();
-            Iterator<Map<String, String>> records = mapper.readerFor(Map.class).with(schema).readValues(reader);
-            Stream<Map<String, String>> lines = Streams.stream(records);
-            lines.forEach(lineConsumer);
+                CsvMapper mapper = new CsvMapper();
+                Iterator<Map<String, String>> records = mapper.readerFor(Map.class).with(schema).readValues(reader);
+                Stream<Map<String, String>> lines = Streams.stream(records);
+                lines.forEach(lineConsumer);
+            }
         }
 
         if (!error.isEmpty()) {
