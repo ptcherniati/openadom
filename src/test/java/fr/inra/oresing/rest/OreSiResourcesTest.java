@@ -176,7 +176,7 @@ public class OreSiResourcesTest {
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-//                    .andExpect(content().json(expectedJson))
+                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
         }
 
