@@ -8,6 +8,7 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
@@ -49,6 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Slf4j
 public class OreSiResourcesTest {
 
     @Autowired
@@ -155,7 +157,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
 
-            System.out.println(response);
+            log.debug(response);
         }
 
         // list des type de data
@@ -164,7 +166,7 @@ public class OreSiResourcesTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        System.out.println(response);
+        log.debug(response);
 
 //        // creation d'un user qui aura le droit de lire les données
 //        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
@@ -298,7 +300,7 @@ public class OreSiResourcesTest {
 //                    .andExpect(status().is4xxClientError())
 //                    .andReturn().getResponse().getContentAsString();
 //
-//            System.out.println(response);
+//            log.debug(response);
 //        }
     }
 
@@ -357,7 +359,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
 
-            System.out.println(response);
+            log.debug(response);
         }
 
         // restitution de data json
@@ -371,7 +373,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
-            System.out.println(actualJson);
+            log.debug(actualJson);
         }
 
         // restitution de data csv

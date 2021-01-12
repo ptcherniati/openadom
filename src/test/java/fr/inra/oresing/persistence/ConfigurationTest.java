@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.model.Configuration;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+@Slf4j
 public class ConfigurationTest {
 
     @Test
@@ -19,7 +21,7 @@ public class ConfigurationTest {
             Configuration conf = Configuration.read(file);
 
             ObjectMapper json = new ObjectMapper();
-            System.out.println(json.writerWithDefaultPrettyPrinter().writeValueAsString(conf));
+            log.debug(json.writerWithDefaultPrettyPrinter().writeValueAsString(conf));
             Assert.assertEquals(11, conf.getReferences().size());
         }
     }

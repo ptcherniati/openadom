@@ -5,6 +5,7 @@ import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
 @DirtiesContext
+@Slf4j
 public class AuthorizationResourcesTest {
 
     @Autowired
@@ -166,7 +168,7 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(create)
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            System.out.println(response);
+            log.debug(response);
         }
 
         {
