@@ -260,14 +260,6 @@ public class OreSiService {
             }
         }
 
-        CsvSchema.Builder schemaBuilder = CsvSchema.builder();
-        schemaBuilder.setColumnSeparator(dataSet.getSeparator());
-        schemaBuilder.setUseHeader(true);
-        schemaBuilder.setReorderColumns(true);
-
-        checkers.keySet().forEach(schemaBuilder::addColumn);
-        CsvSchema schema = schemaBuilder.build();
-
         List<String> error = new LinkedList<>();
 
         DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getTimeScopeColumn());
@@ -344,6 +336,12 @@ public class OreSiService {
                 lines.forEach(lineConsumer);
             }
         } else {
+            CsvSchema.Builder schemaBuilder = CsvSchema.builder();
+            schemaBuilder.setColumnSeparator(dataSet.getSeparator());
+            schemaBuilder.setUseHeader(true);
+            schemaBuilder.setReorderColumns(true);
+            checkers.keySet().forEach(schemaBuilder::addColumn);
+            CsvSchema schema = schemaBuilder.build();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
                 for (int i = 0; i < dataSet.getLineToSkip(); i++) {
                     reader.readLine();
