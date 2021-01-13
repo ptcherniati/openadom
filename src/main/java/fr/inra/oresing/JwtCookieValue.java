@@ -1,14 +1,10 @@
 package fr.inra.oresing;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Value;
 
-@Getter
-@Setter
-@ToString
+@Value
 public class JwtCookieValue {
 
-    private OreSiUserRequestClient requestClient;
+    OreSiUserRequestClient requestClient;
 
 }

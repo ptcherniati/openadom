@@ -268,9 +268,7 @@ public class OreSiService {
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
-                VariableComponentReference variableComponentReference = new VariableComponentReference();
-                variableComponentReference.setVariable(variable);
-                variableComponentReference.setComponent(component);
+                VariableComponentReference variableComponentReference = new VariableComponentReference(variable, component);
                 checkers.put(variableComponentReference, checkerFactory.getChecker(variableDescription, app, component));
             }
         }

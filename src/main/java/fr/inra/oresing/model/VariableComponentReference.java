@@ -1,15 +1,9 @@
 package fr.inra.oresing.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Value;
 
-@Getter
-@Setter
-@EqualsAndHashCode
-@ToString
+@Value
 public class VariableComponentReference {
-    private String variable;
-    private String component;
+    String variable;
+    String component;
 }

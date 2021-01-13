@@ -77,8 +77,7 @@ public class AuthHelper {
     private Cookie newCookie(OreSiUserRequestClient requestClient) {
         String json;
         try {
-            JwtCookieValue jwtCookieValue = new JwtCookieValue();
-            jwtCookieValue.setRequestClient(requestClient);
+            JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
             json = objectMapper.writeValueAsString(jwtCookieValue);
         } catch (JsonProcessingException e) {
             throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);

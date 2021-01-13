@@ -1,25 +1,19 @@
 package fr.inra.oresing;
 
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Value;
 
 import java.util.UUID;
 
-@Getter
-@Setter
-@ToString
+@Value
 public class OreSiUserRequestClient implements OreSiRequestClient {
 
-    private UUID id;
+    UUID id;
 
-    private OreSiUserRole role;
+    OreSiUserRole role;
 
     public static OreSiUserRequestClient of(UUID userId, OreSiUserRole userRole) {
-        OreSiUserRequestClient newRequestClient = new OreSiUserRequestClient();
-        newRequestClient.setId(userId);
-        newRequestClient.setRole(userRole);
+        OreSiUserRequestClient newRequestClient = new OreSiUserRequestClient(userId, userRole);
         return newRequestClient;
     }
 }
