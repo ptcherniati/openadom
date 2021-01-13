@@ -105,11 +105,4 @@ public class Configuration {
         private LinkedHashMap<String, ColumnDescription> data;
     }
 
-    @Getter
-    @Setter
-    @ToString
-    static public class VariableComponentReference {
-        private String variable;
-        private String component;
-    }
 }
