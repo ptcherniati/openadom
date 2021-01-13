@@ -156,7 +156,7 @@ public class ApplicationRepository implements InitializingBean {
         return result;
     }
 
-    public List<Map<String, String>> findData(String dataType) {
+    public List<Map<String, Map<String, String>>> findData(String dataType) {
         String toMergeDataGroupsQuery = " SELECT rowId, jsonb_object_agg(dataValues) as values"
                                       + " FROM " + schema.data().getSqlIdentifier()
                                       + " WHERE application = :applicationId::uuid AND dataType = :dataType"
@@ -169,7 +169,7 @@ public class ApplicationRepository implements InitializingBean {
                 new MapSqlParameterSource("applicationId", application.getId())
                         .addValue("dataType", dataType);
         List result = namedParameterJdbcTemplate.query(query,  args, jsonRowMapper);
-        return (List<Map<String, String>>) result;
+        return (List<Map<String, Map<String, String>>>) result;
     }
 
 }

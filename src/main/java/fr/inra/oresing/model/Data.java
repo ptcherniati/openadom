@@ -18,6 +18,6 @@ public class Data extends OreSiEntity {
     private String dataGroup;
     private LocalDateTimeRange timeScope;
     private List<UUID> refsLinkedTo;
-    private Map<String, String> dataValues;
+    private Map<String, Map<String, String>> dataValues;
     private UUID binaryFile;
 }

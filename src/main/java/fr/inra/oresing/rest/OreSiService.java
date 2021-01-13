@@ -6,6 +6,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
@@ -29,8 +30,8 @@ import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
@@ -46,9 +47,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -187,15 +188,24 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DatasetDescription> entry : conf.getDataset().entrySet()) {
             String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
-            String timeScopeColumn = datasetDescription.getTimeScopeColumn();
-            if (StringUtils.isBlank(timeScopeColumn)) {
-                throw new IllegalArgumentException("il faut indiquer la colonne dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
+            Configuration.VariableComponentReference timeScopeColumn = datasetDescription.getTimeScopeColumn();
+            if (timeScopeColumn == null) {
+                throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
             }
-            if (!datasetDescription.getData().containsKey(timeScopeColumn)) {
-                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetName);
+            if (timeScopeColumn.getVariable() == null) {
+                throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().keySet());
             }
-            Configuration.ColumnDescription timeScopeColumnDescription = datasetDescription.getData().get(timeScopeColumn);
-            Checker timeScopeColumnChecker = checkerFactory.getChecker(timeScopeColumnDescription, app);
+            if (!datasetDescription.getData().containsKey(timeScopeColumn.getVariable())) {
+                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetDescription.getData().keySet());
+            }
+            if (timeScopeColumn.getComponent() == null) {
+                throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeColumn.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().keySet());
+            }
+            if (!datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().containsKey(timeScopeColumn.getComponent())) {
+                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetDescription.getData().keySet());
+            }
+            Configuration.ColumnDescription timeScopeColumnDescription = datasetDescription.getData().get(timeScopeColumn.getVariable());
+            Checker timeScopeColumnChecker = checkerFactory.getChecker(timeScopeColumnDescription, app, timeScopeColumn.getComponent());
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
                 if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
@@ -249,44 +259,46 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
 
-        Map<String, Checker> checkers = new HashMap<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> e : dataSet.getData().entrySet()) {
-            checkers.put(e.getKey(), checkerFactory.getChecker(e.getValue(), app));
-            if (e.getValue() != null) {
-                // ajout de contraintes sur les champs de precisions
-                for (Map.Entry<String, Configuration.ColumnDescription> a : e.getValue().getAccuracy().entrySet()) {
-                    checkers.put(a.getKey(), checkerFactory.getChecker(a.getValue(), app));
-                }
+        Map<String, Map<String, Checker>> checkers = new LinkedHashMap<>();
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataSet.getData().entrySet()) {
+            String variable = variableEntry.getKey();
+            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
+            checkers.put(variable, new LinkedHashMap<>());
+            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
+                String component = componentEntry.getKey();
+                checkers.get(variable).put(component, checkerFactory.getChecker(variableDescription, app, component));
             }
         }
 
         List<String> error = new LinkedList<>();
 
-        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getTimeScopeColumn());
+        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getTimeScopeColumn().getVariable()).get(dataSet.getTimeScopeColumn().getComponent());
         String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
 
         ApplicationRepository applicationRepository = repo.getRepository(app);
 
-        Consumer<Map<String, String>> lineConsumer = line -> {
-            Map<String, String> values = line;
+        Consumer<Map<String, Map<String, String>>> lineConsumer = line -> {
+            Map<String, Map<String, String>> values = line;
             List<UUID> refsLinkedTo = new ArrayList<>();
-            values.forEach((k, v) -> {
-                try {
-                    Checker checker = checkers.get(k);
-                    if (checker == null) {
-                        throw new CheckerException(String.format("Unknown column: '%s'", k));
+            values.forEach((compositeVariableName, compositeVariableValue) -> {
+                compositeVariableValue.forEach((componentName, componentValue) -> {
+                    try {
+                        Checker checker = checkers.get(compositeVariableName).get(componentName);
+                        if (checker == null) {
+                            throw new CheckerException(String.format("Unknown column: '%s'", compositeVariableName));
+                        }
+                        Object result = checker.check(componentValue);
+                        if (checker instanceof ReferenceChecker) {
+                            refsLinkedTo.add((UUID) result);
+                        }
+                    } catch (CheckerException eee) {
+                        log.debug("Validation problem", eee);
+                        error.add(eee.getMessage());
                     }
-                    Object result = checker.check(v);
-                    if (checker instanceof ReferenceChecker) {
-                        refsLinkedTo.add((UUID) result);
-                    }
-                } catch (CheckerException eee) {
-                    log.debug("Validation problem", eee);
-                    error.add(eee.getMessage());
-                }
+                });
             });
 
-            String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
+            String timeScopeValue = values.get(dataSet.getTimeScopeColumn().getVariable()).get(dataSet.getTimeScopeColumn().getComponent());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
@@ -297,7 +309,7 @@ public class OreSiService {
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
                 Set<String> columnsIncludedInDataGroup = dataGroupDescription.getData().keySet();
-                Map<String, String> dataGroupValues = Maps.filterKeys(values, columnsIncludedInDataGroup::contains);
+                Map<String, Map<String, String>> dataGroupValues = Maps.filterKeys(values, columnsIncludedInDataGroup::contains);
 
                 Data e = new Data();
                 e.setBinaryFile(fileId);
@@ -312,46 +324,26 @@ public class OreSiService {
             }
         };
 
-        boolean useBetterCsvParser = true;
-        if (useBetterCsvParser) {
-            CSVFormat csvFormat = CSVFormat.DEFAULT
-                    .withDelimiter(';')
-                    .withSkipHeaderRecord();
-            try (InputStream csv = file.getInputStream()) {
-                CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
-                Iterator<CSVRecord> linesIterator = csvParser.iterator();
-                Iterators.advance(linesIterator, dataSet.getLineToSkip());
-                CSVRecord headerRow = linesIterator.next();
-                ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-                Iterators.advance(linesIterator, dataSet.getLineToSkipAfterHeader());
-                Stream<Map<String, String>> lines = Streams.stream(csvParser).map(record -> {
-                    Iterator<String> currentHeader = columns.iterator();
-                    Map<String, String> row = new LinkedHashMap<>();
-                    record.forEach(column -> {
-                        String header = currentHeader.next();
-                        row.put(header, column);
-                    });
-                    return row;
+        CSVFormat csvFormat = CSVFormat.DEFAULT
+                .withDelimiter(';')
+                .withSkipHeaderRecord();
+        try (InputStream csv = file.getInputStream()) {
+            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+            Iterator<CSVRecord> linesIterator = csvParser.iterator();
+            Iterators.advance(linesIterator, dataSet.getLineToSkip());
+            CSVRecord headerRow = linesIterator.next();
+            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            Iterators.advance(linesIterator, dataSet.getLineToSkipAfterHeader());
+            Stream<Map<String, Map<String, String>>> lines = Streams.stream(csvParser).map(line -> {
+                Iterator<String> currentHeader = columns.iterator();
+                Map<String, Map<String, String>> record = new LinkedHashMap<>();
+                line.forEach(column -> {
+                    String header = currentHeader.next();
+                    record.put(header, Map.of("value", column));
                 });
-                lines.forEach(lineConsumer);
-            }
-        } else {
-            CsvSchema.Builder schemaBuilder = CsvSchema.builder();
-            schemaBuilder.setColumnSeparator(dataSet.getSeparator());
-            schemaBuilder.setUseHeader(true);
-            schemaBuilder.setReorderColumns(true);
-            checkers.keySet().forEach(schemaBuilder::addColumn);
-            CsvSchema schema = schemaBuilder.build();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
-                for (int i = 0; i < dataSet.getLineToSkip(); i++) {
-                    reader.readLine();
-                }
-
-                CsvMapper mapper = new CsvMapper();
-                Iterator<Map<String, String>> records = mapper.readerFor(Map.class).with(schema).readValues(reader);
-                Stream<Map<String, String>> lines = Streams.stream(records);
-                lines.forEach(lineConsumer);
-            }
+                return record;
+            });
+            lines.forEach(lineConsumer);
         }
 
         if (!error.isEmpty()) {
@@ -361,11 +353,37 @@ public class OreSiService {
         return fileId;
     }
 
-    public List<Map<String, String>> findData(String applicationNameOrId, String dataType) {
+    public String getDataCsv(String nameOrId, String dataType) {
+        List<Map<String, Map<String, String>>> list = findData(nameOrId, dataType);
+        String result = "";
+        if (list.size() > 0) {
+            CSVFormat csvFormat = CSVFormat.DEFAULT
+                    .withDelimiter(';')
+                    .withSkipHeaderRecord();
+            StringWriter out = new StringWriter();
+            try {
+                CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
+                ImmutableList<String> headers = ImmutableList.copyOf(list.get(0).keySet());
+                csvPrinter.printRecord(headers);
+                for (Map<String, Map<String, String>> record : list) {
+                    ImmutableList<String> rowAsRecord = headers.stream()
+                            .map(header -> record.get(header).get("value"))
+                            .collect(ImmutableList.toImmutableList());
+                    csvPrinter.printRecord(rowAsRecord);
+                }
+            } catch (IOException e) {
+                throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+            }
+            result = out.toString();
+        }
+        return result;
+    }
+
+    public List<Map<String, Map<String, String>>> findData(String applicationNameOrId, String dataType) {
         authRepository.setRoleForClient();
         Application app = getApplication(applicationNameOrId);
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        List<Map<String, String>> data = applicationRepository.findData(dataType);
+        List<Map<String, Map<String, String>>> data = applicationRepository.findData(dataType);
         return data;
     }
 

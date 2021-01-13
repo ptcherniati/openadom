@@ -42,7 +42,7 @@ public class Configuration {
         private char separator = ';';
         private char quote = '"';
         private LinkedHashMap<String, DataGroupDescription> dataGroups;
-        private String timeScopeColumn;
+        private VariableComponentReference timeScopeColumn;
 
         /**
          * @deprecated à supprimer, c'est pour la rétro-compatibilité avant la mise en place des groupes
@@ -63,8 +63,14 @@ public class Configuration {
     @Setter
     @ToString
     static public class ColumnDescription {
+        private LinkedHashMap<String, VariableComponentDescription> components;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class VariableComponentDescription {
         private CheckerDescription checker;
-        private LinkedHashMap<String, ColumnDescription> accuracy = new LinkedHashMap<>();
     }
 
     @Getter
@@ -81,5 +87,13 @@ public class Configuration {
     static public class DataGroupDescription {
         private String label;
         private LinkedHashMap<String, ColumnDescription> data;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class VariableComponentReference {
+        private String variable;
+        private String component;
     }
 }

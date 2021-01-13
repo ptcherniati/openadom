@@ -1,9 +1,5 @@
 package fr.inra.oresing.rest;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
@@ -162,8 +158,8 @@ public class OreSiResources {
 
     /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Map<String, String>>> getAllDataJson(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) {
-        List<Map<String, String>> list = service.findData(nameOrId, dataType);
+    public ResponseEntity<List<Map<String, Map<String, String>>>> getAllDataJson(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) {
+        List<Map<String, Map<String, String>>> list = service.findData(nameOrId, dataType);
         return ResponseEntity.ok(list);
     }
 
@@ -172,7 +168,7 @@ public class OreSiResources {
     public ResponseEntity<String> getAllDataCsvForce(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
+            @RequestParam MultiValueMap<String, String> params) {
         return getAllDataCsv(nameOrId, dataType, params);
     }
 
@@ -181,19 +177,8 @@ public class OreSiResources {
     public ResponseEntity<String> getAllDataCsv(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam MultiValueMap<String, String> params) throws JsonProcessingException {
-        List<Map<String, String>> list = service.findData(nameOrId, dataType);
-
-        String result = "";
-        if (list.size() > 0) {
-            CsvSchema.Builder schemaBuilder = CsvSchema.builder();
-            list.get(0).keySet().forEach(schemaBuilder::addColumn);
-            CsvSchema schema = schemaBuilder.setUseHeader(true).setColumnSeparator(';').build();
-
-            CsvMapper mapper = new CsvMapper();
-            mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
-            result = mapper.writer(schema).writeValueAsString(list);
-        }
+            @RequestParam MultiValueMap<String, String> params) {
+        String result = service.getDataCsv(nameOrId, dataType);
         return ResponseEntity.ok(result);
     }
 

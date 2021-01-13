@@ -29,11 +29,11 @@ public class CheckerFactory {
         this.checkers = checkers.stream().collect(Collectors.toMap(c -> c.getName().toLowerCase(), c -> c.getClass()));
     }
 
-    public Checker getChecker(Configuration.ColumnDescription columnDescription, Application application) {
-        if (columnDescription == null || columnDescription.getChecker() == null) {
+    public Checker getChecker(Configuration.ColumnDescription columnDescription, Application application, String component) {
+        if (columnDescription == null || columnDescription.getComponents().get(component) == null) {
             return getChecker("Dummy");
         }
-        Configuration.CheckerDescription checkerDescription = columnDescription.getChecker();
+        Configuration.CheckerDescription checkerDescription = columnDescription.getComponents().get(component).getChecker();
         Checker result = getChecker(checkerDescription.getName());
 
         Map<String, String> params = new HashMap<>();
@@ -56,10 +56,13 @@ public class CheckerFactory {
     public Set<ReferenceChecker> getReferenceCheckers(Application application, Configuration.DatasetDescription datasetDescription) {
         Set<ReferenceChecker> referenceCheckers = new LinkedHashSet<>();
         for (Configuration.ColumnDescription columnDescription : datasetDescription.getData().values()) {
-            Checker checker = getChecker(columnDescription, application);
-            if (checker instanceof ReferenceChecker) {
-                ReferenceChecker referenceChecker = (ReferenceChecker) checker;
-                referenceCheckers.add(referenceChecker);
+            for (Map.Entry<String, Configuration.VariableComponentDescription> entry : columnDescription.getComponents().entrySet()) {
+                String component = entry.getKey();
+                Checker checker = getChecker(columnDescription, application, component);
+                if (checker instanceof ReferenceChecker) {
+                    ReferenceChecker referenceChecker = (ReferenceChecker) checker;
+                    referenceCheckers.add(referenceChecker);
+                }
             }
         }
         return referenceCheckers;
