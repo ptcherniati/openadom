@@ -386,7 +386,10 @@ public class OreSiService {
                 for (Map<String, Map<String, String>> record : list) {
                     ImmutableList<String> rowAsRecord = format.getColumns().stream()
                             .map(Configuration.ColumnBindingDescription::getReference)
-                            .map(reference -> record.get(reference.getVariable()).get(reference.getComponent()))
+                            .map(reference -> {
+                                Map<String, String> components = record.computeIfAbsent(reference.getVariable(), k -> Collections.emptyMap());
+                                return components.getOrDefault(reference.getComponent(), "");
+                            })
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);
                 }

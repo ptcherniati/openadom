@@ -1,30 +1,115 @@
 references:
 dataset:
   flux_tours:
-    lineToSkip: 7
-    lineToSkipAfterHeader: 3
-    separator: ";"
+    format:
+      lineToSkip: 7
+      lineToSkipAfterHeader: 3
+      separator: ";"
+      columns:
+        - header: "date"
+          reference:
+            variable: date
+            component: day
+        - header: "heure"
+          reference:
+            variable: date
+            component: time
+        - header: "CO2"
+          reference:
+            variable: CO2
+            component: value
+        - header: "H2O"
+          reference:
+            variable: H2O
+            component: value
+        - header: "ZL"
+          reference:
+            variable: ZL
+            component: value
+        - header: "Fc"
+          reference:
+            variable: Fc
+            component: value
+        - header: "qc1"
+          reference:
+            variable: Fc
+            component: quality
+        - header: "H"
+          reference:
+            variable: H
+            component: value
+        - header: "qc2"
+          reference:
+            variable: H
+            component: quality
+        - header: "LE"
+          reference:
+            variable: LE
+            component: value
+        - header: "qc3"
+          reference:
+            variable: LE
+            component: quality
+        - header: "t"
+          reference:
+            variable: t
+            component: value
+        - header: "qc4"
+          reference:
+            variable: t
+            component: quality
+        - header: "u*"
+          reference:
+            variable: u*
+            component: value
+        - header: "Fc gf"
+          reference:
+            variable: Fc gf
+            component: value
     dataGroups:
       all:
         label: "Toutes les données"
         data:
           date:
-            checker:
-              name: Date
-              params:
-                pattern: dd/MM/yyyy
-          heure:
+            components:
+              day:
+                checker:
+                  name: Date
+                  params:
+                    pattern: dd/MM/yyyy
+              time:
           CO2:
+            components:
+              value:
           H2O:
+            components:
+              value:
           ZL:
+            components:
+              value:
           Fc:
-          qc1:
+            components:
+              value:
+              quality:
           H:
-          qc2:
+            components:
+              value:
+              quality:
           LE:
-          qc3:
+            components:
+              value:
+              quality:
           t:
-          qc4:
+            components:
+              value:
+              quality:
           u*:
+            components:
+              value:
+              quality:
           Fc gf:
-    timeScopeColumn: date
+            components:
+              value:
+    timeScopeColumn:
+      variable: date
+      component: day

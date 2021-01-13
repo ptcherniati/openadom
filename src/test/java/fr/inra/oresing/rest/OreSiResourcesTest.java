@@ -14,7 +14,6 @@ import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -310,7 +309,6 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Ignore("pas encore possible")
     public void addApplicationAcbb() throws Exception {
         authRepository.addUserRightCreateApplication(userId);
 
@@ -378,21 +376,22 @@ public class OreSiResourcesTest {
 //                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
 
+            log.debug(StringUtils.abbreviate(actualJson, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
-            log.debug(actualJson);
         }
 
         // restitution de data csv
-//        {
-////            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
-//            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-////                    .andExpect(content().string(expectedCsv))
-//                    .andReturn().getResponse().getContentAsString();
-//            Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
-//        }
+        {
+//            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
+                    .cookie(authCookie)
+                    .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().isOk())
+//                    .andExpect(content().string(expectedCsv))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(actualCsv, 500));
+            Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
+        }
     }
 
 }
