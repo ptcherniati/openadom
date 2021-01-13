@@ -49,4 +49,8 @@ public class Fixtures {
     public String getFluxToursDataResourceName() {
         return "/data/acbb/Flux_tours.csv";
     }
+
+    public String getBiomasseProductionTeneurDataResourceName() {
+        return "/data/acbb/biomasse_production_teneur.csv";
+    }
 }

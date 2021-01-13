@@ -113,3 +113,563 @@ dataset:
     timeScopeColumn:
       variable: date
       component: day
+  biomasse_production_teneur:
+    format:
+      lineToSkip: 7
+      lineToSkipAfterHeader: 3
+      separator: ";"
+      columns:
+        - header: "parcelle"
+          reference:
+            variable: parcelle
+            component: valeur
+        - header: "observation"
+          reference:
+            variable: observation
+            component: valeur
+        - header: "rotation"
+          reference:
+            variable: rotation
+            component: valeur
+        - header: "année"
+          reference:
+            variable: année
+            component: valeur
+        - header: "période"
+          reference:
+            variable: période
+            component: valeur
+        - header: "type intervention"
+          reference:
+            variable: type intervention
+            component: valeur
+        - header: "date ou num incrémental intervention"
+          reference:
+            variable: date ou num incrémental intervention
+            component: valeur
+        - header: "série"
+          reference:
+            variable: série
+            component: valeur
+        - header: "mav_nature"
+          reference:
+            variable: mav_nature
+            component: valeur
+        - header: "nature couvert"
+          reference:
+            variable: nature couvert
+            component: valeur
+        - header: "date de mesure"
+          reference:
+            variable: date de mesure
+            component: valeur
+        - header: "mav_dateDebut_PotProd"
+          reference:
+            variable: mav_dateDebut_PotProd
+            component: valeur
+        - header: "mav_valeur"
+          reference:
+            variable: mav
+            component: valeur
+        - header: "mav_nb"
+          reference:
+            variable: mav
+            component: nb
+        - header: "mav_et"
+          reference:
+            variable: mav
+            component: et
+        - header: "mav_methode"
+          reference:
+            variable: mav
+            component: methode
+        - header: "mav_IQ"
+          reference:
+            variable: mav
+            component: IQ
+        - header: "N_valeur"
+          reference:
+            variable: N
+            component: valeur
+        - header: "N_nb"
+          reference:
+            variable: N
+            component: nb
+        - header: "N_et"
+          reference:
+            variable: N
+            component: et
+        - header: "N_methode"
+          reference:
+            variable: N
+            component: methode
+        - header: "N_IQ"
+          reference:
+            variable: N
+            component: IQ
+        - header: "DMS_valeur"
+          reference:
+            variable: DMS
+            component: valeur
+        - header: "DMS_nb"
+          reference:
+            variable: DMS
+            component: nb
+        - header: "DMS_et"
+          reference:
+            variable: DMS
+            component: et
+        - header: "DMS_methode"
+          reference:
+            variable: DMS
+            component: methode
+        - header: "DMS_IQ"
+          reference:
+            variable: DMS
+            component: IQ
+        - header: "C_valeur"
+          reference:
+            variable: C
+            component: valeur
+        - header: "C_nb"
+          reference:
+            variable: C
+            component: nb
+        - header: "C_et"
+          reference:
+            variable: C
+            component: et
+        - header: "C_methode"
+          reference:
+            variable: C
+            component: methode
+        - header: "C_IQ"
+          reference:
+            variable: C
+            component: IQ
+        - header: "Pho_valeur"
+          reference:
+            variable: Pho
+            component: valeur
+        - header: "Pho_nb"
+          reference:
+            variable: Pho
+            component: nb
+        - header: "Pho_et"
+          reference:
+            variable: Pho
+            component: et
+        - header: "Pho_methode"
+          reference:
+            variable: Pho
+            component: methode
+        - header: "Pho_IQ"
+          reference:
+            variable: Pho
+            component: IQ
+        - header: "K_valeur"
+          reference:
+            variable: K
+            component: valeur
+        - header: "K_nb"
+          reference:
+            variable: K
+            component: nb
+        - header: "K_et"
+          reference:
+            variable: K
+            component: et
+        - header: "K_methode"
+          reference:
+            variable: K
+            component: methode
+        - header: "K_IQ"
+          reference:
+            variable: K
+            component: IQ
+        - header: "Ca_valeur"
+          reference:
+            variable: Ca
+            component: valeur
+        - header: "Ca_nb"
+          reference:
+            variable: Ca
+            component: nb
+        - header: "Ca_et"
+          reference:
+            variable: Ca
+            component: et
+        - header: "Ca_methode"
+          reference:
+            variable: Ca
+            component: methode
+        - header: "Ca_IQ"
+          reference:
+            variable: Ca
+            component: IQ
+        - header: "Mg_valeur"
+          reference:
+            variable: Mg
+            component: valeur
+        - header: "Mg_nb"
+          reference:
+            variable: Mg
+            component: nb
+        - header: "Mg_et"
+          reference:
+            variable: Mg
+            component: et
+        - header: "Mg_methode"
+          reference:
+            variable: Mg
+            component: methode
+        - header: "Mg_IQ"
+          reference:
+            variable: Mg
+            component: IQ
+        - header: "Bo_valeur"
+          reference:
+            variable: Bo
+            component: valeur
+        - header: "Bo_nb"
+          reference:
+            variable: Bo
+            component: nb
+        - header: "Bo_et"
+          reference:
+            variable: Bo
+            component: et
+        - header: "Bo_methode"
+          reference:
+            variable: Bo
+            component: methode
+        - header: "Bo_IQ"
+          reference:
+            variable: Bo
+            component: IQ
+        - header: "Cu_valeur"
+          reference:
+            variable: Cu
+            component: valeur
+        - header: "Cu_nb"
+          reference:
+            variable: Cu
+            component: nb
+        - header: "Cu_et"
+          reference:
+            variable: Cu
+            component: et
+        - header: "Cu_methode"
+          reference:
+            variable: Cu
+            component: methode
+        - header: "Cu_IQ"
+          reference:
+            variable: Cu
+            component: IQ
+        - header: "Fe_valeur"
+          reference:
+            variable: Fe
+            component: valeur
+        - header: "Fe_nb"
+          reference:
+            variable: Fe
+            component: nb
+        - header: "Fe_et"
+          reference:
+            variable: Fe
+            component: et
+        - header: "Fe_methode"
+          reference:
+            variable: Fe
+            component: methode
+        - header: "Fe_IQ"
+          reference:
+            variable: Fe
+            component: IQ
+        - header: "Mn_valeur"
+          reference:
+            variable: Mn
+            component: valeur
+        - header: "Mn_nb"
+          reference:
+            variable: Mn
+            component: nb
+        - header: "Mn_et"
+          reference:
+            variable: Mn
+            component: et
+        - header: "Mn_methode"
+          reference:
+            variable: Mn
+            component: methode
+        - header: "Mn_IQ"
+          reference:
+            variable: Mn
+            component: IQ
+        - header: "Na_valeur"
+          reference:
+            variable: Na
+            component: valeur
+        - header: "Na_nb"
+          reference:
+            variable: Na
+            component: nb
+        - header: "Na_et"
+          reference:
+            variable: Na
+            component: et
+        - header: "Na_methode"
+          reference:
+            variable: Na
+            component: methode
+        - header: "Na_IQ"
+          reference:
+            variable: Na
+            component: IQ
+        - header: "Zn_valeur"
+          reference:
+            variable: Zn
+            component: valeur
+        - header: "Zn_nb"
+          reference:
+            variable: Zn
+            component: nb
+        - header: "Zn_et"
+          reference:
+            variable: Zn
+            component: et
+        - header: "Zn_methode"
+          reference:
+            variable: Zn
+            component: methode
+        - header: "Zn_IQ"
+          reference:
+            variable: Zn
+            component: IQ
+        - header: "CBR_valeur"
+          reference:
+            variable: CBR
+            component: valeur
+        - header: "CBR_nb"
+          reference:
+            variable: CBR
+            component: nb
+        - header: "CBR_et"
+          reference:
+            variable: CBR
+            component: et
+        - header: "CBR_methode"
+          reference:
+            variable: CBR
+            component: methode
+        - header: "CBR_IQ"
+          reference:
+            variable: CBR
+            component: IQ
+        - header: "HUT_valeur"
+          reference:
+            variable: HUT
+            component: valeur
+        - header: "HUT_nb"
+          reference:
+            variable: HUT
+            component: nb
+        - header: "HUT_et"
+          reference:
+            variable: HUT
+            component: et
+        - header: "HUT_methode"
+          reference:
+            variable: HUT
+            component: methode
+        - header: "HUT_IQ"
+          reference:
+            variable: HUT
+            component: IQ
+        - header: "MOR_valeur"
+          reference:
+            variable: MOR
+            component: valeur
+        - header: "MOR_nb"
+          reference:
+            variable: MOR
+            component: nb
+        - header: "MOR_et"
+          reference:
+            variable: MOR
+            component: et
+        - header: "MOR_methode"
+          reference:
+            variable: MOR
+            component: methode
+        - header: "MOR_IQ"
+          reference:
+            variable: MOR
+            component: IQ
+    dataGroups:
+      all:
+        label: "Toutes les données"
+        data:
+          parcelle:
+            components:
+              valeur:
+          observation:
+            components:
+              valeur:
+          rotation:
+            components:
+              valeur:
+          année:
+            components:
+              valeur:
+          période:
+            components:
+              valeur:
+          type intervention:
+            components:
+              valeur:
+          date ou num incrémental intervention:
+            components:
+              valeur:
+          série:
+            components:
+              valeur:
+          mav_nature:
+            components:
+              valeur:
+          nature couvert:
+            components:
+              valeur:
+          date de mesure:
+            components:
+              valeur:
+                checker:
+                  name: Date
+                  params:
+                    pattern: dd/MM/yyyy
+          mav_dateDebut_PotProd:
+            components:
+              valeur:
+          mav:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          N:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          DMS:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          C:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Pho:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          K:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Ca:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Mg:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Bo:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Cu:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Fe:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Mn:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Na:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          Zn:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          CBR:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          HUT:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+          MOR:
+            components:
+              valeur:
+              nb:
+              et:
+              methode:
+              IQ:
+    timeScopeColumn:
+      variable: date de mesure
+      component: valeur

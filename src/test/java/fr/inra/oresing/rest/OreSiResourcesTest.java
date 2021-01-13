@@ -392,6 +392,43 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
         }
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(fixtures.getBiomasseProductionTeneurDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(response);
+        }
+
+        {
+            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+//                    .andExpect(content().json(expectedJson))
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(actualJson, 500));
+            Assert.assertEquals(252, StringUtils.countMatches(actualJson, "prairie permanente"));
+        }
+
+        {
+//            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                    .cookie(authCookie)
+                    .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().isOk())
+//                    .andExpect(content().string(expectedCsv))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(actualCsv, 500));
+            Assert.assertEquals(252, StringUtils.countMatches(actualCsv, "prairie permanente"));
+        }
     }
 
 }
