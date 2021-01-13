@@ -3,7 +3,9 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import fr.inra.oresing.OreSiTechnicalException;
@@ -324,22 +326,31 @@ public class OreSiService {
             }
         };
 
+        Configuration.FormatDescription formatDescription = dataSet.getFormat();
         CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(';')
+                .withDelimiter(formatDescription.getSeparator())
                 .withSkipHeaderRecord();
         try (InputStream csv = file.getInputStream()) {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
-            Iterators.advance(linesIterator, dataSet.getLineToSkip());
+            Iterators.advance(linesIterator, formatDescription.getLineToSkip());
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Iterators.advance(linesIterator, dataSet.getLineToSkipAfterHeader());
+            ImmutableList<String> expectedColumns = formatDescription.getColumns().stream()
+                    .map(Configuration.ColumnBindingDescription::getHeader)
+                    .collect(ImmutableList.toImmutableList());
+            Preconditions.checkArgument(expectedColumns.equals(columns), "Fichier incorrect. Entêtes détectés " + columns + ". Entêtes attendus " + expectedColumns);
+            Iterators.advance(linesIterator, formatDescription.getLineToSkipAfterHeader());
             Stream<Map<String, Map<String, String>>> lines = Streams.stream(csvParser).map(line -> {
                 Iterator<String> currentHeader = columns.iterator();
                 Map<String, Map<String, String>> record = new LinkedHashMap<>();
+                ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
                 line.forEach(column -> {
                     String header = currentHeader.next();
-                    record.put(header, Map.of("value", column));
+                    Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
+                    String variable = bindingDescription.getReference().getVariable();
+                    String component = bindingDescription.getReference().getComponent();
+                    record.computeIfAbsent(variable, whatever -> new LinkedHashMap<>()).put(component, column);
                 });
                 return record;
             });
@@ -355,19 +366,27 @@ public class OreSiService {
 
     public String getDataCsv(String nameOrId, String dataType) {
         List<Map<String, Map<String, String>>> list = findData(nameOrId, dataType);
+        Configuration.FormatDescription format = getApplication(nameOrId)
+                .getConfiguration()
+                .getDataset()
+                .get(dataType)
+                .getFormat();
         String result = "";
         if (list.size() > 0) {
             CSVFormat csvFormat = CSVFormat.DEFAULT
-                    .withDelimiter(';')
+                    .withDelimiter(format.getSeparator())
                     .withSkipHeaderRecord();
             StringWriter out = new StringWriter();
             try {
                 CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-                ImmutableList<String> headers = ImmutableList.copyOf(list.get(0).keySet());
+                ImmutableList<String> headers = format.getColumns().stream()
+                        .map(Configuration.ColumnBindingDescription::getHeader)
+                        .collect(ImmutableList.toImmutableList());
                 csvPrinter.printRecord(headers);
                 for (Map<String, Map<String, String>> record : list) {
-                    ImmutableList<String> rowAsRecord = headers.stream()
-                            .map(header -> record.get(header).get("value"))
+                    ImmutableList<String> rowAsRecord = format.getColumns().stream()
+                            .map(Configuration.ColumnBindingDescription::getReference)
+                            .map(reference -> record.get(reference.getVariable()).get(reference.getComponent()))
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);
                 }

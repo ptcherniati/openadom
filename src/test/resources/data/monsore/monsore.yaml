@@ -101,8 +101,39 @@ references:
 
 dataset:
   pem:
-    lineToSkip: 3
-    separator: ";"
+    format:
+      lineToSkip: 3
+      lineToSkipAfterHeader: 0
+      separator: ";"
+      columns:
+        - header: "projet"
+          reference:
+            variable: projet
+            component: value
+        - header: "site"
+          reference:
+            variable: site
+            component: value
+        - header: "plateforme"
+          reference:
+            variable: plateforme
+            component: value
+        - header: "date"
+          reference:
+            variable: date
+            component: value
+        - header: "espece"
+          reference:
+            variable: espece
+            component: value
+        - header: "Couleur des individus"
+          reference:
+            variable: Couleur des individus
+            component: value
+        - header: "Nombre d'individus"
+          reference:
+            variable: Nombre d'individus
+            component: value
     dataGroups:
       referentiel:
         label: "Référentiel"

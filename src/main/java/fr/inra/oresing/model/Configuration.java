@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -37,10 +38,7 @@ public class Configuration {
     @Setter
     @ToString
     static public class DatasetDescription {
-        private int lineToSkip = 0;
-        private int lineToSkipAfterHeader = 0;
-        private char separator = ';';
-        private char quote = '"';
+        private FormatDescription format;
         private LinkedHashMap<String, DataGroupDescription> dataGroups;
         private VariableComponentReference timeScopeColumn;
 
@@ -57,6 +55,24 @@ public class Configuration {
             }
             return data;
         }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class FormatDescription {
+        private int lineToSkip = 0;
+        private int lineToSkipAfterHeader = 0;
+        private char separator = ';';
+        private List<ColumnBindingDescription> columns;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class ColumnBindingDescription {
+        private String header;
+        private VariableComponentReference reference;
     }
 
     @Getter

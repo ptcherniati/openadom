@@ -192,6 +192,7 @@ public class OreSiResourcesTest {
                     .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
+            Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
         }
 
         // restitution de data csv
@@ -204,6 +205,7 @@ public class OreSiResourcesTest {
 //                    .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualCsv);
+            Assert.assertEquals(306, StringUtils.countMatches(actualCsv, "/1984"));
         }
 
 //        // restitution de data json
