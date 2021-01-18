@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import fr.inra.oresing.OreSiTechnicalException;
@@ -62,8 +63,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -334,6 +335,24 @@ public class OreSiService {
         };
 
         Configuration.FormatDescription formatDescription = dataSet.getFormat();
+
+        ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
+                .map(Configuration.ColumnBindingDescription::getHeader)
+                .collect(ImmutableSet.toImmutableSet());
+
+        ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
+        Function<Map<String, String>, ImmutableSet<Map<VariableComponentReference, String>>> lineAsMapToRecordsFn = line -> {
+            Preconditions.checkArgument(expectedColumns.containsAll(line.keySet()), "Fichier incorrect. Entêtes détectés " + line.keySet() + ". Entêtes attendus " + expectedColumns);
+            Map<VariableComponentReference, String> record = new LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : line.entrySet()) {
+                String header = entry.getKey();
+                String value = entry.getValue();
+                Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
+                record.put(bindingDescription.getReference(), value);
+            }
+            return ImmutableSet.of(record);
+        };
+
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(formatDescription.getSeparator())
                 .withSkipHeaderRecord();
@@ -343,23 +362,20 @@ public class OreSiService {
             Iterators.advance(linesIterator, formatDescription.getLineToSkip());
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            ImmutableList<String> expectedColumns = formatDescription.getColumns().stream()
-                    .map(Configuration.ColumnBindingDescription::getHeader)
-                    .collect(ImmutableList.toImmutableList());
-            Preconditions.checkArgument(expectedColumns.equals(columns), "Fichier incorrect. Entêtes détectés " + columns + ". Entêtes attendus " + expectedColumns);
             Iterators.advance(linesIterator, formatDescription.getLineToSkipAfterHeader());
-            Stream<Map<VariableComponentReference, String>> lines = Streams.stream(csvParser).map(line -> {
+            Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
-                Map<VariableComponentReference, String> record = new LinkedHashMap<>();
-                ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
+                Map<String, String> record = new LinkedHashMap<>();
                 line.forEach(value -> {
                     String header = currentHeader.next();
-                    Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
-                    record.put(bindingDescription.getReference(), value);
+                    record.put(header, value);
                 });
                 return record;
-            });
-            lines.forEach(lineConsumer);
+            };
+            Streams.stream(csvParser)
+                    .map(csvRecordToLineAsMapFn)
+                    .flatMap(lineAsMap -> lineAsMapToRecordsFn.apply(lineAsMap).stream())
+                    .forEach(lineConsumer);
         }
 
         if (!error.isEmpty()) {
