@@ -14,6 +14,7 @@ import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -464,4 +465,20 @@ public class OreSiResourcesTest {
         }
     }
 
+    @Test
+    @Ignore("utile comme benchmark, ne vérifie rien")
+    public void benchmarkImportData() throws Exception {
+        addApplicationAcbb();
+        try (InputStream in = fixtures.openSwcDataResourceName(false)) {
+            MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(response);
+        }
+    }
 }
