@@ -429,6 +429,39 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(252, StringUtils.countMatches(actualCsv, "prairie permanente"));
         }
+
+        try (InputStream in = fixtures.openSwcDataResourceName(true)) {
+            MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(response);
+        }
+
+        {
+            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/SWC")
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(actualJson, 500));
+            Assert.assertEquals(1456, StringUtils.countMatches(actualJson, "SWC"));
+        }
+
+        {
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/SWC")
+                    .cookie(authCookie)
+                    .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(actualCsv, 500));
+            Assert.assertEquals(1456, StringUtils.countMatches(actualCsv, "/2010"));
+        }
     }
 
 }

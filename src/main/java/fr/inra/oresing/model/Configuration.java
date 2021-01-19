@@ -65,6 +65,7 @@ public class Configuration {
         private int lineToSkipAfterHeader = 0;
         private char separator = ';';
         private List<ColumnBindingDescription> columns;
+        private List<RepeatedColumnBindingDescription> repeatedColumns;
     }
 
     @Getter
@@ -73,6 +74,24 @@ public class Configuration {
     static public class ColumnBindingDescription {
         private String header;
         private VariableComponentReference reference;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class RepeatedColumnBindingDescription {
+        private String headerPattern;
+        private String exportHeader;
+        private List<HeaderPatternToken> tokens;
+        private VariableComponentReference reference;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static public class HeaderPatternToken {
+        private VariableComponentReference reference;
+        private String exportHeader;
     }
 
     @Getter

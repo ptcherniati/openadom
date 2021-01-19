@@ -57,13 +57,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -336,22 +340,78 @@ public class OreSiService {
 
         Configuration.FormatDescription formatDescription = dataSet.getFormat();
 
-        ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
-                .map(Configuration.ColumnBindingDescription::getHeader)
-                .collect(ImmutableSet.toImmutableSet());
+        Function<List<Map.Entry<String, String>>, ImmutableSet<Map<VariableComponentReference, String>>> lineAsMapToRecordsFn;
+        if (formatDescription.getRepeatedColumns() == null || formatDescription.getRepeatedColumns().isEmpty()) {
+            ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
+                    .map(Configuration.ColumnBindingDescription::getHeader)
+                    .collect(ImmutableSet.toImmutableSet());
+            ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
+            lineAsMapToRecordsFn = line -> {
+                ImmutableList<String> actualHeaders = line.stream().map(Map.Entry::getKey).collect(ImmutableList.toImmutableList());
+                Preconditions.checkArgument(expectedColumns.containsAll(actualHeaders), "Fichier incorrect. Entêtes détectés " + actualHeaders + ". Entêtes attendus " + expectedColumns);
+                Map<VariableComponentReference, String> record = new LinkedHashMap<>();
+                for (Map.Entry<String, String> entry : line) {
+                    String header = entry.getKey();
+                    String value = entry.getValue();
+                    Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
+                    record.put(bindingDescription.getReference(), value);
+                }
+                return ImmutableSet.of(record);
+            };
+        } else {
+            lineAsMapToRecordsFn = line -> {
+                LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
+                Map<VariableComponentReference, String> recordPrototype = new LinkedHashMap<>();
+                for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
+                    Map.Entry<String, String> poll = lineCopy.poll();
+                    String header = poll.getKey();
+                    Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
+                    String value = poll.getValue();
+                    recordPrototype.put(column.getReference(), value);
+                }
+                Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
+                Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
+                Set<Map<VariableComponentReference, String>> records = new LinkedHashSet<>();
 
-        ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
-        Function<Map<String, String>, ImmutableSet<Map<VariableComponentReference, String>>> lineAsMapToRecordsFn = line -> {
-            Preconditions.checkArgument(expectedColumns.containsAll(line.keySet()), "Fichier incorrect. Entêtes détectés " + line.keySet() + ". Entêtes attendus " + expectedColumns);
-            Map<VariableComponentReference, String> record = new LinkedHashMap<>();
-            for (Map.Entry<String, String> entry : line.entrySet()) {
-                String header = entry.getKey();
-                String value = entry.getValue();
-                Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
-                record.put(bindingDescription.getReference(), value);
-            }
-            return ImmutableSet.of(record);
-        };
+                Map<VariableComponentReference, String> tokenValues = new LinkedHashMap<>(recordPrototype);
+                Map<VariableComponentReference, String> bodyValues = new LinkedHashMap<>(recordPrototype);
+                while (actualColumnsIterator.hasNext()) {
+                    Map.Entry<String, String> actualColumn = actualColumnsIterator.next();
+                    Configuration.RepeatedColumnBindingDescription expectedColumn = expectedColumns.next();
+
+                    String actualHeader = actualColumn.getKey();
+                    String value = actualColumn.getValue();
+
+                    String headerPattern = expectedColumn.getHeaderPattern();
+                    Pattern pattern = Pattern.compile(headerPattern);
+                    Matcher matcher = pattern.matcher(actualHeader);
+                    boolean matches = matcher.matches();
+                    Preconditions.checkState(matches, "Entête imprévu " + actualHeader + ". Entête attendu " + headerPattern);
+
+                    List<Configuration.HeaderPatternToken> tokens = expectedColumn.getTokens();
+                    if (tokens != null) {
+                        Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
+                        int groupIndex = 1;
+                        for (Configuration.HeaderPatternToken token : tokens) {
+                            tokenValues.put(token.getReference(), matcher.group(groupIndex++));
+                        }
+                    }
+
+                    bodyValues.put(expectedColumn.getReference(), value);
+
+                    if (!expectedColumns.hasNext()) {
+                        Map<VariableComponentReference, String> record = new LinkedHashMap<>(recordPrototype);
+                        record.putAll(tokenValues);
+                        record.putAll(bodyValues);
+                        records.add(record);
+                        tokenValues.clear();
+                        bodyValues.clear();
+                        expectedColumns = formatDescription.getRepeatedColumns().iterator();
+                    }
+                }
+                return ImmutableSet.copyOf(records);
+            };
+        }
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(formatDescription.getSeparator())
@@ -363,12 +423,12 @@ public class OreSiService {
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
             Iterators.advance(linesIterator, formatDescription.getLineToSkipAfterHeader());
-            Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
+            Function<CSVRecord, List<Map.Entry<String, String>>> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
-                Map<String, String> record = new LinkedHashMap<>();
+                List<Map.Entry<String, String>> record = new LinkedList<>();
                 line.forEach(value -> {
                     String header = currentHeader.next();
-                    record.put(header, value);
+                    record.add(Map.entry(header, value));
                 });
                 return record;
             };
@@ -392,6 +452,7 @@ public class OreSiService {
                 .getDataset()
                 .get(dataType)
                 .getFormat();
+        ImmutableMap<String, VariableComponentReference> allColumns = getExportColumns(format);
         String result = "";
         if (list.size() > 0) {
             CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -400,13 +461,9 @@ public class OreSiService {
             StringWriter out = new StringWriter();
             try {
                 CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-                ImmutableList<String> headers = format.getColumns().stream()
-                        .map(Configuration.ColumnBindingDescription::getHeader)
-                        .collect(ImmutableList.toImmutableList());
-                csvPrinter.printRecord(headers);
+                csvPrinter.printRecord(allColumns.keySet());
                 for (Map<String, Map<String, String>> record : list) {
-                    ImmutableList<String> rowAsRecord = format.getColumns().stream()
-                            .map(Configuration.ColumnBindingDescription::getReference)
+                    ImmutableList<String> rowAsRecord = allColumns.values().stream()
                             .map(reference -> {
                                 Map<String, String> components = record.computeIfAbsent(reference.getVariable(), k -> Collections.emptyMap());
                                 return components.getOrDefault(reference.getComponent(), "");
@@ -420,6 +477,25 @@ public class OreSiService {
             result = out.toString();
         }
         return result;
+    }
+
+    private ImmutableMap<String, VariableComponentReference> getExportColumns(Configuration.FormatDescription format) {
+        ImmutableMap<String, VariableComponentReference> valuesFromStaticColumns = format.getColumns().stream()
+                .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getReference));
+        ImmutableMap.Builder<String, VariableComponentReference> allColumnsBuilder = ImmutableMap.<String, VariableComponentReference>builder()
+                .putAll(valuesFromStaticColumns);
+        if (format.getRepeatedColumns() != null) {
+            ImmutableMap<String, VariableComponentReference> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
+                    .filter(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens() != null)
+                    .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
+                    .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getReference));
+            ImmutableMap<String, VariableComponentReference> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
+                    .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getReference));
+            allColumnsBuilder.putAll(valuesFromHeaderPatterns)
+                             .putAll(valuesFromRepeatedColumns)
+                             ;
+        }
+        return allColumnsBuilder.build();
     }
 
     public List<Map<String, Map<String, String>>> findData(String applicationNameOrId, String dataType) {

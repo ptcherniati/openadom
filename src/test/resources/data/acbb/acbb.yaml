@@ -673,3 +673,74 @@ dataset:
     timeScopeColumn:
       variable: date de mesure
       component: valeur
+  SWC:
+    format:
+      lineToSkip: 6
+      lineToSkipAfterHeader: 2
+      separator: ";"
+      columns:
+        - header: "Nom parcelle"
+          reference:
+            variable: Nom parcelle
+            component: valeur
+        - header: "Nom traitement"
+          reference:
+            variable: Nom traitement
+            component: valeur
+        - header: "Date"
+          reference:
+            variable: Date
+            component: day
+        - header: "Time"
+          reference:
+            variable: Date
+            component: time
+      repeatedColumns:
+        - headerPattern: "SWC_([0-9]+)_([0-9]+)"
+          tokens:
+            - reference:
+                variable: contexte
+                component: répétition
+              exportHeader: "Répétition"
+            - reference:
+                variable: contexte
+                component: profondeur
+              exportHeader: "Profondeur"
+          reference:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+        - headerPattern: "qc"
+          reference:
+            variable: SWC
+            component: qualité
+          exportHeader: "qc"
+    dataGroups:
+      all:
+        label: "Toutes les données"
+        data:
+          Nom parcelle:
+            components:
+              valeur:
+          Nom traitement:
+            components:
+              valeur:
+          Date:
+            components:
+              day:
+                checker:
+                  name: Date
+                  params:
+                    pattern: dd/MM/yyyy
+              time:
+          contexte:
+            components:
+              répétition:
+              profondeur:
+          SWC:
+            components:
+              valeur:
+              qualité:
+    timeScopeColumn:
+      variable: Date
+      component: day

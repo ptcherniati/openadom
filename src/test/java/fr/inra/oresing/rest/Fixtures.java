@@ -1,9 +1,16 @@
 package fr.inra.oresing.rest;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+import fr.inra.oresing.OreSiTechnicalException;
+import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class Fixtures {
@@ -52,5 +59,21 @@ public class Fixtures {
 
     public String getBiomasseProductionTeneurDataResourceName() {
         return "/data/acbb/biomasse_production_teneur.csv";
+    }
+
+    public InputStream openSwcDataResourceName(boolean truncated) {
+        String resourceName = "/data/acbb/SWC.csv";
+        if (truncated) {
+            try {
+                String collect = Resources.asCharSource(getClass().getResource(resourceName), Charsets.UTF_8).lines()
+                        .limit(100)
+                        .collect(Collectors.joining("\n"));
+                return IOUtils.toInputStream(collect, Charsets.UTF_8);
+            } catch (IOException e) {
+                throw new OreSiTechnicalException("ne devrait pas arriver", e);
+            }
+        } else {
+            return getClass().getResourceAsStream(resourceName);
+        }
     }
 }
