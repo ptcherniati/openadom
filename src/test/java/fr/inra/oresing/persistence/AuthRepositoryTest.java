@@ -4,8 +4,6 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import org.flywaydb.test.FlywayTestExecutionListener;
-import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,10 +12,11 @@ import org.springframework.boot.test.autoconfigure.SpringBootDependencyInjection
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
-@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class})
+@TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class})
 public class AuthRepositoryTest {
 
     @Autowired
