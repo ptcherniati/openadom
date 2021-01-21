@@ -16,4 +16,11 @@ public interface SqlSchema extends WithSqlIdentifier {
     static SqlSchemaForApplication forApplication(Application application) {
         return new SqlSchemaForApplication(application);
     }
+
+    String getName();
+
+    @Override
+    default String getSqlIdentifier() {
+        return WithSqlIdentifier.escapeSqlIdentifier(getName());
+    }
 }

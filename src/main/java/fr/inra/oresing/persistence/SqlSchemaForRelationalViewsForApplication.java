@@ -13,8 +13,8 @@ public class SqlSchemaForRelationalViewsForApplication implements SqlSchema {
     ViewStrategy viewStrategy;
 
     @Override
-    public String getSqlIdentifier() {
-        return WithSqlIdentifier.escapeSqlIdentifier(String.join("_", application.getName(), viewStrategy.name()));
+    public String getName() {
+        return String.join("_", application.getName(), viewStrategy.name());
     }
 
     public SqlTable forDataset(String datasetName) {

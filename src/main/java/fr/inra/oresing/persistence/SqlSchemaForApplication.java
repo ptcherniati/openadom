@@ -9,8 +9,8 @@ public class SqlSchemaForApplication implements SqlSchema {
     Application application;
 
     @Override
-    public String getSqlIdentifier() {
-        return WithSqlIdentifier.escapeSqlIdentifier(application.getName());
+    public String getName() {
+        return application.getName();
     }
 
     public SqlTable data() {

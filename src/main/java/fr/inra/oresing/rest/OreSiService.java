@@ -115,7 +115,7 @@ public class OreSiService {
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
         org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
         flywayConfiguration.setDataSource(dataSource);
-        flywayConfiguration.setSchemas(sqlSchemaForApplication.getSqlIdentifier());
+        flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
         flywayConfiguration.setLocations(new Location("classpath:migration/application"));
         flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
         Flyway flyway = new Flyway(flywayConfiguration);
