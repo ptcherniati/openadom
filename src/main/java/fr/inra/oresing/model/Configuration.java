@@ -1,9 +1,12 @@
 package fr.inra.oresing.model;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.Value;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -16,11 +19,28 @@ import java.util.Map;
 public class Configuration {
 
     public static Configuration read(byte[] file) throws IOException {
+        checkVersion(file);
         YAMLMapper mapper = new YAMLMapper();
         Configuration result = mapper.readValue(file, Configuration.class);
         return result;
     }
 
+    private static void checkVersion(byte[] file) throws IOException {
+        YAMLMapper mapper = new YAMLMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        Versioned versioned = mapper.readValue(file, Versioned.class);
+        int actualVersion = versioned.getVersion();
+        int expectedVersion = 0;
+        Preconditions.checkArgument(actualVersion == expectedVersion, "Les fichiers YAML de version " + actualVersion + " ne sont pas géré, version attendue " + expectedVersion);
+    }
+
+    @Value
+    private static class Versioned {
+        int version;
+    }
+
+    private int version;
+    private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references;
     private LinkedHashMap<String, DatasetDescription> dataset;
 
@@ -124,4 +144,9 @@ public class Configuration {
         private LinkedHashMap<String, ColumnDescription> data;
     }
 
+    @Value
+    static public class ApplicationDescription {
+        String name;
+        int version;
+    }
 }

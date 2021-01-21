@@ -1,3 +1,7 @@
+version: 0
+application:
+  name: MONSORE
+  version: 1
 references:
   especes:
     lineToSkip: 1
