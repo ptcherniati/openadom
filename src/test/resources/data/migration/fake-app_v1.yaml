@@ -1,0 +1,47 @@
+version: 0
+application:
+  name: "Application pour vérifier le fonctionnement des migrations"
+  version: 1
+references:
+dataset:
+  jeu1:
+    format:
+      lineToSkip: 0
+      lineToSkipAfterHeader: 0
+      separator: ";"
+      columns:
+        - header: "couleur"
+          reference:
+            variable: couleur
+            component: value
+        - header: "date"
+          reference:
+            variable: date
+            component: value
+        - header: "nombre"
+          reference:
+            variable: nombre
+            component: value
+    dataGroups:
+      groupe1:
+        label: "Un groupe de données"
+        data:
+          couleur:
+            components:
+              value:
+          date:
+            components:
+              value:
+                checker:
+                  name: Date
+                  params:
+                    pattern: dd/MM/yyyy
+      groupe2:
+        label: "Un autre groupe de données"
+        data:
+          nombre:
+            components:
+              value:
+    timeScopeColumn:
+      variable: date
+      component: value

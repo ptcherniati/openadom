@@ -19,6 +19,7 @@ import java.util.Map;
 public class Configuration {
 
     public static Configuration read(byte[] file) throws IOException {
+        Preconditions.checkArgument(file.length > 0, "le fichier de configuration est vide");
         checkVersion(file);
         YAMLMapper mapper = new YAMLMapper();
         Configuration result = mapper.readValue(file, Configuration.class);

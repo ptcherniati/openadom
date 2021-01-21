@@ -76,4 +76,12 @@ public class Fixtures {
             return getClass().getResourceAsStream(resourceName);
         }
     }
+
+    public String getMigrationApplicationConfigurationResourceName(int version) {
+        return "/data/migration/fake-app_v" + version + ".yaml";
+    }
+
+    public String getMigrationApplicationDataResourceName() {
+        return "/data/migration/fake-data.csv";
+    }
 }
