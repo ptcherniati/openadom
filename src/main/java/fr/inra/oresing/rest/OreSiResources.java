@@ -82,8 +82,7 @@ public class OreSiResources {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        Application app = service.getApplication(nameOrId);
-        UUID result = service.changeApplicationConfiguration(app, file);
+        UUID result = service.changeApplicationConfiguration(nameOrId, file);
         String uri = UriUtils.encodePath(String.format("/applications/%s/configuration/%s", nameOrId, result), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }

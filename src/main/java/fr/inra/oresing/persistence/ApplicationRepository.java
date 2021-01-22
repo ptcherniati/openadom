@@ -1,5 +1,7 @@
 package fr.inra.oresing.persistence;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Data;
@@ -18,7 +20,6 @@ import org.springframework.util.MultiValueMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -99,16 +100,16 @@ public class ApplicationRepository implements InitializingBean {
         return delete(schema.data(), id);
     }
 
-    public <E extends OreSiEntity> List<E> findAll(Class<E> entityType) {
-        String query = String.format(TEMPLATE_SELECT_ALL, entityType.getName(), entityType.getSimpleName());
-        List<OreSiEntity> result = namedParameterJdbcTemplate.query(query, jsonRowMapper);
-        return (List<E>) result;
+    public BinaryFile findBinaryFileById(UUID id) {
+        Preconditions.checkArgument(id != null);
+        String query = String.format(TEMPLATE_SELECT_BY_ID, BinaryFile.class.getName(), schema.binaryFile().getSqlIdentifier());
+        JsonRowMapper<BinaryFile> jsonRowMapper = getJsonRowMapper();
+        BinaryFile result = namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().collect(MoreCollectors.onlyElement());
+        return result;
     }
 
-    public <E extends OreSiEntity> Optional<E> findById(Class<E> entityType, UUID id) {
-        String query = String.format(TEMPLATE_SELECT_BY_ID, entityType.getName(), entityType.getSimpleName());
-        Optional<OreSiEntity> result = namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().findFirst();
-        return (Optional<E>)result;
+    private <T> JsonRowMapper<T> getJsonRowMapper() {
+        return (JsonRowMapper<T>) jsonRowMapper;
     }
 
     /**
@@ -172,4 +173,13 @@ public class ApplicationRepository implements InitializingBean {
         return (List<Map<String, Map<String, String>>>) result;
     }
 
+    public int migrateData(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd) {
+        String json = jsonRowMapper.toJson(variablesToAdd);
+        String sql = " UPDATE " + schema.data().getSqlIdentifier()
+                   + " SET dataValues = dataValues || '" + json + "'::jsonb"
+                   + " WHERE application = :applicationId::uuid AND dataType = :dataType AND dataGroup = :dataGroup"
+                   ;
+        int count = namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource("applicationId", application.getId()).addValue("dataType", dataType).addValue("dataGroup", dataGroup));
+        return count;
+    }
 }

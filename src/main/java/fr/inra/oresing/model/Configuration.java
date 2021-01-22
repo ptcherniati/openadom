@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 @Getter
 @Setter
@@ -143,11 +144,24 @@ public class Configuration {
     static public class DataGroupDescription {
         private String label;
         private LinkedHashMap<String, ColumnDescription> data;
+        private TreeMap<Integer, List<MigrationDescription>> migrations;
     }
 
     @Value
     static public class ApplicationDescription {
         String name;
         int version;
+    }
+
+    @Value
+    static public class MigrationDescription {
+        String strategy;
+        String variable;
+        Map<String, AddVariableMigrationDescription> components;
+    }
+
+    @Value
+    static public class AddVariableMigrationDescription {
+        String defaultValue;
     }
 }

@@ -1,7 +1,7 @@
 version: 0
 application:
   name: "Application pour vérifier le fonctionnement des migrations"
-  version: 1
+  version: 2
 references:
 dataset:
   jeu1:
@@ -40,6 +40,8 @@ dataset:
                   name: Date
                   params:
                     pattern: dd/MM/yyyy
+        migrations:
+          2:
       groupe2:
         label: "Un autre groupe de données"
         data:
@@ -49,6 +51,15 @@ dataset:
           quantité:
             components:
               value:
+              qc:
+        migrations:
+          2:
+            - strategy: ADD_VARIABLE
+              variable: quantité
+              components:
+                value:
+                  defaultValue: 1234
+                qc:
     timeScopeColumn:
       variable: date
       component: value

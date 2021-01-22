@@ -160,20 +160,71 @@ public class OreSiService {
         return result;
     }
 
-    public UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException {
         authRepository.setRoleForClient();
-        // on essaie de parser le fichier, si tout ce passe bien, on remplace ou ajoute le fichier
-
-        UUID oldConfigId = app.getConfigFile();
-        UUID confId = storeFile(app, configurationFile);
-
-        app.setConfigFile(confId);
-        repo.store(app);
+        Application app = getApplication(nameOrId);
+        Configuration oldConfiguration = app.getConfiguration();
+        UUID oldConfigFileId = app.getConfigFile();
+        UUID uuid = changeApplicationConfiguration(app, configurationFile);
+        Configuration newConfiguration = app.getConfiguration();
+        int oldVersion = oldConfiguration.getApplication().getVersion();
+        int newVersion = newConfiguration.getApplication().getVersion();
+        Preconditions.checkArgument(newVersion > oldVersion, "l'application " + app.getName() + " est déjà dans la version " + oldVersion);
+        int firstMigrationToApply = oldVersion + 1;
+        if (log.isInfoEnabled()) {
+            log.info("va migrer les données de " + app.getName() + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
+        }
+        ApplicationRepository applicationRepository = repo.getRepository(app);
+        for (Map.Entry<String, Configuration.DatasetDescription> datasetEntry : newConfiguration.getDataset().entrySet()) {
+            for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : datasetEntry.getValue().getDataGroups().entrySet()) {
+                Configuration.DataGroupDescription dataGroupDescription = dataGroupEntry.getValue();
+                String dataGroup = dataGroupEntry.getKey();
+                String dataType = datasetEntry.getKey();
+                if (log.isInfoEnabled()) {
+                    log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + ", groupe " + dataGroup + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
+                }
+                for (int migrationVersionToApply = firstMigrationToApply; migrationVersionToApply <= newVersion; migrationVersionToApply++) {
+                    List<Configuration.MigrationDescription> migrations = dataGroupDescription.getMigrations().get(migrationVersionToApply);
+                    Map<String, Map<String, String>> variablesToAdd = new LinkedHashMap<>();
+                    if (migrations == null) {
+                        if (log.isInfoEnabled()) {
+                            log.info("aucune migration déclarée pour migrer vers la version " + migrationVersionToApply);
+                        }
+                    } else {
+                        if (log.isInfoEnabled()) {
+                            log.info(migrations.size() + " migrations déclarée pour migrer vers la version " + migrationVersionToApply);
+                        }
+                        for (Configuration.MigrationDescription migration : migrations) {
+                            Preconditions.checkArgument(migration.getStrategy().equals("ADD_VARIABLE"));
+                            String variable = migration.getVariable();
+                            Map<String, String> variableValue = new LinkedHashMap<>();
+                            for (Map.Entry<String, Configuration.AddVariableMigrationDescription> componentEntry : migration.getComponents().entrySet()) {
+                                String componentValue = Optional.ofNullable(componentEntry.getValue())
+                                        .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
+                                        .orElse("");
+                                variableValue.put(componentEntry.getKey(), componentValue);
+                            }
+                            variablesToAdd.put(variable, variableValue);
+                        }
+                    }
+                    if (!variablesToAdd.isEmpty()) {
+                        applicationRepository.migrateData(dataType, dataGroup, variablesToAdd);
+                    }
+                }
+            }
+        }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
-        ApplicationRepository applicationRepository = repo.getRepository(app);
-        applicationRepository.deleteBinaryFile(oldConfigId);
+        boolean deleted = applicationRepository.deleteBinaryFile(oldConfigFileId);
+        Preconditions.checkState(deleted);
 
+        return uuid;
+    }
+
+    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
+        UUID confId = storeFile(app, configurationFile);
+        app.setConfigFile(confId);
+        repo.store(app);
         Configuration conf = Configuration.read(configurationFile.getBytes());
         if (conf.getReferences() == null) {
             app.setReferenceType(Collections.emptyList());
@@ -181,13 +232,9 @@ public class OreSiService {
             app.setReferenceType(new ArrayList<>(conf.getReferences().keySet()));
         }
         app.setDataType(new ArrayList<>(conf.getDataset().keySet()));
-
         app.setConfiguration(conf);
-
         checkConfiguration(app);
-
         repo.store(app);
-
         return confId;
     }
 

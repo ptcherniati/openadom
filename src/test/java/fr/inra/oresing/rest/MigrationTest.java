@@ -109,6 +109,7 @@ public class MigrationTest {
             log.debug(actualCsv);
             Assert.assertTrue(actualCsv.contains("quantité"));
             Assert.assertEquals(1, StringUtils.countMatches(actualCsv, "bleu"));
+            Assert.assertEquals(1, StringUtils.countMatches(actualCsv, "1234"));
         }
     }
 }
