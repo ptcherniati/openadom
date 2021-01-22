@@ -40,8 +40,6 @@ dataset:
                   name: Date
                   params:
                     pattern: dd/MM/yyyy
-        migrations:
-          2:
       groupe2:
         label: "Un autre groupe de données"
         data:
@@ -52,14 +50,15 @@ dataset:
             components:
               value:
               qc:
-        migrations:
-          2:
-            - strategy: ADD_VARIABLE
-              variable: quantité
-              components:
-                value:
-                  defaultValue: 1234
-                qc:
     timeScopeColumn:
       variable: date
       component: value
+    migrations:
+      2:
+        - strategy: ADD_VARIABLE
+          dataGroup: groupe2
+          variable: quantité
+          components:
+            value:
+              defaultValue: 1234
+            qc:

@@ -62,6 +62,7 @@ public class Configuration {
     static public class DatasetDescription {
         private FormatDescription format;
         private LinkedHashMap<String, DataGroupDescription> dataGroups;
+        private TreeMap<Integer, List<MigrationDescription>> migrations;
         private VariableComponentReference timeScopeColumn;
 
         /**
@@ -144,7 +145,6 @@ public class Configuration {
     static public class DataGroupDescription {
         private String label;
         private LinkedHashMap<String, ColumnDescription> data;
-        private TreeMap<Integer, List<MigrationDescription>> migrations;
     }
 
     @Value
@@ -156,6 +156,7 @@ public class Configuration {
     @Value
     static public class MigrationDescription {
         String strategy;
+        String dataGroup;
         String variable;
         Map<String, AddVariableMigrationDescription> components;
     }

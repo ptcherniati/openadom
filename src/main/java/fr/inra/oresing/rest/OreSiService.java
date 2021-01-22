@@ -176,39 +176,38 @@ public class OreSiService {
         }
         ApplicationRepository applicationRepository = repo.getRepository(app);
         for (Map.Entry<String, Configuration.DatasetDescription> datasetEntry : newConfiguration.getDataset().entrySet()) {
-            for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : datasetEntry.getValue().getDataGroups().entrySet()) {
-                Configuration.DataGroupDescription dataGroupDescription = dataGroupEntry.getValue();
-                String dataGroup = dataGroupEntry.getKey();
-                String dataType = datasetEntry.getKey();
-                if (log.isInfoEnabled()) {
-                    log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + ", groupe " + dataGroup + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
-                }
-                for (int migrationVersionToApply = firstMigrationToApply; migrationVersionToApply <= newVersion; migrationVersionToApply++) {
-                    List<Configuration.MigrationDescription> migrations = dataGroupDescription.getMigrations().get(migrationVersionToApply);
-                    Map<String, Map<String, String>> variablesToAdd = new LinkedHashMap<>();
-                    if (migrations == null) {
-                        if (log.isInfoEnabled()) {
-                            log.info("aucune migration déclarée pour migrer vers la version " + migrationVersionToApply);
-                        }
-                    } else {
-                        if (log.isInfoEnabled()) {
-                            log.info(migrations.size() + " migrations déclarée pour migrer vers la version " + migrationVersionToApply);
-                        }
-                        for (Configuration.MigrationDescription migration : migrations) {
-                            Preconditions.checkArgument(migration.getStrategy().equals("ADD_VARIABLE"));
-                            String variable = migration.getVariable();
-                            Map<String, String> variableValue = new LinkedHashMap<>();
-                            for (Map.Entry<String, Configuration.AddVariableMigrationDescription> componentEntry : migration.getComponents().entrySet()) {
-                                String componentValue = Optional.ofNullable(componentEntry.getValue())
-                                        .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
-                                        .orElse("");
-                                variableValue.put(componentEntry.getKey(), componentValue);
-                            }
-                            variablesToAdd.put(variable, variableValue);
-                        }
+            String dataType = datasetEntry.getKey();
+            Configuration.DatasetDescription datasetDescription = datasetEntry.getValue();
+            if (log.isInfoEnabled()) {
+                log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
+            }
+            for (int migrationVersionToApply = firstMigrationToApply; migrationVersionToApply <= newVersion; migrationVersionToApply++) {
+                List<Configuration.MigrationDescription> migrations = datasetDescription.getMigrations().get(migrationVersionToApply);
+                Map<String, Map<String, String>> variablesToAdd = new LinkedHashMap<>();
+                if (migrations == null) {
+                    if (log.isInfoEnabled()) {
+                        log.info("aucune migration déclarée pour migrer vers la version " + migrationVersionToApply);
                     }
-                    if (!variablesToAdd.isEmpty()) {
-                        applicationRepository.migrateData(dataType, dataGroup, variablesToAdd);
+                } else {
+                    if (log.isInfoEnabled()) {
+                        log.info(migrations.size() + " migrations déclarée pour migrer vers la version " + migrationVersionToApply);
+                    }
+                    for (Configuration.MigrationDescription migration : migrations) {
+                        Preconditions.checkArgument(migration.getStrategy().equals("ADD_VARIABLE"));
+                        String dataGroup = migration.getDataGroup();
+                        String variable = migration.getVariable();
+                        Map<String, String> variableValue = new LinkedHashMap<>();
+                        for (Map.Entry<String, Configuration.AddVariableMigrationDescription> componentEntry : migration.getComponents().entrySet()) {
+                            String componentValue = Optional.ofNullable(componentEntry.getValue())
+                                    .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
+                                    .orElse("");
+                            variableValue.put(componentEntry.getKey(), componentValue);
+                        }
+                        variablesToAdd.put(variable, variableValue);
+                        int migratedCount = applicationRepository.migrateData(dataType, dataGroup, variablesToAdd);
+                        if (log.isInfoEnabled()) {
+                            log.info(migratedCount + " lignes migrées");
+                        }
                     }
                 }
             }
