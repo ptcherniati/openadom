@@ -183,17 +183,16 @@ public class OreSiService {
             }
             for (int migrationVersionToApply = firstMigrationToApply; migrationVersionToApply <= newVersion; migrationVersionToApply++) {
                 List<Configuration.MigrationDescription> migrations = datasetDescription.getMigrations().get(migrationVersionToApply);
-                Map<String, Map<String, String>> variablesToAdd = new LinkedHashMap<>();
                 if (migrations == null) {
                     if (log.isInfoEnabled()) {
-                        log.info("aucune migration déclarée pour migrer vers la version " + migrationVersionToApply);
+                        log.info("aucune migration déclarée pour migrer le type de données " + dataType + " vers la version " + migrationVersionToApply);
                     }
                 } else {
                     if (log.isInfoEnabled()) {
                         log.info(migrations.size() + " migrations déclarée pour migrer vers la version " + migrationVersionToApply);
                     }
                     for (Configuration.MigrationDescription migration : migrations) {
-                        Preconditions.checkArgument(migration.getStrategy().equals("ADD_VARIABLE"));
+                        Preconditions.checkArgument(migration.getStrategy() == Configuration.MigrationStrategy.ADD_VARIABLE);
                         String dataGroup = migration.getDataGroup();
                         String variable = migration.getVariable();
                         Map<String, String> variableValue = new LinkedHashMap<>();
@@ -203,7 +202,7 @@ public class OreSiService {
                                     .orElse("");
                             variableValue.put(componentEntry.getKey(), componentValue);
                         }
-                        variablesToAdd.put(variable, variableValue);
+                        Map<String, Map<String, String>> variablesToAdd = Map.of(variable, variableValue);
                         int migratedCount = applicationRepository.migrateData(dataType, dataGroup, variablesToAdd);
                         if (log.isInfoEnabled()) {
                             log.info(migratedCount + " lignes migrées");

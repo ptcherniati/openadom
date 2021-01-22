@@ -155,7 +155,7 @@ public class Configuration {
 
     @Value
     static public class MigrationDescription {
-        String strategy;
+        MigrationStrategy strategy;
         String dataGroup;
         String variable;
         Map<String, AddVariableMigrationDescription> components;
@@ -164,5 +164,9 @@ public class Configuration {
     @Value
     static public class AddVariableMigrationDescription {
         String defaultValue;
+    }
+
+    public enum MigrationStrategy {
+        ADD_VARIABLE
     }
 }
