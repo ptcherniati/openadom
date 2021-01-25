@@ -178,6 +178,7 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DatasetDescription> datasetEntry : newConfiguration.getDataset().entrySet()) {
             String dataType = datasetEntry.getKey();
             Configuration.DatasetDescription datasetDescription = datasetEntry.getValue();
+            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetDescription);
             if (log.isInfoEnabled()) {
                 log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
             }
@@ -202,7 +203,8 @@ public class OreSiService {
                             String componentValue = Optional.ofNullable(componentEntry.getValue())
                                     .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
                                     .orElse("");
-                            Checker checker = checkerFactory.getChecker(datasetDescription.getData().get(variable), app, component);
+                            VariableComponentReference reference = new VariableComponentReference(variable, component);
+                            Checker checker = checkers.get(reference);
                             if (checker instanceof ReferenceChecker) {
                                 try {
                                     UUID referenceId = checker.check(componentValue);
@@ -268,8 +270,8 @@ public class OreSiService {
             if (!datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().containsKey(timeScopeColumn.getComponent())) {
                 throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetDescription.getData().keySet());
             }
-            Configuration.ColumnDescription timeScopeColumnDescription = datasetDescription.getData().get(timeScopeColumn.getVariable());
-            Checker timeScopeColumnChecker = checkerFactory.getChecker(timeScopeColumnDescription, app, timeScopeColumn.getComponent());
+            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetDescription);
+            Checker timeScopeColumnChecker = checkers.get(timeScopeColumn);
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
                 if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
@@ -323,16 +325,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
 
-        Map<VariableComponentReference, Checker> checkers = new LinkedHashMap<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataSet.getData().entrySet()) {
-            String variable = variableEntry.getKey();
-            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
-                String component = componentEntry.getKey();
-                VariableComponentReference variableComponentReference = new VariableComponentReference(variable, component);
-                checkers.put(variableComponentReference, checkerFactory.getChecker(variableDescription, app, component));
-            }
-        }
+        ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataSet);
 
         List<String> error = new LinkedList<>();
 

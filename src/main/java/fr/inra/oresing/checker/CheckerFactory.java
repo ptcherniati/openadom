@@ -1,12 +1,15 @@
 package fr.inra.oresing.checker;
 
+import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.VariableComponentReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +32,7 @@ public class CheckerFactory {
         this.checkers = checkers.stream().collect(Collectors.toMap(c -> c.getName().toLowerCase(), c -> c.getClass()));
     }
 
-    public Checker getChecker(Configuration.ColumnDescription columnDescription, Application application, String component) {
+    private Checker getChecker(Configuration.ColumnDescription columnDescription, Application application, String component) {
         if (columnDescription == null || columnDescription.getComponents().get(component) == null) {
             return getChecker("Dummy");
         }
@@ -47,7 +50,7 @@ public class CheckerFactory {
         return result;
     }
 
-    public Checker getChecker(String name) {
+    private Checker getChecker(String name) {
         Class<? extends Checker> clazz = checkers.get(name.toLowerCase());
         Checker result = applicationContext.getBean(clazz);
         return result;
@@ -66,5 +69,19 @@ public class CheckerFactory {
             }
         }
         return referenceCheckers;
+    }
+
+    public ImmutableMap<VariableComponentReference, Checker> getCheckers(Application app, Configuration.DatasetDescription dataSet) {
+        Map<VariableComponentReference, Checker> checkers = new LinkedHashMap<>();
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataSet.getData().entrySet()) {
+            String variable = variableEntry.getKey();
+            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
+            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
+                String component = componentEntry.getKey();
+                VariableComponentReference variableComponentReference = new VariableComponentReference(variable, component);
+                checkers.put(variableComponentReference, getChecker(variableDescription, app, component));
+            }
+        }
+        return ImmutableMap.copyOf(checkers);
     }
 }
