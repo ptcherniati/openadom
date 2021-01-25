@@ -143,7 +143,7 @@ public class RelationalService {
         for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
             String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
-            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetDescription);
+            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetName);
 
             Set<String> referenceColumnIds = new LinkedHashSet<>();
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
@@ -192,7 +192,7 @@ public class RelationalService {
         for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
             String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
-            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetDescription);
+            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetName);
 
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();

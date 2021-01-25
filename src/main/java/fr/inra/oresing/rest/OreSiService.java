@@ -178,7 +178,7 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DatasetDescription> datasetEntry : newConfiguration.getDataset().entrySet()) {
             String dataType = datasetEntry.getKey();
             Configuration.DatasetDescription datasetDescription = datasetEntry.getValue();
-            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetDescription);
+            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataType);
             if (log.isInfoEnabled()) {
                 log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
             }
@@ -292,7 +292,7 @@ public class OreSiService {
             if (!datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().containsKey(timeScopeColumn.getComponent())) {
                 throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetDescription.getData().keySet());
             }
-            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetDescription);
+            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetName);
             Checker timeScopeColumnChecker = checkers.get(timeScopeColumn);
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
@@ -347,7 +347,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
 
-        ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataSet);
+        ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataType);
 
         List<String> error = new LinkedList<>();
 

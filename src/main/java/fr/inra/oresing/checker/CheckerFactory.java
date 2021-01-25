@@ -1,6 +1,8 @@
 package fr.inra.oresing.checker;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentReference;
@@ -10,10 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -56,29 +56,19 @@ public class CheckerFactory {
         return result;
     }
 
-    public Set<ReferenceChecker> getReferenceCheckers(Application application, Configuration.DatasetDescription datasetDescription) {
-        Set<ReferenceChecker> referenceCheckers = new LinkedHashSet<>();
-        for (Configuration.ColumnDescription columnDescription : datasetDescription.getData().values()) {
-            for (Map.Entry<String, Configuration.VariableComponentDescription> entry : columnDescription.getComponents().entrySet()) {
-                String component = entry.getKey();
-                Checker checker = getChecker(columnDescription, application, component);
-                if (checker instanceof ReferenceChecker) {
-                    ReferenceChecker referenceChecker = (ReferenceChecker) checker;
-                    referenceCheckers.add(referenceChecker);
-                }
-            }
-        }
+    public ImmutableSet<ReferenceChecker> getReferenceCheckers(Application application, String dataType) {
+        ImmutableSet<ReferenceChecker> referenceCheckers = getCheckers(application, dataType).values().stream()
+                .filter(checker -> checker instanceof ReferenceChecker)
+                .map(checker -> (ReferenceChecker) checker)
+                .collect(ImmutableSet.toImmutableSet());
         return referenceCheckers;
     }
 
     public ImmutableMap<VariableComponentReference, Checker> getCheckers(Application app, String dataset) {
+        Preconditions.checkArgument(app.getConfiguration().getDataset().containsKey(dataset), "Pas de type de données " + dataset + " dans " + app);
         Configuration.DatasetDescription datasetDescription = app.getConfiguration().getDataset().get(dataset);
-        return getCheckers(app, datasetDescription);
-    }
-
-    public ImmutableMap<VariableComponentReference, Checker> getCheckers(Application app, Configuration.DatasetDescription dataSet) {
         Map<VariableComponentReference, Checker> checkers = new LinkedHashMap<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataSet.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : datasetDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
