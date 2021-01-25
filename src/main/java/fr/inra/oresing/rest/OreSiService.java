@@ -223,6 +223,8 @@ public class OreSiService {
                     }
                 }
             }
+
+            validateStoredData(app, dataType);
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
@@ -230,6 +232,26 @@ public class OreSiService {
         Preconditions.checkState(deleted);
 
         return uuid;
+    }
+
+    private void validateStoredData(Application app, String dataType) {
+        ApplicationRepository applicationRepository = repo.getRepository(app);
+        ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+        Consumer<ImmutableMap<VariableComponentReference, String>> validateRow = line -> {
+            for (Map.Entry<VariableComponentReference, String> entry : line.entrySet()) {
+                VariableComponentReference reference = entry.getKey();
+                Checker checker = checkers.get(reference);
+                String value = entry.getValue();
+                try {
+                    checker.check(value);
+                } catch (CheckerException e) {
+                    throw new IllegalStateException("erreur de validation d'une donnée stockée", e);
+                }
+            }
+        };
+        applicationRepository.findData(dataType).stream()
+                .map(this::valuesToIndexedPerReferenceMap)
+                .forEach(validateRow);
     }
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
@@ -569,5 +591,18 @@ public class OreSiService {
     public Optional<Application> tryFindApplication(String nameOrId) {
         authRepository.setRoleForClient();
         return repo.tryFindApplication(nameOrId);
+    }
+
+    private ImmutableMap<VariableComponentReference, String> valuesToIndexedPerReferenceMap(Map<String, Map<String, String>> line) {
+        Map<VariableComponentReference, String> valuesPerReference = new LinkedHashMap<>();
+        for (Map.Entry<String, Map<String, String>> variableEntry : line.entrySet()) {
+            String variable = variableEntry.getKey();
+            for (Map.Entry<String, String> componentEntry : variableEntry.getValue().entrySet()) {
+                String component = componentEntry.getKey();
+                VariableComponentReference reference = new VariableComponentReference(variable, component);
+                valuesPerReference.put(reference, componentEntry.getValue());
+            }
+        }
+        return ImmutableMap.copyOf(valuesPerReference);
     }
 }

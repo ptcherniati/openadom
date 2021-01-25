@@ -71,6 +71,11 @@ public class CheckerFactory {
         return referenceCheckers;
     }
 
+    public ImmutableMap<VariableComponentReference, Checker> getCheckers(Application app, String dataset) {
+        Configuration.DatasetDescription datasetDescription = app.getConfiguration().getDataset().get(dataset);
+        return getCheckers(app, datasetDescription);
+    }
+
     public ImmutableMap<VariableComponentReference, Checker> getCheckers(Application app, Configuration.DatasetDescription dataSet) {
         Map<VariableComponentReference, Checker> checkers = new LinkedHashMap<>();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataSet.getData().entrySet()) {
