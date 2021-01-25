@@ -25,3 +25,10 @@ maven:
   script: mvn --batch-mode clean package
   tags:
     - docker
+
+npm:
+  image: node:12-alpine
+  stage: build
+  script: cd ui ; npm ci
+  tags:
+    - docker
