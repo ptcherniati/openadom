@@ -3,6 +3,10 @@ application:
   name: "Application pour vérifier le fonctionnement des migrations"
   version: 1
 references:
+  couleurs:
+    separator: ";"
+    columns:
+      couleur:
 dataset:
   jeu1:
     format:
@@ -29,6 +33,10 @@ dataset:
           couleur:
             components:
               value:
+                checker:
+                  name: Reference
+                  params:
+                    refType: couleurs
           date:
             components:
               value:

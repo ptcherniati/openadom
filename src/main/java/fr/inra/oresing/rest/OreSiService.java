@@ -196,14 +196,25 @@ public class OreSiService {
                         String dataGroup = migration.getDataGroup();
                         String variable = migration.getVariable();
                         Map<String, String> variableValue = new LinkedHashMap<>();
+                        Set<UUID> refsLinkedToToAdd = new LinkedHashSet<>();
                         for (Map.Entry<String, Configuration.AddVariableMigrationDescription> componentEntry : migration.getComponents().entrySet()) {
+                            String component = componentEntry.getKey();
                             String componentValue = Optional.ofNullable(componentEntry.getValue())
                                     .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
                                     .orElse("");
-                            variableValue.put(componentEntry.getKey(), componentValue);
+                            Checker checker = checkerFactory.getChecker(datasetDescription.getData().get(variable), app, component);
+                            if (checker instanceof ReferenceChecker) {
+                                try {
+                                    UUID referenceId = checker.check(componentValue);
+                                    refsLinkedToToAdd.add(referenceId);
+                                } catch (CheckerException e) {
+                                    throw new IllegalStateException(componentValue + " n'est pas une valeur par défaut acceptable pour " + component);
+                                }
+                            }
+                            variableValue.put(component, componentValue);
                         }
                         Map<String, Map<String, String>> variablesToAdd = Map.of(variable, variableValue);
-                        int migratedCount = applicationRepository.migrateData(dataType, dataGroup, variablesToAdd);
+                        int migratedCount = applicationRepository.migrateData(dataType, dataGroup, variablesToAdd, refsLinkedToToAdd);
                         if (log.isInfoEnabled()) {
                             log.info(migratedCount + " lignes migrées");
                         }

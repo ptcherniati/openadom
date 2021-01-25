@@ -68,17 +68,15 @@ public class MigrationTest {
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().isCreated());
         }
-//
-//        // Ajout de referentiel
-//        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
-//            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-//                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-//                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
-//                        .file(refFile)
-//                        .cookie(authCookie))
-//                        .andExpect(MockMvcResultMatchers.status().isCreated());
-//            }
-//        }
+
+        // Ajout de referentiel
+        try (InputStream refStream = getClass().getResourceAsStream(fixtures.getMigrationApplicationReferenceResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fake_app/references/couleurs")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().isCreated());
+        }
 
         // ajout de data
         try (InputStream refStream = getClass().getResourceAsStream(fixtures.getMigrationApplicationDataResourceName())) {

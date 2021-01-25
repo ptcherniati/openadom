@@ -20,6 +20,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -173,13 +174,25 @@ public class ApplicationRepository implements InitializingBean {
         return (List<Map<String, Map<String, String>>>) result;
     }
 
-    public int migrateData(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd) {
+    public int migrateData(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Set<UUID> refsLinkedToToAdd) {
+        String setRefsLinkedToClause;
+        if (refsLinkedToToAdd.isEmpty()) {
+            setRefsLinkedToClause = "";
+        } else {
+            setRefsLinkedToClause = ", refsLinkedTo = refsLinkedTo || :refsLinkedToToAdd ";
+        }
         String json = jsonRowMapper.toJson(variablesToAdd);
         String sql = " UPDATE " + schema.data().getSqlIdentifier()
                    + " SET dataValues = dataValues || '" + json + "'::jsonb"
+                   + setRefsLinkedToClause
                    + " WHERE application = :applicationId::uuid AND dataType = :dataType AND dataGroup = :dataGroup"
                    ;
-        int count = namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource("applicationId", application.getId()).addValue("dataType", dataType).addValue("dataGroup", dataGroup));
+        MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", application.getId())
+                .addValue("dataType", dataType)
+                .addValue("dataGroup", dataGroup)
+                .addValue("refsLinkedToToAdd", refsLinkedToToAdd)
+                ;
+        int count = namedParameterJdbcTemplate.update(sql, sqlParams);
         return count;
     }
 }

@@ -84,4 +84,8 @@ public class Fixtures {
     public String getMigrationApplicationDataResourceName() {
         return "/data/migration/fake-data.csv";
     }
+
+    public String getMigrationApplicationReferenceResourceName() {
+        return "/data/migration/couleurs.csv";
+    }
 }

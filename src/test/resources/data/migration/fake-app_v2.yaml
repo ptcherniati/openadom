@@ -3,6 +3,10 @@ application:
   name: "Application pour vérifier le fonctionnement des migrations"
   version: 2
 references:
+  couleurs:
+    separator: ";"
+    columns:
+      couleur:
 dataset:
   jeu1:
     format:
@@ -26,6 +30,10 @@ dataset:
           reference:
             variable: quantité
             component: value
+        - header: "couleur secondaire"
+          reference:
+            variable: couleurSecondaire
+            component: value
     dataGroups:
       groupe1:
         label: "Un groupe de données"
@@ -33,6 +41,10 @@ dataset:
           couleur:
             components:
               value:
+                checker:
+                  name: Reference
+                  params:
+                    refType: couleurs
           date:
             components:
               value:
@@ -50,6 +62,13 @@ dataset:
             components:
               value:
               qc:
+          couleurSecondaire:
+            components:
+              value:
+                checker:
+                  name: Reference
+                  params:
+                   refType: couleurs
     timeScopeColumn:
       variable: date
       component: value
@@ -62,3 +81,9 @@ dataset:
             value:
               defaultValue: 1234
             qc:
+        - strategy: ADD_VARIABLE
+          dataGroup: groupe2
+          variable: couleurSecondaire
+          components:
+            value:
+              defaultValue: rouge
