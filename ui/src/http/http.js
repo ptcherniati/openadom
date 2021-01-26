@@ -18,6 +18,7 @@ class HttpClient {
             `${config.API_URL}login`, {
                 method: "POST",
                 body: formData,
+                credentials: "include"
             }
         )
     }
@@ -32,13 +33,13 @@ class HttpClient {
 
     loadDataset(dataset, applicationName) {
         return fetch(`${config.API_URL}applications/${applicationName}/data/${dataset}`, {
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
     loadReference(reference, applicationName) {
         return fetch(`${config.API_URL}applications/${applicationName}/references/${reference}`, {
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
@@ -48,7 +49,7 @@ class HttpClient {
         return fetch(`${config.API_URL}applications/${applicationName}/references/${reference}`, {
             method: "POST",
             body: formData,
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
@@ -58,25 +59,25 @@ class HttpClient {
         return fetch(`${config.API_URL}applications/${applicationName}/data/${dataset}`, {
             method: "POST",
             body: formData,
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
     loadApplications() {
         return fetch(`${config.API_URL}applications/`, {
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
     loadApplicationConfiguration(applicationName) {
         return fetch(`${config.API_URL}applications/${applicationName}`, {
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
     uploadFile(id) {
         return fetch(`${config.API_URL}files/${id}`, {
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
@@ -86,7 +87,7 @@ class HttpClient {
         return fetch(`${config.API_URL}applications/${applicationName}`, {
             method: "POST",
             body: formData,
-            credentials: "same-origin"
+            credentials: "include"
         });
     }
 
