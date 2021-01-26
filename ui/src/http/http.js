@@ -5,81 +5,76 @@ class HttpClient {
         let formData = new FormData();
         formData.append("login", user.login);
         formData.append("password", user.password);
-        return fetch(
-            `${config.API_URL}login`, {
-                method: "POST",
-                body: formData,
-                credentials: "include"
-            }
-        )
+        return this.post('login', formData);
     }
 
     logOut() {
-        return fetch(
-            `${config.API_URL}logout`, {
-                method: "DELETE",
-            }
-        )
+        return this.delete('logout');
     }
 
     loadDataset(dataset, applicationName) {
-        return fetch(`${config.API_URL}applications/${applicationName}/data/${dataset}`, {
-            credentials: "include"
-        });
+        return this.get(`applications/${applicationName}/data/${dataset}`);
     }
 
     loadReference(reference, applicationName) {
-        return fetch(`${config.API_URL}applications/${applicationName}/references/${reference}`, {
-            credentials: "include"
-        });
+        return this.get(`applications/${applicationName}/references/${reference}`);
     }
 
     uploadReference(reference, applicationName, file) {
         let formData = new FormData();
         formData.append("file", file);
-        return fetch(`${config.API_URL}applications/${applicationName}/references/${reference}`, {
-            method: "POST",
-            body: formData,
-            credentials: "include"
-        });
+        return this.post(`applications/${applicationName}/references/${reference}`, formData);
     }
 
     uploadDataset(dataset, applicationName, file) {
         let formData = new FormData();
         formData.append("file", file);
-        return fetch(`${config.API_URL}applications/${applicationName}/data/${dataset}`, {
-            method: "POST",
-            body: formData,
-            credentials: "include"
-        });
+        return this.post(`applications/${applicationName}/data/${dataset}`, formData);
     }
 
     loadApplications() {
-        return fetch(`${config.API_URL}applications/`, {
-            credentials: "include"
-        });
+        return this.get(`applications/`);
     }
 
     loadApplicationConfiguration(applicationName) {
-        return fetch(`${config.API_URL}applications/${applicationName}`, {
-            credentials: "include"
-        });
+        return this.get(`applications/${applicationName}`);
     }
 
     uploadFile(id) {
-        return fetch(`${config.API_URL}files/${id}`, {
-            credentials: "include"
-        });
+        return this.get(`files/${id}`);
     }
 
     loadApplication(applicationName, file) {
         let formData = new FormData();
         formData.append("file", file);
-        return fetch(`${config.API_URL}applications/${applicationName}`, {
-            method: "POST",
-            body: formData,
-            credentials: "include"
-        });
+        return this.post(`applications/${applicationName}`, formData);
+    }
+
+    post(endpoint, body) {
+        return fetch(
+            `${config.API_URL}${endpoint}`, {
+                credentials: "include",
+                method: "POST",
+                body: body
+            }
+        )
+    }
+
+    delete(endpoint) {
+        return fetch(
+            `${config.API_URL}${endpoint}`, {
+                credentials: "include",
+                method: "DELETE"
+            }
+        )
+    }
+
+    get(endpoint) {
+        return fetch(
+            `${config.API_URL}${endpoint}`, {
+                credentials: "include"
+            }
+        )
     }
 }
 const http = new HttpClient()
