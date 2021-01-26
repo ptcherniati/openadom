@@ -12,7 +12,6 @@
     "dependencies": {
         "forms": "^1.3.2",
         "material-design-icons-iconfont": "^4.0.5",
-        "peer": "^0.5.3",
         "sass": "^1.27.0",
         "sass-loader": "^10.0.3",
         "typescript": "^3.9.7",
@@ -51,11 +50,5 @@
     "directories": {
         "test": "tests"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+ssh://ptchernia@git.renater.fr:2222/scmrepos/git/soerev2/ui.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC"
+    "keywords": []
 }
