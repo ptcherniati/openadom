@@ -1,15 +1,6 @@
-import axios from "axios";
 import config from "@/config";
-import {
-    storage,
-    Storage
-} from "@/storage";
 
 class HttpClient {
-    helloWorld() {
-        return axios.get(`${config.API_URL}`);
-    }
-
     login(user) {
         let formData = new FormData();
         formData.append("login", user.login);
@@ -89,16 +80,6 @@ class HttpClient {
             body: formData,
             credentials: "include"
         });
-    }
-
-    buildConfig(config) {
-        const headers = config == null ? {} : config;
-        if (storage.get(Storage.TOKEN_KEY)) {
-            headers["si-ore-jwt"] = storage.get(Storage.TOKEN_KEY);
-        }
-        return {
-            headers
-        };
     }
 }
 const http = new HttpClient()
