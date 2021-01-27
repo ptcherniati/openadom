@@ -29,6 +29,9 @@ maven:
 npm:
   image: node:12-alpine
   stage: build
-  script: cd ui ; npm ci
+  script:
+    - cd ui
+    - npm ci
+    - npm run build
   tags:
     - docker
