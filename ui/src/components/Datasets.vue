@@ -273,6 +273,11 @@ export default {
         this.resetValidation();
       }
     },
+    resetValidation() {
+      /** */
+      this.file = null;
+      this.$refs.file.value = null;
+    },
     pickFile() {
       this.$refs.file.value = null;
       this.$refs.file.click();
