@@ -73,7 +73,6 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
 .references > table > tr > td {
   border: solid 1px red;
