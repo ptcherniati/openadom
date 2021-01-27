@@ -68,7 +68,6 @@
 </template>
 
 <script>
-//import { storage, Storage } from "@/storage";
 import Configuration from "@/components/Configuration";
 import EventBus from "@/eventBus";
 import config from "@/config";

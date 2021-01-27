@@ -62,7 +62,6 @@
 </template>
 
 <script>
-import { storage, Storage } from "@/storage";
 import store from "@/store";
 import Vuex from "vuex";
 import { GChart } from "vue-google-charts";

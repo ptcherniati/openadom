@@ -24,7 +24,6 @@
 </template>
 
 <script>
-import { storage, Storage } from "@/storage";
 export default {
   name: "Login",
   created: function() {

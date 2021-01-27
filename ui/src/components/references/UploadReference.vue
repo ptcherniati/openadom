@@ -57,7 +57,6 @@
 </template>
 
 <script>
-import { storage, Storage } from "@/storage";
 import EventBus from '@/eventBus';
 export default {
   name: "UploadReferences",

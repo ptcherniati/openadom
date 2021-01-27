@@ -67,7 +67,6 @@
 </template>
 
 <script>
-//import { storage, Storage } from "@/storage";
 import Configuration from "@/components/Configuration";
 import ApplicationChoice from "@/components/application/ApplicationChoice";
 import UploadApplication from "@/components/application/UploadApplication";

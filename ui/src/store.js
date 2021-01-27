@@ -3,10 +3,6 @@ import Vuex from 'vuex'
 import defaultData from '@/data'
 import http from "@/http/http.js";
 import EventBus from '@/eventBus';
-import {
-    storage,
-    Storage
-} from "@/storage";
 
 Vue.use(Vuex)
 
