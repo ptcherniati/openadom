@@ -81,7 +81,6 @@
 
 <script>
 //import { storage, Storage } from "@/storage";
-import store from "@/store";
 import EventBus from "@/eventBus";
 export default {
   name: "UploadApplication",
@@ -90,7 +89,7 @@ export default {
       if (event.id) {
         this.snackbar.text = "la configuration a été chargée";
         this.snackbar.visible = true;
-        store.dispatch("loadApplicationConfiguration", event.id);
+        this.$store.dispatch("loadApplicationConfiguration", event.id);
       } else {
         let message = "la configuration n'a pas pu être chargée.";
         if (event.status == 302) {
@@ -110,7 +109,7 @@ export default {
   computed: {
     application: {
       get() {
-        return store.state.application;
+        return this.$store.state.application;
       }
     }
   },
@@ -151,7 +150,7 @@ export default {
     validate() {
       /** */
       if (this.$refs.form.validate() && this.file != null) {
-        store.dispatch("loadApplication", {
+        this.$store.dispatch("loadApplication", {
           applicationName: this.applicationName,
           file: this.file
         });

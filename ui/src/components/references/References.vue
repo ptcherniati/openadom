@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import store from "@/store";
 import ShowReference from "@/components/references/ShowReference";
 //import UploadReference from "@/components/references/UploadReference";
 export default {
@@ -37,7 +36,7 @@ export default {
   computed: {
     referenceType :{
       get(){
-        return store.state.referenceType
+        return this.$store.state.referenceType
       }
     },
   },

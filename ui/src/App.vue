@@ -110,7 +110,6 @@
 <script>
 import router from "./router";
 import Login from "@/components/Login";
-import store from "@/store";
 import '@mdi/font/css/materialdesignicons.css'// Ensure you are using css-
 
 export default {
@@ -127,18 +126,18 @@ export default {
     },
     user: {
       get() {
-        return store.state.user;
+        return this.$store.state.user;
       }
     },
     configuration: {
       get() {
-        return store.state.configuration;
+        return this.$store.state.configuration;
       }
     }
   },
   methods :{
     logout(){
-      store.dispatch('logOut')
+      this.$store.dispatch('logOut')
     }
   }
 };

@@ -58,7 +58,6 @@
 
 <script>
 import { storage, Storage } from "@/storage";
-import store from "@/store";
 import EventBus from '@/eventBus';
 export default {
   name: "UploadReferences",
@@ -77,20 +76,20 @@ export default {
   computed: {
     referenceType :{
       get(){
-        return store.state.referenceType==null?[]:store.state.referenceType
+        return this.$store.state.referenceType==null?[]:this.$store.state.referenceType
       }
     },
     application: {
       get() {
-        return store.state.application;
+        return this.$store.state.application;
       }
     },
     referenceName: {
       get() {
-        return store.state.referenceName;
+        return this.$store.state.referenceName;
       },
       set(referenceName){
-        store.state.referenceName = referenceName;
+        this.$store.state.referenceName = referenceName;
       }
     },
   },
@@ -104,7 +103,7 @@ export default {
   },
   methods: {
     setReference(referenceName) {
-      store.dispatch("loadReference", {
+      this.$store.dispatch("loadReference", {
         referenceName: referenceName,
         referenceDescription: this.references[referenceName],
       });
@@ -114,7 +113,7 @@ export default {
     },
     uploadReference(){
       if (file != null) {
-        store.dispatch("uploadReference", {
+        this.$store.dispatch("uploadReference", {
           referenceName: this.referenceName,
           file: this.file
         });

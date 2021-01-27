@@ -25,11 +25,10 @@
 
 <script>
 import { storage, Storage } from "@/storage";
-import store from "@/store";
 export default {
   name: "Login",
   created: function() {
-    this.user = store.state.user;
+    this.user = this.$store.state.user;
   },
   computed: {},
   props: {},
@@ -38,7 +37,7 @@ export default {
   },
   methods: {
     login() {
-      store.dispatch("loadUser", this.user);
+      this.$store.dispatch("loadUser", this.user);
     }
   }
 };

@@ -20,7 +20,6 @@ import RightNode from "@/components/RightNode";
 import http from "@/http/http";
 import config from "@/config";
 import { storage, Storage } from "@/storage";
-import store from "@/store";
 export default {
   name: "Rights",
   computed: {

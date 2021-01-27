@@ -136,7 +136,6 @@
 
 <script>
 import { storage, Storage } from "@/storage";
-import store from "@/store";
 import EventBus from "@/eventBus";
 export default {
   name: "Datasets",
@@ -175,34 +174,34 @@ export default {
   computed: {
     datasets :{
       get(){
-        return store.state.configuration != null
-          ? store.state.configuration.dataset
+        return this.$store.state.configuration != null
+          ? this.$store.state.configuration.dataset
           : null
       }
     },
     dataType :{
       get(){
-        return store.state.dataType
+        return this.$store.state.dataType
       }
     },
     datasetDescription: {
       get() {
-        return store.state.datasetDescription;
+        return this.$store.state.datasetDescription;
       }
     },
     datasetName: {
       get() {
-        return store.state.datasetName;
+        return this.$store.state.datasetName;
       }
     },
     datasetValue: {
       get() {
-        return store.state.datasetValue;
+        return this.$store.state.datasetValue;
       }
     },
     headers: {
       get() {
-        const datasetDescription = store.state.datasetDescription;
+        const datasetDescription = this.$store.state.datasetDescription;
         if(datasetDescription==null){
           return []
         }
@@ -229,7 +228,7 @@ export default {
   },
   methods: {
     setDataset(datasetName) {
-      store.dispatch("loadDataset", {
+      this.$store.dispatch("loadDataset", {
         datasetName:datasetName, 
         datasetDescription:this.datasets[datasetName]
       });
@@ -266,7 +265,7 @@ export default {
       /** */
       this.file = this.$refs.file.files[0];
       if (this.file != null) {
-        store.dispatch("uploadDataset", {
+        this.$store.dispatch("uploadDataset", {
           datasetName: this.datasetName,
           file: this.file
         });

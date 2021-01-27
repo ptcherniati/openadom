@@ -4,7 +4,6 @@ import References from "./components/references/References";
 import Application from "./components/application/Application";
 import Datasets from "./components/Datasets";
 import Synthesis from "./components/Synthesis";
-import store from "@/store";
 
 Vue.use(Router);
 

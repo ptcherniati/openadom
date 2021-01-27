@@ -68,7 +68,6 @@
 
 <script>
 //import { storage, Storage } from "@/storage";
-import store from "@/store";
 import Configuration from "@/components/Configuration";
 import ApplicationChoice from "@/components/application/ApplicationChoice";
 import UploadApplication from "@/components/application/UploadApplication";
@@ -80,12 +79,12 @@ export default {
   computed: {
     application: {
       get() {
-        return store.state.application;
+        return this.$store.state.application;
       }
     },
     user: {
       get() {
-        return store.state.user;
+        return this.$store.state.user;
       }
     },
   },

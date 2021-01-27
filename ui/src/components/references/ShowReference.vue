@@ -154,7 +154,6 @@
 
 <script>
 import { storage, Storage } from "@/storage";
-import store from "@/store";
 import EventBus from "@/eventBus";
 export default {
   name: "ShowReferences",
@@ -194,26 +193,26 @@ export default {
   computed: {
     references: {
       get() {
-        return store.state.configuration != null
-          ? store.state.configuration.references
+        return this.$store.state.configuration != null
+          ? this.$store.state.configuration.references
           : null;
       }
     },
     referenceType: {
       get() {
-        return store.state.referenceType == null
+        return this.$store.state.referenceType == null
           ? []
-          : store.state.referenceType;
+          : this.$store.state.referenceType;
       }
     },
     referenceDescription: {
       get() {
-        return store.state.referenceDescription;
+        return this.$store.state.referenceDescription;
       }
     },
     referenceName: {
       get() {
-        return store.state.referenceName;
+        return this.$store.state.referenceName;
       },
       set(referenceName) {
         this.setReference(referenceName);
@@ -221,15 +220,15 @@ export default {
     },
     referenceValue: {
       get() {
-        return store.state.referenceValue;
+        return this.$store.state.referenceValue;
       }
     },
     headers: {
       get() {
-        if (store.state.referenceDescription == null) {
+        if (this.$store.state.referenceDescription == null) {
           return [];
         }
-        let headers =  Object.keys(store.state.referenceDescription.columns).map(a => {
+        let headers =  Object.keys(this.$store.state.referenceDescription.columns).map(a => {
           return { text: a, align: "center", value: a };
         });
         /*Object.keys(headers).map(a => {
@@ -257,7 +256,7 @@ export default {
   },
   methods: {
     setReference(referenceName) {
-      store.dispatch("loadReference", {
+      this.$store.dispatch("loadReference", {
         referenceName: referenceName,
         referenceDescription: this.references[referenceName]
       });
@@ -319,7 +318,7 @@ export default {
       /** */
       this.file = this.$refs.file.files[0];
       if (this.file != null) {
-        store.dispatch("uploadReference", {
+        this.$store.dispatch("uploadReference", {
           referenceName: this.referenceName,
           file: this.file
         });
@@ -328,7 +327,7 @@ export default {
     },
     uploadReference() {
       if (file != null) {
-        store.dispatch("uploadReference", this.referenceName);
+        this.$store.dispatch("uploadReference", this.referenceName);
         this.resetValidation();
       }
     },

@@ -69,7 +69,6 @@
 
 <script>
 //import { storage, Storage } from "@/storage";
-import store from "@/store";
 import Configuration from "@/components/Configuration";
 import EventBus from "@/eventBus";
 import config from "@/config";
@@ -80,14 +79,14 @@ export default {
   computed: {
     applications: {
       get() {
-        return store.state.applications;
+        return this.$store.state.applications;
       }
     },
     application: {
       get() {
         // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-        this.url = config.API_URL+"files/"+(store.state.application==null?'':store.state.application.configFile)
-        return store.state.application;
+        this.url = config.API_URL+"files/"+(this.$store.state.application==null?'':this.$store.state.application.configFile)
+        return this.$store.state.application;
       },
       set(application){
         this.setApplication(application.name);
@@ -95,7 +94,7 @@ export default {
     },
     url: {
       get() {
-        return config.API_URL+"files/"+(store.state.application==null?'':store.state.application.configFile)
+        return config.API_URL+"files/"+(this.$store.state.application==null?'':this.$store.state.application.configFile)
       },
       set(url){
 
@@ -103,7 +102,7 @@ export default {
     },
     applicationName: {
       get() {
-        return store.state.applicationName;
+        return this.$store.state.applicationName;
       },
       set(applicationName){
         this.setApplication(applicationName);
@@ -118,7 +117,7 @@ export default {
   },
   methods: {
     setApplication(application) {
-      store.dispatch("loadApplicationConfiguration", application);
+      this.$store.dispatch("loadApplicationConfiguration", application);
     },
   },
   components: {
