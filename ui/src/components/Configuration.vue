@@ -31,9 +31,6 @@ import Rights from "@/components/Rights";
 export default {
   name: "Configuration",
   computed: {},
-  props: {
-    //configuration: Configuration,
-  },
   data(){
     return {
       selectedPanel: "rights"

@@ -40,7 +40,6 @@ export default {
       }
     },
   },
-  props: {},
   data() {
     return {
       tabChoice : 0

@@ -237,7 +237,6 @@ export default {
       }
     }
   },
-  props: {},
   data() {
     return {
       filters: {},

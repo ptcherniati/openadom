@@ -92,7 +92,6 @@ export default {
       }
     },
   },
-  props: {},
   data() {
     return {
       valid: false,/**/

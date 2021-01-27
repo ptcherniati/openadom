@@ -30,7 +30,6 @@ export default {
     this.user = this.$store.state.user;
   },
   computed: {},
-  props: {},
   data() {
     return {};
   },

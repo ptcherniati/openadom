@@ -115,7 +115,6 @@ export default {
       }
     }
   },
-  props: {},
   data() {
     return {
       // Array will be automatically processed with visualization.arrayToDataTable function

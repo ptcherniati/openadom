@@ -209,8 +209,6 @@ export default {
       }
     }
   },
-  props: {
-  },
   data() {
     return {
       snackbar: {
