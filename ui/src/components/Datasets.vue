@@ -202,11 +202,11 @@ export default {
     },
     headers: {
       get() {
-        if(store.state.datasetDescription==null){
+        const datasetDescription = store.state.datasetDescription;
+        if(datasetDescription==null){
           return []
         }
-        return Object.keys(store.state.datasetDescription.references)
-        .concat(Object.keys(store.state.datasetDescription.data))
+        return Object.keys(datasetDescription.data)
         .map(a=>{return {text:a, align:'center', value:a}});
       }
     }
