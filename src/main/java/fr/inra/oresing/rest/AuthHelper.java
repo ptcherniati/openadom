@@ -92,6 +92,7 @@ public class AuthHelper {
         Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setMaxAge(jwtExpiration);
         return cookie;
     }
 
