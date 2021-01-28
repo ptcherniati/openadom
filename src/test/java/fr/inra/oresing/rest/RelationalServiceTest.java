@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class})
-@DirtiesContext
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Ignore("ces tests cassent le build à cause de la création / suppression de schémas SQL qui sont mal cloisonnées")
 public class RelationalServiceTest {
 
