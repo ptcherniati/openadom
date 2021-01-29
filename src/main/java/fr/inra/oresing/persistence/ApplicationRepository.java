@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -159,19 +160,22 @@ public class ApplicationRepository implements InitializingBean {
     }
 
     public List<Map<String, Map<String, String>>> findData(String dataType) {
-        String toMergeDataGroupsQuery = " SELECT rowId, jsonb_object_agg(dataValues) as values"
-                                      + " FROM " + schema.data().getSqlIdentifier()
-                                      + " WHERE application = :applicationId::uuid AND dataType = :dataType"
-                                      + " GROUP BY rowId"
-                                      ;
+        String toMergeDataGroupsQuery = getSqlToMergeData(dataType);
         String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
-                + " SELECT '" + Map.class.getName() + "' AS \"@class\", to_jsonb(values) AS json"
+                + " SELECT '" + Map.class.getName() + "' AS \"@class\", to_jsonb(dataValues) AS json"
                 + " FROM my_data";
-        MapSqlParameterSource args =
-                new MapSqlParameterSource("applicationId", application.getId())
-                        .addValue("dataType", dataType);
-        List result = namedParameterJdbcTemplate.query(query,  args, jsonRowMapper);
+        List result = namedParameterJdbcTemplate.query(query, Collections.emptyMap(), jsonRowMapper);
         return (List<Map<String, Map<String, String>>>) result;
+    }
+
+    public String getSqlToMergeData(String dataType) {
+        Preconditions.checkArgument(application.getDataType().contains(dataType), "pas de type de données " + dataType + " dans l'application " + application);
+        String applicationId = application.getId().toString();
+        String sql = " SELECT rowId, jsonb_object_agg(dataValues) AS dataValues, aggregate_by_array_concatenation(refsLinkedTo) AS refsLinkedTo"
+                   + " FROM " + schema.data().getSqlIdentifier()
+                   + " WHERE application = '" + applicationId + "'::uuid AND dataType = '" + dataType + "'"
+                   + " GROUP BY rowId";
+        return sql;
     }
 
     public int migrateData(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Set<UUID> refsLinkedToToAdd) {

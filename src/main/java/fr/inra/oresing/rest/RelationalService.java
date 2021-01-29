@@ -7,6 +7,7 @@ import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
@@ -15,6 +16,8 @@ import fr.inra.oresing.persistence.SqlTable;
 import fr.inra.oresing.persistence.WithSqlIdentifier;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
+import fr.inra.oresing.rest.OreSiService;
+import fr.inra.oresing.rest.ViewStrategy;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +53,9 @@ public class RelationalService {
 
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Autowired
+    private OreSiRepository repository;
 
     public void createViews(String appName, ViewStrategy viewStrategy) {
         Application app = service.getApplication(appName);
@@ -149,10 +155,12 @@ public class RelationalService {
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
-            String dataTableName = SqlSchema.forApplication(application).data().getSqlIdentifier();
+            String dataTableName = "my_data";
+            String dataAfterDataGroupsMergingQuery = repository.getRepository(application).getSqlToMergeData(datasetName);
+            String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
             for (ReferenceChecker referenceChecker : referenceCheckers) {
-                String referenceType = referenceChecker.getRefType();  // especes
+                String referenceType = referenceChecker.getRefType();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
@@ -175,11 +183,9 @@ public class RelationalService {
 
             String fromClause = "from " + dataTableName + " "
                     + Joiner.on(" ").join(fromClauseJoinElements)
-                    + ", jsonb_to_record(data.dataValues) as " + schemaDeclaration;
+                    + ", jsonb_to_record(dataValues) as " + schemaDeclaration;
 
-            String whereClause = "where data.application = '" + appId + "'::uuid and data.dataType = '" + datasetName + "'";
-
-            String viewSql = String.join("\n", selectClause, fromClause, whereClause);
+            String viewSql = String.join("\n", withClause, selectClause, fromClause);
 
             SqlTable view = sqlSchema.forDataset(datasetName);
             views.add(new ViewCreationCommand(view, viewSql, referenceColumnIds));
