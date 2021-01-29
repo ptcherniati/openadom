@@ -1,11 +1,13 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.VariableComponentReference;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
@@ -16,10 +18,9 @@ import fr.inra.oresing.persistence.SqlTable;
 import fr.inra.oresing.persistence.WithSqlIdentifier;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
-import fr.inra.oresing.rest.OreSiService;
-import fr.inra.oresing.rest.ViewStrategy;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -152,7 +153,7 @@ public class RelationalService {
             Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetName);
 
             Set<String> referenceColumnIds = new LinkedHashSet<>();
-            Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
+            Set<String> selectClauseElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
             String dataTableName = "my_data";
@@ -164,26 +165,28 @@ public class RelationalService {
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                selectClauseReferenceElements.add(quotedViewName + "." + quotedViewIdColumnName);
+                selectClauseElements.add(quotedViewName + "." + quotedViewIdColumnName);
                 referenceColumnIds.add(quotedViewIdColumnName);
-                fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
+                fromClauseJoinElements.add("LEFT OUTER JOIN " + quotedViewName + " ON " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
             }
 
-            Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
-            String quotedDatasetName = quoteSqlIdentifier(datasetName);
-            selectClauseElements.add(quotedDatasetName + ".*");
-            String selectClause = "select " + String.join(", ", selectClauseElements);
+            for (VariableComponentReference reference : getReferences(datasetDescription)) {
+                String variable = reference.getVariable();
+                String component = reference.getComponent();
+                String selectClauseElement = String.format(
+                        "jsonb_extract_path_text(%s.dataValues, '%s', '%s') %s",
+                        dataTableName,
+                        StringUtils.replace(variable, "'", "''"),
+                        StringUtils.replace(component, "'", "''"),
+                        getColumnName(reference)
+                );
+                selectClauseElements.add(selectClauseElement);
+            }
 
-            String dataColumnsAsSchema = datasetDescription.getData().keySet().stream()
-                    .map(this::quoteSqlIdentifier)
-                    .map(quotedColumnName -> quotedColumnName + " text")
-                    .collect(Collectors.joining(", ", "(", ")"));
+            String selectClause = "SELECT " + String.join(", ", selectClauseElements);
 
-            String schemaDeclaration = quotedDatasetName + dataColumnsAsSchema;
-
-            String fromClause = "from " + dataTableName + " "
-                    + Joiner.on(" ").join(fromClauseJoinElements)
-                    + ", jsonb_to_record(dataValues) as " + schemaDeclaration;
+            String fromClause = "FROM " + dataTableName + " "
+                              + Joiner.on(" ").join(fromClauseJoinElements);
 
             String viewSql = String.join("\n", withClause, selectClause, fromClause);
 
@@ -191,6 +194,17 @@ public class RelationalService {
             views.add(new ViewCreationCommand(view, viewSql, referenceColumnIds));
         }
         return views;
+    }
+
+    private ImmutableSet<VariableComponentReference> getReferences(Configuration.DatasetDescription datasetDescription) {
+        Set<VariableComponentReference> references = new LinkedHashSet<>();
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : datasetDescription.getData().entrySet()) {
+            String variable = variableEntry.getKey();
+            for (String component : variableEntry.getValue().getComponents().keySet()) {
+                references.add(new VariableComponentReference(variable, component));
+            }
+        }
+        return ImmutableSet.copyOf(references);
     }
 
     private List<ViewCreationCommand> getDenormalizedViewsForDatasets(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
@@ -216,8 +230,9 @@ public class RelationalService {
 
             Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
 
-            datasetDescription.getData().keySet().stream()
-                    .map(column -> dataTableName + "." + quoteSqlIdentifier(column))
+            getReferences(datasetDescription).stream()
+                    .map(this::getColumnName)
+                    .map(columnName -> dataTableName + "." + columnName)
                     .forEach(selectClauseElements::add);
 
             String selectClause = "select " + String.join(", ", selectClauseElements);
@@ -231,6 +246,10 @@ public class RelationalService {
             views.add(new ViewCreationCommand(view, viewSql, selectClauseReferenceElements));
         }
         return views;
+    }
+
+    private String getColumnName(VariableComponentReference reference) {
+        return "\"" + StringUtils.replace(StringUtils.replace(reference.getVariable() + "_" + reference.getComponent(), " ", "_"), "'", "_") + "\"";
     }
 
     private List<ViewCreationCommand> getViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
