@@ -14,19 +14,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.servlet.http.Cookie;
-import java.io.InputStream;
-import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,41 +49,7 @@ public class AuthorizationResourcesTest {
 
     @Before
     public void createApplication() throws Exception {
-        String aPassword = "xxxxxxxx";
-        String aLogin = "poussin";
-        OreSiUser user = authRepository.createUser(aLogin, aPassword);
-        authRepository.addUserRightCreateApplication(user.getId());
-        authCookie = mockMvc.perform(post("/api/v1/login")
-                .param("login", aLogin)
-                .param("password", aPassword))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMonsoreApplicationConfigurationResourceName())) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
-                    .file(configuration)
-                    .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
-        }
-
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
-                        .andExpect(MockMvcResultMatchers.status().isCreated());
-            }
-        }
-
-        // ajout de data
-        try (InputStream refStream = getClass().getResourceAsStream(fixtures.getPemDataResourceName())) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                    .file(refFile)
-                    .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
-        }
+        authCookie = fixtures.addMonsoreApplication();
     }
 
     @Test
