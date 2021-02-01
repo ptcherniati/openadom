@@ -47,9 +47,6 @@ public class RelationalService {
     private AuthRepository authRepository;
 
     @Autowired
-    private OreSiService service;
-
-    @Autowired
     private CheckerFactory checkerFactory;
 
     @Autowired
@@ -59,12 +56,16 @@ public class RelationalService {
     private OreSiRepository repository;
 
     public void createViews(String appName, ViewStrategy viewStrategy) {
-        Application app = service.getApplication(appName);
+        Application app = getApplication(appName);
         createViews(app, viewStrategy);
     }
 
+    private Application getApplication(String appName) {
+        return repository.findApplication(appName);
+    }
+
     public void createViews(UUID appId, ViewStrategy viewStrategy) {
-        Application app = service.getApplication(appId.toString());
+        Application app = getApplication(appId.toString());
         createViews(app, viewStrategy);
     }
 
@@ -76,7 +77,7 @@ public class RelationalService {
 
     public void dropViews(String appName, ViewStrategy viewStrategy) {
         authRepository.resetRole();
-        Application app = service.getApplication(appName);
+        Application app = getApplication(appName);
         SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
         drop(schemaCreationCommand);
     }
@@ -255,6 +256,9 @@ public class RelationalService {
     private List<ViewCreationCommand> getViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
         UUID appId = app.getId();
         List<ViewCreationCommand> views = new LinkedList<>();
+        if (app.getConfiguration().getReferences() == null) {
+            return views;
+        }
         for (Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
             String referenceType = entry.getKey();
             Set<String> columns = entry.getValue().getColumns().keySet();
@@ -288,15 +292,15 @@ public class RelationalService {
     }
 
     public List<Map<String, Object>> readView(String appName, String dataset, ViewStrategy viewStrategy) {
-        authRepository.setRoleForClient();
-        Application application = service.getApplication(appName);
+//        authRepository.setRoleForClient();
+        Application application = getApplication(appName);
         SqlTable view = SqlSchema.forRelationalViewsOf(application, viewStrategy).forDataset(dataset);
         return namedParameterJdbcTemplate.queryForList("select * from " + view.getSqlIdentifier(), Collections.emptyMap());
     }
 
     public void addRestrictedUser(OreSiRoleToAccessDatabase role, Set<String> excludedReferenceIds, String appName, ViewStrategy viewStrategy) {
         authRepository.resetRole();
-        Application app = service.getApplication(appName);
+        Application app = getApplication(appName);
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
         List<ViewCreationCommand> viewCreationCommands = new LinkedList<>();
         viewCreationCommands.addAll(getViewsForReferences(sqlSchema, app));
