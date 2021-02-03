@@ -322,6 +322,9 @@ export default new Vuex.Store({
                 })
             })
             return result;
+        },
+        isDataAvailable: state => {
+            return state.datasetValue.length > 0
         }
     }
 })

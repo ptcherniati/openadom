@@ -52,7 +52,7 @@
       </v-flex>
     </v-layout>
     <v-layout
-      v-if="datasetName!=null"
+      v-if="datasetName!=null && isDataAvailable"
       wrap
       align-center
     >
@@ -198,6 +198,11 @@ export default {
     datasetValue: {
       get() {
         return this.$store.state.datasetValue;
+      }
+    },
+    isDataAvailable: {
+      get() {
+        return this.$store.getters.isDataAvailable
       }
     },
     variableComponents: {
