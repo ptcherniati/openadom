@@ -118,7 +118,7 @@
           v-model="selectedVariableComponentIdsForDownload"
           :items="selectableVariableComponentItems"
         ></v-treeview>
-        <a :href="downloadDatasetUrl" download>Télécharger</a>
+        <a :href="downloadDatasetUrl" download target="_blank">Télécharger</a>
       </v-flex>
     </v-layout>
     <v-snackbar
@@ -236,9 +236,11 @@ export default {
     downloadDatasetUrl: {
       get() {
         const urlSearchParams = new URLSearchParams()
-        this.selectedVariableComponentIdsForDownload.forEach(selectVariableComponentId => {
-          urlSearchParams.append('variableComponent', selectVariableComponentId)
-        })
+        this.variableComponents
+            .filter(variableComponent => this.selectedVariableComponentIdsForDownload.includes(variableComponent.id))
+            .forEach(selectedVariableComponent => {
+              urlSearchParams.append('variableComponent', selectedVariableComponent.id)
+            })
         return http.getDownloadDatasetUrl(this.$store.state.applicationName, this.datasetName) + '?' + urlSearchParams.toString();
       }
     },

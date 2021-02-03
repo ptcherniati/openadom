@@ -516,14 +516,23 @@ public class OreSiService {
         return fileId;
     }
 
-    public String getDataCsv(String nameOrId, String dataType) {
-        List<Map<String, Map<String, String>>> list = findData(nameOrId, dataType);
-        Configuration.FormatDescription format = getApplication(nameOrId)
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {
+        String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
+        String dataType = downloadDatasetQuery.getDataType();
+        List<Map<String, Map<String, String>>> list = findData(downloadDatasetQuery);
+        Configuration.FormatDescription format = getApplication(applicationNameOrId)
                 .getConfiguration()
                 .getDataset()
                 .get(dataType)
                 .getFormat();
         ImmutableMap<String, VariableComponentReference> allColumns = getExportColumns(format);
+        ImmutableMap<String, VariableComponentReference> columns;
+        if (downloadDatasetQuery.getVariableComponentIds() == null) {
+            columns = allColumns;
+        } else {
+            Map<String, VariableComponentReference> filter = Maps.filterValues(allColumns, variableComponent -> downloadDatasetQuery.getVariableComponentIds().contains(variableComponent.getId()));
+            columns = ImmutableMap.copyOf(filter);
+        }
         String result = "";
         if (list.size() > 0) {
             CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -532,9 +541,9 @@ public class OreSiService {
             StringWriter out = new StringWriter();
             try {
                 CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-                csvPrinter.printRecord(allColumns.keySet());
+                csvPrinter.printRecord(columns.keySet());
                 for (Map<String, Map<String, String>> record : list) {
-                    ImmutableList<String> rowAsRecord = allColumns.values().stream()
+                    ImmutableList<String> rowAsRecord = columns.values().stream()
                             .map(reference -> {
                                 Map<String, String> components = record.computeIfAbsent(reference.getVariable(), k -> Collections.emptyMap());
                                 return components.getOrDefault(reference.getComponent(), "");
@@ -569,11 +578,12 @@ public class OreSiService {
         return allColumnsBuilder.build();
     }
 
-    public List<Map<String, Map<String, String>>> findData(String applicationNameOrId, String dataType) {
+    public List<Map<String, Map<String, String>>> findData(DownloadDatasetQuery downloadDatasetQuery) {
         authRepository.setRoleForClient();
+        String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        List<Map<String, Map<String, String>>> data = applicationRepository.findData(dataType);
+        List<Map<String, Map<String, String>>> data = applicationRepository.findData(downloadDatasetQuery.getDataType());
         return data;
     }
 

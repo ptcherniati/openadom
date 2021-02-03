@@ -26,6 +26,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -157,8 +158,12 @@ public class OreSiResources {
 
     /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Map<String, Map<String, String>>>> getAllDataJson(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam MultiValueMap<String, String> params) {
-        List<Map<String, Map<String, String>>> list = service.findData(nameOrId, dataType);
+    public ResponseEntity<List<Map<String, Map<String, String>>>> getAllDataJson(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("dataType") String dataType,
+            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
+        DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
+        List<Map<String, Map<String, String>>> list = service.findData(downloadDatasetQuery);
         return ResponseEntity.ok(list);
     }
 
@@ -167,8 +172,8 @@ public class OreSiResources {
     public ResponseEntity<String> getAllDataCsvForce(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam MultiValueMap<String, String> params) {
-        return getAllDataCsv(nameOrId, dataType, params);
+            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
+        return getAllDataCsv(nameOrId, dataType, variableComponentIds);
     }
 
     /** export as CSV */
@@ -176,8 +181,9 @@ public class OreSiResources {
     public ResponseEntity<String> getAllDataCsv(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam MultiValueMap<String, String> params) {
-        String result = service.getDataCsv(nameOrId, dataType);
+            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
+        DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
+        String result = service.getDataCsv(downloadDatasetQuery);
         return ResponseEntity.ok(result);
     }
 
