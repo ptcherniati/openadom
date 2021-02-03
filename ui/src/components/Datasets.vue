@@ -112,6 +112,7 @@
             </tr>
           </template>
         </v-data-table>
+        <a :href="downloadDatasetUrl" download>Télécharger</a>
       </v-flex>
     </v-layout>
     <v-snackbar
@@ -136,6 +137,7 @@
 
 <script>
 import EventBus from "@/eventBus";
+import http from "@/http/http";
 export default {
   name: "Datasets",
   mounted() {
@@ -201,6 +203,11 @@ export default {
     variableComponents: {
       get() {
         return this.$store.getters.datasetVariableComponents
+      }
+    },
+    downloadDatasetUrl: {
+      get() {
+        return http.getDownloadDatasetUrl(this.$store.state.applicationName, this.dataType)
       }
     },
     headers: {

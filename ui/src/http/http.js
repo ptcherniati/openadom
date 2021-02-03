@@ -50,6 +50,11 @@ class HttpClient {
         return this.post(`applications/${applicationName}`, formData);
     }
 
+    getDownloadDatasetUrl(applicatioName, dataType) {
+        const endpoint = `applications/${applicatioName}/data/${dataType}/csv`
+        return this.getUrl(endpoint)
+    }
+
     post(endpoint, body) {
         const url = this.getUrl(endpoint)
         return fetch(url,
