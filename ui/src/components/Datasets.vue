@@ -112,6 +112,12 @@
             </tr>
           </template>
         </v-data-table>
+        <v-treeview
+          selectable
+          selection-type="leaf"
+          v-model="selectedVariableComponentIdsForDownload"
+          :items="selectableVariableComponentItems"
+        ></v-treeview>
         <a :href="downloadDatasetUrl" download>Télécharger</a>
       </v-flex>
     </v-layout>
@@ -210,9 +216,30 @@ export default {
         return this.$store.getters.datasetVariableComponents
       }
     },
+    selectableVariableComponentItems: {
+      get() {
+        return this.$store.getters.datasetVariables.map(variable => {
+          const components = this.variableComponents
+              .filter(variableComponent => variableComponent.variable === variable)
+              .map(variableComponent => {
+                const component = variableComponent.component
+                return { id: variableComponent.id, name: component }
+              })
+          return {
+            id: variable,
+            name: variable,
+            children: components
+          }
+        })
+      }
+    },
     downloadDatasetUrl: {
       get() {
-        return http.getDownloadDatasetUrl(this.$store.state.applicationName, this.dataType)
+        const urlSearchParams = new URLSearchParams()
+        this.selectedVariableComponentIdsForDownload.forEach(selectVariableComponentId => {
+          urlSearchParams.append('variableComponent', selectVariableComponentId)
+        })
+        return http.getDownloadDatasetUrl(this.$store.state.applicationName, this.datasetName) + '?' + urlSearchParams.toString();
       }
     },
     headers: {
@@ -240,7 +267,8 @@ export default {
       },
       selected: [],
       //sheet: false,
-      file: null
+      file: null,
+      selectedVariableComponentIdsForDownload: []
     };
   },
   methods: {
