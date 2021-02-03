@@ -11,8 +11,8 @@ export default new Vuex.Store({
         data: defaultData,
         user: {
             init: true,
-            login: "admin",
-            password: "admin"
+            login: "poussin",
+            password: "xxxxxxxx"
         },
         applications: [],
         application: null,
@@ -82,7 +82,7 @@ export default new Vuex.Store({
             } else {
                 EventBus.$emit('reference:loaded', payload);
                 this.state.referenceName = payload.referenceName;
-                this.state.referenceDescription = payload.referenceDescription;
+                this.state.referenceDescription = this.state.configuration.references[payload.referenceName]
                 this.state.referenceValue = payload.referenceValue;
             }
         },
@@ -152,16 +152,15 @@ export default new Vuex.Store({
         },
         loadReference({
             commit
-        }, reference) {
+        }, parameters) {
             http
-                .loadReference(reference.referenceName, this.state.applicationName)
+                .loadReference(parameters.referenceName, parameters.applicationName)
                 .then(response => {
                     if (response.ok) {
                         response.json().then(function(data) {
                             commit('setReference', {
                                 referenceValue: data,
-                                referenceName: reference.referenceName,
-                                referenceDescription: reference.referenceDescription
+                                referenceName: parameters.referenceName
                             });
                         })
                     } else {
@@ -190,7 +189,7 @@ export default new Vuex.Store({
             commit
         }, parameters) {
             http
-                .uploadReference(parameters.referenceName, this.state.applicationName, parameters.file)
+                .uploadReference(parameters.referenceName, parameters.applicationName, parameters.file)
                 .then(response => {
                     if (response.ok) {
                         response.json().then(function(data) {

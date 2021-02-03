@@ -12,11 +12,11 @@
             flat
             round
           >
-            Application
+            Applications
           </v-btn>
         </router-link>
         <router-link
-          to="/references"
+          :to="{ name: 'applicationReferences', params: { applicationName: 'monsore' }}"
           v-if="configuration!=null"
         >
           <v-btn
@@ -28,7 +28,7 @@
           </v-btn>
         </router-link>
         <router-link
-          to="/datasets"
+          :to="{ name: 'applicationDatasets', params: { applicationName: 'monsore' }}"
           v-if="configuration!=null"
         >
           <v-btn

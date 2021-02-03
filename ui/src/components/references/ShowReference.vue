@@ -1,7 +1,6 @@
 <template>
   <div>
     <v-layout
-      v-if="referenceType!=null"
       wrap
       align-center
     >
@@ -9,14 +8,7 @@
         md7
         offset-md2
       >
-        <v-select
-          v-model="referenceName"
-          solo
-          name="references"
-          :items="referenceType"
-          item-text="name"
-          label="Choisissez une donnée de référence"
-        />
+        Blabla
       </v-flex>
       <v-flex
         md1
@@ -54,7 +46,6 @@
       </v-flex>
     </v-layout>
     <v-layout
-      v-if="referenceName!=null"
       wrap
       align-center
     >
@@ -187,6 +178,7 @@ export default {
         this.snackbar.visible = true;
       }
     });
+    this.setReference()
   },
   updated() {},
   computed: {
@@ -211,10 +203,7 @@ export default {
     },
     referenceName: {
       get() {
-        return this.$store.state.referenceName;
-      },
-      set(referenceName) {
-        this.setReference(referenceName);
+        return this.$route.params.referenceName;
       }
     },
     referenceValue: {
@@ -253,10 +242,10 @@ export default {
     };
   },
   methods: {
-    setReference(referenceName) {
+    setReference() {
       this.$store.dispatch("loadReference", {
-        referenceName: referenceName,
-        referenceDescription: this.references[referenceName]
+        applicationName: this.$route.params.applicationName,
+        referenceName: this.referenceName
       });
       this.filters={}
     },

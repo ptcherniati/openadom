@@ -1,54 +1,36 @@
 <template>
-  <v-container
-    v-if="referenceType!=null"
-    class="references"
-    fluid
-    grid-list-xl
-  >
-    <!--v-tabs 
-      v-model="tabChoice"
-      color="purple lighten-5"
-      slider-color="red"
-      centered grow light
-
-      >
-      <v-tab ripple > Afficher les données de référence </v-tab>
-      <v-tab ripple > uploader une donnée de référence </v-tab>
-      <v-tab ripple > Faire autre chose </v-tab>
-      <v-tab-item-->
-    <ShowReference />
-    <!--/v-tab-item>
-      <v-tab-item>
-        <UploadReference />
-      </v-tab-item>
-      <v-tab-item>
-        To be continued
-      </v-tab-item>
-    </v-tabs-->
-  </v-container>
+  <v-select
+    v-model="referenceName"
+    :items="referenceTypes"
+    item-text="name"
+    label="Choisissez une donnée de référence"
+  />
 </template>
 
 <script>
-import ShowReference from "@/components/references/ShowReference";
+//import ShowReference from "@/components/references/ShowReference";
 //import UploadReference from "@/components/references/UploadReference";
 export default {
   name: "References",
   computed: {
-    referenceType :{
-      get(){
+    referenceTypes: {
+      get() {
         return this.$store.state.referenceType
       }
     },
   },
   data() {
     return {
-      tabChoice : 0
+      referenceName: null
     };
   },
-  methods: {
+  watch: {
+    referenceName() {
+      this.$router.push({ name: 'showReference', params: { referenceName: this.referenceName } })
+    } 
   },
   components: {
-    ShowReference,
+    //ShowReference,
     //UploadReference,
   }
 };
