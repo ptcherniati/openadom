@@ -51,8 +51,9 @@ class HttpClient {
     }
 
     post(endpoint, body) {
-        return fetch(
-            `${config.API_URL}${endpoint}`, {
+        const url = this.getUrl(endpoint)
+        return fetch(url,
+            {
                 credentials: "include",
                 method: "POST",
                 body: body
@@ -61,8 +62,9 @@ class HttpClient {
     }
 
     delete(endpoint) {
-        return fetch(
-            `${config.API_URL}${endpoint}`, {
+        const url = this.getUrl(endpoint)
+        return fetch(url,
+            {
                 credentials: "include",
                 method: "DELETE"
             }
@@ -70,11 +72,16 @@ class HttpClient {
     }
 
     get(endpoint) {
-        return fetch(
-            `${config.API_URL}${endpoint}`, {
+        const url = this.getUrl(endpoint)
+        return fetch(url,
+            {
                 credentials: "include"
             }
         )
+    }
+
+    getUrl(endpoint) {
+        return `${config.API_URL}${endpoint}`
     }
 }
 const http = new HttpClient()
