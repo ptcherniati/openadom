@@ -104,10 +104,10 @@
                 />
               </td>
               <td
-                v-for="key in headers"
-                :key="key.value"
+                v-for="variableComponent in variableComponents"
+                :key="variableComponent.variable + variableComponent.component"
               >
-                {{ props.item[key.value] }}
+                {{ props.item[variableComponent.variable][variableComponent.component] }}
               </td>
             </tr>
           </template>
@@ -198,14 +198,22 @@ export default {
         return this.$store.state.datasetValue;
       }
     },
+    variableComponents: {
+      get() {
+        return this.$store.getters.datasetVariableComponents
+      }
+    },
     headers: {
       get() {
-        const datasetDescription = this.$store.state.datasetDescription;
-        if(datasetDescription==null){
-          return []
-        }
-        return Object.keys(datasetDescription.data)
-        .map(a=>{return {text:a, align:'center', value:a}});
+        return this.variableComponents.map(
+          variableComponent => {
+            return {
+              text: variableComponent.variable + " (" + variableComponent.component + ")",
+              value: variableComponent.variable + "_" + variableComponent.component,
+              align: 'center'
+            }
+          }
+        );
       }
     }
   },

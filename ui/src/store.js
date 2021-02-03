@@ -310,6 +310,18 @@ export default new Vuex.Store({
     getters: {
         isLogged(state) {
             return state.user != null;
+        },
+        datasetVariableComponents: state => {
+            const firstLine = state.datasetValue[0]
+            const variables = Object.keys(firstLine)
+            const result = []
+            variables.forEach(variable => {
+                const components = Object.keys(firstLine[variable])
+                components.forEach(component => {
+                    result.push({variable, component})
+                })
+            })
+            return result;
         }
     }
 })
