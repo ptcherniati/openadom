@@ -11,8 +11,8 @@ export default new Vuex.Store({
         data: defaultData,
         user: {
             init: true,
-            login: "admin",
-            password: "admin"
+            login: "poussin",
+            password: "xxxxxxxx"
         },
         applications: [],
         application: null,
@@ -312,8 +312,11 @@ export default new Vuex.Store({
             return state.user != null;
         },
         datasetVariables: (state, getters) => {
-            return getters.datasetVariableComponents
+            const variables = new Set()
+            getters.datasetVariableComponents
                 .map(variableComponent => variableComponent.variable)
+                .forEach(variable => variables.add(variable))
+            return Array.from(variables);
         },
         datasetVariableComponents: (state, getters) => {
             const firstLine = state.datasetValue[0]
