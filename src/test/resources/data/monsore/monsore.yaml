@@ -4,7 +4,6 @@ application:
   version: 1
 references:
   especes:
-    separator: ";"
     columns:
       esp_nom:
       esp_definition_fr:
@@ -97,7 +96,6 @@ dataset:
     format:
       headerLine: 4
       firstRowLine: 5
-      separator: ";"
       columns:
         - header: "projet"
           reference:

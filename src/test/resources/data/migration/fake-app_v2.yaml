@@ -4,13 +4,11 @@ application:
   version: 2
 references:
   couleurs:
-    separator: ";"
     columns:
       couleur:
 dataset:
   jeu1:
     format:
-      separator: ";"
       columns:
         - header: "couleur"
           reference:
