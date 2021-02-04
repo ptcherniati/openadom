@@ -4,7 +4,6 @@ application:
   version: 1
 references:
   especes:
-    lineToSkip: 1
     separator: ";"
     columns:
       esp_nom:
@@ -12,7 +11,6 @@ references:
       esp_definition_en:
 
   projet:
-    lineToSkip: 1
     columns:
       nom_key:
       nom_fr:
@@ -21,7 +19,6 @@ references:
       definition_en:
 
   sites:
-    lineToSkip: 1
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -32,7 +29,6 @@ references:
       zet_chemin_parent:
 
   themes:
-    lineToSkip: 1
     columns:
       nom_key:
       nom_fr:
@@ -41,7 +37,6 @@ references:
       description_en:
 
   type de fichiers:
-    lineToSkip: 1
     columns:
       nom_key:
       nom_fr:
@@ -50,7 +45,6 @@ references:
       description_en:
 
   type_de_sites:
-    lineToSkip: 1
     columns:
       tze_nom_key:
       tze_nom_fr:
@@ -59,7 +53,6 @@ references:
       tze_definition_en:
 
   types_de_donnees_par_themes_de_sites_et_projet:
-    lineToSkip: 1
     columns:
       nom du projet:
       nom du site:
@@ -67,7 +60,6 @@ references:
       nom du type de données:
 
   unites:
-    lineToSkip: 1
     columns:
       code_key:
       code_fr:
@@ -77,7 +69,6 @@ references:
       nom_en:
 
   valeurs_qualitatives:
-    lineToSkip: 1
     columns:
       nom_key:
       nom_fr:
@@ -87,7 +78,6 @@ references:
       valeur_en:
 
   variables:
-    lineToSkip: 1
     columns:
       nom_key:
       nom_fr:
@@ -97,7 +87,6 @@ references:
       isQualitative:
 
   variables_et_unites_par_types_de_donnees:
-    lineToSkip: 1
     columns:
       nom du type de données:
       nom de la variable:
@@ -106,8 +95,8 @@ references:
 dataset:
   pem:
     format:
-      lineToSkip: 3
-      lineToSkipAfterHeader: 0
+      headerLine: 4
+      firstRowLine: 5
       separator: ";"
       columns:
         - header: "projet"

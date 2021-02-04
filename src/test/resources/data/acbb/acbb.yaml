@@ -6,8 +6,8 @@ references:
 dataset:
   flux_tours:
     format:
-      lineToSkip: 7
-      lineToSkipAfterHeader: 3
+      headerLine: 8
+      firstRowLine: 12
       separator: ";"
       columns:
         - header: "date"
@@ -119,8 +119,8 @@ dataset:
       component: day
   biomasse_production_teneur:
     format:
-      lineToSkip: 7
-      lineToSkipAfterHeader: 3
+      headerLine: 8
+      firstRowLine: 12
       separator: ";"
       columns:
         - header: "parcelle"
@@ -679,8 +679,8 @@ dataset:
       component: valeur
   SWC:
     format:
-      lineToSkip: 6
-      lineToSkipAfterHeader: 2
+      headerLine: 7
+      firstRowLine: 10
       separator: ";"
       columns:
         - header: "Nom parcelle"

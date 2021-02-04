@@ -10,8 +10,6 @@ references:
 dataset:
   jeu1:
     format:
-      lineToSkip: 0
-      lineToSkipAfterHeader: 0
       separator: ";"
       columns:
         - header: "couleur"

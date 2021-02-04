@@ -318,7 +318,7 @@ public class OreSiService {
         ApplicationRepository applicationRepository = repo.getRepository(app);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
-            for (int i = 0; i < ref.getLineToSkip(); i++) {
+            for (int lineNumber = 1; lineNumber < ref.getFirstRowLine(); lineNumber++) {
                 reader.readLine();
             }
 

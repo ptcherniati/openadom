@@ -50,7 +50,8 @@ public class Configuration {
     @Setter
     @ToString
     static public class ReferenceDescription {
-        private int lineToSkip = 0;
+        private int headerLine = 1;
+        private int firstRowLine = 2;
         private char separator = ';';
         private char quote = '"';
         private LinkedHashMap<String, ColumnDescription> columns;
@@ -84,11 +85,19 @@ public class Configuration {
     @Setter
     @ToString
     static public class FormatDescription {
-        private int lineToSkip = 0;
-        private int lineToSkipAfterHeader = 0;
+        private int headerLine = 1;
+        private int firstRowLine = 2;
         private char separator = ';';
         private List<ColumnBindingDescription> columns;
         private List<RepeatedColumnBindingDescription> repeatedColumns;
+
+        public int getLineToSkip() {
+            return getHeaderLine() - 1;
+        }
+
+        public int getLineToSkipAfterHeader() {
+            return getFirstRowLine() - getHeaderLine() - 1;
+        }
     }
 
     @Getter
