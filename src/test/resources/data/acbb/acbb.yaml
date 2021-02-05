@@ -69,53 +69,65 @@ dataset:
           reference:
             variable: Fc gf
             component: value
-    dataGroups:
-      all:
-        label: "Toutes les données"
-        data:
-          date:
-            components:
-              day:
-                checker:
-                  name: Date
-                  params:
-                    pattern: dd/MM/yyyy
-              time:
-          CO2:
-            components:
-              value:
-          H2O:
-            components:
-              value:
-          ZL:
-            components:
-              value:
-          Fc:
-            components:
-              value:
-              quality:
-          H:
-            components:
-              value:
-              quality:
-          LE:
-            components:
-              value:
-              quality:
-          t:
-            components:
-              value:
-              quality:
-          u*:
-            components:
-              value:
-              quality:
-          Fc gf:
-            components:
-              value:
-    timeScopeColumn:
-      variable: date
-      component: day
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      CO2:
+        components:
+          value:
+      H2O:
+        components:
+          value:
+      ZL:
+        components:
+          value:
+      Fc:
+        components:
+          value:
+          quality:
+      H:
+        components:
+          value:
+          quality:
+      LE:
+        components:
+          value:
+          quality:
+      t:
+        components:
+          value:
+          quality:
+      u*:
+        components:
+          value:
+          quality:
+      Fc gf:
+        components:
+          value:
+    authorization:
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - date
+            - CO2
+            - H2O
+            - ZL
+            - Fc
+            - H
+            - LE
+            - t
+            - u*
+            - Fc gf
   biomasse_production_teneur:
     format:
       headerLine: 8
@@ -509,172 +521,203 @@ dataset:
           reference:
             variable: MOR
             component: IQ
-    dataGroups:
-      all:
-        label: "Toutes les données"
-        data:
-          parcelle:
-            components:
-              valeur:
-          observation:
-            components:
-              valeur:
-          rotation:
-            components:
-              valeur:
-          année:
-            components:
-              valeur:
-          période:
-            components:
-              valeur:
-          type intervention:
-            components:
-              valeur:
-          date ou num incrémental intervention:
-            components:
-              valeur:
-          série:
-            components:
-              valeur:
-          mav_nature:
-            components:
-              valeur:
-          nature couvert:
-            components:
-              valeur:
-          date de mesure:
-            components:
-              valeur:
-                checker:
-                  name: Date
-                  params:
-                    pattern: dd/MM/yyyy
-          mav_dateDebut_PotProd:
-            components:
-              valeur:
-          mav:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          N:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          DMS:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          C:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Pho:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          K:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Ca:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Mg:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Bo:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Cu:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Fe:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Mn:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Na:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          Zn:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          CBR:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          HUT:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-          MOR:
-            components:
-              valeur:
-              nb:
-              et:
-              methode:
-              IQ:
-    timeScopeColumn:
-      variable: date de mesure
-      component: valeur
+    data:
+      parcelle:
+        components:
+          valeur:
+      observation:
+        components:
+          valeur:
+      rotation:
+        components:
+          valeur:
+      année:
+        components:
+          valeur:
+      période:
+        components:
+          valeur:
+      type intervention:
+        components:
+          valeur:
+      date ou num incrémental intervention:
+        components:
+          valeur:
+      série:
+        components:
+          valeur:
+      mav_nature:
+        components:
+          valeur:
+      nature couvert:
+        components:
+          valeur:
+      date de mesure:
+        components:
+          valeur:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      mav_dateDebut_PotProd:
+        components:
+          valeur:
+      mav:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      N:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      DMS:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      C:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Pho:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      K:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Ca:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Mg:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Bo:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Cu:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Fe:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Mn:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Na:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      Zn:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      CBR:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      HUT:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+      MOR:
+        components:
+          valeur:
+          nb:
+          et:
+          methode:
+          IQ:
+    authorization:
+      timeScope:
+        variable: date de mesure
+        component: valeur
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - parcelle
+            - observation
+            - rotation
+            - année
+            - période
+            - type intervention
+            - date ou num incrémental intervention
+            - série
+            - mav_nature
+            - nature couvert
+            - date de mesure
+            - mav_dateDebut_PotProd
+            - mav
+            - N
+            - DMS
+            - C
+            - Pho
+            - K
+            - Ca
+            - Mg
+            - Bo
+            - Cu
+            - Fe
+            - Mn
+            - Na
+            - Zn
+            - CBR
+            - HUT
+            - MOR
   SWC:
     format:
       headerLine: 7
@@ -716,32 +759,39 @@ dataset:
             variable: SWC
             component: qualité
           exportHeader: "qc"
-    dataGroups:
-      all:
-        label: "Toutes les données"
-        data:
-          Nom parcelle:
-            components:
-              valeur:
-          Nom traitement:
-            components:
-              valeur:
-          Date:
-            components:
-              day:
-                checker:
-                  name: Date
-                  params:
-                    pattern: dd/MM/yyyy
-              time:
-          contexte:
-            components:
-              répétition:
-              profondeur:
-          SWC:
-            components:
-              valeur:
-              qualité:
-    timeScopeColumn:
-      variable: Date
-      component: day
+    data:
+      Nom parcelle:
+        components:
+          valeur:
+      Nom traitement:
+        components:
+          valeur:
+      Date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      contexte:
+        components:
+          répétition:
+          profondeur:
+      SWC:
+        components:
+          valeur:
+          qualité:
+    authorization:
+      timeScope:
+        variable: Date
+        component: day
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - Nom parcelle
+            - Nom traitement
+            - Date
+            - contexte
+            - SWC

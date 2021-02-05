@@ -22,30 +22,35 @@ dataset:
           reference:
             variable: nombre
             component: value
-    dataGroups:
-      groupe1:
-        label: "Un groupe de données"
-        data:
-          couleur:
-            components:
-              value:
-                checker:
-                  name: Reference
-                  params:
-                    refType: couleurs
-          date:
-            components:
-              value:
-                checker:
-                  name: Date
-                  params:
-                    pattern: dd/MM/yyyy
-      groupe2:
-        label: "Un autre groupe de données"
-        data:
-          nombre:
-            components:
-              value:
-    timeScopeColumn:
-      variable: date
-      component: value
+    data:
+      couleur:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                refType: couleurs
+      date:
+        components:
+          value:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      nombre:
+        components:
+          value:
+    authorization:
+      timeScope:
+        variable: date
+        component: value
+      dataGroups:
+        groupe1:
+          label: "Un groupe de données"
+          data:
+            - couleur
+            - date
+        groupe2:
+          label: "Un autre groupe de données"
+          data:
+            - nombre

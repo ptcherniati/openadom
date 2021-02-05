@@ -125,62 +125,71 @@ dataset:
           reference:
             variable: Nombre d'individus
             component: value
-    dataGroups:
-      referentiel:
-        label: "Référentiel"
-        data:
-          projet:
-            components:
-              value:
-                checker:
-                  name: Reference
-                  params:
-                    caseSensitive: false
-                    refType: projet
-          site:
-            components:
-              value:
-                checker:
-                  name: Reference
-                  params:
-                    caseSensitive: false
-                    refType: sites
-                    column: zet_nom_key
-          plateforme:
-            components:
-              value:
-          date:
-            components:
-              value:
-                checker:
-                  name: Date
-                  params:
-                    pattern: dd/MM/yyyy
-          espece:
-            components:
-              value:
-                checker:
-                  name: Reference
-                  params:
-                    caseSensitive: false
-                    refType: especes
-                    column: esp_nom
-      qualitatif:
-        label: "Données qualitatives"
-        data:
-          Couleur des individus:
-            components:
-              value:
-      quantitatif:
-        label: "Données quantitatives"
-        data:
-          Nombre d'individus:
-            components:
-              value:
-                checker:
-                  name: Integer
-                  params:
-                    default: 0
-    timeScopeColumn:
-      variable: date
-      component: value
+    data:
+      projet:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                caseSensitive: false
+                refType: projet
+      site:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                caseSensitive: false
+                refType: sites
+                column: zet_nom_key
+      plateforme:
+        components:
+          value:
+      date:
+        components:
+          value:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      espece:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                caseSensitive: false
+                refType: especes
+                column: esp_nom
+      Couleur des individus:
+        components:
+          value:
+      Nombre d'individus:
+        components:
+          value:
+            checker:
+              name: Integer
+              params:
+                default: 0
+    authorization:
+      timeScope:
+        variable: date
+        component: value
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - projet
+            - site
+            - plateforme
+            - date
+            - espece
+        qualitatif:
+          label: "Données qualitatives"
+          data:
+            - Couleur des individus
+        quantitatif:
+          label: "Données quantitatives"
+          data:
+            - Nombre d'individus

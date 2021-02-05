@@ -55,7 +55,7 @@ public class AuthorizationService {
         String dataGroup = authorization.getDataGroup();
 
         Preconditions.checkArgument(application.getConfiguration().getDataset().containsKey(dataSet));
-        Preconditions.checkArgument(application.getConfiguration().getDataset().get(dataSet).getDataGroups().containsKey(dataGroup));
+        Preconditions.checkArgument(application.getConfiguration().getDataset().get(dataSet).getAuthorization().getDataGroups().containsKey(dataGroup));
 
         usingExpressionElements.add("application = '" + application.getId() + "'::uuid AND dataType = '" + dataSet + "' AND dataGroup = '" + dataGroup + "'");
 

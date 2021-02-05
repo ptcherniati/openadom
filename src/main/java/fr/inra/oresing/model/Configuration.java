@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 @Getter
@@ -62,23 +63,15 @@ public class Configuration {
     @ToString
     static public class DatasetDescription {
         private FormatDescription format;
-        private LinkedHashMap<String, DataGroupDescription> dataGroups;
+        private LinkedHashMap<String, ColumnDescription> data;
         private TreeMap<Integer, List<MigrationDescription>> migrations;
-        private VariableComponentReference timeScopeColumn;
+        private AuthorizationDescription authorization;
+    }
 
-        /**
-         * @deprecated à supprimer, c'est pour la rétro-compatibilité avant la mise en place des groupes
-         */
-        @Deprecated
-        public Map<String, ColumnDescription> getData() {
-            LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
-            if (dataGroups != null) {
-                for (DataGroupDescription value : dataGroups.values()) {
-                    data.putAll(value.getData());
-                }
-            }
-            return data;
-        }
+    @Value
+    public static class AuthorizationDescription {
+        VariableComponentReference timeScope;
+        LinkedHashMap<String, DataGroupDescription> dataGroups;
     }
 
     @Getter
@@ -153,7 +146,7 @@ public class Configuration {
     @ToString
     static public class DataGroupDescription {
         private String label;
-        private LinkedHashMap<String, ColumnDescription> data;
+        private Set<String> data;
     }
 
     @Value

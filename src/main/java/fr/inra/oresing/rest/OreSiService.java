@@ -10,6 +10,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
@@ -276,21 +279,22 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DatasetDescription> entry : conf.getDataset().entrySet()) {
             String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
-            VariableComponentReference timeScopeColumn = datasetDescription.getTimeScopeColumn();
+            VariableComponentReference timeScopeColumn = datasetDescription.getAuthorization().getTimeScope();
             if (timeScopeColumn == null) {
                 throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
             }
+            Set<String> variables = datasetDescription.getData().keySet();
             if (timeScopeColumn.getVariable() == null) {
-                throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().keySet());
+                throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + variables);
             }
             if (!datasetDescription.getData().containsKey(timeScopeColumn.getVariable())) {
-                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetDescription.getData().keySet());
+                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + variables);
             }
             if (timeScopeColumn.getComponent() == null) {
                 throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeColumn.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().keySet());
             }
             if (!datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().containsKey(timeScopeColumn.getComponent())) {
-                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + datasetDescription.getData().keySet());
+                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + variables);
             }
             ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetName);
             Checker timeScopeColumnChecker = checkers.get(timeScopeColumn);
@@ -300,6 +304,27 @@ public class OreSiService {
                     throw new IllegalArgumentException("ne sait pas traiter le format " + pattern + ". Les formats acceptés sont " + LocalDateTimeRange.getKnownPatterns());
                 }
             }
+
+            Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
+            for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : datasetDescription.getAuthorization().getDataGroups().entrySet()) {
+                String dataGroup = dataGroupEntry.getKey();
+                Configuration.DataGroupDescription dataGroupDescription = dataGroupEntry.getValue();
+                Set<String> dataGroupVariables = dataGroupDescription.getData();
+                variableOccurrencesInDataGroups.addAll(dataGroupVariables);
+                ImmutableSet<String> unknownVariables = Sets.difference(dataGroupVariables, variables).immutableCopy();
+                if (!unknownVariables.isEmpty()) {
+                    throw new IllegalArgumentException("le groupe de données " + dataGroup + " est contient des données qui ne sont pas déclarées " + unknownVariables + ". Données connues " + variables);
+                }
+            }
+
+            variables.forEach(variable -> {
+                int count = variableOccurrencesInDataGroups.count(variable);
+                if (count == 0) {
+                    throw new IllegalArgumentException("la variable " + variable + " n'est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe");
+                } else if (count > 1) {
+                    throw new IllegalArgumentException("la variable " + variable + " est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe");
+                }
+            });
         }
     }
 
@@ -351,7 +376,7 @@ public class OreSiService {
 
         List<String> error = new LinkedList<>();
 
-        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getTimeScopeColumn());
+        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getAuthorization().getTimeScope());
         String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
 
         ApplicationRepository applicationRepository = repo.getRepository(app);
@@ -375,17 +400,17 @@ public class OreSiService {
                 }
             });
 
-            String timeScopeValue = values.get(dataSet.getTimeScopeColumn());
+            String timeScopeValue = values.get(dataSet.getAuthorization().getTimeScope());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
 
-            for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataSet.getDataGroups().entrySet()) {
+            for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataSet.getAuthorization().getDataGroups().entrySet()) {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
-                Predicate<VariableComponentReference> includeInDataGroupPredicate = variableComponentReference -> dataGroupDescription.getData().containsKey(variableComponentReference.getVariable());
+                Predicate<VariableComponentReference> includeInDataGroupPredicate = variableComponentReference -> dataGroupDescription.getData().contains(variableComponentReference.getVariable());
                 Map<VariableComponentReference, String> dataGroupValues = Maps.filterKeys(values, includeInDataGroupPredicate);
 
                 Map<String, Map<String, String>> toStore = new LinkedHashMap<>();
