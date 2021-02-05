@@ -7,7 +7,7 @@ import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.VariableComponentReference;
+import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
@@ -171,7 +171,7 @@ public class RelationalService {
                 fromClauseJoinElements.add("LEFT OUTER JOIN " + quotedViewName + " ON " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
             }
 
-            for (VariableComponentReference reference : getReferences(datasetDescription)) {
+            for (VariableComponentKey reference : getReferences(datasetDescription)) {
                 String variable = reference.getVariable();
                 String component = reference.getComponent();
                 String selectClauseElement = String.format(
@@ -197,12 +197,12 @@ public class RelationalService {
         return views;
     }
 
-    private ImmutableSet<VariableComponentReference> getReferences(Configuration.DatasetDescription datasetDescription) {
-        Set<VariableComponentReference> references = new LinkedHashSet<>();
+    private ImmutableSet<VariableComponentKey> getReferences(Configuration.DatasetDescription datasetDescription) {
+        Set<VariableComponentKey> references = new LinkedHashSet<>();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : datasetDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             for (String component : variableEntry.getValue().getComponents().keySet()) {
-                references.add(new VariableComponentReference(variable, component));
+                references.add(new VariableComponentKey(variable, component));
             }
         }
         return ImmutableSet.copyOf(references);
@@ -249,8 +249,8 @@ public class RelationalService {
         return views;
     }
 
-    private String getColumnName(VariableComponentReference reference) {
-        return "\"" + StringUtils.replace(StringUtils.replace(reference.getVariable() + "_" + reference.getComponent(), " ", "_"), "'", "_") + "\"";
+    private String getColumnName(VariableComponentKey variableComponentKey) {
+        return "\"" + StringUtils.replace(StringUtils.replace(variableComponentKey.getVariable() + "_" + variableComponentKey.getComponent(), " ", "_"), "'", "_") + "\"";
     }
 
     private List<ViewCreationCommand> getViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {

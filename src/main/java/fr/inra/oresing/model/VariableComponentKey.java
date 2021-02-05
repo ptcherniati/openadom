@@ -3,7 +3,7 @@ package fr.inra.oresing.model;
 import lombok.Value;
 
 @Value
-public class VariableComponentReference {
+public class VariableComponentKey {
     String variable;
     String component;
 

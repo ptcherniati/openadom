@@ -70,7 +70,7 @@ public class Configuration {
 
     @Value
     public static class AuthorizationDescription {
-        VariableComponentReference timeScope;
+        VariableComponentKey timeScope;
         LinkedHashMap<String, DataGroupDescription> dataGroups;
     }
 
@@ -98,7 +98,7 @@ public class Configuration {
     @ToString
     static public class ColumnBindingDescription {
         private String header;
-        private VariableComponentReference boundTo;
+        private VariableComponentKey boundTo;
     }
 
     @Getter
@@ -108,14 +108,14 @@ public class Configuration {
         private String headerPattern;
         private String exportHeader;
         private List<HeaderPatternToken> tokens;
-        private VariableComponentReference boundTo;
+        private VariableComponentKey boundTo;
     }
 
     @Getter
     @Setter
     @ToString
     static public class HeaderPatternToken {
-        private VariableComponentReference boundTo;
+        private VariableComponentKey boundTo;
         private String exportHeader;
     }
 

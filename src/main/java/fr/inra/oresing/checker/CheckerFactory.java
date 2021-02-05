@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.VariableComponentReference;
+import fr.inra.oresing.model.VariableComponentKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -64,17 +64,17 @@ public class CheckerFactory {
         return referenceCheckers;
     }
 
-    public ImmutableMap<VariableComponentReference, Checker> getCheckers(Application app, String dataset) {
+    public ImmutableMap<VariableComponentKey, Checker> getCheckers(Application app, String dataset) {
         Preconditions.checkArgument(app.getConfiguration().getDataset().containsKey(dataset), "Pas de type de données " + dataset + " dans " + app);
         Configuration.DatasetDescription datasetDescription = app.getConfiguration().getDataset().get(dataset);
-        Map<VariableComponentReference, Checker> checkers = new LinkedHashMap<>();
+        Map<VariableComponentKey, Checker> checkers = new LinkedHashMap<>();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : datasetDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
-                VariableComponentReference variableComponentReference = new VariableComponentReference(variable, component);
-                checkers.put(variableComponentReference, getChecker(variableDescription, app, component));
+                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                checkers.put(variableComponentKey, getChecker(variableDescription, app, component));
             }
         }
         return ImmutableMap.copyOf(checkers);

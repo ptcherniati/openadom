@@ -25,7 +25,7 @@ import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.VariableComponentReference;
+import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -181,7 +181,7 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DatasetDescription> datasetEntry : newConfiguration.getDataset().entrySet()) {
             String dataType = datasetEntry.getKey();
             Configuration.DatasetDescription datasetDescription = datasetEntry.getValue();
-            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
             if (log.isInfoEnabled()) {
                 log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
             }
@@ -206,7 +206,7 @@ public class OreSiService {
                             String componentValue = Optional.ofNullable(componentEntry.getValue())
                                     .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
                                     .orElse("");
-                            VariableComponentReference reference = new VariableComponentReference(variable, component);
+                            VariableComponentKey reference = new VariableComponentKey(variable, component);
                             Checker checker = checkers.get(reference);
                             if (checker instanceof ReferenceChecker) {
                                 try {
@@ -239,10 +239,10 @@ public class OreSiService {
 
     private void validateStoredData(Application app, String dataType) {
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataType);
-        Consumer<ImmutableMap<VariableComponentReference, String>> validateRow = line -> {
-            for (Map.Entry<VariableComponentReference, String> entry : line.entrySet()) {
-                VariableComponentReference reference = entry.getKey();
+        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+        Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
+            for (Map.Entry<VariableComponentKey, String> entry : line.entrySet()) {
+                VariableComponentKey reference = entry.getKey();
                 Checker checker = checkers.get(reference);
                 String value = entry.getValue();
                 try {
@@ -279,25 +279,25 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DatasetDescription> entry : conf.getDataset().entrySet()) {
             String datasetName = entry.getKey();
             Configuration.DatasetDescription datasetDescription = entry.getValue();
-            VariableComponentReference timeScopeColumn = datasetDescription.getAuthorization().getTimeScope();
-            if (timeScopeColumn == null) {
+            VariableComponentKey timeScopeVariableComponentKey = datasetDescription.getAuthorization().getTimeScope();
+            if (timeScopeVariableComponentKey == null) {
                 throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
             }
             Set<String> variables = datasetDescription.getData().keySet();
-            if (timeScopeColumn.getVariable() == null) {
+            if (timeScopeVariableComponentKey.getVariable() == null) {
                 throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + variables);
             }
-            if (!datasetDescription.getData().containsKey(timeScopeColumn.getVariable())) {
-                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + variables);
+            if (!datasetDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
+                throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
             }
-            if (timeScopeColumn.getComponent() == null) {
-                throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeColumn.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().keySet());
+            if (timeScopeVariableComponentKey.getComponent() == null) {
+                throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeVariableComponentKey.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
             }
-            if (!datasetDescription.getData().get(timeScopeColumn.getVariable()).getComponents().containsKey(timeScopeColumn.getComponent())) {
-                throw new IllegalArgumentException(timeScopeColumn + " ne fait pas parti des colonnes connues " + variables);
+            if (!datasetDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
+                throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
             }
-            ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, datasetName);
-            Checker timeScopeColumnChecker = checkers.get(timeScopeColumn);
+            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, datasetName);
+            Checker timeScopeColumnChecker = checkers.get(timeScopeVariableComponentKey);
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
                 if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
@@ -372,7 +372,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
 
-        ImmutableMap<VariableComponentReference, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
 
         List<String> error = new LinkedList<>();
 
@@ -381,14 +381,14 @@ public class OreSiService {
 
         ApplicationRepository applicationRepository = repo.getRepository(app);
 
-        Consumer<Map<VariableComponentReference, String>> lineConsumer = line -> {
-            Map<VariableComponentReference, String> values = line;
+        Consumer<Map<VariableComponentKey, String>> lineConsumer = line -> {
+            Map<VariableComponentKey, String> values = line;
             List<UUID> refsLinkedTo = new ArrayList<>();
-            values.forEach((variableComponentReference, value) -> {
+            values.forEach((variableComponentKey, value) -> {
                 try {
-                    Checker checker = checkers.get(variableComponentReference);
+                    Checker checker = checkers.get(variableComponentKey);
                     if (checker == null) {
-                        throw new CheckerException("Unknown column: " + variableComponentReference);
+                        throw new CheckerException("Unknown column: " + variableComponentKey);
                     }
                     Object result = checker.check(value);
                     if (checker instanceof ReferenceChecker) {
@@ -410,11 +410,11 @@ public class OreSiService {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
-                Predicate<VariableComponentReference> includeInDataGroupPredicate = variableComponentReference -> dataGroupDescription.getData().contains(variableComponentReference.getVariable());
-                Map<VariableComponentReference, String> dataGroupValues = Maps.filterKeys(values, includeInDataGroupPredicate);
+                Predicate<VariableComponentKey> includeInDataGroupPredicate = variableComponentKey -> dataGroupDescription.getData().contains(variableComponentKey.getVariable());
+                Map<VariableComponentKey, String> dataGroupValues = Maps.filterKeys(values, includeInDataGroupPredicate);
 
                 Map<String, Map<String, String>> toStore = new LinkedHashMap<>();
-                for (Map.Entry<VariableComponentReference, String> entry2 : dataGroupValues.entrySet()) {
+                for (Map.Entry<VariableComponentKey, String> entry2 : dataGroupValues.entrySet()) {
                     String variable = entry2.getKey().getVariable();
                     String component = entry2.getKey().getComponent();
                     String value = entry2.getValue();
@@ -436,7 +436,7 @@ public class OreSiService {
 
         Configuration.FormatDescription formatDescription = dataSet.getFormat();
 
-        Function<List<Map.Entry<String, String>>, ImmutableSet<Map<VariableComponentReference, String>>> lineAsMapToRecordsFn;
+        Function<List<Map.Entry<String, String>>, ImmutableSet<Map<VariableComponentKey, String>>> lineAsMapToRecordsFn;
         if (formatDescription.getRepeatedColumns() == null || formatDescription.getRepeatedColumns().isEmpty()) {
             ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
                     .map(Configuration.ColumnBindingDescription::getHeader)
@@ -445,7 +445,7 @@ public class OreSiService {
             lineAsMapToRecordsFn = line -> {
                 ImmutableList<String> actualHeaders = line.stream().map(Map.Entry::getKey).collect(ImmutableList.toImmutableList());
                 Preconditions.checkArgument(expectedColumns.containsAll(actualHeaders), "Fichier incorrect. Entêtes détectés " + actualHeaders + ". Entêtes attendus " + expectedColumns);
-                Map<VariableComponentReference, String> record = new LinkedHashMap<>();
+                Map<VariableComponentKey, String> record = new LinkedHashMap<>();
                 for (Map.Entry<String, String> entry : line) {
                     String header = entry.getKey();
                     String value = entry.getValue();
@@ -457,7 +457,7 @@ public class OreSiService {
         } else {
             lineAsMapToRecordsFn = line -> {
                 LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
-                Map<VariableComponentReference, String> recordPrototype = new LinkedHashMap<>();
+                Map<VariableComponentKey, String> recordPrototype = new LinkedHashMap<>();
                 for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
                     Map.Entry<String, String> poll = lineCopy.poll();
                     String header = poll.getKey();
@@ -467,10 +467,10 @@ public class OreSiService {
                 }
                 Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
                 Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
-                Set<Map<VariableComponentReference, String>> records = new LinkedHashSet<>();
+                Set<Map<VariableComponentKey, String>> records = new LinkedHashSet<>();
 
-                Map<VariableComponentReference, String> tokenValues = new LinkedHashMap<>(recordPrototype);
-                Map<VariableComponentReference, String> bodyValues = new LinkedHashMap<>(recordPrototype);
+                Map<VariableComponentKey, String> tokenValues = new LinkedHashMap<>(recordPrototype);
+                Map<VariableComponentKey, String> bodyValues = new LinkedHashMap<>(recordPrototype);
                 while (actualColumnsIterator.hasNext()) {
                     Map.Entry<String, String> actualColumn = actualColumnsIterator.next();
                     Configuration.RepeatedColumnBindingDescription expectedColumn = expectedColumns.next();
@@ -496,7 +496,7 @@ public class OreSiService {
                     bodyValues.put(expectedColumn.getBoundTo(), value);
 
                     if (!expectedColumns.hasNext()) {
-                        Map<VariableComponentReference, String> record = new LinkedHashMap<>(recordPrototype);
+                        Map<VariableComponentKey, String> record = new LinkedHashMap<>(recordPrototype);
                         record.putAll(tokenValues);
                         record.putAll(bodyValues);
                         records.add(record);
@@ -550,12 +550,12 @@ public class OreSiService {
                 .getDataset()
                 .get(dataType)
                 .getFormat();
-        ImmutableMap<String, VariableComponentReference> allColumns = getExportColumns(format);
-        ImmutableMap<String, VariableComponentReference> columns;
+        ImmutableMap<String, VariableComponentKey> allColumns = getExportColumns(format);
+        ImmutableMap<String, VariableComponentKey> columns;
         if (downloadDatasetQuery.getVariableComponentIds() == null) {
             columns = allColumns;
         } else {
-            Map<String, VariableComponentReference> filter = Maps.filterValues(allColumns, variableComponent -> downloadDatasetQuery.getVariableComponentIds().contains(variableComponent.getId()));
+            Map<String, VariableComponentKey> filter = Maps.filterValues(allColumns, variableComponent -> downloadDatasetQuery.getVariableComponentIds().contains(variableComponent.getId()));
             columns = ImmutableMap.copyOf(filter);
         }
         String result = "";
@@ -569,9 +569,9 @@ public class OreSiService {
                 csvPrinter.printRecord(columns.keySet());
                 for (Map<String, Map<String, String>> record : list) {
                     ImmutableList<String> rowAsRecord = columns.values().stream()
-                            .map(reference -> {
-                                Map<String, String> components = record.computeIfAbsent(reference.getVariable(), k -> Collections.emptyMap());
-                                return components.getOrDefault(reference.getComponent(), "");
+                            .map(variableComponentKey -> {
+                                Map<String, String> components = record.computeIfAbsent(variableComponentKey.getVariable(), k -> Collections.emptyMap());
+                                return components.getOrDefault(variableComponentKey.getComponent(), "");
                             })
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);
@@ -584,17 +584,17 @@ public class OreSiService {
         return result;
     }
 
-    private ImmutableMap<String, VariableComponentReference> getExportColumns(Configuration.FormatDescription format) {
-        ImmutableMap<String, VariableComponentReference> valuesFromStaticColumns = format.getColumns().stream()
+    private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.FormatDescription format) {
+        ImmutableMap<String, VariableComponentKey> valuesFromStaticColumns = format.getColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
-        ImmutableMap.Builder<String, VariableComponentReference> allColumnsBuilder = ImmutableMap.<String, VariableComponentReference>builder()
+        ImmutableMap.Builder<String, VariableComponentKey> allColumnsBuilder = ImmutableMap.<String, VariableComponentKey>builder()
                 .putAll(valuesFromStaticColumns);
         if (format.getRepeatedColumns() != null) {
-            ImmutableMap<String, VariableComponentReference> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
+            ImmutableMap<String, VariableComponentKey> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
                     .filter(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens() != null)
                     .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
                     .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
-            ImmutableMap<String, VariableComponentReference> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
+            ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
                     .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
             allColumnsBuilder.putAll(valuesFromHeaderPatterns)
                              .putAll(valuesFromRepeatedColumns)
@@ -628,13 +628,13 @@ public class OreSiService {
         return repo.tryFindApplication(nameOrId);
     }
 
-    private ImmutableMap<VariableComponentReference, String> valuesToIndexedPerReferenceMap(Map<String, Map<String, String>> line) {
-        Map<VariableComponentReference, String> valuesPerReference = new LinkedHashMap<>();
+    private ImmutableMap<VariableComponentKey, String> valuesToIndexedPerReferenceMap(Map<String, Map<String, String>> line) {
+        Map<VariableComponentKey, String> valuesPerReference = new LinkedHashMap<>();
         for (Map.Entry<String, Map<String, String>> variableEntry : line.entrySet()) {
             String variable = variableEntry.getKey();
             for (Map.Entry<String, String> componentEntry : variableEntry.getValue().entrySet()) {
                 String component = componentEntry.getKey();
-                VariableComponentReference reference = new VariableComponentReference(variable, component);
+                VariableComponentKey reference = new VariableComponentKey(variable, component);
                 valuesPerReference.put(reference, componentEntry.getValue());
             }
         }
