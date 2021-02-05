@@ -178,15 +178,15 @@ public class OreSiService {
             log.info("va migrer les données de " + app.getName() + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
         }
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        for (Map.Entry<String, Configuration.DatasetDescription> datasetEntry : newConfiguration.getDataset().entrySet()) {
-            String dataType = datasetEntry.getKey();
-            Configuration.DatasetDescription datasetDescription = datasetEntry.getValue();
+        for (Map.Entry<String, Configuration.DataTypeDescription> dataTypeEntry : newConfiguration.getDataTypes().entrySet()) {
+            String dataType = dataTypeEntry.getKey();
+            Configuration.DataTypeDescription dataTypeDescription = dataTypeEntry.getValue();
             ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
             if (log.isInfoEnabled()) {
                 log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
             }
             for (int migrationVersionToApply = firstMigrationToApply; migrationVersionToApply <= newVersion; migrationVersionToApply++) {
-                List<Configuration.MigrationDescription> migrations = datasetDescription.getMigrations().get(migrationVersionToApply);
+                List<Configuration.MigrationDescription> migrations = dataTypeDescription.getMigrations().get(migrationVersionToApply);
                 if (migrations == null) {
                     if (log.isInfoEnabled()) {
                         log.info("aucune migration déclarée pour migrer le type de données " + dataType + " vers la version " + migrationVersionToApply);
@@ -267,7 +267,7 @@ public class OreSiService {
         } else {
             app.setReferenceType(new ArrayList<>(conf.getReferences().keySet()));
         }
-        app.setDataType(new ArrayList<>(conf.getDataset().keySet()));
+        app.setDataType(new ArrayList<>(conf.getDataTypes().keySet()));
         app.setConfiguration(conf);
         checkConfiguration(app);
         repo.store(app);
@@ -276,27 +276,27 @@ public class OreSiService {
 
     private void checkConfiguration(Application app) {
         Configuration conf = app.getConfiguration();
-        for (Map.Entry<String, Configuration.DatasetDescription> entry : conf.getDataset().entrySet()) {
-            String datasetName = entry.getKey();
-            Configuration.DatasetDescription datasetDescription = entry.getValue();
-            VariableComponentKey timeScopeVariableComponentKey = datasetDescription.getAuthorization().getTimeScope();
+        for (Map.Entry<String, Configuration.DataTypeDescription> entry : conf.getDataTypes().entrySet()) {
+            String dataType = entry.getKey();
+            Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
+            VariableComponentKey timeScopeVariableComponentKey = dataTypeDescription.getAuthorization().getTimeScope();
             if (timeScopeVariableComponentKey == null) {
-                throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName);
+                throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType);
             }
-            Set<String> variables = datasetDescription.getData().keySet();
+            Set<String> variables = dataTypeDescription.getData().keySet();
             if (timeScopeVariableComponentKey.getVariable() == null) {
-                throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + variables);
+                throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType + ". Valeurs possibles " + variables);
             }
-            if (!datasetDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
+            if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
                 throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
             }
             if (timeScopeVariableComponentKey.getComponent() == null) {
-                throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeVariableComponentKey.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + datasetName + ". Valeurs possibles " + datasetDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeVariableComponentKey.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType + ". Valeurs possibles " + dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
             }
-            if (!datasetDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
+            if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
                 throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
             }
-            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, datasetName);
+            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
             Checker timeScopeColumnChecker = checkers.get(timeScopeVariableComponentKey);
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
@@ -306,7 +306,7 @@ public class OreSiService {
             }
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
-            for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : datasetDescription.getAuthorization().getDataGroups().entrySet()) {
+            for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
                 String dataGroup = dataGroupEntry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = dataGroupEntry.getValue();
                 Set<String> dataGroupVariables = dataGroupDescription.getData();
@@ -370,13 +370,13 @@ public class OreSiService {
 
         // recuperation de la configuration pour ce type de donnees
         Configuration conf = app.getConfiguration();
-        Configuration.DatasetDescription dataSet = conf.getDataset().get(dataType);
+        Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
 
         List<String> error = new LinkedList<>();
 
-        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataSet.getAuthorization().getTimeScope());
+        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataTypeDescription.getAuthorization().getTimeScope());
         String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
 
         ApplicationRepository applicationRepository = repo.getRepository(app);
@@ -400,13 +400,13 @@ public class OreSiService {
                 }
             });
 
-            String timeScopeValue = values.get(dataSet.getAuthorization().getTimeScope());
+            String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
 
-            for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataSet.getAuthorization().getDataGroups().entrySet()) {
+            for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
@@ -434,7 +434,7 @@ public class OreSiService {
             }
         };
 
-        Configuration.FormatDescription formatDescription = dataSet.getFormat();
+        Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
 
         Function<List<Map.Entry<String, String>>, ImmutableSet<Map<VariableComponentKey, String>>> lineAsMapToRecordsFn;
         if (formatDescription.getRepeatedColumns() == null || formatDescription.getRepeatedColumns().isEmpty()) {
@@ -515,10 +515,12 @@ public class OreSiService {
         try (InputStream csv = file.getInputStream()) {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
-            Iterators.advance(linesIterator, formatDescription.getLineToSkip());
+            int lineToSkip = formatDescription.getHeaderLine() - 1;
+            Iterators.advance(linesIterator, lineToSkip);
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Iterators.advance(linesIterator, formatDescription.getLineToSkipAfterHeader());
+            int lineToSkipAfterHeader = formatDescription.getFirstRowLine() - formatDescription.getHeaderLine() - 1;
+            Iterators.advance(linesIterator, lineToSkipAfterHeader);
             Function<CSVRecord, List<Map.Entry<String, String>>> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
                 List<Map.Entry<String, String>> record = new LinkedList<>();
@@ -547,7 +549,7 @@ public class OreSiService {
         List<Map<String, Map<String, String>>> list = findData(downloadDatasetQuery);
         Configuration.FormatDescription format = getApplication(applicationNameOrId)
                 .getConfiguration()
-                .getDataset()
+                .getDataTypes()
                 .get(dataType)
                 .getFormat();
         ImmutableMap<String, VariableComponentKey> allColumns = getExportColumns(format);

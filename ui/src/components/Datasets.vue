@@ -182,7 +182,7 @@ export default {
     datasets :{
       get(){
         return this.$store.state.configuration != null
-          ? this.$store.state.configuration.dataset
+          ? this.$store.state.configuration.dataTypes
           : null
       }
     },

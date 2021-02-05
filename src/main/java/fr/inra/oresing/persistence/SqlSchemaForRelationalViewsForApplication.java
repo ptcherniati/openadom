@@ -17,18 +17,18 @@ public class SqlSchemaForRelationalViewsForApplication implements SqlSchema {
         return String.join("_", application.getName(), viewStrategy.name());
     }
 
-    public SqlTable forDataset(String datasetName) {
-        checkDatasetName(datasetName);
-        return new SqlTable(this, datasetName);
+    public SqlTable forDataType(String dataType) {
+        checkDataType(dataType);
+        return new SqlTable(this, dataType);
     }
 
-    public SqlTable forDenormalizedDataset(String datasetName) {
-        checkDatasetName(datasetName);
-        return new SqlTable(this, "denormalized_" + datasetName);
+    public SqlTable forDenormalizedDataType(String dataType) {
+        checkDataType(dataType);
+        return new SqlTable(this, "denormalized_" + dataType);
     }
 
-    private void checkDatasetName(String datasetName) {
-        Preconditions.checkArgument(application.getDataType().contains(datasetName), datasetName + " n'est pas un dataset de " + getApplication());
+    private void checkDataType(String dataType) {
+        Preconditions.checkArgument(application.getDataType().contains(dataType), dataType + " n'est pas un type de données de " + getApplication());
     }
 
     public SqlTable forReferenceType(String referenceName) {

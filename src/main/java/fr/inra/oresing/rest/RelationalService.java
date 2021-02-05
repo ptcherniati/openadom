@@ -135,30 +135,30 @@ public class RelationalService {
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
         List<ViewCreationCommand> views = new LinkedList<>();
         views.addAll(getViewsForReferences(sqlSchema, app));
-        views.addAll(getViewsForDatasets(sqlSchema, app));
+        views.addAll(getViewsForDataTypes(sqlSchema, app));
         if (viewStrategy == ViewStrategy.VIEW) {
-            views.addAll(getDenormalizedViewsForDatasets(sqlSchema, app));
+            views.addAll(getDenormalizedViewsForDataTypes(sqlSchema, app));
         }
         return new SchemaCreationCommand(app, sqlSchema, views, viewStrategy);
     }
 
-    private List<ViewCreationCommand> getViewsForDatasets(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
+    private List<ViewCreationCommand> getViewsForDataTypes(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
 
         List<ViewCreationCommand> views = new LinkedList<>();
 
         UUID appId = application.getId();
 
-        for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
-            String datasetName = entry.getKey();
-            Configuration.DatasetDescription datasetDescription = entry.getValue();
-            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetName);
+        for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
+            String dataType = entry.getKey();
+            Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
+            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, dataType);
 
             Set<String> referenceColumnIds = new LinkedHashSet<>();
             Set<String> selectClauseElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
             String dataTableName = "my_data";
-            String dataAfterDataGroupsMergingQuery = repository.getRepository(application).getSqlToMergeData(datasetName);
+            String dataAfterDataGroupsMergingQuery = repository.getRepository(application).getSqlToMergeData(dataType);
             String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
             for (ReferenceChecker referenceChecker : referenceCheckers) {
@@ -171,7 +171,7 @@ public class RelationalService {
                 fromClauseJoinElements.add("LEFT OUTER JOIN " + quotedViewName + " ON " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
             }
 
-            for (VariableComponentKey reference : getReferences(datasetDescription)) {
+            for (VariableComponentKey reference : getReferences(dataTypeDescription)) {
                 String variable = reference.getVariable();
                 String component = reference.getComponent();
                 String selectClauseElement = String.format(
@@ -191,15 +191,15 @@ public class RelationalService {
 
             String viewSql = String.join("\n", withClause, selectClause, fromClause);
 
-            SqlTable view = sqlSchema.forDataset(datasetName);
+            SqlTable view = sqlSchema.forDataType(dataType);
             views.add(new ViewCreationCommand(view, viewSql, referenceColumnIds));
         }
         return views;
     }
 
-    private ImmutableSet<VariableComponentKey> getReferences(Configuration.DatasetDescription datasetDescription) {
+    private ImmutableSet<VariableComponentKey> getReferences(Configuration.DataTypeDescription dataTypeDescription) {
         Set<VariableComponentKey> references = new LinkedHashSet<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : datasetDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             for (String component : variableEntry.getValue().getComponents().keySet()) {
                 references.add(new VariableComponentKey(variable, component));
@@ -208,17 +208,17 @@ public class RelationalService {
         return ImmutableSet.copyOf(references);
     }
 
-    private List<ViewCreationCommand> getDenormalizedViewsForDatasets(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
+    private List<ViewCreationCommand> getDenormalizedViewsForDataTypes(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
         List<ViewCreationCommand> views = new LinkedList<>();
-        for (Map.Entry<String, Configuration.DatasetDescription> entry : application.getConfiguration().getDataset().entrySet()) {
-            String datasetName = entry.getKey();
-            Configuration.DatasetDescription datasetDescription = entry.getValue();
-            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, datasetName);
+        for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
+            String dataType = entry.getKey();
+            Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
+            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, dataType);
 
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
-            String dataTableName = sqlSchema.forDataset(datasetName).getSqlIdentifier();
+            String dataTableName = sqlSchema.forDataType(dataType).getSqlIdentifier();
 
             for (ReferenceChecker referenceChecker : referenceCheckers) {
                 String referenceType = referenceChecker.getRefType();  // especes
@@ -231,19 +231,19 @@ public class RelationalService {
 
             Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
 
-            getReferences(datasetDescription).stream()
+            getReferences(dataTypeDescription).stream()
                     .map(this::getColumnName)
                     .map(columnName -> dataTableName + "." + columnName)
                     .forEach(selectClauseElements::add);
 
             String selectClause = "select " + String.join(", ", selectClauseElements);
 
-            String fromClause = "from " + sqlSchema.forDataset(datasetName).getSqlIdentifier() + " "
+            String fromClause = "from " + sqlSchema.forDataType(dataType).getSqlIdentifier() + " "
                     + Joiner.on(" ").join(fromClauseJoinElements);
 
             String viewSql = String.join("\n", selectClause, fromClause);
 
-            SqlTable view = sqlSchema.forDenormalizedDataset(datasetName);
+            SqlTable view = sqlSchema.forDenormalizedDataType(dataType);
             views.add(new ViewCreationCommand(view, viewSql, selectClauseReferenceElements));
         }
         return views;
@@ -291,10 +291,10 @@ public class RelationalService {
         return WithSqlIdentifier.escapeSqlIdentifier(sqlIdentifier);
     }
 
-    public List<Map<String, Object>> readView(String appName, String dataset, ViewStrategy viewStrategy) {
+    public List<Map<String, Object>> readView(String appName, String dataType, ViewStrategy viewStrategy) {
 //        authRepository.setRoleForClient();
         Application application = getApplication(appName);
-        SqlTable view = SqlSchema.forRelationalViewsOf(application, viewStrategy).forDataset(dataset);
+        SqlTable view = SqlSchema.forRelationalViewsOf(application, viewStrategy).forDataType(dataType);
         return namedParameterJdbcTemplate.queryForList("select * from " + view.getSqlIdentifier(), Collections.emptyMap());
     }
 
@@ -304,7 +304,7 @@ public class RelationalService {
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
         List<ViewCreationCommand> viewCreationCommands = new LinkedList<>();
         viewCreationCommands.addAll(getViewsForReferences(sqlSchema, app));
-        viewCreationCommands.addAll(getViewsForDatasets(sqlSchema, app));
+        viewCreationCommands.addAll(getViewsForDataTypes(sqlSchema, app));
         for (ViewCreationCommand viewCreationCommand : viewCreationCommands) {
             Set<String> referenceIdColumns = viewCreationCommand.getReferenceIdColumns();
             String usingExpression = referenceIdColumns.stream().map(referenceIdColumn -> referenceIdColumn + "::uuid").collect(Collectors.joining(", ", "ARRAY[", "]"))

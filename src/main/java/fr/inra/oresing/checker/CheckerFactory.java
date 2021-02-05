@@ -64,11 +64,11 @@ public class CheckerFactory {
         return referenceCheckers;
     }
 
-    public ImmutableMap<VariableComponentKey, Checker> getCheckers(Application app, String dataset) {
-        Preconditions.checkArgument(app.getConfiguration().getDataset().containsKey(dataset), "Pas de type de données " + dataset + " dans " + app);
-        Configuration.DatasetDescription datasetDescription = app.getConfiguration().getDataset().get(dataset);
+    public ImmutableMap<VariableComponentKey, Checker> getCheckers(Application app, String dataType) {
+        Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
+        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         Map<VariableComponentKey, Checker> checkers = new LinkedHashMap<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : datasetDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {

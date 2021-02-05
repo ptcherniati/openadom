@@ -71,7 +71,7 @@ export default {
     datasets: {
       get() {
         return store.state.configuration != null
-          ? store.state.configuration.dataset
+          ? store.state.configuration.dataTypes
           : null;
       }
     },
@@ -142,7 +142,7 @@ export default {
           setDataset(state, payload) {
             this.state.datasetName = payload.datasetName;
             this.state.dataDescription =
-              store.state.configuration.dataset[payload.datasetName];
+              store.state.configuration.dataTypes[payload.datasetName];
           },
           setVariable(state, payload) {
             this.state.variableName = payload.variableName;

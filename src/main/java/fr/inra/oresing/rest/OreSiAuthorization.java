@@ -17,7 +17,7 @@ public class OreSiAuthorization {
 
     String applicationNameOrId;
 
-    String dataset;
+    String dataType;
 
     String dataGroup;
 

@@ -45,27 +45,24 @@ public class Configuration {
     private int version;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references;
-    private LinkedHashMap<String, DatasetDescription> dataset;
+    private LinkedHashMap<String, DataTypeDescription> dataTypes;
 
     @Getter
     @Setter
     @ToString
-    static public class ReferenceDescription {
+    public static class ReferenceDescription {
         private int headerLine = 1;
         private int firstRowLine = 2;
         private char separator = ';';
-        private char quote = '"';
         private LinkedHashMap<String, ColumnDescription> columns;
     }
 
-    @Getter
-    @Setter
-    @ToString
-    static public class DatasetDescription {
-        private FormatDescription format;
-        private LinkedHashMap<String, ColumnDescription> data;
-        private TreeMap<Integer, List<MigrationDescription>> migrations;
-        private AuthorizationDescription authorization;
+    @Value
+    public static class DataTypeDescription {
+        FormatDescription format;
+        LinkedHashMap<String, ColumnDescription> data;
+        TreeMap<Integer, List<MigrationDescription>> migrations;
+        AuthorizationDescription authorization;
     }
 
     @Value
@@ -77,86 +74,64 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    static public class FormatDescription {
+    public static class FormatDescription {
         private int headerLine = 1;
         private int firstRowLine = 2;
         private char separator = ';';
         private List<ColumnBindingDescription> columns;
         private List<RepeatedColumnBindingDescription> repeatedColumns;
-
-        public int getLineToSkip() {
-            return getHeaderLine() - 1;
-        }
-
-        public int getLineToSkipAfterHeader() {
-            return getFirstRowLine() - getHeaderLine() - 1;
-        }
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class ColumnBindingDescription {
-        private String header;
-        private VariableComponentKey boundTo;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class RepeatedColumnBindingDescription {
-        private String headerPattern;
-        private String exportHeader;
-        private List<HeaderPatternToken> tokens;
-        private VariableComponentKey boundTo;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class HeaderPatternToken {
-        private VariableComponentKey boundTo;
-        private String exportHeader;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class ColumnDescription {
-        private LinkedHashMap<String, VariableComponentDescription> components;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class VariableComponentDescription {
-        private CheckerDescription checker;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class CheckerDescription {
-        private String name;
-        private Map<String, String> params;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    static public class DataGroupDescription {
-        private String label;
-        private Set<String> data;
     }
 
     @Value
-    static public class ApplicationDescription {
+    public static class ColumnBindingDescription {
+        String header;
+        VariableComponentKey boundTo;
+    }
+
+    @Value
+    public static class RepeatedColumnBindingDescription {
+        String headerPattern;
+        String exportHeader;
+        List<HeaderPatternToken> tokens;
+        VariableComponentKey boundTo;
+    }
+
+    @Value
+    public static class HeaderPatternToken {
+        VariableComponentKey boundTo;
+        String exportHeader;
+    }
+
+    @Value
+    public static class ColumnDescription {
+        LinkedHashMap<String, VariableComponentDescription> components;
+    }
+
+    @Value
+    public static class VariableComponentDescription {
+        CheckerDescription checker;
+    }
+
+    @Value
+    public static class CheckerDescription {
+        String name;
+        Map<String, String> params;
+    }
+
+    @Value
+    public static class DataGroupDescription {
+        String label;
+        Set<String> data;
+    }
+
+    @Value
+    public static class ApplicationDescription {
         String name;
         int version;
     }
 
     @Value
-    static public class MigrationDescription {
+    public static class MigrationDescription {
         MigrationStrategy strategy;
         String dataGroup;
         String variable;
@@ -164,7 +139,7 @@ public class Configuration {
     }
 
     @Value
-    static public class AddVariableMigrationDescription {
+    public static class AddVariableMigrationDescription {
         String defaultValue;
     }
 

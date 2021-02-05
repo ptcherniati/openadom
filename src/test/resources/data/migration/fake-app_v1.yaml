@@ -6,7 +6,7 @@ references:
   couleurs:
     columns:
       couleur:
-dataset:
+dataTypes:
   jeu1:
     format:
       columns:

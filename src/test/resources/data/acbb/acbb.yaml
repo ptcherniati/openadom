@@ -3,7 +3,7 @@ application:
   name: ACBB
   version: 1
 references:
-dataset:
+dataTypes:
   flux_tours:
     format:
       headerLine: 8

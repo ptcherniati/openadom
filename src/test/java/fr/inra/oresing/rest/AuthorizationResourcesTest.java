@@ -86,7 +86,7 @@ public class AuthorizationResourcesTest {
 
         {
             String readerUserId = reader.getId().toString();
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"monsore\",\"dataset\":\"pem\",\"dataGroup\":\"quantitatif\",\"referenceIds\":null,\"fromDay\":[1984,1,2],\"toDay\":[1984,1,3]}";
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"monsore\",\"dataType\":\"pem\",\"dataGroup\":\"quantitatif\",\"referenceIds\":null,\"fromDay\":[1984,1,2],\"toDay\":[1984,1,3]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
