@@ -10,63 +10,63 @@ dataset:
       firstRowLine: 12
       columns:
         - header: "date"
-          reference:
+          boundTo:
             variable: date
             component: day
         - header: "heure"
-          reference:
+          boundTo:
             variable: date
             component: time
         - header: "CO2"
-          reference:
+          boundTo:
             variable: CO2
             component: value
         - header: "H2O"
-          reference:
+          boundTo:
             variable: H2O
             component: value
         - header: "ZL"
-          reference:
+          boundTo:
             variable: ZL
             component: value
         - header: "Fc"
-          reference:
+          boundTo:
             variable: Fc
             component: value
         - header: "qc1"
-          reference:
+          boundTo:
             variable: Fc
             component: quality
         - header: "H"
-          reference:
+          boundTo:
             variable: H
             component: value
         - header: "qc2"
-          reference:
+          boundTo:
             variable: H
             component: quality
         - header: "LE"
-          reference:
+          boundTo:
             variable: LE
             component: value
         - header: "qc3"
-          reference:
+          boundTo:
             variable: LE
             component: quality
         - header: "t"
-          reference:
+          boundTo:
             variable: t
             component: value
         - header: "qc4"
-          reference:
+          boundTo:
             variable: t
             component: quality
         - header: "u*"
-          reference:
+          boundTo:
             variable: u*
             component: value
         - header: "Fc gf"
-          reference:
+          boundTo:
             variable: Fc gf
             component: value
     data:
@@ -134,391 +134,391 @@ dataset:
       firstRowLine: 12
       columns:
         - header: "parcelle"
-          reference:
+          boundTo:
             variable: parcelle
             component: valeur
         - header: "observation"
-          reference:
+          boundTo:
             variable: observation
             component: valeur
         - header: "rotation"
-          reference:
+          boundTo:
             variable: rotation
             component: valeur
         - header: "année"
-          reference:
+          boundTo:
             variable: année
             component: valeur
         - header: "période"
-          reference:
+          boundTo:
             variable: période
             component: valeur
         - header: "type intervention"
-          reference:
+          boundTo:
             variable: type intervention
             component: valeur
         - header: "date ou num incrémental intervention"
-          reference:
+          boundTo:
             variable: date ou num incrémental intervention
             component: valeur
         - header: "série"
-          reference:
+          boundTo:
             variable: série
             component: valeur
         - header: "mav_nature"
-          reference:
+          boundTo:
             variable: mav_nature
             component: valeur
         - header: "nature couvert"
-          reference:
+          boundTo:
             variable: nature couvert
             component: valeur
         - header: "date de mesure"
-          reference:
+          boundTo:
             variable: date de mesure
             component: valeur
         - header: "mav_dateDebut_PotProd"
-          reference:
+          boundTo:
             variable: mav_dateDebut_PotProd
             component: valeur
         - header: "mav_valeur"
-          reference:
+          boundTo:
             variable: mav
             component: valeur
         - header: "mav_nb"
-          reference:
+          boundTo:
             variable: mav
             component: nb
         - header: "mav_et"
-          reference:
+          boundTo:
             variable: mav
             component: et
         - header: "mav_methode"
-          reference:
+          boundTo:
             variable: mav
             component: methode
         - header: "mav_IQ"
-          reference:
+          boundTo:
             variable: mav
             component: IQ
         - header: "N_valeur"
-          reference:
+          boundTo:
             variable: N
             component: valeur
         - header: "N_nb"
-          reference:
+          boundTo:
             variable: N
             component: nb
         - header: "N_et"
-          reference:
+          boundTo:
             variable: N
             component: et
         - header: "N_methode"
-          reference:
+          boundTo:
             variable: N
             component: methode
         - header: "N_IQ"
-          reference:
+          boundTo:
             variable: N
             component: IQ
         - header: "DMS_valeur"
-          reference:
+          boundTo:
             variable: DMS
             component: valeur
         - header: "DMS_nb"
-          reference:
+          boundTo:
             variable: DMS
             component: nb
         - header: "DMS_et"
-          reference:
+          boundTo:
             variable: DMS
             component: et
         - header: "DMS_methode"
-          reference:
+          boundTo:
             variable: DMS
             component: methode
         - header: "DMS_IQ"
-          reference:
+          boundTo:
             variable: DMS
             component: IQ
         - header: "C_valeur"
-          reference:
+          boundTo:
             variable: C
             component: valeur
         - header: "C_nb"
-          reference:
+          boundTo:
             variable: C
             component: nb
         - header: "C_et"
-          reference:
+          boundTo:
             variable: C
             component: et
         - header: "C_methode"
-          reference:
+          boundTo:
             variable: C
             component: methode
         - header: "C_IQ"
-          reference:
+          boundTo:
             variable: C
             component: IQ
         - header: "Pho_valeur"
-          reference:
+          boundTo:
             variable: Pho
             component: valeur
         - header: "Pho_nb"
-          reference:
+          boundTo:
             variable: Pho
             component: nb
         - header: "Pho_et"
-          reference:
+          boundTo:
             variable: Pho
             component: et
         - header: "Pho_methode"
-          reference:
+          boundTo:
             variable: Pho
             component: methode
         - header: "Pho_IQ"
-          reference:
+          boundTo:
             variable: Pho
             component: IQ
         - header: "K_valeur"
-          reference:
+          boundTo:
             variable: K
             component: valeur
         - header: "K_nb"
-          reference:
+          boundTo:
             variable: K
             component: nb
         - header: "K_et"
-          reference:
+          boundTo:
             variable: K
             component: et
         - header: "K_methode"
-          reference:
+          boundTo:
             variable: K
             component: methode
         - header: "K_IQ"
-          reference:
+          boundTo:
             variable: K
             component: IQ
         - header: "Ca_valeur"
-          reference:
+          boundTo:
             variable: Ca
             component: valeur
         - header: "Ca_nb"
-          reference:
+          boundTo:
             variable: Ca
             component: nb
         - header: "Ca_et"
-          reference:
+          boundTo:
             variable: Ca
             component: et
         - header: "Ca_methode"
-          reference:
+          boundTo:
             variable: Ca
             component: methode
         - header: "Ca_IQ"
-          reference:
+          boundTo:
             variable: Ca
             component: IQ
         - header: "Mg_valeur"
-          reference:
+          boundTo:
             variable: Mg
             component: valeur
         - header: "Mg_nb"
-          reference:
+          boundTo:
             variable: Mg
             component: nb
         - header: "Mg_et"
-          reference:
+          boundTo:
             variable: Mg
             component: et
         - header: "Mg_methode"
-          reference:
+          boundTo:
             variable: Mg
             component: methode
         - header: "Mg_IQ"
-          reference:
+          boundTo:
             variable: Mg
             component: IQ
         - header: "Bo_valeur"
-          reference:
+          boundTo:
             variable: Bo
             component: valeur
         - header: "Bo_nb"
-          reference:
+          boundTo:
             variable: Bo
             component: nb
         - header: "Bo_et"
-          reference:
+          boundTo:
             variable: Bo
             component: et
         - header: "Bo_methode"
-          reference:
+          boundTo:
             variable: Bo
             component: methode
         - header: "Bo_IQ"
-          reference:
+          boundTo:
             variable: Bo
             component: IQ
         - header: "Cu_valeur"
-          reference:
+          boundTo:
             variable: Cu
             component: valeur
         - header: "Cu_nb"
-          reference:
+          boundTo:
             variable: Cu
             component: nb
         - header: "Cu_et"
-          reference:
+          boundTo:
             variable: Cu
             component: et
         - header: "Cu_methode"
-          reference:
+          boundTo:
             variable: Cu
             component: methode
         - header: "Cu_IQ"
-          reference:
+          boundTo:
             variable: Cu
             component: IQ
         - header: "Fe_valeur"
-          reference:
+          boundTo:
             variable: Fe
             component: valeur
         - header: "Fe_nb"
-          reference:
+          boundTo:
             variable: Fe
             component: nb
         - header: "Fe_et"
-          reference:
+          boundTo:
             variable: Fe
             component: et
         - header: "Fe_methode"
-          reference:
+          boundTo:
             variable: Fe
             component: methode
         - header: "Fe_IQ"
-          reference:
+          boundTo:
             variable: Fe
             component: IQ
         - header: "Mn_valeur"
-          reference:
+          boundTo:
             variable: Mn
             component: valeur
         - header: "Mn_nb"
-          reference:
+          boundTo:
             variable: Mn
             component: nb
         - header: "Mn_et"
-          reference:
+          boundTo:
             variable: Mn
             component: et
         - header: "Mn_methode"
-          reference:
+          boundTo:
             variable: Mn
             component: methode
         - header: "Mn_IQ"
-          reference:
+          boundTo:
             variable: Mn
             component: IQ
         - header: "Na_valeur"
-          reference:
+          boundTo:
             variable: Na
             component: valeur
         - header: "Na_nb"
-          reference:
+          boundTo:
             variable: Na
             component: nb
         - header: "Na_et"
-          reference:
+          boundTo:
             variable: Na
             component: et
         - header: "Na_methode"
-          reference:
+          boundTo:
             variable: Na
             component: methode
         - header: "Na_IQ"
-          reference:
+          boundTo:
             variable: Na
             component: IQ
         - header: "Zn_valeur"
-          reference:
+          boundTo:
             variable: Zn
             component: valeur
         - header: "Zn_nb"
-          reference:
+          boundTo:
             variable: Zn
             component: nb
         - header: "Zn_et"
-          reference:
+          boundTo:
             variable: Zn
             component: et
         - header: "Zn_methode"
-          reference:
+          boundTo:
             variable: Zn
             component: methode
         - header: "Zn_IQ"
-          reference:
+          boundTo:
             variable: Zn
             component: IQ
         - header: "CBR_valeur"
-          reference:
+          boundTo:
             variable: CBR
             component: valeur
         - header: "CBR_nb"
-          reference:
+          boundTo:
             variable: CBR
             component: nb
         - header: "CBR_et"
-          reference:
+          boundTo:
             variable: CBR
             component: et
         - header: "CBR_methode"
-          reference:
+          boundTo:
             variable: CBR
             component: methode
         - header: "CBR_IQ"
-          reference:
+          boundTo:
             variable: CBR
             component: IQ
         - header: "HUT_valeur"
-          reference:
+          boundTo:
             variable: HUT
             component: valeur
         - header: "HUT_nb"
-          reference:
+          boundTo:
             variable: HUT
             component: nb
         - header: "HUT_et"
-          reference:
+          boundTo:
             variable: HUT
             component: et
         - header: "HUT_methode"
-          reference:
+          boundTo:
             variable: HUT
             component: methode
         - header: "HUT_IQ"
-          reference:
+          boundTo:
             variable: HUT
             component: IQ
         - header: "MOR_valeur"
-          reference:
+          boundTo:
             variable: MOR
             component: valeur
         - header: "MOR_nb"
-          reference:
+          boundTo:
             variable: MOR
             component: nb
         - header: "MOR_et"
-          reference:
+          boundTo:
             variable: MOR
             component: et
         - header: "MOR_methode"
-          reference:
+          boundTo:
             variable: MOR
             component: methode
         - header: "MOR_IQ"
-          reference:
+          boundTo:
             variable: MOR
             component: IQ
     data:
@@ -724,38 +724,38 @@ dataset:
       firstRowLine: 10
       columns:
         - header: "Nom parcelle"
-          reference:
+          boundTo:
             variable: Nom parcelle
             component: valeur
         - header: "Nom traitement"
-          reference:
+          boundTo:
             variable: Nom traitement
             component: valeur
         - header: "Date"
-          reference:
+          boundTo:
             variable: Date
             component: day
         - header: "Time"
-          reference:
+          boundTo:
             variable: Date
             component: time
       repeatedColumns:
         - headerPattern: "SWC_([0-9]+)_([0-9]+)"
           tokens:
-            - reference:
+            - boundTo:
                 variable: contexte
                 component: répétition
               exportHeader: "Répétition"
-            - reference:
+            - boundTo:
                 variable: contexte
                 component: profondeur
               exportHeader: "Profondeur"
-          reference:
+          boundTo:
             variable: SWC
             component: valeur
           exportHeader: "SWC"
         - headerPattern: "qc"
-          reference:
+          boundTo:
             variable: SWC
             component: qualité
           exportHeader: "qc"

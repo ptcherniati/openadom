@@ -11,15 +11,15 @@ dataset:
     format:
       columns:
         - header: "couleur"
-          reference:
+          boundTo:
             variable: couleur
             component: value
         - header: "date"
-          reference:
+          boundTo:
             variable: date
             component: value
         - header: "nombre"
-          reference:
+          boundTo:
             variable: nombre
             component: value
     data:

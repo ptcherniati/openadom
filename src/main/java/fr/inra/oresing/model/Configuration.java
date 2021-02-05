@@ -98,7 +98,7 @@ public class Configuration {
     @ToString
     static public class ColumnBindingDescription {
         private String header;
-        private VariableComponentReference reference;
+        private VariableComponentReference boundTo;
     }
 
     @Getter
@@ -108,14 +108,14 @@ public class Configuration {
         private String headerPattern;
         private String exportHeader;
         private List<HeaderPatternToken> tokens;
-        private VariableComponentReference reference;
+        private VariableComponentReference boundTo;
     }
 
     @Getter
     @Setter
     @ToString
     static public class HeaderPatternToken {
-        private VariableComponentReference reference;
+        private VariableComponentReference boundTo;
         private String exportHeader;
     }
 

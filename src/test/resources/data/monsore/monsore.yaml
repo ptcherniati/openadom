@@ -98,31 +98,31 @@ dataset:
       firstRowLine: 5
       columns:
         - header: "projet"
-          reference:
+          boundTo:
             variable: projet
             component: value
         - header: "site"
-          reference:
+          boundTo:
             variable: site
             component: value
         - header: "plateforme"
-          reference:
+          boundTo:
             variable: plateforme
             component: value
         - header: "date"
-          reference:
+          boundTo:
             variable: date
             component: value
         - header: "espece"
-          reference:
+          boundTo:
             variable: espece
             component: value
         - header: "Couleur des individus"
-          reference:
+          boundTo:
             variable: Couleur des individus
             component: value
         - header: "Nombre d'individus"
-          reference:
+          boundTo:
             variable: Nombre d'individus
             component: value
     data:

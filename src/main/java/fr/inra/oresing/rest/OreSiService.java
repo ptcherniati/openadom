@@ -450,7 +450,7 @@ public class OreSiService {
                     String header = entry.getKey();
                     String value = entry.getValue();
                     Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
-                    record.put(bindingDescription.getReference(), value);
+                    record.put(bindingDescription.getBoundTo(), value);
                 }
                 return ImmutableSet.of(record);
             };
@@ -463,7 +463,7 @@ public class OreSiService {
                     String header = poll.getKey();
                     Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
                     String value = poll.getValue();
-                    recordPrototype.put(column.getReference(), value);
+                    recordPrototype.put(column.getBoundTo(), value);
                 }
                 Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
                 Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
@@ -489,11 +489,11 @@ public class OreSiService {
                         Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
                         int groupIndex = 1;
                         for (Configuration.HeaderPatternToken token : tokens) {
-                            tokenValues.put(token.getReference(), matcher.group(groupIndex++));
+                            tokenValues.put(token.getBoundTo(), matcher.group(groupIndex++));
                         }
                     }
 
-                    bodyValues.put(expectedColumn.getReference(), value);
+                    bodyValues.put(expectedColumn.getBoundTo(), value);
 
                     if (!expectedColumns.hasNext()) {
                         Map<VariableComponentReference, String> record = new LinkedHashMap<>(recordPrototype);
@@ -586,16 +586,16 @@ public class OreSiService {
 
     private ImmutableMap<String, VariableComponentReference> getExportColumns(Configuration.FormatDescription format) {
         ImmutableMap<String, VariableComponentReference> valuesFromStaticColumns = format.getColumns().stream()
-                .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getReference));
+                .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
         ImmutableMap.Builder<String, VariableComponentReference> allColumnsBuilder = ImmutableMap.<String, VariableComponentReference>builder()
                 .putAll(valuesFromStaticColumns);
         if (format.getRepeatedColumns() != null) {
             ImmutableMap<String, VariableComponentReference> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
                     .filter(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens() != null)
                     .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
-                    .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getReference));
+                    .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
             ImmutableMap<String, VariableComponentReference> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
-                    .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getReference));
+                    .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
             allColumnsBuilder.putAll(valuesFromHeaderPatterns)
                              .putAll(valuesFromRepeatedColumns)
                              ;
