@@ -93,38 +93,6 @@ references:
 
 dataTypes:
   pem:
-    format:
-      headerLine: 4
-      firstRowLine: 5
-      columns:
-        - header: "projet"
-          boundTo:
-            variable: projet
-            component: value
-        - header: "site"
-          boundTo:
-            variable: site
-            component: value
-        - header: "plateforme"
-          boundTo:
-            variable: plateforme
-            component: value
-        - header: "date"
-          boundTo:
-            variable: date
-            component: value
-        - header: "espece"
-          boundTo:
-            variable: espece
-            component: value
-        - header: "Couleur des individus"
-          boundTo:
-            variable: Couleur des individus
-            component: value
-        - header: "Nombre d'individus"
-          boundTo:
-            variable: Nombre d'individus
-            component: value
     data:
       projet:
         components:
@@ -172,6 +140,38 @@ dataTypes:
               name: Integer
               params:
                 default: 0
+    format:
+      headerLine: 4
+      firstRowLine: 5
+      columns:
+        - header: "projet"
+          boundTo:
+            variable: projet
+            component: value
+        - header: "site"
+          boundTo:
+            variable: site
+            component: value
+        - header: "plateforme"
+          boundTo:
+            variable: plateforme
+            component: value
+        - header: "date"
+          boundTo:
+            variable: date
+            component: value
+        - header: "espece"
+          boundTo:
+            variable: espece
+            component: value
+        - header: "Couleur des individus"
+          boundTo:
+            variable: Couleur des individus
+            component: value
+        - header: "Nombre d'individus"
+          boundTo:
+            variable: Nombre d'individus
+            component: value
     authorization:
       timeScope:
         variable: date
