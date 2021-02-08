@@ -29,6 +29,7 @@ create table Data (
     dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
     rowId TEXT NOT NULL,
     dataGroup TEXT NOT NULL,
+    localizationScope ltree NOT NULL,
     timeScope tsrange NOT NULL,
     refsLinkedTo ListEntityRef CHECK(refs_check('${applicationSchema}', application, refsLinkedTo)),
     dataValues jsonb,

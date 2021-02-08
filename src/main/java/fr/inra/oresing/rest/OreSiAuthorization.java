@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -21,7 +20,7 @@ public class OreSiAuthorization {
 
     String dataGroup;
 
-    Set<UUID> referenceIds;
+    String localizationScope;
 
     LocalDate fromDay;
 
@@ -43,9 +42,5 @@ public class OreSiAuthorization {
             }
         }
         return timeScope;
-    }
-
-    public boolean isRestrictedOnReference() {
-        return referenceIds != null && !referenceIds.isEmpty();
     }
 }

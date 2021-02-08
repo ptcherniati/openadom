@@ -86,7 +86,7 @@ public class AuthorizationResourcesTest {
 
         {
             String readerUserId = reader.getId().toString();
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"monsore\",\"dataType\":\"pem\",\"dataGroup\":\"quantitatif\",\"referenceIds\":null,\"fromDay\":[1984,1,2],\"toDay\":[1984,1,3]}";
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"monsore\",\"dataType\":\"pem\",\"dataGroup\":\"referentiel\",\"localizationScope\":\"oir\",\"fromDay\":[1984,1,2],\"toDay\":[1984,1,3]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +120,18 @@ public class AuthorizationResourcesTest {
 
             // contrôle sur le groupe de données
             Assert.assertFalse(json.contains("Couleur des individus"));
-            Assert.assertTrue(json.contains("Nombre d'individus"));
+            Assert.assertFalse(json.contains("Nombre d'individus"));
+            Assert.assertTrue(json.contains("date"));
+            Assert.assertTrue(json.contains("projet"));
+            Assert.assertTrue(json.contains("espece"));
+
+            // contrôle sur la localization
+            Assert.assertFalse(json.contains("Nivelle"));
+            Assert.assertFalse(json.contains("nivelle"));
+            Assert.assertFalse(json.contains("Scarff"));
+            Assert.assertFalse(json.contains("scarff"));
+            Assert.assertTrue(json.contains("Oir"));
+            Assert.assertTrue(json.contains("P1"));
         }
     }
 }

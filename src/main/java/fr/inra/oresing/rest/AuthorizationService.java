@@ -43,12 +43,8 @@ public class AuthorizationService {
             usingExpressionElements.add("timeScope @> '" + timeScopeSqlExpression + "'");
         });
 
-        if (authorization.isRestrictedOnReference()) {
-            String referenceIdsArray = authorization.getReferenceIds().stream()
-                    .map(uuid -> "'" + uuid + "'::uuid")
-                    .collect(Collectors.joining(",", "ARRAY[", "]"));
-
-            // String usingExpression = "refsLinkedTo <@ " + referenceIdsArray;
+        if (authorization.getLocalizationScope() != null) {
+            usingExpressionElements.add("localizationScope <@ '" + authorization.getLocalizationScope() + "'::ltree");
         }
 
         String dataType = authorization.getDataType();

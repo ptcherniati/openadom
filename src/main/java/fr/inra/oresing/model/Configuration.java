@@ -66,6 +66,7 @@ public class Configuration {
     @Value
     public static class AuthorizationDescription {
         VariableComponentKey timeScope;
+        VariableComponentKey localizationScope;
         LinkedHashMap<String, DataGroupDescription> dataGroups;
     }
 

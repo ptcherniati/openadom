@@ -16,6 +16,7 @@ public class Data extends OreSiEntity {
     private String dataType;
     private String rowId;
     private String dataGroup;
+    private String localizationScope;
     private LocalDateTimeRange timeScope;
     private List<UUID> refsLinkedTo;
     private Map<String, Map<String, String>> dataValues;

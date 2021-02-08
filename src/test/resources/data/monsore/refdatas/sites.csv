@@ -1,10 +1,10 @@
-tze_type_nom;zet_nom_key;zet_nom_fr;zet_nom_en;zet_description_fr;zet_description_en;zet_chemin_parent
-bassin_versant;oir;Oir;Oir;Bassin versant d'Oir;Oir catchment;
-plateforme;p2;P2;P2;;;oir
-plateforme;p1;P1;P1;;;oir
-plateforme;a;A;A;;;oir/p1
-plateforme;b;B;B;;;oir/p1
-bassin_versant;nivelle;Nivelle;Nivelle;Bassin versant de Nivelle;Watershed Nivelle;
-bassin_versant;scarff;Scarff;Scarff;Bassin versant de Scarff;Watershed Scarff;
-plateforme;p1;P1;P1;;;nivelle
-plateforme;p1;P1;P1;;;scarff
+tze_type_nom;zet_nom_key;zet_nom_fr;zet_nom_en;zet_description_fr;zet_description_en;zet_chemin_parent;chemin
+bassin_versant;oir;Oir;Oir;Bassin versant d'Oir;Oir catchment;;oir
+plateforme;p2;P2;P2;;;oir;oir.p2
+plateforme;p1;P1;P1;;;oir;oir.p1
+plateforme;a;A;A;;;oir.p1;oir.p1.a
+plateforme;b;B;B;;;oir.p1;oir.p1.b
+bassin_versant;nivelle;Nivelle;Nivelle;Bassin versant de Nivelle;Watershed Nivelle;;nivelle
+bassin_versant;scarff;Scarff;Scarff;Bassin versant de Scarff;Watershed Scarff;;scarff
+plateforme;p1;P1;P1;;;nivelle;nivelle.p1
+plateforme;p1;P1;P1;;;scarff;scarff.p1

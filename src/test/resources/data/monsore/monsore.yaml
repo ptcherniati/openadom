@@ -26,6 +26,7 @@ references:
       zet_description_fr:
       zet_description_en:
       zet_chemin_parent:
+      chemin:
 
   themes:
     columns:
@@ -104,16 +105,14 @@ dataTypes:
                 refType: projet
       site:
         components:
-          value:
+          bassin:
+          plateforme:
+          chemin:
             checker:
               name: Reference
               params:
-                caseSensitive: false
                 refType: sites
-                column: zet_nom_key
-      plateforme:
-        components:
-          value:
+                column: chemin
       date:
         components:
           value:
@@ -151,11 +150,11 @@ dataTypes:
         - header: "site"
           boundTo:
             variable: site
-            component: value
+            component: bassin
         - header: "plateforme"
           boundTo:
-            variable: plateforme
-            component: value
+            variable: site
+            component: plateforme
         - header: "date"
           boundTo:
             variable: date
@@ -172,7 +171,14 @@ dataTypes:
           boundTo:
             variable: Nombre d'individus
             component: value
+        - header: "site_chemin"
+          boundTo:
+            variable: site
+            component: chemin
     authorization:
+      localizationScope:
+        variable: site
+        component: chemin
       timeScope:
         variable: date
         component: value
@@ -182,7 +188,6 @@ dataTypes:
           data:
             - projet
             - site
-            - plateforme
             - date
             - espece
         qualitatif:
