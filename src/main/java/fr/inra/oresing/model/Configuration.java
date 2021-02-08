@@ -51,8 +51,6 @@ public class Configuration {
     @Setter
     @ToString
     public static class ReferenceDescription {
-        private int headerLine = 1;
-        private int firstRowLine = 2;
         private char separator = ';';
         private LinkedHashMap<String, ColumnDescription> columns;
     }

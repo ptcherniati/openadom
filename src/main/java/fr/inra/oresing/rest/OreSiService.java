@@ -1,7 +1,5 @@
 package fr.inra.oresing.rest;
 
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -50,11 +48,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -71,7 +66,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -335,30 +329,36 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
-        CsvSchema.Builder schemaBuilder = CsvSchema.builder();
-        ref.getColumns().entrySet().forEach(e -> {
-            schemaBuilder.addColumn(e.getKey());
-        });
-        CsvSchema schema = schemaBuilder.setColumnSeparator(ref.getSeparator()).build();
         ApplicationRepository applicationRepository = repo.getRepository(app);
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
-            for (int lineNumber = 1; lineNumber < ref.getFirstRowLine(); lineNumber++) {
-                reader.readLine();
-            }
-
-            CsvMapper mapper = new CsvMapper();
-            List<ReferenceValue> refs = mapper.readerFor(Map.class).with(schema).readValues(reader).readAll().stream()
-                    .map(line -> {
+        CSVFormat csvFormat = CSVFormat.DEFAULT
+                .withDelimiter(ref.getSeparator())
+                .withSkipHeaderRecord();
+        try (InputStream csv = file.getInputStream()) {
+            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+            Iterator<CSVRecord> linesIterator = csvParser.iterator();
+            CSVRecord headerRow = linesIterator.next();
+            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
+                Iterator<String> currentHeader = columns.iterator();
+                Map<String, String> recordAsMap = new LinkedHashMap<>();
+                line.forEach(value -> {
+                    String header = currentHeader.next();
+                    recordAsMap.put(header, value);
+                });
+                return recordAsMap;
+            };
+            Streams.stream(csvParser)
+                    .map(csvRecordToLineAsMapFn)
+                    .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setApplication(app.getId());
-                        e.setRefValues((Map<String, String>) line);
+                        e.setRefValues(refValues);
                         return e;
-                    }).collect(Collectors.toList());
-
-            refs.forEach(applicationRepository::store);
+                    })
+                    .forEach(applicationRepository::store);
         }
 
         return fileId;
