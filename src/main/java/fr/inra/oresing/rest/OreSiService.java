@@ -270,9 +270,32 @@ public class OreSiService {
 
     private void checkConfiguration(Application app) {
         Configuration conf = app.getConfiguration();
+        Set<String> references = conf.getReferences() == null ? Collections.emptySet() : conf.getReferences().keySet();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : conf.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
+            for (Map.Entry<String, Configuration.ColumnDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
+                String datum = dataEntry.getKey();
+                Configuration.ColumnDescription datumDescription = dataEntry.getValue();
+                for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : datumDescription.getComponents().entrySet()) {
+                    String component = componentEntry.getKey();
+                    Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
+                    if (variableComponentDescription != null) {
+                        Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
+                        if ("Reference".equals(checkerDescription.getName())) {
+                            Preconditions.checkArgument(checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_REFTYPE), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", il faut préciser le référentiel parmi " + references);
+                            String referenceType = checkerDescription.getParams().get(ReferenceChecker.PARAM_REFTYPE);
+                            Set<String> referenceTypeColumns = conf.getReferences().get(referenceType).getColumns().keySet();
+                            if (checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_COLUMN)) {
+                                // Preconditions.checkArgument(checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_COLUMN), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", il faut préciser la colonne du référentiel à utiliser comme clé parmi " + referenceTypeColumns);
+                                String column = checkerDescription.getParams().get(ReferenceChecker.PARAM_COLUMN);
+                                Preconditions.checkArgument(referenceTypeColumns.contains(column), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", la colonne " + column + " n'est pas une colonne valide du référentiel " + referenceType + ". Colonnes valides : " + referenceTypeColumns);
+                            }
+                        }
+                    }
+                }
+            }
+
             VariableComponentKey timeScopeVariableComponentKey = dataTypeDescription.getAuthorization().getTimeScope();
             if (timeScopeVariableComponentKey == null) {
                 throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType);
