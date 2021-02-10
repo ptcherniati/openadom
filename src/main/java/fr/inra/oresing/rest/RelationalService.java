@@ -21,6 +21,8 @@ import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -38,7 +40,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @Transactional
-public class RelationalService {
+public class RelationalService implements InitializingBean, DisposableBean {
 
     @Autowired
     private SqlService db;
@@ -55,7 +57,14 @@ public class RelationalService {
     @Autowired
     private OreSiRepository repository;
 
-    public void createViews(String appName, ViewStrategy viewStrategy) {
+    @org.springframework.beans.factory.annotation.Value("${viewStrategy:DISABLED}")
+    private ViewStrategy viewStrategy;
+
+    public void createViews(String appName) {
+        createViews(appName, viewStrategy);
+    }
+
+    void createViews(String appName, ViewStrategy viewStrategy) {
         Application app = getApplication(appName);
         createViews(app, viewStrategy);
     }
@@ -64,22 +73,38 @@ public class RelationalService {
         return repository.findApplication(appName);
     }
 
-    public void createViews(UUID appId, ViewStrategy viewStrategy) {
+    void createViews(UUID appId, ViewStrategy viewStrategy) {
         Application app = getApplication(appId.toString());
         createViews(app, viewStrategy);
     }
 
     private void createViews(Application app, ViewStrategy viewStrategy) {
-        authRepository.resetRole();
-        SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
-        create(schemaCreationCommand);
+        if (viewStrategy.isEnabled()) {
+            authRepository.resetRole();
+            SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
+            create(schemaCreationCommand);
+        } else {
+            if (log.isInfoEnabled()) {
+                log.info("les vues relationnelles sont désactivées, on ne crée pas les vues pour " + app.getName());
+            }
+        }
     }
 
-    public void dropViews(String appName, ViewStrategy viewStrategy) {
-        authRepository.resetRole();
-        Application app = getApplication(appName);
-        SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
-        drop(schemaCreationCommand);
+    public void dropViews(String appName) {
+        dropViews(appName, viewStrategy);
+    }
+
+    void dropViews(String appName, ViewStrategy viewStrategy) {
+        if (viewStrategy.isEnabled()) {
+            authRepository.resetRole();
+            Application app = getApplication(appName);
+            SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
+            drop(schemaCreationCommand);
+        } else {
+            if (log.isInfoEnabled()) {
+                log.info("les vues relationnelles sont désactivées, on ne supprime pas les vues pour " + appName);
+            }
+        }
     }
 
     private void create(SchemaCreationCommand schemaCreationCommand) {
@@ -313,6 +338,39 @@ public class RelationalService {
                                    ;
             SqlPolicy sqlPolicy = new SqlPolicy(viewCreationCommand.getView(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, SqlPolicy.Statement.SELECT, role, "(" + usingExpression + ") is false");
             db.createPolicy(sqlPolicy);
+        }
+    }
+
+    public void onDataUpdate(String appName) {
+        if (viewStrategy.isRecreationOnDataUpdateRequired()) {
+            dropViews(appName);
+            createViews(appName);
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        if (viewStrategy.isEnabled()) {
+            if (log.isInfoEnabled()) {
+                log.info("création des vues relationnelles pour les application existantes");
+            }
+            List<Application> allApplications = repository.findAllApplications();
+            allApplications.stream()
+                    .map(Application::getName)
+                    .forEach(this::createViews);
+        }
+    }
+
+    @Override
+    public void destroy() {
+        if (viewStrategy.isEnabled()) {
+            if (log.isInfoEnabled()) {
+                log.info("suppression des vues relationnelles pour les application existantes");
+            }
+            List<Application> allApplications = repository.findAllApplications();
+            allApplications.stream()
+                    .map(Application::getName)
+                    .forEach(this::dropViews);
         }
     }
 

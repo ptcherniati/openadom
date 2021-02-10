@@ -90,6 +90,9 @@ public class OreSiService {
     @Autowired
     private SqlService db;
 
+    @Autowired
+    private RelationalService relationalService;
+
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
         authRepository.setRoleForClient();
         // creation du fichier
@@ -154,10 +157,13 @@ public class OreSiService {
         UUID result = repo.store(app);
         changeApplicationConfiguration(app, configurationFile);
 
+        relationalService.createViews(app.getName());
+
         return result;
     }
 
     public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException {
+        relationalService.dropViews(nameOrId);
         authRepository.setRoleForClient();
         Application app = getApplication(nameOrId);
         Configuration oldConfiguration = app.getConfiguration();
@@ -227,6 +233,8 @@ public class OreSiService {
         // on supprime l'ancien fichier vu que tout c'est bien passé
         boolean deleted = applicationRepository.deleteBinaryFile(oldConfigFileId);
         Preconditions.checkState(deleted);
+
+        relationalService.createViews(nameOrId);
 
         return uuid;
     }
@@ -562,6 +570,8 @@ public class OreSiService {
         if (!error.isEmpty()) {
             throw new CheckerException("Parsing error:\n" + String.join("\n\t", error));
         }
+
+        relationalService.onDataUpdate(app.getName());
 
         return fileId;
     }

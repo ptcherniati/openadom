@@ -119,4 +119,8 @@ public class OreSiRepository implements InitializingBean {
     public ApplicationRepository getRepository(Application application) {
         return beanFactory.getBean(ApplicationRepository.class, application);
     }
+
+    public List<Application> findAllApplications() {
+        return findAll(Application.class);
+    }
 }
