@@ -38,7 +38,7 @@ mvn test
 
 D'abord, il convient de démarrer la base de données
 
-```
+```bash
 docker-compose up
 ```
 
@@ -50,13 +50,13 @@ mvn spring-boot:run
 
 Si cela n'a pas déjà été fait, installer les dépendances du frontend
 
-```
+```bash
 npm ci
 ```
 
 Enfin, on démarre le frontend
 
-```
+```bash
 npm run serve
 ```
 
@@ -64,7 +64,7 @@ npm run serve
 
 En ligne de commande :
 
-```
+```bash
 psql -h localhost -U dbuser ore-si
 ```
 
