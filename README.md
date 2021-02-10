@@ -15,6 +15,77 @@ Le projet est constitué de 2 sous projet :
 - Simplification du ticket d'accès technique pour les développeurs (interface ou services)
 
 
-## Play with docker
+## Environnement de développement
 
-- todo
+### Prérequis
+
+  - JDK ≥ 11
+  - maven 3
+  - Docker
+  - nodejs 12
+
+Pour constuire le projet avec maven, l'utilisateur doit avoir le droit de démarrer de conteneurs docker.
+
+Sous Linux, cela consiste à ajoute l'utilisateur au groupe `docker`
+
+### Vérifier la qualité du projet
+
+```bash
+mvn test
+```
+
+### Démarrer l'interface en local
+
+D'abord, il convient de démarrer la base de données
+
+```
+docker-compose up
+```
+
+Ensuite, on démarre le backend
+
+```bash
+mvn spring-boot:run
+```
+
+Si cela n'a pas déjà été fait, installer les dépendances du frontend
+
+```
+npm ci
+```
+
+Enfin, on démarre le frontend
+
+```
+npm run serve
+```
+
+### Accéder à la base de données
+
+En ligne de commande :
+
+```
+psql -h localhost -U dbuser ore-si
+```
+
+Via pgAdmin :
+
+```
+http://localhost:8083/
+```
+
+Pour s'authetifier sur PGAdmin, l'identifiant est `si-ore-developpement@list.forge.codelutin.com` et le mot de passe est `test`.
+
+Une fois authentifié dans PGAdmin, on peut accéder à la base de données en renseignant le mot de passe `xxxxxxxx`
+
+### Création d'un utilisateur
+
+Afin d'essayer l'application, il faut pouvoir se connecter. Il faut pour cela créer un utilisateur
+
+
+```sql
+INSERT INTO OreSiUser (id, login, password) values ('5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9'::uuid, 'poussin', 'xxxxxxxx');
+DROP ROLE IF EXISTS "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
+CREATE ROLE "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
+GRANT "applicationCreator" TO "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
+```

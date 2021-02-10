@@ -89,12 +89,3 @@ CREATE POLICY "applicationCreator_Application_select" ON Application AS PERMISSI
 
 CREATE AGGREGATE jsonb_object_agg(jsonb) (SFUNC = 'jsonb_concat', STYPE = jsonb, INITCOND = '{}');
 CREATE AGGREGATE aggregate_by_array_concatenation(anyarray) (SFUNC = 'array_cat', STYPE = anyarray, INITCOND = '{}');
-
--- creation d'un utilisateur de test qui a le droit de creer des applications
--- on passe superadmin pour simuler la creation via un appel rest
---SET ROLE "superadmin";
---
---INSERT INTO OreSiUser (id, login, password) values ('5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9'::uid, 'poussin', 'xxxxxxxx');
---DROP ROLE IF EXISTS "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
---CREATE ROLE "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
---GRANT "applicationCreator" TO "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
