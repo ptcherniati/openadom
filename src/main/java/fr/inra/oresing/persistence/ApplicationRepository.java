@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
@@ -24,6 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -114,6 +117,10 @@ public class ApplicationRepository implements InitializingBean {
         return (JsonRowMapper<T>) jsonRowMapper;
     }
 
+    public List<ReferenceValue> findReference(String refType) {
+        return findReference(refType, new LinkedMultiValueMap<String, String>());
+    }
+
     /**
      *
      * @param refType le type du referenciel
@@ -197,5 +204,11 @@ public class ApplicationRepository implements InitializingBean {
                 ;
         int count = namedParameterJdbcTemplate.update(sql, sqlParams);
         return count;
+    }
+
+    public ImmutableBiMap<String, UUID> getReferenceIdPerKeys(String referenceType, String keyColumn) {
+        Function<ReferenceValue, String> getKeyFn = referenceValue -> referenceValue.getRefValues().get(keyColumn);
+        return findReference(referenceType).stream()
+                .collect(ImmutableBiMap.toImmutableBiMap(getKeyFn, ReferenceValue::getId));
     }
 }

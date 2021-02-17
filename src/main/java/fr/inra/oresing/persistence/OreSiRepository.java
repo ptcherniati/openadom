@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
@@ -91,10 +90,6 @@ public class OreSiRepository implements InitializingBean {
 
     public Application findApplication(UUID applicationId) {
         return findApplication(applicationId.toString());
-    }
-
-    public List<ReferenceValue> findReference(UUID applicationId, String refType) {
-        return findReference(applicationId, refType, new LinkedMultiValueMap<>());
     }
 
     /**

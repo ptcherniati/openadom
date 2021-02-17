@@ -1,17 +1,16 @@
 package fr.inra.oresing.checker;
 
-import fr.inra.oresing.model.ReferenceValue;
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 @Scope("prototype")
@@ -58,18 +57,10 @@ public class ReferenceChecker implements Checker {
         return ref;
     }
 
-    protected Map<String, UUID> loadRef(UUID appId, String refType, String column) {
-        List<ReferenceValue> list = repo.findReference(appId, refType);
-        Map<String, UUID> result;
-        if (StringUtils.isNotBlank(column)) {
-            result = list.stream()
-                    .collect(Collectors.toMap(v -> normalizeCase(v.getRefValues().get(column)), ReferenceValue::getId, (s, a) -> s));
-        } else {
-            result = list.stream()
-                    .flatMap(v -> v.getRefValues().values().stream().map(value -> Pair.of(normalizeCase(value), v.getId())))
-                    .collect(Collectors.toMap(Pair::getLeft, Pair::getRight, (s, a) -> s));
-        }
-        return result;
+    private ImmutableMap<String, UUID> loadRef(UUID appId, String refType, String keyColumn) {
+        Application app = repo.findApplication(appId);
+        ApplicationRepository applicationRepository = repo.getRepository(app);
+        return applicationRepository.getReferenceIdPerKeys(refType, keyColumn);
     }
 
     public String getRefType() {
