@@ -3,6 +3,37 @@ application:
   name: ACBB
   version: 1
 references:
+  sites:
+    columns:
+      Agroécosystème:
+      nom du site_key:
+      nom du site_fr:
+      nom du site_en:
+      ville:
+      adresse:
+      cordonnées du dispositif:
+      milieu:
+      climat:
+      pluviométrie moyenne (mm):
+      température moyenne (°C):
+      vent dominant:
+      vitesse moyenne du vent (km/h):
+      type de sol:
+      profondeur moyenne du sol (m):
+      altitude moyenne (m):
+      date mise en service du dispositif:
+  parcelles:
+    columns:
+      site:
+      bloc:
+      répétition:
+      nom de la parcelle_key:
+      nom de la parcelle_fr:
+      nom de la parcelle_en:
+      surface:
+      date de création:
+      commentaire_fr:
+      commentaire_en:
 dataTypes:
   flux_tours:
     data:

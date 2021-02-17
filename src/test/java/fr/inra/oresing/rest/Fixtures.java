@@ -96,7 +96,8 @@ public class Fixtures {
 
     public Map<String, String> getAcbbReferentielFiles() {
         Map<String, String> referentielFiles = new HashMap<>();
-        //referentielFiles.put("especes", "/data/monsore/refdatas/especes.csv");
+        referentielFiles.put("sites", "/data/acbb/sites.csv");
+        referentielFiles.put("parcelles", "/data/acbb/parcelle.csv");
         return referentielFiles;
     }
 
