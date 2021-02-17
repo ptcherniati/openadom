@@ -107,13 +107,7 @@ public class OreSiRepository implements InitializingBean {
     public List<ReferenceValue> findReference(UUID applicationId, String refType, MultiValueMap<String, String> params) {
         Application application = findApplication(applicationId);
         ApplicationRepository applicationRepository = getRepository(application);
-        return applicationRepository.findReference(applicationId, refType, params);
-    }
-
-    public List<String> findReferenceValue(UUID applicationId, String refType, String column) {
-        Application application = findApplication(applicationId);
-        ApplicationRepository applicationRepository = getRepository(application);
-        return applicationRepository.findReferenceValue(applicationId, refType, column);
+        return applicationRepository.findReference(refType, params);
     }
 
     public ApplicationRepository getRepository(Application application) {

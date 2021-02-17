@@ -116,15 +116,14 @@ public class ApplicationRepository implements InitializingBean {
 
     /**
      *
-     * @param applicationId l'id de l'application
      * @param refType le type du referenciel
      * @param params les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
      * @return la liste qui satisfont aux criteres
      */
-    public List<ReferenceValue> findReference(UUID applicationId, String refType, MultiValueMap<String, String> params) {
+    public List<ReferenceValue> findReference(String refType, MultiValueMap<String, String> params) {
         String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
                 + schema.referenceValue().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
-        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", applicationId)
+        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", application.getId())
                 .addValue("refType", refType);
 
         AtomicInteger i = new AtomicInteger();
@@ -150,12 +149,12 @@ public class ApplicationRepository implements InitializingBean {
         return (List<ReferenceValue>) result;
     }
 
-    public List<String> findReferenceValue(UUID applicationId, String refType, String column) {
+    public List<String> findReferenceValue(String refType, String column) {
         String sqlPattern = " SELECT refValues->>'%s' "
                           + " FROM " + schema.referenceValue().getSqlIdentifier() + " t"
                           + " WHERE application=:applicationId::uuid AND referenceType=:refType";
         String query = String.format(sqlPattern, column);
-        List<String> result = namedParameterJdbcTemplate.queryForList(query,  new MapSqlParameterSource("applicationId", applicationId).addValue("refType", refType), String.class);
+        List<String> result = namedParameterJdbcTemplate.queryForList(query,  new MapSqlParameterSource("applicationId", application.getId()).addValue("refType", refType), String.class);
         return result;
     }
 

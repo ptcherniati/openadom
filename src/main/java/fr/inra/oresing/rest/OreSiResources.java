@@ -5,6 +5,7 @@ import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -134,8 +135,9 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
-        Application app = service.getApplication(nameOrId);
-        List<String> list = repo.findReferenceValue(app.getId(), refType, column);
+        Application application = service.getApplication(nameOrId);
+        ApplicationRepository applicationRepository = repo.getRepository(application);
+        List<String> list = applicationRepository.findReferenceValue(refType, column);
         return ResponseEntity.ok(list);
     }
 
