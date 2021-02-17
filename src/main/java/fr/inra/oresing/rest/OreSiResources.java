@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.google.common.base.Preconditions;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
@@ -140,14 +141,11 @@ public class OreSiResources {
 
     @PostMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createReference(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @RequestParam("file") MultipartFile file) throws IOException {
+        Preconditions.checkArgument(!file.isEmpty(), "le CSV téléversé pour le référentiel " + refType + " est vide");
         Application app = service.getApplication(nameOrId);
-        if (!file.isEmpty()) {
-            UUID result = service.addReference(app, refType, file);
-            String uri = UriUtils.encodePath(String.format("/applications/%s/references/%s", nameOrId, refType), Charset.defaultCharset());
-            return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
+        UUID result = service.addReference(app, refType, file);
+        String uri = UriUtils.encodePath(String.format("/applications/%s/references/%s", nameOrId, refType), Charset.defaultCharset());
+        return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
