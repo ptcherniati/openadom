@@ -34,6 +34,14 @@ references:
       date de création:
       commentaire_fr:
       commentaire_en:
+compositeReferences:
+  localizations:
+    components:
+      - reference: sites
+        keyColumn: "nom du site_key"
+      - reference: parcelles
+        keyColumn: "nom de la parcelle_key"
+        parentKeyColumn: "site"
 dataTypes:
   flux_tours:
     data:

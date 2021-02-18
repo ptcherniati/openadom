@@ -6,11 +6,17 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
+import com.google.common.graph.ElementOrder;
+import com.google.common.graph.Graph;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
@@ -33,11 +39,13 @@ import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
@@ -71,6 +79,13 @@ import java.util.regex.Pattern;
 @Component
 @Transactional
 public class OreSiService {
+
+    /**
+     * Déliminateur entre les différents niveaux d'un ltree postgresql.
+     *
+     * https://www.postgresql.org/docs/current/ltree.html
+     */
+    private static final String LTREE_SEPARATOR = ".";
 
     @Autowired
     private OreSiRepository repo;
@@ -392,7 +407,171 @@ public class OreSiService {
                     .forEach(applicationRepository::store);
         }
 
+        ImmutableSet<String> toUpdateCompositeReferences = conf.getCompositeReferencesUsing(refType);
+        for (String toUpdateCompositeReference : toUpdateCompositeReferences) {
+            updateCompositeReference(app, toUpdateCompositeReference);
+        }
+
         return fileId;
+    }
+
+    private void updateCompositeReference(Application application, String compositeReference) {
+        ApplicationRepository repository = repo.getRepository(application);
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferences().get(compositeReference);
+
+        ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                .collect(ImmutableList.toImmutableList());
+        ImmutableSortedSet<String> strings = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+
+        Hierarchy hierarchy = new Hierarchy();
+
+        Map<HierarchyNode, ReferenceValue> referenceValuePerNodes = new LinkedHashMap<>();
+
+        for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
+            String referenceType = compositeReferenceComponentDescription.getReference();
+            String keyColumn = compositeReferenceComponentDescription.getKeyColumn();
+            String parentReferenceType = strings.lower(referenceType);
+            boolean root = parentReferenceType == null;
+            List<ReferenceValue> references = repository.findReference(referenceType);
+            for (ReferenceValue reference : references) {
+                String key = reference.getRefValues().get(keyColumn);
+                HierarchyNode node = new HierarchyNode(referenceType, key);
+                referenceValuePerNodes.put(node, reference);
+                if (root) {
+                    hierarchy.addNode(node);
+                } else {
+                    String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
+                    String parentKey = reference.getRefValues().get(parentKeyColumn);
+                    HierarchyNode parentNode = new HierarchyNode(parentReferenceType, parentKey);
+                    hierarchy.addNode(node, parentNode);
+                }
+            }
+        }
+
+        HierarchyKeysComputer hierarchyKeysComputer = new HierarchyKeysComputer(hierarchy);
+        Map<HierarchyNode, String> compositeKeys = hierarchyKeysComputer.getCompositeKeys();
+
+        for (Map.Entry<HierarchyNode, ReferenceValue> entry : referenceValuePerNodes.entrySet()) {
+            HierarchyNode node = entry.getKey();
+            ReferenceValue referenceValue = entry.getValue();
+            String compositeKey = compositeKeys.get(node);
+            referenceValue.setCompositeKey(compositeKey);
+            repository.store(referenceValue);
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("hiérarchie " + hierarchy);
+            log.trace("clés composites " + compositeKeys);
+        }
+    }
+
+    @Value
+    public static class HierarchyNode {
+          String referenceType;
+          String key;
+    }
+
+    private static class HierarchyKeysComputer {
+
+        private static final String KEY_COMPONENT_SEPARATOR = LTREE_SEPARATOR;
+
+        private final Hierarchy hierarchy;
+
+        private final Map<HierarchyNode, String> compositeKeys = new LinkedHashMap<>();
+
+        public HierarchyKeysComputer(Hierarchy hierarchy) {
+            this.hierarchy = hierarchy;
+        }
+
+        public void visit(HierarchyNode root) {
+            Preconditions.checkArgument(hierarchy.getRoots().contains(root), root + " n'est pas un nœud racine");
+            String compositeKey = escapeKey(root);
+            compositeKeys.put(root, compositeKey);
+            hierarchy.getChildren(root).forEach(child -> this.visit(root, child));
+        }
+
+        private void visit(HierarchyNode parent, HierarchyNode child) {
+            String compositeKey = compositeKeys.get(parent) + KEY_COMPONENT_SEPARATOR + escapeKey(child);
+            compositeKeys.put(child, compositeKey);
+            hierarchy.getChildren(child).forEach(childChild -> this.visit(child, childChild));
+        }
+
+        private String escapeKey(HierarchyNode node) {
+            String toEscape = node.getKey().toLowerCase();
+            return StringUtils.replace(StringUtils.replace(toEscape, " ", "_"), "-", "");
+        }
+
+        public Map<HierarchyNode, String> getCompositeKeys() {
+            if (compositeKeys.isEmpty()) {
+                hierarchy.getRoots().forEach(this::visit);
+            }
+            return compositeKeys;
+        }
+    }
+
+    private static class Hierarchy {
+
+        private final MutableGraph<HierarchyNode> graph = GraphBuilder
+                .directed()
+                .allowsSelfLoops(false)
+                .nodeOrder(ElementOrder.insertion())
+                .incidentEdgeOrder(ElementOrder.unordered())
+                .build();
+
+        public ImmutableSet<HierarchyNode> getRoots() {
+            return graph.nodes().stream()
+                            .filter(node -> graph.inDegree(node) == 0)
+                            .collect(ImmutableSet.toImmutableSet());
+        }
+
+        public void addNode(HierarchyNode node) {
+            graph.addNode(node);
+        }
+
+        public void addNode(HierarchyNode node, HierarchyNode parentNode) {
+            addNode(node);
+            addNode(parentNode);
+            graph.putEdge(parentNode, node);
+        }
+
+        public Set<HierarchyNode> getChildren(HierarchyNode node) {
+            return graph.successors(node);
+        }
+
+        @Override
+        public String toString() {
+            ToStringGraphVisitor<HierarchyNode> toStringGraphVisitor = new ToStringGraphVisitor<>(graph);
+            ImmutableSet<HierarchyNode> rootNodes = getRoots();
+            rootNodes.forEach(toStringGraphVisitor::visit);
+            return toStringGraphVisitor.trace();
+        }
+
+        private static class ToStringGraphVisitor<N> {
+
+            private final Graph<N> graph;
+
+            private final StringBuilder stringBuilder = new StringBuilder();
+
+            ToStringGraphVisitor(Graph<N> graph) {
+                this.graph = graph;
+            }
+
+            void visit(N start) {
+                visit(start, "");
+            }
+
+            private void visit(N node, String prefix) {
+                stringBuilder.append(System.lineSeparator()).append(prefix).append("→ ").append(node);
+                for (N successor : graph.successors(node)) {
+                    visit(successor, prefix + "  ");
+                }
+            }
+
+            public String trace() {
+                return stringBuilder.toString();
+            }
+        }
     }
 
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {

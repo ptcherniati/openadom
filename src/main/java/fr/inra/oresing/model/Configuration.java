@@ -3,6 +3,7 @@ package fr.inra.oresing.model;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -37,6 +38,13 @@ public class Configuration {
         Preconditions.checkArgument(actualVersion == expectedVersion, "Les fichiers YAML de version " + actualVersion + " ne sont pas géré, version attendue " + expectedVersion);
     }
 
+    public ImmutableSet<String> getCompositeReferencesUsing(String reference) {
+        return getCompositeReferences().entrySet().stream()
+                .filter(entry -> entry.getValue().isDependentOfReference(reference))
+                .map(Map.Entry::getKey)
+                .collect(ImmutableSet.toImmutableSet());
+    }
+
     @Value
     private static class Versioned {
         int version;
@@ -45,6 +53,7 @@ public class Configuration {
     private int version;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references;
+    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences;
     private LinkedHashMap<String, DataTypeDescription> dataTypes;
 
     @Getter
@@ -53,6 +62,24 @@ public class Configuration {
     public static class ReferenceDescription {
         private char separator = ';';
         private LinkedHashMap<String, ColumnDescription> columns;
+    }
+
+    @Value
+    public static class CompositeReferenceDescription {
+        List<CompositeReferenceComponentDescription> components;
+
+        public boolean isDependentOfReference(String reference) {
+            return components.stream()
+                    .map(CompositeReferenceComponentDescription::getReference)
+                    .anyMatch(reference::equals);
+        }
+    }
+
+    @Value
+    public static class CompositeReferenceComponentDescription {
+        String reference;
+        String keyColumn;
+        String parentKeyColumn;
     }
 
     @Value

@@ -13,6 +13,7 @@ import java.util.UUID;
 public class ReferenceValue extends OreSiEntity {
     private UUID application;
     private String referenceType;
+    private String compositeKey;
     private Map<String, String> refValues;
     private UUID binaryFile;
 }
