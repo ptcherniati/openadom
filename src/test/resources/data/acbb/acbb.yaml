@@ -784,6 +784,10 @@ dataTypes:
       Nom parcelle:
         components:
           chemin:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
       Nom traitement:
         components:
           valeur:
