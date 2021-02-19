@@ -14,7 +14,7 @@ create table ReferenceValue (
     updateDate DateOrNow,
     application EntityRef REFERENCES Application(id),
     referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
-    compositeKey ltree,
+    compositeKey ltree NOT NULL,
     refValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );

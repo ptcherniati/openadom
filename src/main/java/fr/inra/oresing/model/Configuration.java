@@ -39,6 +39,9 @@ public class Configuration {
     }
 
     public ImmutableSet<String> getCompositeReferencesUsing(String reference) {
+        if (getCompositeReferences() == null) {
+            return ImmutableSet.of();
+        }
         return getCompositeReferences().entrySet().stream()
                 .filter(entry -> entry.getValue().isDependentOfReference(reference))
                 .map(Map.Entry::getKey)
@@ -61,6 +64,7 @@ public class Configuration {
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
+        private String keyColumn;
         private LinkedHashMap<String, ColumnDescription> columns;
     }
 
@@ -78,7 +82,6 @@ public class Configuration {
     @Value
     public static class CompositeReferenceComponentDescription {
         String reference;
-        String keyColumn;
         String parentKeyColumn;
     }
 

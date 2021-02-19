@@ -4,6 +4,7 @@ application:
   version: 1
 references:
   couleurs:
+    keyColumn: couleur
     columns:
       couleur:
 dataTypes:
@@ -41,6 +42,9 @@ dataTypes:
         components:
           value:
     authorization:
+      localizationScope:
+        variable: couleur
+        component: value
       timeScope:
         variable: date
         component: value

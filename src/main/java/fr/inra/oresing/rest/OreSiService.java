@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -13,10 +14,6 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
-import com.google.common.graph.ElementOrder;
-import com.google.common.graph.Graph;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
@@ -39,7 +36,6 @@ import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -307,13 +303,6 @@ public class OreSiService {
                         Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                         if ("Reference".equals(checkerDescription.getName())) {
                             Preconditions.checkArgument(checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_REFTYPE), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", il faut préciser le référentiel parmi " + references);
-                            String referenceType = checkerDescription.getParams().get(ReferenceChecker.PARAM_REFTYPE);
-                            Set<String> referenceTypeColumns = conf.getReferences().get(referenceType).getColumns().keySet();
-                            if (checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_COLUMN)) {
-                                // Preconditions.checkArgument(checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_COLUMN), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", il faut préciser la colonne du référentiel à utiliser comme clé parmi " + referenceTypeColumns);
-                                String column = checkerDescription.getParams().get(ReferenceChecker.PARAM_COLUMN);
-                                Preconditions.checkArgument(referenceTypeColumns.contains(column), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", la colonne " + column + " n'est pas une colonne valide du référentiel " + referenceType + ". Colonnes valides : " + referenceTypeColumns);
-                            }
                         }
                     }
                 }
@@ -353,7 +342,7 @@ public class OreSiService {
                 variableOccurrencesInDataGroups.addAll(dataGroupVariables);
                 ImmutableSet<String> unknownVariables = Sets.difference(dataGroupVariables, variables).immutableCopy();
                 if (!unknownVariables.isEmpty()) {
-                    throw new IllegalArgumentException("le groupe de données " + dataGroup + " est contient des données qui ne sont pas déclarées " + unknownVariables + ". Données connues " + variables);
+                    throw new IllegalArgumentException("le groupe de données " + dataGroup + " contient des données qui ne sont pas déclarées " + unknownVariables + ". Données connues " + variables);
                 }
             }
 
@@ -398,8 +387,16 @@ public class OreSiService {
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
+                        String key;
+                        if (ref.getKeyColumn() == null) {
+                            key = escapeKeyComponent(e.getId().toString());
+                        } else {
+                            key = escapeKeyComponent(refValues.get(ref.getKeyColumn()));
+                        }
+                        checkCompositeKey(key);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
+                        e.setCompositeKey(key);
                         e.setApplication(app.getId());
                         e.setRefValues(refValues);
                         return e;
@@ -424,154 +421,43 @@ public class OreSiService {
                 .collect(ImmutableList.toImmutableList());
         ImmutableSortedSet<String> strings = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
 
-        Hierarchy hierarchy = new Hierarchy();
-
-        Map<HierarchyNode, ReferenceValue> referenceValuePerNodes = new LinkedHashMap<>();
-
         for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
             String referenceType = compositeReferenceComponentDescription.getReference();
-            String keyColumn = compositeReferenceComponentDescription.getKeyColumn();
+            String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
             List<ReferenceValue> references = repository.findReference(referenceType);
             for (ReferenceValue reference : references) {
-                String key = reference.getRefValues().get(keyColumn);
-                HierarchyNode node = new HierarchyNode(referenceType, key);
-                referenceValuePerNodes.put(node, reference);
+                String keyElement = reference.getRefValues().get(keyColumn);
+                String escapedKeyElement = escapeKeyComponent(keyElement);
+                String compositeKey;
                 if (root) {
-                    hierarchy.addNode(node);
+                    compositeKey = escapedKeyElement;
                 } else {
                     String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
-                    String parentKey = reference.getRefValues().get(parentKeyColumn);
-                    HierarchyNode parentNode = new HierarchyNode(parentReferenceType, parentKey);
-                    hierarchy.addNode(node, parentNode);
+                    String parentCompositeKey = reference.getRefValues().get(parentKeyColumn);
+                    compositeKey = parentCompositeKey + LTREE_SEPARATOR + escapedKeyElement;
                 }
+                checkCompositeKey(compositeKey);
+                reference.setCompositeKey(compositeKey);
+                repository.store(reference);
             }
-        }
-
-        HierarchyKeysComputer hierarchyKeysComputer = new HierarchyKeysComputer(hierarchy);
-        Map<HierarchyNode, String> compositeKeys = hierarchyKeysComputer.getCompositeKeys();
-
-        for (Map.Entry<HierarchyNode, ReferenceValue> entry : referenceValuePerNodes.entrySet()) {
-            HierarchyNode node = entry.getKey();
-            ReferenceValue referenceValue = entry.getValue();
-            String compositeKey = compositeKeys.get(node);
-            referenceValue.setCompositeKey(compositeKey);
-            repository.store(referenceValue);
-        }
-
-        if (log.isTraceEnabled()) {
-            log.trace("hiérarchie " + hierarchy);
-            log.trace("clés composites " + compositeKeys);
         }
     }
 
-    @Value
-    public static class HierarchyNode {
-          String referenceType;
-          String key;
+    private String escapeKeyComponent(String key) {
+        String toEscape = StringUtils.stripAccents(key.toLowerCase());
+        String escaped = StringUtils.remove(StringUtils.replace(toEscape, " ", "_"), "-");
+        checkCompositeKey(escaped);
+        return escaped;
     }
 
-    private static class HierarchyKeysComputer {
-
-        private static final String KEY_COMPONENT_SEPARATOR = LTREE_SEPARATOR;
-
-        private final Hierarchy hierarchy;
-
-        private final Map<HierarchyNode, String> compositeKeys = new LinkedHashMap<>();
-
-        public HierarchyKeysComputer(Hierarchy hierarchy) {
-            this.hierarchy = hierarchy;
-        }
-
-        public void visit(HierarchyNode root) {
-            Preconditions.checkArgument(hierarchy.getRoots().contains(root), root + " n'est pas un nœud racine");
-            String compositeKey = escapeKey(root);
-            compositeKeys.put(root, compositeKey);
-            hierarchy.getChildren(root).forEach(child -> this.visit(root, child));
-        }
-
-        private void visit(HierarchyNode parent, HierarchyNode child) {
-            String compositeKey = compositeKeys.get(parent) + KEY_COMPONENT_SEPARATOR + escapeKey(child);
-            compositeKeys.put(child, compositeKey);
-            hierarchy.getChildren(child).forEach(childChild -> this.visit(child, childChild));
-        }
-
-        private String escapeKey(HierarchyNode node) {
-            String toEscape = node.getKey().toLowerCase();
-            return StringUtils.replace(StringUtils.replace(toEscape, " ", "_"), "-", "");
-        }
-
-        public Map<HierarchyNode, String> getCompositeKeys() {
-            if (compositeKeys.isEmpty()) {
-                hierarchy.getRoots().forEach(this::visit);
-            }
-            return compositeKeys;
-        }
+    private void checkKeyComponent(String keyComponent) {
+        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé composite");
     }
 
-    private static class Hierarchy {
-
-        private final MutableGraph<HierarchyNode> graph = GraphBuilder
-                .directed()
-                .allowsSelfLoops(false)
-                .nodeOrder(ElementOrder.insertion())
-                .incidentEdgeOrder(ElementOrder.unordered())
-                .build();
-
-        public ImmutableSet<HierarchyNode> getRoots() {
-            return graph.nodes().stream()
-                            .filter(node -> graph.inDegree(node) == 0)
-                            .collect(ImmutableSet.toImmutableSet());
-        }
-
-        public void addNode(HierarchyNode node) {
-            graph.addNode(node);
-        }
-
-        public void addNode(HierarchyNode node, HierarchyNode parentNode) {
-            addNode(node);
-            addNode(parentNode);
-            graph.putEdge(parentNode, node);
-        }
-
-        public Set<HierarchyNode> getChildren(HierarchyNode node) {
-            return graph.successors(node);
-        }
-
-        @Override
-        public String toString() {
-            ToStringGraphVisitor<HierarchyNode> toStringGraphVisitor = new ToStringGraphVisitor<>(graph);
-            ImmutableSet<HierarchyNode> rootNodes = getRoots();
-            rootNodes.forEach(toStringGraphVisitor::visit);
-            return toStringGraphVisitor.trace();
-        }
-
-        private static class ToStringGraphVisitor<N> {
-
-            private final Graph<N> graph;
-
-            private final StringBuilder stringBuilder = new StringBuilder();
-
-            ToStringGraphVisitor(Graph<N> graph) {
-                this.graph = graph;
-            }
-
-            void visit(N start) {
-                visit(start, "");
-            }
-
-            private void visit(N node, String prefix) {
-                stringBuilder.append(System.lineSeparator()).append(prefix).append("→ ").append(node);
-                for (N successor : graph.successors(node)) {
-                    visit(successor, prefix + "  ");
-                }
-            }
-
-            public String trace() {
-                return stringBuilder.toString();
-            }
-        }
+    private void checkCompositeKey(String compositeKey) {
+        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkKeyComponent);
     }
 
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {

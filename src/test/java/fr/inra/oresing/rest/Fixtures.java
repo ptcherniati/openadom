@@ -228,7 +228,7 @@ public class Fixtures {
         for (Map.Entry<String, String> e : getAcbbReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
                         .file(refFile)
                         .cookie(authCookie))
                         .andExpect(status().isCreated());

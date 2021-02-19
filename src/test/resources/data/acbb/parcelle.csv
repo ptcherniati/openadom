@@ -1,44 +1,44 @@
 site;bloc;répétition;nom de la parcelle_key;nom de la parcelle_fr;nom de la parcelle_en;surface;date de création;commentaire_fr;commentaire_en
-estrees-mons;1;;a01;a01;a01;5040.0;01/03/2008;;
-estrees-mons;1;;a02;a02;a02;4410.0;01/03/2008;;
-estrees-mons;1;;a03;a03;a03;4410.0;01/03/2008;;
-estrees-mons;1;;a04;a04;a04;4410.0;01/03/2008;;
-estrees-mons;1;;a05;a05;a05;4410.0;01/03/2008;;
-estrees-mons;1;;a06;a06;a06;5040.0;01/03/2008;;
-estrees-mons;2;;a07;a07;a07;5040.0;01/03/2008;;
-estrees-mons;2;;a08;a08;a08;3570.0;01/03/2008;;
-estrees-mons;2;;a09;a09;a09;3570.0;01/03/2008;;
-estrees-mons;2;;a10;a10;a10;3570.0;01/03/2008;;
-estrees-mons;2;;a11;a11;a11;3570.0;01/03/2008;;
-estrees-mons;2;;a12;a12;a12;4080.0;01/03/2008;;
-estrees-mons;3;;a13;a13;a13;4080.0;01/03/2008;;
-estrees-mons;3;;a14;a14;a14;3570.0;01/03/2008;;
-estrees-mons;3;;a15;a15;a15;3570.0;01/03/2008;;
-estrees-mons;3;;a16;a16;a16;3570.0;01/03/2008;;
-estrees-mons;3;;a17;a17;a17;3570.0;01/03/2008;;
-estrees-mons;3;;a18;a18;a18;4080.0;01/03/2008;;
-estrees-mons;4;;a19;a19;a19;4080.0;01/03/2008;;
-estrees-mons;4;;a20;a20;a20;3570.0;01/03/2008;;
-estrees-mons;4;;a21;a21;a21;3570.0;01/03/2008;;
-estrees-mons;4;;a22;a22;a22;3570.0;01/03/2008;;
-estrees-mons;4;;a23;a23;a23;3570.0;01/03/2008;;
-estrees-mons;4;;a24;a24;a24;4080.0;01/03/2008;;
-estrees-mons;1;;a25;a25;a25;13800.0;01/03/2008;;
-estrees-mons;1;;sn25;sn25;sn25;139.0;01/03/2008;sol nu;sol nu
-estrees-mons;1;;a26;a26;a26;12000.0;01/03/2008;;
-estrees-mons;1;;sn26;sn26;sn26;136.0;01/03/2008;sol nu;sol nu
-estrees-mons;1;;a27;a27;a27;42000.0;01/03/2008;Equipée pour mesures de gaz par tours à flux;Equipée pour mesures de gaz par tours à flux
-estrees-mons;1;;a28;a28;a28;42000.0;01/03/2008;Equipée pour mesures de gaz par tours à flux;Equipée pour mesures de gaz par tours à flux
-estrees-mons;1;;a29;a29;a29;4176.0;15/07/2015;;
-estrees-mons;1;;a30;a30;a30;4176.0;15/07/2015;;
-estrees-mons;bio;;a31;a31;a31;4176.0;15/07/2015;;
-estrees-mons;bio;;a32;a32;a32;4176.0;15/07/2015;;
-estrees-mons;bio;;a33;a33;a33;4176.0;15/07/2015;;
-estrees-mons;bio;;a34;a34;a34;3600.0;15/07/2015;;
-estrees-mons;1;;A06_SN;A06_SN;A06_SN;12.0;15/07/2015;sol nu;sol nu
-estrees-mons;2;;A07_SN;A07_SN;A07_SN;12.0;15/07/2015;sol nu;sol nu
-estrees-mons;3;;A17_SN;A17_SN;A17_SN;12.0;15/07/2015;sol nu;sol nu
-estrees-mons;4;;A23_SN;A23_SN;A23_SN;12.0;15/07/2015;sol nu;sol nu
+estreesmons;1;;a01;a01;a01;5040.0;01/03/2008;;
+estreesmons;1;;a02;a02;a02;4410.0;01/03/2008;;
+estreesmons;1;;a03;a03;a03;4410.0;01/03/2008;;
+estreesmons;1;;a04;a04;a04;4410.0;01/03/2008;;
+estreesmons;1;;a05;a05;a05;4410.0;01/03/2008;;
+estreesmons;1;;a06;a06;a06;5040.0;01/03/2008;;
+estreesmons;2;;a07;a07;a07;5040.0;01/03/2008;;
+estreesmons;2;;a08;a08;a08;3570.0;01/03/2008;;
+estreesmons;2;;a09;a09;a09;3570.0;01/03/2008;;
+estreesmons;2;;a10;a10;a10;3570.0;01/03/2008;;
+estreesmons;2;;a11;a11;a11;3570.0;01/03/2008;;
+estreesmons;2;;a12;a12;a12;4080.0;01/03/2008;;
+estreesmons;3;;a13;a13;a13;4080.0;01/03/2008;;
+estreesmons;3;;a14;a14;a14;3570.0;01/03/2008;;
+estreesmons;3;;a15;a15;a15;3570.0;01/03/2008;;
+estreesmons;3;;a16;a16;a16;3570.0;01/03/2008;;
+estreesmons;3;;a17;a17;a17;3570.0;01/03/2008;;
+estreesmons;3;;a18;a18;a18;4080.0;01/03/2008;;
+estreesmons;4;;a19;a19;a19;4080.0;01/03/2008;;
+estreesmons;4;;a20;a20;a20;3570.0;01/03/2008;;
+estreesmons;4;;a21;a21;a21;3570.0;01/03/2008;;
+estreesmons;4;;a22;a22;a22;3570.0;01/03/2008;;
+estreesmons;4;;a23;a23;a23;3570.0;01/03/2008;;
+estreesmons;4;;a24;a24;a24;4080.0;01/03/2008;;
+estreesmons;1;;a25;a25;a25;13800.0;01/03/2008;;
+estreesmons;1;;sn25;sn25;sn25;139.0;01/03/2008;sol nu;sol nu
+estreesmons;1;;a26;a26;a26;12000.0;01/03/2008;;
+estreesmons;1;;sn26;sn26;sn26;136.0;01/03/2008;sol nu;sol nu
+estreesmons;1;;a27;a27;a27;42000.0;01/03/2008;Equipée pour mesures de gaz par tours à flux;Equipée pour mesures de gaz par tours à flux
+estreesmons;1;;a28;a28;a28;42000.0;01/03/2008;Equipée pour mesures de gaz par tours à flux;Equipée pour mesures de gaz par tours à flux
+estreesmons;1;;a29;a29;a29;4176.0;15/07/2015;;
+estreesmons;1;;a30;a30;a30;4176.0;15/07/2015;;
+estreesmons;bio;;a31;a31;a31;4176.0;15/07/2015;;
+estreesmons;bio;;a32;a32;a32;4176.0;15/07/2015;;
+estreesmons;bio;;a33;a33;a33;4176.0;15/07/2015;;
+estreesmons;bio;;a34;a34;a34;3600.0;15/07/2015;;
+estreesmons;1;;A06_SN;A06_SN;A06_SN;12.0;15/07/2015;sol nu;sol nu
+estreesmons;2;;A07_SN;A07_SN;A07_SN;12.0;15/07/2015;sol nu;sol nu
+estreesmons;3;;A17_SN;A17_SN;A17_SN;12.0;15/07/2015;sol nu;sol nu
+estreesmons;4;;A23_SN;A23_SN;A23_SN;12.0;15/07/2015;sol nu;sol nu
 laqueuille;;;1;1;1;28200.0;01/05/2002;Laq-int grande parcelle, sans répétition;Laq-int grande parcelle, sans répétition
 laqueuille;;;2;2;2;38400.0;01/05/2002;Laq-ext grande parcelle, sans répétition;Laq-ext grande parcelle, sans répétition
 lusignan;1;;1;1;1;3830.0;15/04/2005;rep 1;rep 1

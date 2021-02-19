@@ -1,7 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -206,9 +205,8 @@ public class ApplicationRepository implements InitializingBean {
         return count;
     }
 
-    public ImmutableBiMap<String, UUID> getReferenceIdPerKeys(String referenceType, String keyColumn) {
-        Function<ReferenceValue, String> getKeyFn = referenceValue -> referenceValue.getRefValues().get(keyColumn);
+    public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {
         return findReference(referenceType).stream()
-                .collect(ImmutableBiMap.toImmutableBiMap(getKeyFn, ReferenceValue::getId));
+                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getCompositeKey, ReferenceValue::getId));
     }
 }

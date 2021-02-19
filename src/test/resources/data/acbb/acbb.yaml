@@ -4,6 +4,7 @@ application:
   version: 1
 references:
   sites:
+    keyColumn: nom du site_key
     columns:
       Agroécosystème:
       nom du site_key:
@@ -23,6 +24,7 @@ references:
       altitude moyenne (m):
       date mise en service du dispositif:
   parcelles:
+    keyColumn: nom de la parcelle_key
     columns:
       site:
       bloc:
@@ -38,13 +40,18 @@ compositeReferences:
   localizations:
     components:
       - reference: sites
-        keyColumn: "nom du site_key"
       - reference: parcelles
-        keyColumn: "nom de la parcelle_key"
         parentKeyColumn: "site"
 dataTypes:
   flux_tours:
     data:
+      parcelle:
+        components:
+          chemin:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
       date:
         components:
           day:
@@ -89,6 +96,10 @@ dataTypes:
       headerLine: 8
       firstRowLine: 12
       columns:
+        - header: "parcelle"
+          boundTo:
+            variable: parcelle
+            component: chemin
         - header: "date"
           boundTo:
             variable: date
@@ -150,6 +161,9 @@ dataTypes:
             variable: Fc gf
             component: value
     authorization:
+      localizationScope:
+        variable: parcelle
+        component: chemin
       timeScope:
         variable: date
         component: day
@@ -157,6 +171,7 @@ dataTypes:
         all:
           label: "Toutes les données"
           data:
+            - parcelle
             - date
             - CO2
             - H2O
@@ -171,7 +186,11 @@ dataTypes:
     data:
       parcelle:
         components:
-          valeur:
+          chemin:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
       observation:
         components:
           valeur:
@@ -335,7 +354,7 @@ dataTypes:
         - header: "parcelle"
           boundTo:
             variable: parcelle
-            component: valeur
+            component: chemin
         - header: "observation"
           boundTo:
             variable: observation
@@ -721,6 +740,9 @@ dataTypes:
             variable: MOR
             component: IQ
     authorization:
+      localizationScope:
+        variable: parcelle
+        component: chemin
       timeScope:
         variable: date de mesure
         component: valeur
@@ -761,7 +783,7 @@ dataTypes:
     data:
       Nom parcelle:
         components:
-          valeur:
+          chemin:
       Nom traitement:
         components:
           valeur:
@@ -788,7 +810,7 @@ dataTypes:
         - header: "Nom parcelle"
           boundTo:
             variable: Nom parcelle
-            component: valeur
+            component: chemin
         - header: "Nom traitement"
           boundTo:
             variable: Nom traitement
@@ -822,6 +844,9 @@ dataTypes:
             component: qualité
           exportHeader: "qc"
     authorization:
+      localizationScope:
+        variable: Nom parcelle
+        component: chemin
       timeScope:
         variable: Date
         component: day

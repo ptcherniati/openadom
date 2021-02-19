@@ -4,12 +4,14 @@ application:
   version: 1
 references:
   especes:
+    keyColumn: esp_nom
     columns:
       esp_nom:
       esp_definition_fr:
       esp_definition_en:
 
   projet:
+    keyColumn: nom_key
     columns:
       nom_key:
       nom_fr:
@@ -18,6 +20,7 @@ references:
       definition_en:
 
   sites:
+    keyColumn: chemin
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -29,6 +32,7 @@ references:
       chemin:
 
   themes:
+    keyColumn: nom_key
     columns:
       nom_key:
       nom_fr:
@@ -37,6 +41,7 @@ references:
       description_en:
 
   type de fichiers:
+    keyColumn: nom_key
     columns:
       nom_key:
       nom_fr:
@@ -45,6 +50,7 @@ references:
       description_en:
 
   type_de_sites:
+    keyColumn: tze_nom_key
     columns:
       tze_nom_key:
       tze_nom_fr:
@@ -69,6 +75,7 @@ references:
       nom_en:
 
   valeurs_qualitatives:
+    keyColumn: nom_key
     columns:
       nom_key:
       nom_fr:
@@ -78,6 +85,7 @@ references:
       valeur_en:
 
   variables:
+    keyColumn: nom_key
     columns:
       nom_key:
       nom_fr:
@@ -101,7 +109,6 @@ dataTypes:
             checker:
               name: Reference
               params:
-                caseSensitive: false
                 refType: projet
       site:
         components:
@@ -112,7 +119,6 @@ dataTypes:
               name: Reference
               params:
                 refType: sites
-                column: chemin
       date:
         components:
           value:
@@ -126,9 +132,7 @@ dataTypes:
             checker:
               name: Reference
               params:
-                caseSensitive: false
                 refType: especes
-                column: esp_nom
       Couleur des individus:
         components:
           value:
