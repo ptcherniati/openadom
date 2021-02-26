@@ -1,0 +1,158 @@
+version: 0 
+application:
+  name: hautefrequence
+  version: 1
+compositeReferences: 
+  localizations: 
+    components: 
+      - 
+        reference: projet
+      - 
+        parentKeyColumn: projet
+        reference: site
+dataTypes: 
+  hautefrequence: 
+    authorization: 
+      dataGroups: 
+        all: 
+          data: 
+            - localization
+            - date
+            - temperature
+            - pression
+            - outil
+          label: "Toutes les données"
+      localizationScope: 
+        component: site
+        variable: localization
+      timeScope: 
+        component: day
+        variable: date
+    data: 
+      date: 
+        components: 
+          day: 
+            checker: 
+              name: Date
+              params: 
+                pattern: dd/MM/yyyy
+          time: 
+            checker: 
+              name: Date
+              params: 
+                pattern: hh:mm:ss
+      localization: 
+        components: 
+          plateforme: 
+            checker: 
+              name: Reference
+              params: 
+                refType: plateforme
+          profondeur: 
+            checker: 
+              name: Integer
+          projet: 
+            checker: 
+              name: Reference
+              params: 
+                refType: projet
+          site: 
+            checker: 
+              name: Reference
+              params: 
+                refType: site
+      outil: 
+        components: 
+          value: 
+            checker: 
+              name: Reference
+              params: 
+                refType: outil
+      pression: 
+        components: 
+          value: ~
+      temperature: 
+        components: 
+          quality: ~
+          value: ~
+    format: 
+      columns: 
+        - 
+          boundTo: 
+            component: projet
+            variable: localization
+          header: "nom du projet"
+        - 
+          boundTo: 
+            component: site
+            variable: localization
+          header: "nom du site"
+        - 
+          boundTo: 
+            component: plateforme
+            variable: localization
+          header: "nom de la plateforme"
+        - 
+          boundTo: 
+            component: day
+            variable: date
+          header: "date de prélèvement"
+        - 
+          boundTo: 
+            component: value
+            variable: outil
+          header: "outil de mesure"
+        - 
+          boundTo: 
+            component: value
+            variable: commentaire
+          header: commentaire
+        - 
+          boundTo: 
+            component: time
+            variable: date
+          header: heure
+        - 
+          boundTo: 
+            component: profondeur
+            variable: localization
+          header: profondeur
+        - 
+          boundTo: 
+            component: value
+            variable: temperature
+          header: temperature
+        - 
+          boundTo: 
+            component: quality
+            variable: temperature
+          header: "qualite temperature"
+        - 
+          boundTo: 
+            component: value
+            variable: pression
+          header: pression
+      firstRowLine: 2
+      headerLine: 1
+references: 
+  outil: 
+    columns: 
+      codeOutil: ~
+    keyColumn: codeOutil
+  plateforme: 
+    columns: 
+      codePlateforme: ~
+    keyColumn: codePlateforme
+  projet: 
+    columns: 
+      codeProjet: ~
+    keyColumn: codeProjet
+  site: 
+    columns: 
+      codeSite: ~
+      projet: ~
+    keyColumn: codeSite
+  variable: 
+    columns: 
+      codeVariable: ~
+    keyColumn: codeVariable
