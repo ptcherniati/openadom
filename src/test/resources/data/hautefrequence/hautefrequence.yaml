@@ -70,11 +70,17 @@ dataTypes:
                 refType: outil
       pression: 
         components: 
-          value: ~
+          value: 
+            checker: 
+              name: Float
       temperature: 
         components: 
-          quality: ~
-          value: ~
+          quality: 
+            checker: 
+              name: Float
+          value: 
+            checker: 
+              name: Float
     format: 
       columns: 
         - 
