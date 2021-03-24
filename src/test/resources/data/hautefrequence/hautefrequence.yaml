@@ -18,6 +18,7 @@ dataTypes:
           data: 
             - localization
             - date
+            - commentaire
             - temperature
             - pression
             - outil
@@ -68,6 +69,9 @@ dataTypes:
               name: Reference
               params: 
                 refType: outil
+      commentaire: 
+        components: 
+          value: 
       pression: 
         components: 
           value: 
@@ -112,7 +116,7 @@ dataTypes:
           boundTo: 
             component: value
             variable: commentaire
-          header: commentaire
+          header: "commentaire"
         - 
           boundTo: 
             component: time
