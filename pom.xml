@@ -71,6 +71,8 @@
         <jwt.version>0.10.5</jwt.version>
         <flyway-spring-test.version>5.2.1</flyway-spring-test.version>
         <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
+
+        <start-class>fr.inra.oresing.OreSiNgCli</start-class>
     </properties>
 
     <dependencies>
@@ -201,6 +203,17 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <executable>true</executable>
+                            <mainClass>${start-class}</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
