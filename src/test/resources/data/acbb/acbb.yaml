@@ -93,13 +93,15 @@ dataTypes:
         components:
           value:
     format:
-      headerLine: 8
-      firstRowLine: 12
-      columns:
-        - header: "parcelle"
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
           boundTo:
             variable: parcelle
             component: chemin
+      headerLine: 8
+      firstRowLine: 12
+      columns:
         - header: "date"
           boundTo:
             variable: date

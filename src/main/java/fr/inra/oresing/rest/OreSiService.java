@@ -7,6 +7,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
@@ -608,14 +609,39 @@ public class OreSiService {
             };
         }
 
+        ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants;
+        List<Configuration.HeaderConstantDescription> constants = formatDescription.getConstants();
+        if (constants == null) {
+            perRowNumberConstants = ImmutableSetMultimap.of();
+        } else {
+            perRowNumberConstants = constants.stream()
+                    .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
+        }
+        Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
+        Function<Map<VariableComponentKey, String>, Map<VariableComponentKey, String>> mergeLineValuesAndConstantValuesFn =
+                lineAsMap -> ImmutableMap.<VariableComponentKey, String>builder()
+                        .putAll(constantValues)
+                        .putAll(lineAsMap)
+                        .build();
+
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(formatDescription.getSeparator())
                 .withSkipHeaderRecord();
         try (InputStream csv = file.getInputStream()) {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
-            int lineToSkip = formatDescription.getHeaderLine() - 1;
-            Iterators.advance(linesIterator, lineToSkip);
+
+            for (int lineNumber = 1; lineNumber < formatDescription.getHeaderLine(); lineNumber++) {
+                CSVRecord row = linesIterator.next();
+                ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
+                constantDescriptions.forEach(constant -> {
+                    int columnNumber = constant.getColumnNumber();
+                    String value = row.get(columnNumber - 1);
+                    VariableComponentKey boundTo = constant.getBoundTo();
+                    constantValues.put(boundTo, value);
+                });
+            }
+
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
             int lineToSkipAfterHeader = formatDescription.getFirstRowLine() - formatDescription.getHeaderLine() - 1;
@@ -632,6 +658,7 @@ public class OreSiService {
             Streams.stream(csvParser)
                     .map(csvRecordToLineAsMapFn)
                     .flatMap(lineAsMap -> lineAsMapToRecordsFn.apply(lineAsMap).stream())
+                    .map(mergeLineValuesAndConstantValuesFn)
                     .forEach(lineConsumer);
         }
 

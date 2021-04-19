@@ -109,6 +109,14 @@ public class Configuration {
         private char separator = ';';
         private List<ColumnBindingDescription> columns;
         private List<RepeatedColumnBindingDescription> repeatedColumns;
+        private List<HeaderConstantDescription> constants;
+    }
+
+    @Value
+    public static class HeaderConstantDescription {
+        int rowNumber;
+        int columnNumber;
+        VariableComponentKey boundTo;
     }
 
     @Value
