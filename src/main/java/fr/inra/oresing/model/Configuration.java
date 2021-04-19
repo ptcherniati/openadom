@@ -7,10 +7,11 @@ import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.Value;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +49,9 @@ public class Configuration {
                 .collect(ImmutableSet.toImmutableSet());
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     private static class Versioned {
         int version;
     }
@@ -68,9 +71,11 @@ public class Configuration {
         private LinkedHashMap<String, ColumnDescription> columns;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class CompositeReferenceDescription {
-        List<CompositeReferenceComponentDescription> components;
+        List<CompositeReferenceComponentDescription> components = new LinkedList<>();
 
         public boolean isDependentOfReference(String reference) {
             return components.stream()
@@ -79,25 +84,31 @@ public class Configuration {
         }
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class CompositeReferenceComponentDescription {
         String reference;
         String parentKeyColumn;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class DataTypeDescription {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data;
-        TreeMap<Integer, List<MigrationDescription>> migrations;
+        TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class AuthorizationDescription {
         VariableComponentKey timeScope;
         VariableComponentKey localizationScope;
-        LinkedHashMap<String, DataGroupDescription> dataGroups;
+        LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
     }
 
     @Getter
@@ -107,75 +118,97 @@ public class Configuration {
         private int headerLine = 1;
         private int firstRowLine = 2;
         private char separator = ';';
-        private List<ColumnBindingDescription> columns;
-        private List<RepeatedColumnBindingDescription> repeatedColumns;
-        private List<HeaderConstantDescription> constants;
+        private List<ColumnBindingDescription> columns = new LinkedList<>();
+        private List<RepeatedColumnBindingDescription> repeatedColumns = new LinkedList<>();
+        private List<HeaderConstantDescription> constants = new LinkedList<>();
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class HeaderConstantDescription {
         int rowNumber;
         int columnNumber;
         VariableComponentKey boundTo;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class ColumnBindingDescription {
         String header;
         VariableComponentKey boundTo;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class RepeatedColumnBindingDescription {
         String headerPattern;
         String exportHeader;
-        List<HeaderPatternToken> tokens;
+        List<HeaderPatternToken> tokens = new LinkedList<>();
         VariableComponentKey boundTo;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class HeaderPatternToken {
         VariableComponentKey boundTo;
         String exportHeader;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class ColumnDescription {
-        LinkedHashMap<String, VariableComponentDescription> components;
+        LinkedHashMap<String, VariableComponentDescription> components = new LinkedHashMap<>();
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class VariableComponentDescription {
         CheckerDescription checker;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class CheckerDescription {
         String name;
-        Map<String, String> params;
+        Map<String, String> params = new LinkedHashMap<>();
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class DataGroupDescription {
         String label;
-        Set<String> data;
+        Set<String> data = new LinkedHashSet<>();
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class ApplicationDescription {
         String name;
         int version;
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class MigrationDescription {
         MigrationStrategy strategy;
         String dataGroup;
         String variable;
-        Map<String, AddVariableMigrationDescription> components;
+        Map<String, AddVariableMigrationDescription> components = new LinkedHashMap<>();
     }
 
-    @Value
+    @Getter
+    @Setter
+    @ToString
     public static class AddVariableMigrationDescription {
         String defaultValue;
     }

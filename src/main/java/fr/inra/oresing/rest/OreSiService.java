@@ -537,7 +537,7 @@ public class OreSiService {
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
 
         Function<List<Map.Entry<String, String>>, ImmutableSet<Map<VariableComponentKey, String>>> lineAsMapToRecordsFn;
-        if (formatDescription.getRepeatedColumns() == null || formatDescription.getRepeatedColumns().isEmpty()) {
+        if (formatDescription.getRepeatedColumns().isEmpty()) {
             ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
                     .map(Configuration.ColumnBindingDescription::getHeader)
                     .collect(ImmutableSet.toImmutableSet());
@@ -609,14 +609,9 @@ public class OreSiService {
             };
         }
 
-        ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants;
-        List<Configuration.HeaderConstantDescription> constants = formatDescription.getConstants();
-        if (constants == null) {
-            perRowNumberConstants = ImmutableSetMultimap.of();
-        } else {
-            perRowNumberConstants = constants.stream()
-                    .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
-        }
+        ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
+                formatDescription.getConstants().stream()
+                .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
         Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
         Function<Map<VariableComponentKey, String>, Map<VariableComponentKey, String>> mergeLineValuesAndConstantValuesFn =
                 lineAsMap -> ImmutableMap.<VariableComponentKey, String>builder()
@@ -719,17 +714,14 @@ public class OreSiService {
                 .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
         ImmutableMap.Builder<String, VariableComponentKey> allColumnsBuilder = ImmutableMap.<String, VariableComponentKey>builder()
                 .putAll(valuesFromStaticColumns);
-        if (format.getRepeatedColumns() != null) {
-            ImmutableMap<String, VariableComponentKey> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
-                    .filter(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens() != null)
-                    .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
-                    .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
-            ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
-                    .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
-            allColumnsBuilder.putAll(valuesFromHeaderPatterns)
-                             .putAll(valuesFromRepeatedColumns)
-                             ;
-        }
+        ImmutableMap<String, VariableComponentKey> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
+                .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
+                .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
+        ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
+                .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
+        allColumnsBuilder.putAll(valuesFromHeaderPatterns)
+                         .putAll(valuesFromRepeatedColumns)
+                         ;
         return allColumnsBuilder.build();
     }
 

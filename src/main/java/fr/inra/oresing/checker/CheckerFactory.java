@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +38,10 @@ public class CheckerFactory {
         Configuration.CheckerDescription checkerDescription = columnDescription.getComponents().get(component).getChecker();
         Checker result = getChecker(checkerDescription.getName());
 
-        Map<String, String> params = new HashMap<>();
-        if (checkerDescription.getParams() != null) {
-            params.putAll(checkerDescription.getParams());
-        }
-
-        params.put(Checker.PARAM_APPLICATION, application.getId().toString());
+        ImmutableMap<String, String> params = ImmutableMap.<String, String>builder()
+                .putAll(checkerDescription.getParams())
+                .put(Checker.PARAM_APPLICATION, application.getId().toString())
+                .build();
         result.setParam(params);
 
         return result;
