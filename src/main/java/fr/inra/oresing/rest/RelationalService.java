@@ -183,7 +183,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
             String dataTableName = "my_data";
-            String dataAfterDataGroupsMergingQuery = repository.getRepository(application).getSqlToMergeData(dataType);
+            String dataAfterDataGroupsMergingQuery = repository.getRepository(application).data().getSqlToMergeData(dataType);
             String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
             for (ReferenceChecker referenceChecker : referenceCheckers) {

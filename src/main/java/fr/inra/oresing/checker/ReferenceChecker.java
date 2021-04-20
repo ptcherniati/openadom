@@ -46,7 +46,7 @@ public class ReferenceChecker implements Checker {
     private ImmutableMap<String, UUID> loadRef(UUID appId, String refType) {
         Application app = repo.findApplication(appId);
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        return applicationRepository.getReferenceIdPerKeys(refType);
+        return applicationRepository.referenceValue().getReferenceIdPerKeys(refType);
     }
 
     public String getRefType() {

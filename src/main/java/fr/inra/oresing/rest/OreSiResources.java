@@ -137,7 +137,7 @@ public class OreSiResources {
     public ResponseEntity<List<String>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
         Application application = service.getApplication(nameOrId);
         ApplicationRepository applicationRepository = repo.getRepository(application);
-        List<String> list = applicationRepository.findReferenceValue(refType, column);
+        List<String> list = applicationRepository.referenceValue().findReferenceValue(refType, column);
         return ResponseEntity.ok(list);
     }
 

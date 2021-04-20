@@ -232,7 +232,7 @@ public class OreSiService {
                             variableValue.put(component, componentValue);
                         }
                         Map<String, Map<String, String>> variablesToAdd = Map.of(variable, variableValue);
-                        int migratedCount = applicationRepository.migrateData(dataType, dataGroup, variablesToAdd, refsLinkedToToAdd);
+                        int migratedCount = applicationRepository.data().migrate(dataType, dataGroup, variablesToAdd, refsLinkedToToAdd);
                         if (log.isInfoEnabled()) {
                             log.info(migratedCount + " lignes migrées");
                         }
@@ -244,7 +244,7 @@ public class OreSiService {
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
-        boolean deleted = applicationRepository.deleteBinaryFile(oldConfigFileId);
+        boolean deleted = applicationRepository.binaryFile().delete(oldConfigFileId);
         Preconditions.checkState(deleted);
 
         relationalService.createViews(nameOrId);
@@ -267,7 +267,7 @@ public class OreSiService {
                 }
             }
         };
-        applicationRepository.findData(dataType).stream()
+        applicationRepository.data().findAllByDataType(dataType).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
@@ -428,7 +428,7 @@ public class OreSiService {
             String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
-            List<ReferenceValue> references = repository.findReference(referenceType);
+            List<ReferenceValue> references = repository.referenceValue().findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
                 String keyElement = reference.getRefValues().get(keyColumn);
                 String escapedKeyElement = escapeKeyComponent(keyElement);
@@ -735,7 +735,7 @@ public class OreSiService {
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
         ApplicationRepository applicationRepository = repo.getRepository(app);
-        List<Map<String, Map<String, String>>> data = applicationRepository.findData(downloadDatasetQuery.getDataType());
+        List<Map<String, Map<String, String>>> data = applicationRepository.data().findAllByDataType(downloadDatasetQuery.getDataType());
         return data;
     }
 
