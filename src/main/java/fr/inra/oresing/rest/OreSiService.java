@@ -71,6 +71,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -113,7 +114,7 @@ public class OreSiService {
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
-        UUID result = repo.getRepository(app).store(binaryFile);
+        UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
         return result;
     }
 
@@ -384,7 +385,7 @@ public class OreSiService {
                 });
                 return recordAsMap;
             };
-            Streams.stream(csvParser)
+            Stream<ReferenceValue> referenceValuesStream = Streams.stream(csvParser)
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
@@ -401,8 +402,8 @@ public class OreSiService {
                         e.setApplication(app.getId());
                         e.setRefValues(refValues);
                         return e;
-                    })
-                    .forEach(applicationRepository::store);
+                    });
+            applicationRepository.referenceValue().storeAll(referenceValuesStream);
         }
 
         ImmutableSet<String> toUpdateCompositeReferences = conf.getCompositeReferencesUsing(refType);
@@ -441,7 +442,7 @@ public class OreSiService {
                 }
                 checkCompositeKey(compositeKey);
                 reference.setCompositeKey(compositeKey);
-                repository.store(reference);
+                repository.referenceValue().store(reference);
             }
         }
     }
@@ -476,9 +477,7 @@ public class OreSiService {
         DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataTypeDescription.getAuthorization().getTimeScope());
         String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
 
-        ApplicationRepository applicationRepository = repo.getRepository(app);
-
-        Consumer<Map<VariableComponentKey, String>> lineConsumer = line -> {
+        Function<Map<VariableComponentKey, String>, Stream<Data>> lineValuesToEntityStreamFn = line -> {
             Map<VariableComponentKey, String> values = line;
             List<UUID> refsLinkedTo = new ArrayList<>();
             values.forEach((variableComponentKey, value) -> {
@@ -505,7 +504,7 @@ public class OreSiService {
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
 
-            for (Map.Entry<String, Configuration.DataGroupDescription> entry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
+            Stream<Data> dataStream = dataTypeDescription.getAuthorization().getDataGroups().entrySet().stream().map(entry -> {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
@@ -530,8 +529,10 @@ public class OreSiService {
                 e.setDataValues(toStore);
                 e.setTimeScope(timeScope);
                 e.setLocalizationScope(localizationScope);
-                applicationRepository.store(e);
-            }
+                return e;
+            });
+
+            return dataStream;
         };
 
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
@@ -650,11 +651,15 @@ public class OreSiService {
                 });
                 return record;
             };
-            Streams.stream(csvParser)
+
+            Stream<Data> dataStream = Streams.stream(csvParser)
                     .map(csvRecordToLineAsMapFn)
                     .flatMap(lineAsMap -> lineAsMapToRecordsFn.apply(lineAsMap).stream())
                     .map(mergeLineValuesAndConstantValuesFn)
-                    .forEach(lineConsumer);
+                    .flatMap(lineValuesToEntityStreamFn);
+
+            ApplicationRepository applicationRepository = repo.getRepository(app);
+            applicationRepository.data().storeAll(dataStream);
         }
 
         if (!error.isEmpty()) {

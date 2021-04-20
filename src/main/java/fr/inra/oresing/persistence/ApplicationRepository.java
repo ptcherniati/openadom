@@ -2,12 +2,15 @@ package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.UnmodifiableIterator;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.ReferenceValue;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +25,15 @@ import org.springframework.util.MultiValueMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Slf4j
 public class ApplicationRepository implements InitializingBean {
 
     private static final String TEMPLATE_SELECT_ALL = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t";
@@ -41,8 +45,6 @@ public class ApplicationRepository implements InitializingBean {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    private Map<Class, String> sqlUpsert;
-
     private final Application application;
 
     private final SqlSchemaForApplication schema;
@@ -50,34 +52,12 @@ public class ApplicationRepository implements InitializingBean {
     public ApplicationRepository(Application application) {
         this.application = application;
         schema = SqlSchema.forApplication(application);
-        sqlUpsert = Map.of(
-                BinaryFile.class, "INSERT INTO " + schema.binaryFile().getSqlIdentifier() + "(id, application, name, size, data) SELECT id, application, name, size, data FROM json_populate_record(NULL::" + schema.binaryFile().getSqlIdentifier() + ", :json::json) "
-                        + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, name=EXCLUDED.name, size=EXCLUDED.size, data=EXCLUDED.data"
-                        + " RETURNING id",
-                ReferenceValue.class, "INSERT INTO " + schema.referenceValue().getSqlIdentifier() + "(id, application, referenceType, compositeKey, refValues, binaryFile) SELECT id, application, referenceType, compositeKey, refValues, binaryFile FROM json_populate_record(NULL::" + schema.referenceValue().getSqlIdentifier() + ", :json::json) "
-                        + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, referenceType=EXCLUDED.referenceType, compositeKey=EXCLUDED.compositeKey, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
-                        + " RETURNING id",
-                Data.class, "INSERT INTO " + schema.data().getSqlIdentifier() + "(id, application, dataType, rowId, dataGroup, localizationScope, timeScope, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, rowId, dataGroup, localizationScope, timeScope, refsLinkedTo, dataValues, binaryFile FROM json_populate_record(NULL::" + schema.data().getSqlIdentifier() + ", :json::json) "
-                        + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, dataGroup=EXCLUDED.rowId, localizationScope=EXCLUDED.localizationScope, timeScope=EXCLUDED.timeScope, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
-                        + " RETURNING id"
-        );
     }
 
     @Override
     public void afterPropertiesSet() {
         // pour force la recuperation petit a petit et pas tout en meme temps (probleme memoire)
         namedParameterJdbcTemplate.getJdbcTemplate().setFetchSize(1000);
-    }
-
-    public UUID store(OreSiEntity e) {
-        if (e.getId() == null) {
-            e.setId(UUID.randomUUID());
-        }
-        String query = Objects.requireNonNull(sqlUpsert.get(e.getClass()));
-        String json = jsonRowMapper.toJson(e);
-        UUID result = namedParameterJdbcTemplate.queryForObject(
-                query, new MapSqlParameterSource("json", json), UUID.class);
-        return result;
     }
 
     /**
@@ -208,5 +188,80 @@ public class ApplicationRepository implements InitializingBean {
     public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {
         return findReference(referenceType).stream()
                 .collect(ImmutableMap.toImmutableMap(ReferenceValue::getCompositeKey, ReferenceValue::getId));
+    }
+
+    public DataDao data() {
+        return new DataDao();
+    }
+
+    public ReferenceValueDao referenceValue() {
+        return new ReferenceValueDao();
+    }
+
+    public BinaryFileDao binaryFile() {
+        return new BinaryFileDao();
+    }
+
+    public abstract class SortOfDao<T extends OreSiEntity> {
+
+        private UnmodifiableIterator<List<T>> partition(Stream<T> stream) {
+            // 7min19 pour 10
+            // 6min07 pour 30
+            // 6min15 pour 40
+            // 5min46 pour 50
+            // 5min48 pour 100
+            // 5min50 pour 500
+            // 6min21 pour 1000
+            return Iterators.partition(stream.iterator(), 50);
+        }
+
+        public void storeAll(Stream<T> stream) {
+            String query = getUpsertQuery();
+            partition(stream).forEachRemaining(entities -> {
+                entities.forEach(e -> {
+                    if (e.getId() == null) {
+                        e.setId(UUID.randomUUID());
+                    }
+                });
+                String json = jsonRowMapper.toJson(entities);
+                List<UUID> result = namedParameterJdbcTemplate.queryForList(
+                        query, new MapSqlParameterSource("json", json), UUID.class);
+            });
+        }
+
+        protected abstract String getUpsertQuery();
+
+        public UUID store(T entity) {
+            UUID id = entity.getId();
+            storeAll(Stream.of(entity));
+            return id;
+        }
+    }
+
+    public class DataDao extends SortOfDao<Data> {
+        @Override
+        protected String getUpsertQuery() {
+            return "INSERT INTO " + schema.data().getSqlIdentifier() + "(id, application, dataType, rowId, dataGroup, localizationScope, timeScope, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, rowId, dataGroup, localizationScope, timeScope, refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + schema.data().getSqlIdentifier() + ", :json::json) "
+                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, dataGroup=EXCLUDED.rowId, localizationScope=EXCLUDED.localizationScope, timeScope=EXCLUDED.timeScope, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
+                + " RETURNING id";
+        }
+    }
+
+    public class ReferenceValueDao extends SortOfDao<ReferenceValue> {
+        @Override
+        protected String getUpsertQuery() {
+            return "INSERT INTO " + schema.referenceValue().getSqlIdentifier() + "(id, application, referenceType, compositeKey, refValues, binaryFile) SELECT id, application, referenceType, compositeKey, refValues, binaryFile FROM json_populate_recordset(NULL::" + schema.referenceValue().getSqlIdentifier() + ", :json::json) "
+                            + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, referenceType=EXCLUDED.referenceType, compositeKey=EXCLUDED.compositeKey, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
+                            + " RETURNING id";
+        }
+    }
+
+    public class BinaryFileDao extends SortOfDao<BinaryFile> {
+        @Override
+        protected String getUpsertQuery() {
+            return "INSERT INTO " + schema.binaryFile().getSqlIdentifier() + "(id, application, name, size, data) SELECT id, application, name, size, data FROM json_populate_recordset(NULL::" + schema.binaryFile().getSqlIdentifier() + ", :json::json) "
+                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, name=EXCLUDED.name, size=EXCLUDED.size, data=EXCLUDED.data"
+                    + " RETURNING id";
+        }
     }
 }
