@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
@@ -31,7 +31,7 @@ public class Fixtures {
     private MockMvc mockMvc;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     private Cookie cookie;
 
@@ -141,8 +141,8 @@ public class Fixtures {
         if (cookie == null) {
             String aPassword = "xxxxxxxx";
             String aLogin = "poussin";
-            OreSiUser user = authRepository.createUser(aLogin, aPassword);
-            authRepository.addUserRightCreateApplication(user.getId());
+            OreSiUser user = authenticationService.createUser(aLogin, aPassword);
+            authenticationService.addUserRightCreateApplication(user.getId());
             cookie = mockMvc.perform(post("/api/v1/login")
                     .param("login", aLogin)
                     .param("password", aPassword))

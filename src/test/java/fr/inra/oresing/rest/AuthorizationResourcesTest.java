@@ -2,7 +2,7 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,7 +42,7 @@ public class AuthorizationResourcesTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private Fixtures fixtures;
@@ -57,7 +57,7 @@ public class AuthorizationResourcesTest {
     @Test
     public void testAddAuthorization() throws Exception {
 
-        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
+        OreSiUser reader = authenticationService.createUser("UnReader", "xxxxxxxx");
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "UnReader")
                 .param("password", "xxxxxxxx"))

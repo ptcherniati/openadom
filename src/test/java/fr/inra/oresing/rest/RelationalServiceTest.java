@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class RelationalServiceTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private Fixtures fixtures;

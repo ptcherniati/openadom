@@ -7,7 +7,7 @@ import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.core.Is;
@@ -63,7 +63,7 @@ public class OreSiResourcesTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private Fixtures fixtures;
@@ -74,7 +74,7 @@ public class OreSiResourcesTest {
 
     @Before
     public void createUser() throws Exception {
-        OreSiUser user = authRepository.createUser("poussin", "xxxxxxxx");
+        OreSiUser user = authenticationService.createUser("poussin", "xxxxxxxx");
         userId = user.getId();
         authCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "poussin")
@@ -95,7 +95,7 @@ public class OreSiResourcesTest {
                     .file(configuration)
                     .cookie(authCookie))
                     .andExpect(status().is4xxClientError());
-            authRepository.addUserRightCreateApplication(userId);
+            authenticationService.addUserRightCreateApplication(userId);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                     .file(configuration)
@@ -313,7 +313,7 @@ public class OreSiResourcesTest {
 
     @Test
     public void addApplicationAcbb() throws Exception {
-        authRepository.addUserRightCreateApplication(userId);
+        authenticationService.addUserRightCreateApplication(userId);
 
         String appId;
         URL resource = getClass().getResource(fixtures.getAcbbApplicationConfigurationResourceName());

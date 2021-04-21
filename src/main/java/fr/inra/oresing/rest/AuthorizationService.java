@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
@@ -27,13 +27,13 @@ public class AuthorizationService {
     private SqlService db;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private OreSiRepository repository;
 
     public OreSiAuthorization addAuthorization(OreSiAuthorization authorization) {
-        OreSiUserRole userRole = authRepository.getUserRole(authorization.getUserId());
+        OreSiUserRole userRole = authenticationService.getUserRole(authorization.getUserId());
         Set<String> usingExpressionElements = new LinkedHashSet<>();
 
         Application application = repository.application().findApplication(authorization.getApplicationNameOrId());

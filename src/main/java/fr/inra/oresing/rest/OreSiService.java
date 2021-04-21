@@ -28,7 +28,7 @@ import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
@@ -91,7 +91,7 @@ public class OreSiService {
     private OreSiRepository repo;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private CheckerFactory checkerFactory;
@@ -109,7 +109,7 @@ public class OreSiService {
     private RelationalService relationalService;
 
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
         binaryFile.setApplication(app.getId());
@@ -125,7 +125,7 @@ public class OreSiService {
         Application app = new Application();
         app.setName(name);
 
-        authRepository.resetRole();
+        authenticationService.resetRole();
 
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
         org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
@@ -165,10 +165,10 @@ public class OreSiService {
         db.setTableOwner(sqlSchemaForApplication.referenceValue(), adminOnApplicationRole);
         db.setTableOwner(sqlSchemaForApplication.binaryFile(), adminOnApplicationRole);
 
-        OreSiUserRole creator = authRepository.getUserRole(request.getRequestClient().getId());
+        OreSiUserRole creator = authenticationService.getUserRole(request.getRequestClient().getId());
         db.addUserInRole(creator, adminOnApplicationRole);
 
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         UUID result = repo.application().store(app);
         changeApplicationConfiguration(app, configurationFile);
 
@@ -179,7 +179,7 @@ public class OreSiService {
 
     public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException {
         relationalService.dropViews(nameOrId);
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
@@ -361,7 +361,7 @@ public class OreSiService {
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file);
 
         Configuration conf = app.getConfiguration();
@@ -464,7 +464,7 @@ public class OreSiService {
     }
 
     public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file);
 
         // recuperation de la configuration pour ce type de donnees
@@ -731,7 +731,7 @@ public class OreSiService {
     }
 
     public List<Map<String, Map<String, String>>> findData(DownloadDatasetQuery downloadDatasetQuery) {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
         List<Map<String, Map<String, String>>> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
@@ -739,18 +739,18 @@ public class OreSiService {
     }
 
     public List<Application> getApplications() {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         List<Application> result = repo.application().findAll();
         return result;
     }
 
     public Application getApplication(String nameOrId) {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         return repo.application().findApplication(nameOrId);
     }
 
     public Optional<Application> tryFindApplication(String nameOrId) {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         return repo.application().tryFindApplication(nameOrId);
     }
 
@@ -775,13 +775,13 @@ public class OreSiService {
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         List<ReferenceValue> list = repo.getRepository(nameOrId).referenceValue().findAllByReferenceType(refType, params);
         return list;
     }
 
     public Optional<BinaryFile> getFile(String name, UUID id) {
-        authRepository.setRoleForClient();
+        authenticationService.setRoleForClient();
         Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindById(id);
         return optionalBinaryFile;
     }

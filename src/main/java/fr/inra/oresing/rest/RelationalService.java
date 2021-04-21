@@ -8,7 +8,7 @@ import fr.inra.oresing.checker.ReferenceChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
@@ -46,7 +46,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
     private SqlService db;
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
     private CheckerFactory checkerFactory;
@@ -80,7 +80,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
     private void createViews(Application app, ViewStrategy viewStrategy) {
         if (viewStrategy.isEnabled()) {
-            authRepository.resetRole();
+            authenticationService.resetRole();
             SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
             create(schemaCreationCommand);
         } else {
@@ -96,7 +96,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
     void dropViews(String appName, ViewStrategy viewStrategy) {
         if (viewStrategy.isEnabled()) {
-            authRepository.resetRole();
+            authenticationService.resetRole();
             Application app = getApplication(appName);
             SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
             drop(schemaCreationCommand);
@@ -325,7 +325,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
     }
 
     public void addRestrictedUser(OreSiRoleToAccessDatabase role, Set<String> excludedReferenceIds, String appName, ViewStrategy viewStrategy) {
-        authRepository.resetRole();
+        authenticationService.resetRole();
         Application app = getApplication(appName);
         SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
         List<ViewCreationCommand> viewCreationCommands = new LinkedList<>();

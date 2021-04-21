@@ -11,6 +11,10 @@ public enum OreSiSqlSchema implements SqlSchema {
         return new SqlTable(MAIN, "application");
     }
 
+    public SqlTable oreSiUser() {
+        return new SqlTable(MAIN, "oreSiUser");
+    }
+
     @Override
     public String getName() {
         return "public";

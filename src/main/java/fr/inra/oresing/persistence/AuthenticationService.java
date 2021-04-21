@@ -1,6 +1,5 @@
 package fr.inra.oresing.persistence;
 
-import fr.inra.oresing.model.OreSiEntity;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
@@ -8,35 +7,17 @@ import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
 @Transactional
-public class AuthRepository {
-
-    private static final String USER_UPSERT =
-            "INSERT INTO OreSiUser (id, login, password) SELECT id, login, password FROM json_populate_record(NULL::OreSiUser, :json::json)"
-                    + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, login=EXCLUDED.login, password=EXCLUDED.password"
-                    + " RETURNING id";
-
-    private static final String SELECT_USER_FOR_AUTHENTICATION = "SELECT '" + OreSiUser.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM OreSiUser t WHERE login=:login AND password=:password";
-
-    private static final String SELECT_USER = "SELECT '" + OreSiUser.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM OreSiUser t WHERE id=:id";
-
-    private static final String DELETE_USER = "DELETE FROM OreSiUser WHERE id=:id";
+public class AuthenticationService {
 
     @Autowired
-    private JsonRowMapper<OreSiEntity> jsonRowMapper;
-
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private UserRepository userRepository;
 
     @Autowired
     private SqlService db;
@@ -79,10 +60,7 @@ public class AuthRepository {
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
      */
     public OreSiUser login(String login, String password) throws Throwable {
-        String query = SELECT_USER_FOR_AUTHENTICATION;
-        Optional result = namedParameterJdbcTemplate.query(query,
-                new MapSqlParameterSource("login", login).addValue("password", password), jsonRowMapper).stream().findFirst();
-        return (OreSiUser)result.orElseThrow(SecurityException::new);
+        return userRepository.login(login, password);
     }
 
     /**
@@ -93,16 +71,9 @@ public class AuthRepository {
         OreSiUser result = new OreSiUser();
         result.setLogin(login);
         result.setPassword(password);
-
-        String query = USER_UPSERT;
-        String json = jsonRowMapper.toJson(result);
-        UUID id = namedParameterJdbcTemplate.queryForObject(
-                query, new MapSqlParameterSource("json", json), UUID.class);
-        result.setId(id);
-
+        userRepository.store(result);
         OreSiUserRole userRole = getUserRole(result);
         db.createRole(userRole);
-
         return result;
     }
 
@@ -114,18 +85,15 @@ public class AuthRepository {
 
     public void removeUser(UUID userId) {
         OreSiUser oreSiUser = getOreSiUser(userId);
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
-        int count = namedParameterJdbcTemplate.update(DELETE_USER, sqlParameterSource);
-        if (count > 0) {
+        boolean deleted = userRepository.delete(userId);
+        if (deleted) {
             OreSiUserRole userRoleToDelete = getUserRole(oreSiUser);
             db.dropRole(userRoleToDelete);
         }
     }
 
     private OreSiUser getOreSiUser(UUID userId) {
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("id", userId);
-        return (OreSiUser) namedParameterJdbcTemplate.query(SELECT_USER, sqlParameterSource, jsonRowMapper).stream()
-                    .findAny()
+        return userRepository.tryFindById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("l'utilisateur " + userId + " n'existe pas en base"));
     }
 

@@ -21,27 +21,27 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 @TestPropertySource(locations = "classpath:/application-tests.properties")
 @AutoConfigureMockMvc
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class})
-public class AuthRepositoryTest {
+public class AuthenticationServiceTest {
 
     @Autowired
-    private AuthRepository authRepository;
+    private AuthenticationService authenticationService;
 
     @Test
     public void testSetRole() {
-        authRepository.setRole(OreSiRole.anonymous());
+        authenticationService.setRole(OreSiRole.anonymous());
     }
 
     @Test
     public void testCreateAndLogin() throws Throwable {
         String login = "toto@codelutin.com";
         String password = "xxxx";
-        OreSiUser user = authRepository.createUser(login, password);
+        OreSiUser user = authenticationService.createUser(login, password);
         Assert.assertEquals(login, user.getLogin());
-        user = authRepository.login(login, password);
+        user = authenticationService.login(login, password);
         Assert.assertEquals(login, user.getLogin());
-        OreSiUserRole userRole = authRepository.getUserRole(user);
-        authRepository.setRole(userRole);
-        authRepository.resetRole();
-        authRepository.removeUser(user.getId());
+        OreSiUserRole userRole = authenticationService.getUserRole(user);
+        authenticationService.setRole(userRole);
+        authenticationService.resetRole();
+        authenticationService.removeUser(user.getId());
     }
 }
