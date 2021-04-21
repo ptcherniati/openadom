@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class BinaryFileRepository extends ApplicationEntityDao<BinaryFile> {
+public class BinaryFileRepository extends JsonTableInApplicationSchemaRepositoryTemplate<BinaryFile> {
 
     public BinaryFileRepository(Application application) {
         super(application);

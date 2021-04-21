@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class DataRepository extends ApplicationEntityDao<Data> {
+public class DataRepository extends JsonTableInApplicationSchemaRepositoryTemplate<Data> {
 
     public DataRepository(Application application) {
         super(application);

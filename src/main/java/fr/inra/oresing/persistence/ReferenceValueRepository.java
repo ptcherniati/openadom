@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class ReferenceValueRepository extends ApplicationEntityDao<ReferenceValue> {
+public class ReferenceValueRepository extends JsonTableInApplicationSchemaRepositoryTemplate<ReferenceValue> {
 
     public ReferenceValueRepository(Application application) {
         super(application);
