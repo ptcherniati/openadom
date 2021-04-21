@@ -1,5 +1,4 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "chkpass";
 CREATE EXTENSION IF NOT EXISTS "ltree";
 
 CREATE OR REPLACE FUNCTION fk_check(targetTable TEXT, uid UUID)
@@ -47,7 +46,7 @@ create table OreSiUser (
     creationDate DateOrNow,
     updateDate DateOrNow,
     login Text,
-    password chkpass
+    password text
 );
 
 create table Application (

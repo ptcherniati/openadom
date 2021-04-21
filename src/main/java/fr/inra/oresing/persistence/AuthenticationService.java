@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
@@ -7,10 +8,12 @@ import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.function.Predicate;
 
 @Component
 @Transactional
@@ -24,6 +27,9 @@ public class AuthenticationService {
 
     @Autowired
     private OreSiApiRequestContext request;
+
+    @Value("${bcryptCost:12}")
+    private int bcryptCost;
 
     /**
      * Reprend le role de l'utilisateur utilisé pour la connexion à la base de données
@@ -59,8 +65,11 @@ public class AuthenticationService {
      * verifie que l'utilisateur existe et que son mot de passe est le bon
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
      */
-    public OreSiUser login(String login, String password) throws Throwable {
-        return userRepository.login(login, password);
+    public OreSiUser login(String login, String password) throws AuthenticationFailure {
+        Predicate<OreSiUser> checkPassword = user -> BCrypt.verifyer().verify(password.toCharArray(), user.getPassword().toCharArray()).verified;
+        return userRepository.findByLogin(login)
+                .filter(checkPassword)
+                .orElseThrow(() -> new AuthenticationFailure("identifiants fournis incorrects"));
     }
 
     /**
@@ -68,9 +77,10 @@ public class AuthenticationService {
      * @return l'objet OreSiUser qui vient d'être créé
      */
     public OreSiUser createUser(String login, String password) {
+        String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, password.toCharArray());
         OreSiUser result = new OreSiUser();
         result.setLogin(login);
-        result.setPassword(password);
+        result.setPassword(bcrypted);
         userRepository.store(result);
         OreSiUserRole userRole = getUserRole(result);
         db.createRole(userRole);

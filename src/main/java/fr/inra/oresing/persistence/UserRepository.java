@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.model.OreSiUser;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
@@ -26,10 +27,10 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
         return OreSiUser.class;
     }
 
-    public OreSiUser login(String login, String password) throws Throwable {
-        String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t WHERE login=:login AND password=:password";
-        Optional result = getNamedParameterJdbcTemplate().query(query,
-                new MapSqlParameterSource("login", login).addValue("password", password), getJsonRowMapper()).stream().findFirst();
-        return (OreSiUser)result.orElseThrow(SecurityException::new);
+    public Optional<OreSiUser> findByLogin(String login) {
+        String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t WHERE login = :login";
+        Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
+                new MapSqlParameterSource("login", login), getJsonRowMapper()).stream().collect(MoreCollectors.toOptional());
+        return result;
     }
 }

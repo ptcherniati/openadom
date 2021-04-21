@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Throwables;
 import fr.inra.oresing.checker.CheckerException;
+import fr.inra.oresing.persistence.AuthenticationFailure;
 import org.postgresql.util.PSQLException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +18,8 @@ public class OreExceptionHandler {
         return ResponseEntity.badRequest().body(eee.getMessage());
     }
 
-    @ExceptionHandler(value = SecurityException.class)
-    public ResponseEntity<String> handle(SecurityException eee) {
+    @ExceptionHandler(value = AuthenticationFailure.class)
+    public ResponseEntity<String> handle(AuthenticationFailure eee) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
     }
 
