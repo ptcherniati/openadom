@@ -28,9 +28,10 @@ import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthRepository;
+import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForApplication;
@@ -50,6 +51,7 @@ import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
@@ -167,7 +169,7 @@ public class OreSiService {
         db.addUserInRole(creator, adminOnApplicationRole);
 
         authRepository.setRoleForClient();
-        UUID result = repo.store(app);
+        UUID result = repo.application().store(app);
         changeApplicationConfiguration(app, configurationFile);
 
         relationalService.createViews(app.getName());
@@ -190,7 +192,7 @@ public class OreSiService {
         if (log.isInfoEnabled()) {
             log.info("va migrer les données de " + app.getName() + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
         }
-        ApplicationRepository applicationRepository = repo.getRepository(app);
+        DataRepository dataRepository = repo.getRepository(app).data();
         for (Map.Entry<String, Configuration.DataTypeDescription> dataTypeEntry : newConfiguration.getDataTypes().entrySet()) {
             String dataType = dataTypeEntry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = dataTypeEntry.getValue();
@@ -232,7 +234,7 @@ public class OreSiService {
                             variableValue.put(component, componentValue);
                         }
                         Map<String, Map<String, String>> variablesToAdd = Map.of(variable, variableValue);
-                        int migratedCount = applicationRepository.data().migrate(dataType, dataGroup, variablesToAdd, refsLinkedToToAdd);
+                        int migratedCount = dataRepository.migrate(dataType, dataGroup, variablesToAdd, refsLinkedToToAdd);
                         if (log.isInfoEnabled()) {
                             log.info(migratedCount + " lignes migrées");
                         }
@@ -244,7 +246,7 @@ public class OreSiService {
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
-        boolean deleted = applicationRepository.binaryFile().delete(oldConfigFileId);
+        boolean deleted = repo.getRepository(app).binaryFile().delete(oldConfigFileId);
         Preconditions.checkState(deleted);
 
         relationalService.createViews(nameOrId);
@@ -253,7 +255,6 @@ public class OreSiService {
     }
 
     private void validateStoredData(Application app, String dataType) {
-        ApplicationRepository applicationRepository = repo.getRepository(app);
         ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             for (Map.Entry<VariableComponentKey, String> entry : line.entrySet()) {
@@ -267,7 +268,7 @@ public class OreSiService {
                 }
             }
         };
-        applicationRepository.data().findAllByDataType(dataType).stream()
+        repo.getRepository(app).data().findAllByDataType(dataType).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
@@ -275,7 +276,7 @@ public class OreSiService {
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
         UUID confId = storeFile(app, configurationFile);
         app.setConfigFile(confId);
-        repo.store(app);
+        repo.application().store(app);
         Configuration conf = Configuration.read(configurationFile.getBytes());
         if (conf.getReferences() == null) {
             app.setReferenceType(Collections.emptyList());
@@ -285,7 +286,7 @@ public class OreSiService {
         app.setDataType(new ArrayList<>(conf.getDataTypes().keySet()));
         app.setConfiguration(conf);
         checkConfiguration(app);
-        repo.store(app);
+        repo.application().store(app);
         return confId;
     }
 
@@ -366,7 +367,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
-        ApplicationRepository applicationRepository = repo.getRepository(app);
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(ref.getSeparator())
@@ -403,7 +404,7 @@ public class OreSiService {
                         e.setRefValues(refValues);
                         return e;
                     });
-            applicationRepository.referenceValue().storeAll(referenceValuesStream);
+            referenceValueRepository.storeAll(referenceValuesStream);
         }
 
         ImmutableSet<String> toUpdateCompositeReferences = conf.getCompositeReferencesUsing(refType);
@@ -415,7 +416,7 @@ public class OreSiService {
     }
 
     private void updateCompositeReference(Application application, String compositeReference) {
-        ApplicationRepository repository = repo.getRepository(application);
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
         Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferences().get(compositeReference);
 
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -428,7 +429,7 @@ public class OreSiService {
             String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
-            List<ReferenceValue> references = repository.referenceValue().findAllByReferenceType(referenceType);
+            List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
                 String keyElement = reference.getRefValues().get(keyColumn);
                 String escapedKeyElement = escapeKeyComponent(keyElement);
@@ -442,7 +443,7 @@ public class OreSiService {
                 }
                 checkCompositeKey(compositeKey);
                 reference.setCompositeKey(compositeKey);
-                repository.referenceValue().store(reference);
+                referenceValueRepository.store(reference);
             }
         }
     }
@@ -658,8 +659,7 @@ public class OreSiService {
                     .map(mergeLineValuesAndConstantValuesFn)
                     .flatMap(lineValuesToEntityStreamFn);
 
-            ApplicationRepository applicationRepository = repo.getRepository(app);
-            applicationRepository.data().storeAll(dataStream);
+            repo.getRepository(app).data().storeAll(dataStream);
         }
 
         if (!error.isEmpty()) {
@@ -734,25 +734,24 @@ public class OreSiService {
         authRepository.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        ApplicationRepository applicationRepository = repo.getRepository(app);
-        List<Map<String, Map<String, String>>> data = applicationRepository.data().findAllByDataType(downloadDatasetQuery.getDataType());
+        List<Map<String, Map<String, String>>> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
         return data;
     }
 
     public List<Application> getApplications() {
         authRepository.setRoleForClient();
-        List<Application> result = repo.findAll(Application.class);
+        List<Application> result = repo.application().findAll();
         return result;
     }
 
     public Application getApplication(String nameOrId) {
         authRepository.setRoleForClient();
-        return repo.findApplication(nameOrId);
+        return repo.application().findApplication(nameOrId);
     }
 
     public Optional<Application> tryFindApplication(String nameOrId) {
         authRepository.setRoleForClient();
-        return repo.tryFindApplication(nameOrId);
+        return repo.application().tryFindApplication(nameOrId);
     }
 
     private ImmutableMap<VariableComponentKey, String> valuesToIndexedPerReferenceMap(Map<String, Map<String, String>> line) {
@@ -766,5 +765,24 @@ public class OreSiService {
             }
         }
         return ImmutableMap.copyOf(valuesPerReference);
+    }
+
+    /**
+     *
+     * @param nameOrId l'id de l'application
+     * @param refType le type du referenciel
+     * @param params les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
+     * @return la liste qui satisfont aux criteres
+     */
+    public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {
+        authRepository.setRoleForClient();
+        List<ReferenceValue> list = repo.getRepository(nameOrId).referenceValue().findAllByReferenceType(refType, params);
+        return list;
+    }
+
+    public Optional<BinaryFile> getFile(String name, UUID id) {
+        authRepository.setRoleForClient();
+        Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindById(id);
+        return optionalBinaryFile;
     }
 }

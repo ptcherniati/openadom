@@ -1,9 +1,7 @@
 package fr.inra.oresing.checker;
 
-import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -30,7 +28,8 @@ public class ReferenceChecker implements Checker {
         application = params.get(PARAM_APPLICATION);
         refType = params.get(PARAM_REFTYPE);
 
-        refValues = loadRef(UUID.fromString(application), refType);
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
+        refValues = referenceValueRepository.getReferenceIdPerKeys(refType);
     }
 
     @Override
@@ -41,12 +40,6 @@ public class ReferenceChecker implements Checker {
                     value, refType, application));
         }
         return result;
-    }
-
-    private ImmutableMap<String, UUID> loadRef(UUID appId, String refType) {
-        Application app = repo.findApplication(appId);
-        ApplicationRepository applicationRepository = repo.getRepository(app);
-        return applicationRepository.referenceValue().getReferenceIdPerKeys(refType);
     }
 
     public String getRefType() {

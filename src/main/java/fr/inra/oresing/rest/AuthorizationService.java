@@ -36,7 +36,7 @@ public class AuthorizationService {
         OreSiUserRole userRole = authRepository.getUserRole(authorization.getUserId());
         Set<String> usingExpressionElements = new LinkedHashSet<>();
 
-        Application application = repository.findApplication(authorization.getApplicationNameOrId());
+        Application application = repository.application().findApplication(authorization.getApplicationNameOrId());
 
         authorization.getTimeScope().ifPresent(timeScope -> {
             String timeScopeSqlExpression = timeScope.toSqlExpression();

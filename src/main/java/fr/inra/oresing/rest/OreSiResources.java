@@ -5,7 +5,6 @@ import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -41,9 +40,9 @@ public class OreSiResources {
     @Autowired
     private OreSiService service;
 
-    @GetMapping(value = "/files/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> getFile(@PathVariable("id") UUID id) {
-        Optional<BinaryFile> optionalBinaryFile = repo.findById(BinaryFile.class, id);
+    @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<byte[]> getFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
+        Optional<BinaryFile> optionalBinaryFile = service.getFile(name, id);
         if (optionalBinaryFile.isPresent()) {
             BinaryFile binaryFile = optionalBinaryFile.get();
             HttpHeaders headers = new HttpHeaders();
@@ -77,7 +76,7 @@ public class OreSiResources {
     public ResponseEntity<byte[]> getConfiguration(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
         UUID configFileId = application.getConfigFile();
-        return getFile(configFileId);
+        return getFile(nameOrId, configFileId);
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -128,16 +127,14 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("refType") String refType,
             @RequestParam MultiValueMap<String, String> params) {
-        Application app = service.getApplication(nameOrId);
-        List<ReferenceValue> list = repo.findReference(app.getId(), refType, params);
+        List<ReferenceValue> list = service.findReference(nameOrId, refType, params);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
         Application application = service.getApplication(nameOrId);
-        ApplicationRepository applicationRepository = repo.getRepository(application);
-        List<String> list = applicationRepository.referenceValue().findReferenceValue(refType, column);
+        List<String> list = repo.getRepository(application).referenceValue().findReferenceValue(refType, column);
         return ResponseEntity.ok(list);
     }
 

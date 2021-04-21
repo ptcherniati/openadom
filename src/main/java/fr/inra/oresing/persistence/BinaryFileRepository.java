@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class BinaryFileDao extends ApplicationEntityDao<BinaryFile> {
+public class BinaryFileRepository extends ApplicationEntityDao<BinaryFile> {
 
-    public BinaryFileDao(Application application) {
+    public BinaryFileRepository(Application application) {
         super(application);
     }
 

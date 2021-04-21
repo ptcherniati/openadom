@@ -16,9 +16,9 @@ import java.util.UUID;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class DataDao extends ApplicationEntityDao<Data> {
+public class DataRepository extends ApplicationEntityDao<Data> {
 
-    public DataDao(Application application) {
+    public DataRepository(Application application) {
         super(application);
     }
 

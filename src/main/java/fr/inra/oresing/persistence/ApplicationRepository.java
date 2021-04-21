@@ -1,34 +1,51 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
+import fr.inra.oresing.rest.NoSuchApplicationException;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Component
-@Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class ApplicationRepository {
+public class ApplicationRepository extends JsonTableRepositoryTemplate<Application> {
 
-    @Autowired
-    private BeanFactory beanFactory;
+    private static final String SELECT_APPLICATION =
+            "SELECT '" + Application.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
+                    + Application.class.getSimpleName() + " t WHERE id::text=:nameOrId or name=:nameOrId";
 
-    private final Application application;
-
-    public ApplicationRepository(Application application) {
-        this.application = application;
+    @Override
+    protected String getUpsertQuery() {
+        return "INSERT INTO " + getTable().getSqlIdentifier() + " (id, name, referenceType, dataType, configuration, configFile) SELECT id, name, referenceType, dataType, configuration, configFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json)"
+                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, name=EXCLUDED.name, referenceType=EXCLUDED.referenceType, dataType=EXCLUDED.dataType, configuration=EXCLUDED.configuration, configFile=EXCLUDED.configFile"
+                + " RETURNING id";
     }
 
-    public DataDao data() {
-        return beanFactory.getBean(DataDao.class, application);
+    @Override
+    protected SqlTable getTable() {
+        return SqlSchema.main().application();
     }
 
-    public ReferenceValueDao referenceValue() {
-        return beanFactory.getBean(ReferenceValueDao.class, application);
+    @Override
+    protected Class<Application> getEntityClass() {
+        return Application.class;
     }
 
-    public BinaryFileDao binaryFile() {
-        return beanFactory.getBean(BinaryFileDao.class, application);
+    public Application findApplication(String nameOrId) {
+        return tryFindApplication(nameOrId).orElseThrow(() -> new NoSuchApplicationException(nameOrId));
+    }
+
+    public Optional<Application> tryFindApplication(String nameOrId) {
+        Optional<Application> result = getNamedParameterJdbcTemplate().query(SELECT_APPLICATION, new MapSqlParameterSource("nameOrId", nameOrId), getJsonRowMapper()).stream().findFirst();
+        return result;
+    }
+
+    public Optional<Application> tryFindApplication(UUID id) {
+        return tryFindApplication(id.toString());
+    }
+
+    public Application findApplication(UUID id) {
+        return findApplication(id.toString());
     }
 }

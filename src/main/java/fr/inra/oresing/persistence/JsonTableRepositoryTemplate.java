@@ -2,7 +2,6 @@ package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.UnmodifiableIterator;
 import fr.inra.oresing.model.OreSiEntity;
 import org.springframework.beans.factory.InitializingBean;
@@ -11,10 +10,12 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-public abstract class SortOfDao<T extends OreSiEntity> implements InitializingBean {
+abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements InitializingBean {
 
     @Autowired
     private JsonRowMapper<T> jsonRowMapper;
@@ -85,12 +86,21 @@ public abstract class SortOfDao<T extends OreSiEntity> implements InitializingBe
     }
 
     public T findById(UUID id) {
+        return tryFindById(id).orElseThrow(() -> new NoSuchElementException(id + " dans la table " + getTable()));
+    }
+
+    public Optional<T> tryFindById(UUID id) {
         Preconditions.checkArgument(id != null);
         String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json FROM %s t WHERE id = :id", getEntityClass().getName(), getTable().getSqlIdentifier());
-        JsonRowMapper<T> jsonRowMapper = getJsonRowMapper();
-        T result = namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().collect(MoreCollectors.onlyElement());
+        Optional<T> result = namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
         return result;
     }
 
     protected abstract Class<T> getEntityClass();
+
+    public List<T> findAll() {
+        String query = String.format("SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t", getEntityClass().getName(), getEntityClass().getSimpleName());
+        List<T> result = namedParameterJdbcTemplate.query(query, getJsonRowMapper());
+        return result;
+    }
 }

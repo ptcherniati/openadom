@@ -3,7 +3,7 @@ package fr.inra.oresing.persistence;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiEntity;
 
-public abstract class ApplicationEntityDao<T extends OreSiEntity> extends SortOfDao<T> {
+public abstract class ApplicationEntityDao<T extends OreSiEntity> extends JsonTableRepositoryTemplate<T> {
 
     private final Application application;
 

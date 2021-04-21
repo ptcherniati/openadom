@@ -70,7 +70,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
     }
 
     private Application getApplication(String appName) {
-        return repository.findApplication(appName);
+        return repository.application().findApplication(appName);
     }
 
     void createViews(UUID appId, ViewStrategy viewStrategy) {
@@ -355,7 +355,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             if (log.isInfoEnabled()) {
                 log.info("création des vues relationnelles pour les application existantes");
             }
-            List<Application> allApplications = repository.findAllApplications();
+            List<Application> allApplications = repository.application().findAll();
             allApplications.stream()
                     .map(Application::getName)
                     .forEach(this::createViews);
@@ -368,7 +368,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             if (log.isInfoEnabled()) {
                 log.info("suppression des vues relationnelles pour les application existantes");
             }
-            List<Application> allApplications = repository.findAllApplications();
+            List<Application> allApplications = repository.application().findAll();
             allApplications.stream()
                     .map(Application::getName)
                     .forEach(this::dropViews);
