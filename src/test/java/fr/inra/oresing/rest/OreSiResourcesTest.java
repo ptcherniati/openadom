@@ -381,6 +381,7 @@ public class OreSiResourcesTest {
 
             log.debug(StringUtils.abbreviate(actualJson, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
+            Assert.assertTrue(actualJson.contains("laqueuille.1"));
         }
 
         // restitution de data csv
@@ -394,6 +395,8 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
+            Assert.assertTrue(actualCsv.contains("Parcelle"));
+            Assert.assertTrue(actualCsv.contains("laqueuille.1"));
         }
 
         // ajout de data

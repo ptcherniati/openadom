@@ -130,6 +130,7 @@ public class Configuration {
         int rowNumber;
         int columnNumber;
         VariableComponentKey boundTo;
+        String exportHeader;
     }
 
     @Getter
