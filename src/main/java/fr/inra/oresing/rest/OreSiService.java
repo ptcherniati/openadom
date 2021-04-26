@@ -328,13 +328,13 @@ public class OreSiService {
             if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
                 throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
             }
-            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
-            Checker timeScopeColumnChecker = checkers.get(timeScopeVariableComponentKey);
-            if (timeScopeColumnChecker instanceof DateChecker) {
-                String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
-                if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
-                    throw new IllegalArgumentException("ne sait pas traiter le format " + pattern + ". Les formats acceptés sont " + LocalDateTimeRange.getKnownPatterns());
-                }
+            Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
+            if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
+                throw new IllegalArgumentException(timeScopeVariableComponentChecker + " ne peut pas être utilisé comme portant l'information temporelle car ce n'est pas une donnée déclarée comme Date");
+            }
+            String pattern = timeScopeVariableComponentChecker.getParams().get(DateChecker.PARAM_PATTERN);
+            if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
+                throw new IllegalArgumentException("ne sait pas traiter le format " + pattern + ". Les formats acceptés sont " + LocalDateTimeRange.getKnownPatterns());
             }
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
