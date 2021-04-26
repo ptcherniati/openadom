@@ -11,6 +11,10 @@ module.exports = {
   ],
   parserOptions: {
     parser: "babel-eslint",
+    ecmaVersion: 2020,
+    ecmaFeatures: {
+      legacyDecorators: true,
+    },
   },
   rules: {
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
