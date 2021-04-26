@@ -1,1 +1,27 @@
 // A file for common css across the application
+.title {
+  color: $primary;
+  &.main-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+a {
+  color: $info;
+}
+
+.buttons {
+  justify-content: flex-end;
+
+  .button {
+    margin-bottom: 0;
+  }
+}
+
+// Buefy/Bulma UI overrides
+
+.tabs.is-boxed li.is-active a {
+  color: $primary;
+}

@@ -15,6 +15,7 @@
     "buefy": "^0.9.0",
     "core-js": "^3.6.5",
     "husky": "^6.0.0",
+    "vee-validate": "^3.4.5",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.6",
     "vue-i18n": "^8.22.3",

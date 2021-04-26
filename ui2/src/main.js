@@ -4,12 +4,16 @@ import router from "./router";
 
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faAngleDown, faAngleUp } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-library.add(faAngleDown, faAngleUp);
+library.add(faEye, faEyeSlash);
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
 import "@/style/global.scss";
+
+// Validation
+import "vee-validate";
+import "@/services/validation/vee-validation-rules";
 
 // Translation
 import i18n from "@/i18n";
