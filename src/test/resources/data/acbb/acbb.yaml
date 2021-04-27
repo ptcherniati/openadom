@@ -99,6 +99,7 @@ dataTypes:
           boundTo:
             variable: parcelle
             component: chemin
+          exportHeader: "Parcelle"
       headerLine: 8
       firstRowLine: 12
       columns:

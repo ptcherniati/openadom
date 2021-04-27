@@ -717,17 +717,19 @@ public class OreSiService {
     private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.FormatDescription format) {
         ImmutableMap<String, VariableComponentKey> valuesFromStaticColumns = format.getColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
-        ImmutableMap.Builder<String, VariableComponentKey> allColumnsBuilder = ImmutableMap.<String, VariableComponentKey>builder()
-                .putAll(valuesFromStaticColumns);
+        ImmutableMap<String, VariableComponentKey> valuesFromConstants = format.getConstants().stream()
+                .collect(ImmutableMap.toImmutableMap(Configuration.HeaderConstantDescription::getExportHeader, Configuration.HeaderConstantDescription::getBoundTo));
         ImmutableMap<String, VariableComponentKey> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
                 .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
                 .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
         ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
-        allColumnsBuilder.putAll(valuesFromHeaderPatterns)
-                         .putAll(valuesFromRepeatedColumns)
-                         ;
-        return allColumnsBuilder.build();
+        return ImmutableMap.<String, VariableComponentKey>builder()
+                .putAll(valuesFromStaticColumns)
+                .putAll(valuesFromConstants)
+                .putAll(valuesFromHeaderPatterns)
+                .putAll(valuesFromRepeatedColumns)
+                .build();
     }
 
     public List<Map<String, Map<String, String>>> findData(DownloadDatasetQuery downloadDatasetQuery) {
