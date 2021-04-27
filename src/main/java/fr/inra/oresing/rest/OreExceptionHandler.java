@@ -36,4 +36,9 @@ public class OreExceptionHandler {
     public ResponseEntity<String> handle(NoSuchApplicationException noSuchApplicationException) {
         return ResponseEntity.badRequest().body(noSuchApplicationException.getMessage());
     }
+
+    @ExceptionHandler(value = BadApplicationConfigurationException.class)
+    public ResponseEntity<ConfigurationParsingResult> handle(BadApplicationConfigurationException badApplicationConfigurationException) {
+        return ResponseEntity.badRequest().body(badApplicationConfigurationException.getConfigurationParsingResult());
+    }
 }

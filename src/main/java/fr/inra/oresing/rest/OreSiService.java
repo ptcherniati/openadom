@@ -11,10 +11,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
@@ -97,6 +94,9 @@ public class OreSiService {
     private CheckerFactory checkerFactory;
 
     @Autowired
+    private ApplicationConfigurationService applicationConfigurationService;
+
+    @Autowired
     private OreSiApiRequestContext request;
 
     @Autowired
@@ -120,7 +120,7 @@ public class OreSiService {
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException {
+    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
 
         Application app = new Application();
         app.setName(name);
@@ -177,7 +177,7 @@ public class OreSiService {
         return result;
     }
 
-    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
         relationalService.dropViews(nameOrId);
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
@@ -273,91 +273,21 @@ public class OreSiService {
                 .forEach(validateRow);
     }
 
-    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException {
+    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+        ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+        BadApplicationConfigurationException.check(configurationParsingResult);
+        Configuration configuration = configurationParsingResult.getResult();
+        if (configuration.getReferences() == null) {
+            app.setReferenceType(Collections.emptyList());
+        } else {
+            app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
+        }
+        app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
+        app.setConfiguration(configuration);
         UUID confId = storeFile(app, configurationFile);
         app.setConfigFile(confId);
         repo.application().store(app);
-        Configuration conf = Configuration.read(configurationFile.getBytes());
-        if (conf.getReferences() == null) {
-            app.setReferenceType(Collections.emptyList());
-        } else {
-            app.setReferenceType(new ArrayList<>(conf.getReferences().keySet()));
-        }
-        app.setDataType(new ArrayList<>(conf.getDataTypes().keySet()));
-        app.setConfiguration(conf);
-        checkConfiguration(app);
-        repo.application().store(app);
         return confId;
-    }
-
-    private void checkConfiguration(Application app) {
-        Configuration conf = app.getConfiguration();
-        Set<String> references = conf.getReferences() == null ? Collections.emptySet() : conf.getReferences().keySet();
-        for (Map.Entry<String, Configuration.DataTypeDescription> entry : conf.getDataTypes().entrySet()) {
-            String dataType = entry.getKey();
-            Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
-            for (Map.Entry<String, Configuration.ColumnDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
-                String datum = dataEntry.getKey();
-                Configuration.ColumnDescription datumDescription = dataEntry.getValue();
-                for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : datumDescription.getComponents().entrySet()) {
-                    String component = componentEntry.getKey();
-                    Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
-                    if (variableComponentDescription != null) {
-                        Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
-                        if ("Reference".equals(checkerDescription.getName())) {
-                            Preconditions.checkArgument(checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_REFTYPE), "Pour le type de données " + dataType + ", la donnée " + datum + ", le composant " + component + ", il faut préciser le référentiel parmi " + references);
-                        }
-                    }
-                }
-            }
-
-            VariableComponentKey timeScopeVariableComponentKey = dataTypeDescription.getAuthorization().getTimeScope();
-            if (timeScopeVariableComponentKey == null) {
-                throw new IllegalArgumentException("il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType);
-            }
-            Set<String> variables = dataTypeDescription.getData().keySet();
-            if (timeScopeVariableComponentKey.getVariable() == null) {
-                throw new IllegalArgumentException("il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType + ". Valeurs possibles " + variables);
-            }
-            if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
-                throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
-            }
-            if (timeScopeVariableComponentKey.getComponent() == null) {
-                throw new IllegalArgumentException("il faut indiquer le composant de la variable " + timeScopeVariableComponentKey.getVariable() + " dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données " + dataType + ". Valeurs possibles " + dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
-            }
-            if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
-                throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
-            }
-            Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
-            if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
-                throw new IllegalArgumentException(timeScopeVariableComponentChecker + " ne peut pas être utilisé comme portant l'information temporelle car ce n'est pas une donnée déclarée comme Date");
-            }
-            String pattern = timeScopeVariableComponentChecker.getParams().get(DateChecker.PARAM_PATTERN);
-            if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
-                throw new IllegalArgumentException("ne sait pas traiter le format " + pattern + ". Les formats acceptés sont " + LocalDateTimeRange.getKnownPatterns());
-            }
-
-            Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
-            for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
-                String dataGroup = dataGroupEntry.getKey();
-                Configuration.DataGroupDescription dataGroupDescription = dataGroupEntry.getValue();
-                Set<String> dataGroupVariables = dataGroupDescription.getData();
-                variableOccurrencesInDataGroups.addAll(dataGroupVariables);
-                ImmutableSet<String> unknownVariables = Sets.difference(dataGroupVariables, variables).immutableCopy();
-                if (!unknownVariables.isEmpty()) {
-                    throw new IllegalArgumentException("le groupe de données " + dataGroup + " contient des données qui ne sont pas déclarées " + unknownVariables + ". Données connues " + variables);
-                }
-            }
-
-            variables.forEach(variable -> {
-                int count = variableOccurrencesInDataGroups.count(variable);
-                if (count == 0) {
-                    throw new IllegalArgumentException("la variable " + variable + " n'est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe");
-                } else if (count > 1) {
-                    throw new IllegalArgumentException("la variable " + variable + " est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe");
-                }
-            });
-        }
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
@@ -786,5 +716,10 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindById(id);
         return optionalBinaryFile;
+    }
+
+    public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
+        authenticationService.setRoleForClient();
+        return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 }

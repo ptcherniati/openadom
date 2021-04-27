@@ -1,14 +1,10 @@
 package fr.inra.oresing.model;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -22,23 +18,6 @@ import java.util.TreeMap;
 @ToString
 public class Configuration {
 
-    public static Configuration read(byte[] file) throws IOException {
-        Preconditions.checkArgument(file.length > 0, "le fichier de configuration est vide");
-        checkVersion(file);
-        YAMLMapper mapper = new YAMLMapper();
-        Configuration result = mapper.readValue(file, Configuration.class);
-        return result;
-    }
-
-    private static void checkVersion(byte[] file) throws IOException {
-        YAMLMapper mapper = new YAMLMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        Versioned versioned = mapper.readValue(file, Versioned.class);
-        int actualVersion = versioned.getVersion();
-        int expectedVersion = 0;
-        Preconditions.checkArgument(actualVersion == expectedVersion, "Les fichiers YAML de version " + actualVersion + " ne sont pas géré, version attendue " + expectedVersion);
-    }
-
     public ImmutableSet<String> getCompositeReferencesUsing(String reference) {
         if (getCompositeReferences() == null) {
             return ImmutableSet.of();
@@ -47,13 +26,6 @@ public class Configuration {
                 .filter(entry -> entry.getValue().isDependentOfReference(reference))
                 .map(Map.Entry::getKey)
                 .collect(ImmutableSet.toImmutableSet());
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    private static class Versioned {
-        int version;
     }
 
     private int version;
@@ -97,7 +69,7 @@ public class Configuration {
     @ToString
     public static class DataTypeDescription {
         FormatDescription format;
-        LinkedHashMap<String, ColumnDescription> data;
+        LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
     }

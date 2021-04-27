@@ -59,8 +59,14 @@ public class OreSiResources {
         return service.getApplications();
     }
 
+    @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ConfigurationParsingResult> validateConfiguration(@RequestParam("file") MultipartFile file) throws IOException {
+        ConfigurationParsingResult validationResult = service.validateConfiguration(file);
+        return ResponseEntity.ok(validationResult);
+    }
+
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> createApplication(@PathVariable("name") String name, @RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<Map<String, Object>> createApplication(@PathVariable("name") String name, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
         UUID result = service.createApplication(name, file);
         String uri = UriUtils.encodePath("/applications/" + result, Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
@@ -80,7 +86,7 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
