@@ -1,0 +1,26 @@
+/**************************************************************************************************
+*                       Global app variables (defined in the app)                                 *
+***************************************************************************************************/
+
+$font-family: "LiberationSans", Helvetica, Arial, sans-serif;
+
+$text-default-color: #2c3e50;
+
+// InputWithValidation
+$input-field-margin-bot: 1rem;
+$input-help-margin-top: 0.25rem;
+
+/**************************************************************************************************
+*                                   Buefy/Bulma customizations                                   *
+*        see all customizable variables here https://buefy.org/documentation/customization/       *
+***************************************************************************************************/
+
+// General variables
+$primary: #00847f;
+$info: #4ec6c2;
+$success: #bade81;
+$warning: #ffec60;
+$danger: #d13a18;
+$dark: #4b6464;
+$light: #aab7b7;
+$family-primary: $font-family;
