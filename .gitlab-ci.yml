@@ -26,11 +26,21 @@ maven:
   tags:
     - docker
 
-npm:
+npm-legacy:
   image: node:12-alpine
   stage: build
   script:
     - cd ui
+    - npm ci
+    - npm run build
+  tags:
+    - docker
+
+npm:
+  image: node:12-alpine
+  stage: build
+  script:
+    - cd ui2
     - npm ci
     - npm run build
   tags:
