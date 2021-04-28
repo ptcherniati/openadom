@@ -5,13 +5,14 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faCheck,
   faExclamationCircle,
   faEye,
   faEyeSlash,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-library.add(faEye, faEyeSlash, faPlus, faExclamationCircle);
+library.add(faEye, faEyeSlash, faPlus, faExclamationCircle, faCheck);
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
 import "@/style/global.scss";

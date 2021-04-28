@@ -1,7 +1,6 @@
-import { EventEmitter } from "events";
 import config from "@/config";
 
-export class Fetcher extends EventEmitter {
+export class Fetcher {
   async post(url, data) {
     const formData = this.convertToFormData(data);
 
@@ -66,17 +65,8 @@ export class Fetcher extends EventEmitter {
   }
 
   async _handleResponse(response) {
-    let result = "";
-    try {
-      if (response.status !== 204) {
-        result = await response.json();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
     if (response.ok) {
-      return Promise.resolve(result);
+      return Promise.resolve();
     }
 
     return Promise.reject({ status: response.status });
@@ -86,9 +76,7 @@ export class Fetcher extends EventEmitter {
     let formData = new FormData();
     if (body) {
       for (const [key, value] of Object.entries(body)) {
-        console.log(`${key}: ${value}`);
         formData.append(key.toString(), value.toString());
-        console.log("FOR", formData);
       }
     }
     return formData;

@@ -16,5 +16,10 @@
     "facultatif": "Facultatif",
     "invalid-required": "Merci de remplir le champ",
     "invalid-email": "Merci de renseigner un email valide"
+  },
+  "alert": {
+    "cancel": "Annuler",
+    "server-error": "Une erreur serveur est survenue",
+    "user-uknown": "Identifiants inconnus"
   }
 }

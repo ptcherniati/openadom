@@ -60,7 +60,7 @@
     <div class="buttons">
       <b-button
         type="is-primary"
-        @click="handleSubmit(submit)"
+        @click="handleSubmit(signIn)"
         icon-right="plus"
       >
         {{ $t("login.signin") }}
@@ -76,18 +76,29 @@
 import { Component, Vue } from "vue-property-decorator";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { LoginService } from "@/services/LoginService";
+import { AlertService } from "@/services/AlertService";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
   components: { ValidationObserver, ValidationProvider },
 })
 export default class SignIn extends Vue {
   loginService = LoginService.INSTANCE;
+  alertService = AlertService.INSTANCE;
 
   login = "";
   password = "";
 
-  submit() {
-    this.loginService.signIn(this.login, this.password);
+  async signIn() {
+    try {
+      await this.loginService.signIn(this.login, this.password);
+    } catch (error) {
+      let message = this.$t("alert.server-error");
+      if (error.status === HttpStatusCodes.FORBIDDEN) {
+        message = this.$t("alert.user-uknown");
+      }
+      this.alertService.toastError(message, error);
+    }
   }
 }
 </script>
