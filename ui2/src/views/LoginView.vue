@@ -6,7 +6,6 @@
         <b-tab-item :label="$t('login.signin')">
           <SignIn />
         </b-tab-item>
-        <b-tab-item :label="$t('login.signup')">À venir</b-tab-item>
       </b-tabs>
     </div>
   </PageView>

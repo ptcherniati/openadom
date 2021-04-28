@@ -5,12 +5,11 @@
         rules="required|email"
         name="email"
         v-slot="{ errors, valid }"
-        v-id="email"
+        vid="email"
       >
         <b-field
           class="input-field"
           :type="{
-            'is-normal': disabled,
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
@@ -40,7 +39,6 @@
         <b-field
           class="input-field"
           :type="{
-            'is-normal': disabled,
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
@@ -64,10 +62,14 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(submit)">
+      <b-button
+        type="is-primary"
+        @click="handleSubmit(submit)"
+        icon-right="plus"
+      >
         {{ $t("login.signin") }}
       </b-button>
-      <router-link :to="{ path: '/forgot-password/' + email }">
+      <router-link :to="{ path: '/' }">
         {{ $t("login.pwd-forgotten") }}
       </router-link>
     </div>
@@ -77,16 +79,19 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
+import { LoginService } from "@/services/LoginService";
 
 @Component({
   components: { ValidationObserver, ValidationProvider },
 })
 export default class SignIn extends Vue {
+  loginService = LoginService.INSTANCE;
+
   email = "";
   password = "";
 
   submit() {
-    console.log(this.email, this.password);
+    this.loginService.signIn(this.email, this.password);
   }
 }
 </script>
