@@ -5,8 +5,8 @@
   "login": {
     "signin": "Se connecter",
     "signup": "Créer un compte",
-    "email": "Email",
-    "email-placeholder": "Entrer l'adresse mail",
+    "login": "Login",
+    "login-placeholder": "Entrer le login",
     "pwd": "Mot de passe",
     "pwd-placeholder": "Entrer le mot de passe",
     "pwd-forgotten": "Mot de passe oublié ?"

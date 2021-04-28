@@ -7,9 +7,9 @@ export class LoginService extends Fetcher {
     super();
   }
 
-  async signIn(email, pwd) {
+  async signIn(login, pwd) {
     return this.post("login", {
-      login: email,
+      login: login,
       password: pwd,
     });
   }

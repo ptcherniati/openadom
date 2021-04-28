@@ -2,10 +2,10 @@
   <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
     <section>
       <ValidationProvider
-        rules="required|email"
-        name="email"
+        rules="required"
+        name="login"
         v-slot="{ errors, valid }"
-        vid="email"
+        vid="login"
       >
         <b-field
           class="input-field"
@@ -16,23 +16,19 @@
           :message="errors[0]"
         >
           <template slot="label">
-            {{ $t("login.email") }}
+            {{ $t("login.login") }}
             <span class="mandatory">
               {{ $t("validation.obligatoire") }}
             </span>
           </template>
-          <b-input
-            type="email"
-            v-model="email"
-            :placeholder="$t('login.email-placeholder')"
-          >
+          <b-input v-model="login" :placeholder="$t('login.login-placeholder')">
           </b-input>
         </b-field>
       </ValidationProvider>
 
       <ValidationProvider
         rules="required"
-        name="email"
+        name="password"
         v-slot="{ errors, valid }"
         vid="password"
       >
@@ -87,11 +83,11 @@ import { LoginService } from "@/services/LoginService";
 export default class SignIn extends Vue {
   loginService = LoginService.INSTANCE;
 
-  email = "";
+  login = "";
   password = "";
 
   submit() {
-    this.loginService.signIn(this.email, this.password);
+    this.loginService.signIn(this.login, this.password);
   }
 }
 </script>
