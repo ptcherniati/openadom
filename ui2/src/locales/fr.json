@@ -1,6 +1,7 @@
 {
   "titles": {
-    "login-page": "Bienvenue sur SI-ORE"
+    "login-page": "Bienvenue sur SI-ORE",
+    "applications-page": "Applications"
   },
   "login": {
     "signin": "Se connecter",

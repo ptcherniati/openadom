@@ -58,7 +58,7 @@ export class Fetcher {
     });
 
     if (response.ok) {
-      return Promise.resolve();
+      return Promise.resolve(response);
     }
 
     return Promise.reject({ status: response.status });
@@ -66,7 +66,8 @@ export class Fetcher {
 
   async _handleResponse(response) {
     if (response.ok) {
-      return Promise.resolve();
+      const text = await response.text();
+      return Promise.resolve(JSON.parse(text));
     }
 
     return Promise.reject({ status: response.status });

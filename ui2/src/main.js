@@ -31,8 +31,10 @@ Vue.use(Buefy, {
 
 Vue.config.productionTip = false;
 
-new Vue({
+const app = new Vue({
   router,
   i18n,
   render: (h) => h(App),
 }).$mount("#app");
+
+export default app;
