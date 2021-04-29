@@ -31,4 +31,8 @@ export class LoginService extends Fetcher {
     app.$router.push("/applications");
     return Promise.resolve(response);
   }
+
+  logout() {
+    return this.delete("logout");
+  }
 }

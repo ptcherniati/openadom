@@ -1,8 +1,8 @@
 <template>
   <div>
     <MenuView />
-    <PageView>
-      <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
+    <PageView class="LoginView">
+      <h1 class="title main-title">{{ $t("titles.references-page") }}</h1>
       {{ loggedUser.login }}
     </PageView>
   </div>
@@ -18,7 +18,7 @@ import PageView from "./common/PageView.vue";
 @Component({
   components: { PageView, MenuView },
 })
-export default class ApplicationsView extends Vue {
+export default class ReferencesView extends Vue {
   loginService = LoginService.INSTANCE;
 
   loggedUser = new User();

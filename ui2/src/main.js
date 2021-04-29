@@ -10,9 +10,17 @@ import {
   faEye,
   faEyeSlash,
   faPlus,
+  faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-library.add(faEye, faEyeSlash, faPlus, faExclamationCircle, faCheck);
+library.add(
+  faEye,
+  faEyeSlash,
+  faPlus,
+  faExclamationCircle,
+  faCheck,
+  faSignOutAlt
+);
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
 import "@/style/global.scss";
