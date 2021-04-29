@@ -196,7 +196,7 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DataTypeDescription> dataTypeEntry : newConfiguration.getDataTypes().entrySet()) {
             String dataType = dataTypeEntry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = dataTypeEntry.getValue();
-            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getDatatypeCheckers(app, dataType);
             if (log.isInfoEnabled()) {
                 log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
             }
@@ -255,7 +255,7 @@ public class OreSiService {
     }
 
     private void validateStoredData(Application app, String dataType) {
-        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getDatatypeCheckers(app, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             for (Map.Entry<VariableComponentKey, String> entry : line.entrySet()) {
                 VariableComponentKey reference = entry.getKey();
@@ -328,7 +328,7 @@ public class OreSiService {
             if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
                 throw new IllegalArgumentException(timeScopeVariableComponentKey + " ne fait pas parti des colonnes connues " + variables);
             }
-            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getDatatypeCheckers(app, dataType);
             Checker timeScopeColumnChecker = checkers.get(timeScopeVariableComponentKey);
             if (timeScopeColumnChecker instanceof DateChecker) {
                 String pattern = ((DateChecker) timeScopeColumnChecker).getPattern();
@@ -365,7 +365,9 @@ public class OreSiService {
         UUID fileId = storeFile(app, file);
 
         Configuration conf = app.getConfiguration();
+
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
+        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getReferencesCheckers(app, refType);
 
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
 
@@ -377,7 +379,7 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
+                Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
                 Map<String, String> recordAsMap = new LinkedHashMap<>();
                 line.forEach(value -> {
@@ -471,7 +473,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getDatatypeCheckers(app, dataType);
 
         List<String> error = new LinkedList<>();
 

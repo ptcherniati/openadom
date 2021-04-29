@@ -2,6 +2,12 @@ version: 0
 application:
   name: hautefrequence
   version: 1
+  languages:
+    -
+      name: fr
+      byDefault: true
+    -
+      name: en
 compositeReferences: 
   localizations: 
     components: 
@@ -10,8 +16,8 @@ compositeReferences:
       - 
         parentKeyColumn: projet
         reference: site
-dataTypes: 
-  hautefrequence: 
+dataTypes:
+  hautefrequence:
     authorization: 
       dataGroups: 
         all: 
@@ -147,7 +153,9 @@ dataTypes:
 references: 
   outil: 
     columns: 
-      codeOutil: ~
+      codeOutil:
+        internationalizable:
+          key: true
     keyColumn: codeOutil
   plateforme: 
     columns: 

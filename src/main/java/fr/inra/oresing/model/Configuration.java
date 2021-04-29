@@ -9,13 +9,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.prefs.Preferences;
 
 @Getter
 @Setter
@@ -27,7 +22,58 @@ public class Configuration {
         checkVersion(file);
         YAMLMapper mapper = new YAMLMapper();
         Configuration result = mapper.readValue(file, Configuration.class);
-        return result;
+        return postConfiguration(result);
+    }
+
+    private static Configuration postConfiguration(Configuration configuration) {
+        Optional.ofNullable(configuration)
+                .map(conf->conf.getApplication())
+                .map(app->app.getLanguages())
+                .ifPresent(languages -> {
+                    configuration.setReferences(internationalizeReferences(configuration.getReferences(), languages));
+                });
+        return configuration;
+    }
+
+    private static LinkedHashMap<String, ReferenceDescription> internationalizeReferences(LinkedHashMap<String, ReferenceDescription> references, List<Language> languages) {
+        references.values().forEach(reference -> {
+            if (languages != null)
+                reference.getColumns().entrySet().stream()
+                        .filter(e->e.getValue()!=null)
+                        .forEach(entry -> {
+                            String key = entry.getKey();
+                            ColumnDescription columnDescription = entry.getValue();
+                            Internationalizable internationalizable = columnDescription.getInternationalizable();
+                            if (internationalizable != null) {
+                                LinkedHashMap<String, VariableComponentDescription> components = columnDescription.getComponents();
+                                if (components == null) {
+                                    components = new LinkedHashMap<>();
+                                    columnDescription.setComponents(components);
+                                }
+                                if(key.equals(reference.getKeyColumn())){
+                                    String defaultLanguage;
+                                    if(internationalizable.isKey()){
+                                        defaultLanguage= "key";
+                                    }else {
+                                        defaultLanguage= languages.stream()
+                                                .filter(Language::isByDefault)
+                                                .map(Language::getName)
+                                                .findFirst()
+                                                .orElse(languages==null || languages.isEmpty()?null:languages.get(0).getName());
+                                    }
+                                    if(defaultLanguage!=null){
+                                        reference.setKeyColumn(String.format("%s.%s", reference.getKeyColumn(), defaultLanguage));
+                                    }
+                                }
+                                if (internationalizable.isKey()) {
+                                    components.putIfAbsent("key", new VariableComponentDescription());
+                                }
+                                LinkedHashMap<String, VariableComponentDescription> finalComponents = columnDescription.getComponents();
+                                languages.forEach(language -> finalComponents.putIfAbsent(language.getName(), new VariableComponentDescription()));
+                            }
+                        });
+        });
+        return references;
     }
 
     private static void checkVersion(byte[] file) throws IOException {
@@ -90,6 +136,14 @@ public class Configuration {
     public static class CompositeReferenceComponentDescription {
         String reference;
         String parentKeyColumn;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class Language {
+        String name;
+        boolean byDefault;
     }
 
     @Getter
@@ -164,6 +218,16 @@ public class Configuration {
     @ToString
     public static class ColumnDescription {
         LinkedHashMap<String, VariableComponentDescription> components = new LinkedHashMap<>();
+        Internationalizable internationalizable;
+
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class Internationalizable {
+        boolean key;
+
     }
 
     @Getter
@@ -193,6 +257,17 @@ public class Configuration {
     @Setter
     @ToString
     public static class ApplicationDescription {
+        public Optional<Language> getDefaultLanguage(){
+            return languages.stream()
+                    .filter(Language::isByDefault)
+                    .findAny();
+        }
+        public Optional<Language> getlanLanguageByName(String name){
+            return languages.stream()
+                    .filter(l->l.getName().equals(name))
+                    .findAny();
+        }
+        List<Language> languages = new LinkedList<>();
         String name;
         int version;
     }

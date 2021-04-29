@@ -133,7 +133,7 @@ export default {
       get() {
         return this.$store.state.configuration;
       }
-    }
+    },
   },
   methods :{
     logout(){

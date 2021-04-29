@@ -125,7 +125,7 @@
                 v-for="key in headers"
                 :key="key.value"
               >
-                {{ props.item.refValues[key.value] }}
+                {{ getLocalValue(props.item,key.value) }}
               </td>
             </tr>
           </template>
@@ -190,6 +190,13 @@ export default {
   },
   updated() {},
   computed: {
+    application: {
+      get() {
+        return this.$store.state.configuration != null
+          ? this.$store.state.configuration
+          : null;
+      }
+    },
     references: {
       get() {
         return this.$store.state.configuration != null
@@ -224,12 +231,24 @@ export default {
     },
     headers: {
       get() {
-        if (this.$store.state.referenceDescription == null) {
+        let referenceDescription = this.$store.state.referenceDescription;
+        if (referenceDescription == null) {
           return [];
         }
-        let headers =  Object.keys(this.$store.state.referenceDescription.columns).map(a => {
+        let headers =  Object.keys(referenceDescription.columns).map(a => {
+          let column = referenceDescription.columns[a];
+          if(column && column.internationalizable ){
+            let language = navigator.language.split('-')[0];
+            let internationlizationColumn =[];
+            if(column.internationalizable.key){
+              internationlizationColumn.push( { text: a+'.key', align: "center", value: a+'.key'})
+            }
+            for(language in this.application.application.languages){
+              internationlizationColumn.push( { text: a+'.'+this.application.application.languages[language].name, align: "center", value: a+'.'+this.application.application.languages[language].name});
+            }
+          }
           return { text: a, align: "center", value: a };
-        });
+        },this.application.application.languages);
         /*Object.keys(headers).map(a => {
           this.filters[headers[a].text]='';
         });*/
@@ -253,6 +272,16 @@ export default {
     };
   },
   methods: {
+    getLocalValue(item,key){
+      let value;
+      value = item.refValues[key+'.'+navigator.language.split('-')[0]];
+      if(value!=null)return value;
+      value = item.refValues[key+'.'+this.application.defaultLanguage];
+      if(value!=null)return value;
+      value = item.refValues[key+'.key'];
+      if(value!=null)return value;
+      return item.refValues[key]
+    },
     setReference(referenceName) {
       this.$store.dispatch("loadReference", {
         referenceName: referenceName,
@@ -338,9 +367,6 @@ export default {
     pickFile() {
       this.$refs.file.value = null;
       this.$refs.file.click();
-    },
-    getKey(item){
-      this.referenceDescription.columns
     }
   },
   components: {}

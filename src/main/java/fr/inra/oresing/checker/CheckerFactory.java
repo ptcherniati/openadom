@@ -32,7 +32,7 @@ public class CheckerFactory {
     }
 
     private Checker getChecker(Configuration.ColumnDescription columnDescription, Application application, String component) {
-        if (columnDescription == null || columnDescription.getComponents().get(component) == null) {
+        if (columnDescription == null || columnDescription.getComponents().get(component) == null|| columnDescription.getComponents().get(component) .getChecker()== null) {
             return getChecker("Dummy");
         }
         Configuration.CheckerDescription checkerDescription = columnDescription.getComponents().get(component).getChecker();
@@ -54,26 +54,42 @@ public class CheckerFactory {
     }
 
     public ImmutableSet<ReferenceChecker> getReferenceCheckers(Application application, String dataType) {
-        ImmutableSet<ReferenceChecker> referenceCheckers = getCheckers(application, dataType).values().stream()
+        ImmutableSet<ReferenceChecker> referenceCheckers = getDatatypeCheckers(application, dataType).values().stream()
                 .filter(checker -> checker instanceof ReferenceChecker)
                 .map(checker -> (ReferenceChecker) checker)
                 .collect(ImmutableSet.toImmutableSet());
         return referenceCheckers;
     }
 
-    public ImmutableMap<VariableComponentKey, Checker> getCheckers(Application app, String dataType) {
+    public ImmutableMap<VariableComponentKey, Checker> getDatatypeCheckers(Application app, String dataType) {
         Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         Map<VariableComponentKey, Checker> checkers = new LinkedHashMap<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
-            String variable = variableEntry.getKey();
-            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
-                String component = componentEntry.getKey();
+        dataTypeDescription.getData().forEach((variable, variableDescription) -> {
+            if(variableDescription==null){
+                return;
+            }
+            variableDescription.getComponents().forEach((component, value) -> {
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
                 checkers.put(variableComponentKey, getChecker(variableDescription, app, component));
+            });
+        });
+        return ImmutableMap.copyOf(checkers);
+    }
+
+    public ImmutableMap<VariableComponentKey, Checker> getReferencesCheckers(Application app, String reference) {
+        Preconditions.checkArgument(app.getConfiguration().getReferences().containsKey(reference), "Pas de référence " + reference + " dans " + app);
+        Configuration.ReferenceDescription referenceDescription = app.getConfiguration().getReferences().get(reference);
+        Map<VariableComponentKey, Checker> checkers = new LinkedHashMap<>();
+        referenceDescription.getColumns().forEach((variable, variableDescription) -> {
+            if(variableDescription==null){
+                return;
             }
-        }
+            variableDescription.getComponents().forEach((component, value) -> {
+                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                checkers.put(variableComponentKey, getChecker(variableDescription, app, component));
+            });
+        });
         return ImmutableMap.copyOf(checkers);
     }
 }
