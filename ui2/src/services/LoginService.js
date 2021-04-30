@@ -43,7 +43,8 @@ export class LoginService extends Fetcher {
     return Promise.resolve(response);
   }
 
-  logout() {
-    return this.delete("logout");
+  async logout() {
+    await this.delete("logout");
+    this.notifyCrendentialsLost();
   }
 }
