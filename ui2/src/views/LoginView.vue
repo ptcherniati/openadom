@@ -22,11 +22,17 @@ import PageView from "./common/PageView.vue";
 export default class LoginView extends Vue {}
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .LoginView {
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  .PageView-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
   .LoginView-card {
     width: 70%;
