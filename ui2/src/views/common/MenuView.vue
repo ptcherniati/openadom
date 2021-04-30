@@ -52,6 +52,7 @@ export default class MenuView extends Vue {
 .menu-view {
   background-color: $primary;
   height: $menu-height;
+  width: 100%;
 
   .navbar-item {
     flex: 1 1 auto;

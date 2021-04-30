@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageView class="LoginView">
+    <PageView>
       <h1 class="title main-title">{{ $t("titles.references-page") }}</h1>
       {{ loggedUser.login }}
     </PageView>
