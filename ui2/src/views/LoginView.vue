@@ -1,5 +1,5 @@
 <template>
-  <PageView class="LoginView">
+  <PageView class="LoginView" :noMenu="true">
     <h1 class="title main-title">{{ $t("titles.login-page") }}</h1>
     <div class="card LoginView-card">
       <b-tabs type="is-boxed">

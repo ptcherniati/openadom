@@ -1,6 +1,14 @@
 import config from "@/config";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
+import { EventEmitter } from "events";
 
-export class Fetcher {
+export const CREDENTIALS_LOST_EVENT = "credentialsLost";
+
+export class Fetcher extends EventEmitter {
+  notifyCrendentialsLost() {
+    this.emit(CREDENTIALS_LOST_EVENT);
+  }
+
   async post(url, data) {
     const formData = this.convertToFormData(data);
 
@@ -59,15 +67,23 @@ export class Fetcher {
 
     if (response.ok) {
       return Promise.resolve(response);
+    } else if (response.status === HttpStatusCodes.UNAUTHORIZED) {
+      this.notifyCrendentialsLost();
     }
 
     return Promise.reject({ status: response.status });
   }
 
   async _handleResponse(response) {
-    if (response.ok) {
-      const text = await response.text();
-      return Promise.resolve(JSON.parse(text));
+    try {
+      if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
+        const text = await response.text();
+        return Promise.resolve(JSON.parse(text));
+      } else if (response.status === HttpStatusCodes.UNAUTHORIZED) {
+        this.notifyCrendentialsLost();
+      }
+    } catch (error) {
+      console.error(error);
     }
 
     return Promise.reject({ status: response.status });
