@@ -1,7 +1,9 @@
 <template>
-  <div class="container PageView-container">
+  <div>
     <MenuView v-if="!noMenu" />
-    <slot></slot>
+    <div class="container PageView-container">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
