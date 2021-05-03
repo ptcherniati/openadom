@@ -489,49 +489,72 @@ public class OreSiService {
         } else {
             lineAsMapToRecordsFn = line -> {
                 LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
-                Map<VariableComponentKey, String> recordPrototype = new LinkedHashMap<>();
-                for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
-                    Map.Entry<String, String> poll = lineCopy.poll();
-                    String header = poll.getKey();
-                    Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
-                    String value = poll.getValue();
-                    recordPrototype.put(column.getBoundTo(), value);
+
+                // d'abord, il s'agit de lire les colonnes fixes, non répétées. Les données
+                // qui en sont tirées sont communes pour toute la ligne
+                Map<VariableComponentKey, String> recordPrototype; {
+                    recordPrototype = new LinkedHashMap<>();
+                    for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
+                        Map.Entry<String, String> poll = lineCopy.poll();
+                        String header = poll.getKey();
+                        Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
+                        String value = poll.getValue();
+                        recordPrototype.put(column.getBoundTo(), value);
+                    }
                 }
+
+                // ensuite, on traite les colonnes répétées
                 Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
                 Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
                 Set<Map<VariableComponentKey, String>> records = new LinkedHashSet<>();
 
-                Map<VariableComponentKey, String> tokenValues = new LinkedHashMap<>(recordPrototype);
-                Map<VariableComponentKey, String> bodyValues = new LinkedHashMap<>(recordPrototype);
+                // les données tirées de l'entête de la colonne répétée
+                Map<VariableComponentKey, String> tokenValues = new LinkedHashMap<>();
+
+                // les données tirées du contenu de la cellule d'une colonne répétée
+                Map<VariableComponentKey, String> bodyValues = new LinkedHashMap<>();
+
+                // pour lire toute la ligne, on doit lire X groupes qui sont Y groupes de N colonnes
                 while (actualColumnsIterator.hasNext()) {
                     Map.Entry<String, String> actualColumn = actualColumnsIterator.next();
                     Configuration.RepeatedColumnBindingDescription expectedColumn = expectedColumns.next();
 
-                    String actualHeader = actualColumn.getKey();
-                    String value = actualColumn.getValue();
+                    // on lit les informations dans l'entête
+                    {
+                        String actualHeader = actualColumn.getKey();
 
-                    String headerPattern = expectedColumn.getHeaderPattern();
-                    Pattern pattern = Pattern.compile(headerPattern);
-                    Matcher matcher = pattern.matcher(actualHeader);
-                    boolean matches = matcher.matches();
-                    Preconditions.checkState(matches, "Entête imprévu " + actualHeader + ". Entête attendu " + headerPattern);
+                        String headerPattern = expectedColumn.getHeaderPattern();
+                        Pattern pattern = Pattern.compile(headerPattern);
+                        Matcher matcher = pattern.matcher(actualHeader);
+                        boolean matches = matcher.matches();
+                        Preconditions.checkState(matches, "Entête imprévu " + actualHeader + ". Entête attendu " + headerPattern);
 
-                    List<Configuration.HeaderPatternToken> tokens = expectedColumn.getTokens();
-                    if (tokens != null) {
-                        Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
-                        int groupIndex = 1;
-                        for (Configuration.HeaderPatternToken token : tokens) {
-                            tokenValues.put(token.getBoundTo(), matcher.group(groupIndex++));
+                        List<Configuration.HeaderPatternToken> tokens = expectedColumn.getTokens();
+                        if (tokens != null) {
+                            Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
+                            int groupIndex = 1;
+                            for (Configuration.HeaderPatternToken token : tokens) {
+                                tokenValues.put(token.getBoundTo(), matcher.group(groupIndex++));
+                            }
                         }
                     }
 
+                    // on lit l'information dans le contenu de la cellule
+                    String value = actualColumn.getValue();
                     bodyValues.put(expectedColumn.getBoundTo(), value);
 
                     if (!expectedColumns.hasNext()) {
-                        Map<VariableComponentKey, String> record = new LinkedHashMap<>(recordPrototype);
-                        record.putAll(tokenValues);
-                        record.putAll(bodyValues);
+                        // on a lu un groupe de colonne entier
+
+                        // pour les données de ce groupe de colonne répétées, on ajoute une donnée
+                        Map<VariableComponentKey, String> record = ImmutableMap.<VariableComponentKey, String>builder()
+                                .putAll(recordPrototype)
+                                .putAll(tokenValues)
+                                .putAll(bodyValues)
+                                .build();
                         records.add(record);
+
+                        // et on passe au groupe de colonnes répétées suivant
                         tokenValues.clear();
                         bodyValues.clear();
                         expectedColumns = formatDescription.getRepeatedColumns().iterator();
