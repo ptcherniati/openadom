@@ -29,13 +29,6 @@ public class ConfigurationParsingResult {
         return result;
     }
 
-    @Value
-    public static class ValidationCheckResult {
-        boolean valid;
-        String message;
-        Map<String, Object> messageParams;
-    }
-
     public static Builder builder() {
         return new Builder();
     }
