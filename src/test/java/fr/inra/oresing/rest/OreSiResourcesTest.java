@@ -223,6 +223,10 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
             Assert.assertTrue(response.contains("projet_manch"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("141"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("143"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("310"));
         }
 
 //        // restitution de data json

@@ -14,6 +14,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.Ordering;
+import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
@@ -38,6 +39,7 @@ import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -388,7 +390,19 @@ public class OreSiService {
         Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkKeyComponent);
     }
 
-    public List<ValidationCheckResult> addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
+    @Value
+    private static class RowWithData {
+        int lineNumber;
+        Map<VariableComponentKey, String> datum;
+    }
+
+    @Value
+    private static class ParsedCsvRow {
+        int lineNumber;
+        List<Map.Entry<String, String>> columns;
+    }
+
+    public List<CsvRowValidationCheckResult> addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
         UUID fileId = storeFile(app, file);
@@ -399,7 +413,7 @@ public class OreSiService {
 
         ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
 
-        List<ValidationCheckResult> errors = new LinkedList<>();
+        List<CsvRowValidationCheckResult> errors = new LinkedList<>();
 
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
 
@@ -410,8 +424,8 @@ public class OreSiService {
                 .collect(MoreCollectors.onlyElement())
                 .getPattern();
 
-        Function<Map<VariableComponentKey, String>, Stream<Data>> lineValuesToEntityStreamFn = line -> {
-            Map<VariableComponentKey, String> values = line;
+        Function<RowWithData, Stream<Data>> lineValuesToEntityStreamFn = rowWithData -> {
+            Map<VariableComponentKey, String> values = rowWithData.getDatum();
 //            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
             List<UUID> refsLinkedTo = new ArrayList<>();
 
@@ -423,7 +437,7 @@ public class OreSiService {
                         refsLinkedTo.add(referenceId);
                     }
                 } else {
-                    errors.add(validationCheckResult);
+                    errors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
                 }
             });
 
@@ -468,13 +482,14 @@ public class OreSiService {
 
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
 
-        Function<List<Map.Entry<String, String>>, ImmutableSet<Map<VariableComponentKey, String>>> lineAsMapToRecordsFn;
+        Function<ParsedCsvRow, ImmutableSet<RowWithData>> lineAsMapToRecordsFn;
         if (formatDescription.getRepeatedColumns().isEmpty()) {
             ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
                     .map(Configuration.ColumnBindingDescription::getHeader)
                     .collect(ImmutableSet.toImmutableSet());
             ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
-            lineAsMapToRecordsFn = line -> {
+            lineAsMapToRecordsFn = parsedCsvRow -> {
+                List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
                 ImmutableList<String> actualHeaders = line.stream().map(Map.Entry::getKey).collect(ImmutableList.toImmutableList());
                 Preconditions.checkArgument(expectedColumns.containsAll(actualHeaders), "Fichier incorrect. Entêtes détectés " + actualHeaders + ". Entêtes attendus " + expectedColumns);
                 Map<VariableComponentKey, String> record = new LinkedHashMap<>();
@@ -484,10 +499,11 @@ public class OreSiService {
                     Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
                     record.put(bindingDescription.getBoundTo(), value);
                 }
-                return ImmutableSet.of(record);
+                return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), record));
             };
         } else {
-            lineAsMapToRecordsFn = line -> {
+            lineAsMapToRecordsFn = parsedCsvRow -> {
+                List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
                 LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
 
                 // d'abord, il s'agit de lire les colonnes fixes, non répétées. Les données
@@ -506,7 +522,7 @@ public class OreSiService {
                 // ensuite, on traite les colonnes répétées
                 Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
                 Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
-                Set<Map<VariableComponentKey, String>> records = new LinkedHashSet<>();
+                Set<RowWithData> records = new LinkedHashSet<>();
 
                 // les données tirées de l'entête de la colonne répétée
                 Map<VariableComponentKey, String> tokenValues = new LinkedHashMap<>();
@@ -552,7 +568,7 @@ public class OreSiService {
                                 .putAll(tokenValues)
                                 .putAll(bodyValues)
                                 .build();
-                        records.add(record);
+                        records.add(new RowWithData(parsedCsvRow.getLineNumber(), record));
 
                         // et on passe au groupe de colonnes répétées suivant
                         tokenValues.clear();
@@ -568,18 +584,21 @@ public class OreSiService {
                 formatDescription.getConstants().stream()
                 .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
         Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-        Function<Map<VariableComponentKey, String>, Map<VariableComponentKey, String>> mergeLineValuesAndConstantValuesFn =
-                lineAsMap -> ImmutableMap.<VariableComponentKey, String>builder()
-                        .putAll(constantValues)
-                        .putAll(lineAsMap)
-                        .build();
-        Function<Map<VariableComponentKey, String>, Map<VariableComponentKey, String>> replaceMissingValuesByDefaultValuesFn =
-                lineAsMap -> {
+        Function<RowWithData, RowWithData> mergeLineValuesAndConstantValuesFn =
+                rowWithData -> {
+                    ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
+                            .putAll(constantValues)
+                            .putAll(rowWithData.getDatum())
+                            .build();
+                    return new RowWithData(rowWithData.getLineNumber(), datum);
+                };
+        Function<RowWithData, RowWithData> replaceMissingValuesByDefaultValuesFn =
+                rowWithData -> {
                     Maps.EntryTransformer<VariableComponentKey, String, String> replaceEmptyByDefaultValueFn =
                             (variableComponentKey, value) -> StringUtils.isBlank(value) ? defaultValues.get(variableComponentKey) : value;
-                    Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(lineAsMap, replaceEmptyByDefaultValueFn);
+                    Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(rowWithData.getDatum(), replaceEmptyByDefaultValueFn);
                     ImmutableMap<VariableComponentKey, String> result = ImmutableMap.copyOf(withDefaultValues);
-                    return result;
+                    return new RowWithData(rowWithData.getLineNumber(), result);
                 };
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -604,14 +623,15 @@ public class OreSiService {
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
             int lineToSkipAfterHeader = formatDescription.getFirstRowLine() - formatDescription.getHeaderLine() - 1;
             Iterators.advance(linesIterator, lineToSkipAfterHeader);
-            Function<CSVRecord, List<Map.Entry<String, String>>> csvRecordToLineAsMapFn = line -> {
+            Function<CSVRecord, ParsedCsvRow> csvRecordToLineAsMapFn = line -> {
+                int lineNumber = Ints.checkedCast(line.getRecordNumber());
                 Iterator<String> currentHeader = columns.iterator();
                 List<Map.Entry<String, String>> record = new LinkedList<>();
                 line.forEach(value -> {
                     String header = currentHeader.next();
                     record.add(Map.entry(header, value));
                 });
-                return record;
+                return new ParsedCsvRow(lineNumber, record);
             };
 
             Stream<Data> dataStream = Streams.stream(csvParser)

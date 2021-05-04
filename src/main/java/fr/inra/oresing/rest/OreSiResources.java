@@ -191,11 +191,11 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ValidationCheckResult>> createData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam("file") MultipartFile file) throws IOException, CheckerException {
+    public ResponseEntity<List<CsvRowValidationCheckResult>> createData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam("file") MultipartFile file) throws IOException, CheckerException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        List<ValidationCheckResult> errors = service.addData(nameOrId, dataType, file);
+        List<CsvRowValidationCheckResult> errors = service.addData(nameOrId, dataType, file);
         if (errors.isEmpty()) {
             return ResponseEntity.ok().build();
         } else {
