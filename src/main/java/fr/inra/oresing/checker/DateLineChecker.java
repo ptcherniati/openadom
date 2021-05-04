@@ -38,9 +38,9 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         ValidationCheckResult validationCheckResult;
         try {
             fastDateFormat.parse(value);
-            validationCheckResult = new DefaultValidationCheckResult(true, null, null);
+            validationCheckResult = DefaultValidationCheckResult.success();
         } catch (ParseException e) {
-            validationCheckResult = new DefaultValidationCheckResult(false, "invalidDate", ImmutableMap.of("variableComponentKey", variableComponentKey, "pattern", pattern, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", variableComponentKey, "pattern", pattern, "value", value));
         }
         return validationCheckResult;
     }

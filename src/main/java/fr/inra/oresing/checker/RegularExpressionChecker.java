@@ -33,9 +33,9 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         if (predicate.test(value)) {
-            validationCheckResult = new DefaultValidationCheckResult(true, null, null);
+            validationCheckResult = DefaultValidationCheckResult.success();
         } else {
-            validationCheckResult = new DefaultValidationCheckResult(false, "invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey(), "pattern", patternString, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey(), "pattern", patternString, "value", value));
         }
         return validationCheckResult;
     }

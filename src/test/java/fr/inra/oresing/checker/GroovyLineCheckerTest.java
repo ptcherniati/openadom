@@ -45,10 +45,10 @@ public class GroovyLineCheckerTest {
                         new VariableComponentKey("temperature", "unité"), "degrés"
                 );
 
-        Assert.assertTrue(groovyLineChecker.check(validDatum).isValid());
-        Assert.assertFalse(groovyLineChecker.check(invalidDatum).isValid());
+        Assert.assertTrue(groovyLineChecker.check(validDatum).isSuccess());
+        Assert.assertFalse(groovyLineChecker.check(invalidDatum).isSuccess());
         try {
-            groovyLineChecker.check(invalidDatum2).isValid();
+            groovyLineChecker.check(invalidDatum2).isSuccess();
             Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));

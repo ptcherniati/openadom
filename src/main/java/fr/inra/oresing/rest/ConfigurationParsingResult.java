@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Value
@@ -21,7 +20,7 @@ public class ConfigurationParsingResult {
     Configuration result;
 
     public boolean isValid() {
-        return getValidationCheckResults().stream().allMatch(ValidationCheckResult::isValid);
+        return getValidationCheckResults().stream().allMatch(ValidationCheckResult::isSuccess);
     }
 
     @Nullable
@@ -41,8 +40,8 @@ public class ConfigurationParsingResult {
             return recordError(message, ImmutableMap.of());
         }
 
-        private Builder recordError(String message, Map<String, Object> params) {
-            validationCheckResults.add(new DefaultValidationCheckResult(false, message, params));
+        private Builder recordError(String message, ImmutableMap<String, Object> params) {
+            validationCheckResults.add(DefaultValidationCheckResult.error(message, params));
             return this;
         }
 

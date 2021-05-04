@@ -230,7 +230,7 @@ public class OreSiService {
                             if (referenceLineCheckers.containsKey(variableComponentKey)) {
                                 ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
                                 ReferenceValidationCheckResult referenceCheckResult = referenceLineChecker.check(componentValue);
-                                Preconditions.checkState(referenceCheckResult.isValid(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
+                                Preconditions.checkState(referenceCheckResult.isSuccess(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
                                 UUID referenceId = referenceCheckResult.getReferenceId();
                                 refsLinkedToToAdd.add(referenceId);
                             }
@@ -262,7 +262,7 @@ public class OreSiService {
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(line);
-                Preconditions.checkState(validationCheckResult.isValid(), "erreur de validation d'une donnée stockée " + validationCheckResult);
+                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
             });
         };
         repo.getRepository(app).data().findAllByDataType(dataType).stream()
@@ -431,7 +431,7 @@ public class OreSiService {
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
-                if (validationCheckResult.isValid()) {
+                if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         UUID referenceId = ((ReferenceValidationCheckResult) validationCheckResult).getReferenceId();
                         refsLinkedTo.add(referenceId);

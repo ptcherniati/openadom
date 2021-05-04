@@ -40,9 +40,9 @@ public class GroovyLineChecker implements LineChecker {
             Object evaluation = engine.eval(expression);
             if (evaluation instanceof Boolean) {
                 if ((Boolean) evaluation) {
-                    return new DefaultValidationCheckResult(true, null, null);
+                    return DefaultValidationCheckResult.success();
                 } else {
-                    return new DefaultValidationCheckResult(false, expression + " a été évalue à FAUX", ImmutableMap.of("evaluation", evaluation));
+                    return DefaultValidationCheckResult.error(expression + " a été évalue à FAUX", ImmutableMap.of("evaluation", evaluation));
                 }
             } else {
                 throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + expression + ", donnée = " + datum);

@@ -23,9 +23,9 @@ public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker 
         ValidationCheckResult validationCheckResult;
         try {
             Integer.parseInt(value);
-            validationCheckResult = new DefaultValidationCheckResult(true, null, null);
+            validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
-            validationCheckResult = new DefaultValidationCheckResult(false, "invalidInteger", ImmutableMap.of("variableComponentKey", variableComponentKey, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("invalidInteger", ImmutableMap.of("variableComponentKey", variableComponentKey, "value", value));
         }
         return validationCheckResult;
     }

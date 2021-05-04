@@ -1,12 +1,18 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.ValidationLevel;
+
 import java.util.Map;
 
 public interface ValidationCheckResult {
 
-    boolean isValid();
+    ValidationLevel getLevel();
 
     String getMessage();
 
     Map<String, Object> getMessageParams();
+
+    default boolean isSuccess() {
+        return getLevel().isSuccess();
+    }
 }
