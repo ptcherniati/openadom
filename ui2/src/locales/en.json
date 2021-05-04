@@ -11,7 +11,7 @@
     "login-placeholder": "Write down the login",
     "pwd": "Password",
     "pwd-placeholder": "Write down the password",
-    "pwd-forgotten": "Password forgotten ? "
+    "pwd-forgotten": "Forgotten password ? "
   },
   "validation": {
     "obligatoire": "Mandatory",
