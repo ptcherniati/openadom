@@ -1,6 +1,6 @@
 <template>
   <div>
-    <MenuView v-if="!noMenu" />
+    <MenuView v-if="hasMenu" />
     <div class="container PageView-container">
       <slot></slot>
     </div>
@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import { LoginService, LOGGED_OUT } from "@/services/LoginService";
+import { LoginService } from "@/services/LoginService";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import MenuView from "./MenuView.vue";
 
@@ -16,7 +16,7 @@ import MenuView from "./MenuView.vue";
   components: { MenuView },
 })
 export default class PageView extends Vue {
-  @Prop({ default: false }) noMenu;
+  @Prop({ default: true }) hasMenu;
 
   loginService = LoginService.INSTANCE;
 
@@ -25,10 +25,6 @@ export default class PageView extends Vue {
     if (!loggedUser || !loggedUser.id) {
       this.$router.push("/login").catch(() => {});
     }
-
-    this.loginService.on(LOGGED_OUT, () => {
-      this.$router.push("/login").catch(() => {});
-    });
   }
 }
 </script>

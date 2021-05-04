@@ -16,8 +16,7 @@
   "validation": {
     "obligatoire": "Obligatoire",
     "facultatif": "Facultatif",
-    "invalid-required": "Merci de remplir le champ",
-    "invalid-email": "Merci de renseigner un email valide"
+    "invalid-required": "Merci de remplir le champ"
   },
   "alert": {
     "cancel": "Annuler",

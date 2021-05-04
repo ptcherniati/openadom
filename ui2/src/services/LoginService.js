@@ -3,7 +3,6 @@ import { User } from "@/model/User";
 import { Fetcher } from "@/services/Fetcher.js";
 
 const LOCAL_STORAGE_LOGGUED_USER = "loggedUser";
-export const LOGGED_OUT = "loggedOut";
 
 export class LoginService extends Fetcher {
   static INSTANCE = new LoginService();
@@ -15,7 +14,7 @@ export class LoginService extends Fetcher {
 
   notifyCrendentialsLost() {
     localStorage.removeItem(LOCAL_STORAGE_LOGGUED_USER);
-    this.emit(LOGGED_OUT);
+    app.$router.push("/login").catch(() => {});
   }
 
   getLoggedUser() {
