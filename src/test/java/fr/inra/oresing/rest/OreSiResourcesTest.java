@@ -9,6 +9,7 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
@@ -35,6 +36,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import javax.servlet.http.Cookie;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -157,7 +159,7 @@ public class OreSiResourcesTest {
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -208,6 +210,23 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualCsv);
             Assert.assertEquals(306, StringUtils.countMatches(actualCsv, "/1984"));
+        }
+
+        try (InputStream in = getClass().getResourceAsStream(fixtures.getPemDataResourceName())) {
+            String csv = IOUtils.toString(in, StandardCharsets.UTF_8);
+            String invalidCsv = csv.replace("projet_manche", "projet_manch");
+            MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+            Assert.assertTrue(response.contains("projet_manch"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("141"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("143"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("310"));
         }
 
 //        // restitution de data json
@@ -363,7 +382,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -406,7 +425,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -442,7 +461,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -480,7 +499,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);

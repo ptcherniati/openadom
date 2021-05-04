@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -70,6 +71,7 @@ public class Configuration {
     public static class DataTypeDescription {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
+        Set<CheckerDescription> checkers = new LinkedHashSet<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
     }
@@ -143,6 +145,7 @@ public class Configuration {
     @ToString
     public static class VariableComponentDescription {
         CheckerDescription checker;
+        @Nullable String defaultValue;
     }
 
     @Getter

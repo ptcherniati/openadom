@@ -1,34 +1,32 @@
 package fr.inra.oresing.checker;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.ValidationCheckResult;
 
-import java.util.Map;
+public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker {
 
-@Component
-@Scope("prototype")
-public class IntegerChecker implements Checker {
+    private final VariableComponentKey variableComponentKey;
 
-    public static final String PARAM_DEFAULT = "default";
-
-    private String defaultValue;
-
-    @Override
-    public void setParam(Map<String, String> params) {
-        defaultValue = params.get(PARAM_DEFAULT);
+    public IntegerChecker(VariableComponentKey variableComponentKey) {
+        this.variableComponentKey = variableComponentKey;
     }
 
     @Override
-    public Integer check(String value) throws CheckerException {
-        try {
-            if (StringUtils.isBlank(value) && defaultValue != null) {
-                value = defaultValue;
-            }
-            return Integer.parseInt(value);
-        } catch (Exception eee) {
-            throw new CheckerException(String.format("Can't parse integer '%s'", value), eee);
-        }
+    public VariableComponentKey getVariableComponentKey() {
+        return variableComponentKey;
+    }
 
+    @Override
+    public ValidationCheckResult check(String value) {
+        ValidationCheckResult validationCheckResult;
+        try {
+            Integer.parseInt(value);
+            validationCheckResult = new DefaultValidationCheckResult(true, null, null);
+        } catch (NumberFormatException e) {
+            validationCheckResult = new DefaultValidationCheckResult(false, "invalidInteger", ImmutableMap.of("variableComponentKey", variableComponentKey, "value", value));
+        }
+        return validationCheckResult;
     }
 }

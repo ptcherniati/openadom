@@ -67,7 +67,7 @@ public class ApplicationConfigurationServiceTest {
             ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
             System.out.println(configurationParsingResult);
             Assert.assertFalse(configurationParsingResult.isValid());
-            ConfigurationParsingResult.ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
             Assert.assertTrue(onlyError.getMessageParams().containsValue("pas_un_chiffre"));
         }
     }
