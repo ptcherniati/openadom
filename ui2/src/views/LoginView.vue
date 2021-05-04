@@ -39,9 +39,5 @@ export default class LoginView extends Vue {
   .LoginView-card {
     width: 70%;
   }
-
-  .title {
-    margin-top: 1.5rem;
-  }
 }
 </style>

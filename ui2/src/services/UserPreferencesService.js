@@ -1,3 +1,4 @@
+import app from "@/main";
 import { Locales } from "@/utils/LocaleUtils";
 import { Fetcher } from "./Fetcher";
 
@@ -22,6 +23,6 @@ export class UserPreferencesService extends Fetcher {
 
   setUserPrefLocale(locale) {
     localStorage.setItem(LOCAL_STORAGE_LANG, locale);
-    this.$root.$i18n.locale = locale;
+    app.$i18n.locale = locale;
   }
 }
