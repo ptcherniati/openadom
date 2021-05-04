@@ -42,7 +42,7 @@ public class ConfigurationParsingResult {
         }
 
         private Builder recordError(String message, Map<String, Object> params) {
-            validationCheckResults.add(new ValidationCheckResult(false, message, params));
+            validationCheckResults.add(new DefaultValidationCheckResult(false, message, params));
             return this;
         }
 

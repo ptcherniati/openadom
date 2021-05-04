@@ -12,13 +12,15 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.Ordering;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.Checker;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.DateChecker;
-import fr.inra.oresing.checker.ReferenceChecker;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.ReferenceValidationCheckResult;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
@@ -197,7 +199,7 @@ public class OreSiService {
         for (Map.Entry<String, Configuration.DataTypeDescription> dataTypeEntry : newConfiguration.getDataTypes().entrySet()) {
             String dataType = dataTypeEntry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = dataTypeEntry.getValue();
-            ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+            ImmutableMap<VariableComponentKey, ReferenceLineChecker> referenceLineCheckers = checkerFactory.getReferenceLineCheckers(app, dataType);
             if (log.isInfoEnabled()) {
                 log.info("va migrer les données de " + app.getName() + ", type de données, " + dataType + " de la version actuelle " + oldVersion + " à la nouvelle version " + newVersion);
             }
@@ -222,15 +224,13 @@ public class OreSiService {
                             String componentValue = Optional.ofNullable(componentEntry.getValue())
                                     .map(Configuration.AddVariableMigrationDescription::getDefaultValue)
                                     .orElse("");
-                            VariableComponentKey reference = new VariableComponentKey(variable, component);
-                            Checker checker = checkers.get(reference);
-                            if (checker instanceof ReferenceChecker) {
-                                try {
-                                    UUID referenceId = checker.check(componentValue);
-                                    refsLinkedToToAdd.add(referenceId);
-                                } catch (CheckerException e) {
-                                    throw new IllegalStateException(componentValue + " n'est pas une valeur par défaut acceptable pour " + component);
-                                }
+                            VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                            if (referenceLineCheckers.containsKey(variableComponentKey)) {
+                                ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
+                                ReferenceValidationCheckResult referenceCheckResult = referenceLineChecker.check(componentValue);
+                                Preconditions.checkState(referenceCheckResult.isValid(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
+                                UUID referenceId = referenceCheckResult.getReferenceId();
+                                refsLinkedToToAdd.add(referenceId);
                             }
                             variableValue.put(component, componentValue);
                         }
@@ -256,18 +256,12 @@ public class OreSiService {
     }
 
     private void validateStoredData(Application app, String dataType) {
-        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
-            for (Map.Entry<VariableComponentKey, String> entry : line.entrySet()) {
-                VariableComponentKey reference = entry.getKey();
-                Checker checker = checkers.get(reference);
-                String value = entry.getValue();
-                try {
-                    checker.check(value);
-                } catch (CheckerException e) {
-                    throw new IllegalStateException("erreur de validation d'une donnée stockée", e);
-                }
-            }
+            lineCheckers.forEach(lineChecker -> {
+                ValidationCheckResult validationCheckResult = lineChecker.check(line);
+                Preconditions.checkState(validationCheckResult.isValid(), "erreur de validation d'une donnée stockée " + validationCheckResult);
+            });
         };
         repo.getRepository(app).data().findAllByDataType(dataType).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
@@ -394,8 +388,9 @@ public class OreSiService {
         Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkKeyComponent);
     }
 
-    public UUID addData(Application app, String dataType, MultipartFile file) throws IOException, CheckerException {
+    public List<ValidationCheckResult> addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
         authenticationService.setRoleForClient();
+        Application app = getApplication(nameOrId);
         UUID fileId = storeFile(app, file);
 
         // recuperation de la configuration pour ce type de donnees
@@ -403,30 +398,32 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
-        ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
 
-        List<String> error = new LinkedList<>();
+        List<ValidationCheckResult> errors = new LinkedList<>();
 
-        DateChecker timeScopeColumnChecker = (DateChecker) checkers.get(dataTypeDescription.getAuthorization().getTimeScope());
-        String timeScopeColumnPattern = timeScopeColumnChecker.getPattern();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
+
+        String timeScopeColumnPattern = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                .map(lineChecker -> (DateLineChecker) lineChecker)
+                .filter(dateLineChecker -> dateLineChecker.getVariableComponentKey().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .collect(MoreCollectors.onlyElement())
+                .getPattern();
 
         Function<Map<VariableComponentKey, String>, Stream<Data>> lineValuesToEntityStreamFn = line -> {
             Map<VariableComponentKey, String> values = line;
 //            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
             List<UUID> refsLinkedTo = new ArrayList<>();
-            values.forEach((variableComponentKey, value) -> {
-                try {
-                    Checker checker = checkers.get(variableComponentKey);
-                    if (checker == null) {
-                        throw new CheckerException("Unknown column: " + variableComponentKey);
+
+            lineCheckers.forEach(lineChecker -> {
+                ValidationCheckResult validationCheckResult = lineChecker.check(values);
+                if (validationCheckResult.isValid()) {
+                    if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                        UUID referenceId = ((ReferenceValidationCheckResult) validationCheckResult).getReferenceId();
+                        refsLinkedTo.add(referenceId);
                     }
-                    Object result = checker.check(value);
-                    if (checker instanceof ReferenceChecker) {
-                        refsLinkedTo.add((UUID) result);
-                    }
-                } catch (CheckerException eee) {
-                    log.debug("Validation problem", eee);
-                    error.add(eee.getMessage());
+                } else {
+                    errors.add(validationCheckResult);
                 }
             });
 
@@ -627,13 +624,9 @@ public class OreSiService {
             repo.getRepository(app).data().storeAll(dataStream);
         }
 
-        if (!error.isEmpty()) {
-            throw new CheckerException("Parsing error:\n" + String.join("\n\t", error));
-        }
-
         relationalService.onDataUpdate(app.getName());
 
-        return fileId;
+        return errors;
     }
 
     private ImmutableMap<VariableComponentKey, String> getDefaultValues(Configuration.DataTypeDescription dataTypeDescription) {

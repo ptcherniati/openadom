@@ -1,29 +1,32 @@
 package fr.inra.oresing.checker;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.ValidationCheckResult;
 
-import java.util.Map;
+public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
 
-@Component
-@Scope("prototype")
-public class FloatChecker implements Checker {
+    private final VariableComponentKey variableComponentKey;
 
-    @Override
-    public void setParam(Map<String, String> params) {
-
+    public FloatChecker(VariableComponentKey variableComponentKey) {
+        this.variableComponentKey = variableComponentKey;
     }
 
     @Override
-    public Float check(String value) throws CheckerException {
-        if (StringUtils.isBlank(value)) {
-            return null;
-        }
+    public VariableComponentKey getVariableComponentKey() {
+        return variableComponentKey;
+    }
+
+    @Override
+    public ValidationCheckResult check(String value) {
+        ValidationCheckResult validationCheckResult;
         try {
-            return Float.parseFloat(value);
-        } catch (NumberFormatException eee) {
-            throw new CheckerException(String.format("Can't parse float '%s'", value), eee);
+            Float.parseFloat(value);
+            validationCheckResult = new DefaultValidationCheckResult(true, null, null);
+        } catch (NumberFormatException e) {
+            validationCheckResult = new DefaultValidationCheckResult(false, "invalidFloat", ImmutableMap.of("variableComponentKey", variableComponentKey, "value", value));
         }
+        return validationCheckResult;
     }
 }

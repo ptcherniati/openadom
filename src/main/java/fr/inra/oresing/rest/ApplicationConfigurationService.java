@@ -10,8 +10,8 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.DateChecker;
-import fr.inra.oresing.checker.ReferenceChecker;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -91,7 +91,7 @@ public class ApplicationConfigurationService {
                     if (variableComponentDescription != null) {
                         Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                         if ("Reference".equals(checkerDescription.getName())) {
-                            if (checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_REFTYPE)) {
+                            if (checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
                                 // OK
                             } else {
                                 builder.missingReferenceForChecker(dataType, datum, component, references);
@@ -123,7 +123,7 @@ public class ApplicationConfigurationService {
             if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
                 builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
             }
-            String pattern = timeScopeVariableComponentChecker.getParams().get(DateChecker.PARAM_PATTERN);
+            String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
             if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
                 builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
             }

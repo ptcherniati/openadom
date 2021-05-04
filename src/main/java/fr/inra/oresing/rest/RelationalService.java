@@ -1,10 +1,11 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.ReferenceChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -176,7 +177,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
-            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, dataType);
+            ImmutableMap<VariableComponentKey, ReferenceLineChecker> referenceCheckers = checkerFactory.getReferenceLineCheckers(application, dataType);
 
             Set<String> referenceColumnIds = new LinkedHashSet<>();
             Set<String> selectClauseElements = new LinkedHashSet<>();
@@ -186,7 +187,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String dataAfterDataGroupsMergingQuery = repository.getRepository(application).data().getSqlToMergeData(dataType);
             String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
-            for (ReferenceChecker referenceChecker : referenceCheckers) {
+            for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
@@ -238,14 +239,14 @@ public class RelationalService implements InitializingBean, DisposableBean {
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
-            Set<ReferenceChecker> referenceCheckers = checkerFactory.getReferenceCheckers(application, dataType);
+            ImmutableMap<VariableComponentKey, ReferenceLineChecker> referenceCheckers = checkerFactory.getReferenceLineCheckers(application, dataType);
 
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
             Set<String> fromClauseJoinElements = new LinkedHashSet<>();
 
             String dataTableName = sqlSchema.forDataType(dataType).getSqlIdentifier();
 
-            for (ReferenceChecker referenceChecker : referenceCheckers) {
+            for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();  // especes
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 

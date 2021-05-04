@@ -2,6 +2,7 @@ package fr.inra.oresing.checker;
 
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import javax.script.ScriptEngine;
@@ -27,9 +28,9 @@ public class GroovyLineChecker {
             Object evaluation = engine.eval(expression);
             if (evaluation instanceof Boolean) {
                 if ((Boolean) evaluation) {
-                    return new ValidationCheckResult(true, null, null);
+                    return new DefaultValidationCheckResult(true, null, null);
                 } else {
-                    return new ValidationCheckResult(false, "", null);
+                    return new DefaultValidationCheckResult(false, "", null);
                 }
             } else {
                 throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + expression + ", donnée = " + datum);
