@@ -1,5 +1,5 @@
 <template>
-  <PageView class="LoginView" :hasMenu="false">
+  <PageView class="LoginView">
     <h1 class="title main-title">{{ $t("titles.login-page") }}</h1>
     <div class="card LoginView-card">
       <b-tabs type="is-boxed">
@@ -13,13 +13,15 @@
 
 <script>
 import SignIn from "@/components/login/Signin.vue";
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Provide, Vue } from "vue-property-decorator";
 import PageView from "./common/PageView.vue";
 
 @Component({
   components: { PageView, SignIn },
 })
-export default class LoginView extends Vue {}
+export default class LoginView extends Vue {
+  @Provide() shortMenu = true;
+}
 </script>
 
 <style lang="scss">
@@ -36,6 +38,10 @@ export default class LoginView extends Vue {}
 
   .LoginView-card {
     width: 70%;
+  }
+
+  .title {
+    margin-top: 1.5rem;
   }
 }
 </style>

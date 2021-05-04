@@ -1,6 +1,6 @@
 <template>
   <b-navbar class="menu-view">
-    <template #start>
+    <template #start v-if="!shortMenu">
       <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
         {{ $t("menu.applications") }}
       </b-navbar-item>
@@ -10,7 +10,7 @@
     </template>
 
     <template #end>
-      <b-navbar-item tag="div">
+      <b-navbar-item tag="div" v-if="!shortMenu">
         <div class="buttons">
           <b-button type="is-info" @click="logout" icon-right="sign-out-alt">{{
             $t("menu.logout")
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Inject, Vue } from "vue-property-decorator";
 
 import { LoginService } from "@/services/LoginService";
 import { UserPreferencesService } from "@/services/UserPreferencesService";
@@ -46,6 +46,8 @@ import { Locales } from "@/utils/LocaleUtils.js";
   components: {},
 })
 export default class MenuView extends Vue {
+  @Inject() shortMenu;
+
   loginService = LoginService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
 
