@@ -12,6 +12,7 @@ export class UserPreferencesService extends Fetcher {
 
   getUserPrefLocale() {
     const browserLocale = window.navigator.language.substring(0, 2);
+
     return (
       localStorage.getItem(LOCAL_STORAGE_LANG) ||
       (Object.values(Locales).includes(browserLocale) && browserLocale) ||
@@ -21,5 +22,6 @@ export class UserPreferencesService extends Fetcher {
 
   setUserPrefLocale(locale) {
     localStorage.setItem(LOCAL_STORAGE_LANG, locale);
+    this.$root.$i18n.locale = locale;
   }
 }

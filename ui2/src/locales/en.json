@@ -1,0 +1,34 @@
+{
+  "titles": {
+    "login-page": "Welcome to SI-ORE",
+    "applications-page": "My applications",
+    "references-page": "My references"
+  },
+  "login": {
+    "signin": "Sign in",
+    "signup": "Sign up",
+    "login": "Login",
+    "login-placeholder": "Write down the login",
+    "pwd": "Password",
+    "pwd-placeholder": "Write down the password",
+    "pwd-forgotten": "Password forgotten ? "
+  },
+  "validation": {
+    "obligatoire": "Mandatory",
+    "facultatif": "Optional",
+    "invalid-required": "Please fill the field"
+  },
+  "alert": {
+    "cancel": "Cancel",
+    "server-error": "A server error occured",
+    "user-uknown": "Uknown user"
+  },
+  "menu": {
+    "logout": "Log out",
+    "applications": "Applications",
+    "references": "References",
+    "french": "Français",
+    "english": "English",
+    "language": "Language"
+  }
+}
