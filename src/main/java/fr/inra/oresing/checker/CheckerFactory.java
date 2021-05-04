@@ -46,28 +46,39 @@ public class CheckerFactory {
                     }
                 } else {
                     Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
-                    LineChecker lineChecker;
+                    CheckerOnOneVariableComponentLineChecker variableComponentChecker;
                     if ("Reference".equals(checkerDescription.getName())) {
                         String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
                         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                         ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                        lineChecker = new ReferenceLineChecker(variableComponentKey, refType, referenceValues);
+                        variableComponentChecker = new ReferenceLineChecker(variableComponentKey, refType, referenceValues);
                     } else if ("Date".equals(checkerDescription.getName())) {
                         String pattern = checkerDescription.getParams().get(DateLineChecker.PARAM_PATTERN);
-                        lineChecker = new DateLineChecker(variableComponentKey, pattern);
+                        variableComponentChecker = new DateLineChecker(variableComponentKey, pattern);
                     } else if ("Integer".equals(checkerDescription.getName())) {
-                        lineChecker = new IntegerChecker(variableComponentKey);
+                        variableComponentChecker = new IntegerChecker(variableComponentKey);
                     } else if ("Float".equals(checkerDescription.getName())) {
-                        lineChecker = new FloatChecker(variableComponentKey);
+                        variableComponentChecker = new FloatChecker(variableComponentKey);
                     } else if ("RegularExpression".equals(checkerDescription.getName())) {
                         String pattern = checkerDescription.getParams().get(RegularExpressionChecker.PARAM_PATTERN);
-                        lineChecker = new RegularExpressionChecker(variableComponentKey, pattern);
+                        variableComponentChecker = new RegularExpressionChecker(variableComponentKey, pattern);
                     } else {
                         throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
                     }
-                    checkersBuilder.add(lineChecker);
+                    Preconditions.checkState(variableComponentChecker.getVariableComponentKey().equals(variableComponentKey));
+                    checkersBuilder.add(variableComponentChecker);
                 }
             }
+        }
+        for (Configuration.CheckerDescription checkerDescription : dataTypeDescription.getCheckers()) {
+            LineChecker lineChecker;
+            if ("GroovyExpression".equals(checkerDescription.getName())) {
+                String expression = checkerDescription.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
+                lineChecker = GroovyLineChecker.forExpression(expression);
+            } else {
+                throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
+            }
+            checkersBuilder.add(lineChecker);
         }
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {

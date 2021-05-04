@@ -1,15 +1,18 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.VariableComponentKey;
 import jdk.jshell.JShell;
 import jdk.jshell.SnippetEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
 
+@Slf4j
 public class GroovyLineCheckerTest {
 
     @Test
@@ -25,7 +28,7 @@ public class GroovyLineCheckerTest {
                 , "throw new IllegalArgumentException(\"unité inconnue, \" + unité);"
         );
 
-        GroovyLineChecker groovyLineChecker = new GroovyLineChecker(expression);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression);
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
@@ -44,7 +47,15 @@ public class GroovyLineCheckerTest {
 
         Assert.assertTrue(groovyLineChecker.check(validDatum).isValid());
         Assert.assertFalse(groovyLineChecker.check(invalidDatum).isValid());
-        Assert.assertFalse(groovyLineChecker.check(invalidDatum2).isValid());
+        try {
+            groovyLineChecker.check(invalidDatum2).isValid();
+            Assert.fail("une exception aurait dû être levée");
+        } catch (OreSiTechnicalException e) {
+            Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));
+            if (log.isDebugEnabled()) {
+                log.debug("erreur si le script lève une exception", e);
+            }
+        }
     }
 
     @Test

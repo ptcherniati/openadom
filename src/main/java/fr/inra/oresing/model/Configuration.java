@@ -71,6 +71,7 @@ public class Configuration {
     public static class DataTypeDescription {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
+        Set<CheckerDescription> checkers = new LinkedHashSet<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
     }
