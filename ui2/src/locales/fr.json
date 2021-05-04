@@ -1,12 +1,14 @@
 {
   "titles": {
-    "login-page": "Bienvenue sur ORE"
+    "login-page": "Bienvenue sur SI-ORE",
+    "applications-page": "Mes applications",
+    "references-page": "Mes référentiels"
   },
   "login": {
     "signin": "Se connecter",
     "signup": "Créer un compte",
-    "email": "Email",
-    "email-placeholder": "Entrer l'adresse mail",
+    "login": "Identifiant",
+    "login-placeholder": "Entrer l'identifiant",
     "pwd": "Mot de passe",
     "pwd-placeholder": "Entrer le mot de passe",
     "pwd-forgotten": "Mot de passe oublié ?"
@@ -14,7 +16,16 @@
   "validation": {
     "obligatoire": "Obligatoire",
     "facultatif": "Facultatif",
-    "invalid-required": "Merci de remplir le champ",
-    "invalid-email": "Merci de renseigner un email valide"
+    "invalid-required": "Merci de remplir le champ"
+  },
+  "alert": {
+    "cancel": "Annuler",
+    "server-error": "Une erreur serveur est survenue",
+    "user-uknown": "Identifiants inconnus"
+  },
+  "menu": {
+    "logout": "Se déconnecter",
+    "applications": "Applications",
+    "references": "Référentiels"
   }
 }

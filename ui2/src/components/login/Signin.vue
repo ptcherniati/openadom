@@ -2,45 +2,39 @@
   <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
     <section>
       <ValidationProvider
-        rules="required|email"
-        name="email"
+        rules="required"
+        name="login"
         v-slot="{ errors, valid }"
-        v-id="email"
+        vid="login"
       >
         <b-field
           class="input-field"
           :type="{
-            'is-normal': disabled,
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
           :message="errors[0]"
         >
           <template slot="label">
-            {{ $t("login.email") }}
+            {{ $t("login.login") }}
             <span class="mandatory">
               {{ $t("validation.obligatoire") }}
             </span>
           </template>
-          <b-input
-            type="email"
-            v-model="email"
-            :placeholder="$t('login.email-placeholder')"
-          >
+          <b-input v-model="login" :placeholder="$t('login.login-placeholder')">
           </b-input>
         </b-field>
       </ValidationProvider>
 
       <ValidationProvider
         rules="required"
-        name="email"
+        name="password"
         v-slot="{ errors, valid }"
         vid="password"
       >
         <b-field
           class="input-field"
           :type="{
-            'is-normal': disabled,
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
@@ -64,10 +58,14 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(submit)">
+      <b-button
+        type="is-primary"
+        @click="handleSubmit(signIn)"
+        icon-right="plus"
+      >
         {{ $t("login.signin") }}
       </b-button>
-      <router-link :to="{ path: '/forgot-password/' + email }">
+      <router-link :to="{ path: '/' }">
         {{ $t("login.pwd-forgotten") }}
       </router-link>
     </div>
@@ -77,16 +75,30 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
+import { LoginService } from "@/services/LoginService";
+import { AlertService } from "@/services/AlertService";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
   components: { ValidationObserver, ValidationProvider },
 })
 export default class SignIn extends Vue {
-  email = "";
+  loginService = LoginService.INSTANCE;
+  alertService = AlertService.INSTANCE;
+
+  login = "";
   password = "";
 
-  submit() {
-    console.log(this.email, this.password);
+  async signIn() {
+    try {
+      await this.loginService.signIn(this.login, this.password);
+    } catch (error) {
+      let message = this.$t("alert.server-error");
+      if (error.status === HttpStatusCodes.FORBIDDEN) {
+        message = this.$t("alert.user-uknown");
+      }
+      this.alertService.toastError(message, error);
+    }
   }
 }
 </script>

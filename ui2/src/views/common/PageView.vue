@@ -1,14 +1,32 @@
 <template>
-  <div class="container PageView-container">
-    <slot></slot>
+  <div>
+    <MenuView v-if="hasMenu" />
+    <div class="container PageView-container">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
 <script>
-import { Component, Vue } from "vue-property-decorator";
+import { LoginService } from "@/services/LoginService";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import MenuView from "./MenuView.vue";
 
-@Component
-export default class PageView extends Vue {}
+@Component({
+  components: { MenuView },
+})
+export default class PageView extends Vue {
+  @Prop({ default: true }) hasMenu;
+
+  loginService = LoginService.INSTANCE;
+
+  created() {
+    const loggedUser = this.loginService.getLoggedUser();
+    if (!loggedUser || !loggedUser.id) {
+      this.$router.push("/login").catch(() => {});
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>

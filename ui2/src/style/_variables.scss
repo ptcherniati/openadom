@@ -5,10 +5,13 @@
 $font-family: "LiberationSans", Helvetica, Arial, sans-serif;
 
 $text-default-color: #2c3e50;
-
+$light-text: rgb(230, 230, 230);
 // InputWithValidation
 $input-field-margin-bot: 1rem;
 $input-help-margin-top: 0.25rem;
+
+// MenuView
+$menu-height: 80px;
 
 /**************************************************************************************************
 *                                   Buefy/Bulma customizations                                   *
