@@ -139,10 +139,9 @@ dataTypes:
       Nombre d'individus:
         components:
           value:
+            defaultValue: "0"
             checker:
               name: Integer
-              params:
-                default: 0
     format:
       headerLine: 4
       firstRowLine: 5

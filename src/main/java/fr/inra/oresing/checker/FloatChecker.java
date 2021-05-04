@@ -10,25 +10,20 @@ import java.util.Map;
 @Scope("prototype")
 public class FloatChecker implements Checker {
 
-    public static final String PARAM_DEFAULT = "default";
-
-    private String defaultValue;
-
     @Override
     public void setParam(Map<String, String> params) {
-        defaultValue = params.get(PARAM_DEFAULT);
+
     }
 
     @Override
     public Float check(String value) throws CheckerException {
+        if (StringUtils.isBlank(value)) {
+            return null;
+        }
         try {
-            if (StringUtils.isBlank(value) && defaultValue != null) {
-                value = defaultValue;
-            }
             return Float.parseFloat(value);
-        } catch (Exception eee) {
+        } catch (NumberFormatException eee) {
             throw new CheckerException(String.format("Can't parse float '%s'", value), eee);
         }
-
     }
 }

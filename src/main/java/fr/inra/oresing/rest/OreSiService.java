@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -401,6 +402,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
+        ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
         ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getCheckers(app, dataType);
 
         List<String> error = new LinkedList<>();
@@ -410,6 +412,7 @@ public class OreSiService {
 
         Function<Map<VariableComponentKey, String>, Stream<Data>> lineValuesToEntityStreamFn = line -> {
             Map<VariableComponentKey, String> values = line;
+//            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
             List<UUID> refsLinkedTo = new ArrayList<>();
             values.forEach((variableComponentKey, value) -> {
                 try {
@@ -573,6 +576,14 @@ public class OreSiService {
                         .putAll(constantValues)
                         .putAll(lineAsMap)
                         .build();
+        Function<Map<VariableComponentKey, String>, Map<VariableComponentKey, String>> replaceMissingValuesByDefaultValuesFn =
+                lineAsMap -> {
+                    Maps.EntryTransformer<VariableComponentKey, String, String> replaceEmptyByDefaultValueFn =
+                            (variableComponentKey, value) -> StringUtils.isBlank(value) ? defaultValues.get(variableComponentKey) : value;
+                    Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(lineAsMap, replaceEmptyByDefaultValueFn);
+                    ImmutableMap<VariableComponentKey, String> result = ImmutableMap.copyOf(withDefaultValues);
+                    return result;
+                };
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(formatDescription.getSeparator())
@@ -610,6 +621,7 @@ public class OreSiService {
                     .map(csvRecordToLineAsMapFn)
                     .flatMap(lineAsMap -> lineAsMapToRecordsFn.apply(lineAsMap).stream())
                     .map(mergeLineValuesAndConstantValuesFn)
+                    .map(replaceMissingValuesByDefaultValuesFn)
                     .flatMap(lineValuesToEntityStreamFn);
 
             repo.getRepository(app).data().storeAll(dataStream);
@@ -622,6 +634,26 @@ public class OreSiService {
         relationalService.onDataUpdate(app.getName());
 
         return fileId;
+    }
+
+    private ImmutableMap<VariableComponentKey, String> getDefaultValues(Configuration.DataTypeDescription dataTypeDescription) {
+        ImmutableMap.Builder<VariableComponentKey, String> defaultValuesBuilder = ImmutableMap.builder();
+        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
+            String variable = variableEntry.getKey();
+            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
+            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
+                String component = componentEntry.getKey();
+                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                String defaultValue;
+                if (componentEntry.getValue() == null) {
+                    defaultValue = null;
+                } else {
+                    defaultValue = componentEntry.getValue().getDefaultValue();
+                }
+                defaultValuesBuilder.put(variableComponentKey, Strings.nullToEmpty(defaultValue));
+            }
+        }
+        return defaultValuesBuilder.build();
     }
 
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -143,6 +144,7 @@ public class Configuration {
     @ToString
     public static class VariableComponentDescription {
         CheckerDescription checker;
+        @Nullable String defaultValue;
     }
 
     @Getter

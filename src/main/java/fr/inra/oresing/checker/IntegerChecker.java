@@ -10,25 +10,20 @@ import java.util.Map;
 @Scope("prototype")
 public class IntegerChecker implements Checker {
 
-    public static final String PARAM_DEFAULT = "default";
-
-    private String defaultValue;
-
     @Override
     public void setParam(Map<String, String> params) {
-        defaultValue = params.get(PARAM_DEFAULT);
+
     }
 
     @Override
     public Integer check(String value) throws CheckerException {
+        if (StringUtils.isBlank(value)) {
+            return null;
+        }
         try {
-            if (StringUtils.isBlank(value) && defaultValue != null) {
-                value = defaultValue;
-            }
             return Integer.parseInt(value);
-        } catch (Exception eee) {
+        } catch (NumberFormatException eee) {
             throw new CheckerException(String.format("Can't parse integer '%s'", value), eee);
         }
-
     }
 }
