@@ -26,6 +26,9 @@
   "menu": {
     "logout": "Se déconnecter",
     "applications": "Applications",
-    "references": "Référentiels"
+    "references": "Référentiels",
+    "french": "Français",
+    "english": "English",
+    "language": "Langue"
   }
 }

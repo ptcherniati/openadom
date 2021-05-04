@@ -17,33 +17,51 @@
           }}</b-button>
         </div>
       </b-navbar-item>
+      <b-navbar-item tag="div">
+        <b-field>
+          <b-select
+            v-model="chosenLocale"
+            :placeholder="$t('menu.language')"
+            icon="globe"
+            @input="setUserPrefLocale"
+          >
+            <option :value="locales.FRENCH">{{ $t("menu.french") }}</option>
+            <option :value="locales.ENGLISH">{{ $t("menu.english") }}</option>
+          </b-select>
+        </b-field>
+      </b-navbar-item>
     </template>
   </b-navbar>
 </template>
 
 <script>
-import { User } from "@/model/User";
-import { LoginService } from "@/services/LoginService";
 import { Component, Vue } from "vue-property-decorator";
+
+import { LoginService } from "@/services/LoginService";
+import { UserPreferencesService } from "@/services/UserPreferencesService";
+
+import { Locales } from "@/utils/LocaleUtils.js";
 
 @Component({
   components: {},
 })
 export default class MenuView extends Vue {
   loginService = LoginService.INSTANCE;
+  userPreferencesService = UserPreferencesService.INSTANCE;
 
-  loggedUser = new User();
+  locales = Locales;
+  chosenLocale = "";
 
   created() {
-    this.init();
-  }
-
-  async init() {
-    this.loggedUser = await this.loginService.getLoggedUser();
+    this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
   }
 
   logout() {
     this.loginService.logout();
+  }
+
+  setUserPrefLocale() {
+    this.userPreferencesService.setUserPrefLocale(this.chosenLocale);
   }
 }
 </script>

@@ -9,6 +9,7 @@ import {
   faExclamationCircle,
   faEye,
   faEyeSlash,
+  faGlobe,
   faPlus,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
@@ -19,7 +20,8 @@ library.add(
   faPlus,
   faExclamationCircle,
   faCheck,
-  faSignOutAlt
+  faSignOutAlt,
+  faGlobe
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
