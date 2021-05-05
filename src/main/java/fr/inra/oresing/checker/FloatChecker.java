@@ -1,34 +1,32 @@
 package fr.inra.oresing.checker;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.ValidationCheckResult;
 
-import java.util.Map;
+public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
 
-@Component
-@Scope("prototype")
-public class FloatChecker implements Checker {
+    private final VariableComponentKey variableComponentKey;
 
-    public static final String PARAM_DEFAULT = "default";
-
-    private String defaultValue;
-
-    @Override
-    public void setParam(Map<String, String> params) {
-        defaultValue = params.get(PARAM_DEFAULT);
+    public FloatChecker(VariableComponentKey variableComponentKey) {
+        this.variableComponentKey = variableComponentKey;
     }
 
     @Override
-    public Float check(String value) throws CheckerException {
-        try {
-            if (StringUtils.isBlank(value) && defaultValue != null) {
-                value = defaultValue;
-            }
-            return Float.parseFloat(value);
-        } catch (Exception eee) {
-            throw new CheckerException(String.format("Can't parse float '%s'", value), eee);
-        }
+    public VariableComponentKey getVariableComponentKey() {
+        return variableComponentKey;
+    }
 
+    @Override
+    public ValidationCheckResult check(String value) {
+        ValidationCheckResult validationCheckResult;
+        try {
+            Float.parseFloat(value);
+            validationCheckResult = DefaultValidationCheckResult.success();
+        } catch (NumberFormatException e) {
+            validationCheckResult = DefaultValidationCheckResult.error("invalidFloat", ImmutableMap.of("variableComponentKey", variableComponentKey, "value", value));
+        }
+        return validationCheckResult;
     }
 }

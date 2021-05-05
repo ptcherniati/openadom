@@ -810,6 +810,13 @@ dataTypes:
         components:
           valeur:
           qualité:
+    validations:
+      swcQualityEnumeration:
+        description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        checker:
+          name: GroovyExpression
+          params:
+            expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
     format:
       headerLine: 7
       firstRowLine: 10

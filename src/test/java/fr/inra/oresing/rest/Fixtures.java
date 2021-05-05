@@ -178,7 +178,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
+                    .andExpect(MockMvcResultMatchers.status().isOk());
         }
         return authCookie;
     }
@@ -208,7 +208,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fake_app/data/jeu1")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
+                    .andExpect(MockMvcResultMatchers.status().isOk());
         }
 
         return authCookie;
@@ -241,7 +241,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isOk());
         }
 
         try (InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
@@ -249,7 +249,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isOk());
         }
 
         try (InputStream in = openSwcDataResourceName(true)) {
@@ -257,7 +257,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isOk());
         }
     }
 }

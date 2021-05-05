@@ -10,8 +10,9 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.DateChecker;
-import fr.inra.oresing.checker.ReferenceChecker;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.GroovyLineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -19,12 +20,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -91,13 +94,30 @@ public class ApplicationConfigurationService {
                     if (variableComponentDescription != null) {
                         Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                         if ("Reference".equals(checkerDescription.getName())) {
-                            if (checkerDescription.getParams().containsKey(ReferenceChecker.PARAM_REFTYPE)) {
+                            if (checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
                                 // OK
                             } else {
                                 builder.missingReferenceForChecker(dataType, datum, component, references);
                             }
                         }
                     }
+                }
+            }
+
+            for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : dataTypeDescription.getValidations().entrySet()) {
+                Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
+                String lineValidationRuleKey = validationEntry.getKey();
+                Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
+                if (GroovyLineChecker.NAME.equals(checker.getName())) {
+                    String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
+                    if (StringUtils.isBlank(expression)) {
+                        builder.recordMissingRequiredExpression(lineValidationRuleKey);
+                    } else {
+                        Optional<GroovyLineChecker.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
+                        compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(lineValidationRuleKey, expression, compilationError));
+                    }
+                } else {
+                    builder.recordUnknownCheckerName(lineValidationRuleKey, checker.getName());
                 }
             }
 
@@ -123,7 +143,7 @@ public class ApplicationConfigurationService {
             if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
                 builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
             }
-            String pattern = timeScopeVariableComponentChecker.getParams().get(DateChecker.PARAM_PATTERN);
+            String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
             if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
                 builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
             }
