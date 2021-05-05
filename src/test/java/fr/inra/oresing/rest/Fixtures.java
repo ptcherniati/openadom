@@ -38,7 +38,7 @@ public class Fixtures {
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
-        FAKE_APP_FOR_MIGRATION("fake_app", ImmutableSet.of());
+        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
 
@@ -187,7 +187,7 @@ public class Fixtures {
         Cookie authCookie = addApplicationCreatorUser();
         try (InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
             MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fake_app")
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp")
                     .file(configuration)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().isCreated());
@@ -196,7 +196,7 @@ public class Fixtures {
         // Ajout de referentiel
         try (InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationReferenceResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fake_app/references/couleurs")
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp/references/couleurs")
                     .file(refFile)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().isCreated());
@@ -205,7 +205,7 @@ public class Fixtures {
         // ajout de data
         try (InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fake_app/data/jeu1")
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp/data/jeu1")
                     .file(refFile)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().isOk());

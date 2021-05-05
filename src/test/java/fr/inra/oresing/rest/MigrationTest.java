@@ -56,14 +56,14 @@ public class MigrationTest {
     public void testMigrate() throws Exception {
         try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(2))) {
             MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fake_app/configuration")
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp/configuration")
                     .file(configuration)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().isCreated());
         }
 
         {
-            String actualCsv = mockMvc.perform(get("/api/v1/applications/fake_app/data/jeu1")
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/fakeapp/data/jeu1")
                     .cookie(authCookie)
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
