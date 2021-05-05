@@ -81,10 +81,10 @@ public class GroovyLineChecker implements LineChecker {
                 if ((Boolean) evaluation) {
                     return DefaultValidationCheckResult.success();
                 } else {
-                    return DefaultValidationCheckResult.error(script + " a été évalue à FAUX", ImmutableMap.of("evaluation", evaluation));
+                    return DefaultValidationCheckResult.error(expression + " a été évalue à FAUX", ImmutableMap.of("evaluation", evaluation));
                 }
             } else {
-                throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + script + ", donnée = " + datum);
+                throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + expression + ", donnée = " + datum);
             }
         } catch (ScriptException e) {
             int lineNumber = e.getLineNumber();
