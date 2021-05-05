@@ -1,6 +1,6 @@
 <template>
   <div class="PageView">
-    <MenuView />
+    <MenuView v-if="hasMenu" />
     <div class="container PageView-container">
       <slot></slot>
     </div>
@@ -9,13 +9,15 @@
 
 <script>
 import { LoginService } from "@/services/LoginService";
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import MenuView from "./MenuView.vue";
 
 @Component({
   components: { MenuView },
 })
 export default class PageView extends Vue {
+  @Prop({ default: true }) hasMenu;
+
   loginService = LoginService.INSTANCE;
 
   created() {

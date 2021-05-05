@@ -21,7 +21,7 @@
   "alert": {
     "cancel": "Cancel",
     "server-error": "A server error occured",
-    "user-uknown": "Uknown user"
+    "user-unknown": "Unknown user"
   },
   "menu": {
     "logout": "Log out",

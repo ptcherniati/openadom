@@ -47,8 +47,8 @@ export const i18n = new VueI18n({
 import "vee-validate";
 import { required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
-// See https://logaretm.github.io/vee-validate/guide/rules.html
-// For list of all availables rules
+// Ici on surcharge les messages d'erreur de vee-validate.
+// Pour plus de règles :  https://logaretm.github.io/vee-validate/guide/rules.html
 
 extend("required", {
   ...required,

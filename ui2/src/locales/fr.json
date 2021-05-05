@@ -21,7 +21,7 @@
   "alert": {
     "cancel": "Annuler",
     "server-error": "Une erreur serveur est survenue",
-    "user-uknown": "Identifiants inconnus"
+    "user-unknown": "Identifiants inconnus"
   },
   "menu": {
     "logout": "Se déconnecter",
