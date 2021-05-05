@@ -95,7 +95,7 @@ export default class SignIn extends Vue {
     } catch (error) {
       let message = this.$t("alert.server-error");
       if (error.status === HttpStatusCodes.FORBIDDEN) {
-        message = this.$t("alert.user-uknown");
+        message = this.$t("alert.user-unknown");
       }
       this.alertService.toastError(message, error);
     }

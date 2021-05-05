@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="PageView">
     <MenuView v-if="hasMenu" />
     <div class="container PageView-container">
       <slot></slot>
@@ -30,6 +30,10 @@ export default class PageView extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.PageView {
+  height: 100%;
+}
+
 .PageView-container {
   width: 100%;
 }

@@ -1,6 +1,13 @@
 // A file for common css across the application
+html,
+body {
+  height: 100%;
+}
+
 .title {
   color: $primary;
+  margin-top: 1.5rem;
+
   &.main-title {
     display: flex;
     align-items: center;

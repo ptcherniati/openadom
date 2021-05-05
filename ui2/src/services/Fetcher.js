@@ -1,5 +1,8 @@
 import config from "@/config";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
+import { Locales } from "@/utils/LocaleUtils";
+
+export const LOCAL_STORAGE_LANG = "lang";
 
 export class Fetcher {
   async post(url, data) {
@@ -10,6 +13,9 @@ export class Fetcher {
       mode: "cors",
       credentials: "include",
       body: formData,
+      headers: {
+        "Accept-Language": this.getUserPrefLocale(),
+      },
     });
 
     return this._handleResponse(response);
@@ -22,6 +28,9 @@ export class Fetcher {
       mode: "cors",
       credentials: "include",
       body: formData,
+      headers: {
+        "Accept-Language": this.getUserPrefLocale(),
+      },
     });
 
     return this._handleResponse(response);
@@ -44,6 +53,9 @@ export class Fetcher {
       method: "GET",
       mode: "cors",
       credentials: "include",
+      headers: {
+        "Accept-Language": this.getUserPrefLocale(),
+      },
     });
 
     return this._handleResponse(response);
@@ -56,6 +68,9 @@ export class Fetcher {
       mode: "cors",
       credentials: "include",
       body: formData,
+      headers: {
+        "Accept-Language": this.getUserPrefLocale(),
+      },
     });
 
     if (response.ok) {
@@ -91,5 +106,15 @@ export class Fetcher {
       }
     }
     return formData;
+  }
+
+  getUserPrefLocale() {
+    const browserLocale = window.navigator.language.substring(0, 2);
+
+    return (
+      localStorage.getItem(LOCAL_STORAGE_LANG) ||
+      (Object.values(Locales).includes(browserLocale) && browserLocale) ||
+      Locales.FRENCH
+    );
   }
 }

@@ -19,5 +19,6 @@ export default class App extends Vue {}
   color: $text-default-color;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 </style>
