@@ -29,10 +29,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1")
 public class OreSiResources {
+
+    private static final Predicate<String> INVALID_APPLICATION_NAME_PREDICATE =
+            Pattern.compile("[a-z]+").asMatchPredicate().negate();
 
     @Autowired
     private OreSiRepository repo;
@@ -66,7 +71,10 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> createApplication(@PathVariable("name") String name, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
+    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
+        if (INVALID_APPLICATION_NAME_PREDICATE.test(name)) {
+            return ResponseEntity.badRequest().body("'" + name + "' n’est pas un nom d'application valide, seules les lettres minuscules sont acceptées");
+        }
         UUID result = service.createApplication(name, file);
         String uri = UriUtils.encodePath("/applications/" + result, Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
