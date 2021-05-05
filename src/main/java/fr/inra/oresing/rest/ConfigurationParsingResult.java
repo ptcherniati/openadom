@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
 import lombok.Value;
@@ -137,6 +138,27 @@ public class ConfigurationParsingResult {
                     "targetTypeName", targetTypeName
             ));
         }
+
+        public Builder recordMissingRequiredExpression(String lineValidationRuleKey) {
+            return recordError("missingRequiredExpression", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey
+            ));
+        }
+
+        public Builder recordIllegalGroovyExpression(String lineValidationRuleKey, String expression, GroovyLineChecker.CompilationError compilationError) {
+            return recordError("illegalGroovyExpression", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey,
+                    "expression", expression,
+                    "compilationError", compilationError
+            ));
+        }
+
+        public Builder recordUnknownCheckerName(String lineValidationRuleKey, String checkerName) {
+            return recordError("unknownCheckerName", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey,
+                    "checkerName", checkerName
+            ));
+        }
     }
 
     // "emptyFile": "le fichier est vide"
@@ -154,5 +176,7 @@ public class ConfigurationParsingResult {
     // "timeScopeVariableComponentPatternUnknown": "Le composant {component} de la variable {variable} ne peut pas être utilisé comme portant l’information temporelle car le format de date '{pattern}' n’est pas géré. Formats acceptés : {knownPatterns}"
     // "unrecognizedProperty": "Erreur à la ligne {lineNumber} (colonne {columnNumber}) : {unknownPropertyName}, c'est pas une propriété reconnue. Les propriétés reconnues sont {knownProperties}"
     // "invalidFormat": "Erreur à la ligne {lineNumber} (colonne {columnNumber}) : '{value}' n’a pas le bon format. Le type attendu est {targetTypeName}"
-
+    // "missingRequiredExpression": "Pour la règle de validation {lineValidationRuleKey}, vous devez renseigner l'expression à évaluer pour contrôler que la règle est respectée par les données"
+    // "illegalGroovyExpression": "Pour la règle de validation {lineValidationRuleKey}, l'expression renseignée {expression} n'est pas correcte. Erreur de compilation de l'expression à la ligne {compilationError.lineNumber} (colonne {compilationError.columnNumber}) message '{compilationError.message}'"
+    // "unknownCheckerName": "Pour la règle de validation {lineValidationRuleKey}, '{checkerName}' est déclaré mais ce n’est pas un contrôle connu"
 }

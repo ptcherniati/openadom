@@ -71,9 +71,17 @@ public class Configuration {
     public static class DataTypeDescription {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
-        Set<CheckerDescription> checkers = new LinkedHashSet<>();
+        LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class LineValidationRuleDescription {
+        String description;
+        CheckerDescription checker;
     }
 
     @Getter

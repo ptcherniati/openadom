@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
@@ -19,12 +20,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -98,6 +101,23 @@ public class ApplicationConfigurationService {
                             }
                         }
                     }
+                }
+            }
+
+            for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : dataTypeDescription.getValidations().entrySet()) {
+                Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
+                String lineValidationRuleKey = validationEntry.getKey();
+                Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
+                if (GroovyLineChecker.NAME.equals(checker.getName())) {
+                    String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
+                    if (StringUtils.isBlank(expression)) {
+                        builder.recordMissingRequiredExpression(lineValidationRuleKey);
+                    } else {
+                        Optional<GroovyLineChecker.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
+                        compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(lineValidationRuleKey, expression, compilationError));
+                    }
+                } else {
+                    builder.recordUnknownCheckerName(lineValidationRuleKey, checker.getName());
                 }
             }
 

@@ -70,9 +70,11 @@ public class CheckerFactory {
                 }
             }
         }
-        for (Configuration.CheckerDescription checkerDescription : dataTypeDescription.getCheckers()) {
+        for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : dataTypeDescription.getValidations().entrySet()) {
+            Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
+            Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
             LineChecker lineChecker;
-            if ("GroovyExpression".equals(checkerDescription.getName())) {
+            if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
                 String expression = checkerDescription.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
                 lineChecker = GroovyLineChecker.forExpression(expression);
             } else {

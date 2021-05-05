@@ -11,6 +11,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class GroovyLineCheckerTest {
@@ -27,6 +28,14 @@ public class GroovyLineCheckerTest {
                 , "}"
                 , "throw new IllegalArgumentException(\"unité inconnue, \" + unité);"
         );
+        String wrongExpression = expression.replace("Integer", "Integre");
+
+        Assert.assertFalse(GroovyLineChecker.validateExpression(expression).isPresent());
+        Optional<GroovyLineChecker.CompilationError> compilationErrorOptional = GroovyLineChecker.validateExpression(wrongExpression);
+        Assert.assertTrue(compilationErrorOptional.isPresent());
+        compilationErrorOptional.ifPresent(compilationError -> {
+            Assert.assertTrue(compilationError.getMessage().contains("Integre"));
+        });
 
         GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression);
         ImmutableMap<VariableComponentKey, String> validDatum =
