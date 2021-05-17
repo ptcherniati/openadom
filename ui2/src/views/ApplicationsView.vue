@@ -2,31 +2,18 @@
   <div>
     <PageView>
       <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
-      {{ loggedUser.login }}
+      <UploadApplication />
     </PageView>
   </div>
 </template>
 
 <script>
-import { User } from "@/model/User";
-import { LoginService } from "@/services/LoginService";
+import UploadApplication from "@/components/applications/UploadApplication.vue";
 import { Component, Vue } from "vue-property-decorator";
 import PageView from "./common/PageView.vue";
 
 @Component({
-  components: { PageView },
+  components: { PageView, UploadApplication },
 })
-export default class ApplicationsView extends Vue {
-  loginService = LoginService.INSTANCE;
-
-  loggedUser = new User();
-
-  created() {
-    this.init();
-  }
-
-  async init() {
-    this.loggedUser = await this.loginService.getLoggedUser();
-  }
-}
+export default class ApplicationsView extends Vue {}
 </script>

@@ -30,5 +30,11 @@
     "french": "Français",
     "english": "English",
     "language": "Langue"
+  },
+  "applications": {
+    "chose-config": "Choisir une configuration",
+    "create": "Créer l'application",
+    "name": "Nom de l'application",
+    "name-placeholder": "Entrer le nom de l'application"
   }
 }

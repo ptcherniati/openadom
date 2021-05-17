@@ -12,6 +12,7 @@ import {
   faGlobe,
   faPlus,
   faSignOutAlt,
+  faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -21,7 +22,8 @@ library.add(
   faExclamationCircle,
   faCheck,
   faSignOutAlt,
-  faGlobe
+  faGlobe,
+  faUpload
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
