@@ -32,7 +32,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     @Override
     protected String getUpsertQuery() {
         return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, compositeKey, refValues, binaryFile) SELECT id, application, referenceType, compositeKey, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, referenceType=EXCLUDED.referenceType, compositeKey=EXCLUDED.compositeKey, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
+                + " ON CONFLICT ON CONSTRAINT UK_Reference DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, referenceType=EXCLUDED.referenceType, compositeKey=EXCLUDED.compositeKey, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
 
