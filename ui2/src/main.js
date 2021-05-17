@@ -57,6 +57,20 @@ extend("required", {
   message: i18n.t("validation.invalid-required"),
 });
 
+extend("validApplicationName", {
+  message: i18n.t("validation.invalid-application-name"),
+  validate: (value) => {
+    return value && value.match("^[a-zA-Z][a-zA-Z0-9_]*$") != null;
+  },
+});
+
+extend("validApplicationNameLength", {
+  message: i18n.t("validation.invalid-application-name-length"),
+  validate: (value) => {
+    return value && value.length >= 4 && value.length <= 20;
+  },
+});
+
 // Buefy
 Vue.use(Buefy, {
   defaultIconComponent: "vue-fontawesome",

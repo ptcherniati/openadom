@@ -2,7 +2,7 @@
   <div>
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
       <ValidationProvider
-        rules="required"
+        rules="required|validApplicationName|validApplicationNameLength"
         name="applicationsName"
         v-slot="{ errors, valid }"
         vid="applicationsName"
@@ -22,7 +22,7 @@
             </span>
           </template>
           <b-input
-            v-model="login"
+            v-model="applicationName"
             :placeholder="$t('applications.name-placeholder')"
           >
           </b-input>
@@ -36,7 +36,6 @@
       >
         <b-field
           class="file is-primary"
-          :class="{ 'has-name': file && file.name }"
           :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
@@ -78,6 +77,7 @@ import { ValidationObserver, ValidationProvider } from "vee-validate";
 })
 export default class UploadApplication extends Vue {
   file = {};
+  applicationName = "";
 
   createApplication() {
     console.log("CREAE");

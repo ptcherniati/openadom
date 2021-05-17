@@ -16,7 +16,9 @@
   "validation": {
     "obligatoire": "Mandatory",
     "facultatif": "Optional",
-    "invalid-required": "Please fill the field"
+    "invalid-required": "Please fill the field",
+    "invalid-application-name": "The name must begin with a letter and only includes letters, numbers or _.",
+    "invalid-application-name-length": "The name's length should be between 4 and 20 characters."
   },
   "alert": {
     "cancel": "Cancel",
