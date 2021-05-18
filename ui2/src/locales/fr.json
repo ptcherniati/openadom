@@ -17,7 +17,7 @@
     "obligatoire": "Obligatoire",
     "facultatif": "Facultatif",
     "invalid-required": "Merci de remplir le champ",
-    "invalid-application-name": "Le nom doit commencer par une lettre et ne comporter que des lettres, des chiffre ou _.",
+    "invalid-application-name": "Le nom ne doit comporter que des lettresminuscules .",
     "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères."
   },
   "alert": {

@@ -60,7 +60,7 @@ extend("required", {
 extend("validApplicationName", {
   message: i18n.t("validation.invalid-application-name"),
   validate: (value) => {
-    return value && value.match("^[a-zA-Z][a-zA-Z0-9_]*$") != null;
+    return value && value.match("^[a-z][a-z]*$") != null;
   },
 });
 
