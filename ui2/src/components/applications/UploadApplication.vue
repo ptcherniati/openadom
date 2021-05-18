@@ -22,7 +22,7 @@
             </span>
           </template>
           <b-input
-            v-model="applicationName"
+            v-model="applicationConfig.name"
             :placeholder="$t('applications.name-placeholder')"
           >
           </b-input>
@@ -41,15 +41,19 @@
             'is-success': valid,
           }"
         >
-          <b-upload v-model="file" class="file-label" accept=".yaml">
+          <b-upload
+            v-model="applicationConfig.file"
+            class="file-label"
+            accept=".yaml"
+          >
             <span class="file-cta">
               <b-icon class="file-icon" icon="upload"></b-icon>
               <span class="file-label">{{
                 $t("applications.chose-config")
               }}</span>
             </span>
-            <span class="file-name" v-if="file">
-              {{ file.name }}
+            <span class="file-name" v-if="applicationConfig.file">
+              {{ applicationConfig.file.name }}
             </span>
           </b-upload>
         </b-field>
@@ -71,16 +75,19 @@
 import { Component, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
+import { ApplicationConfig } from "@/model/ApplicationConfig";
+import { ApplicationService } from "@/services/rest/ApplicationService";
 
 @Component({
   components: { PageView, ValidationObserver, ValidationProvider },
 })
 export default class UploadApplication extends Vue {
-  file = {};
-  applicationName = "";
+  applicationService = ApplicationService.INSTANCE;
+
+  applicationConfig = new ApplicationConfig();
 
   createApplication() {
-    console.log("CREAE");
+    this.applicationService.createApplication(this.applicationConfig);
   }
 }
 </script>

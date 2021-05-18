@@ -37,7 +37,7 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 
-import { LoginService } from "@/services/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 import { UserPreferencesService } from "@/services/UserPreferencesService";
 
 import { Locales } from "@/utils/LocaleUtils.js";

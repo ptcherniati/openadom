@@ -102,7 +102,7 @@ export class Fetcher {
     let formData = new FormData();
     if (body) {
       for (const [key, value] of Object.entries(body)) {
-        formData.append(key.toString(), value.toString());
+        formData.append(key.toString(), value);
       }
     }
     return formData;

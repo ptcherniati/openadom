@@ -75,7 +75,7 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
-import { LoginService } from "@/services/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 import { AlertService } from "@/services/AlertService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 

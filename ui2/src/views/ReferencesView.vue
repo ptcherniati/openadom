@@ -9,7 +9,7 @@
 
 <script>
 import { User } from "@/model/User";
-import { LoginService } from "@/services/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 import { Component, Vue } from "vue-property-decorator";
 import PageView from "./common/PageView.vue";
 

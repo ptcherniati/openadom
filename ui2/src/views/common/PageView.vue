@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import { LoginService } from "@/services/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import MenuView from "./MenuView.vue";
 
