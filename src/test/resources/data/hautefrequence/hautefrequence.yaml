@@ -2,10 +2,17 @@ version: 0
 application:
   name: hautefrequence
   version: 1
-compositeReferences: 
+compositeReferences:
+  testCompositeReference:
+    components:
+      -
+        reference: b
+      -
+        parentKeyColumn: b1_b2
+        reference: a
   localizations: 
-    components: 
-      - 
+    components:
+      -
         reference: projet
       - 
         parentKeyColumn: projet
@@ -87,7 +94,7 @@ dataTypes:
               name: Float
     format: 
       columns: 
-        - 
+        -
           boundTo: 
             component: projet
             variable: localization
@@ -144,7 +151,20 @@ dataTypes:
           header: pression
       firstRowLine: 2
       headerLine: 1
-references: 
+references:
+  b:
+    columns:
+      b1: ~
+      b2: ~
+      d: ~
+    keyColumn: b1,b2
+  a:
+    columns:
+      b1_b2: ~
+      a1: ~
+      a2: ~
+      c: ~
+    keyColumn: a1,a2
   outil: 
     columns: 
       codeOutil: ~

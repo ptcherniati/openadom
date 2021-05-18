@@ -75,7 +75,7 @@ references:
       nom_en:
 
   valeurs_qualitatives:
-    keyColumn: nom_key
+    keyColumn: nom_key,valeur_key
     columns:
       nom_key:
       nom_fr:
@@ -136,6 +136,10 @@ dataTypes:
       Couleur des individus:
         components:
           value:
+            checker:
+              name: Reference
+              params:
+                refType: valeurs_qualitatives
       Nombre d'individus:
         components:
           value:
