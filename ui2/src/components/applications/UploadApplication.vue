@@ -77,17 +77,26 @@ import PageView from "@/views/common/PageView.vue";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { ApplicationConfig } from "@/model/ApplicationConfig";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { AlertService } from "@/services/AlertService";
 
 @Component({
   components: { PageView, ValidationObserver, ValidationProvider },
 })
 export default class UploadApplication extends Vue {
   applicationService = ApplicationService.INSTANCE;
+  alertService = AlertService.INSTANCE;
 
   applicationConfig = new ApplicationConfig();
 
-  createApplication() {
-    this.applicationService.createApplication(this.applicationConfig);
+  async createApplication() {
+    try {
+      await this.applicationService.createApplication(this.applicationConfig);
+      this.alertService.toastSuccess(
+        this.$t("alert.application-creation-success")
+      );
+    } catch (error) {
+      this.alertService.toastError(this.$t("alert.server-error"), error);
+    }
   }
 }
 </script>

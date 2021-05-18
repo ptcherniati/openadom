@@ -23,7 +23,8 @@
   "alert": {
     "cancel": "Annuler",
     "server-error": "Une erreur serveur est survenue",
-    "user-unknown": "Identifiants inconnus"
+    "user-unknown": "Identifiants inconnus",
+    "application-creation-success": "L'application a été créée !"
   },
   "menu": {
     "logout": "Se déconnecter",

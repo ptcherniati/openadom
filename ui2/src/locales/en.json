@@ -23,7 +23,8 @@
   "alert": {
     "cancel": "Cancel",
     "server-error": "A server error occured",
-    "user-unknown": "Unknown user"
+    "user-unknown": "Unknown user",
+    "application-creation-success": "L'application a été créée !"
   },
   "menu": {
     "logout": "Log out",

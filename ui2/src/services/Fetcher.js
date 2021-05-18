@@ -1,8 +1,10 @@
 import config from "@/config";
+import app from "@/main";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { Locales } from "@/utils/LocaleUtils";
 
 export const LOCAL_STORAGE_LANG = "lang";
+export const LOCAL_STORAGE_LOGGUED_USER = "loggedUser";
 
 export class Fetcher {
   async post(url, data) {
@@ -84,10 +86,15 @@ export class Fetcher {
 
   async _handleResponse(response) {
     try {
+      const text = await response.json();
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
-        const text = await response.json();
         return Promise.resolve(text);
-      } else if (response.status === HttpStatusCodes.UNAUTHORIZED) {
+      } else if (
+        response.status === HttpStatusCodes.UNAUTHORIZED ||
+        (response.status === HttpStatusCodes.INTERNAL_SERVER_ERROR &&
+          text.message ===
+            "la requête est faite en tant qu'utilisateur anonyme, il n'y a pas d'identifiant associé")
+      ) {
         this.notifyCrendentialsLost();
       }
     } catch (error) {
@@ -96,6 +103,11 @@ export class Fetcher {
     }
 
     return Promise.reject({ status: response.status });
+  }
+
+  notifyCrendentialsLost() {
+    localStorage.removeItem(LOCAL_STORAGE_LOGGUED_USER);
+    app.$router.push("/login").catch(() => {});
   }
 
   convertToFormData(body) {

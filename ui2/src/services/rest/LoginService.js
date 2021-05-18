@@ -1,8 +1,6 @@
 import app from "@/main";
 import { User } from "@/model/User";
-import { Fetcher } from "@/services/Fetcher.js";
-
-const LOCAL_STORAGE_LOGGUED_USER = "loggedUser";
+import { Fetcher, LOCAL_STORAGE_LOGGUED_USER } from "@/services/Fetcher.js";
 
 export class LoginService extends Fetcher {
   static INSTANCE = new LoginService();
@@ -10,11 +8,6 @@ export class LoginService extends Fetcher {
 
   constructor() {
     super();
-  }
-
-  notifyCrendentialsLost() {
-    localStorage.removeItem(LOCAL_STORAGE_LOGGUED_USER);
-    app.$router.push("/login").catch(() => {});
   }
 
   getLoggedUser() {
