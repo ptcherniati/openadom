@@ -45,12 +45,12 @@
     "name-placeholder": "Write down the application name"
   },
   "errors": {
-    "emptyFile": "Le fichier est vide",
-    "missingReference": "Pour le type de données {dataType}, la donnée {datum}, le composant {component}, il faut préciser le référentiel parmi {references}",
-    "unsupportedVersion": "Les fichiers YAML de version {actualVersion} ne sont pas géré, version attendue {expectedVersion}",
-    "undeclaredDataGroup": "La variable {variable} n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe",
-    "variableInMultipleData": "La variable {variable} est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
-    "unknownVariablesDataGroup": "le groupe de données {dataGroup} contient des données qui ne sont pas déclarées {unknownVariables}. Données connues {variables}",
+    "emptyFile": "File is empty",
+    "missingReference": "For data type : {dataType}, datum : {datum}, component : {component}, you need to one of those references : {references}",
+    "unsupportedVersion": "YAML files with version : {actualVersion} aren't currently managed, expected version {expectedVersion}",
+    "undeclaredDataGroup": "Variable : {variable} doesn't belong to any data group, it needs to be in one",
+    "variableInMultipleData": "Variable : {variable} is declared in several data groups, it needs to be only in one",
+    "unknownVariablesDataGroup": "Data group : {dataGroup} has undeclared data : {unknownVariables}. Known data : {variables}",
     "missingTimeScope": "il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}",
     "timeScopeVariableComponentKeyMissingVariable": "il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}. Valeurs possibles {variables}",
     "timeScopeVariableComponentKeyUnknownVariable": "{variable} ne fait pas parti des colonnes connues {knownVariables}",
