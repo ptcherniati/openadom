@@ -5,6 +5,8 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faAngleLeft,
+  faAngleRight,
   faArrowDown,
   faArrowUp,
   faCheck,
@@ -27,7 +29,9 @@ library.add(
   faGlobe,
   faUpload,
   faArrowUp,
-  faArrowDown
+  faArrowDown,
+  faAngleLeft,
+  faAngleRight
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

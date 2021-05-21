@@ -16,8 +16,18 @@
         :striped="true"
         :isFocusable="true"
         :isHoverable="true"
+        :sticky-header="true"
+        :paginated="true"
+        :per-page="15"
+        height="100%"
       >
-        <b-table-column field="name" label="Name" sortable v-slot="props">
+        <b-table-column
+          field="name"
+          label="Name"
+          sortable
+          width="50%"
+          v-slot="props"
+        >
           {{ props.row.name }}
         </b-table-column>
         <b-table-column
