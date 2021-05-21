@@ -78,12 +78,14 @@ import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { ApplicationConfig } from "@/model/ApplicationConfig";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AlertService } from "@/services/AlertService";
+import { ErrorsService } from "@/services/ErrorsService";
 
 @Component({
   components: { PageView, ValidationObserver, ValidationProvider },
 })
 export default class UploadApplication extends Vue {
   applicationService = ApplicationService.INSTANCE;
+  errorsService = ErrorsService.INSTANCE;
   alertService = AlertService.INSTANCE;
 
   applicationConfig = new ApplicationConfig();
@@ -95,7 +97,14 @@ export default class UploadApplication extends Vue {
         this.$t("alert.application-creation-success")
       );
     } catch (error) {
-      this.alertService.toastError(this.$t("alert.server-error"), error);
+      if (error instanceof Array && error.length !== 0 && error[0].message) {
+        const messages = this.errorsService.getErrorsMessages(error);
+        messages.forEach((msg, index) => {
+          this.alertService.toastError(msg, error[index]);
+        });
+      } else {
+        this.alertService.toastError(this.$t("alert.server-error"), error);
+      }
     }
   }
 }

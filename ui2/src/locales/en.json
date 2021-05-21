@@ -41,7 +41,7 @@
     "name-placeholder": "Write down the application name"
   },
   "errors": {
-    "emptyfile": "Le fichier est vide",
+    "emptyFile": "Le fichier est vide",
     "missingReference": "Pour le type de données {dataType}, la donnée {datum}, le composant {component}, il faut préciser le référentiel parmi {references}",
     "unsupportedVersion": "Les fichiers YAML de version {actualVersion} ne sont pas géré, version attendue {expectedVersion}",
     "undeclaredDataGroup": "La variable {variable} n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe",

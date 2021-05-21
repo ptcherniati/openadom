@@ -96,6 +96,8 @@ export class Fetcher {
             "la requête est faite en tant qu'utilisateur anonyme, il n'y a pas d'identifiant associé")
       ) {
         this.notifyCrendentialsLost();
+      } else if (text.validationCheckResults) {
+        return Promise.reject(text.validationCheckResults);
       }
     } catch (error) {
       console.error(error);
