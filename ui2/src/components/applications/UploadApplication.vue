@@ -75,6 +75,7 @@
           type="is-danger"
           has-icon
           :aria-close-label="$t('message.close')"
+          class="mt-4"
         >
           {{ msg }}
         </b-message>

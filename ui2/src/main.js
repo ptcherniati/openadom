@@ -5,6 +5,8 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faArrowDown,
+  faArrowUp,
   faCheck,
   faExclamationCircle,
   faEye,
@@ -23,7 +25,9 @@ library.add(
   faCheck,
   faSignOutAlt,
   faGlobe,
-  faUpload
+  faUpload,
+  faArrowUp,
+  faArrowDown
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
