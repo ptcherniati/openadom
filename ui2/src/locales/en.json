@@ -26,6 +26,10 @@
     "user-unknown": "Unknown user",
     "application-creation-success": "L'application a été créée !"
   },
+  "message": {
+    "app-config-error": "Error in yaml file",
+    "close": "Close message"
+  },
   "menu": {
     "logout": "Log out",
     "applications": "Applications",

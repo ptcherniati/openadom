@@ -68,6 +68,18 @@
         </b-button>
       </div>
     </ValidationObserver>
+    <div v-if="errorsMessages.length">
+      <div v-for="msg in errorsMessages" v-bind:key="msg">
+        <b-message
+          :title="$t('message.app-config-error')"
+          type="is-danger"
+          has-icon
+          :aria-close-label="$t('message.close')"
+        >
+          {{ msg }}
+        </b-message>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -89,8 +101,10 @@ export default class UploadApplication extends Vue {
   alertService = AlertService.INSTANCE;
 
   applicationConfig = new ApplicationConfig();
+  errorsMessages = [];
 
   async createApplication() {
+    this.errorsMessages = {};
     try {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(
@@ -98,10 +112,7 @@ export default class UploadApplication extends Vue {
       );
     } catch (error) {
       if (error instanceof Array && error.length !== 0 && error[0].message) {
-        const messages = this.errorsService.getErrorsMessages(error);
-        messages.forEach((msg, index) => {
-          this.alertService.toastError(msg, error[index]);
-        });
+        this.errorsMessages = this.errorsService.getErrorsMessages(error);
       } else {
         this.alertService.toastError(this.$t("alert.server-error"), error);
       }
