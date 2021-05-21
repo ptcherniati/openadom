@@ -2,7 +2,15 @@
   <div>
     <PageView>
       <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
-      <UploadApplication />
+      <div class="buttons">
+        <b-button
+          type="is-primary"
+          @click="createApplication"
+          icon-right="plus"
+        >
+          {{ $t("applications.create") }}
+        </b-button>
+      </div>
       <b-table
         :data="applications"
         :striped="true"
@@ -26,13 +34,12 @@
 </template>
 
 <script>
-import UploadApplication from "@/components/applications/UploadApplication.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { Component, Vue } from "vue-property-decorator";
 import PageView from "./common/PageView.vue";
 
 @Component({
-  components: { PageView, UploadApplication },
+  components: { PageView },
 })
 export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
@@ -45,6 +52,10 @@ export default class ApplicationsView extends Vue {
 
   async init() {
     this.applications = await this.applicationService.getApplications();
+  }
+
+  createApplication() {
+    this.$router.push("/applicationCreation");
   }
 }
 </script>

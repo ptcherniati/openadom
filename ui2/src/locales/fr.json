@@ -2,7 +2,8 @@
   "titles": {
     "login-page": "Bienvenue sur SI-ORE",
     "applications-page": "Mes applications",
-    "references-page": "Mes référentiels"
+    "references-page": "Mes référentiels",
+    "application-creation": "Créer une application"
   },
   "login": {
     "signin": "Se connecter",
