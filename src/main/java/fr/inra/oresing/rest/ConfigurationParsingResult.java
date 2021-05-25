@@ -160,23 +160,4 @@ public class ConfigurationParsingResult {
             ));
         }
     }
-
-    // "emptyFile": "le fichier est vide"
-    // "missingReferenceForChecker": "Pour le type de données {dataType}, la donnée {datum}, le composant {component}, il faut préciser le référentiel parmi {references}"
-    // "unsupportedVersion": "Les fichiers YAML de version {actualVersion} ne sont pas géré, version attendue {expectedVersion}"
-    // "undeclaredDataGroupForVariable": "la variable {variable} n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe"
-    // "variableInMultipleDataGroup": "la variable {variable} est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe"
-    // "unknownVariablesInDataGroup": "le groupe de données {dataGroup} contient des données qui ne sont pas déclarées {unknownVariables}. Données connues {variables}"
-    // "missingTimeScopeVariableComponentKey": "il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}"
-    // "timeScopeVariableComponentKeyMissingVariable": "il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}. Valeurs possibles {variables}"
-    // "timeScopeVariableComponentKeyUnknownVariable": "{variable} ne fait pas parti des colonnes connues {knownVariables}"
-    // "timeVariableComponentKeyMissingComponent": "il faut indiquer le composant de la variable {variable} dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}. Valeurs possibles {knownComponents}"
-    // "timeVariableComponentKeyUnknownComponent": "{component} ne fait pas parti des composants connus pour la variable {variable}. Composants connus : {knownComponents}"
-    // "timeScopeVariableComponentWrongChecker": "Le composant {component} de la variable {variable} ne peut pas être utilisé comme portant l’information temporelle car ce n’est pas une donnée déclarée comme {expectedChecker}"
-    // "timeScopeVariableComponentPatternUnknown": "Le composant {component} de la variable {variable} ne peut pas être utilisé comme portant l’information temporelle car le format de date '{pattern}' n’est pas géré. Formats acceptés : {knownPatterns}"
-    // "unrecognizedProperty": "Erreur à la ligne {lineNumber} (colonne {columnNumber}) : {unknownPropertyName}, c'est pas une propriété reconnue. Les propriétés reconnues sont {knownProperties}"
-    // "invalidFormat": "Erreur à la ligne {lineNumber} (colonne {columnNumber}) : '{value}' n’a pas le bon format. Le type attendu est {targetTypeName}"
-    // "missingRequiredExpression": "Pour la règle de validation {lineValidationRuleKey}, vous devez renseigner l'expression à évaluer pour contrôler que la règle est respectée par les données"
-    // "illegalGroovyExpression": "Pour la règle de validation {lineValidationRuleKey}, l'expression renseignée {expression} n'est pas correcte. Erreur de compilation de l'expression à la ligne {compilationError.lineNumber} (colonne {compilationError.columnNumber}) message '{compilationError.message}'"
-    // "unknownCheckerName": "Pour la règle de validation {lineValidationRuleKey}, '{checkerName}' est déclaré mais ce n’est pas un contrôle connu"
 }
