@@ -367,6 +367,9 @@ public class OreSiService {
                         .map(kc->reference.getRefValues().get(kc))
                         .map(kc->escapeKeyComponent(kc))
                         .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                if(referenceType== compositeReferenceComponentDescription.getReference() && Stream.of(keyColumn.split(",")).anyMatch(r->r.equals(compositeReferenceComponentDescription.getParentKeyColumn()))) {
+                    escapedKeyElement=escapedKeyElement.replace(reference.getRefValues().get(compositeReferenceComponentDescription.getParentKeyColumn())+KEYCOLUMN_SEPARATOR, "");
+                }
                 String compositeKey;
                 if (root) {
                     compositeKey = escapedKeyElement;
