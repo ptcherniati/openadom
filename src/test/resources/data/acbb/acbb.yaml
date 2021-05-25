@@ -2,14 +2,20 @@ version: 0
 application:
   name: ACBB
   version: 1
+  languages:
+    -
+      name: fr
+      byDefault: true
+    -
+      name: en
 references:
   sites:
     keyColumn: nom du site_key
     columns:
       Agroécosystème:
-      nom du site_key:
-      nom du site_fr:
-      nom du site_en:
+      nom du site:
+        internationalizable:
+          key: true
       ville:
       adresse:
       cordonnées du dispositif:
@@ -29,12 +35,13 @@ references:
       site:
       bloc:
       répétition:
-      nom de la parcelle_key:
-      nom de la parcelle_fr:
-      nom de la parcelle_en:
+      nom de la parcelle:
+        internationalizable:
+          key: true
       surface:
       date de création:
-      commentaire_fr:
+      commentaire:
+        internationalizable:
       commentaire_en:
 compositeReferences:
   localizations:

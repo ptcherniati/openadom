@@ -22,10 +22,10 @@ public class Configuration {
         checkVersion(file);
         YAMLMapper mapper = new YAMLMapper();
         Configuration result = mapper.readValue(file, Configuration.class);
-        return postConfiguration(result);
+        return result;
     }
 
-    private static Configuration postConfiguration(Configuration configuration) {
+    public static Configuration postConfiguration(Configuration configuration) {
         Optional.ofNullable(configuration)
                 .map(conf->conf.getApplication())
                 .map(app->app.getLanguages())

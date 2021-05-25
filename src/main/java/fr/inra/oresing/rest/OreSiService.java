@@ -291,7 +291,7 @@ public class OreSiService {
     }
 
     private void checkConfiguration(Application app) {
-        Configuration conf = app.getConfiguration();
+        Configuration conf = app.getConfiguration();//app.getInternationalizableConfiguration()??
         Set<String> references = conf.getReferences() == null ? Collections.emptySet() : conf.getReferences().keySet();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : conf.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
@@ -364,7 +364,7 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file);
 
-        Configuration conf = app.getConfiguration();
+        Configuration conf = app.getInternationalizableConfiguration();
 
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
         ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getReferencesCheckers(app, refType);
@@ -419,7 +419,8 @@ public class OreSiService {
 
     private void updateCompositeReference(Application application, String compositeReference) {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
-        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferences().get(compositeReference);
+        Configuration configuration = application.getInternationalizableConfiguration();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = configuration.getCompositeReferences().get(compositeReference);
 
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
                 .map(Configuration.CompositeReferenceComponentDescription::getReference)
@@ -428,7 +429,7 @@ public class OreSiService {
 
         for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
             String referenceType = compositeReferenceComponentDescription.getReference();
-            String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
+            String keyColumn = configuration.getReferences().get(referenceType).getKeyColumn();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
@@ -470,7 +471,7 @@ public class OreSiService {
         UUID fileId = storeFile(app, file);
 
         // recuperation de la configuration pour ce type de donnees
-        Configuration conf = app.getConfiguration();
+        Configuration conf = app.getInternationalizableConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         ImmutableMap<VariableComponentKey, Checker> checkers = checkerFactory.getDatatypeCheckers(app, dataType);
@@ -678,7 +679,7 @@ public class OreSiService {
         String dataType = downloadDatasetQuery.getDataType();
         List<Map<String, Map<String, String>>> list = findData(downloadDatasetQuery);
         Configuration.FormatDescription format = getApplication(applicationNameOrId)
-                .getConfiguration()
+                .getInternationalizableConfiguration()
                 .getDataTypes()
                 .get(dataType)
                 .getFormat();

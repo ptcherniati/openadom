@@ -16,4 +16,7 @@ public class Application extends OreSiEntity {
     private List<String> dataType;
     private Configuration configuration;
     private UUID configFile; // lien vers un BinaryFile
+    public Configuration getInternationalizableConfiguration(){
+        return Configuration.postConfiguration(configuration);
+    }
 }
