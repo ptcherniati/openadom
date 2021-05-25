@@ -167,6 +167,22 @@ public class ApplicationConfigurationService {
                     builder.recordVariableInMultipleDataGroup(variable);
                 }
             });
+
+            for (Configuration.ColumnBindingDescription columnBindingDescription : dataTypeDescription.getFormat().getColumns()) {
+                VariableComponentKey boundTo = columnBindingDescription.getBoundTo();
+                String variable = boundTo.getVariable();
+                if (variables.contains(variable)) {
+                    String component = boundTo.getComponent();
+                    Set<String> components = dataTypeDescription.getData().get(variable).getComponents().keySet();
+                    if (components.contains(component)) {
+                        // OK
+                    } else {
+                        builder.recordCsvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, components);
+                    }
+                } else {
+                    builder.recordCsvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
+                }
+            }
         }
 
         return builder.build(configuration);

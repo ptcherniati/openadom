@@ -63,6 +63,8 @@
     "invalidFormat": "Erreur à la ligne {lineNumber} (colonne {columnNumber}) : '{value}' n’a pas le bon format. Le type attendu est {targetTypeName}",
     "missingRequiredExpression": "Pour la règle de validation {lineValidationRuleKey}, vous devez renseigner l'expression à évaluer pour contrôler que la règle est respectée par les données",
     "illegalGroovyExpression": "Pour la règle de validation {lineValidationRuleKey}, l'expression renseignée {expression} n'est pas correcte. Erreur de compilation de l'expression à la ligne {compilationError.lineNumber} (colonne {compilationError.columnNumber}) message '{compilationError.message}'",
-    "unknownCheckerName": "Pour la règle de validation {lineValidationRuleKey}, '{checkerName}' est déclaré mais ce n’est pas un contrôle connu"
+    "unknownCheckerName": "Pour la règle de validation {lineValidationRuleKey}, '{checkerName}' est déclaré mais ce n’est pas un contrôle connu",
+    "csvBoundToUnknownVariable": "In the CSV format, header {header} is bound to unknown variable {variable}. Known variables: {variables}",
+    "csvBoundToUnknownVariableComponent": "In the CSV format, header {header} is bound to {variable} but it has no {component} component. Known components: {components}"
   }
 }

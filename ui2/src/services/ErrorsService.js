@@ -70,6 +70,8 @@ export class ErrorsService {
       this.getIllegalGroovyExpressionError
     );
     errorsMap.set("unknownCheckerName", this.getUnknownCheckerNameError);
+    errorsMap.set("csvBoundToUnknownVariable", this.getCsvBoundToUnknownVariableError);
+    errorsMap.set("csvBoundToUnknownVariableComponent", this.getCsvBoundToUnknownVariableComponentError);
     return errorsMap;
   }
 
@@ -149,5 +151,13 @@ export class ErrorsService {
 
   getUnknownCheckerNameError(params) {
     return i18n.t("errors.unknownCheckerName", params);
+  }
+
+  getCsvBoundToUnknownVariableError(params) {
+    return i18n.t("errors.csvBoundToUnknownVariable", params);
+  }
+
+  getCsvBoundToUnknownVariableComponentError(params) {
+    return i18n.t("errors.csvBoundToUnknownVariableComponent", params);
   }
 }
