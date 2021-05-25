@@ -274,11 +274,7 @@ public class OreSiService {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
-        if (configuration.getReferences() == null) {
-            app.setReferenceType(Collections.emptyList());
-        } else {
-            app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
-        }
+        app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
         UUID confId = storeFile(app, configurationFile);

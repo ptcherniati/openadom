@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,7 +80,7 @@ public class ApplicationConfigurationService {
 
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
-        Set<String> references = configuration.getReferences() == null ? Collections.emptySet() : configuration.getReferences().keySet();
+        Set<String> references = configuration.getReferences().keySet();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
