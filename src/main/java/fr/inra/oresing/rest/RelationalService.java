@@ -174,10 +174,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
         UUID appId = application.getId();
 
-        if (application.getConfiguration() == null) {
-            return views;
-        }
-
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
@@ -240,9 +236,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
     private List<ViewCreationCommand> getDenormalizedViewsForDataTypes(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
         List<ViewCreationCommand> views = new LinkedList<>();
-        if (application.getConfiguration() == null) {
-            return views;
-        }
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
@@ -289,7 +282,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
     private List<ViewCreationCommand> getViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
         UUID appId = app.getId();
         List<ViewCreationCommand> views = new LinkedList<>();
-        if (app.getConfiguration() == null || app.getConfiguration().getReferences() == null) {
+        if (app.getConfiguration().getReferences() == null) {
             return views;
         }
         for (Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
