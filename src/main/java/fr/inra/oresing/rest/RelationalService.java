@@ -289,7 +289,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String referenceType = entry.getKey();
             Set<String> columns = entry.getValue().getColumns().keySet();
             String columnsAsSchema = columns.stream()
-                    .map(ident->referenceType+"_"+ident)
                     .map(this::quoteSqlIdentifier)
                     .map(quotedColumnName -> quotedColumnName + " text")
                     .collect(Collectors.joining(", ", "(", ")"));
