@@ -9,6 +9,7 @@ references:
       esp_nom:
       esp_definition_fr:
       esp_definition_en:
+      colonne_homonyme_entre_referentiels:
 
   projet:
     keyColumn: nom_key
@@ -18,6 +19,7 @@ references:
       nom_en:
       definition_fr:
       definition_en:
+      colonne_homonyme_entre_referentiels:
 
   sites:
     keyColumn: chemin
