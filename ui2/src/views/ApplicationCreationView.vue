@@ -63,6 +63,13 @@
           </ValidationProvider>
           <div class="buttons">
             <b-button
+              type="is-light"
+              @click="handleSubmit(testApplication)"
+              icon-right="plus"
+            >
+              {{ $t("applications.test") }}
+            </b-button>
+            <b-button
               type="is-primary"
               @click="handleSubmit(createApplication)"
               icon-right="plus"
@@ -116,6 +123,34 @@ export default class ApplicationCreationView extends Vue {
       this.alertService.toastSuccess(
         this.$t("alert.application-creation-success")
       );
+    } catch (error) {
+      if (error instanceof Array && error.length !== 0 && error[0].message) {
+        this.errorsMessages = this.errorsService.getErrorsMessages(error);
+      } else {
+        this.alertService.toastError(this.$t("alert.server-error"), error);
+      }
+    }
+  }
+
+  async testApplication() {
+    this.errorsMessages = {};
+    try {
+      let response = await this.applicationService.validateConfiguration(
+        this.applicationConfig
+      );
+      console.dir(response);
+      if (response.valid == true) {
+        this.alertService.toastSuccess(
+          this.$t("alert.application-validate-success")
+        );
+      } else {
+        let error = [];
+        for (let i in response.validationCheckResults) {
+          let vce = response.validationCheckResults[i];
+          error.push(this.$t("errors." + vce.message, vce.messageParams));
+        }
+        this.alertService.toastError(error);
+      }
     } catch (error) {
       if (error instanceof Array && error.length !== 0 && error[0].message) {
         this.errorsMessages = this.errorsService.getErrorsMessages(error);

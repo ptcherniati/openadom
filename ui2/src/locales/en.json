@@ -25,7 +25,8 @@
     "cancel": "Cancel",
     "server-error": "A server error occured",
     "user-unknown": "Unknown user",
-    "application-creation-success": "L'application a été créée !"
+    "application-creation-success": "The app has been created!",
+    "application-validate-success": "The YAML file is valid!"
   },
   "message": {
     "app-config-error": "Error in yaml file",
@@ -42,6 +43,7 @@
   "applications": {
     "chose-config": "Chose a configuration",
     "create": "Create application",
+    "test": "Test",
     "name": "Application name",
     "name-placeholder": "Write down the application name"
   },

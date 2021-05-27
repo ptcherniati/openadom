@@ -25,7 +25,8 @@
     "cancel": "Annuler",
     "server-error": "Une erreur serveur est survenue",
     "user-unknown": "Identifiants inconnus",
-    "application-creation-success": "L'application a été créée !"
+    "application-creation-success": "L'application a été créée !",
+    "application-validate-success": "Le fichier YAML est valide !"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",
@@ -42,6 +43,7 @@
   "applications": {
     "chose-config": "Choisir une configuration",
     "create": "Créer l'application",
+    "test": "Tester",
     "name": "Nom de l'application",
     "name-placeholder": "Entrer le nom de l'application"
   },
@@ -49,9 +51,9 @@
     "emptyFile": "Le fichier est vide",
     "missingReference": "Pour le type de données {dataType}, la donnée {datum}, le composant {component}, il faut préciser le référentiel parmi {references}",
     "unsupportedVersion": "Les fichiers YAML de version {actualVersion} ne sont pas gérés, version attendue {expectedVersion}",
-    "undeclaredDataGroup": "La variable {variable} n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe",
+    "undeclaredDataGroupForVariable": "La variable {variable} n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe",
     "variableInMultipleData": "La variable {variable} est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
-    "unknownVariablesDataGroup": "le groupe de données {dataGroup} contient des données qui ne sont pas déclarées {unknownVariables}. Données connues {variables}",
+    "unknownVariablesInDataGroup": "le groupe de données {dataGroup} contient des données qui ne sont pas déclarées {unknownVariables}. Données connues {variables}",
     "missingTimeScope": "Il faut indiquer la variable (et son composant) dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}",
     "timeScopeVariableComponentKeyMissingVariable": "Il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données {dataType}. Valeurs possibles {variables}",
     "timeScopeVariableComponentKeyUnknownVariable": "{variable} ne fait pas parti des colonnes connues {knownVariables}",
