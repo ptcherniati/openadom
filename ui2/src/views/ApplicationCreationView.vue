@@ -70,7 +70,7 @@
               :aria-close-label="$t('message.close')"
               class="mt-4"
             >
-              {{ msg }}
+              <span v-html="msg" />
             </b-message>
           </div>
         </div>
