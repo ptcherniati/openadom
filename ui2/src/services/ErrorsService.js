@@ -14,23 +14,11 @@ export class ErrorsService {
   getErrorsMap() {
     const errorsMap = new Map();
     errorsMap.set("emptyFile", this.getEmptyFileError);
-    errorsMap.set(
-      "missingReferenceForChecker",
-      this.getMissingReferenceForCheckerError
-    );
+    errorsMap.set("missingReferenceForChecker", this.getMissingReferenceForCheckerError);
     errorsMap.set("unsupportedVersion", this.getUnsupportedVersionError);
-    errorsMap.set(
-      "undeclaredDataGroupForVariable",
-      this.getUndeclaredDataGroupForVariableError
-    );
-    errorsMap.set(
-      "variableInMultipleDataGroup",
-      this.getVariableInMultipleDataGroupError
-    );
-    errorsMap.set(
-      "unknownVariablesInDataGroup",
-      this.getUnknownVariablesInDataGroupError
-    );
+    errorsMap.set("undeclaredDataGroupForVariable", this.getUndeclaredDataGroupForVariableError);
+    errorsMap.set("variableInMultipleDataGroup", this.getVariableInMultipleDataGroupError);
+    errorsMap.set("unknownVariablesInDataGroup", this.getUnknownVariablesInDataGroupError);
     errorsMap.set(
       "missingTimeScopeVariableComponentKey",
       this.getMissingTimeScopeVariableComponentKeyError
@@ -61,17 +49,14 @@ export class ErrorsService {
     );
     errorsMap.set("unrecognizedProperty", this.getUnrecognizedPropertyError);
     errorsMap.set("invalidFormat", this.getInvalidFormatError);
-    errorsMap.set(
-      "missingRequiredExpression",
-      this.getMissingRequiredExpressionError
-    );
-    errorsMap.set(
-      "illegalGroovyExpression",
-      this.getIllegalGroovyExpressionError
-    );
+    errorsMap.set("missingRequiredExpression", this.getMissingRequiredExpressionError);
+    errorsMap.set("illegalGroovyExpression", this.getIllegalGroovyExpressionError);
     errorsMap.set("unknownCheckerName", this.getUnknownCheckerNameError);
     errorsMap.set("csvBoundToUnknownVariable", this.getCsvBoundToUnknownVariableError);
-    errorsMap.set("csvBoundToUnknownVariableComponent", this.getCsvBoundToUnknownVariableComponentError);
+    errorsMap.set(
+      "csvBoundToUnknownVariableComponent",
+      this.getCsvBoundToUnknownVariableComponentError
+    );
     return errorsMap;
   }
 
@@ -104,17 +89,11 @@ export class ErrorsService {
   }
 
   getTimeScopeVariableComponentKeyMissingVariableError(params) {
-    return i18n.t(
-      "errors.timeScopeVariableComponentKeyMissingVariable",
-      params
-    );
+    return i18n.t("errors.timeScopeVariableComponentKeyMissingVariable", params);
   }
 
   getTimeScopeVariableComponentKeyUnknownVariableError(params) {
-    return i18n.t(
-      "errors.timeScopeVariableComponentKeyUnknownVariable",
-      params
-    );
+    return i18n.t("errors.timeScopeVariableComponentKeyUnknownVariable", params);
   }
 
   getTimeVariableComponentKeyMissingComponentError(params) {
