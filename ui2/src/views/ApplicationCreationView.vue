@@ -44,16 +44,10 @@
                 'is-success': valid,
               }"
             >
-              <b-upload
-                v-model="applicationConfig.file"
-                class="file-label"
-                accept=".yaml"
-              >
+              <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml">
                 <span class="file-cta">
                   <b-icon class="file-icon" icon="upload"></b-icon>
-                  <span class="file-label">{{
-                    $t("applications.chose-config")
-                  }}</span>
+                  <span class="file-label">{{ $t("applications.chose-config") }}</span>
                 </span>
                 <span class="file-name" v-if="applicationConfig.file">
                   {{ applicationConfig.file.name }}
@@ -62,11 +56,7 @@
             </b-field>
           </ValidationProvider>
           <div class="buttons">
-            <b-button
-              type="is-primary"
-              @click="handleSubmit(createApplication)"
-              icon-right="plus"
-            >
+            <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-right="plus">
               {{ $t("applications.create") }}
             </b-button>
           </div>
@@ -110,12 +100,10 @@ export default class ApplicationCreationView extends Vue {
   errorsMessages = [];
 
   async createApplication() {
-    this.errorsMessages = {};
+    this.errorsMessages = [];
     try {
       await this.applicationService.createApplication(this.applicationConfig);
-      this.alertService.toastSuccess(
-        this.$t("alert.application-creation-success")
-      );
+      this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
     } catch (error) {
       if (error instanceof Array && error.length !== 0 && error[0].message) {
         this.errorsMessages = this.errorsService.getErrorsMessages(error);
