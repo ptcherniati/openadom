@@ -4,7 +4,7 @@ import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { Locales } from "@/utils/LocaleUtils";
 
 export const LOCAL_STORAGE_LANG = "lang";
-export const LOCAL_STORAGE_LOGGUED_USER = "loggedUser";
+export const LOCAL_STORAGE_AUTHENTICATED_USER = "authenticatedUser";
 
 export class Fetcher {
   async post(url, data) {
@@ -108,7 +108,7 @@ export class Fetcher {
   }
 
   notifyCrendentialsLost() {
-    localStorage.removeItem(LOCAL_STORAGE_LOGGUED_USER);
+    localStorage.removeItem(LOCAL_STORAGE_AUTHENTICATED_USER);
     app.$router.push("/login").catch(() => {});
   }
 
