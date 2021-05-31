@@ -87,6 +87,7 @@ import { ApplicationConfig } from "@/model/ApplicationConfig";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AlertService } from "@/services/AlertService";
 import { ErrorsService } from "@/services/ErrorsService";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
   components: { PageView, ValidationObserver, ValidationProvider },
@@ -105,10 +106,12 @@ export default class ApplicationCreationView extends Vue {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
     } catch (error) {
-      if (error instanceof Array && error.length !== 0 && error[0].message) {
-        this.errorsMessages = this.errorsService.getErrorsMessages(error);
+      if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+        this.errorsMessages = this.errorsService.getErrorsMessages(
+          error.content.validationCheckResults
+        );
       } else {
-        this.alertService.toastError(this.$t("alert.server-error"), error);
+        this.alertService.toastServerError(error);
       }
     }
   }

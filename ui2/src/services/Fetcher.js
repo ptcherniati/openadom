@@ -89,22 +89,15 @@ export class Fetcher {
       const text = await response.json();
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
         return Promise.resolve(text);
-      } else if (
-        response.status === HttpStatusCodes.UNAUTHORIZED ||
-        (response.status === HttpStatusCodes.INTERNAL_SERVER_ERROR &&
-          text.message ===
-            "la requête est faite en tant qu'utilisateur anonyme, il n'y a pas d'identifiant associé")
-      ) {
-        this.notifyCrendentialsLost();
-      } else if (text.validationCheckResults) {
-        return Promise.reject(text.validationCheckResults);
       }
+      return Promise.reject({ httpResponseCode: response.status, content: text });
     } catch (error) {
       console.error(error);
-      throw error;
     }
-
-    return Promise.reject({ status: response.status });
+    if (response.ok) {
+      return Promise.resolve();
+    }
+    return Promise.reject({ httpResponseCode: response.status });
   }
 
   notifyCrendentialsLost() {

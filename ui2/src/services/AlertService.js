@@ -1,3 +1,4 @@
+import { i18n } from "@/main";
 import { BuefyTypes } from "@/utils/BuefyUtils";
 import { ToastProgrammatic } from "buefy";
 
@@ -38,5 +39,9 @@ export class AlertService {
       duration: TOAST_ERROR_DURATION,
       position: TOAST_POSITION,
     });
+  }
+
+  toastServerError(error) {
+    this.toastError(i18n.t("alert.server-error"), error);
   }
 }
