@@ -251,7 +251,10 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                selectClauseReferenceElements.add(quotedViewName + ".*");
+
+                application.getConfiguration().getReferences().get(referenceType).getColumns().keySet().stream()
+                        .map(referenceColumn -> quotedViewName + "." + quoteSqlIdentifier(referenceColumn) + " as " + quoteSqlIdentifier(referenceType + "_" + referenceColumn))
+                        .forEach(selectClauseReferenceElements::add);
                 fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + "." + quotedViewIdColumnName + " = " + quotedViewName + "." + quotedViewIdColumnName);
             }
 
