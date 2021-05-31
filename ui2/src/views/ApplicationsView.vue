@@ -3,11 +3,7 @@
     <PageView>
       <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
       <div class="buttons">
-        <b-button
-          type="is-primary"
-          @click="createApplication"
-          icon-right="plus"
-        >
+        <b-button type="is-primary" @click="createApplication" icon-right="plus">
           {{ $t("applications.create") }}
         </b-button>
       </div>
@@ -21,21 +17,10 @@
         :per-page="15"
         height="100%"
       >
-        <b-table-column
-          field="name"
-          label="Name"
-          sortable
-          width="50%"
-          v-slot="props"
-        >
+        <b-table-column field="name" label="Name" sortable width="50%" v-slot="props">
           {{ props.row.name }}
         </b-table-column>
-        <b-table-column
-          field="creationDate"
-          label="Creation Date"
-          sortable
-          v-slot="props"
-        >
+        <b-table-column field="creationDate" label="Creation Date" sortable v-slot="props">
           {{ new Date(props.row.creationDate) }}
         </b-table-column>
       </b-table>

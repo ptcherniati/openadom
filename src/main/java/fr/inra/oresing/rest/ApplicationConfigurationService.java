@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,7 +80,7 @@ public class ApplicationConfigurationService {
 
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
-        Set<String> references = configuration.getReferences() == null ? Collections.emptySet() : configuration.getReferences().keySet();
+        Set<String> references = configuration.getReferences().keySet();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
@@ -168,6 +167,22 @@ public class ApplicationConfigurationService {
                     builder.recordVariableInMultipleDataGroup(variable);
                 }
             });
+
+            for (Configuration.ColumnBindingDescription columnBindingDescription : dataTypeDescription.getFormat().getColumns()) {
+                VariableComponentKey boundTo = columnBindingDescription.getBoundTo();
+                String variable = boundTo.getVariable();
+                if (variables.contains(variable)) {
+                    String component = boundTo.getComponent();
+                    Set<String> components = dataTypeDescription.getData().get(variable).getComponents().keySet();
+                    if (components.contains(component)) {
+                        // OK
+                    } else {
+                        builder.recordCsvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, components);
+                    }
+                } else {
+                    builder.recordCsvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
+                }
+            }
         }
 
         return builder.build(configuration);

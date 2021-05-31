@@ -159,5 +159,22 @@ public class ConfigurationParsingResult {
                     "checkerName", checkerName
             ));
         }
+
+        public Builder recordCsvBoundToUnknownVariable(String header, String variable, Set<String> variables) {
+            return recordError("csvBoundToUnknownVariable", ImmutableMap.of(
+                    "header", header,
+                    "variable", variable,
+                    "variables", variables
+            ));
+        }
+
+        public Builder recordCsvBoundToUnknownVariableComponent(String header, String variable, String component, Set<String> components) {
+            return recordError("csvBoundToUnknownVariableComponent", ImmutableMap.of(
+                    "header", header,
+                    "variable", variable,
+                    "component", component,
+                    "components", components
+            ));
+        }
     }
 }

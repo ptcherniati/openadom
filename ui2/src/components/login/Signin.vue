@@ -1,12 +1,7 @@
 <template>
   <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
     <section>
-      <ValidationProvider
-        rules="required"
-        name="login"
-        v-slot="{ errors, valid }"
-        vid="login"
-      >
+      <ValidationProvider rules="required" name="login" v-slot="{ errors, valid }" vid="login">
         <b-field
           class="input-field"
           :type="{
@@ -21,8 +16,7 @@
               {{ $t("validation.obligatoire") }}
             </span>
           </template>
-          <b-input v-model="login" :placeholder="$t('login.login-placeholder')">
-          </b-input>
+          <b-input v-model="login" :placeholder="$t('login.login-placeholder')"> </b-input>
         </b-field>
       </ValidationProvider>
 
@@ -58,11 +52,7 @@
     </section>
 
     <div class="buttons">
-      <b-button
-        type="is-primary"
-        @click="handleSubmit(signIn)"
-        icon-right="plus"
-      >
+      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-right="plus">
         {{ $t("login.signin") }}
       </b-button>
       <router-link :to="{ path: '/' }">
@@ -93,11 +83,11 @@ export default class SignIn extends Vue {
     try {
       await this.loginService.signIn(this.login, this.password);
     } catch (error) {
-      let message = this.$t("alert.server-error");
-      if (error.status === HttpStatusCodes.FORBIDDEN) {
-        message = this.$t("alert.user-unknown");
+      if (error.httpResponseCode === HttpStatusCodes.FORBIDDEN) {
+        this.alertService.toastError(this.$t("alert.user-unknown"), error);
+      } else {
+        this.alertService.toastServerError(error);
       }
-      this.alertService.toastError(message, error);
     }
   }
 }
