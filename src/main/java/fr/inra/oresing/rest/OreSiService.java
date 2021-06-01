@@ -89,7 +89,7 @@ public class OreSiService {
      * https://www.postgresql.org/docs/current/ltree.html
      */
     private static final String LTREE_SEPARATOR = ".";
-    private static final String KEYCOLUMN_SEPARATOR = "_";
+    private static final String KEYCOLUMN_SEPARATOR = "__";
 
     @Autowired
     private OreSiRepository repo;
