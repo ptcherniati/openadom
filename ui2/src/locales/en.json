@@ -34,7 +34,6 @@
   "menu": {
     "logout": "Log out",
     "applications": "Applications",
-    "references": "References",
     "french": "Français",
     "english": "English",
     "language": "Language"
@@ -66,5 +65,16 @@
     "unknownCheckerName": "For the validation rule : <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' is declared but is not a known checker",
     "csvBoundToUnknownVariable": "In the CSV format, header <code>{header}</code> is bound to unknown variable <code>{variable}</code>. Known variables: <code>{variables}</code>",
     "csvBoundToUnknownVariableComponent": "In the CSV format, header <code>{header}</code> is bound to <code>{variable}</code> but it has no <code>{component}</code> component. Known components: <code>{components}</code>"
+  },
+  "applicationDetailsView": {
+    "application": "Application details",
+    "references": "References",
+    "dataset": "Datasets"
+  },
+  "referenceSelection": {
+    "placeholder": "Chose the reference"
+  },
+  "datasetSelection": {
+    "placeholder": "Chose the dataset"
   }
 }

@@ -17,7 +17,15 @@ export class ApplicationService extends Fetcher {
     return this.get("applications/");
   }
 
-  async getApplication(id) {
-    return this.get("applications/" + id);
+  async getApplication(name) {
+    return this.get("applications/" + name);
+  }
+
+  async getDataset(dataset, applicationName) {
+    return this.get(`applications/${applicationName}/data/${dataset}`);
+  }
+
+  async getReference(reference, applicationName) {
+    return this.get(`applications/${applicationName}/references/${reference}`);
   }
 }

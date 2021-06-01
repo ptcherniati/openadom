@@ -28,7 +28,7 @@ const routes = [
     component: ApplicationCreationView,
   },
   {
-    path: "/application/:name",
+    path: "/application/:applicationName",
     name: "Application view",
     component: ApplicationDetailsView,
     props: true,

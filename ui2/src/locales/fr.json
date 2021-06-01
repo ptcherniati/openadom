@@ -34,7 +34,6 @@
   "menu": {
     "logout": "Se déconnecter",
     "applications": "Applications",
-    "references": "Référentiels",
     "french": "Français",
     "english": "English",
     "language": "Langue"
@@ -66,5 +65,16 @@
     "unknownCheckerName": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' est déclaré mais ce n’est pas un contrôle connu",
     "csvBoundToUnknownVariable": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n'est pas connue. Variables connues <code>{variables}</code>",
     "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n'a pas de composant <code>{component}</code>. <br>Composants connus <code>{components}</code>"
+  },
+  "applicationDetailsView": {
+    "application": "Détail de l'application",
+    "references": "Référentiels",
+    "dataset": "Données"
+  },
+  "referenceSelection": {
+    "placeholder": "Choisir le référentiel"
+  },
+  "datasetSelection": {
+    "placeholder": "Choisir les données"
   }
 }
