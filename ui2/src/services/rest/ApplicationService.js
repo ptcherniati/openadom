@@ -16,4 +16,8 @@ export class ApplicationService extends Fetcher {
   async getApplications() {
     return this.get("applications/");
   }
+
+  async getApplication(id) {
+    return this.get("applications/" + id);
+  }
 }

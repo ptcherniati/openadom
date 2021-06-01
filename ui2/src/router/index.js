@@ -1,8 +1,9 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import LoginView from "@/views/LoginView.vue";
-import ApplicationsView from "@/views/ApplicationsView.vue";
-import ApplicationCreationView from "@/views/ApplicationCreationView.vue";
+import ApplicationsView from "@/views/application/ApplicationsView.vue";
+import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
+import ApplicationDetailsView from "@/views/application/ApplicationDetailsView.vue";
 
 Vue.use(VueRouter);
 
@@ -25,6 +26,12 @@ const routes = [
     path: "/applicationCreation",
     name: "Application creation",
     component: ApplicationCreationView,
+  },
+  {
+    path: "/application/:name",
+    name: "Application view",
+    component: ApplicationDetailsView,
+    props: true,
   },
 ];
 
