@@ -42,7 +42,8 @@
     "chose-config": "Chose a configuration",
     "create": "Create application",
     "name": "Application name",
-    "name-placeholder": "Write down the application name"
+    "name-placeholder": "Write down the application name",
+    "creation-date": "Creation date"
   },
   "errors": {
     "emptyFile": "File is empty",

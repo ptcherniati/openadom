@@ -16,12 +16,23 @@
       :per-page="15"
       height="100%"
     >
-      <b-table-column field="name" label="Name" sortable width="50%" v-slot="props">
+      <b-table-column
+        field="name"
+        :label="$t('applications.name')"
+        sortable
+        width="50%"
+        v-slot="props"
+      >
         <div @click="displayApplication(props.row)" class="clickable">
           {{ props.row.name }}
         </div>
       </b-table-column>
-      <b-table-column field="creationDate" label="Creation Date" sortable v-slot="props">
+      <b-table-column
+        field="creationDate"
+        :label="$t('applications.creation-date')"
+        sortable
+        v-slot="props"
+      >
         <div @click="displayApplication(props.row)" class="clickable">
           {{ new Date(props.row.creationDate) }}
         </div>
