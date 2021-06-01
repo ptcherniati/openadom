@@ -86,7 +86,7 @@ public class OreSiService {
 
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
-     *
+     * <p>
      * https://www.postgresql.org/docs/current/ltree.html
      */
     private static final String LTREE_SEPARATOR = ".";
@@ -320,13 +320,13 @@ public class OreSiService {
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
-                        String key ;
+                        String key;
                         if (ref.getKeyColumn() == null) {
                             key = escapeKeyComponent(e.getId().toString());
                         } else {
-                            key =  Stream.of(ref.getKeyColumn().split(","))
-                                            .map(kc->escapeKeyComponent(refValues.get(kc)))
-                                            .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                            key = Stream.of(ref.getKeyColumn().split(","))
+                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkCompositeKey(key);
                         e.setBinaryFile(fileId);
@@ -364,11 +364,11 @@ public class OreSiService {
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
                 String escapedKeyElement = Stream.of(keyColumn.split(","))
-                        .map(kc->reference.getRefValues().get(kc))
-                        .map(kc->escapeKeyComponent(kc))
+                        .map(kc -> reference.getRefValues().get(kc))
+                        .map(kc -> escapeKeyComponent(kc))
                         .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
-                if(referenceType== compositeReferenceComponentDescription.getReference() && Stream.of(keyColumn.split(",")).anyMatch(r->r.equals(compositeReferenceComponentDescription.getParentKeyColumn()))) {
-                    escapedKeyElement=escapedKeyElement.replace(reference.getRefValues().get(compositeReferenceComponentDescription.getParentKeyColumn())+KEYCOLUMN_SEPARATOR, "");
+                if (referenceType == compositeReferenceComponentDescription.getReference() && Stream.of(keyColumn.split(",")).anyMatch(r -> r.equals(compositeReferenceComponentDescription.getParentKeyColumn()))) {
+                    escapedKeyElement = escapedKeyElement.replace(reference.getRefValues().get(compositeReferenceComponentDescription.getParentKeyColumn()) + KEYCOLUMN_SEPARATOR, "");
                 }
                 String compositeKey;
                 if (root) {
@@ -518,7 +518,8 @@ public class OreSiService {
 
                 // d'abord, il s'agit de lire les colonnes fixes, non répétées. Les données
                 // qui en sont tirées sont communes pour toute la ligne
-                Map<VariableComponentKey, String> recordPrototype; {
+                Map<VariableComponentKey, String> recordPrototype;
+                {
                     recordPrototype = new LinkedHashMap<>();
                     for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
                         Map.Entry<String, String> poll = lineCopy.poll();
@@ -592,7 +593,7 @@ public class OreSiService {
 
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
                 formatDescription.getConstants().stream()
-                .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
+                        .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
         Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
         Function<RowWithData, RowWithData> mergeLineValuesAndConstantValuesFn =
                 rowWithData -> {
@@ -778,10 +779,9 @@ public class OreSiService {
     }
 
     /**
-     *
      * @param nameOrId l'id de l'application
-     * @param refType le type du referenciel
-     * @param params les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
+     * @param refType  le type du referenciel
+     * @param params   les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {

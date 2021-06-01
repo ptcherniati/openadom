@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -91,5 +92,18 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {
         return findAllByReferenceType(referenceType).stream()
                 .collect(ImmutableMap.toImmutableMap(ReferenceValue::getCompositeKey, ReferenceValue::getId));
+    }
+
+    public ImmutableMap<String, UUID> getReferenceIdPerColumnKeys(String referenceType, String keysColumnsSearch, String keyValueSearch) {
+        return findAllByReferenceType(referenceType).stream()
+                .collect(ImmutableMap.toImmutableMap(
+                        ref->{
+                            return Stream.of(keysColumnsSearch.split(","))
+                                    .map(col -> ref.getRefValues().getOrDefault(col,""))
+                                    .collect(Collectors.joining("."));
+                        }
+                        ,
+                        ReferenceValue::getId)
+                );
     }
 }

@@ -140,6 +140,8 @@ dataTypes:
               name: Reference
               params:
                 refType: valeurs_qualitatives
+                keysColumnsSearch: nom_key,valeur_key
+                patternKey: couleur_des_individus.$?
       Nombre d'individus:
         components:
           value:

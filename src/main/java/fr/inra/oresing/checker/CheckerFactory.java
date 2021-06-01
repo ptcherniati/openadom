@@ -1,6 +1,7 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.model.Application;
@@ -50,8 +51,16 @@ public class CheckerFactory {
                     if ("Reference".equals(checkerDescription.getName())) {
                         String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
                         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-                        ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                        variableComponentChecker = new ReferenceLineChecker(variableComponentKey, refType, referenceValues);
+                        String keysColumnsSearch = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_KEYSCOLUMNSSEARCH);
+                        String patternKey = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_PATTERNKEY);
+                        ImmutableMap<String, UUID> referenceValues;
+                        if(Strings.isNullOrEmpty(keysColumnsSearch) || Strings.isNullOrEmpty(patternKey)){
+                            referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
+                            variableComponentChecker = new ReferenceLineChecker(variableComponentKey, refType, referenceValues);
+                        }else {
+                            referenceValues = referenceValueRepository.getReferenceIdPerColumnKeys(refType, keysColumnsSearch, keysColumnsSearch);
+                            variableComponentChecker = new ReferenceLineChecker(variableComponentKey, refType, referenceValues, patternKey);
+                        }
                     } else if ("Date".equals(checkerDescription.getName())) {
                         String pattern = checkerDescription.getParams().get(DateLineChecker.PARAM_PATTERN);
                         variableComponentChecker = new DateLineChecker(variableComponentKey, pattern);
