@@ -320,10 +320,10 @@ public class OreSiService {
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
                         String key;
-                        if (ref.getKeyColumn() == null) {
+                        if (ref.getKeyColumns().isEmpty()) {
                             key = escapeKeyComponent(e.getId().toString());
                         } else {
-                            key = Stream.of(ref.getKeyColumn().split(","))
+                            key = ref.getKeyColumns().stream()
                                     .map(kc -> escapeKeyComponent(refValues.get(kc)))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
@@ -357,12 +357,12 @@ public class OreSiService {
 
         for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
             String referenceType = compositeReferenceComponentDescription.getReference();
-            String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
+            List<String> keyColumns = application.getConfiguration().getReferences().get(referenceType).getKeyColumns();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
-                String escapedKeyElement = Stream.of(keyColumn.split(","))
+                String escapedKeyElement = keyColumns.stream()
                         .map(kc -> reference.getRefValues().get(kc))
                         .map(kc -> escapeKeyComponent(kc))
                         .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));

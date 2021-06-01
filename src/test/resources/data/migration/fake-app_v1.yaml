@@ -4,7 +4,7 @@ application:
   version: 1
 references:
   couleurs:
-    keyColumn: couleur
+    keyColumns: [couleur]
     columns:
       couleur:
 dataTypes:
