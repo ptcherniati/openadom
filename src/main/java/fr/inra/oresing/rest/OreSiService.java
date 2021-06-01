@@ -319,13 +319,13 @@ public class OreSiService {
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
-                        String key ;
+                        String key;
                         if (ref.getKeyColumn() == null) {
                             key = escapeKeyComponent(e.getId().toString());
                         } else {
-                            key =  Stream.of(ref.getKeyColumn().split(","))
-                                            .map(kc->escapeKeyComponent(refValues.get(kc)))
-                                            .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                            key = Stream.of(ref.getKeyColumn().split(","))
+                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkCompositeKey(key);
                         e.setBinaryFile(fileId);
@@ -363,8 +363,8 @@ public class OreSiService {
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
                 String escapedKeyElement = Stream.of(keyColumn.split(","))
-                        .map(kc->reference.getRefValues().get(kc))
-                        .map(kc->escapeKeyComponent(kc))
+                        .map(kc -> reference.getRefValues().get(kc))
+                        .map(kc -> escapeKeyComponent(kc))
                         .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                 String compositeKey;
                 if (root) {
