@@ -260,4 +260,8 @@ public class Fixtures {
                     .andExpect(status().isOk());
         }
     }
+
+    public String getHauteFrequenceApplicationConfigurationResourceName() {
+        return "/data/hautefrequence/hautefrequence.yaml";
+    }
 }
