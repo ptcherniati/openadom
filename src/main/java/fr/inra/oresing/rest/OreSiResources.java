@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
@@ -81,9 +82,14 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Application> getApplication(@PathVariable("nameOrId") String nameOrId) {
+    public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
-        return ResponseEntity.ok(application);
+        Map<String, ApplicationResult.Reference> references = Maps.transformValues(application.getConfiguration().getReferences(), referenceDescription -> {
+            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column));
+            return new ApplicationResult.Reference(columns);
+        });
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references);
+        return ResponseEntity.ok(applicationResult);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

@@ -5,7 +5,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,9 +36,9 @@ import javax.servlet.http.Cookie;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -118,12 +117,11 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.id", Is.is(appId)))
                 .andReturn().getResponse().getContentAsString();
 
-        Application app2 = objectMapper.readValue(response, Application.class);
+        ApplicationResult applicationResult = objectMapper.readValue(response, ApplicationResult.class);
 
-        Date now = new Date();
-        Assert.assertEquals("monsore", app2.getName());
-        Assert.assertEquals(List.of("especes", "projet", "sites", "themes", "type de fichiers", "type_de_sites", "types_de_donnees_par_themes_de_sites_et_projet", "unites", "valeurs_qualitatives", "variables", "variables_et_unites_par_types_de_donnees"), app2.getReferenceType());
-        Assert.assertEquals(List.of("pem"), app2.getDataType());
+        Assert.assertEquals("monsore", applicationResult.getName());
+        Assert.assertEquals(Set.of("especes", "projet", "sites", "themes", "type de fichiers", "type_de_sites", "types_de_donnees_par_themes_de_sites_et_projet", "unites", "valeurs_qualitatives", "variables", "variables_et_unites_par_types_de_donnees"), applicationResult.getReferences().keySet());
+//        Assert.assertEquals(List.of("pem"), applicationResult.getDataType());
 
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
