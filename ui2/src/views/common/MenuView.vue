@@ -28,10 +28,10 @@
         </b-field>
       </b-navbar-item>
       <b-navbar-item href="https://www.inrae.fr/">
-        <img class="logo" src="../../assets/logo-inrae_blanc.svg" />
-        <img class="logo" src="../../assets/Logo-INRAE.svg" />
+        <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
+        <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
       </b-navbar-item>
-      <img class="logo_rep" src="../../assets/Rep-FR-logo.svg" />
+      <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
     </template>
   </b-navbar>
 </template>
@@ -75,7 +75,7 @@ export default class MenuView extends Vue {
   width: 100%;
 
   .logo_rep {
-    margin: 2.4%;
+    margin: 0.7rem;
     max-height: 4.5rem;
   }
 
@@ -89,7 +89,7 @@ export default class MenuView extends Vue {
     padding-right: 10px;
     justify-content: center;
 
-    .logo:last-child {
+    .logo_vert {
       display: none;
     }
 
@@ -100,10 +100,10 @@ export default class MenuView extends Vue {
 
     &:hover {
       color: $primary;
-      .logo:last-child {
+      .logo_vert {
         display: block;
       }
-      .logo:first-child {
+      .logo_blanc {
         display: none;
       }
     }
