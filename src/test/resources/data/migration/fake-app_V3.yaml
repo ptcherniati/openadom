@@ -1,0 +1,131 @@
+version: 0
+application:
+  name: Sites
+  version: 2
+compositeReferences:
+  localizations:
+    components:
+      - reference: typeSites
+      - parentKeyColumn: "nom du type de site"
+        reference: sites
+      - parentKeyColumn: "nom du site"
+        reference: plateformes
+references:
+  projets:
+    keyColumn: nom du projet_key
+    columns:
+      nom du projet_key:
+      nom du projet_fr:
+      nom du projet_en:
+      description du projet_fr:
+      description du projet_en:
+  plateformes:
+    keyColumn: nom de la plateforme_key
+    columns:
+      nom de la plateforme_key:
+      nom du site:
+      nom de la plateforme_fr:
+      nom de la plateforme_en:
+      latitude:
+      longitude:
+      altitude:
+      nom du type de plateforme:
+      code sandre:
+      code sandre du contexte:
+  typeSites:
+    keyColumn: nom_key
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  sites:
+    keyColumn: nom du site_key
+    columns:
+      nom du type de site:
+      nom du site_key:
+      nom du site_fr:
+      nom du site_en:
+      description du site_fr:
+      description du site_en:
+      code sandre du Plan d'eau:
+      code sandre de la Masse d'eau plan d'eau:
+dataTypes:
+  site:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+            - date
+        qualitatif:
+          label: "Données qualitatives"
+          data:
+            - Couleur des individus
+      localizationScope:
+        variable: localization
+        component: site
+      timeScope:
+        variable: date
+        component: day
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: hh:mm:ss
+      localization:
+        components:
+          site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+          typeSite:
+            checker:
+              name: Reference
+              params:
+                refType: typeSites
+      Couleur des individus:
+        components:
+          value:
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: site
+          exportHeader: "Site"
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "typeSite"
+          boundTo:
+            variable: localization
+            component: typeSite
+        - header: "site"
+          boundTo:
+            variable: localization
+            component: site
+        - header: "date"
+          boundTo:
+            variable: date
+            component: day
+        - header: "heure"
+          boundTo:
+            variable: date
+            component: time
+        - header: "Couleur des individus"
+          boundTo:
+            variable: Couleur des individus
+            component: value

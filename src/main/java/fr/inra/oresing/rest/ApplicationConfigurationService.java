@@ -93,8 +93,11 @@ public class ApplicationConfigurationService {
                     if (variableComponentDescription != null) {
                         Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                         if ("Reference".equals(checkerDescription.getName())) {
-                            if (checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
-                                // OK
+                            if (checkerDescription.getParams()!=null && checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
+                                String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+                                if(!references.contains(refType)){
+                                    builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
+                                }
                             } else {
                                 builder.missingReferenceForChecker(dataType, datum, component, references);
                             }
@@ -125,27 +128,35 @@ public class ApplicationConfigurationService {
             VariableComponentKey timeScopeVariableComponentKey = dataTypeDescription.getAuthorization().getTimeScope();
             if (timeScopeVariableComponentKey == null) {
                 builder.recordMissingTimeScopeVariableComponentKey(dataType);
+            } else {
+                if (timeScopeVariableComponentKey.getVariable() == null) {
+                    builder.recordTimeScopeVariableComponentKeyMissingVariable(dataType, variables);
+                } else {
+                    if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
+                        builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
+                    }
+                    else {
+                        if (timeScopeVariableComponentKey.getComponent() == null) {
+                            builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                        } else {
+                            if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
+                                builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                            } else {
+                                Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
+                                if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
+                                    builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
+                                }
+                                String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
+                                if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
+                                    builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            if (timeScopeVariableComponentKey.getVariable() == null) {
-                builder.recordTimeScopeVariableComponentKeyMissingVariable(dataType, variables);
-            }
-            if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
-                builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
-            }
-            if (timeScopeVariableComponentKey.getComponent() == null) {
-                builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
-            }
-            if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
-                builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
-            }
-            Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
-            if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
-                builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
-            }
-            String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
-            if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
-                builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
-            }
+
+
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
             for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
