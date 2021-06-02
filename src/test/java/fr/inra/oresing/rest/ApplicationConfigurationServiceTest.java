@@ -44,7 +44,8 @@ public class ApplicationConfigurationServiceTest {
     public void parseConfigurationFile() throws IOException {
         ImmutableSet.of(
                 fixtures.getMonsoreApplicationConfigurationResourceName(),
-                fixtures.getAcbbApplicationConfigurationResourceName()
+                fixtures.getAcbbApplicationConfigurationResourceName(),
+                fixtures.getHauteFrequenceApplicationConfigurationResourceName()
         ).forEach(resource -> {
             try (InputStream in = getClass().getResourceAsStream(resource)) {
                 byte[] bytes = in.readAllBytes();
