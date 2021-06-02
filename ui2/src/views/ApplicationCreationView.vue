@@ -104,44 +104,40 @@ export default class ApplicationCreationView extends Vue {
   errorsMessages = [];
 
   async createApplication() {
-    this.errorsMessages = [];
     try {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
     } catch (error) {
-      if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-        this.errorsMessages = this.errorsService.getErrorsMessages(
-          error.content.validationCheckResults
-        );
-      } else {
-        this.alertService.toastServerError(error);
-      }
+      this.errors;
     }
   }
 
   async testApplication() {
-    this.errorsMessages = {};
     try {
       let response = await this.applicationService.validateConfiguration(this.applicationConfig);
-      console.dir(response);
       if (response.valid == true) {
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
         let error = [];
         for (let i in response.validationCheckResults) {
-          let vce = response.validationCheckResults[i];
-          error.push(this.$t("errors." + vce.message, vce.messageParams));
+          let validationResuts = response.validationCheckResults[i];
+          error.push(this.$t("errors." + validationResuts.message, validationResuts.messageParams));
         }
         this.alertService.toastError(error);
       }
     } catch (error) {
-      if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-        this.errorsMessages = this.errorsService.getErrorsMessages(
-          error.content.validationCheckResults
-        );
-      } else {
-        this.alertService.toastServerError(error);
-      }
+      this.errors;
+    }
+  }
+
+  async errors(error) {
+    this.errorsMessages = [];
+    if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      this.errorsMessages = this.errorsService.getErrorsMessages(
+        error.content.validationCheckResults
+      );
+    } else {
+      this.alertService.toastServerError(error);
     }
   }
 }
