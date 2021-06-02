@@ -4,9 +4,6 @@
       <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
         {{ $t("menu.applications") }}
       </b-navbar-item>
-      <b-navbar-item tag="router-link" :to="{ path: '/references' }">
-        {{ $t("menu.references") }}
-      </b-navbar-item>
     </template>
 
     <template #end>
@@ -37,7 +34,7 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 
-import { LoginService } from "@/services/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 import { UserPreferencesService } from "@/services/UserPreferencesService";
 
 import { Locales } from "@/utils/LocaleUtils.js";

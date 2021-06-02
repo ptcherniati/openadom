@@ -47,7 +47,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
-import org.checkerframework.checker.units.qual.K;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
@@ -90,7 +89,7 @@ public class OreSiService {
      * https://www.postgresql.org/docs/current/ltree.html
      */
     private static final String LTREE_SEPARATOR = ".";
-    private static final String KEYCOLUMN_SEPARATOR = "_";
+    private static final String KEYCOLUMN_SEPARATOR = "__";
 
     @Autowired
     private OreSiRepository repo;
@@ -277,11 +276,7 @@ public class OreSiService {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
-        if (configuration.getReferences() == null) {
-            app.setReferenceType(Collections.emptyList());
-        } else {
-            app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
-        }
+        app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
         UUID confId = storeFile(app, configurationFile);
@@ -320,13 +315,13 @@ public class OreSiService {
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
-                        String key ;
-                        if (ref.getKeyColumn() == null) {
+                        String key;
+                        if (ref.getKeyColumns().isEmpty()) {
                             key = escapeKeyComponent(e.getId().toString());
                         } else {
-                            key =  Stream.of(ref.getKeyColumn().split(","))
-                                            .map(kc->escapeKeyComponent(refValues.get(kc)))
-                                            .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                            key = ref.getKeyColumns().stream()
+                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkCompositeKey(key);
                         e.setBinaryFile(fileId);
@@ -358,16 +353,16 @@ public class OreSiService {
 
         for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
             String referenceType = compositeReferenceComponentDescription.getReference();
-            String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
+            List<String> keyColumns = application.getConfiguration().getReferences().get(referenceType).getKeyColumns();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
-                String escapedKeyElement = Stream.of(keyColumn.split(","))
-                        .map(kc->reference.getRefValues().get(kc))
-                        .map(kc->escapeKeyComponent(kc))
+                String escapedKeyElement = keyColumns.stream()
+                        .map(kc -> reference.getRefValues().get(kc))
+                        .map(kc -> escapeKeyComponent(kc))
                         .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
-                if(referenceType== compositeReferenceComponentDescription.getReference() && Stream.of(keyColumn.split(",")).anyMatch(r->r.equals(compositeReferenceComponentDescription.getParentKeyColumn()))) {
+                if(referenceType== compositeReferenceComponentDescription.getReference() && keyColumns.stream().anyMatch(r->r.equals(compositeReferenceComponentDescription.getParentKeyColumn()))) {
                     escapedKeyElement=escapedKeyElement.replace(reference.getRefValues().get(compositeReferenceComponentDescription.getParentKeyColumn())+KEYCOLUMN_SEPARATOR, "");
                 }
                 String compositeKey;

@@ -251,7 +251,10 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                selectClauseReferenceElements.add(quotedViewName + ".*");
+
+                application.getConfiguration().getReferences().get(referenceType).getColumns().keySet().stream()
+                        .map(referenceColumn -> quotedViewName + "." + quoteSqlIdentifier(referenceColumn) + " as " + quoteSqlIdentifier(referenceType + "_" + referenceColumn))
+                        .forEach(selectClauseReferenceElements::add);
                 fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + "." + quotedViewIdColumnName + " = " + quotedViewName + "." + quotedViewIdColumnName);
             }
 
@@ -282,14 +285,10 @@ public class RelationalService implements InitializingBean, DisposableBean {
     private List<ViewCreationCommand> getViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
         UUID appId = app.getId();
         List<ViewCreationCommand> views = new LinkedList<>();
-        if (app.getConfiguration().getReferences() == null) {
-            return views;
-        }
         for (Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
             String referenceType = entry.getKey();
             Set<String> columns = entry.getValue().getColumns().keySet();
             String columnsAsSchema = columns.stream()
-                    .map(ident->referenceType+"_"+ident)
                     .map(this::quoteSqlIdentifier)
                     .map(quotedColumnName -> quotedColumnName + " text")
                     .collect(Collectors.joining(", ", "(", ")"));

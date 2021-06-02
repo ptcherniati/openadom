@@ -2,7 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import LoginView from "@/views/LoginView.vue";
 import ApplicationsView from "@/views/ApplicationsView.vue";
-import ReferencesView from "@/views/ReferencesView.vue";
+import ApplicationCreationView from "@/views/ApplicationCreationView.vue";
 
 Vue.use(VueRouter);
 
@@ -22,9 +22,9 @@ const routes = [
     component: ApplicationsView,
   },
   {
-    path: "/references",
-    name: "References",
-    component: ReferencesView,
+    path: "/applicationCreation",
+    name: "Application creation",
+    component: ApplicationCreationView,
   },
 ];
 
