@@ -20,9 +20,6 @@ import java.util.TreeMap;
 public class Configuration {
 
     public ImmutableSet<String> getCompositeReferencesUsing(String reference) {
-        if (getCompositeReferences() == null) {
-            return ImmutableSet.of();
-        }
         return getCompositeReferences().entrySet().stream()
                 .filter(entry -> entry.getValue().isDependentOfReference(reference))
                 .map(Map.Entry::getKey)
@@ -31,16 +28,16 @@ public class Configuration {
 
     private int version;
     private ApplicationDescription application;
-    private LinkedHashMap<String, ReferenceDescription> references;
-    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences;
-    private LinkedHashMap<String, DataTypeDescription> dataTypes;
+    private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
+    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
+    private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
 
     @Getter
     @Setter
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
-        private String keyColumn;
+        private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
     }
 

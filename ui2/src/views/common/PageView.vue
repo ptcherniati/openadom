@@ -21,8 +21,8 @@ export default class PageView extends Vue {
   loginService = LoginService.INSTANCE;
 
   created() {
-    const loggedUser = this.loginService.getLoggedUser();
-    if (!loggedUser || !loggedUser.id) {
+    const authenticatedUser = this.loginService.getAuthenticatedUser();
+    if (!authenticatedUser || !authenticatedUser.id) {
       this.$router.push("/login").catch(() => {});
     }
   }

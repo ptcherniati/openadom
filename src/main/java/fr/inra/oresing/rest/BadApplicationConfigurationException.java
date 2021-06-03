@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.OreSiException;
+import fr.inra.oresing.OreSiTechnicalException;
 
-public class BadApplicationConfigurationException extends OreSiException {
+public class BadApplicationConfigurationException extends OreSiTechnicalException {
 
     private final ConfigurationParsingResult configurationParsingResult;
 

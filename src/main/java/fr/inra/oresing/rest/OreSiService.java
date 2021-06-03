@@ -75,6 +75,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -88,6 +89,7 @@ public class OreSiService {
      * https://www.postgresql.org/docs/current/ltree.html
      */
     private static final String LTREE_SEPARATOR = ".";
+    private static final String KEYCOLUMN_SEPARATOR = "__";
 
     @Autowired
     private OreSiRepository repo;
@@ -274,11 +276,7 @@ public class OreSiService {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
-        if (configuration.getReferences() == null) {
-            app.setReferenceType(Collections.emptyList());
-        } else {
-            app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
-        }
+        app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
         UUID confId = storeFile(app, configurationFile);
@@ -318,10 +316,12 @@ public class OreSiService {
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
                         String key;
-                        if (ref.getKeyColumn() == null) {
+                        if (ref.getKeyColumns().isEmpty()) {
                             key = escapeKeyComponent(e.getId().toString());
                         } else {
-                            key = escapeKeyComponent(refValues.get(ref.getKeyColumn()));
+                            key = ref.getKeyColumns().stream()
+                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkCompositeKey(key);
                         e.setBinaryFile(fileId);
@@ -353,13 +353,15 @@ public class OreSiService {
 
         for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
             String referenceType = compositeReferenceComponentDescription.getReference();
-            String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
+            List<String> keyColumns = application.getConfiguration().getReferences().get(referenceType).getKeyColumns();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
-                String keyElement = reference.getRefValues().get(keyColumn);
-                String escapedKeyElement = escapeKeyComponent(keyElement);
+                String escapedKeyElement = keyColumns.stream()
+                        .map(kc -> reference.getRefValues().get(kc))
+                        .map(kc -> escapeKeyComponent(kc))
+                        .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                 String compositeKey;
                 if (root) {
                     compositeKey = escapedKeyElement;

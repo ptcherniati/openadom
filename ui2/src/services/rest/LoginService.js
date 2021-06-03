@@ -1,22 +1,20 @@
 import app from "@/main";
 import { User } from "@/model/User";
-import { Fetcher, LOCAL_STORAGE_LOGGUED_USER } from "@/services/Fetcher.js";
+import { Fetcher, LOCAL_STORAGE_AUTHENTICATED_USER } from "@/services/Fetcher.js";
 
 export class LoginService extends Fetcher {
   static INSTANCE = new LoginService();
-  loggedUser = new User();
+  authenticatedUser = new User();
 
   constructor() {
     super();
   }
 
-  getLoggedUser() {
-    if (!this.loggedUser || !this.loggedUser.id) {
-      this.loggedUser = JSON.parse(
-        localStorage.getItem(LOCAL_STORAGE_LOGGUED_USER)
-      );
+  getAuthenticatedUser() {
+    if (!this.authenticatedUser || !this.authenticatedUser.id) {
+      this.authenticatedUser = JSON.parse(localStorage.getItem(LOCAL_STORAGE_AUTHENTICATED_USER));
     }
-    return this.loggedUser;
+    return this.authenticatedUser;
   }
 
   async signIn(login, pwd) {
@@ -25,11 +23,8 @@ export class LoginService extends Fetcher {
       password: pwd,
     });
 
-    this.loggedUser = response;
-    localStorage.setItem(
-      LOCAL_STORAGE_LOGGUED_USER,
-      JSON.stringify(this.loggedUser)
-    );
+    this.authenticatedUser = response;
+    localStorage.setItem(LOCAL_STORAGE_AUTHENTICATED_USER, JSON.stringify(this.authenticatedUser));
 
     app.$router.push("/applications");
     return Promise.resolve(response);
