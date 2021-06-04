@@ -104,6 +104,7 @@ export default class ApplicationCreationView extends Vue {
   errorsMessages = [];
 
   async createApplication() {
+    this.errorsMessages = [];
     try {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
@@ -113,6 +114,7 @@ export default class ApplicationCreationView extends Vue {
   }
 
   async testApplication() {
+    this.errorsMessages = [];
     try {
       let response = await this.applicationService.validateConfiguration(this.applicationConfig);
       if (response.valid == true) {
@@ -131,7 +133,6 @@ export default class ApplicationCreationView extends Vue {
   }
 
   async errors(error) {
-    this.errorsMessages = [];
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
       this.errorsMessages = this.errorsService.getErrorsMessages(
         error.content.validationCheckResults

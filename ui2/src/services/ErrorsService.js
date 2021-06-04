@@ -4,6 +4,7 @@ import { i18n } from "@/main";
 const ERRORS = {
   emptyFile: () => i18n.t("errors.emptyFile"),
   missingReferenceForChecker: (params) => i18n.t("errors.missingReferenceForChecker", params),
+  unknownReferenceForChecker: (params) => i18n.t("errors.unknownReferenceForChecker", params),
   unsupportedVersion: (params) => i18n.t("errors.unsupportedVersion", params),
   undeclaredDataGroupForVariable: (params) => i18n.t("errors.undeclaredDataGroupForVariable", params),
   variableInMultipleDataGroup: (params) => i18n.t("errors.variableInMultipleDataGroup", params),
