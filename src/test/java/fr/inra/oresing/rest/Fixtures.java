@@ -260,4 +260,8 @@ public class Fixtures {
                     .andExpect(status().isOk());
         }
     }
+
+    public String getValidationApplicationConfigurationResourceName() {
+        return "/data/validation/fake-app.yaml";
+    }
 }

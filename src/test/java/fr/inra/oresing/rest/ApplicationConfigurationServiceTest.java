@@ -62,7 +62,7 @@ public class ApplicationConfigurationServiceTest {
 
     private ConfigurationParsingResult parseYaml(String toReplace, String by) {
         ConfigurationParsingResult configurationParsingResult;
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
+        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getValidationApplicationConfigurationResourceName())) {
             String yaml = IOUtils.toString(configurationFile, StandardCharsets.UTF_8);
             String wrongYaml = yaml.replace(toReplace, by);
             byte[] bytes = wrongYaml.getBytes(StandardCharsets.UTF_8);
