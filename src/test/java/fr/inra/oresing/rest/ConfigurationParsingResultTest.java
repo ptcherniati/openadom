@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.google.common.collect.Iterables;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.OreSiTechnicalException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -18,6 +19,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -37,7 +39,7 @@ public class ConfigurationParsingResultTest {
     @Autowired
     private ApplicationConfigurationService service;
 
-    private ConfigurationParsingResult parseYaml(String toReplace, String by)throws Exception{
+    private ConfigurationParsingResult parseYaml(String toReplace, String by) {
         ConfigurationParsingResult configurationParsingResult;
         try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
             String yaml = IOUtils.toString(configurationFile, StandardCharsets.UTF_8);
@@ -45,6 +47,8 @@ public class ConfigurationParsingResultTest {
             byte[] bytes = wrongYaml.getBytes(StandardCharsets.UTF_8);
             configurationParsingResult = service.parseConfigurationBytes(bytes);
             return configurationParsingResult;
+        } catch (IOException e) {
+            throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
         }
     }
 
@@ -63,7 +67,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testMissingReferenceForChecker() throws Exception {
+    public void testMissingReferenceForChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -72,7 +76,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testUnknownReferenceForChecker() throws Exception {
+    public void testUnknownReferenceForChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -81,7 +85,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testUnsupportedVersion() throws Exception {
+    public void testUnsupportedVersion() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("version: 0", "version: -1");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -90,7 +94,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testUndeclaredDataGroupForVariable() throws Exception {
+    public void testUndeclaredDataGroupForVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
                 "            - localization", "data:\n" +
                 "            - localizations");
@@ -104,7 +108,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testVariableInMultipleDataGroup() throws Exception {
+    public void testVariableInMultipleDataGroup() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
                 "            - Couleur des individus","data:\n" +
                 "            - localization\n" +
@@ -116,7 +120,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testMissingTimeScopeVariableComponentKey() throws Exception {
+    public void testMissingTimeScopeVariableComponentKey() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
                 "      timeScope:\n" +
                 "        variable: date\n" +
@@ -128,7 +132,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testTimeScopeVariableComponentKeyMissingVariable() throws Exception {
+    public void testTimeScopeVariableComponentKeyMissingVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day","timeScope:\n" +
@@ -140,7 +144,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testTimeScopeVariableComponentKeyUnknownVariable() throws Exception {
+    public void testTimeScopeVariableComponentKeyUnknownVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day","timeScope:\n" +
@@ -153,7 +157,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testTimeVariableComponentKeyMissingComponent() throws Exception {
+    public void testTimeVariableComponentKeyMissingComponent() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day","timeScope:\n" +
@@ -166,7 +170,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testTimeVariableComponentKeyUnknownComponent() throws Exception {
+    public void testTimeVariableComponentKeyUnknownComponent() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day","timeScope:\n" +
@@ -179,7 +183,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testTimeScopeVariableComponentWrongChecker() throws Exception {
+    public void testTimeScopeVariableComponentWrongChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("checker:\n" +
                 "              name: Date", "checker:\n" +
                 "              name: Dates");
@@ -190,7 +194,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testTimeScopeVariableComponentPatternUnknown() throws Exception {
+    public void testTimeScopeVariableComponentPatternUnknown() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("params:\n" +
                 "                pattern: dd/MM/yyyy","params:\n" +
                 "                pattern: dd/MM");
@@ -201,7 +205,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testUnrecognizedProperty() throws Exception {
+    public void testUnrecognizedProperty() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences","compositReference");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -210,7 +214,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testInvalidFormat() throws Exception {
+    public void testInvalidFormat() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: a");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -223,7 +227,7 @@ public class ConfigurationParsingResultTest {
 //unknownCheckerName
 
     @Test
-    public void testCsvBoundToUnknownVariable() throws Exception {
+    public void testCsvBoundToUnknownVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("header: \"typeSite\"\n" +
                 "          boundTo:\n" +
                 "            variable: localization", "header: \"typeSite\"\n" +
@@ -236,7 +240,7 @@ public class ConfigurationParsingResultTest {
     }
 
     @Test
-    public void testCsvBoundToUnknownVariableComponent() throws Exception {
+    public void testCsvBoundToUnknownVariableComponent() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("components:\n" +
                 "          site:", "components:\n" +
                 "          sites:");
