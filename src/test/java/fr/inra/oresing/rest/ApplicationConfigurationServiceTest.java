@@ -44,11 +44,13 @@ public class ApplicationConfigurationServiceTest {
     public void parseConfigurationFile() {
         ImmutableSet.of(
                 fixtures.getMonsoreApplicationConfigurationResourceName(),
-                fixtures.getAcbbApplicationConfigurationResourceName()
+                fixtures.getAcbbApplicationConfigurationResourceName(),
+                fixtures.getValidationApplicationConfigurationResourceName()
         ).forEach(resource -> {
             try (InputStream in = getClass().getResourceAsStream(resource)) {
                 byte[] bytes = in.readAllBytes();
                 ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
+                log.debug("résultat de la validation de " + resource, configurationParsingResult);
                 Assert.assertTrue(resource + " doit être reconnu comme un fichier valide",configurationParsingResult.isValid());
             } catch (IOException e) {
                 throw new OreSiTechnicalException("ne peut pas lire le fichier de test " + resource, e);
