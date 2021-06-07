@@ -98,6 +98,13 @@ dataTypes:
       Couleur des individus:
         components:
           value:
+    validations:
+      exempldeDeRegleDeValidation:
+        description: "Juste un exemple"
+        checker:
+          name: GroovyExpression
+          params:
+            expression: "true"
     format:
       constants:
         - rowNumber: 1
