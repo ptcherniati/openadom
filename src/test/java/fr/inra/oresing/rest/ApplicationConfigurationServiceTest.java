@@ -41,7 +41,7 @@ public class ApplicationConfigurationServiceTest {
     private ApplicationConfigurationService service;
 
     @Test
-    public void parseConfigurationFile() throws IOException {
+    public void parseConfigurationFile() {
         ImmutableSet.of(
                 fixtures.getMonsoreApplicationConfigurationResourceName(),
                 fixtures.getAcbbApplicationConfigurationResourceName()
@@ -55,21 +55,9 @@ public class ApplicationConfigurationServiceTest {
             }
         });
 
-        Assert.assertFalse(service.parseConfigurationBytes("".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("vers: 0".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("version: 1".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("::".getBytes(StandardCharsets.UTF_8)).isValid());
-
-        try (InputStream in = getClass().getResourceAsStream(fixtures.getMonsoreApplicationConfigurationResourceName())) {
-            String yaml = IOUtils.toString(in, StandardCharsets.UTF_8);
-            String wrongYaml = yaml.replace("firstRowLine: 5", "firstRowLine: pas_un_chiffre");
-            byte[] bytes = wrongYaml.getBytes(StandardCharsets.UTF_8);
-            ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
-            System.out.println(configurationParsingResult);
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessageParams().containsValue("pas_un_chiffre"));
-        }
     }
 
     private ConfigurationParsingResult parseYaml(String toReplace, String by) {
@@ -86,17 +74,13 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testEmptyFile() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            String yaml = IOUtils.toString(configurationFile, StandardCharsets.UTF_8);
-            String wrongYaml = yaml.replace(yaml, "");
-            byte[] bytes = wrongYaml.getBytes(StandardCharsets.UTF_8);
-            ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("emptyFile", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+    public void testEmptyFile() {
+        byte[] bytes = "".getBytes(StandardCharsets.UTF_8);
+        ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("emptyFile", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
@@ -248,7 +232,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testInvalidFormat() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: a");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         Assert.assertEquals("invalidFormat", onlyError.getMessage());
