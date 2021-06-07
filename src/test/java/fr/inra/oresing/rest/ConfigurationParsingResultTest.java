@@ -57,7 +57,7 @@ public class ConfigurationParsingResultTest {
             ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "emptyFile");
+            Assert.assertEquals("emptyFile", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -68,7 +68,7 @@ public class ConfigurationParsingResultTest {
             ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "missingReferenceForChecker");
+            Assert.assertEquals("missingReferenceForChecker", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -79,7 +79,7 @@ public class ConfigurationParsingResultTest {
             ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "unknownReferenceForChecker");
+            Assert.assertEquals("unknownReferenceForChecker", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -90,7 +90,7 @@ public class ConfigurationParsingResultTest {
             ConfigurationParsingResult configurationParsingResult = parseYaml("version: 0", "version: -1");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "unsupportedVersion");
+            Assert.assertEquals("unsupportedVersion", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -106,7 +106,7 @@ public class ConfigurationParsingResultTest {
                 .map(ValidationCheckResult::getMessage)
                 .filter(mes -> mes.equals("unknownVariablesInDataGroup") || mes.equals("undeclaredDataGroupForVariable"))
                 .count();
-        Assert.assertTrue(count==2);
+        Assert.assertEquals(2, count);
     }
 
     @Test
@@ -118,7 +118,7 @@ public class ConfigurationParsingResultTest {
                     "            - Couleur des individus");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "variableInMultipleDataGroup");
+            Assert.assertEquals("variableInMultipleDataGroup", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -132,7 +132,7 @@ public class ConfigurationParsingResultTest {
                     "        component: day","component: site\n");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "missingTimeScopeVariableComponentKey");
+            Assert.assertEquals("missingTimeScopeVariableComponentKey", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -146,7 +146,7 @@ public class ConfigurationParsingResultTest {
                     "        component: day");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "timeScopeVariableComponentKeyMissingVariable");
+            Assert.assertEquals("timeScopeVariableComponentKeyMissingVariable", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -161,7 +161,7 @@ public class ConfigurationParsingResultTest {
                     "        component: day");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "timeScopeVariableComponentKeyUnknownVariable");
+            Assert.assertEquals("timeScopeVariableComponentKeyUnknownVariable", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -176,7 +176,7 @@ public class ConfigurationParsingResultTest {
                     "        component: ~");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "timeVariableComponentKeyMissingComponent");
+            Assert.assertEquals("timeVariableComponentKeyMissingComponent", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -191,7 +191,7 @@ public class ConfigurationParsingResultTest {
                     "        component: days");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "timeVariableComponentKeyUnknownComponent");
+            Assert.assertEquals("timeVariableComponentKeyUnknownComponent", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -204,7 +204,7 @@ public class ConfigurationParsingResultTest {
                     "              name: Dates");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "timeScopeVariableComponentWrongChecker");
+            Assert.assertEquals("timeScopeVariableComponentWrongChecker", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -217,7 +217,7 @@ public class ConfigurationParsingResultTest {
                     "                pattern: dd/MM");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "timeScopeVariableComponentPatternUnknown");
+            Assert.assertEquals("timeScopeVariableComponentPatternUnknown", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -228,7 +228,7 @@ public class ConfigurationParsingResultTest {
             ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences","compositReference");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "unrecognizedProperty");
+            Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -239,7 +239,7 @@ public class ConfigurationParsingResultTest {
             ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: a");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "invalidFormat");
+            Assert.assertEquals("invalidFormat", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -258,7 +258,7 @@ public class ConfigurationParsingResultTest {
                     "            variable: localizations");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "csvBoundToUnknownVariable");
+            Assert.assertEquals("csvBoundToUnknownVariable", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
@@ -271,7 +271,7 @@ public class ConfigurationParsingResultTest {
                     "          sites:");
             Assert.assertFalse(configurationParsingResult.isValid());
             ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertTrue(onlyError.getMessage() == "csvBoundToUnknownVariableComponent");
+            Assert.assertEquals("csvBoundToUnknownVariableComponent", onlyError.getMessage());
             System.out.println(onlyError.getMessage());
         }
     }
