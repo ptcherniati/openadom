@@ -64,35 +64,29 @@ public class ConfigurationParsingResultTest {
 
     @Test
     public void testMissingReferenceForChecker() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("missingReferenceForChecker", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("missingReferenceForChecker", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testUnknownReferenceForChecker() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("unknownReferenceForChecker", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("unknownReferenceForChecker", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testUnsupportedVersion() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("version: 0", "version: -1");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("unsupportedVersion", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("version: 0", "version: -1");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("unsupportedVersion", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
@@ -111,137 +105,117 @@ public class ConfigurationParsingResultTest {
 
     @Test
     public void testVariableInMultipleDataGroup() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
-                    "            - Couleur des individus","data:\n" +
-                    "            - localization\n" +
-                    "            - Couleur des individus");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("variableInMultipleDataGroup", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
+                "            - Couleur des individus","data:\n" +
+                "            - localization\n" +
+                "            - Couleur des individus");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("variableInMultipleDataGroup", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testMissingTimeScopeVariableComponentKey() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
-                    "      timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: day","component: site\n");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("missingTimeScopeVariableComponentKey", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
+                "      timeScope:\n" +
+                "        variable: date\n" +
+                "        component: day","component: site\n");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("missingTimeScopeVariableComponentKey", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testTimeScopeVariableComponentKeyMissingVariable() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: day","timeScope:\n" +
-                    "        component: day");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("timeScopeVariableComponentKeyMissingVariable", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+                "        variable: date\n" +
+                "        component: day","timeScope:\n" +
+                "        component: day");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("timeScopeVariableComponentKeyMissingVariable", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testTimeScopeVariableComponentKeyUnknownVariable() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: day","timeScope:\n" +
-                    "        variable: dates\n" +
-                    "        component: day");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("timeScopeVariableComponentKeyUnknownVariable", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+                "        variable: date\n" +
+                "        component: day","timeScope:\n" +
+                "        variable: dates\n" +
+                "        component: day");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("timeScopeVariableComponentKeyUnknownVariable", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testTimeVariableComponentKeyMissingComponent() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: day","timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: ~");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("timeVariableComponentKeyMissingComponent", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+                "        variable: date\n" +
+                "        component: day","timeScope:\n" +
+                "        variable: date\n" +
+                "        component: ~");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("timeVariableComponentKeyMissingComponent", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testTimeVariableComponentKeyUnknownComponent() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: day","timeScope:\n" +
-                    "        variable: date\n" +
-                    "        component: days");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("timeVariableComponentKeyUnknownComponent", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+                "        variable: date\n" +
+                "        component: day","timeScope:\n" +
+                "        variable: date\n" +
+                "        component: days");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("timeVariableComponentKeyUnknownComponent", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testTimeScopeVariableComponentWrongChecker() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("checker:\n" +
-                    "              name: Date", "checker:\n" +
-                    "              name: Dates");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("timeScopeVariableComponentWrongChecker", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("checker:\n" +
+                "              name: Date", "checker:\n" +
+                "              name: Dates");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("timeScopeVariableComponentWrongChecker", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testTimeScopeVariableComponentPatternUnknown() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("params:\n" +
-                    "                pattern: dd/MM/yyyy","params:\n" +
-                    "                pattern: dd/MM");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("timeScopeVariableComponentPatternUnknown", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("params:\n" +
+                "                pattern: dd/MM/yyyy","params:\n" +
+                "                pattern: dd/MM");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("timeScopeVariableComponentPatternUnknown", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testUnrecognizedProperty() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences","compositReference");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences","compositReference");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testInvalidFormat() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: a");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("invalidFormat", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: a");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("invalidFormat", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
 //missingRequiredExpression
@@ -250,29 +224,25 @@ public class ConfigurationParsingResultTest {
 
     @Test
     public void testCsvBoundToUnknownVariable() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("header: \"typeSite\"\n" +
-                    "          boundTo:\n" +
-                    "            variable: localization", "header: \"typeSite\"\n" +
-                    "          boundTo:\n" +
-                    "            variable: localizations");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("csvBoundToUnknownVariable", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("header: \"typeSite\"\n" +
+                "          boundTo:\n" +
+                "            variable: localization", "header: \"typeSite\"\n" +
+                "          boundTo:\n" +
+                "            variable: localizations");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("csvBoundToUnknownVariable", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 
     @Test
     public void testCsvBoundToUnknownVariableComponent() throws Exception {
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getMigrationApplicationConfigurationResourceName(3))) {
-            ConfigurationParsingResult configurationParsingResult = parseYaml("components:\n" +
-                    "          site:", "components:\n" +
-                    "          sites:");
-            Assert.assertFalse(configurationParsingResult.isValid());
-            ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-            Assert.assertEquals("csvBoundToUnknownVariableComponent", onlyError.getMessage());
-            System.out.println(onlyError.getMessage());
-        }
+        ConfigurationParsingResult configurationParsingResult = parseYaml("components:\n" +
+                "          site:", "components:\n" +
+                "          sites:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        Assert.assertEquals("csvBoundToUnknownVariableComponent", onlyError.getMessage());
+        System.out.println(onlyError.getMessage());
     }
 }
