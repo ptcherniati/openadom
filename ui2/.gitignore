@@ -21,3 +21,8 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+# Fichiers example de cypress
+ui2/cypress/integration/example
+ui2/cypress/videos
+ui2/cypress/screenshots
+ui2/cypress/downloads
