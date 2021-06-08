@@ -6,7 +6,6 @@ import com.google.common.io.Resources;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -24,6 +23,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
@@ -37,13 +38,15 @@ import javax.servlet.http.Cookie;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -76,12 +79,12 @@ public class OreSiResourcesTest {
 
     @Before
     public void createUser() throws Exception {
-        OreSiUser user = authenticationService.createUser("poussin", "xxxxxxxx");
-        userId = user.getId();
-        authCookie = mockMvc.perform(post("/api/v1/login")
-                .param("login", "poussin")
-                .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+//        OreSiUser user = authenticationService.createUser("poussin", "xxxxxxxx");
+//        userId = user.getId();
+//        authCookie = mockMvc.perform(post("/api/v1/login")
+//                .param("login", "poussin")
+//                .param("password", "xxxxxxxx"))
+//                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
     }
 
     @Test
@@ -487,6 +490,45 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(1456, StringUtils.countMatches(actualCsv, "/2010"));
         }
+    }
+
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Test
+    public void testReadAsStream() throws Exception {
+//        addApplicationAcbb();
+//        try (InputStream in = fixtures.openSwcDataResourceName(false)) {
+//            MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
+//            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
+//                    .file(file)
+//                    .cookie(authCookie))
+//                    .andExpect(status().isOk())
+//                    .andReturn().getResponse().getContentAsString();
+//        }
+        JdbcTemplate jdbcTemplate = namedParameterJdbcTemplate.getJdbcTemplate();
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        if (connection.getAutoCommit()) {
+            log.warn("désactive l'autoCommit sur " + connection);
+            connection.setAutoCommit(false);
+        }
+        jdbcTemplate.setFetchSize(10);
+        String sql = "select dataValues from acbb.data";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setFetchSize(10);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            String dataValues = resultSet.getString(1);
+            System.out.println(StringUtils.abbreviate(dataValues, 50));
+        }
+        resultSet.close();
+        preparedStatement.close();
+
+//        RowCallbackHandler rowCallbackHandler = rs -> {
+//            String dataValues = rs.getString(1);
+//            System.out.println(StringUtils.abbreviate(dataValues, 50));
+//        };
+//        namedParameterJdbcTemplate.query(sql, rowCallbackHandler);
     }
 
     @Test
