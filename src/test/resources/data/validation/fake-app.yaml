@@ -108,7 +108,7 @@ dataTypes:
         checker:
           name: GroovyExpression
           params:
-            expression: "if(true){return true;}"
+            expression: "true"
     format:
       constants:
         - rowNumber: 1

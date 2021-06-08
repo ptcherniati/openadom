@@ -252,7 +252,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testIllegalGroovyExpression() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("if(true){return true;}", "if(}");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("\"true\"", "if(}");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
