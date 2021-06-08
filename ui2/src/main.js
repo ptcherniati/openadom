@@ -9,6 +9,8 @@ import {
   faAngleRight,
   faArrowDown,
   faArrowUp,
+  faCaretDown,
+  faCaretUp,
   faCheck,
   faDraftingCompass,
   faExclamationCircle,
@@ -37,7 +39,9 @@ library.add(
   faAngleRight,
   faWrench,
   faPoll,
-  faDraftingCompass
+  faDraftingCompass,
+  faCaretUp,
+  faCaretDown
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
