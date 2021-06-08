@@ -431,6 +431,15 @@ public class OreSiService {
         Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
         Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
+        Map<VariableComponentKey, String> defaultValues = new LinkedHashMap<>();
+
+        dataTypeDescription.getData().forEach((variableNme, columnDescription) -> {
+            columnDescription.getComponents().forEach((componentName, variableComponentDescription) -> {
+                Optional.ofNullable(variableComponentDescription)
+                        .map(Configuration.VariableComponentDescription::getDefaultValue)
+                        .ifPresent(dv ->  defaultValues.put(new VariableComponentKey(variableNme, componentName), dv));
+            });
+        });
 
         readPreHeader(formatDescription, constantValues, linesIterator);
 
@@ -440,7 +449,7 @@ public class OreSiService {
         Stream<Data> dataStream = Streams.stream(csvParser)
                 .map(buildCsvRecordToLineAsMapFn(columns))
                 .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
-                .map(fillConstantValuesAndBuildMergeLineValuesAndConstantValuesFn(constantValues))
+                .map(fillConstantValuesAndFillDefaultValueAndBuildMergeLineValuesAndConstantValuesAndDfaultValuesFn(constantValues, defaultValues))
                 .map(buildReplaceMissingValuesByDefaultValuesFn(getDefaultValues(dataTypeDescription)))
                 .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
 
@@ -494,7 +503,9 @@ public class OreSiService {
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         UUID referenceId = ((ReferenceValidationCheckResult) validationCheckResult).getReferenceId();
-                        refsLinkedTo.add(referenceId);
+                        if(!refsLinkedTo.contains(referenceId)){
+                            refsLinkedTo.add(referenceId);
+                        }
                     }
                 } else {
                     errors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
@@ -562,12 +573,17 @@ public class OreSiService {
      * @param constantValues
      * @return
      */
-    private Function<RowWithData, RowWithData> fillConstantValuesAndBuildMergeLineValuesAndConstantValuesFn(Map<VariableComponentKey, String> constantValues){
+    private Function<RowWithData, RowWithData> fillConstantValuesAndFillDefaultValueAndBuildMergeLineValuesAndConstantValuesAndDfaultValuesFn(Map<VariableComponentKey, String> constantValues, Map<VariableComponentKey, String> defaultValues){
         return rowWithData -> {
-            ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
-                    .putAll(constantValues)
-                    .putAll(rowWithData.getDatum())
-                    .build();
+            ImmutableMap.Builder<VariableComponentKey, String> builder = ImmutableMap.<VariableComponentKey, String>builder()
+                        .putAll(constantValues)
+                            .putAll(rowWithData.getDatum());
+                    defaultValues.entrySet()
+                            .stream()
+                            .filter(e->!rowWithData.getDatum().containsKey(e.getKey()))
+                            .forEach(e->builder.put(e.getKey(), e.getValue()));
+
+                    ImmutableMap<VariableComponentKey, String> datum = builder.build();
             return new RowWithData(rowWithData.getLineNumber(), datum);
         };
     }
