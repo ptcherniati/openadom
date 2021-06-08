@@ -109,7 +109,7 @@ export default class ApplicationCreationView extends Vue {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
     } catch (error) {
-      this.messageErrors(error);
+      this.checkMessageErrors(error);
     }
   }
 
@@ -128,11 +128,11 @@ export default class ApplicationCreationView extends Vue {
         this.alertService.toastError(error);
       }
     } catch (error) {
-      this.messageErrors(error);
+      this.checkMessageErrors(error);
     }
   }
 
-  messageErrors(error) {
+  checkMessageErrors(error) {
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
       this.errorsMessages = this.errorsService.getErrorsMessages(
         error.content.validationCheckResults
