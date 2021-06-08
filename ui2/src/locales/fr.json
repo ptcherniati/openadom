@@ -71,11 +71,5 @@
     "application": "Détail de l'application",
     "references": "Référentiels",
     "dataset": "Données"
-  },
-  "referenceSelection": {
-    "placeholder": "Choisir le référentiel"
-  },
-  "datasetSelection": {
-    "placeholder": "Choisir les données"
   }
 }

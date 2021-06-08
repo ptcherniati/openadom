@@ -71,11 +71,5 @@
     "application": "Application details",
     "references": "References",
     "dataset": "Datasets"
-  },
-  "referenceSelection": {
-    "placeholder": "Chose the reference"
-  },
-  "datasetSelection": {
-    "placeholder": "Chose the dataset"
   }
 }
