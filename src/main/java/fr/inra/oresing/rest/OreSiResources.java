@@ -1,10 +1,15 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,9 +89,25 @@ public class OreSiResources {
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
-        Map<String, ApplicationResult.Reference> references = Maps.transformValues(application.getConfiguration().getReferences(), referenceDescription -> {
-            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column));
-            return new ApplicationResult.Reference(columns);
+        TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
+        application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
+            ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                    .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                    .collect(ImmutableList.toImmutableList());
+            ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+            sortedReferenceTypes.forEach(reference -> {
+                String child = sortedReferenceTypes.higher(reference);
+                if (child == null) {
+                    // on est sur le dernier élément de la hiérarchie, pas de descendant
+                } else {
+                    childrenPerReferences.put(reference, child);
+                }
+            });
+        });
+        Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
+            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
+            Set<String> children = childrenPerReferences.get(reference);
+            return new ApplicationResult.Reference(reference, reference, children, columns);
         });
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references);
         return ResponseEntity.ok(applicationResult);

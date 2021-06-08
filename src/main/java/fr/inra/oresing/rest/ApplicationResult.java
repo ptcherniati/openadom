@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import lombok.Value;
 
 import java.util.Map;
+import java.util.Set;
 
 @Value
 public class ApplicationResult {
@@ -13,11 +14,17 @@ public class ApplicationResult {
 
     @Value
     public static class Reference {
+        String id;
+        String label;
+        Set<String> children;
         Map<String, Column> columns;
 
         @Value
         public static class Column {
+            String id;
             String title;
+            boolean key;
+            String linkedTo;
         }
     }
 }
