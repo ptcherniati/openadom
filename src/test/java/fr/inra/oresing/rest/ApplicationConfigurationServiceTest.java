@@ -241,9 +241,32 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("invalidFormat", onlyError.getMessage());
     }
 
-//missingRequiredExpression
-//illegalGroovyExpression
-//unknownCheckerName
+    @Test
+    public void testMissingRequiredExpression() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("\"true\"", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingRequiredExpression", onlyError.getMessage());
+    }
+
+    @Test
+    public void testIllegalGroovyExpression() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("if(true){return true;}", "if(}");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("illegalGroovyExpression", onlyError.getMessage());
+    }
+
+    @Test
+    public void testUnknownCheckerName() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("name: GroovyExpression", "name: GroovyExpressions");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownCheckerName", onlyError.getMessage());
+    }
 
     @Test
     public void testCsvBoundToUnknownVariable() {
