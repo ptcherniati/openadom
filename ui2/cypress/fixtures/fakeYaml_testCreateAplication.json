@@ -1,0 +1,235 @@
+{
+  "validationCheckResults": [],
+  "result": {
+    "version": 0,
+    "application": {
+      "name": "Sites",
+      "version": 1
+    },
+    "references": {
+      "projets": {
+        "separator": ";",
+        "keyColumns": [
+          "nom du projet_key"
+        ],
+        "columns": {
+          "nom du projet_key": null,
+          "nom du projet_fr": null,
+          "nom du projet_en": null,
+          "description du projet_fr": null,
+          "description du projet_en": null
+        }
+      },
+      "plateformes": {
+        "separator": ";",
+        "keyColumns": [
+          "nom de la plateforme_key"
+        ],
+        "columns": {
+          "nom de la plateforme_key": null,
+          "nom du site": null,
+          "nom de la plateforme_fr": null,
+          "nom de la plateforme_en": null,
+          "latitude": null,
+          "longitude": null,
+          "altitude": null,
+          "nom du type de plateforme": null,
+          "code sandre": null,
+          "code sandre du contexte": null
+        }
+      },
+      "typeSites": {
+        "separator": ";",
+        "keyColumns": [
+          "nom_key"
+        ],
+        "columns": {
+          "nom_key": null,
+          "nom_fr": null,
+          "nom_en": null,
+          "description_fr": null,
+          "description_en": null
+        }
+      },
+      "sites": {
+        "separator": ";",
+        "keyColumns": [
+          "nom du site_key"
+        ],
+        "columns": {
+          "nom du type de site": null,
+          "nom du site_key": null,
+          "nom du site_fr": null,
+          "nom du site_en": null,
+          "description du site_fr": null,
+          "description du site_en": null,
+          "code sandre du Plan d'eau": null,
+          "code sandre de la Masse d'eau plan d'eau": null
+        }
+      }
+    },
+    "compositeReferences": {
+      "localizations": {
+        "components": [
+          {
+            "reference": "typeSites",
+            "parentKeyColumn": null
+          },
+          {
+            "reference": "sites",
+            "parentKeyColumn": "nom du type de site"
+          },
+          {
+            "reference": "plateformes",
+            "parentKeyColumn": "nom du site"
+          }
+        ]
+      }
+    },
+    "dataTypes": {
+      "site": {
+        "format": {
+          "headerLine": 1,
+          "firstRowLine": 2,
+          "separator": ";",
+          "columns": [
+            {
+              "header": "typeSite",
+              "boundTo": {
+                "variable": "localization",
+                "component": "typeSite",
+                "id": "localization_typeSite"
+              }
+            },
+            {
+              "header": "site",
+              "boundTo": {
+                "variable": "localization",
+                "component": "site",
+                "id": "localization_site"
+              }
+            },
+            {
+              "header": "date",
+              "boundTo": {
+                "variable": "date",
+                "component": "day",
+                "id": "date_day"
+              }
+            },
+            {
+              "header": "heure",
+              "boundTo": {
+                "variable": "date",
+                "component": "time",
+                "id": "date_time"
+              }
+            },
+            {
+              "header": "Couleur des individus",
+              "boundTo": {
+                "variable": "Couleur des individus",
+                "component": "value",
+                "id": "Couleur des individus_value"
+              }
+            }
+          ],
+          "repeatedColumns": [],
+          "constants": [
+            {
+              "rowNumber": 1,
+              "columnNumber": 2,
+              "boundTo": {
+                "variable": "localization",
+                "component": "site",
+                "id": "localization_site"
+              },
+              "exportHeader": "Site"
+            }
+          ]
+        },
+        "data": {
+          "date": {
+            "components": {
+              "day": {
+                "checker": {
+                  "name": "Date",
+                  "params": {
+                    "pattern": "dd/MM/yyyy"
+                  }
+                },
+                "defaultValue": null
+              },
+              "time": {
+                "checker": {
+                  "name": "Date",
+                  "params": {
+                    "pattern": "hh:mm:ss"
+                  }
+                },
+                "defaultValue": null
+              }
+            }
+          },
+          "localization": {
+            "components": {
+              "site": {
+                "checker": {
+                  "name": "Reference",
+                  "params": {
+                    "refType": "sites"
+                  }
+                },
+                "defaultValue": null
+              },
+              "typeSite": {
+                "checker": {
+                  "name": "Reference",
+                  "params": {
+                    "refType": "typeSites"
+                  }
+                },
+                "defaultValue": null
+              }
+            }
+          },
+          "Couleur des individus": {
+            "components": {
+              "value": null
+            }
+          }
+        },
+        "validations": {},
+        "migrations": {},
+        "authorization": {
+          "timeScope": {
+            "variable": "date",
+            "component": "day",
+            "id": "date_day"
+          },
+          "localizationScope": {
+            "variable": "localization",
+            "component": "site",
+            "id": "localization_site"
+          },
+          "dataGroups": {
+            "referentiel": {
+              "label": "Référentiel",
+              "data": [
+                "localization",
+                "date"
+              ]
+            },
+            "qualitatif": {
+              "label": "Données qualitatives",
+              "data": [
+                "Couleur des individus"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "valid": true
+}
