@@ -48,7 +48,7 @@
   "errors": {
     "emptyFile": "Le fichier est vide",
     "missingReferenceForChecker": "Pour le type de données <code>{dataType}</code>, la donnée <code>{datum}</code>, le composant <code>{component}</code>, il faut préciser le référentiel parmi <code>{references}</code>",
-    "unknownReferenceForChecker": "Pour le type de données <code>{dataType}</code>, la donnée <code>{datum}</code>, le composant <code>{component}</code>, la référence <code>{refType}</code> n'est pas dans les références accetés qui sont : <code>{references}</code>",
+    "unknownReferenceForChecker": "Pour le type de données <code>{dataType}</code>, la donnée <code>{datum}</code>, le composant <code>{component}</code>, la référence <code>{refType}</code> n’est pas dans les références acceptés qui sont : <code>{references}</code>",
     "unsupportedVersion": "Les fichiers YAML de version <code>{actualVersion}</code> ne sont pas gérés, version attendue <code>{expectedVersion}</code>",
     "undeclaredDataGroupForVariable": "La variable <code>{variable}</code> n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe",
     "variableInMultipleDataGroup": "La variable <code>{variable}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
@@ -57,15 +57,15 @@
     "timeScopeVariableComponentKeyMissingVariable": "Il faut indiquer la variable dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données <code>{dataType}</code>. Valeurs possibles <code>{variables}</code>",
     "timeScopeVariableComponentKeyUnknownVariable": "<code>{variable}</code> ne fait pas parti des colonnes connues <code>{knownVariables}</code>",
     "timeVariableComponentKeyMissingComponent": "Il faut indiquer le composant de la variable <code>{variable}</code> dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données <code>{dataType}</code>. Valeurs possibles <code>{knownComponents}</code>",
-    "timeVariableComponentKeyUnknownComponent": "<code>{component}</code> ne fait pas parti des composants connus pour la variable <code>{variable}</code>. Composants connus : <code>{knownComponents}</code>",
+    "timeVariableComponentKeyUnknownComponent": "<code>{component}</code> ne fait pas parti des composants connus pour la variable <code>{variable}</code>. Composants connus : <code>{knownComponents}</code>",
     "timeScopeVariableComponentWrongChecker": "Le composant <code>{component}</code> de la variable <code>{variable}</code> ne peut pas être utilisé comme portant l’information temporelle car ce n’est pas une donnée déclarée comme <code>{expectedChecker}</code>",
-    "timeScopeVariableComponentPatternUnknown": "Le composant <code>{component}</code> de la variable <code>{variable}</code> ne peut pas être utilisé comme portant l’information temporelle car le format de date '<code>{pattern}</code>' n’est pas géré. Formats acceptés : <code>{knownPatterns}</code>",
-    "unrecognizedProperty": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, c'est pas une propriété reconnue. Les propriétés reconnues sont <code>{knownProperties}</code>",
-    "invalidFormat": "Erreur à la ligne <code>{lineNumber} (colonne <code>{columnNumber}</code>) : '<code>{value}</code>' n’a pas le bon format. Le type attendu est <code>{targetTypeName}</code>",
-    "missingRequiredExpression": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, vous devez renseigner l'expression à évaluer pour contrôler que la règle est respectée par les données",
-    "illegalGroovyExpression": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, l'expression renseignée <code>{expression}</code> n'est pas correcte. Erreur de compilation de l'expression à la ligne <code>{compilationError.lineNumber}</code> (colonne <code>{compilationError.columnNumber}</code>) message '<code>{compilationError.message}</code>'",
+    "timeScopeVariableComponentPatternUnknown": "Le composant <code>{component}</code> de la variable <code>{variable}</code> ne peut pas être utilisé comme portant l’information temporelle car le format de date '<code>{pattern}</code>' n’est pas géré. Formats acceptés : <code>{knownPatterns}</code>",
+    "unrecognizedProperty": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, c’est pas une propriété reconnue. Les propriétés reconnues sont <code>{knownProperties}</code>",
+    "invalidFormat": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : '<code>{value}</code>' n’a pas le bon format. Le type attendu est <code>{targetTypeName}</code>",
+    "missingRequiredExpression": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, vous devez renseigner l’expression à évaluer pour contrôler que la règle est respectée par les données",
+    "illegalGroovyExpression": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, l’expression renseignée <code>{expression}</code> n’est pas correcte. Erreur de compilation de l’expression à la ligne <code>{compilationError.lineNumber}</code> (colonne <code>{compilationError.columnNumber}</code>) message '<code>{compilationError.message}</code>'",
     "unknownCheckerName": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' est déclaré mais ce n’est pas un contrôle connu",
-    "csvBoundToUnknownVariable": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n'est pas connue. Variables connues <code>{variables}</code>",
-    "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n'a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>"
+    "csvBoundToUnknownVariable": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n’est pas connue. Variables connues <code>{variables}</code>",
+    "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>"
   }
 }
