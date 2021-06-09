@@ -24,7 +24,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterUtils;
+import org.springframework.jdbc.core.namedparam.ParsedSql;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
@@ -513,7 +517,11 @@ public class OreSiResourcesTest {
             connection.setAutoCommit(false);
         }
         jdbcTemplate.setFetchSize(10);
-        String sql = "select dataValues from acbb.data";
+        String sqlPattern = "select dataValues from acbb.data where rowId like :rowIdPattern";
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlPattern);
+        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, new MapSqlParameterSource("rowIdPattern", "%"));
+        List<SqlParameter> declaredParameters = NamedParameterUtils.buildSqlParameterList(parsedSql, paramSource);
+        System.out.println(sql);
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setFetchSize(10);
         ResultSet resultSet = preparedStatement.executeQuery();
