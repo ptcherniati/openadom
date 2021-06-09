@@ -68,6 +68,7 @@ references:
       nom du type de données:
 
   unites:
+    keyColumns: [nom_key]
     columns:
       code_key:
       code_fr:
@@ -142,12 +143,24 @@ dataTypes:
               name: Reference
               params:
                 refType: valeurs_qualitatives
+          unit:
+            defaultValue: "sans_unite"
+            checker:
+              name: Reference
+              params:
+                refType: unites
       Nombre d'individus:
         components:
           value:
             defaultValue: "0"
             checker:
               name: Integer
+          unit:
+            defaultValue: "sans_unite"
+            checker:
+              name: Reference
+              params:
+                refType: unites
     format:
       headerLine: 4
       firstRowLine: 5
