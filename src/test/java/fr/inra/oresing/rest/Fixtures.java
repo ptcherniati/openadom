@@ -264,4 +264,8 @@ public class Fixtures {
     public String getValidationApplicationConfigurationResourceName() {
         return "/data/validation/fake-app.yaml";
     }
+
+    public String getHauteFrequenceApplicationConfigurationResourceName() {
+        return "/data/hautefrequence/hautefrequence.yaml";
+    }
 }

@@ -13,7 +13,7 @@ compositeReferences:
 references:
   projets:
     separator:
-    keyColumn: nom du projet_key
+    keyColumns: [nom du projet_key]
     columns:
       nom du projet_key:
       nom du projet_fr:
@@ -22,7 +22,7 @@ references:
       description du projet_en:
   plateformes:
     separator:
-    keyColumn: nom de la plateforme_key
+    keyColumns: [nom de la plateforme_key]
     columns:
       nom de la plateforme_key:
       nom du site:
@@ -36,7 +36,7 @@ references:
       code sandre du contexte:
   typeSites:
     separator:
-    keyColumn: nom_key
+    keyColumns: [nom_key]
     columns:
       nom_key:
       nom_fr:
@@ -45,7 +45,7 @@ references:
       description_en:
   sites:
     separator:
-    keyColumn: nom du site_key
+    keyColumns: [nom du site_key]
     columns:
       nom du type de site:
       nom du site_key:

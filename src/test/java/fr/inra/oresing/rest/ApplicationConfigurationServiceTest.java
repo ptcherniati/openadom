@@ -45,6 +45,7 @@ public class ApplicationConfigurationServiceTest {
         ImmutableSet.of(
                 fixtures.getMonsoreApplicationConfigurationResourceName(),
                 fixtures.getAcbbApplicationConfigurationResourceName(),
+                fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
                 fixtures.getValidationApplicationConfigurationResourceName()
         ).forEach(resource -> {
             try (InputStream in = getClass().getResourceAsStream(resource)) {

@@ -75,6 +75,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -88,6 +89,7 @@ public class OreSiService {
      * https://www.postgresql.org/docs/current/ltree.html
      */
     private static final String LTREE_SEPARATOR = ".";
+    private static final String KEYCOLUMN_SEPARATOR = "__";
 
     @Autowired
     private OreSiRepository repo;
@@ -314,10 +316,12 @@ public class OreSiService {
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
                         String key;
-                        if (ref.getKeyColumn() == null) {
+                        if (ref.getKeyColumns().isEmpty()) {
                             key = escapeKeyComponent(e.getId().toString());
                         } else {
-                            key = escapeKeyComponent(refValues.get(ref.getKeyColumn()));
+                            key = ref.getKeyColumns().stream()
+                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkCompositeKey(key);
                         e.setBinaryFile(fileId);
@@ -349,13 +353,15 @@ public class OreSiService {
 
         for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
             String referenceType = compositeReferenceComponentDescription.getReference();
-            String keyColumn = application.getConfiguration().getReferences().get(referenceType).getKeyColumn();
+            List<String> keyColumns = application.getConfiguration().getReferences().get(referenceType).getKeyColumns();
             String parentReferenceType = strings.lower(referenceType);
             boolean root = parentReferenceType == null;
             List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
             for (ReferenceValue reference : references) {
-                String keyElement = reference.getRefValues().get(keyColumn);
-                String escapedKeyElement = escapeKeyComponent(keyElement);
+                String escapedKeyElement = keyColumns.stream()
+                        .map(kc -> reference.getRefValues().get(kc))
+                        .map(kc -> escapeKeyComponent(kc))
+                        .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                 String compositeKey;
                 if (root) {
                     compositeKey = escapedKeyElement;
@@ -398,20 +404,63 @@ public class OreSiService {
         List<Map.Entry<String, String>> columns;
     }
 
+
+    /**
+     * Add a new datatype from csv file
+     * @param nameOrId
+     * @param dataType
+     * @param file
+     * @return
+     * @throws IOException
+     * @throws CheckerException
+     */
     public List<CsvRowValidationCheckResult> addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
+        List<CsvRowValidationCheckResult> errors= new LinkedList<>();
         authenticationService.setRoleForClient();
+
         Application app = getApplication(nameOrId);
         UUID fileId = storeFile(app, file);
 
-        // recuperation de la configuration pour ce type de donnees
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
+        Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
 
-        ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
 
-        List<CsvRowValidationCheckResult> errors = new LinkedList<>();
 
+        CSVParser csvParser = buildCSVParserForFile(file, formatDescription);
+        Iterator<CSVRecord> linesIterator = csvParser.iterator();
+
+        Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
+
+        readPreHeader(formatDescription, constantValues, linesIterator);
+
+        ImmutableList<String> columns = readHeaderRow(linesIterator);
+        readPostHeader(formatDescription, linesIterator);
+
+        Stream<Data> dataStream = Streams.stream(csvParser)
+                .map(buildCsvRecordToLineAsMapFn(columns))
+                .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
+                .map(fillConstantValuesAndBuildMergeLineValuesAndConstantValuesFn(constantValues))
+                .map(buildReplaceMissingValuesByDefaultValuesFn(getDefaultValues(dataTypeDescription)))
+                .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
+
+        repo.getRepository(app).data().storeAll(dataStream);
+        relationalService.onDataUpdate(app.getName());
+
+        return errors;
+    }
+
+    /**
+     * return a function that transform each RowWithData to a stream of data entities
+     * @param app
+     * @param dataType
+     * @param fileId
+     * @return
+     */
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors){
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
+        Configuration conf = app.getConfiguration();
+        Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         String timeScopeColumnPattern = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
@@ -420,7 +469,22 @@ public class OreSiService {
                 .collect(MoreCollectors.onlyElement())
                 .getPattern();
 
-        Function<RowWithData, Stream<Data>> lineValuesToEntityStreamFn = rowWithData -> {
+        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, timeScopeColumnPattern);
+    }
+
+    /**
+     * build the function that transform each RowWithData to a stream of data entities
+     * @param app
+     * @param dataType
+     * @param fileId
+     * @param errors
+     * @param lineCheckers
+     * @param dataTypeDescription
+     * @param timeScopeColumnPattern
+     * @return
+     */
+    private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, ImmutableSet<LineChecker> lineCheckers, Configuration.DataTypeDescription dataTypeDescription, String timeScopeColumnPattern) {
+        return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
 //            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
             List<UUID> refsLinkedTo = new ArrayList<>();
@@ -475,175 +539,254 @@ public class OreSiService {
 
             return dataStream;
         };
+    }
 
-        Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
+    /**
+     * Build a function that add defaultValues to rowWithdata
+     *
+     * @param defaultValues
+     * @return
+     */
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, String> defaultValues){
+        return rowWithData -> {
+            Maps.EntryTransformer<VariableComponentKey, String, String> replaceEmptyByDefaultValueFn =
+                    (variableComponentKey, value) -> StringUtils.isBlank(value) ? defaultValues.get(variableComponentKey) : value;
+            Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(rowWithData.getDatum(), replaceEmptyByDefaultValueFn);
+            ImmutableMap<VariableComponentKey, String> result = ImmutableMap.copyOf(withDefaultValues);
+            return new RowWithData(rowWithData.getLineNumber(), result);
+        };
+    }
 
+    /**
+     * Return a function that add constantValues to rowWithdata
+     * @param constantValues
+     * @return
+     */
+    private Function<RowWithData, RowWithData> fillConstantValuesAndBuildMergeLineValuesAndConstantValuesFn(Map<VariableComponentKey, String> constantValues){
+        return rowWithData -> {
+            ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
+                    .putAll(constantValues)
+                    .putAll(rowWithData.getDatum())
+                    .build();
+            return new RowWithData(rowWithData.getLineNumber(), datum);
+        };
+    }
+
+
+    /**
+     * Build the function that Dispatch ParsedCsvRow into RowWithData when there are not repeatedColumns
+     *
+     * @param formatDescription
+     * @return
+     */
+    private Function<ParsedCsvRow, ImmutableSet<RowWithData>> buildLineAsMapWhenNoRepeatedColumnsToRecordsFn(Configuration.FormatDescription formatDescription) {
         Function<ParsedCsvRow, ImmutableSet<RowWithData>> lineAsMapToRecordsFn;
-        if (formatDescription.getRepeatedColumns().isEmpty()) {
-            ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
-                    .map(Configuration.ColumnBindingDescription::getHeader)
-                    .collect(ImmutableSet.toImmutableSet());
-            ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
-            lineAsMapToRecordsFn = parsedCsvRow -> {
-                List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
-                ImmutableList<String> actualHeaders = line.stream().map(Map.Entry::getKey).collect(ImmutableList.toImmutableList());
-                Preconditions.checkArgument(expectedColumns.containsAll(actualHeaders), "Fichier incorrect. Entêtes détectés " + actualHeaders + ". Entêtes attendus " + expectedColumns);
-                Map<VariableComponentKey, String> record = new LinkedHashMap<>();
-                for (Map.Entry<String, String> entry : line) {
-                    String header = entry.getKey();
-                    String value = entry.getValue();
-                    Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
-                    record.put(bindingDescription.getBoundTo(), value);
+        ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
+                .map(Configuration.ColumnBindingDescription::getHeader)
+                .collect(ImmutableSet.toImmutableSet());
+        ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
+        lineAsMapToRecordsFn = parsedCsvRow -> {
+            List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
+            ImmutableList<String> actualHeaders = line.stream().map(Map.Entry::getKey).collect(ImmutableList.toImmutableList());
+            Preconditions.checkArgument(expectedColumns.containsAll(actualHeaders), "Fichier incorrect. Entêtes détectés " + actualHeaders + ". Entêtes attendus " + expectedColumns);
+            Map<VariableComponentKey, String> record = new LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : line) {
+                String header = entry.getKey();
+                String value = entry.getValue();
+                Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
+                record.put(bindingDescription.getBoundTo(), value);
+            }
+            return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), record));
+        };
+        return lineAsMapToRecordsFn;
+    }
+
+    /**
+     * build the function that Dispatch ParsedCsvRow into RowWithData when there are repeatedColumns
+     *
+     * @param formatDescription
+     * @return
+     */
+    private Function<ParsedCsvRow, ImmutableSet<RowWithData>> buildLineAsMapWhenRepeatedColumnsToRecordsFn(Configuration.FormatDescription formatDescription) {
+        return  parsedCsvRow -> {
+            List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
+            LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
+
+            // d'abord, il s'agit de lire les colonnes fixes, non répétées. Les données
+            // qui en sont tirées sont communes pour toute la ligne
+            Map<VariableComponentKey, String> recordPrototype;
+            {
+                recordPrototype = new LinkedHashMap<>();
+                for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
+                    Map.Entry<String, String> poll = lineCopy.poll();
+                    String header = poll.getKey();
+                    Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
+                    String value = poll.getValue();
+                    recordPrototype.put(column.getBoundTo(), value);
                 }
-                return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), record));
-            };
-        } else {
-            lineAsMapToRecordsFn = parsedCsvRow -> {
-                List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
-                LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
-
-                // d'abord, il s'agit de lire les colonnes fixes, non répétées. Les données
-                // qui en sont tirées sont communes pour toute la ligne
-                Map<VariableComponentKey, String> recordPrototype; {
-                    recordPrototype = new LinkedHashMap<>();
-                    for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
-                        Map.Entry<String, String> poll = lineCopy.poll();
-                        String header = poll.getKey();
-                        Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
-                        String value = poll.getValue();
-                        recordPrototype.put(column.getBoundTo(), value);
-                    }
-                }
-
-                // ensuite, on traite les colonnes répétées
-                Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
-                Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
-                Set<RowWithData> records = new LinkedHashSet<>();
-
-                // les données tirées de l'entête de la colonne répétée
-                Map<VariableComponentKey, String> tokenValues = new LinkedHashMap<>();
-
-                // les données tirées du contenu de la cellule d'une colonne répétée
-                Map<VariableComponentKey, String> bodyValues = new LinkedHashMap<>();
-
-                // pour lire toute la ligne, on doit lire X groupes qui sont Y groupes de N colonnes
-                while (actualColumnsIterator.hasNext()) {
-                    Map.Entry<String, String> actualColumn = actualColumnsIterator.next();
-                    Configuration.RepeatedColumnBindingDescription expectedColumn = expectedColumns.next();
-
-                    // on lit les informations dans l'entête
-                    {
-                        String actualHeader = actualColumn.getKey();
-
-                        String headerPattern = expectedColumn.getHeaderPattern();
-                        Pattern pattern = Pattern.compile(headerPattern);
-                        Matcher matcher = pattern.matcher(actualHeader);
-                        boolean matches = matcher.matches();
-                        Preconditions.checkState(matches, "Entête imprévu " + actualHeader + ". Entête attendu " + headerPattern);
-
-                        List<Configuration.HeaderPatternToken> tokens = expectedColumn.getTokens();
-                        if (tokens != null) {
-                            Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
-                            int groupIndex = 1;
-                            for (Configuration.HeaderPatternToken token : tokens) {
-                                tokenValues.put(token.getBoundTo(), matcher.group(groupIndex++));
-                            }
-                        }
-                    }
-
-                    // on lit l'information dans le contenu de la cellule
-                    String value = actualColumn.getValue();
-                    bodyValues.put(expectedColumn.getBoundTo(), value);
-
-                    if (!expectedColumns.hasNext()) {
-                        // on a lu un groupe de colonne entier
-
-                        // pour les données de ce groupe de colonne répétées, on ajoute une donnée
-                        Map<VariableComponentKey, String> record = ImmutableMap.<VariableComponentKey, String>builder()
-                                .putAll(recordPrototype)
-                                .putAll(tokenValues)
-                                .putAll(bodyValues)
-                                .build();
-                        records.add(new RowWithData(parsedCsvRow.getLineNumber(), record));
-
-                        // et on passe au groupe de colonnes répétées suivant
-                        tokenValues.clear();
-                        bodyValues.clear();
-                        expectedColumns = formatDescription.getRepeatedColumns().iterator();
-                    }
-                }
-                return ImmutableSet.copyOf(records);
-            };
-        }
-
-        ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
-                formatDescription.getConstants().stream()
-                .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
-        Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-        Function<RowWithData, RowWithData> mergeLineValuesAndConstantValuesFn =
-                rowWithData -> {
-                    ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
-                            .putAll(constantValues)
-                            .putAll(rowWithData.getDatum())
-                            .build();
-                    return new RowWithData(rowWithData.getLineNumber(), datum);
-                };
-        Function<RowWithData, RowWithData> replaceMissingValuesByDefaultValuesFn =
-                rowWithData -> {
-                    Maps.EntryTransformer<VariableComponentKey, String, String> replaceEmptyByDefaultValueFn =
-                            (variableComponentKey, value) -> StringUtils.isBlank(value) ? defaultValues.get(variableComponentKey) : value;
-                    Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(rowWithData.getDatum(), replaceEmptyByDefaultValueFn);
-                    ImmutableMap<VariableComponentKey, String> result = ImmutableMap.copyOf(withDefaultValues);
-                    return new RowWithData(rowWithData.getLineNumber(), result);
-                };
-
-        CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(formatDescription.getSeparator())
-                .withSkipHeaderRecord();
-        try (InputStream csv = file.getInputStream()) {
-            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
-            Iterator<CSVRecord> linesIterator = csvParser.iterator();
-
-            for (int lineNumber = 1; lineNumber < formatDescription.getHeaderLine(); lineNumber++) {
-                CSVRecord row = linesIterator.next();
-                ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
-                constantDescriptions.forEach(constant -> {
-                    int columnNumber = constant.getColumnNumber();
-                    String value = row.get(columnNumber - 1);
-                    VariableComponentKey boundTo = constant.getBoundTo();
-                    constantValues.put(boundTo, value);
-                });
             }
 
-            CSVRecord headerRow = linesIterator.next();
-            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            int lineToSkipAfterHeader = formatDescription.getFirstRowLine() - formatDescription.getHeaderLine() - 1;
-            Iterators.advance(linesIterator, lineToSkipAfterHeader);
-            Function<CSVRecord, ParsedCsvRow> csvRecordToLineAsMapFn = line -> {
-                int lineNumber = Ints.checkedCast(line.getRecordNumber());
-                Iterator<String> currentHeader = columns.iterator();
-                List<Map.Entry<String, String>> record = new LinkedList<>();
-                line.forEach(value -> {
-                    String header = currentHeader.next();
-                    record.add(Map.entry(header, value));
-                });
-                return new ParsedCsvRow(lineNumber, record);
-            };
+            // ensuite, on traite les colonnes répétées
+            Iterator<Map.Entry<String, String>> actualColumnsIterator = lineCopy.iterator();
+            Iterator<Configuration.RepeatedColumnBindingDescription> expectedColumns = formatDescription.getRepeatedColumns().iterator();
+            Set<RowWithData> records = new LinkedHashSet<>();
 
-            Stream<Data> dataStream = Streams.stream(csvParser)
-                    .map(csvRecordToLineAsMapFn)
-                    .flatMap(lineAsMap -> lineAsMapToRecordsFn.apply(lineAsMap).stream())
-                    .map(mergeLineValuesAndConstantValuesFn)
-                    .map(replaceMissingValuesByDefaultValuesFn)
-                    .flatMap(lineValuesToEntityStreamFn);
+            // les données tirées de l'entête de la colonne répétée
+            Map<VariableComponentKey, String> tokenValues = new LinkedHashMap<>();
 
-            repo.getRepository(app).data().storeAll(dataStream);
-        }
+            // les données tirées du contenu de la cellule d'une colonne répétée
+            Map<VariableComponentKey, String> bodyValues = new LinkedHashMap<>();
 
-        relationalService.onDataUpdate(app.getName());
+            // pour lire toute la ligne, on doit lire X groupes qui sont Y groupes de N colonnes
+            while (actualColumnsIterator.hasNext()) {
+                Map.Entry<String, String> actualColumn = actualColumnsIterator.next();
+                Configuration.RepeatedColumnBindingDescription expectedColumn = expectedColumns.next();
 
-        return errors;
+                // on lit les informations dans l'entête
+                {
+                    String actualHeader = actualColumn.getKey();
+
+                    String headerPattern = expectedColumn.getHeaderPattern();
+                    Pattern pattern = Pattern.compile(headerPattern);
+                    Matcher matcher = pattern.matcher(actualHeader);
+                    boolean matches = matcher.matches();
+                    Preconditions.checkState(matches, "Entête imprévu " + actualHeader + ". Entête attendu " + headerPattern);
+
+                    List<Configuration.HeaderPatternToken> tokens = expectedColumn.getTokens();
+                    if (tokens != null) {
+                        Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
+                        int groupIndex = 1;
+                        for (Configuration.HeaderPatternToken token : tokens) {
+                            tokenValues.put(token.getBoundTo(), matcher.group(groupIndex++));
+                        }
+                    }
+                }
+
+                // on lit l'information dans le contenu de la cellule
+                String value = actualColumn.getValue();
+                bodyValues.put(expectedColumn.getBoundTo(), value);
+
+                if (!expectedColumns.hasNext()) {
+                    // on a lu un groupe de colonne entier
+
+                    // pour les données de ce groupe de colonne répétées, on ajoute une donnée
+                    Map<VariableComponentKey, String> record = ImmutableMap.<VariableComponentKey, String>builder()
+                            .putAll(recordPrototype)
+                            .putAll(tokenValues)
+                            .putAll(bodyValues)
+                            .build();
+                    records.add(new RowWithData(parsedCsvRow.getLineNumber(), record));
+
+                    // et on passe au groupe de colonnes répétées suivant
+                    tokenValues.clear();
+                    bodyValues.clear();
+                    expectedColumns = formatDescription.getRepeatedColumns().iterator();
+                }
+            }
+            return ImmutableSet.copyOf(records);
+        };
     }
+
+
+    /**
+     * build the function Dispatch ParsedCsvRow into RowWithData
+     *
+     * @param formatDescription
+     * @return
+     */
+    private Function<ParsedCsvRow, ImmutableSet<RowWithData>> buildLineAsMapToRecordsFn(Configuration.FormatDescription formatDescription) {
+        if (formatDescription.getRepeatedColumns().isEmpty()) {
+            return buildLineAsMapWhenNoRepeatedColumnsToRecordsFn(formatDescription);
+        } else {
+            return buildLineAsMapWhenRepeatedColumnsToRecordsFn(formatDescription);
+        }
+    }
+
+
+    /**
+     * build the function that diplay the line in a {@link ParsedCsvRow}
+     *
+     * @param columns
+     * @return
+     */
+    private Function<CSVRecord, ParsedCsvRow> buildCsvRecordToLineAsMapFn(ImmutableList<String> columns) {
+        return line -> {
+            int lineNumber = Ints.checkedCast(line.getRecordNumber());
+            Iterator<String> currentHeader = columns.iterator();
+            List<Map.Entry<String, String>> record = new LinkedList<>();
+            line.forEach(value -> {
+                String header = currentHeader.next();
+                record.add(Map.entry(header, value));
+            });
+            return new ParsedCsvRow(lineNumber, record);
+        };
+    }
+
+    /**
+     * read the header cartridge of the file to extract some constants values.
+     *
+     * @param formatDescription
+     * @param constantValues
+     * @param linesIterator
+     */
+    private void readPreHeader(Configuration.FormatDescription formatDescription, Map<VariableComponentKey, String> constantValues, Iterator<CSVRecord> linesIterator) {
+        ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
+                formatDescription.getConstants().stream()
+                        .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
+
+        for (int lineNumber = 1; lineNumber < formatDescription.getHeaderLine(); lineNumber++) {
+            CSVRecord row = linesIterator.next();
+            ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
+            constantDescriptions.forEach(constant -> {
+                int columnNumber = constant.getColumnNumber();
+                String value = row.get(columnNumber - 1);
+                VariableComponentKey boundTo = constant.getBoundTo();
+                constantValues.put(boundTo, value);
+            });
+        }
+    }
+
+    /**
+     * read the header row and return the columns
+     *
+     * @param linesIterator
+     * @return
+     */
+    private ImmutableList<String> readHeaderRow(Iterator<CSVRecord> linesIterator) {
+        CSVRecord headerRow = linesIterator.next();
+        return Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+    }
+
+    /**
+     * read some post header as example line, units, min and max values for each columns
+     *
+     * @param formatDescription
+     * @param linesIterator
+     */
+    private void readPostHeader(Configuration.FormatDescription formatDescription, Iterator<CSVRecord> linesIterator) {
+        int lineToSkipAfterHeader = formatDescription.getFirstRowLine() - formatDescription.getHeaderLine() - 1;
+        Iterators.advance(linesIterator, lineToSkipAfterHeader);
+    }
+
+    /**
+     * build a csvParser from file
+     *
+     * @param file
+     * @param formatDesc
+     * ription
+     * @return
+     * @throws IOException
+     */
+    private CSVParser buildCSVParserForFile(MultipartFile file, Configuration.FormatDescription formatDescription) throws IOException {
+        try (InputStream csv = file.getInputStream()) {
+            CSVFormat csvFormat = CSVFormat.DEFAULT
+                    .withDelimiter(formatDescription.getSeparator())
+                    .withSkipHeaderRecord();
+            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+            return csvParser;
+        }
+    }
+
 
     private ImmutableMap<VariableComponentKey, String> getDefaultValues(Configuration.DataTypeDescription dataTypeDescription) {
         ImmutableMap.Builder<VariableComponentKey, String> defaultValuesBuilder = ImmutableMap.builder();

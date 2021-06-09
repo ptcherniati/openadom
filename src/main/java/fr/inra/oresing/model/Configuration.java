@@ -37,7 +37,7 @@ public class Configuration {
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
-        private String keyColumn;
+        private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
     }
 
