@@ -197,6 +197,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
+            Assert.assertEquals(306 * 2, StringUtils.countMatches(actualJson, "sans_unite"));
         }
 
         // restitution de data csv

@@ -431,15 +431,7 @@ public class OreSiService {
         Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
         Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-        Map<VariableComponentKey, String> defaultValues = new LinkedHashMap<>();
-
-        dataTypeDescription.getData().forEach((variableNme, columnDescription) -> {
-            columnDescription.getComponents().forEach((componentName, variableComponentDescription) -> {
-                Optional.ofNullable(variableComponentDescription)
-                        .map(Configuration.VariableComponentDescription::getDefaultValue)
-                        .ifPresent(dv ->  defaultValues.put(new VariableComponentKey(variableNme, componentName), dv));
-            });
-        });
+        ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
 
         readPreHeader(formatDescription, constantValues, linesIterator);
 
@@ -449,8 +441,8 @@ public class OreSiService {
         Stream<Data> dataStream = Streams.stream(csvParser)
                 .map(buildCsvRecordToLineAsMapFn(columns))
                 .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
-                .map(fillConstantValuesAndFillDefaultValueAndBuildMergeLineValuesAndConstantValuesAndDfaultValuesFn(constantValues, defaultValues))
-                .map(buildReplaceMissingValuesByDefaultValuesFn(getDefaultValues(dataTypeDescription)))
+                .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
+                .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValues))
                 .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
 
         repo.getRepository(app).data().storeAll(dataStream);
@@ -553,41 +545,34 @@ public class OreSiService {
     }
 
     /**
-     * Build a function that add defaultValues to rowWithdata
+     * Une fonction qui ajoute à une donnée les valeurs par défaut.
      *
-     * @param defaultValues
-     * @return
+     * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, String> defaultValues){
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, String> defaultValues) {
         return rowWithData -> {
-            Maps.EntryTransformer<VariableComponentKey, String, String> replaceEmptyByDefaultValueFn =
-                    (variableComponentKey, value) -> StringUtils.isBlank(value) ? defaultValues.get(variableComponentKey) : value;
-            Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(rowWithData.getDatum(), replaceEmptyByDefaultValueFn);
-            ImmutableMap<VariableComponentKey, String> result = ImmutableMap.copyOf(withDefaultValues);
-            return new RowWithData(rowWithData.getLineNumber(), result);
+            Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
+            rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
+            return new RowWithData(rowWithData.getLineNumber(), ImmutableMap.copyOf(rowWithDefaults));
         };
     }
 
     /**
-     * Return a function that add constantValues to rowWithdata
-     * @param constantValues
-     * @return
+     * Une fonction qui ajoute à une donnée les données constantes.
+     *
+     * Les constantes sont des variables/composants qui ont la même valeur pour toutes les lignes
+     * d'un fichier de données qu'on importe. Ce sont les données qu'on trouve dans l'entête
+     * du fichier.
      */
-    private Function<RowWithData, RowWithData> fillConstantValuesAndFillDefaultValueAndBuildMergeLineValuesAndConstantValuesAndDfaultValuesFn(Map<VariableComponentKey, String> constantValues, Map<VariableComponentKey, String> defaultValues){
+    private Function<RowWithData, RowWithData> buildMergeLineValuesAndConstantValuesFn(Map<VariableComponentKey, String> constantValues) {
         return rowWithData -> {
-            ImmutableMap.Builder<VariableComponentKey, String> builder = ImmutableMap.<VariableComponentKey, String>builder()
-                        .putAll(constantValues)
-                            .putAll(rowWithData.getDatum());
-                    defaultValues.entrySet()
-                            .stream()
-                            .filter(e->!rowWithData.getDatum().containsKey(e.getKey()))
-                            .forEach(e->builder.put(e.getKey(), e.getValue()));
-
-                    ImmutableMap<VariableComponentKey, String> datum = builder.build();
+            ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
+                    .putAll(constantValues)
+                    .putAll(rowWithData.getDatum())
+                    .build();
             return new RowWithData(rowWithData.getLineNumber(), datum);
         };
     }
-
 
     /**
      * Build the function that Dispatch ParsedCsvRow into RowWithData when there are not repeatedColumns
