@@ -134,8 +134,7 @@ public class ApplicationConfigurationService {
                 } else {
                     if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
                         builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
-                    }
-                    else {
+                    } else {
                         if (timeScopeVariableComponentKey.getComponent() == null) {
                             builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
                         } else {
