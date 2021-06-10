@@ -2,11 +2,10 @@
   <PageView>
     <h1 class="title main-title">{{ application.title }}</h1>
     <b-tabs type="is-boxed" expanded class="mt-4">
-      <b-tab-item :label="$t('applicationDetailsView.application')" icon="wrench"> </b-tab-item>
       <b-tab-item :label="$t('applicationDetailsView.references')" icon="drafting-compass">
-        <ReferencesManagement :application="application" />
+        <ReferencesManagement :application="application" :key="application.id" />
       </b-tab-item>
-      <b-tab-item :label="$t('applicationDetailsView.dataset')" icon="poll"> </b-tab-item>
+      <b-tab-item :label="$t('applicationDetailsView.dataset')" icon="poll">À venir</b-tab-item>
     </b-tabs>
   </PageView>
 </template>

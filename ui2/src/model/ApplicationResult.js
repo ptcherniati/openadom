@@ -9,7 +9,7 @@ export class ApplicationResult {
       children: [],
       columns: {
         id: "",
-        label: "",
+        title: "",
         key: false,
         linkedTo: "",
       },
