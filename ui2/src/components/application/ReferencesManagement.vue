@@ -1,30 +1,26 @@
 <template>
   <div>
-    <div>
-      <FontAwesomeIcon
-        @click="openSite = !openSite"
-        :icon="openSite ? 'caret-up' : 'caret-down'"
-        class="clickable"
-      />
-      Site
-      <div v-if="openSite">Parcelle</div>
-    </div>
-    <div>Unités</div>
+    <CollapsibleTree
+      v-for="ref in references"
+      :key="ref.id"
+      :label="ref.label"
+      :children="ref.children"
+      :level="0"
+    />
   </div>
 </template>
 
 <script>
 import { Component, Prop, Vue } from "vue-property-decorator";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { convertReferencesToTrees } from "@/utils/ConversionUtils";
+import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 
 @Component({
-  components: { FontAwesomeIcon },
+  components: { CollapsibleTree },
 })
 export default class ReferencesManagement extends Vue {
   @Prop() application;
 
-  openSite = false;
   references = [];
 
   created() {
