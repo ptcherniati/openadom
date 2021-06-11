@@ -89,6 +89,7 @@ public class GroovyLineCheckerTest {
                 );
         try {
             ValidationCheckResult validation = groovyLineChecker.check(validDatum);
+            Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getMessage().contains("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais 261.15."));
         }
