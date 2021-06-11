@@ -6,6 +6,8 @@
       :label="ref.label"
       :children="ref.children"
       :level="0"
+      :withDownload="true"
+      :onClickLabelCb="(event, label) => openRefDetails(event, label)"
     />
   </div>
 </template>
@@ -28,6 +30,12 @@ export default class ReferencesManagement extends Vue {
       return;
     }
     this.references = convertReferencesToTrees(Object.values(this.application.references));
+  }
+
+  openRefDetails(event, label) {
+    event.stopPropagation();
+
+    console.log("OUVRIR DETAILS DE LA REF:", label);
   }
 }
 </script>
