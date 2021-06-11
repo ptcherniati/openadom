@@ -80,30 +80,12 @@ public class GroovyLineCheckerTest {
                 , "}"
                 , "throw new IllegalArgumentException(\"unité inconnue, \" + unité);"
         );
-        String wrongExpression = expression.replace("Integer", "Integre");
-
-        Assert.assertFalse(GroovyLineChecker.validateExpression(expression).isPresent());
-        Optional<GroovyLineChecker.CompilationError> compilationErrorOptional = GroovyLineChecker.validateExpression(wrongExpression);
-        Assert.assertTrue(compilationErrorOptional.isPresent());
-        compilationErrorOptional.ifPresent(compilationError -> {
-            Assert.assertTrue(compilationError.getMessage().contains("Integre"));
-        });
 
         GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression);
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
                         new VariableComponentKey("temperature", "unité"), "°C"
-                );
-        ImmutableMap<VariableComponentKey, String> invalidDatum =
-                ImmutableMap.of(
-                        new VariableComponentKey("temperature", "valeur"), "-12",
-                        new VariableComponentKey("temperature", "unité"), "kelvin"
-                );
-        ImmutableMap<VariableComponentKey, String> invalidDatum2 =
-                ImmutableMap.of(
-                        new VariableComponentKey("temperature", "valeur"), "-12",
-                        new VariableComponentKey("temperature", "unité"), "degrés"
                 );
         try {
             ValidationCheckResult validation = groovyLineChecker.check(validDatum);
