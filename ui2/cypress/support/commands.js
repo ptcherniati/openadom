@@ -25,7 +25,19 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 import 'cypress-file-upload';
 
-Cypress.Commands.add('userLogin', (user) => {
-    cy.get('input[placeholder = "Entrer l\'identifiant"]').type(user.login)
-    cy.get('input[placeholder = "Entrer le mot de passe"]').type(user.password)
+
+Cypress.Commands.add('login', (userRole) => {
+    cy.fixture('users.json').as('users')
+    cy.get('@users').then((users) => {
+        const user = users[userRole]
+        cy.visit(Cypress.env('login_url'))
+        cy.get(':nth-child(1) > .field > .control > .input').type(userRole)
+        cy.get(':nth-child(2) > .field > .control > .input').type("password")
+
+        //console.table(user)
+        cy.intercept(
+            'POST',
+            'http://localhost:8081/api/v1/login', user.response)
+        cy.get('.buttons button').contains(" Se connecter ").click()
+    })
 })
