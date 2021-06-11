@@ -16,7 +16,9 @@ create table ReferenceValue (
     referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
     compositeKey ltree NOT NULL,
     refValues jsonb,
-    binaryFile EntityRef REFERENCES BinaryFile(id)
+    binaryFile EntityRef REFERENCES BinaryFile(id),
+
+    CONSTRAINT "compositeKey_uniqueness" UNIQUE (application, referenceType, compositeKey)
 );
 
 --CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
