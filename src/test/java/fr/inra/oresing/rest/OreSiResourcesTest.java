@@ -365,15 +365,15 @@ public class OreSiResourcesTest {
             }
         }
 
-//        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes/esp_nom")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-//                .andReturn().getResponse().getContentAsString();
-//
-//        List refs = objectMapper.readValue(response, List.class);
-//        Assert.assertFalse(refs.isEmpty());
+        String getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        List refs = objectMapper.readValue(getReferenceResponse, List.class);
+        Assert.assertEquals(103, refs.size());
 
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {
