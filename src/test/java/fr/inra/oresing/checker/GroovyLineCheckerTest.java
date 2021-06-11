@@ -68,7 +68,7 @@ public class GroovyLineCheckerTest {
         }
     }
 
-    @Test()
+    @Test
     public void testCheckerWithNonBooleanValue() {
         String expression = String.join("\n"
                 , "Integer température = Integer.parseInt(datum.get(\"temperature\").get(\"valeur\"));"
