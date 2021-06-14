@@ -214,7 +214,7 @@ public class Fixtures {
         return authCookie;
     }
 
-    public void addApplicationAcbb() throws Exception {
+    public Cookie addApplicationAcbb() throws Exception {
         Cookie authCookie = addApplicationCreatorUser();
         try (InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
@@ -259,6 +259,7 @@ public class Fixtures {
                     .cookie(authCookie))
                     .andExpect(status().isOk());
         }
+        return authCookie;
     }
 
     public String getValidationApplicationConfigurationResourceName() {

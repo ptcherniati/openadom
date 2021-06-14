@@ -5,7 +5,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -29,7 +29,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -53,7 +53,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -77,7 +77,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -101,7 +101,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -125,7 +125,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -149,7 +149,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -173,7 +173,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -197,7 +197,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -221,7 +221,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -245,7 +245,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -269,7 +269,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -293,7 +293,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -317,7 +317,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -341,7 +341,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -365,7 +365,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -389,7 +389,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -413,7 +413,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -437,7 +437,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -461,7 +461,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -485,7 +485,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -509,7 +509,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -533,7 +533,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -557,7 +557,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -581,7 +581,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -605,7 +605,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -629,7 +629,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -653,7 +653,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -677,7 +677,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -701,7 +701,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -725,7 +725,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -749,7 +749,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -773,7 +773,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -797,7 +797,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -821,7 +821,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -845,7 +845,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -869,7 +869,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -893,7 +893,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -917,7 +917,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -941,7 +941,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -965,7 +965,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -989,7 +989,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1013,7 +1013,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1037,7 +1037,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1061,7 +1061,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1085,7 +1085,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1109,7 +1109,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1133,7 +1133,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1157,7 +1157,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1181,7 +1181,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1205,7 +1205,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1229,7 +1229,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1253,7 +1253,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1277,7 +1277,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1301,7 +1301,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1325,7 +1325,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1349,7 +1349,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1373,7 +1373,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1397,7 +1397,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1421,7 +1421,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1445,7 +1445,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1469,7 +1469,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1493,7 +1493,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1517,7 +1517,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1541,7 +1541,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1565,7 +1565,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1589,7 +1589,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1613,7 +1613,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1637,7 +1637,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1661,7 +1661,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1685,7 +1685,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1709,7 +1709,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1733,7 +1733,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1757,7 +1757,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1781,7 +1781,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1805,7 +1805,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1829,7 +1829,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1853,7 +1853,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1877,7 +1877,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1901,7 +1901,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1925,7 +1925,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1949,7 +1949,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1973,7 +1973,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1997,7 +1997,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -2021,7 +2021,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2045,7 +2045,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2069,7 +2069,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2093,7 +2093,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2117,7 +2117,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2141,7 +2141,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2165,7 +2165,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2189,7 +2189,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2213,7 +2213,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2237,7 +2237,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2261,7 +2261,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2285,7 +2285,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2309,7 +2309,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2333,7 +2333,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2357,7 +2357,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2381,7 +2381,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2405,7 +2405,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2429,7 +2429,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2453,7 +2453,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2477,7 +2477,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2501,7 +2501,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2525,7 +2525,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2549,7 +2549,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2573,7 +2573,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2597,7 +2597,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2621,7 +2621,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2645,7 +2645,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2669,7 +2669,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2693,7 +2693,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2717,7 +2717,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2741,7 +2741,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2765,7 +2765,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2789,7 +2789,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2813,7 +2813,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2837,7 +2837,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2861,7 +2861,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2885,7 +2885,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2909,7 +2909,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2933,7 +2933,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2957,7 +2957,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2981,7 +2981,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3005,7 +3005,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3029,7 +3029,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3053,7 +3053,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3077,7 +3077,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3101,7 +3101,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3125,7 +3125,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3149,7 +3149,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3173,7 +3173,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3197,7 +3197,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3221,7 +3221,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3245,7 +3245,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3269,7 +3269,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3293,7 +3293,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3317,7 +3317,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3341,7 +3341,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3365,7 +3365,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3389,7 +3389,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3413,7 +3413,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3437,7 +3437,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3461,7 +3461,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3485,7 +3485,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3509,7 +3509,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3533,7 +3533,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3557,7 +3557,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3581,7 +3581,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3605,7 +3605,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3629,7 +3629,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3653,7 +3653,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3677,7 +3677,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3701,7 +3701,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3725,7 +3725,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3749,7 +3749,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3773,7 +3773,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3797,7 +3797,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3821,7 +3821,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3845,7 +3845,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3869,7 +3869,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3893,7 +3893,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3917,7 +3917,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3941,7 +3941,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3965,7 +3965,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3989,7 +3989,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4013,7 +4013,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4037,7 +4037,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4061,7 +4061,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4085,7 +4085,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4109,7 +4109,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4133,7 +4133,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4157,7 +4157,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4181,7 +4181,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4205,7 +4205,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4229,7 +4229,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4253,7 +4253,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4277,7 +4277,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4301,7 +4301,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4325,7 +4325,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4349,7 +4349,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4373,7 +4373,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4397,7 +4397,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4421,7 +4421,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4445,7 +4445,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4469,7 +4469,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4493,7 +4493,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4517,7 +4517,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4541,7 +4541,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4565,7 +4565,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4589,7 +4589,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4613,7 +4613,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4637,7 +4637,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4661,7 +4661,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4685,7 +4685,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4709,7 +4709,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4733,7 +4733,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4757,7 +4757,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4781,7 +4781,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4805,7 +4805,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4829,7 +4829,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4853,7 +4853,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4877,7 +4877,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4901,7 +4901,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4925,7 +4925,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4949,7 +4949,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4973,7 +4973,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4997,7 +4997,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5021,7 +5021,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5045,7 +5045,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5069,7 +5069,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5093,7 +5093,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5117,7 +5117,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5141,7 +5141,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5165,7 +5165,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5189,7 +5189,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5213,7 +5213,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5237,7 +5237,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5261,7 +5261,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5285,7 +5285,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5309,7 +5309,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5333,7 +5333,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5357,7 +5357,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5381,7 +5381,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5405,7 +5405,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5429,7 +5429,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5453,7 +5453,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5477,7 +5477,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5501,7 +5501,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5525,7 +5525,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5549,7 +5549,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5573,7 +5573,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5597,7 +5597,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5621,7 +5621,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5645,7 +5645,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5669,7 +5669,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5693,7 +5693,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5717,7 +5717,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5741,7 +5741,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5765,7 +5765,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5789,7 +5789,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5813,7 +5813,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5837,7 +5837,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5861,7 +5861,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5885,7 +5885,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5909,7 +5909,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5933,7 +5933,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5957,7 +5957,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5981,7 +5981,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6005,7 +6005,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6029,7 +6029,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6053,7 +6053,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6077,7 +6077,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6101,7 +6101,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6125,7 +6125,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6149,7 +6149,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6173,7 +6173,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6197,7 +6197,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6221,7 +6221,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6245,7 +6245,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6269,7 +6269,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6293,7 +6293,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6317,7 +6317,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6341,7 +6341,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6365,7 +6365,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6389,7 +6389,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6413,7 +6413,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6437,7 +6437,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6461,7 +6461,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6485,7 +6485,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6509,7 +6509,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6533,7 +6533,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6557,7 +6557,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6581,7 +6581,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6605,7 +6605,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6629,7 +6629,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6653,7 +6653,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6677,7 +6677,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6701,7 +6701,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6725,7 +6725,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6749,7 +6749,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6773,7 +6773,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6797,7 +6797,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6821,7 +6821,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6845,7 +6845,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6869,7 +6869,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6893,7 +6893,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6917,7 +6917,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6941,7 +6941,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6965,7 +6965,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6989,7 +6989,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -7013,7 +7013,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -7037,7 +7037,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -7061,7 +7061,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -7085,7 +7085,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -7109,7 +7109,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -7133,7 +7133,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -7157,7 +7157,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -7181,7 +7181,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -7205,7 +7205,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -7229,7 +7229,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -7253,7 +7253,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -7277,7 +7277,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -7301,7 +7301,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -7325,7 +7325,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {

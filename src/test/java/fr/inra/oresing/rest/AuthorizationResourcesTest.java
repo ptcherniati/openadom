@@ -51,7 +51,7 @@ public class AuthorizationResourcesTest {
 
     @Before
     public void createApplication() throws Exception {
-        authCookie = fixtures.addMonsoreApplication();
+        authCookie = fixtures.addApplicationAcbb();
     }
 
     @Test
@@ -67,18 +67,18 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                             .cookie(authCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("monsore"));
+            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("acbb"));
         }
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                             .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("monsore"));
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("acbb"));
         }
 
         {
-            mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .cookie(authReaderCookie)
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().is4xxClientError());
@@ -86,7 +86,7 @@ public class AuthorizationResourcesTest {
 
         {
             String readerUserId = reader.getId().toString();
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"monsore\",\"dataType\":\"pem\",\"dataGroup\":\"referentiel\",\"localizationScope\":\"oir\",\"fromDay\":[1984,1,2],\"toDay\":[1984,1,3]}";
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"localizationScope\":\"theix.theix__22\",\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -102,36 +102,30 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("monsore"));
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("acbb"));
         }
 
         {
-            String json = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            String json = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .cookie(authReaderCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             // contrôle sur la fenêtre temporelle
-//            Assert.assertFalse(json.contains("01/01/1984"));
-//            Assert.assertTrue(json.contains("02/01/1984"));
-//            Assert.assertTrue(json.contains("03/01/1984"));
-//            Assert.assertFalse(json.contains("04/01/1984"));
+            Assert.assertFalse(json.contains("31/08/2010"));
+            Assert.assertTrue(json.contains("26/05/2010"));
 
             // contrôle sur le groupe de données
-            Assert.assertFalse(json.contains("Couleur des individus"));
-            Assert.assertFalse(json.contains("Nombre d'individus"));
-            Assert.assertTrue(json.contains("date"));
-            Assert.assertTrue(json.contains("projet"));
-            Assert.assertTrue(json.contains("espece"));
+//            Assert.assertFalse(json.contains("Couleur des individus"));
+//            Assert.assertFalse(json.contains("Nombre d'individus"));
+//            Assert.assertTrue(json.contains("date"));
+//            Assert.assertTrue(json.contains("projet"));
+//            Assert.assertTrue(json.contains("espece"));
 
             // contrôle sur la localization
-            Assert.assertFalse(json.contains("Nivelle"));
-            Assert.assertFalse(json.contains("nivelle"));
-            Assert.assertFalse(json.contains("Scarff"));
-            Assert.assertFalse(json.contains("scarff"));
-            Assert.assertTrue(json.contains("Oir"));
-            Assert.assertTrue(json.contains("P1"));
+            Assert.assertFalse(json.contains("theix.theix__7"));
+            Assert.assertTrue(json.contains("theix.theix__22"));
         }
     }
 }
