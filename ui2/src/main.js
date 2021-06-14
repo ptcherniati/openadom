@@ -20,6 +20,7 @@ import {
   faPlus,
   faPoll,
   faSignOutAlt,
+  faTimes,
   faUpload,
   faWrench,
 } from "@fortawesome/free-solid-svg-icons";
@@ -41,7 +42,8 @@ library.add(
   faPoll,
   faDraftingCompass,
   faCaretUp,
-  faCaretDown
+  faCaretDown,
+  faTimes
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

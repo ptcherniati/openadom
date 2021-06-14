@@ -1,7 +1,7 @@
 <template>
   <PageView>
     <h1 class="title main-title">{{ application.title }}</h1>
-    <b-tabs type="is-boxed" expanded class="mt-4">
+    <b-tabs type="is-boxed" expanded class="mt-4 ApplicationDetailsView-tabs">
       <b-tab-item :label="$t('applicationDetailsView.references')" icon="drafting-compass">
         <ReferencesManagement :application="application" :key="application.id" />
       </b-tab-item>
@@ -41,3 +41,11 @@ export default class ApplicationDetailsView extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.ApplicationDetailsView-tabs.b-tabs {
+  .tab-content {
+    position: initial;
+  }
+}
+</style>

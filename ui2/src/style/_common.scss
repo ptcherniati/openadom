@@ -6,7 +6,7 @@ body {
 
 .title {
   color: $primary;
-  margin-top: 1.5rem;
+  margin-top: $title-margin-top;
 
   &.main-title {
     display: flex;
