@@ -27,6 +27,7 @@ import 'cypress-file-upload';
 
 
 Cypress.Commands.add('login', (userRole) => {
+    localStorage.clear()
     cy.fixture('users.json').as('users')
     cy.get('@users').then((users) => {
         const user = users[userRole]
@@ -34,7 +35,6 @@ Cypress.Commands.add('login', (userRole) => {
         cy.get(':nth-child(1) > .field > .control > .input').type(userRole)
         cy.get(':nth-child(2) > .field > .control > .input').type("password")
 
-        //console.table(user)
         cy.intercept(
             'POST',
             'http://localhost:8081/api/v1/login', user.response)
