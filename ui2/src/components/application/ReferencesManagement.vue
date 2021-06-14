@@ -9,10 +9,10 @@
       :withDownload="true"
       :onClickLabelCb="(event, label) => openRefDetails(event, label)"
     />
-    <SidePanel
-      :leftAlign="true"
+    <ReferencesDetailsPanel
+      :leftAlign="false"
       :open="openPanel"
-      :title="chosenRef && chosenRef.label"
+      :reference="chosenRef"
       @openStateChanged="(newVal) => (openPanel = newVal)"
     />
   </div>
@@ -22,10 +22,10 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { convertReferencesToTrees } from "@/utils/ConversionUtils";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import SidePanel from "../common/SidePanel.vue";
+import ReferencesDetailsPanel from "./ReferencesDetailsPanel.vue";
 
 @Component({
-  components: { CollapsibleTree, SidePanel },
+  components: { CollapsibleTree, ReferencesDetailsPanel },
 })
 export default class ReferencesManagement extends Vue {
   @Prop() application;

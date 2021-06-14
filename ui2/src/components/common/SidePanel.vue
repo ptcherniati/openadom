@@ -8,10 +8,9 @@
 
 <script>
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
-  components: { FontAwesomeIcon },
+  components: {},
 })
 export default class SidePanel extends Vue {
   @Prop({ default: false }) leftAlign;

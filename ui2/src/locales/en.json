@@ -25,7 +25,10 @@
     "cancel": "Cancel",
     "server-error": "A server error occured",
     "user-unknown": "Unknown user",
-    "application-creation-success": "L'application a été créée !"
+    "application-creation-success": "L'application a été créée !",
+    "warning": "Warning !",
+    "reference-deletion-msg": "You're about to delete the reference : {label}. Are you sure ?",
+    "delete": "Delete"
   },
   "message": {
     "app-config-error": "Error in yaml file",
@@ -71,5 +74,11 @@
     "application": "Application details",
     "references": "References",
     "dataset": "Datasets"
+  },
+  "referencesManagement": {
+    "actions": "Actions",
+    "consult": "Consult",
+    "download": "Download",
+    "delete": "Delete"
   }
 }

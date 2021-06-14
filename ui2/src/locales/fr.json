@@ -25,7 +25,10 @@
     "cancel": "Annuler",
     "server-error": "Une erreur serveur est survenue",
     "user-unknown": "Identifiants inconnus",
-    "application-creation-success": "L'application a été créée !"
+    "application-creation-success": "L'application a été créée !",
+    "warning": "Attention !",
+    "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
+    "delete": "Supprimer"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",
@@ -71,5 +74,11 @@
     "application": "Détail de l'application",
     "references": "Référentiels",
     "dataset": "Données"
+  },
+  "referencesManagement": {
+    "actions": "Actions",
+    "consult": "Consulter",
+    "download": "Télécharger",
+    "delete": "Supprimer"
   }
 }

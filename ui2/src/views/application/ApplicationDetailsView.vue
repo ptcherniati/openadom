@@ -1,7 +1,7 @@
 <template>
   <PageView>
     <h1 class="title main-title">{{ application.title }}</h1>
-    <b-tabs type="is-boxed" expanded class="mt-4 ApplicationDetailsView-tabs">
+    <b-tabs type="is-boxed" expanded class="mt-4 ApplicationDetailsView-tabs" :animated="false">
       <b-tab-item :label="$t('applicationDetailsView.references')" icon="drafting-compass">
         <ReferencesManagement :application="application" :key="application.id" />
       </b-tab-item>
