@@ -76,8 +76,8 @@ public class ConfigurationParsingResult {
         public Builder unknownReferenceForChecker(String dataType, String datum, String component, String refType, Set<String> references) {
             return recordError("unknownReferenceForChecker", ImmutableMap.of("dataType", dataType,
                     "datum", datum,
-                    "component", component,
                     "refType", refType,
+                    "component", component,
                     "references", references));
         }
 

@@ -40,7 +40,7 @@ public class AuthorizationService {
 
         authorization.getTimeScope().ifPresent(timeScope -> {
             String timeScopeSqlExpression = timeScope.toSqlExpression();
-            usingExpressionElements.add("timeScope @> '" + timeScopeSqlExpression + "'");
+            usingExpressionElements.add("timeScope <@ '" + timeScopeSqlExpression + "'");
         });
 
         if (authorization.getLocalizationScope() != null) {
