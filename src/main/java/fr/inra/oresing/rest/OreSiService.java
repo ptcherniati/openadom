@@ -9,11 +9,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.CheckerException;
@@ -71,6 +70,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -292,6 +292,28 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
+        Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
+        String parentHierarchicalKeyColumn;
+        BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
+        if (toUpdateCompositeReference.isPresent()) {
+            Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
+            boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
+            if (root) {
+                getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
+            } else {
+                parentHierarchicalKeyColumn = compositeReferenceDescription.getComponents().stream()
+                        .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
+                        .collect(MoreCollectors.onlyElement())
+                        .getParentKeyColumn();
+                getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
+                    String parentHierarchicalKey = referenceValues.get(parentHierarchicalKeyColumn);
+                    return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
+                };
+            }
+        } else {
+            getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
+        }
+
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -315,18 +337,22 @@ public class OreSiService {
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
                         ReferenceValue e = new ReferenceValue();
-                        String key;
+                        String naturalKey;
+                        String technicalId = e.getId().toString();
                         if (ref.getKeyColumns().isEmpty()) {
-                            key = escapeKeyComponent(e.getId().toString());
+                            naturalKey = escapeKeyComponent(technicalId);
                         } else {
-                            key = ref.getKeyColumns().stream()
+                            naturalKey = ref.getKeyColumns().stream()
                                     .map(kc -> escapeKeyComponent(refValues.get(kc)))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
-                        checkCompositeKey(key);
+                        checkNaturalKeySyntax(naturalKey);
+                        String hierarchicalKey = getHierarchicalKeyFn.apply(naturalKey, refValues);
+                        checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
-                        e.setCompositeKey(key);
+                        e.setHierarchicalKey(hierarchicalKey);
+                        e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
                         e.setRefValues(refValues);
                         return e;
@@ -334,62 +360,22 @@ public class OreSiService {
             referenceValueRepository.storeAll(referenceValuesStream);
         }
 
-        ImmutableSet<String> toUpdateCompositeReferences = conf.getCompositeReferencesUsing(refType);
-        for (String toUpdateCompositeReference : toUpdateCompositeReferences) {
-            updateCompositeReference(app, toUpdateCompositeReference);
-        }
-
         return fileId;
-    }
-
-    private void updateCompositeReference(Application application, String compositeReference) {
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
-        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferences().get(compositeReference);
-
-        ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
-                .map(Configuration.CompositeReferenceComponentDescription::getReference)
-                .collect(ImmutableList.toImmutableList());
-        ImmutableSortedSet<String> strings = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
-
-        for (Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription : compositeReferenceDescription.getComponents()) {
-            String referenceType = compositeReferenceComponentDescription.getReference();
-            List<String> keyColumns = application.getConfiguration().getReferences().get(referenceType).getKeyColumns();
-            String parentReferenceType = strings.lower(referenceType);
-            boolean root = parentReferenceType == null;
-            List<ReferenceValue> references = referenceValueRepository.findAllByReferenceType(referenceType);
-            for (ReferenceValue reference : references) {
-                String escapedKeyElement = keyColumns.stream()
-                        .map(kc -> reference.getRefValues().get(kc))
-                        .map(kc -> escapeKeyComponent(kc))
-                        .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
-                String compositeKey;
-                if (root) {
-                    compositeKey = escapedKeyElement;
-                } else {
-                    String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
-                    String parentCompositeKey = reference.getRefValues().get(parentKeyColumn);
-                    compositeKey = parentCompositeKey + LTREE_SEPARATOR + escapedKeyElement;
-                }
-                checkCompositeKey(compositeKey);
-                reference.setCompositeKey(compositeKey);
-                referenceValueRepository.store(reference);
-            }
-        }
     }
 
     private String escapeKeyComponent(String key) {
         String toEscape = StringUtils.stripAccents(key.toLowerCase());
         String escaped = StringUtils.remove(StringUtils.replace(toEscape, " ", "_"), "-");
-        checkCompositeKey(escaped);
+        checkNaturalKeySyntax(escaped);
         return escaped;
     }
 
-    private void checkKeyComponent(String keyComponent) {
-        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé composite");
+    private void checkNaturalKeySyntax(String keyComponent) {
+        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
 
-    private void checkCompositeKey(String compositeKey) {
-        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkKeyComponent);
+    private void checkHierarchicalKeySyntax(String compositeKey) {
+        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkNaturalKeySyntax);
     }
 
     @Value
@@ -431,6 +417,7 @@ public class OreSiService {
         Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
         Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
+        ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
 
         readPreHeader(formatDescription, constantValues, linesIterator);
 
@@ -440,8 +427,8 @@ public class OreSiService {
         Stream<Data> dataStream = Streams.stream(csvParser)
                 .map(buildCsvRecordToLineAsMapFn(columns))
                 .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
-                .map(fillConstantValuesAndBuildMergeLineValuesAndConstantValuesFn(constantValues))
-                .map(buildReplaceMissingValuesByDefaultValuesFn(getDefaultValues(dataTypeDescription)))
+                .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
+                .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValues))
                 .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
 
         repo.getRepository(app).data().storeAll(dataStream);
@@ -494,7 +481,9 @@ public class OreSiService {
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         UUID referenceId = ((ReferenceValidationCheckResult) validationCheckResult).getReferenceId();
-                        refsLinkedTo.add(referenceId);
+                        if(!refsLinkedTo.contains(referenceId)){
+                            refsLinkedTo.add(referenceId);
+                        }
                     }
                 } else {
                     errors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
@@ -542,27 +531,26 @@ public class OreSiService {
     }
 
     /**
-     * Build a function that add defaultValues to rowWithdata
+     * Une fonction qui ajoute à une donnée les valeurs par défaut.
      *
-     * @param defaultValues
-     * @return
+     * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, String> defaultValues){
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, String> defaultValues) {
         return rowWithData -> {
-            Maps.EntryTransformer<VariableComponentKey, String, String> replaceEmptyByDefaultValueFn =
-                    (variableComponentKey, value) -> StringUtils.isBlank(value) ? defaultValues.get(variableComponentKey) : value;
-            Map<VariableComponentKey, String> withDefaultValues = Maps.transformEntries(rowWithData.getDatum(), replaceEmptyByDefaultValueFn);
-            ImmutableMap<VariableComponentKey, String> result = ImmutableMap.copyOf(withDefaultValues);
-            return new RowWithData(rowWithData.getLineNumber(), result);
+            Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
+            rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
+            return new RowWithData(rowWithData.getLineNumber(), ImmutableMap.copyOf(rowWithDefaults));
         };
     }
 
     /**
-     * Return a function that add constantValues to rowWithdata
-     * @param constantValues
-     * @return
+     * Une fonction qui ajoute à une donnée les données constantes.
+     *
+     * Les constantes sont des variables/composants qui ont la même valeur pour toutes les lignes
+     * d'un fichier de données qu'on importe. Ce sont les données qu'on trouve dans l'entête
+     * du fichier.
      */
-    private Function<RowWithData, RowWithData> fillConstantValuesAndBuildMergeLineValuesAndConstantValuesFn(Map<VariableComponentKey, String> constantValues){
+    private Function<RowWithData, RowWithData> buildMergeLineValuesAndConstantValuesFn(Map<VariableComponentKey, String> constantValues) {
         return rowWithData -> {
             ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
                     .putAll(constantValues)
@@ -571,7 +559,6 @@ public class OreSiService {
             return new RowWithData(rowWithData.getLineNumber(), datum);
         };
     }
-
 
     /**
      * Build the function that Dispatch ParsedCsvRow into RowWithData when there are not repeatedColumns

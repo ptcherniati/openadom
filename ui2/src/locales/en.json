@@ -25,7 +25,8 @@
     "cancel": "Cancel",
     "server-error": "A server error occured",
     "user-unknown": "Unknown user",
-    "application-creation-success": "L'application a été créée !",
+    "application-creation-success": "The app has been created!",
+    "application-validate-success": "The YAML file is valid!",
     "warning": "Warning !",
     "reference-deletion-msg": "You're about to delete the reference : {label}. Are you sure ?",
     "delete": "Delete"
@@ -37,6 +38,7 @@
   "menu": {
     "logout": "Log out",
     "applications": "Applications",
+    "references": "References",
     "french": "Français",
     "english": "English",
     "language": "Language"
@@ -44,6 +46,7 @@
   "applications": {
     "chose-config": "Chose a configuration",
     "create": "Create application",
+    "test": "Test",
     "name": "Application name",
     "name-placeholder": "Write down the application name",
     "creation-date": "Creation date",
@@ -52,12 +55,13 @@
   },
   "errors": {
     "emptyFile": "File is empty",
-    "missingReference": "For data type <code>{dataType}</code>, datum <code>{datum}</code>, component <code>{component}</code>, you need to one of those references : <code>{references}</code>",
+    "missingReferenceForChecker": "For data type <code>{dataType}</code>, datum <code>{datum}</code>, component <code>{component}</code>, you need to one of those references : <code>{references}</code>",
+    "unknownReferenceForChecker": "For data type <code>{dataType}</code>, datum <code>{datum}</code>, component <code>{component}</code>, the reference <code>{refType}</code> is not in the accetés references which are: <code>{references}</code>",
     "unsupportedVersion": "YAML files with version <code>{actualVersion}</code> aren't currently managed, expected version : <code>{expectedVersion}</code>",
-    "undeclaredDataGroup": "Variable <code>{variable}</code> doesn't belong to any data group, it needs to be in one",
-    "variableInMultipleData": "Variable <code>{variable}</code> is declared in several data groups, it needs to be only in one",
-    "unknownVariablesDataGroup": "Data group <code>{dataGroup}</code> has undeclared data : <code>{unknownVariables}</code>. <br>Known data : <code>{variables}</code>",
-    "missingTimeScope": "Mandatory indication of the variable (and its component) used for the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>",
+    "undeclaredDataGroupForVariable": "Variable <code>{variable}</code> doesn't belong to any data group, it needs to be in one",
+    "variableInMultipleDataGroup": "Variable <code>{variable}</code> is declared in several data groups, it needs to be only in one",
+    "unknownVariablesInDataGroup": "Data group <code>{dataGroup}</code> has undeclared data : <code>{unknownVariables}</code>. <br>Known data : <code>{variables}</code>",
+    "missingTimeScopeVariableComponentKey": "Mandatory indication of the variable (and its component) used for the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>",
     "timeScopeVariableComponentKeyMissingVariable": "Mandatory indication of the variable in which we collect the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>. <br>Accepted values : <code>{variables}</code>",
     "timeScopeVariableComponentKeyUnknownVariable": "<code>{variable}</code> doesn't be along to any of known variables : <code>{knownVariables}</code>",
     "timeVariableComponentKeyMissingComponent": "Mandatory indication of the component of : <code>{variable}</code> in which we collect the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>. <br>Accepted values : <code>{knownComponents}</code>",

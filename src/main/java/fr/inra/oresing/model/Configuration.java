@@ -1,6 +1,6 @@
 package fr.inra.oresing.model;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MoreCollectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -19,11 +20,10 @@ import java.util.TreeMap;
 @ToString
 public class Configuration {
 
-    public ImmutableSet<String> getCompositeReferencesUsing(String reference) {
-        return getCompositeReferences().entrySet().stream()
-                .filter(entry -> entry.getValue().isDependentOfReference(reference))
-                .map(Map.Entry::getKey)
-                .collect(ImmutableSet.toImmutableSet());
+    public Optional<CompositeReferenceDescription> getCompositeReferencesUsing(String reference) {
+        return getCompositeReferences().values().stream()
+                .filter(compositeReferenceDescription -> compositeReferenceDescription.isDependentOfReference(reference))
+                .collect(MoreCollectors.toOptional());
     }
 
     private int version;

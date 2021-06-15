@@ -56,6 +56,9 @@
             </b-field>
           </ValidationProvider>
           <div class="buttons">
+            <b-button type="is-light" @click="handleSubmit(testApplication)" icon-right="vial">
+              {{ $t("applications.test") }}
+            </b-button>
             <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-right="plus">
               {{ $t("applications.create") }}
             </b-button>
@@ -106,13 +109,31 @@ export default class ApplicationCreationView extends Vue {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
     } catch (error) {
-      if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-        this.errorsMessages = this.errorsService.getErrorsMessages(
-          error.content.validationCheckResults
-        );
+      this.checkMessageErrors(error);
+    }
+  }
+
+  async testApplication() {
+    this.errorsMessages = [];
+    try {
+      let response = await this.applicationService.validateConfiguration(this.applicationConfig);
+      if (response.valid == true) {
+        this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
-        this.alertService.toastServerError(error);
+        this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
       }
+    } catch (error) {
+      this.checkMessageErrors(error);
+    }
+  }
+
+  checkMessageErrors(error) {
+    if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      this.errorsMessages = this.errorsService.getErrorsMessages(
+        error.content.validationCheckResults
+      );
+    } else {
+      this.alertService.toastServerError(error);
     }
   }
 }

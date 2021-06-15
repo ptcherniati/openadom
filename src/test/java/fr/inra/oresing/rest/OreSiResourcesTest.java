@@ -139,15 +139,15 @@ public class OreSiResourcesTest {
             }
         }
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes/esp_nom")
+        String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
-        List refs = objectMapper.readValue(response, List.class);
-        Assert.assertFalse(refs.isEmpty());
+        List refs = objectMapper.readValue(getReferencesResponse, List.class);
+        Assert.assertEquals(9, refs.size());
 
         // ajout de data
         resource = getClass().getResource(fixtures.getPemDataResourceName());
@@ -195,6 +195,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
+            Assert.assertEquals(306 * 2, StringUtils.countMatches(actualJson, "sans_unite"));
         }
 
         // restitution de data csv
@@ -363,15 +364,41 @@ public class OreSiResourcesTest {
             }
         }
 
-//        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes/esp_nom")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-//                .andReturn().getResponse().getContentAsString();
-//
-//        List refs = objectMapper.readValue(response, List.class);
-//        Assert.assertFalse(refs.isEmpty());
+        String getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        List refs = objectMapper.readValue(getReferenceResponse, List.class);
+        Assert.assertEquals(103, refs.size());
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getAcbbReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                String refFileId = JsonPath.parse(response).read("$.id");
+            }
+        }
+
+        getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        refs = objectMapper.readValue(getReferenceResponse, List.class);
+        Assert.assertEquals(103, refs.size());
 
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {
@@ -398,7 +425,7 @@ public class OreSiResourcesTest {
 
             log.debug(StringUtils.abbreviate(actualJson, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
-            Assert.assertTrue(actualJson.contains("laqueuille.1"));
+            Assert.assertTrue(actualJson.contains("laqueuille.laqueuille__1"));
         }
 
         // restitution de data csv
@@ -413,7 +440,7 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
             Assert.assertTrue(actualCsv.contains("Parcelle"));
-            Assert.assertTrue(actualCsv.contains("laqueuille.1"));
+            Assert.assertTrue(actualCsv.contains("laqueuille.laqueuille__1"));
         }
 
         // ajout de data

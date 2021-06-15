@@ -3,12 +3,13 @@ import { i18n } from "@/main";
 
 const ERRORS = {
   emptyFile: () => i18n.t("errors.emptyFile"),
-  missingReferenceForChecker: (params) => i18n.t("errors.missingReference", params),
+  missingReferenceForChecker: (params) => i18n.t("errors.missingReferenceForChecker", params),
+  unknownReferenceForChecker: (params) => i18n.t("errors.unknownReferenceForChecker", params),
   unsupportedVersion: (params) => i18n.t("errors.unsupportedVersion", params),
-  undeclaredDataGroupForVariable: (params) => i18n.t("errors.undeclaredDataGroup", params),
-  variableInMultipleDataGroup: (params) => i18n.t("errors.variableInMultipleData", params),
-  unknownVariablesInDataGroup: (params) => i18n.t("errors.unknownVariablesDataGroup", params),
-  missingTimeScopeVariableComponentKey: (params) => i18n.t("errors.missingTimeScope", params),
+  undeclaredDataGroupForVariable: (params) => i18n.t("errors.undeclaredDataGroupForVariable", params),
+  variableInMultipleDataGroup: (params) => i18n.t("errors.variableInMultipleDataGroup", params),
+  unknownVariablesInDataGroup: (params) => i18n.t("errors.unknownVariablesInDataGroup", params),
+  missingTimeScopeVariableComponentKey: (params) => i18n.t("errors.missingTimeScopeVariableComponentKey", params),
   timeScopeVariableComponentKeyMissingVariable: (params) => i18n.t("errors.timeScopeVariableComponentKeyMissingVariable", params),
   timeScopeVariableComponentKeyUnknownVariable: (params) => i18n.t("errors.timeScopeVariableComponentKeyUnknownVariable", params),
   timeVariableComponentKeyMissingComponent: (params) => i18n.t("errors.timeVariableComponentKeyMissingComponent", params),
