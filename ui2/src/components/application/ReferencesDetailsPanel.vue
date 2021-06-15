@@ -1,5 +1,10 @@
 <template>
-  <SidePanel :open="open" :leftAlign="leftAlign" :title="reference && reference.label">
+  <SidePanel
+    :open="open"
+    :leftAlign="leftAlign"
+    :title="reference && reference.label"
+    :closeCb="closeCb"
+  >
     <div class="Panel-buttons">
       <b-button type="is-primary" icon-left="eye">{{
         $t("referencesManagement.consult")
@@ -24,6 +29,7 @@ export default class ReferencesDetailsPanel extends Vue {
   @Prop({ default: false }) leftAlign;
   @Prop({ default: false }) open;
   @Prop() reference;
+  @Prop() closeCb;
 
   alertService = AlertService.INSTANCE;
 

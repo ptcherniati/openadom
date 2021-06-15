@@ -16,6 +16,7 @@ export default class SidePanel extends Vue {
   @Prop({ default: false }) leftAlign;
   @Prop({ default: false }) open;
   @Prop({ default: "" }) title;
+  @Prop() closeCb;
 
   innerOpen = false;
 
@@ -30,7 +31,7 @@ export default class SidePanel extends Vue {
 
   @Watch("innerOpen")
   onInnerOpenStateChanged(newVal) {
-    this.$emit("openStateChanged", newVal);
+    this.closeCb(newVal);
   }
 }
 </script>

@@ -13,7 +13,7 @@
       :leftAlign="false"
       :open="openPanel"
       :reference="chosenRef"
-      @openStateChanged="(newVal) => (openPanel = newVal)"
+      :closeCb="(newVal) => (openPanel = newVal)"
     />
   </div>
 </template>
