@@ -25,7 +25,8 @@
     "cancel": "Annuler",
     "server-error": "Une erreur serveur est survenue",
     "user-unknown": "Identifiants inconnus",
-    "application-creation-success": "L'application a été créée !"
+    "application-creation-success": "L'application a été créée !",
+    "application-validate-success": "Le fichier YAML est valide !"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",
@@ -42,6 +43,7 @@
   "applications": {
     "chose-config": "Choisir une configuration",
     "create": "Créer l'application",
+    "test": "Tester",
     "name": "Nom de l'application",
     "name-placeholder": "Entrer le nom de l'application"
   },
