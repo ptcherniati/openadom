@@ -1,7 +1,14 @@
 <template>
   <PageView>
     <h1 class="title main-title">{{ application.title }}</h1>
-    <b-tabs type="is-boxed" expanded class="mt-4 ApplicationDetailsView-tabs" :animated="false">
+    <b-tabs
+      v-model="currentTabIndex"
+      type="is-boxed"
+      expanded
+      class="mt-4 ApplicationDetailsView-tabs"
+      :animated="false"
+      @input="onTabSelection"
+    >
       <b-tab-item :label="$t('applicationDetailsView.references')" icon="drafting-compass">
         <ReferencesManagement :application="application" :key="application.id" />
       </b-tab-item>
@@ -11,7 +18,7 @@
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import { ApplicationService } from "@/services/rest/ApplicationService";
@@ -23,12 +30,16 @@ import ReferencesManagement from "@/components/application/ReferencesManagement.
 })
 export default class ApplicationDetailsView extends Vue {
   @Prop() applicationName;
+  @Prop() tabIndex;
 
   applicationService = ApplicationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   application = new ApplicationResult();
 
+  currentTabIndex = 0;
+
   created() {
+    this.currentTabIndex = parseInt(this.tabIndex);
     this.init();
   }
 
@@ -37,6 +48,18 @@ export default class ApplicationDetailsView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
     } catch (error) {
       this.alertService.toastServerError();
+    }
+  }
+
+  @Watch("tabIndex")
+  onExternalTabIndexChanged(newVal) {
+    this.currentTabIndex = parseInt(newVal);
+  }
+
+  onTabSelection() {
+    const params = this.$router.currentRoute.params;
+    if (this.currentTabIndex.toString() !== params["tabIndex"]) {
+      this.$router.push({ params: { tabIndex: this.currentTabIndex } });
     }
   }
 }

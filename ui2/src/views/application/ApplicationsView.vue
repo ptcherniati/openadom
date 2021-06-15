@@ -70,7 +70,7 @@ export default class ApplicationsView extends Vue {
     if (!application) {
       return;
     }
-    this.$router.push("/application/" + application.name);
+    this.$router.push("/application/" + application.name + "/0");
   }
 }
 </script>
