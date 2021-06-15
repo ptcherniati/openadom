@@ -1,39 +1,46 @@
 <template>
-  <b-navbar class="menu-view">
-    <template #start>
-      <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
-        {{ $t("menu.applications") }}
-      </b-navbar-item>
-    </template>
+  <div class="menu-view-container">
+    <b-navbar class="menu-view" v-if="open">
+      <template #start>
+        <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
+          {{ $t("menu.applications") }}
+        </b-navbar-item>
+      </template>
 
-    <template #end>
-      <b-navbar-item tag="div">
-        <div class="buttons">
-          <b-button type="is-info" @click="logout" icon-right="sign-out-alt">{{
-            $t("menu.logout")
-          }}</b-button>
-        </div>
-      </b-navbar-item>
-      <b-navbar-item tag="div">
-        <b-field>
-          <b-select
-            v-model="chosenLocale"
-            :placeholder="$t('menu.language')"
-            icon="globe"
-            @input="setUserPrefLocale"
-          >
-            <option :value="locales.FRENCH">{{ $t("menu.french") }}</option>
-            <option :value="locales.ENGLISH">{{ $t("menu.english") }}</option>
-          </b-select>
-        </b-field>
-      </b-navbar-item>
-      <b-navbar-item href="https://www.inrae.fr/">
-        <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
-        <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
-      </b-navbar-item>
-      <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
-    </template>
-  </b-navbar>
+      <template #end>
+        <b-navbar-item tag="div">
+          <div class="buttons">
+            <b-button type="is-info" @click="logout" icon-right="sign-out-alt">{{
+              $t("menu.logout")
+            }}</b-button>
+          </div>
+        </b-navbar-item>
+        <b-navbar-item tag="div">
+          <b-field>
+            <b-select
+              v-model="chosenLocale"
+              :placeholder="$t('menu.language')"
+              icon="globe"
+              @input="setUserPrefLocale"
+            >
+              <option :value="locales.FRENCH">{{ $t("menu.french") }}</option>
+              <option :value="locales.ENGLISH">{{ $t("menu.english") }}</option>
+            </b-select>
+          </b-field>
+        </b-navbar-item>
+        <b-navbar-item href="https://www.inrae.fr/">
+          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
+          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
+        </b-navbar-item>
+        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
+      </template>
+    </b-navbar>
+    <FontAwesomeIcon
+      @click="open = !open"
+      :icon="open ? 'caret-up' : 'caret-down'"
+      class="clickable mr-3 menu-view-collapsible-icon"
+    />
+  </div>
 </template>
 
 <script>
@@ -43,9 +50,10 @@ import { LoginService } from "@/services/rest/LoginService";
 import { UserPreferencesService } from "@/services/UserPreferencesService";
 
 import { Locales } from "@/utils/LocaleUtils.js";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
-  components: {},
+  components: { FontAwesomeIcon },
 })
 export default class MenuView extends Vue {
   loginService = LoginService.INSTANCE;
@@ -53,6 +61,7 @@ export default class MenuView extends Vue {
 
   locales = Locales;
   chosenLocale = "";
+  open = true;
 
   created() {
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
@@ -117,6 +126,25 @@ export default class MenuView extends Vue {
       justify-content: space-around;
       margin: 0;
     }
+  }
+}
+
+.menu-view-container {
+  line-height: 0;
+}
+
+.menu-view-collapsible-icon {
+  width: 100%;
+  background-color: $primary-slightly-transparent;
+  height: 30px;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  path {
+    fill: white;
   }
 }
 </style>

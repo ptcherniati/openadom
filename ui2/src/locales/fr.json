@@ -9,9 +9,9 @@
     "signin": "Se connecter",
     "signup": "Créer un compte",
     "login": "Identifiant",
-    "login-placeholder": "Entrer l'identifiant",
+    "login-placeholder": "Ex: michel",
     "pwd": "Mot de passe",
-    "pwd-placeholder": "Entrer le mot de passe",
+    "pwd-placeholder": "Ex: xxxx",
     "pwd-forgotten": "Mot de passe oublié ?"
   },
   "validation": {
@@ -48,7 +48,7 @@
     "create": "Créer l'application",
     "test": "Tester",
     "name": "Nom de l'application",
-    "name-placeholder": "Entrer le nom de l'application",
+    "name-placeholder": "Ex : olac",
     "creation-date": "Date de création",
     "actions": "Actions",
     "references": "Référentiels"
