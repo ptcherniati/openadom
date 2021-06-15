@@ -7,6 +7,7 @@ $font-family: "LiberationSans", Helvetica, Arial, sans-serif;
 $text-default-color: #2c3e50;
 $light-text: rgb(230, 230, 230);
 $primary-slightly-transparent: rgba(0, 163, 166, 0.8);
+$info-transparent: rgba(78, 198, 194, 0.3);
 
 // PageView
 $container-padding-hor: 3rem;
@@ -23,7 +24,7 @@ $menu-height: 80px;
 
 // General variables
 $primary: rgb(0, 163, 166);
-$info: #4ec6c2;
+$info: rgb(78, 198, 194);
 $success: #bade81;
 $warning: #ffec60;
 $danger: #d13a18;

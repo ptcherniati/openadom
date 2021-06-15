@@ -14,7 +14,7 @@
           class="clickable mr-3"
         />
         <div
-          class="clickable CollapsibleTree-header-label"
+          class="link"
           :style="`transform:translate(${level * 50}px);`"
           @click="(event) => onClickLabelCb(event, label)"
         >
@@ -95,12 +95,5 @@ export default class CollapsibleTree extends Vue {
 .CollapsibleTree-header-infos {
   display: flex;
   align-items: center;
-}
-
-.CollapsibleTree-header-label {
-  &:hover {
-    color: $primary;
-    text-decoration: underline;
-  }
 }
 </style>

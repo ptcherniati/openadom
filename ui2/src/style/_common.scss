@@ -23,6 +23,14 @@ a {
   cursor: pointer;
 }
 
+.link {
+  cursor: pointer;
+  &:hover {
+    color: $primary;
+    text-decoration: underline;
+  }
+}
+
 // Input style
 
 .input-field {

@@ -1,5 +1,6 @@
 <template>
   <PageView>
+    <SubMenu :root="application.title" :paths="subMenuPaths" />
     <h1 class="title main-title">{{ application.title }}</h1>
     <div>
       <CollapsibleTree
@@ -29,9 +30,10 @@ import ReferencesDetailsPanel from "@/components/references/ReferencesDetailsPan
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import PageView from "../common/PageView.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 
 @Component({
-  components: { CollapsibleTree, ReferencesDetailsPanel, PageView },
+  components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
 })
 export default class ReferencesManagementView extends Vue {
   @Prop() applicationName;
@@ -42,9 +44,13 @@ export default class ReferencesManagementView extends Vue {
   openPanel = false;
   chosenRef = null;
   application = new ApplicationResult();
+  subMenuPaths = [
+    new SubMenuPath("references", () =>
+      this.$router.push(`/applications/${this.applicationName}/references`)
+    ),
+  ];
 
   created() {
-    console.log(this.applicationName);
     this.init();
   }
 
