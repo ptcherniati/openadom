@@ -4,7 +4,7 @@ application:
   version: 1
 references:
   sites:
-    keyColumn: nom du site_key
+    keyColumns: [nom du site_key]
     columns:
       Agroécosystème:
       nom du site_key:
@@ -24,7 +24,7 @@ references:
       altitude moyenne (m):
       date mise en service du dispositif:
   parcelles:
-    keyColumn: site,nom de la parcelle_key
+    keyColumns: [site,nom de la parcelle_key]
     columns:
       site:
       bloc:

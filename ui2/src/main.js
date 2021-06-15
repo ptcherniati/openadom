@@ -5,6 +5,10 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faAngleLeft,
+  faAngleRight,
+  faArrowDown,
+  faArrowUp,
   faCheck,
   faExclamationCircle,
   faEye,
@@ -12,6 +16,7 @@ import {
   faGlobe,
   faPlus,
   faSignOutAlt,
+  faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -21,7 +26,12 @@ library.add(
   faExclamationCircle,
   faCheck,
   faSignOutAlt,
-  faGlobe
+  faGlobe,
+  faUpload,
+  faArrowUp,
+  faArrowDown,
+  faAngleLeft,
+  faAngleRight
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
@@ -53,6 +63,20 @@ import { extend } from "vee-validate";
 extend("required", {
   ...required,
   message: i18n.t("validation.invalid-required"),
+});
+
+extend("validApplicationName", {
+  message: i18n.t("validation.invalid-application-name"),
+  validate: (value) => {
+    return value && value.match("^[a-z]*$") != null;
+  },
+});
+
+extend("validApplicationNameLength", {
+  message: i18n.t("validation.invalid-application-name-length"),
+  validate: (value) => {
+    return value && value.length >= 4 && value.length <= 20;
+  },
 });
 
 // Buefy

@@ -1,6 +1,6 @@
 package fr.inra.oresing.model;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MoreCollectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -19,28 +20,24 @@ import java.util.TreeMap;
 @ToString
 public class Configuration {
 
-    public ImmutableSet<String> getCompositeReferencesUsing(String reference) {
-        if (getCompositeReferences() == null) {
-            return ImmutableSet.of();
-        }
-        return getCompositeReferences().entrySet().stream()
-                .filter(entry -> entry.getValue().isDependentOfReference(reference))
-                .map(Map.Entry::getKey)
-                .collect(ImmutableSet.toImmutableSet());
+    public Optional<CompositeReferenceDescription> getCompositeReferencesUsing(String reference) {
+        return getCompositeReferences().values().stream()
+                .filter(compositeReferenceDescription -> compositeReferenceDescription.isDependentOfReference(reference))
+                .collect(MoreCollectors.toOptional());
     }
 
     private int version;
     private ApplicationDescription application;
-    private LinkedHashMap<String, ReferenceDescription> references;
-    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences;
-    private LinkedHashMap<String, DataTypeDescription> dataTypes;
+    private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
+    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
+    private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
 
     @Getter
     @Setter
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
-        private String keyColumn;
+        private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
     }
 

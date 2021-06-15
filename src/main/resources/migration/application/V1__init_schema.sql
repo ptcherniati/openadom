@@ -14,9 +14,12 @@ create table ReferenceValue (
     updateDate DateOrNow,
     application EntityRef REFERENCES Application(id),
     referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
-    compositeKey ltree NOT NULL,
+    hierarchicalKey ltree NOT NULL,
+    naturalKey TEXT NOT NULL,
     refValues jsonb,
-    binaryFile EntityRef REFERENCES BinaryFile(id)
+    binaryFile EntityRef REFERENCES BinaryFile(id),
+
+    CONSTRAINT "hierarchicalKey_uniqueness" UNIQUE (application, referenceType, hierarchicalKey)
 );
 
 --CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);

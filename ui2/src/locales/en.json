@@ -2,7 +2,8 @@
   "titles": {
     "login-page": "Welcome to SI-ORE",
     "applications-page": "My applications",
-    "references-page": "My references"
+    "references-page": "My references",
+    "application-creation": "Application creation"
   },
   "login": {
     "signin": "Sign in",
@@ -16,12 +17,19 @@
   "validation": {
     "obligatoire": "Mandatory",
     "facultatif": "Optional",
-    "invalid-required": "Please fill the field"
+    "invalid-required": "Please fill the field",
+    "invalid-application-name": "The name must only includes lowercase letters.",
+    "invalid-application-name-length": "The name's length should be between 4 and 20 characters."
   },
   "alert": {
     "cancel": "Cancel",
     "server-error": "A server error occured",
-    "user-unknown": "Unknown user"
+    "user-unknown": "Unknown user",
+    "application-creation-success": "L'application a été créée !"
+  },
+  "message": {
+    "app-config-error": "Error in yaml file",
+    "close": "Close message"
   },
   "menu": {
     "logout": "Log out",
@@ -30,5 +38,33 @@
     "french": "Français",
     "english": "English",
     "language": "Language"
+  },
+  "applications": {
+    "chose-config": "Chose a configuration",
+    "create": "Create application",
+    "name": "Application name",
+    "name-placeholder": "Write down the application name"
+  },
+  "errors": {
+    "emptyFile": "File is empty",
+    "missingReference": "For data type <code>{dataType}</code>, datum <code>{datum}</code>, component <code>{component}</code>, you need to one of those references : <code>{references}</code>",
+    "unsupportedVersion": "YAML files with version <code>{actualVersion}</code> aren't currently managed, expected version : <code>{expectedVersion}</code>",
+    "undeclaredDataGroup": "Variable <code>{variable}</code> doesn't belong to any data group, it needs to be in one",
+    "variableInMultipleData": "Variable <code>{variable}</code> is declared in several data groups, it needs to be only in one",
+    "unknownVariablesDataGroup": "Data group <code>{dataGroup}</code> has undeclared data : <code>{unknownVariables}</code>. <br>Known data : <code>{variables}</code>",
+    "missingTimeScope": "Mandatory indication of the variable (and its component) used for the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>",
+    "timeScopeVariableComponentKeyMissingVariable": "Mandatory indication of the variable in which we collect the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>. <br>Accepted values : <code>{variables}</code>",
+    "timeScopeVariableComponentKeyUnknownVariable": "<code>{variable}</code> doesn't be along to any of known variables : <code>{knownVariables}</code>",
+    "timeVariableComponentKeyMissingComponent": "Mandatory indication of the component of : <code>{variable}</code> in which we collect the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>. <br>Accepted values : <code>{knownComponents}</code>",
+    "timeVariableComponentKeyUnknownComponent": "<code>{component}</code> doesn't belong to any of known variables : <code>{variable}</code>. <br>Known components : <code>{knownComponents}</code>",
+    "timeScopeVariableComponentWrongChecker": "The component <code>{component}</code> of variable <code>{variable}</code> can't be used for carrying time information because it's not declared as : <code>{expectedChecker}</code>",
+    "timeScopeVariableComponentPatternUnknown": "The component <code>{component}</code> of variable <code>{variable}</code> can't be used for carrying time information because the date format : <code>{pattern}</code> isn't managed. <br>Accepted formats : <code>{knownPatterns}</code>",
+    "unrecognizedProperty": "Error in line <code>{lineNumber}</code> (column : <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, is not a known property. <br>Known properties : <code>{knownProperties}</code>",
+    "invalidFormat": "Error in line : <code>{lineNumber}</code> (column : <code>{columnNumber}</code>) : <code>{value}</code> doesn't have the right format. <br>Expected format : <code>{targetTypeName}</code>",
+    "missingRequiredExpression": "For the validation rule <code>{lineValidationRuleKey}</code>, you have to write the expression to evaluate in order to verify that the data are following the rules.",
+    "illegalGroovyExpression": "For the validation rule : {lineValidationRuleKey}</code>, the expression : <code>{expression}</code> is not correct. Expression compilation error at line : <code>{compilationError.lineNumber}</code> (column : <code>{compilationError.columnNumber}</code>) message '<code>{compilationError.message}</code>'",
+    "unknownCheckerName": "For the validation rule : <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' is declared but is not a known checker",
+    "csvBoundToUnknownVariable": "In the CSV format, header <code>{header}</code> is bound to unknown variable <code>{variable}</code>. Known variables: <code>{variables}</code>",
+    "csvBoundToUnknownVariableComponent": "In the CSV format, header <code>{header}</code> is bound to <code>{variable}</code> but it has no <code>{component}</code> component. Known components: <code>{components}</code>"
   }
 }

@@ -4,9 +4,6 @@
       <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
         {{ $t("menu.applications") }}
       </b-navbar-item>
-      <b-navbar-item tag="router-link" :to="{ path: '/references' }">
-        {{ $t("menu.references") }}
-      </b-navbar-item>
     </template>
 
     <template #end>
@@ -30,6 +27,11 @@
           </b-select>
         </b-field>
       </b-navbar-item>
+      <b-navbar-item href="https://www.inrae.fr/">
+        <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
+        <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
+      </b-navbar-item>
+      <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
     </template>
   </b-navbar>
 </template>
@@ -37,7 +39,7 @@
 <script>
 import { Component, Vue } from "vue-property-decorator";
 
-import { LoginService } from "@/services/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 import { UserPreferencesService } from "@/services/UserPreferencesService";
 
 import { Locales } from "@/utils/LocaleUtils.js";
@@ -72,6 +74,11 @@ export default class MenuView extends Vue {
   height: $menu-height;
   width: 100%;
 
+  .logo_rep {
+    margin: 0.7rem;
+    max-height: 4.5rem;
+  }
+
   .navbar-item {
     flex: 1 1 auto;
     font-weight: bold;
@@ -82,6 +89,10 @@ export default class MenuView extends Vue {
     padding-right: 10px;
     justify-content: center;
 
+    .logo_vert {
+      display: none;
+    }
+
     &.router-link-exact-active {
       color: white;
       font-size: 20px;
@@ -89,6 +100,12 @@ export default class MenuView extends Vue {
 
     &:hover {
       color: $primary;
+      .logo_vert {
+        display: block;
+      }
+      .logo_blanc {
+        display: none;
+      }
     }
   }
 

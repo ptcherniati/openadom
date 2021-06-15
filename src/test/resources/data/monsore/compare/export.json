@@ -5,7 +5,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -15,10 +15,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -27,7 +29,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -37,10 +39,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -49,7 +53,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -59,10 +63,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -71,7 +77,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -81,10 +87,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -93,7 +101,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -103,10 +111,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -115,7 +125,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -125,10 +135,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -137,7 +149,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -147,10 +159,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -159,7 +173,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -169,10 +183,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -181,7 +197,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -191,10 +207,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -203,7 +221,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -213,10 +231,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -225,7 +245,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -235,10 +255,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -247,7 +269,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -257,10 +279,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -269,7 +293,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -279,10 +303,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -291,7 +317,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -301,10 +327,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -313,7 +341,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -323,10 +351,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -335,7 +365,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -345,10 +375,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -357,7 +389,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -367,10 +399,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -379,7 +413,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -389,10 +423,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -401,7 +437,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -411,10 +447,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -423,7 +461,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -433,10 +471,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -445,7 +485,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -455,10 +495,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -467,7 +509,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -477,10 +519,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -489,7 +533,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -499,10 +543,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -511,7 +557,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -521,10 +567,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -533,7 +581,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -543,10 +591,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -555,7 +605,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -565,10 +615,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -577,7 +629,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -587,10 +639,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -599,7 +653,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -609,10 +663,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -621,7 +677,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -631,10 +687,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -643,7 +701,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -653,10 +711,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -665,7 +725,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -675,10 +735,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -687,7 +749,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -697,10 +759,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -709,7 +773,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -719,10 +783,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -731,7 +797,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -741,10 +807,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -753,7 +821,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -763,10 +831,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -775,7 +845,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -785,10 +855,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -797,7 +869,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -807,10 +879,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -819,7 +893,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -829,10 +903,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -841,7 +917,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -851,10 +927,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -863,7 +941,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -873,10 +951,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -885,7 +965,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -895,10 +975,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -907,7 +989,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -917,10 +999,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -929,7 +1013,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -939,10 +1023,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -951,7 +1037,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -961,10 +1047,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -973,7 +1061,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -983,10 +1071,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -995,7 +1085,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1005,10 +1095,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1017,7 +1109,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1027,10 +1119,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1039,7 +1133,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1049,10 +1143,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1061,7 +1157,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1071,10 +1167,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1083,7 +1181,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1093,10 +1191,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1105,7 +1205,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1115,10 +1215,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1127,7 +1229,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1137,10 +1239,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1149,7 +1253,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1159,10 +1263,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1171,7 +1277,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1181,10 +1287,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1193,7 +1301,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1203,10 +1311,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1215,7 +1325,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1225,10 +1335,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1237,7 +1349,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1247,10 +1359,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1259,7 +1373,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1269,10 +1383,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1281,7 +1397,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1291,10 +1407,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1303,7 +1421,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1313,10 +1431,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1325,7 +1445,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1335,10 +1455,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1347,7 +1469,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1357,10 +1479,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "20"
+      "value": "20",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1369,7 +1493,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1379,10 +1503,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1391,7 +1517,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1401,10 +1527,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1413,7 +1541,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1423,10 +1551,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1435,7 +1565,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1445,10 +1575,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1457,7 +1589,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1467,10 +1599,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1479,7 +1613,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1489,10 +1623,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1501,7 +1637,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1511,10 +1647,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1523,7 +1661,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1533,10 +1671,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1545,7 +1685,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1555,10 +1695,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1567,7 +1709,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1577,10 +1719,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1589,7 +1733,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1599,10 +1743,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1611,7 +1757,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1621,10 +1767,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1633,7 +1781,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1643,10 +1791,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1655,7 +1805,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1665,10 +1815,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1677,7 +1829,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1687,10 +1839,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1699,7 +1853,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1709,10 +1863,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1721,7 +1877,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1731,10 +1887,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1743,7 +1901,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1753,10 +1911,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1765,7 +1925,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1775,10 +1935,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1787,7 +1949,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1797,10 +1959,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1809,7 +1973,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1819,10 +1983,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1831,7 +1997,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -1841,10 +2007,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1853,7 +2021,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -1863,10 +2031,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1875,7 +2045,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1885,10 +2055,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1897,7 +2069,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1907,10 +2079,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1919,7 +2093,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1929,10 +2103,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1941,7 +2117,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1951,10 +2127,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1963,7 +2141,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1973,10 +2151,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -1985,7 +2165,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -1995,10 +2175,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2007,7 +2189,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2017,10 +2199,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2029,7 +2213,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2039,10 +2223,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2051,7 +2237,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2061,10 +2247,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2073,7 +2261,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2083,10 +2271,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2095,7 +2285,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2105,10 +2295,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2117,7 +2309,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2127,10 +2319,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2139,7 +2333,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2149,10 +2343,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2161,7 +2357,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2171,10 +2367,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2183,7 +2381,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2193,10 +2391,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2205,7 +2405,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2215,10 +2415,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2227,7 +2429,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2237,10 +2439,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2249,7 +2453,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2259,10 +2463,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2271,7 +2477,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2281,10 +2487,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2293,7 +2501,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2303,10 +2511,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2315,7 +2525,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2325,10 +2535,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2337,7 +2549,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2347,10 +2559,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2359,7 +2573,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2369,10 +2583,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2381,7 +2597,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2391,10 +2607,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2403,7 +2621,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2413,10 +2631,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2425,7 +2645,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2435,10 +2655,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2447,7 +2669,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2457,10 +2679,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2469,7 +2693,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2479,10 +2703,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2491,7 +2717,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2501,10 +2727,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2513,7 +2741,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2523,10 +2751,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2535,7 +2765,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2545,10 +2775,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2557,7 +2789,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2567,10 +2799,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2579,7 +2813,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2589,10 +2823,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2601,7 +2837,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2611,10 +2847,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2623,7 +2861,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2633,10 +2871,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2645,7 +2885,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2655,10 +2895,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2667,7 +2909,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2677,10 +2919,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2689,7 +2933,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2699,10 +2943,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2711,7 +2957,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2721,10 +2967,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2733,7 +2981,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2743,10 +2991,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2755,7 +3005,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2765,10 +3015,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2777,7 +3029,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -2787,10 +3039,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2799,7 +3053,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2809,10 +3063,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2821,7 +3077,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2831,10 +3087,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2843,7 +3101,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -2853,10 +3111,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2865,7 +3125,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2875,10 +3135,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2887,7 +3149,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2897,10 +3159,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2909,7 +3173,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2919,10 +3183,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2931,7 +3197,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2941,10 +3207,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2953,7 +3221,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -2963,10 +3231,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2975,7 +3245,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -2985,10 +3255,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -2997,7 +3269,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3007,10 +3279,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3019,7 +3293,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3029,10 +3303,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3041,7 +3317,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3051,10 +3327,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3063,7 +3341,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3073,10 +3351,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "20"
+      "value": "20",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3085,7 +3365,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3095,10 +3375,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3107,7 +3389,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3117,10 +3399,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3129,7 +3413,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3139,10 +3423,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3151,7 +3437,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3161,10 +3447,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3173,7 +3461,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3183,10 +3471,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3195,7 +3485,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3205,10 +3495,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3217,7 +3509,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3227,10 +3519,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3239,7 +3533,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3249,10 +3543,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3261,7 +3557,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3271,10 +3567,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3283,7 +3581,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3293,10 +3591,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3305,7 +3605,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3315,10 +3615,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3327,7 +3629,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3337,10 +3639,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3349,7 +3653,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3359,10 +3663,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3371,7 +3677,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3381,10 +3687,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3393,7 +3701,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3403,10 +3711,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3415,7 +3725,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3425,10 +3735,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3437,7 +3749,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3447,10 +3759,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3459,7 +3773,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3469,10 +3783,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3481,7 +3797,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3491,10 +3807,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3503,7 +3821,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3513,10 +3831,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3525,7 +3845,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3535,10 +3855,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3547,7 +3869,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3557,10 +3879,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "50"
+      "value": "50",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3569,7 +3893,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3579,10 +3903,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3591,7 +3917,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3601,10 +3927,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3613,7 +3941,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3623,10 +3951,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3635,7 +3965,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3645,10 +3975,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3657,7 +3989,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3667,10 +3999,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3679,7 +4013,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3689,10 +4023,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3701,7 +4037,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3711,10 +4047,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3723,7 +4061,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3733,10 +4071,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3745,7 +4085,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -3755,10 +4095,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3767,7 +4109,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3777,10 +4119,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3789,7 +4133,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3799,10 +4143,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3811,7 +4157,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3821,10 +4167,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3833,7 +4181,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3843,10 +4191,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3855,7 +4205,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3865,10 +4215,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3877,7 +4229,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3887,10 +4239,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3899,7 +4253,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3909,10 +4263,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3921,7 +4277,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3931,10 +4287,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3943,7 +4301,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -3953,10 +4311,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3965,7 +4325,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3975,10 +4335,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -3987,7 +4349,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -3997,10 +4359,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4009,7 +4373,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4019,10 +4383,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4031,7 +4397,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4041,10 +4407,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4053,7 +4421,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4063,10 +4431,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4075,7 +4445,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4085,10 +4455,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4097,7 +4469,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4107,10 +4479,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4119,7 +4493,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4129,10 +4503,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4141,7 +4517,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4151,10 +4527,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4163,7 +4541,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4173,10 +4551,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4185,7 +4565,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4195,10 +4575,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4207,7 +4589,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4217,10 +4599,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4229,7 +4613,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4239,10 +4623,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4251,7 +4637,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4261,10 +4647,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4273,7 +4661,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4283,10 +4671,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4295,7 +4685,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4305,10 +4695,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4317,7 +4709,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4327,10 +4719,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4339,7 +4733,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4349,10 +4743,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4361,7 +4757,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4371,10 +4767,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4383,7 +4781,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4393,10 +4791,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4405,7 +4805,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4415,10 +4815,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4427,7 +4829,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -4437,10 +4839,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4449,7 +4853,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4459,10 +4863,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4471,7 +4877,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4481,10 +4887,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4493,7 +4901,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4503,10 +4911,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4515,7 +4925,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4525,10 +4935,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4537,7 +4949,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4547,10 +4959,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "41"
+      "value": "41",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4559,7 +4973,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4569,10 +4983,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4581,7 +4997,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4591,10 +5007,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4603,7 +5021,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4613,10 +5031,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4625,7 +5045,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4635,10 +5055,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4647,7 +5069,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4657,10 +5079,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4669,7 +5093,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4679,10 +5103,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "39"
+      "value": "39",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4691,7 +5117,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4701,10 +5127,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4713,7 +5141,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4723,10 +5151,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4735,7 +5165,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4745,10 +5175,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4757,7 +5189,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4767,10 +5199,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4779,7 +5213,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4789,10 +5223,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4801,7 +5237,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4811,10 +5247,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4823,7 +5261,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4833,10 +5271,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4845,7 +5285,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4855,10 +5295,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4867,7 +5309,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4877,10 +5319,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4889,7 +5333,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4899,10 +5343,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4911,7 +5357,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -4921,10 +5367,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4933,7 +5381,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4943,10 +5391,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4955,7 +5405,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4965,10 +5415,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4977,7 +5429,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -4987,10 +5439,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -4999,7 +5453,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5009,10 +5463,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5021,7 +5477,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5031,10 +5487,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5043,7 +5501,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5053,10 +5511,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5065,7 +5525,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5075,10 +5535,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5087,7 +5549,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5097,10 +5559,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5109,7 +5573,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5119,10 +5583,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5131,7 +5597,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5141,10 +5607,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5153,7 +5621,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5163,10 +5631,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5175,7 +5645,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5185,10 +5655,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5197,7 +5669,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5207,10 +5679,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5219,7 +5693,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5229,10 +5703,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5241,7 +5717,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5251,10 +5727,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5263,7 +5741,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5273,10 +5751,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5285,7 +5765,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5295,10 +5775,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5307,7 +5789,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5317,10 +5799,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5329,7 +5813,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5339,10 +5823,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5351,7 +5837,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5361,10 +5847,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5373,7 +5861,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5383,10 +5871,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5395,7 +5885,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5405,10 +5895,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5417,7 +5909,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5427,10 +5919,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5439,7 +5933,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5449,10 +5943,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5461,7 +5957,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5471,10 +5967,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "16"
+      "value": "16",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5483,7 +5981,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5493,10 +5991,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "22"
+      "value": "22",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5505,7 +6005,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5515,10 +6015,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5527,7 +6029,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5537,10 +6039,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5549,7 +6053,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5559,10 +6063,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5571,7 +6077,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5581,10 +6087,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5593,7 +6101,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5603,10 +6111,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5615,7 +6125,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5625,10 +6135,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5637,7 +6149,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5647,10 +6159,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5659,7 +6173,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5669,10 +6183,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5681,7 +6197,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5691,10 +6207,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5703,7 +6221,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5713,10 +6231,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5725,7 +6245,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5735,10 +6255,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5747,7 +6269,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5757,10 +6279,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5769,7 +6293,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5779,10 +6303,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5791,7 +6317,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5801,10 +6327,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5813,7 +6341,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5823,10 +6351,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5835,7 +6365,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -5845,10 +6375,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5857,7 +6389,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5867,10 +6399,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5879,7 +6413,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5889,10 +6423,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "17"
+      "value": "17",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5901,7 +6437,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -5911,10 +6447,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5923,7 +6461,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5933,10 +6471,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5945,7 +6485,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5955,10 +6495,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5967,7 +6509,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5977,10 +6519,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "51"
+      "value": "51",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -5989,7 +6533,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -5999,10 +6543,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "43"
+      "value": "43",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6011,7 +6557,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6021,10 +6567,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6033,7 +6581,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6043,10 +6591,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6055,7 +6605,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6065,10 +6615,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "59"
+      "value": "59",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6077,7 +6629,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6087,10 +6639,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6099,7 +6653,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6109,10 +6663,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6121,7 +6677,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6131,10 +6687,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "54"
+      "value": "54",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6143,7 +6701,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6153,10 +6711,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6165,7 +6725,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6175,10 +6735,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6187,7 +6749,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6197,10 +6759,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6209,7 +6773,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6219,10 +6783,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "18"
+      "value": "18",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6231,7 +6797,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6241,10 +6807,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6253,7 +6821,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6263,10 +6831,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6275,7 +6845,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6285,10 +6855,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "38"
+      "value": "38",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6297,7 +6869,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6307,10 +6879,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6319,7 +6893,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6329,10 +6903,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6341,7 +6917,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6351,10 +6927,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "21"
+      "value": "21",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6363,7 +6941,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6373,10 +6951,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6385,7 +6965,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6395,10 +6975,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "32"
+      "value": "32",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6407,7 +6989,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6417,10 +6999,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6429,7 +7013,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6439,10 +7023,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "20"
+      "value": "20",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6451,7 +7037,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6461,10 +7047,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6473,7 +7061,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6483,10 +7071,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6495,7 +7085,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6505,10 +7095,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "0"
+      "value": "0",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6517,7 +7109,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6527,10 +7119,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6539,7 +7133,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6549,10 +7143,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6561,7 +7157,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6571,10 +7167,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "14"
+      "value": "14",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6583,7 +7181,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6593,10 +7191,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6605,7 +7205,7 @@
     },
     "site": {
       "bassin": "Scarff",
-      "chemin": "scarff.p1",
+      "chemin": "scarff___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6615,10 +7215,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "45"
+      "value": "45",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6627,7 +7229,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6637,10 +7239,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "15"
+      "value": "15",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "vert"
+      "value": "vert",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6649,7 +7253,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p1",
+      "chemin": "oir___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6659,10 +7263,12 @@
       "value": "projet_manche"
     },
     "Nombre d'individus": {
-      "value": "27"
+      "value": "27",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6671,7 +7277,7 @@
     },
     "site": {
       "bassin": "oir",
-      "chemin": "oir.p1.a",
+      "chemin": "oir___p1___a",
       "plateforme": "p1/a"
     },
     "espece": {
@@ -6681,10 +7287,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "24"
+      "value": "24",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6693,7 +7301,7 @@
     },
     "site": {
       "bassin": "Oir",
-      "chemin": "oir.p2",
+      "chemin": "oir___p2",
       "plateforme": "P2"
     },
     "espece": {
@@ -6703,10 +7311,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "25"
+      "value": "25",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "rouge"
+      "value": "rouge",
+      "unit": "sans_unite"
     }
   },
   {
@@ -6715,7 +7325,7 @@
     },
     "site": {
       "bassin": "Nivelle",
-      "chemin": "nivelle.p1",
+      "chemin": "nivelle___p1",
       "plateforme": "P1"
     },
     "espece": {
@@ -6725,10 +7335,12 @@
       "value": "projet_atlantique"
     },
     "Nombre d'individus": {
-      "value": "49"
+      "value": "49",
+      "unit": "sans_unite"
     },
     "Couleur des individus": {
-      "value": "bleu"
+      "value": "bleu",
+      "unit": "sans_unite"
     }
   }
 ]

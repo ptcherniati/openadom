@@ -1,8 +1,10 @@
 import config from "@/config";
+import app from "@/main";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { Locales } from "@/utils/LocaleUtils";
 
 export const LOCAL_STORAGE_LANG = "lang";
+export const LOCAL_STORAGE_AUTHENTICATED_USER = "authenticatedUser";
 
 export class Fetcher {
   async post(url, data) {
@@ -84,25 +86,30 @@ export class Fetcher {
 
   async _handleResponse(response) {
     try {
+      const text = await response.json();
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
-        const text = await response.json();
         return Promise.resolve(text);
-      } else if (response.status === HttpStatusCodes.UNAUTHORIZED) {
-        this.notifyCrendentialsLost();
       }
+      return Promise.reject({ httpResponseCode: response.status, content: text });
     } catch (error) {
       console.error(error);
-      throw error;
     }
+    if (response.ok) {
+      return Promise.resolve();
+    }
+    return Promise.reject({ httpResponseCode: response.status });
+  }
 
-    return Promise.reject({ status: response.status });
+  notifyCrendentialsLost() {
+    localStorage.removeItem(LOCAL_STORAGE_AUTHENTICATED_USER);
+    app.$router.push("/login").catch(() => {});
   }
 
   convertToFormData(body) {
     let formData = new FormData();
     if (body) {
       for (const [key, value] of Object.entries(body)) {
-        formData.append(key.toString(), value.toString());
+        formData.append(key.toString(), value);
       }
     }
     return formData;

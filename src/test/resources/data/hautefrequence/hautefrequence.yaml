@@ -157,32 +157,32 @@ references:
       b1: ~
       b2: ~
       d: ~
-    keyColumn: b1,b2
+    keyColumns: [b1,b2]
   a:
     columns:
       b1_b2: ~
       a1: ~
       a2: ~
       c: ~
-    keyColumn: a1,a2
+    keyColumns: [a1,a2]
   outil: 
     columns: 
       codeOutil: ~
-    keyColumn: codeOutil
+    keyColumns: [codeOutil]
   plateforme: 
     columns: 
       codePlateforme: ~
-    keyColumn: codePlateforme
+    keyColumns: [codePlateforme]
   projet: 
     columns: 
       codeProjet: ~
-    keyColumn: codeProjet
+    keyColumns: [codeProjet]
   site: 
     columns: 
       codeSite: ~
       projet: ~
-    keyColumn: codeSite
+    keyColumns: [codeSite]
   variable: 
     columns: 
       codeVariable: ~
-    keyColumn: codeVariable
+    keyColumns: [codeVariable]

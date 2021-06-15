@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,7 +80,7 @@ public class ApplicationConfigurationService {
 
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
-        Set<String> references = configuration.getReferences() == null ? Collections.emptySet() : configuration.getReferences().keySet();
+        Set<String> references = configuration.getReferences().keySet();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
@@ -94,8 +93,11 @@ public class ApplicationConfigurationService {
                     if (variableComponentDescription != null) {
                         Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                         if ("Reference".equals(checkerDescription.getName())) {
-                            if (checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
-                                // OK
+                            if (checkerDescription.getParams()!=null && checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
+                                String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+                                if(!references.contains(refType)){
+                                    builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
+                                }
                             } else {
                                 builder.missingReferenceForChecker(dataType, datum, component, references);
                             }
@@ -126,27 +128,34 @@ public class ApplicationConfigurationService {
             VariableComponentKey timeScopeVariableComponentKey = dataTypeDescription.getAuthorization().getTimeScope();
             if (timeScopeVariableComponentKey == null) {
                 builder.recordMissingTimeScopeVariableComponentKey(dataType);
+            } else {
+                if (timeScopeVariableComponentKey.getVariable() == null) {
+                    builder.recordTimeScopeVariableComponentKeyMissingVariable(dataType, variables);
+                } else {
+                    if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
+                        builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
+                    } else {
+                        if (timeScopeVariableComponentKey.getComponent() == null) {
+                            builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                        } else {
+                            if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
+                                builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                            } else {
+                                Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
+                                if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
+                                    builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
+                                }
+                                String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
+                                if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
+                                    builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            if (timeScopeVariableComponentKey.getVariable() == null) {
-                builder.recordTimeScopeVariableComponentKeyMissingVariable(dataType, variables);
-            }
-            if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
-                builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
-            }
-            if (timeScopeVariableComponentKey.getComponent() == null) {
-                builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
-            }
-            if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
-                builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
-            }
-            Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
-            if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
-                builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
-            }
-            String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
-            if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
-                builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
-            }
+
+
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
             for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
@@ -168,6 +177,22 @@ public class ApplicationConfigurationService {
                     builder.recordVariableInMultipleDataGroup(variable);
                 }
             });
+
+            for (Configuration.ColumnBindingDescription columnBindingDescription : dataTypeDescription.getFormat().getColumns()) {
+                VariableComponentKey boundTo = columnBindingDescription.getBoundTo();
+                String variable = boundTo.getVariable();
+                if (variables.contains(variable)) {
+                    String component = boundTo.getComponent();
+                    Set<String> components = dataTypeDescription.getData().get(variable).getComponents().keySet();
+                    if (components.contains(component)) {
+                        // OK
+                    } else {
+                        builder.recordCsvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, components);
+                    }
+                } else {
+                    builder.recordCsvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
+                }
+            }
         }
 
         return builder.build(configuration);
