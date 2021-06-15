@@ -3,7 +3,7 @@ import VueRouter from "vue-router";
 import LoginView from "@/views/LoginView.vue";
 import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
-import ApplicationDetailsView from "@/views/application/ApplicationDetailsView.vue";
+import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
 
 Vue.use(VueRouter);
 
@@ -28,9 +28,9 @@ const routes = [
     component: ApplicationCreationView,
   },
   {
-    path: "/application/:applicationName/:tabIndex",
-    name: "Application view",
-    component: ApplicationDetailsView,
+    path: "/applications/:applicationName/references",
+    name: "References management view",
+    component: ReferencesManagementView,
     props: true,
   },
 ];

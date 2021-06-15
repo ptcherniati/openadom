@@ -16,16 +16,8 @@
       :per-page="15"
       height="100%"
     >
-      <b-table-column
-        field="name"
-        :label="$t('applications.name')"
-        sortable
-        width="50%"
-        v-slot="props"
-      >
-        <div @click="displayApplication(props.row)" class="clickable">
-          {{ props.row.name }}
-        </div>
+      <b-table-column field="name" :label="$t('applications.name')" sortable v-slot="props">
+        {{ props.row.name }}
       </b-table-column>
       <b-table-column
         field="creationDate"
@@ -33,9 +25,12 @@
         sortable
         v-slot="props"
       >
-        <div @click="displayApplication(props.row)" class="clickable">
-          {{ new Date(props.row.creationDate) }}
-        </div>
+        {{ new Date(props.row.creationDate) }}
+      </b-table-column>
+      <b-table-column field="actions" :label="$t('applications.actions')" v-slot="props">
+        <b-button icon-left="drafting-compass" @click="displayReferencesManagement(props.row)">{{
+          $t("applications.references")
+        }}</b-button>
       </b-table-column>
     </b-table>
   </PageView>
@@ -66,11 +61,11 @@ export default class ApplicationsView extends Vue {
     this.$router.push("/applicationCreation");
   }
 
-  displayApplication(application) {
+  displayReferencesManagement(application) {
     if (!application) {
       return;
     }
-    this.$router.push("/application/" + application.name + "/0");
+    this.$router.push("/applications/" + application.name + "/references");
   }
 }
 </script>
