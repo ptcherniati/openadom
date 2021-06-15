@@ -36,7 +36,6 @@ import javax.servlet.http.Cookie;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -146,8 +145,8 @@ public class OreSiResourcesTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
-        List refs = objectMapper.readValue(getReferencesResponse, List.class);
-        Assert.assertEquals(9, refs.size());
+        GetReferenceResult GetReferenceResult = objectMapper.readValue(getReferencesResponse, GetReferenceResult.class);
+        Assert.assertEquals(9, GetReferenceResult.getReferenceValues().size());
 
         // ajout de data
         resource = getClass().getResource(fixtures.getPemDataResourceName());
@@ -371,8 +370,8 @@ public class OreSiResourcesTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
-        List refs = objectMapper.readValue(getReferenceResponse, List.class);
-        Assert.assertEquals(103, refs.size());
+        GetReferenceResult refs = objectMapper.readValue(getReferenceResponse, GetReferenceResult.class);
+        Assert.assertEquals(103, refs.getReferenceValues().size());
 
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getAcbbReferentielFiles().entrySet()) {
@@ -397,8 +396,8 @@ public class OreSiResourcesTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
-        refs = objectMapper.readValue(getReferenceResponse, List.class);
-        Assert.assertEquals(103, refs.size());
+        refs = objectMapper.readValue(getReferenceResponse, GetReferenceResult.class);
+        Assert.assertEquals(103, refs.getReferenceValues().size());
 
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {

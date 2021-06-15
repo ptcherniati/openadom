@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
@@ -30,6 +31,7 @@ import org.springframework.web.util.UriUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -164,12 +166,21 @@ public class OreSiResources {
      * @return un tableau de chaine
      */
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ReferenceValue>> listReferences(
+    public ResponseEntity<GetReferenceResult> listReferences(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("refType") String refType,
             @RequestParam MultiValueMap<String, String> params) {
         List<ReferenceValue> list = service.findReference(nameOrId, refType, params);
-        return ResponseEntity.ok(list);
+        ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
+                .map(referenceValue ->
+                        new GetReferenceResult.ReferenceValue(
+                            referenceValue.getHierarchicalKey(),
+                            referenceValue.getNaturalKey(),
+                            referenceValue.getRefValues()
+                        )
+                )
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
+        return ResponseEntity.ok(new GetReferenceResult(referenceValues));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
