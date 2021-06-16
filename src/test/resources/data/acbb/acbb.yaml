@@ -24,7 +24,7 @@ references:
       altitude moyenne (m):
       date mise en service du dispositif:
   parcelles:
-    keyColumns: [nom de la parcelle_key]
+    keyColumns: [site,nom de la parcelle_key]
     columns:
       site:
       bloc:

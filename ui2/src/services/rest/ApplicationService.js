@@ -16,4 +16,14 @@ export class ApplicationService extends Fetcher {
   async getApplications() {
     return this.get("applications/");
   }
+
+  async validateConfiguration(applicationConfig) {
+    return this.post("validate-configuration", {
+      file: applicationConfig.file,
+    });
+  }
+
+  async getValidateConfiguration() {
+    return this.post("validate-configuration");
+  }
 }

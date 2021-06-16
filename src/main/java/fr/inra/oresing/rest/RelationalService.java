@@ -298,9 +298,10 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String schemaDeclaration = quotedReferenceType + columnsAsSchema;
 
             String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-            String quotedViewNaturalIdColumnName = quoteSqlIdentifier(referenceType + "_naturalId");
+            String quotedViewHierarchicalKeyColumnName = quoteSqlIdentifier(referenceType + "_hierarchicalKey");
+            String quotedViewNaturalKeyColumnName = quoteSqlIdentifier(referenceType + "_naturalKey");
             String referenceValueTableName = SqlSchema.forApplication(app).referenceValue().getSqlIdentifier();
-            String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.compositeKey as " + quotedViewNaturalIdColumnName + ", " + quotedReferenceType + ".* "
+            String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.hierarchicalKey as " + quotedViewHierarchicalKeyColumnName + ", referenceValue.naturalKey as " + quotedViewNaturalKeyColumnName + ", " + quotedReferenceType + ".* "
                     + " from " + referenceValueTableName + ", jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
                     + " where referenceType = '" + referenceType + "' and application = '" + appId + "'::uuid";
 
