@@ -1,5 +1,5 @@
 <template>
-  <PageView class="ReferencesManagementView">
+  <PageView class="with-submenu">
     <SubMenu :root="application.title" :paths="subMenuPaths" />
     <h1 class="title main-title">
       {{ $t("titles.references-page", { applicationName: application.title }) }}
@@ -19,6 +19,7 @@
         :open="openPanel"
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
+        @consultReference="consultReference"
       />
     </div>
   </PageView>
@@ -74,13 +75,9 @@ export default class ReferencesManagementView extends Vue {
     this.openPanel = this.chosenRef && this.chosenRef.label === label ? !this.openPanel : true;
     this.chosenRef = Object.values(this.application.references).find((ref) => ref.label === label);
   }
-}
-</script>
 
-<style lang="scss">
-.ReferencesManagementView {
-  .PageView-container {
-    padding-top: 0.5rem;
+  consultReference(id) {
+    this.$router.push(`/applications/${this.applicationName}/references/${id}`);
   }
 }
-</style>
+</script>

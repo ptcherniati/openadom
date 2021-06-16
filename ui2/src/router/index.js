@@ -4,6 +4,7 @@ import LoginView from "@/views/LoginView.vue";
 import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
+import ReferenceTable from "@/views/references/ReferenceTableView.vue";
 
 Vue.use(VueRouter);
 
@@ -31,6 +32,11 @@ const routes = [
     path: "/applications/:applicationName/references",
     name: "References management view",
     component: ReferencesManagementView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/references/:refId",
+    component: ReferenceTable,
     props: true,
   },
 ];

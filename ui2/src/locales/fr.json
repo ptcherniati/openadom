@@ -3,6 +3,7 @@
     "login-page": "Bienvenue sur SI-ORE",
     "applications-page": "Mes applications",
     "references-page": "Référentiels de {applicationName}",
+    "references-data": "Données de {refName}",
     "application-creation": "Créer une application"
   },
   "login": {

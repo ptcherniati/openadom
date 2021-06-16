@@ -4,7 +4,7 @@
     <div v-for="(path, index) in paths" :key="path.label">
       <span class="SubMenu-path-separator mr-1 ml-1">/</span>
       <span
-        @click="index !== paths.length - 1 ? path.clickCb : ''"
+        @click="index !== paths.length - 1 ? path.clickCb() : ''"
         :class="index !== paths.length - 1 ? 'link' : ''"
         >{{ path.label }}</span
       >
@@ -40,7 +40,9 @@ export default class SubMenu extends Vue {
   height: 40px;
   background-color: $info-transparent;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.5rem $container-padding-hor;
+  width: calc(100% + 2 * #{$container-padding-hor});
+  transform: translateX(-$container-padding-hor);
 }
 
 .SubMenu-root {

@@ -61,7 +61,7 @@ export default class MenuView extends Vue {
 
   locales = Locales;
   chosenLocale = "";
-  open = true;
+  open = false;
 
   created() {
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();

@@ -32,6 +32,11 @@ export default class PageView extends Vue {
 <style lang="scss" scoped>
 .PageView {
   height: 100%;
+  &.with-submenu {
+    .PageView-container {
+      padding-top: 0rem;
+    }
+  }
 }
 
 .PageView-container {
