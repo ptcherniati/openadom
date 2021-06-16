@@ -1,9 +1,13 @@
 <template>
   <div class="SubMenu">
     <span class="SubMenu-root">{{ root }}</span>
-    <div v-for="path in paths" :key="path.label">
+    <div v-for="(path, index) in paths" :key="path.label">
       <span class="SubMenu-path-separator mr-1 ml-1">/</span>
-      <span @click="path.clickCb" class="link"> {{ path.label }}</span>
+      <span
+        @click="index !== paths.length - 1 ? path.clickCb : ''"
+        :class="index !== paths.length - 1 ? 'link' : ''"
+        >{{ path.label }}</span
+      >
     </div>
   </div>
 </template>
@@ -27,10 +31,6 @@ export class SubMenuPath {
 export default class SubMenu extends Vue {
   @Prop() root;
   @Prop() paths;
-
-  created() {
-    console.log(this.paths);
-  }
 }
 </script>
 
@@ -39,6 +39,8 @@ export default class SubMenu extends Vue {
   display: flex;
   height: 40px;
   background-color: $info-transparent;
+  align-items: center;
+  padding: 0.5rem;
 }
 
 .SubMenu-root {

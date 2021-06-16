@@ -1,7 +1,9 @@
 <template>
-  <PageView>
+  <PageView class="ReferencesManagementView">
     <SubMenu :root="application.title" :paths="subMenuPaths" />
-    <h1 class="title main-title">{{ application.title }}</h1>
+    <h1 class="title main-title">
+      {{ $t("titles.references-page", { applicationName: application.title }) }}
+    </h1>
     <div>
       <CollapsibleTree
         v-for="ref in references"
@@ -44,13 +46,14 @@ export default class ReferencesManagementView extends Vue {
   openPanel = false;
   chosenRef = null;
   application = new ApplicationResult();
-  subMenuPaths = [
-    new SubMenuPath("references", () =>
-      this.$router.push(`/applications/${this.applicationName}/references`)
-    ),
-  ];
+  subMenuPaths = [];
 
   created() {
+    this.subMenuPaths = [
+      new SubMenuPath(this.$t("referencesManagement.references").toLowerCase(), () =>
+        this.$router.push(`/applications/${this.applicationName}/references`)
+      ),
+    ];
     this.init();
   }
 
@@ -73,3 +76,11 @@ export default class ReferencesManagementView extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.ReferencesManagementView {
+  .PageView-container {
+    padding-top: 0.5rem;
+  }
+}
+</style>

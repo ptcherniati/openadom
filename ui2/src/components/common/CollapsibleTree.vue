@@ -10,7 +10,7 @@
       <div class="CollapsibleTree-header-infos">
         <FontAwesomeIcon
           v-if="children && children.length !== 0"
-          :icon="displayChildren ? 'caret-up' : 'caret-down'"
+          :icon="displayChildren ? 'caret-down' : 'caret-right'"
           class="clickable mr-3"
         />
         <div

@@ -2,7 +2,7 @@
   "titles": {
     "login-page": "Welcome to SI-ORE",
     "applications-page": "My applications",
-    "references-page": "My references",
+    "references-page": "{applicationName} references",
     "application-creation": "Application creation"
   },
   "login": {
@@ -80,6 +80,8 @@
     "actions": "Actions",
     "consult": "Consult",
     "download": "Download",
-    "delete": "Delete"
+    "delete": "Delete",
+    "references": "References",
+    "data": "Data"
   }
 }
