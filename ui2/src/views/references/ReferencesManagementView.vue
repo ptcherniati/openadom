@@ -11,8 +11,8 @@
         :label="ref.label"
         :children="ref.children"
         :level="0"
-        :withDownload="true"
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
+        :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
       />
       <ReferencesDetailsPanel
         :leftAlign="false"
@@ -31,9 +31,12 @@ import { convertReferencesToTrees } from "@/utils/ConversionUtils";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import ReferencesDetailsPanel from "@/components/references/ReferencesDetailsPanel.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { ReferenceService } from "@/services/rest/ReferenceService";
+
 import PageView from "../common/PageView.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { AlertService } from "@/services/AlertService";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -42,6 +45,8 @@ export default class ReferencesManagementView extends Vue {
   @Prop() applicationName;
 
   applicationService = ApplicationService.INSTANCE;
+  referenceService = ReferenceService.INSTANCE;
+  alertService = AlertService.INSTANCE;
 
   references = [];
   openPanel = false;
@@ -78,6 +83,16 @@ export default class ReferencesManagementView extends Vue {
 
   consultReference(id) {
     this.$router.push(`/applications/${this.applicationName}/references/${id}`);
+  }
+
+  async uploadReferenceCsv(label, refFile) {
+    const reference = Object.values(this.application.references).find((ref) => ref.label === label);
+    try {
+      await this.referenceService.createReference(this.applicationName, reference.id, refFile);
+      this.alertService.toastSuccess(this.$t("alert.reference-updated"));
+    } catch (error) {
+      this.alertService.toastError(this.$t("alert.reference-csv-upload-error"), error);
+    }
   }
 }
 </script>

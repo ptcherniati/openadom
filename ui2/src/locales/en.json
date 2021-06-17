@@ -30,7 +30,9 @@
     "application-validate-success": "The YAML file is valid!",
     "warning": "Warning !",
     "reference-deletion-msg": "You're about to delete the reference : {label}. Are you sure ?",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reference-csv-upload-error": "An error occured while uploading the csv file",
+    "reference-updated": "Reference updated"
   },
   "message": {
     "app-config-error": "Error in yaml file",

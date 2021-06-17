@@ -21,8 +21,13 @@
           {{ label }}
         </div>
       </div>
-      <b-field class="file is-primary" v-if="withDownload">
-        <b-upload v-model="refFile" class="file-label" accept=".csv">
+      <b-field class="file is-primary" v-if="onUploadCb">
+        <b-upload
+          v-model="refFile"
+          class="file-label"
+          accept=".csv"
+          @input="() => onUploadCb(label, refFile)"
+        >
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
@@ -39,8 +44,8 @@
         :label="child.label"
         :children="child.children"
         :level="level + 1"
-        :withDownload="withDownload"
         :onClickLabelCb="onClickLabelCb"
+        :onUploadCb="onUploadCb"
       />
     </div>
   </div>
@@ -57,8 +62,8 @@ export default class CollapsibleTree extends Vue {
   @Prop() label;
   @Prop() children;
   @Prop() level;
-  @Prop() withDownload;
   @Prop() onClickLabelCb;
+  @Prop() onUploadCb;
 
   displayChildren = false;
   refFile = null;
