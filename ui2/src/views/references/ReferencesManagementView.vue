@@ -13,13 +13,13 @@
         :level="0"
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
+        :buttons="buttons"
       />
       <ReferencesDetailsPanel
         :leftAlign="false"
         :open="openPanel"
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
-        @consultReference="consultReference"
       />
     </div>
   </PageView>
@@ -37,6 +37,7 @@ import PageView from "../common/PageView.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
+import { Button } from "@/model/Button";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -53,6 +54,15 @@ export default class ReferencesManagementView extends Vue {
   chosenRef = null;
   application = new ApplicationResult();
   subMenuPaths = [];
+  buttons = [
+    new Button(
+      this.$t("referencesManagement.consult"),
+      "eye",
+      (label) => this.consultReference(label),
+      "is-primary"
+    ),
+    new Button(this.$t("referencesManagement.download"), "download"),
+  ];
 
   created() {
     this.subMenuPaths = [
@@ -81,8 +91,11 @@ export default class ReferencesManagementView extends Vue {
     this.chosenRef = Object.values(this.application.references).find((ref) => ref.label === label);
   }
 
-  consultReference(id) {
-    this.$router.push(`/applications/${this.applicationName}/references/${id}`);
+  consultReference(label) {
+    const ref = Object.values(this.application.references).find((ref) => ref.label === label);
+    if (ref) {
+      this.$router.push(`/applications/${this.applicationName}/references/${ref.id}`);
+    }
   }
 
   async uploadReferenceCsv(label, refFile) {

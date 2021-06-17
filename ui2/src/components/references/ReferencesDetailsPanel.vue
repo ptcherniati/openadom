@@ -6,10 +6,6 @@
     :closeCb="closeCb"
   >
     <div class="Panel-buttons">
-      <b-button type="is-primary" icon-left="eye" @click="emitConsult">{{
-        $t("referencesManagement.consult")
-      }}</b-button>
-      <b-button icon-left="download">{{ $t("referencesManagement.download") }}</b-button>
       <b-button type="is-danger" icon-left="trash-alt" @click="askDeletionConfirmation">{{
         $t("referencesManagement.delete")
       }}</b-button>
@@ -45,10 +41,6 @@ export default class ReferencesDetailsPanel extends Vue {
 
   deleteReference() {
     console.log("DELETE", this.reference);
-  }
-
-  emitConsult() {
-    this.$emit("consultReference", this.reference.id);
   }
 }
 </script>
