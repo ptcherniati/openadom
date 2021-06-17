@@ -7,7 +7,7 @@
 
     <div v-if="reference && columns">
       <b-table
-        :data="[]"
+        :data="tableValues"
         :striped="true"
         :isFocusable="true"
         :isHoverable="true"
@@ -19,11 +19,13 @@
         <b-table-column
           v-for="column in columns"
           :key="column.id"
-          :field="column.title"
+          :field="column.id"
           :label="column.title"
           sortable
           :sticky="column.key"
+          v-slot="props"
         >
+          {{ props.row[column.id] }}
         </b-table-column>
       </b-table>
     </div>
@@ -35,6 +37,7 @@ import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import { AlertService } from "@/services/AlertService";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { ReferenceService } from "@/services/rest/ReferenceService";
 import { Prop, Vue, Component } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 
@@ -47,20 +50,30 @@ export default class ReferenceTableView extends Vue {
 
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
+  referenceService = ReferenceService.INSTANCE;
 
   application = new ApplicationResult();
   subMenuPaths = [];
   reference = {};
   columns = [];
+  referenceValues = [];
+  tableValues = [];
 
-  created() {
-    this.init();
+  async created() {
+    await this.init();
+    this.setInitialVariables();
   }
 
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      this.setInitialVariables();
+      const references = await this.referenceService.getReferenceValues(
+        this.applicationName,
+        this.refId
+      );
+      if (references) {
+        this.referenceValues = references.referenceValues;
+      }
     } catch (error) {
       this.alertService.toastServerError();
     }
@@ -95,6 +108,13 @@ export default class ReferenceTableView extends Vue {
         }
         return 0;
       });
+    }
+
+    console.log(this.columns);
+
+    if (this.referenceValues) {
+      this.tableValues = Object.values(this.referenceValues).map((refValue) => refValue.values);
+      console.log(this.tableValues);
     }
   }
 }

@@ -7,7 +7,7 @@ export class ReferenceService extends Fetcher {
     super();
   }
 
-  async getReference(applicationName, referenceId) {
+  async getReferenceValues(applicationName, referenceId) {
     return this.get(`applications/${applicationName}/references/${referenceId}`);
   }
 
