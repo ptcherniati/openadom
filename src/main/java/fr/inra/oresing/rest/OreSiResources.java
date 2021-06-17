@@ -111,7 +111,16 @@ public class OreSiResources {
             Set<String> children = childrenPerReferences.get(reference);
             return new ApplicationResult.Reference(reference, reference, children, columns);
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references);
+        Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
+            Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
+                Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
+                    return new ApplicationResult.DataType.Variable.Component(component, component);
+                });
+                return new ApplicationResult.DataType.Variable(variable, variable, components);
+            });
+            return new ApplicationResult.DataType(dataType, dataType, variables);
+        });
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
     }
 

@@ -11,6 +11,7 @@ public class ApplicationResult {
     String name;
     String title;
     Map<String, Reference> references;
+    Map<String, DataType> dataTypes;
 
     @Value
     public static class Reference {
@@ -25,6 +26,26 @@ public class ApplicationResult {
             String title;
             boolean key;
             String linkedTo;
+        }
+    }
+
+    @Value
+    public static class DataType {
+        String id;
+        String label;
+        Map<String, Variable> variables;
+
+        @Value
+        public static class Variable {
+            String id;
+            String label;
+            Map<String, Component> components;
+
+            @Value
+            public static class Component {
+                String id;
+                String label;
+            }
         }
     }
 }
