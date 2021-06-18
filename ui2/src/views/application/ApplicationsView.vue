@@ -75,7 +75,7 @@ export default class ApplicationsView extends Vue {
     if (!application) {
       return;
     }
-    this.$router.push("/applications/" + application.name + "/dataset/tutu");
+    this.$router.push("/applications/" + application.name + "/dataTypes");
   }
 }
 </script>

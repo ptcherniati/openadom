@@ -4,7 +4,8 @@
     "applications-page": "My applications",
     "references-page": "{applicationName} references",
     "references-data": "{refName} data",
-    "application-creation": "Application creation"
+    "application-creation": "Application creation",
+    "data-types-page": "{applicationName} data types"
   },
   "login": {
     "signin": "Sign in",
@@ -55,7 +56,7 @@
     "creation-date": "Creation date",
     "actions": "Actions",
     "references": "References",
-    "dataset": "Données"
+    "dataset": "Data types"
   },
   "errors": {
     "emptyFile": "File is empty",
@@ -87,5 +88,8 @@
     "delete": "Delete",
     "references": "References",
     "data": "Data"
+  },
+  "dataTypesManagement": {
+    "data-types": "Data types"
   }
 }

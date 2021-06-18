@@ -4,7 +4,8 @@
     "applications-page": "Mes applications",
     "references-page": "Référentiels de {applicationName}",
     "references-data": "Données de {refName}",
-    "application-creation": "Créer une application"
+    "application-creation": "Créer une application",
+    "data-types-page": "Type de données de {applicationName}"
   },
   "login": {
     "signin": "Se connecter",
@@ -87,5 +88,8 @@
     "delete": "Supprimer",
     "references": "Référentiels",
     "data": "Données"
+  },
+  "dataTypesManagement": {
+    "data-types": "Type de données"
   }
 }

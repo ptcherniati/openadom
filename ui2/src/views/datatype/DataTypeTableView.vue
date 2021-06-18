@@ -1,6 +1,6 @@
 <template>
   <PageView>
-    <h1 class="title main-title">{{ dataSetId }}</h1>
+    <h1 class="title main-title">{{ dataTypeId }}</h1>
 
     <div class="b-table">
       <div
@@ -22,6 +22,10 @@
               <td>Donnée 1.a</td>
               <td>Donnée 1.b</td>
             </tr>
+            <tr>
+              <td>Donnée 2.a</td>
+              <td>Donnée 2.b</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -36,9 +40,9 @@ import PageView from "@/views/common/PageView.vue";
 @Component({
   components: { PageView },
 })
-export default class DataSetTableView extends Vue {
+export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
-  @Prop() dataSetId;
+  @Prop() dataTypeId;
 }
 </script>
 

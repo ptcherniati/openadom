@@ -5,7 +5,8 @@ import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
 import ReferenceTable from "@/views/references/ReferenceTableView.vue";
-import DataSetTableView from "@/views/dataset/DataSetTableView.vue";
+import DataTypeTableView from "@/views/datatype/DataTypeTableView.vue";
+import DataTypesManagementView from "@/views/datatype/DataTypesManagementView.vue";
 
 Vue.use(VueRouter);
 
@@ -41,8 +42,13 @@ const routes = [
     props: true,
   },
   {
-    path: "/applications/:applicationName/dataset/:dataSetId",
-    component: DataSetTableView,
+    path: "/applications/:applicationName/dataTypes",
+    component: DataTypesManagementView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/dataTypes/:dataTypeId",
+    component: DataTypeTableView,
     props: true,
   },
 ];
