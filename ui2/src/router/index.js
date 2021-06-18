@@ -5,6 +5,7 @@ import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
 import ReferenceTable from "@/views/references/ReferenceTableView.vue";
+import DataSetTableView from "@/views/dataset/DataSetTableView.vue";
 
 Vue.use(VueRouter);
 
@@ -37,6 +38,11 @@ const routes = [
   {
     path: "/applications/:applicationName/references/:refId",
     component: ReferenceTable,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/dataset/:dataSetId",
+    component: DataSetTableView,
     props: true,
   },
 ];

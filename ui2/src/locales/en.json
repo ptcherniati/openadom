@@ -54,7 +54,8 @@
     "name-placeholder": "Ex : olac",
     "creation-date": "Creation date",
     "actions": "Actions",
-    "references": "References"
+    "references": "References",
+    "dataset": "Données"
   },
   "errors": {
     "emptyFile": "File is empty",
