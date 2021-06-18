@@ -12,6 +12,7 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -216,13 +217,19 @@ public class OreSiResources {
 
     /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Map<String, Map<String, String>>>> getAllDataJson(
+    public ResponseEntity<GetDataResult> getAllDataJson(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
         DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        List<Map<String, Map<String, String>>> list = service.findData(downloadDatasetQuery);
-        return ResponseEntity.ok(list);
+        List<DataRow> list = service.findData(downloadDatasetQuery);
+        ImmutableSet<String> variables = list.stream()
+                .limit(1)
+                .map(DataRow::getValues)
+                .map(Map::keySet)
+                .flatMap(Set::stream)
+                .collect(ImmutableSet.toImmutableSet());
+        return ResponseEntity.ok(new GetDataResult(variables, list));
     }
 
     /** export as CSV */

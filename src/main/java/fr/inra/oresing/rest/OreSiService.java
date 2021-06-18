@@ -30,6 +30,7 @@ import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
@@ -798,7 +799,7 @@ public class OreSiService {
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         String dataType = downloadDatasetQuery.getDataType();
-        List<Map<String, Map<String, String>>> list = findData(downloadDatasetQuery);
+        List<DataRow> list = findData(downloadDatasetQuery);
         Configuration.FormatDescription format = getApplication(applicationNameOrId)
                 .getConfiguration()
                 .getDataTypes()
@@ -821,7 +822,8 @@ public class OreSiService {
             try {
                 CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
                 csvPrinter.printRecord(columns.keySet());
-                for (Map<String, Map<String, String>> record : list) {
+                for (DataRow dataRow : list) {
+                    Map<String, Map<String, String>> record = dataRow.getValues();
                     ImmutableList<String> rowAsRecord = columns.values().stream()
                             .map(variableComponentKey -> {
                                 Map<String, String> components = record.computeIfAbsent(variableComponentKey.getVariable(), k -> Collections.emptyMap());
@@ -856,11 +858,11 @@ public class OreSiService {
                 .build();
     }
 
-    public List<Map<String, Map<String, String>>> findData(DownloadDatasetQuery downloadDatasetQuery) {
+    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery) {
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        List<Map<String, Map<String, String>>> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
+        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
         return data;
     }
 
@@ -880,7 +882,8 @@ public class OreSiService {
         return repo.application().tryFindApplication(nameOrId);
     }
 
-    private ImmutableMap<VariableComponentKey, String> valuesToIndexedPerReferenceMap(Map<String, Map<String, String>> line) {
+    private ImmutableMap<VariableComponentKey, String> valuesToIndexedPerReferenceMap(DataRow dataRow) {
+        Map<String, Map<String, String>> line = dataRow.getValues();
         Map<VariableComponentKey, String> valuesPerReference = new LinkedHashMap<>();
         for (Map.Entry<String, Map<String, String>> variableEntry : line.entrySet()) {
             String variable = variableEntry.getKey();
