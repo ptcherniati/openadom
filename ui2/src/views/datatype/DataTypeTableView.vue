@@ -1,5 +1,7 @@
 <template>
-  <PageView>
+  <PageView class="with-submenu">
+    <SubMenu :root="application.title" :paths="subMenuPaths" />
+
     <h1 class="title main-title">{{ dataTypeId }}</h1>
 
     <div class="b-table">
@@ -36,13 +38,42 @@
 <script>
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 
 @Component({
-  components: { PageView },
+  components: { PageView, SubMenu },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
   @Prop() dataTypeId;
+
+  applicationService = ApplicationService.INSTANCE;
+
+  application = new ApplicationResult();
+  subMenuPaths = [];
+
+  async created() {
+    console.log(this.dataTypeId);
+    await this.init();
+    this.subMenuPaths = [
+      new SubMenuPath(this.$t("dataTypesManagement.data-types").toLowerCase(), () =>
+        this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+      ),
+      new SubMenuPath(this.dataTypeId, () =>
+        this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`)
+      ),
+    ];
+  }
+
+  async init() {
+    try {
+      this.application = await this.applicationService.getApplication(this.applicationName);
+    } catch (error) {
+      this.alertService.toastServerError();
+    }
+  }
 }
 </script>
 
