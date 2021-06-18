@@ -2,16 +2,17 @@
   "titles": {
     "login-page": "Bienvenue sur SI-ORE",
     "applications-page": "Mes applications",
-    "references-page": "Mes référentiels",
+    "references-page": "Référentiels de {applicationName}",
+    "references-data": "Données de {refName}",
     "application-creation": "Créer une application"
   },
   "login": {
     "signin": "Se connecter",
     "signup": "Créer un compte",
     "login": "Identifiant",
-    "login-placeholder": "Entrer l'identifiant",
+    "login-placeholder": "Ex: michel",
     "pwd": "Mot de passe",
-    "pwd-placeholder": "Entrer le mot de passe",
+    "pwd-placeholder": "Ex: xxxx",
     "pwd-forgotten": "Mot de passe oublié ?"
   },
   "validation": {
@@ -26,7 +27,12 @@
     "server-error": "Une erreur serveur est survenue",
     "user-unknown": "Identifiants inconnus",
     "application-creation-success": "L'application a été créée !",
-    "application-validate-success": "Le fichier YAML est valide !"
+    "application-validate-success": "Le fichier YAML est valide !",
+    "warning": "Attention !",
+    "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
+    "delete": "Supprimer",
+    "reference-csv-upload-error": "Une erreur s'est produite au téléversement du fichier csv",
+    "reference-updated": "Référentiel mis à jour"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",
@@ -45,7 +51,10 @@
     "create": "Créer l'application",
     "test": "Tester",
     "name": "Nom de l'application",
-    "name-placeholder": "Entrer le nom de l'application"
+    "name-placeholder": "Ex : olac",
+    "creation-date": "Date de création",
+    "actions": "Actions",
+    "references": "Référentiels"
   },
   "errors": {
     "emptyFile": "Le fichier est vide",
@@ -69,5 +78,13 @@
     "unknownCheckerName": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' est déclaré mais ce n’est pas un contrôle connu",
     "csvBoundToUnknownVariable": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n’est pas connue. Variables connues <code>{variables}</code>",
     "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>"
+  },
+  "referencesManagement": {
+    "actions": "Actions",
+    "consult": "Consulter",
+    "download": "Télécharger",
+    "delete": "Supprimer",
+    "references": "Référentiels",
+    "data": "Données"
   }
 }

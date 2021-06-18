@@ -1,6 +1,6 @@
 import { i18n } from "@/main";
 import { BuefyTypes } from "@/utils/BuefyUtils";
-import { ToastProgrammatic } from "buefy";
+import { ToastProgrammatic, DialogProgrammatic } from "buefy";
 
 const TOAST_INFO_DURATION = 3000;
 const TOAST_ERROR_DURATION = 8000;
@@ -43,5 +43,19 @@ export class AlertService {
 
   toastServerError(error) {
     this.toastError(i18n.t("alert.server-error"), error);
+  }
+
+  dialog(title, message, confirmText, type, onConfirmCb) {
+    DialogProgrammatic.confirm({
+      title: title,
+      message: message,
+      confirmText: confirmText,
+      type: type,
+      hasIcon: true,
+      cancelText: this.cancelMsg,
+      onConfirm: () => {
+        onConfirmCb();
+      },
+    });
   }
 }

@@ -1,9 +1,16 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import fr.inra.oresing.checker.CheckerException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +31,7 @@ import org.springframework.web.util.UriUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,9 +89,39 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Application> getApplication(@PathVariable("nameOrId") String nameOrId) {
+    public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
-        return ResponseEntity.ok(application);
+        TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
+        application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
+            ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                    .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                    .collect(ImmutableList.toImmutableList());
+            ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+            sortedReferenceTypes.forEach(reference -> {
+                String child = sortedReferenceTypes.higher(reference);
+                if (child == null) {
+                    // on est sur le dernier élément de la hiérarchie, pas de descendant
+                } else {
+                    childrenPerReferences.put(reference, child);
+                }
+            });
+        });
+        Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
+            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
+            Set<String> children = childrenPerReferences.get(reference);
+            return new ApplicationResult.Reference(reference, reference, children, columns);
+        });
+        Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
+            Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
+                Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
+                    return new ApplicationResult.DataType.Variable.Component(component, component);
+                });
+                return new ApplicationResult.DataType.Variable(variable, variable, components);
+            });
+            return new ApplicationResult.DataType(dataType, dataType, variables);
+        });
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references, dataTypes);
+        return ResponseEntity.ok(applicationResult);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -137,12 +175,21 @@ public class OreSiResources {
      * @return un tableau de chaine
      */
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ReferenceValue>> listReferences(
+    public ResponseEntity<GetReferenceResult> listReferences(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("refType") String refType,
             @RequestParam MultiValueMap<String, String> params) {
         List<ReferenceValue> list = service.findReference(nameOrId, refType, params);
-        return ResponseEntity.ok(list);
+        ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
+                .map(referenceValue ->
+                        new GetReferenceResult.ReferenceValue(
+                            referenceValue.getHierarchicalKey(),
+                            referenceValue.getNaturalKey(),
+                            referenceValue.getRefValues()
+                        )
+                )
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
+        return ResponseEntity.ok(new GetReferenceResult(referenceValues));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)

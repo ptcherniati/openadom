@@ -9,15 +9,24 @@ import {
   faAngleRight,
   faArrowDown,
   faArrowUp,
+  faCaretDown,
+  faCaretUp,
   faCheck,
+  faDownload,
+  faDraftingCompass,
   faExclamationCircle,
   faEye,
   faEyeSlash,
   faGlobe,
   faPlus,
+  faPoll,
   faSignOutAlt,
+  faTimes,
+  faTrashAlt,
   faUpload,
+  faWrench,
   faVial,
+  faCaretRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -33,7 +42,16 @@ library.add(
   faArrowDown,
   faAngleLeft,
   faAngleRight,
-  faVial
+  faWrench,
+  faPoll,
+  faDraftingCompass,
+  faCaretUp,
+  faCaretDown,
+  faTimes,
+  faTrashAlt,
+  faDownload,
+  faVial,
+  faCaretRight
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

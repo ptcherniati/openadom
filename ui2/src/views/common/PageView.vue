@@ -1,7 +1,7 @@
 <template>
   <div class="PageView">
     <MenuView v-if="hasMenu" />
-    <div class="container PageView-container">
+    <div :class="`PageView-container ${hasMenu ? '' : 'noMenu'}`">
       <slot></slot>
     </div>
   </div>
@@ -32,9 +32,21 @@ export default class PageView extends Vue {
 <style lang="scss" scoped>
 .PageView {
   height: 100%;
+  &.with-submenu {
+    .PageView-container {
+      padding-top: 0rem;
+    }
+  }
 }
 
 .PageView-container {
   width: 100%;
+  height: calc(100% - #{$menu-height});
+  padding: $container-padding-vert $container-padding-hor;
+  position: relative;
+
+  &.noMenu {
+    height: 100%;
+  }
 }
 </style>
