@@ -70,7 +70,6 @@ export default class DataTypesManagementView extends Vue {
       }
       if (this.application.dataTypes) {
         this.dataTypes = Object.values(this.application.dataTypes);
-        console.log(this.dataTypes);
       }
     } catch (error) {
       this.alertService.toastServerError();
@@ -78,9 +77,7 @@ export default class DataTypesManagementView extends Vue {
   }
 
   consultDataType(label) {
-    console.log(label);
     const dataType = this.dataTypes.find((dt) => dt.label === label);
-    console.log(dataType);
     this.$router.push(`/applications/${this.applicationName}/dataTypes/${dataType.id}`);
   }
 

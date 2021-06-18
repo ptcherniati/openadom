@@ -110,11 +110,8 @@ export default class ReferenceTableView extends Vue {
       });
     }
 
-    console.log(this.columns);
-
     if (this.referenceValues) {
       this.tableValues = Object.values(this.referenceValues).map((refValue) => refValue.values);
-      console.log(this.tableValues);
     }
   }
 }
