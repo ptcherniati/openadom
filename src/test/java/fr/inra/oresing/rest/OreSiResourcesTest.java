@@ -5,7 +5,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -74,8 +73,7 @@ public class OreSiResourcesTest {
 
     @Before
     public void createUser() throws Exception {
-        OreSiUser user = authenticationService.createUser("poussin", "xxxxxxxx");
-        userId = user.getId();
+        userId = authenticationService.createUser("poussin", "xxxxxxxx").getUserId();
         authCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "poussin")
                 .param("password", "xxxxxxxx"))

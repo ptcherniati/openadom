@@ -1,9 +1,10 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.CreateUserResult;
+import fr.inra.oresing.rest.LoginResult;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,13 +36,12 @@ public class AuthenticationServiceTest {
     public void testCreateAndLogin() throws Throwable {
         String login = "toto@codelutin.com";
         String password = "xxxx";
-        OreSiUser user = authenticationService.createUser(login, password);
-        Assert.assertEquals(login, user.getLogin());
-        user = authenticationService.login(login, password);
-        Assert.assertEquals(login, user.getLogin());
-        OreSiUserRole userRole = authenticationService.getUserRole(user);
+        CreateUserResult createUserResult = authenticationService.createUser(login, password);
+        LoginResult loginResult = authenticationService.login(login, password);
+        Assert.assertEquals(login, loginResult.getLogin());
+        OreSiUserRole userRole = authenticationService.getUserRole(createUserResult.getUserId());
         authenticationService.setRole(userRole);
         authenticationService.resetRole();
-        authenticationService.removeUser(user.getId());
+        authenticationService.removeUser(loginResult.getId());
     }
 }

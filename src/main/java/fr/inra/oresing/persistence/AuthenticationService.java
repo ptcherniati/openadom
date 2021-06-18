@@ -6,6 +6,8 @@ import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.CreateUserResult;
+import fr.inra.oresing.rest.LoginResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,18 +67,26 @@ public class AuthenticationService {
      * verifie que l'utilisateur existe et que son mot de passe est le bon
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
      */
-    public OreSiUser login(String login, String password) throws AuthenticationFailure {
+    public LoginResult login(String login, String password) throws AuthenticationFailure {
         Predicate<OreSiUser> checkPassword = user -> BCrypt.verifyer().verify(password.toCharArray(), user.getPassword().toCharArray()).verified;
         return userRepository.findByLogin(login)
                 .filter(checkPassword)
+                .map(this::toLoginResult)
                 .orElseThrow(() -> new AuthenticationFailure("identifiants fournis incorrects"));
+    }
+
+    private LoginResult toLoginResult(OreSiUser oreSiUser) {
+        OreSiUserRole userRole = getUserRole(oreSiUser);
+        db.setRole(userRole);
+        boolean authorizedForApplicationCreation = db.hasRole(OreSiRole.applicationCreator());
+        return new LoginResult(oreSiUser.getId(), oreSiUser.getLogin(), authorizedForApplicationCreation);
     }
 
     /**
      * Permet de créer un nouvel utilisateur
      * @return l'objet OreSiUser qui vient d'être créé
      */
-    public OreSiUser createUser(String login, String password) {
+    public CreateUserResult createUser(String login, String password) {
         String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, password.toCharArray());
         OreSiUser result = new OreSiUser();
         result.setLogin(login);
@@ -84,7 +94,7 @@ public class AuthenticationService {
         userRepository.store(result);
         OreSiUserRole userRole = getUserRole(result);
         db.createRole(userRole);
-        return result;
+        return new CreateUserResult(result.getId());
     }
 
     public void addUserRightCreateApplication(UUID userId) {
