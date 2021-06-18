@@ -21,10 +21,6 @@ export class ApplicationService extends Fetcher {
     return this.get("applications/" + name);
   }
 
-  async getDataset(dataset, applicationName) {
-    return this.get(`applications/${applicationName}/data/${dataset}`);
-  }
-
   async validateConfiguration(applicationConfig) {
     return this.post("validate-configuration", {
       file: applicationConfig.file,

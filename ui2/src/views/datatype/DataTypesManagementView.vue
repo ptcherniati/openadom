@@ -11,7 +11,7 @@
         :label="data.label"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
-        :onUploadCb="(label, refFile) => uploadDataTypeCsv(label, refFile)"
+        :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"
         :buttons="buttons"
       />
     </div>
@@ -27,6 +27,7 @@ import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import { Button } from "@/model/Button";
 import { AlertService } from "@/services/AlertService";
+import { DataService } from "@/services/rest/DataService";
 
 @Component({
   components: { CollapsibleTree, PageView, SubMenu },
@@ -36,8 +37,8 @@ export default class DataTypesManagementView extends Vue {
 
   applicationService = ApplicationService.INSTANCE;
   alertService = AlertService.INSTANCE;
+  dataService = DataService.INSTANCE;
 
-  dataTypes = [];
   application = new ApplicationResult();
   subMenuPaths = [];
   buttons = [
@@ -49,6 +50,7 @@ export default class DataTypesManagementView extends Vue {
     ),
     new Button(this.$t("referencesManagement.download"), "download"),
   ];
+  dataTypes = [];
 
   created() {
     this.subMenuPaths = [
@@ -66,23 +68,28 @@ export default class DataTypesManagementView extends Vue {
       if (!this.application || !this.application.id) {
         return;
       }
+      if (this.application && this.application.dataTypes) {
+        this.dataTypes = Object.values(this.application.dataTypes);
+      }
     } catch (error) {
       this.alertService.toastServerError();
     }
   }
 
   consultDataType(label) {
-    console.log(label);
+    const dataType = this.dataTypes.find((dt) => (dt.label = label));
+    this.$router.push(`/applications/${this.applicationName}/dataTypes/${dataType.id}`);
   }
 
   openDataTypeCb(event, label) {
     event.stopPropagation();
 
-    console.log(label);
+    console.log("OPEN", label);
   }
 
-  uploadDataTypeCsv() {
-    console.log("UPLOAD");
+  uploadDataTypeCsv(label, file) {
+    const dataType = this.dataTypes.find((dt) => (dt.label = label));
+    this.dataService.addData(this.applicationName, dataType.label, file);
   }
 }
 </script>
