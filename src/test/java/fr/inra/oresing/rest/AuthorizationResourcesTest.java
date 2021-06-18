@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -57,7 +56,8 @@ public class AuthorizationResourcesTest {
     @Test
     public void testAddAuthorization() throws Exception {
 
-        OreSiUser reader = authenticationService.createUser("UnReader", "xxxxxxxx");
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "UnReader")
                 .param("password", "xxxxxxxx"))
@@ -85,7 +85,6 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String readerUserId = reader.getId().toString();
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"localizationScope\":\"theix.theix__22\",\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/authorization")

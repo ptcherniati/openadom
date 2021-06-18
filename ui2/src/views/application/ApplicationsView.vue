@@ -1,7 +1,7 @@
 <template>
   <PageView>
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
-    <div class="buttons">
+    <div class="buttons" v-if="canCreateApplication">
       <b-button type="is-primary" @click="createApplication" icon-right="plus">
         {{ $t("applications.create") }}
       </b-button>
@@ -40,6 +40,7 @@
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { Component, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
+import { LoginService } from "@/services/rest/LoginService";
 
 @Component({
   components: { PageView },
@@ -48,6 +49,7 @@ export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
+  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
 
   created() {
     this.init();
