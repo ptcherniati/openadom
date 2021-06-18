@@ -399,6 +399,14 @@ public class OreSiResourcesTest {
         refs = objectMapper.readValue(getReferenceResponse, GetReferenceResult.class);
         Assert.assertEquals(103, refs.getReferenceValues().size());
 
+        String getReferenceCsvResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles/csv")
+                .cookie(authCookie)
+                .accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Assert.assertEquals(31, StringUtils.countMatches(getReferenceCsvResponse, "theix"));
+
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {
             MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
