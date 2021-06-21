@@ -89,11 +89,15 @@ export default class ReferenceTableView extends Vue {
     );
 
     this.subMenuPaths = [
-      new SubMenuPath(this.$t("referencesManagement.references").toLowerCase(), () =>
-        this.$router.push(`/applications/${this.applicationName}/references`)
+      new SubMenuPath(
+        this.$t("referencesManagement.references").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/references`),
+        () => this.$router.push(`/applications`)
       ),
-      new SubMenuPath(this.reference.label, () =>
-        this.$router.push(`/applications/${this.applicationName}/references/${this.refId}`)
+      new SubMenuPath(
+        this.reference.label,
+        () => this.$router.push(`/applications/${this.applicationName}/references/${this.refId}`),
+        () => this.$router.push(`/applications/${this.applicationName}/references`)
       ),
     ];
 

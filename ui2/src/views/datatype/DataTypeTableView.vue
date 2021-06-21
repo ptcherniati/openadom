@@ -57,11 +57,16 @@ export default class DataTypeTableView extends Vue {
   async created() {
     await this.init();
     this.subMenuPaths = [
-      new SubMenuPath(this.$t("dataTypesManagement.data-types").toLowerCase(), () =>
-        this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+      new SubMenuPath(
+        this.$t("dataTypesManagement.data-types").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+        () => this.$router.push(`/applications`)
       ),
-      new SubMenuPath(this.dataTypeId, () =>
-        this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`)
+      new SubMenuPath(
+        this.dataTypeId,
+        () =>
+          this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`),
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
     ];
   }

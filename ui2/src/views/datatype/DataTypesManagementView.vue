@@ -54,8 +54,10 @@ export default class DataTypesManagementView extends Vue {
 
   created() {
     this.subMenuPaths = [
-      new SubMenuPath(this.$t("dataTypesManagement.data-types").toLowerCase(), () =>
-        this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+      new SubMenuPath(
+        this.$t("dataTypesManagement.data-types").toLowerCase(),
+        () => {},
+        () => this.$router.push("/applications")
       ),
     ];
 
