@@ -393,15 +393,9 @@ public class OreSiService {
 
 
     /**
-     * Add a new datatype from csv file
-     * @param nameOrId
-     * @param dataType
-     * @param file
-     * @return
-     * @throws IOException
-     * @throws CheckerException
+     * Insérer un jeu de données.
      */
-    public List<CsvRowValidationCheckResult> addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
+    public UUID addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
         List<CsvRowValidationCheckResult> errors= new LinkedList<>();
         authenticationService.setRoleForClient();
 
@@ -439,7 +433,11 @@ public class OreSiService {
 
         relationalService.onDataUpdate(app.getName());
 
-        return errors;
+        if (errors.isEmpty()) {
+            return fileId;
+        } else {
+            throw new CheckerException(errors);
+        }
     }
 
     /**

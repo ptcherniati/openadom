@@ -1,16 +1,20 @@
 package fr.inra.oresing.checker;
 
-public class CheckerException extends Exception {
-    public CheckerException() {
-        super();
+import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.rest.CsvRowValidationCheckResult;
+
+import java.util.List;
+
+public class CheckerException extends OreSiTechnicalException {
+
+    private final List<CsvRowValidationCheckResult> errors;
+
+    public CheckerException(List<CsvRowValidationCheckResult> errors) {
+        super("Erreurs rencontrées à l'import du fichier");
+        this.errors = errors;
     }
-    public CheckerException(String message) {
-        super(message);
-    }
-    public CheckerException(Throwable cause) {
-        super(cause);
-    }
-    public CheckerException(String message, Throwable cause) {
-        super(message, cause);
+
+    public List<CsvRowValidationCheckResult> getErrors() {
+        return errors;
     }
 }

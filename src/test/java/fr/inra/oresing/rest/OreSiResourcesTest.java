@@ -154,7 +154,7 @@ public class OreSiResourcesTest {
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(status().isOk())
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -404,7 +404,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk())
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -447,7 +447,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk())
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -457,8 +457,7 @@ public class OreSiResourcesTest {
             String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-//                    .andExpect(content().json(expectedJson))
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(StringUtils.abbreviate(actualJson, 500));
@@ -466,12 +465,10 @@ public class OreSiResourcesTest {
         }
 
         {
-//            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
             String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .cookie(authCookie)
                     .accept(MediaType.TEXT_PLAIN))
-                    .andExpect(status().isOk())
-//                    .andExpect(content().string(expectedCsv))
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(252, StringUtils.countMatches(actualCsv, "prairie permanente"));
@@ -483,7 +480,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk())
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
@@ -521,7 +518,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk())
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(response);
