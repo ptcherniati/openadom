@@ -758,26 +758,6 @@ public class OreSiService {
         Iterators.advance(linesIterator, lineToSkipAfterHeader);
     }
 
-    /**
-     * build a csvParser from file
-     *
-     * @param file
-     * @param formatDesc
-     * ription
-     * @return
-     * @throws IOException
-     */
-    private CSVParser buildCSVParserForFile(MultipartFile file, Configuration.FormatDescription formatDescription) throws IOException {
-        try (InputStream csv = file.getInputStream()) {
-            CSVFormat csvFormat = CSVFormat.DEFAULT
-                    .withDelimiter(formatDescription.getSeparator())
-                    .withSkipHeaderRecord();
-            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
-            return csvParser;
-        }
-    }
-
-
     private ImmutableMap<VariableComponentKey, String> getDefaultValues(Configuration.DataTypeDescription dataTypeDescription) {
         ImmutableMap.Builder<VariableComponentKey, String> defaultValuesBuilder = ImmutableMap.builder();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
