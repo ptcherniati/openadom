@@ -412,27 +412,31 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
 
+        try (InputStream csv = file.getInputStream()) {
+            CSVFormat csvFormat = CSVFormat.DEFAULT
+                    .withDelimiter(formatDescription.getSeparator())
+                    .withSkipHeaderRecord();
+            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+            Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
+            Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
+            ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
 
-        CSVParser csvParser = buildCSVParserForFile(file, formatDescription);
-        Iterator<CSVRecord> linesIterator = csvParser.iterator();
+            readPreHeader(formatDescription, constantValues, linesIterator);
 
-        Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-        ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
+            ImmutableList<String> columns = readHeaderRow(linesIterator);
+            readPostHeader(formatDescription, linesIterator);
 
-        readPreHeader(formatDescription, constantValues, linesIterator);
+            Stream<Data> dataStream = Streams.stream(csvParser)
+                    .map(buildCsvRecordToLineAsMapFn(columns))
+                    .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
+                    .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValues))
+                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
 
-        ImmutableList<String> columns = readHeaderRow(linesIterator);
-        readPostHeader(formatDescription, linesIterator);
+            repo.getRepository(app).data().storeAll(dataStream);
+        }
 
-        Stream<Data> dataStream = Streams.stream(csvParser)
-                .map(buildCsvRecordToLineAsMapFn(columns))
-                .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
-                .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValues))
-                .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
-
-        repo.getRepository(app).data().storeAll(dataStream);
         relationalService.onDataUpdate(app.getName());
 
         return errors;
