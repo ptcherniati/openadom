@@ -7,7 +7,7 @@ export class DataService extends Fetcher {
     super();
   }
 
-  async getDataTypes(applicationName, dataTypeId) {
+  async getDataType(applicationName, dataTypeId) {
     return this.get(`applications/${applicationName}/data/${dataTypeId}`);
   }
 

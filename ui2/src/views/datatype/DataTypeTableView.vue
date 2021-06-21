@@ -12,14 +12,26 @@
         <table class="table is-striped">
           <thead>
             <tr>
-              <th colspan="2">Variable 1</th>
+              <th
+                v-for="variable in variables"
+                :key="variable.id"
+                :colspan="Object.values(variable.components).length"
+              >
+                {{ variable.label }}
+              </th>
             </tr>
             <tr>
-              <th colspan="1">Composant 1</th>
-              <th colspan="1">Composant 2</th>
+              <th
+                v-for="(comp, index) in variablesComponents"
+                :key="`${comp.label}-${index}`"
+                colspan="1"
+              >
+                {{ comp.label }}
+              </th>
             </tr>
           </thead>
           <tbody>
+            <tr v-for="row in rows" :key="row.id"></tr>
             <tr>
               <td>Donnée 1.a</td>
               <td>Donnée 1.b</td>
@@ -41,6 +53,8 @@ import PageView from "@/views/common/PageView.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { DataService } from "@/services/rest/DataService";
+import { AlertService } from "@/services/AlertService";
 
 @Component({
   components: { PageView, SubMenu },
@@ -50,9 +64,14 @@ export default class DataTypeTableView extends Vue {
   @Prop() dataTypeId;
 
   applicationService = ApplicationService.INSTANCE;
+  dataService = DataService.INSTANCE;
+  alertService = AlertService.INSTANCE;
 
   application = new ApplicationResult();
   subMenuPaths = [];
+  rows = [];
+  variables = [];
+  variablesComponents = [];
 
   async created() {
     await this.init();
@@ -72,11 +91,15 @@ export default class DataTypeTableView extends Vue {
   }
 
   async init() {
-    try {
-      this.application = await this.applicationService.getApplication(this.applicationName);
-    } catch (error) {
-      this.alertService.toastServerError();
-    }
+    this.application = await this.applicationService.getApplication(this.applicationName);
+    const dataTypes = await this.dataService.getDataType(this.applicationName, this.dataTypeId);
+    this.rows = dataTypes.rows.map((r) => {
+      return r.values;
+    });
+    const variablesModels = this.application.dataTypes[this.dataTypeId].variables;
+    this.variables = dataTypes.variables.map((v) => variablesModels[v]);
+    this.variablesComponents = this.variables.map((v) => Object.values(v.components)).flat();
+    console.log(this.rows);
   }
 }
 </script>

@@ -89,9 +89,13 @@ export default class DataTypesManagementView extends Vue {
     console.log("OPEN", label);
   }
 
-  uploadDataTypeCsv(label, file) {
+  async uploadDataTypeCsv(label, file) {
     const dataType = this.dataTypes.find((dt) => dt.label === label);
-    this.dataService.addData(this.applicationName, dataType.label, file);
+    try {
+      await this.dataService.addData(this.applicationName, dataType.label, file);
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
   }
 }
 </script>
