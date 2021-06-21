@@ -259,7 +259,7 @@ public class OreSiResources {
         }
         List<CsvRowValidationCheckResult> errors = service.addData(nameOrId, dataType, file);
         if (errors.isEmpty()) {
-            return ResponseEntity.ok().build();
+            return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.badRequest().body(errors);
         }
