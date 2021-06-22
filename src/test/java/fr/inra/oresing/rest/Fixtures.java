@@ -17,6 +17,7 @@ import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -267,5 +268,53 @@ public class Fixtures {
 
     public String getHauteFrequenceApplicationConfigurationResourceName() {
         return "/data/hautefrequence/hautefrequence.yaml";
+    }
+
+    public Map<String, String> getHauteFrequenceReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("a", "/data/hautefrequence/a.csv");
+        referentielFiles.put("b", "/data/hautefrequence/b.csv");
+        referentielFiles.put("outil", "/data/hautefrequence/outil.csv");
+        referentielFiles.put("projet", "/data/hautefrequence/projet.csv");
+        referentielFiles.put("site", "/data/hautefrequence/site.csv");
+        referentielFiles.put("plateforme", "/data/hautefrequence/plateforme.csv");
+        referentielFiles.put("variable", "/data/hautefrequence/variable.csv");
+        return referentielFiles;
+    }
+
+    public String getHauteFrequenceDataResourceName() {
+        return "/data/hautefrequence/rnt_bimont_haute_frequence_14-06-2016_14-03-2017.csv";
+    }
+
+    public Cookie addApplicationHauteFrequence() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getHauteFrequenceReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+        try (InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+        return authCookie;
     }
 }

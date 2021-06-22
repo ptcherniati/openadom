@@ -61,9 +61,10 @@ dataTypes:
               params:
                refType: couleurs
     authorization:
-      localizationScope:
-        variable: couleur
-        component: value
+      authorizationScopes:
+        couleur:
+          variable: couleur
+          component: value
       timeScope:
         variable: date
         component: value

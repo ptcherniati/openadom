@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
@@ -38,22 +39,29 @@ public class AuthorizationService {
 
         Application application = repository.application().findApplication(authorization.getApplicationNameOrId());
 
+        String dataType = authorization.getDataType();
+        String dataGroup = authorization.getDataGroup();
+
+        Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
+
+        Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
+
+        Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(dataGroup));
+
+        usingExpressionElements.add("application = '" + application.getId() + "'::uuid");
+        usingExpressionElements.add("dataType = '" + dataType + "'");
+        usingExpressionElements.add("dataGroup = '" + dataGroup + "'");
+
         authorization.getTimeScope().ifPresent(timeScope -> {
             String timeScopeSqlExpression = timeScope.toSqlExpression();
             usingExpressionElements.add("timeScope <@ '" + timeScopeSqlExpression + "'");
         });
 
-        if (authorization.getLocalizationScope() != null) {
-            usingExpressionElements.add("localizationScope <@ '" + authorization.getLocalizationScope() + "'::ltree");
-        }
-
-        String dataType = authorization.getDataType();
-        String dataGroup = authorization.getDataGroup();
-
-        Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
-        Preconditions.checkArgument(application.getConfiguration().getDataTypes().get(dataType).getAuthorization().getDataGroups().containsKey(dataGroup));
-
-        usingExpressionElements.add("application = '" + application.getId() + "'::uuid AND dataType = '" + dataType + "' AND dataGroup = '" + dataGroup + "'");
+        authorizationDescription.getAuthorizationScopes().keySet().stream().map(authorizationScope -> {
+            String authorizedScope = authorization.getAuthorizedScopes().get(authorizationScope);
+            String usingElement = "jsonb_extract_path_text(requiredAuthorizations, '" + authorizationScope + "')::ltree <@ '" + authorizedScope + "'::ltree";
+            return usingElement;
+        }).forEach(usingExpressionElements::add);
 
         String usingExpression = usingExpressionElements.stream()
                 .map(statement -> "(" + statement + ")")
