@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
-import fr.inra.oresing.checker.CheckerException;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
@@ -261,7 +261,7 @@ public class OreSiResources {
             UUID fileId = service.addData(nameOrId, dataType, file);
             String uri = UriUtils.encodePath(String.format("/applications/%s/file/%s", nameOrId, fileId), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of("fileId", fileId.toString()));
-        } catch (CheckerException e) {
+        } catch (InvalidDatasetContentException e) {
             List<CsvRowValidationCheckResult> errors = e.getErrors();
             return ResponseEntity.badRequest().body(errors);
         }

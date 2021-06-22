@@ -7,6 +7,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
@@ -15,7 +16,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.CheckerException;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.LineChecker;
@@ -395,7 +396,7 @@ public class OreSiService {
     /**
      * Insérer un jeu de données.
      */
-    public UUID addData(String nameOrId, String dataType, MultipartFile file) throws IOException, CheckerException {
+    public UUID addData(String nameOrId, String dataType, MultipartFile file) throws IOException, InvalidDatasetContentException {
         List<CsvRowValidationCheckResult> errors= new LinkedList<>();
         authenticationService.setRoleForClient();
 
@@ -430,14 +431,9 @@ public class OreSiService {
 
             repo.getRepository(app).data().storeAll(dataStream);
         }
-
+        InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
-
-        if (errors.isEmpty()) {
-            return fileId;
-        } else {
-            throw new CheckerException(errors);
-        }
+        return fileId;
     }
 
     /**
@@ -476,7 +472,6 @@ public class OreSiService {
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, ImmutableSet<LineChecker> lineCheckers, Configuration.DataTypeDescription dataTypeDescription, String timeScopeColumnPattern) {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
-//            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
             List<UUID> refsLinkedTo = new ArrayList<>();
 
             lineCheckers.forEach(lineChecker -> {
@@ -565,20 +560,19 @@ public class OreSiService {
 
     /**
      * Build the function that Dispatch ParsedCsvRow into RowWithData when there are not repeatedColumns
-     *
-     * @param formatDescription
-     * @return
      */
     private Function<ParsedCsvRow, ImmutableSet<RowWithData>> buildLineAsMapWhenNoRepeatedColumnsToRecordsFn(Configuration.FormatDescription formatDescription) {
-        Function<ParsedCsvRow, ImmutableSet<RowWithData>> lineAsMapToRecordsFn;
-        ImmutableSet<String> expectedColumns = formatDescription.getColumns().stream()
+        ImmutableSet<String> expectedHeaderColumns = formatDescription.getColumns().stream()
                 .map(Configuration.ColumnBindingDescription::getHeader)
                 .collect(ImmutableSet.toImmutableSet());
+        int headerLine = formatDescription.getHeaderLine();
         ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
-        lineAsMapToRecordsFn = parsedCsvRow -> {
+        Function<ParsedCsvRow, ImmutableSet<RowWithData>> lineAsMapToRecordsFn = parsedCsvRow -> {
             List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
-            ImmutableList<String> actualHeaders = line.stream().map(Map.Entry::getKey).collect(ImmutableList.toImmutableList());
-            Preconditions.checkArgument(expectedColumns.containsAll(actualHeaders), "Fichier incorrect. Entêtes détectés " + actualHeaders + ". Entêtes attendus " + expectedColumns);
+            ImmutableMultiset<String> actualHeaderColumns = line.stream()
+                    .map(Map.Entry::getKey)
+                    .collect(ImmutableMultiset.toImmutableMultiset());
+            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, actualHeaderColumns, headerLine);
             Map<VariableComponentKey, String> record = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : line) {
                 String header = entry.getKey();
@@ -593,9 +587,6 @@ public class OreSiService {
 
     /**
      * build the function that Dispatch ParsedCsvRow into RowWithData when there are repeatedColumns
-     *
-     * @param formatDescription
-     * @return
      */
     private Function<ParsedCsvRow, ImmutableSet<RowWithData>> buildLineAsMapWhenRepeatedColumnsToRecordsFn(Configuration.FormatDescription formatDescription) {
         return  parsedCsvRow -> {
@@ -610,7 +601,10 @@ public class OreSiService {
                 for (Configuration.ColumnBindingDescription column : formatDescription.getColumns()) {
                     Map.Entry<String, String> poll = lineCopy.poll();
                     String header = poll.getKey();
-                    Preconditions.checkState(header.equals(column.getHeader()), "Entête inattendu " + header + ". Entête attendu " + column.getHeader());
+                    String expected = column.getHeader();
+                    if (!header.equals(expected)) {
+                        throw InvalidDatasetContentException.forUnexpectedHeaderColumn(expected, header, formatDescription.getHeaderLine());
+                    }
                     String value = poll.getValue();
                     recordPrototype.put(column.getBoundTo(), value);
                 }
@@ -640,11 +634,14 @@ public class OreSiService {
                     Pattern pattern = Pattern.compile(headerPattern);
                     Matcher matcher = pattern.matcher(actualHeader);
                     boolean matches = matcher.matches();
-                    Preconditions.checkState(matches, "Entête imprévu " + actualHeader + ". Entête attendu " + headerPattern);
-
+                    if (!matches) {
+                        throw InvalidDatasetContentException.forHeaderColumnPatternNotMatching(headerPattern, actualHeader, formatDescription.getHeaderLine());
+                    }
                     List<Configuration.HeaderPatternToken> tokens = expectedColumn.getTokens();
                     if (tokens != null) {
-                        Preconditions.checkState(matcher.groupCount() == tokens.size(), "On doit pouvoir repérer " + tokens.size() + " informations dans l'entête " + actualHeader + ", or seulement " + matcher.groupCount() + " détectés");
+                        if (matcher.groupCount() != tokens.size()) {
+                            throw InvalidDatasetContentException.forUnexpectedTokenCount(tokens.size(), actualHeader, matcher.groupCount(), formatDescription.getHeaderLine());
+                        }
                         int groupIndex = 1;
                         for (Configuration.HeaderPatternToken token : tokens) {
                             tokenValues.put(token.getBoundTo(), matcher.group(groupIndex++));
