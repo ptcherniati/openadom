@@ -37,6 +37,7 @@ public class Fixtures {
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
+        PRO("pro", ImmutableSet.of("EfeleEssaiTsMo")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -267,5 +268,55 @@ public class Fixtures {
 
     public String getHauteFrequenceApplicationConfigurationResourceName() {
         return "/data/hautefrequence/hautefrequence.yaml";
+    }
+
+
+    public Map<String, String> getProReferentielFiles() {
+        Map<String, String> referentielFiles = new HashMap<>();
+        referentielFiles.put("dispositif", "/data/pro/dispositif.csv");
+        referentielFiles.put("bloc", "/data/pro/bloc.csv");
+        referentielFiles.put("parcelle_elementaire", "/data/pro/parcelle_elementaire.csv");
+        referentielFiles.put("placette", "/data/pro/placette.csv");
+        referentielFiles.put("code_bloc", "/data/pro/code_bloc.csv");
+        referentielFiles.put("application_traitement_parcelle", "/data/pro/application_traitement_parcelle.csv");
+        referentielFiles.put("description_traitement", "/data/pro/description_traitement.csv");
+        return referentielFiles;
+    }
+
+    public String getProApplicationConfigurationResourceName() {
+        return "/data/pro/pro.yaml";
+    }
+
+    public Cookie addApplicationPRO() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getProApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().isCreated());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getProReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "EFELE_TS_MO_plante.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/EFELE_TS_MO_plante")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isOk());
+        }
+
+        return authCookie;
     }
 }

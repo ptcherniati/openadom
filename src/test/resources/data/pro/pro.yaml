@@ -1,0 +1,167 @@
+version: 0 
+application:
+  name: Pros
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: dispositifs
+      - reference: blocs
+        parentKeyColumn: dispositif_key
+      - reference: parcelles_elementaires
+        parentKeyColumn: bloc_key
+      - reference: placettes
+        parentKeyColumn: parcelle_key
+references:
+  dispositifs:
+    keyColumns: [dispositif_key]
+    columns:
+      annee_arret_epandage:
+      annee_chgt_systeme_conduite:
+      annee_debut:
+      annee_fin:
+      code:
+      is_chgt_systeme_conduite:
+      nom:
+      raison_chgt_systeme_conduite:
+      surface_totale:
+      dispositif_key:
+      chgt_stc_key:
+      géolocalisation_key:
+      lie_key:
+      stc_key:
+      tpd_key:
+  blocs:
+    keyColumns: [dispositif_key, bloc_key]
+    columns:
+      bloc_key:
+      nom:
+      code_bloc_key:
+      dispositif_key:
+  parcelles_elementaires:
+    keyColumns: [dispositif_key, bloc_key, parcelle_key]
+    columns:
+      mycode:
+      nom:
+      parcelle_key:
+      bloc_key:
+      code_parcelle_key:
+      dispositif_key:
+      géolocalisation_key:
+  placettes:
+    keyColumns: [parcelle_key, placette_key]
+    columns:
+      placette_key:
+      annee_debut:
+      annee-fin:
+      code:
+      commentaire:
+      nom:
+      géolocalisation_key:
+      parcelle_key:
+  code_bloc:
+    keyColumns: [code_bloc_key]
+    columns:
+      code_bloc_key:
+      code:
+  application_traitement_parcelle:
+    keyColumns: [parcelle_key, traitement_parcelle_key]
+    columns:
+      traitement_parcelle_key:
+      annee_debut_application:
+      annee_fin_application:
+      numero_repetition:
+      description_traitement_key:
+      modalité_key:
+      parcelle_key:
+  description_traitement:
+    keyColumns: [deccription_traitement_key]
+    columns:
+      description_traitement_key:
+      annee_validite_debut:
+      annee_validite_fin:
+      annee_modif_mineure:
+      code:
+      code_unique:
+      commentaire:
+      nombre_repetition:
+      nom:
+      disp_key:
+      traitement_origine_key:
+      tptrt_key:
+dataTypes:
+  EFELE_TS_MO_plante:
+    authorization:
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - localization
+            - date
+      localizationScope:
+        variable: localization
+        component: dispositifs
+      timeScope:
+        variable: date
+        component: day
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: hh:mm:ss
+      localization:
+        components:
+          dispositif:
+            checker:
+              name: Reference
+              params:
+                refType: dispositifs
+          bloc:
+            checker:
+              name: Reference
+              params:
+                refType: blocs
+          parcelle_elementaire:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles_elementaires
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: dispositif
+          exportHeader: "Dispositif"
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "dispositif"
+          boundTo:
+            variable: localization
+            component: dispositif
+        - header: "bloc"
+          boundTo:
+            variable: localization
+            component: bloc
+        - header: "parcelle elementaire"
+          boundTo:
+            variable: localization
+            component: parcelle_elementaire
+        - header: "date"
+          boundTo:
+            variable: date
+            component: day
+        - header: "heure"
+          boundTo:
+            variable: date
+            component: time

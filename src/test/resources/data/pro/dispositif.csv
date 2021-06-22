@@ -1,0 +1,12 @@
+annee_arret_epandage;annee_chgt_systeme_conduite;annee_debut;annee_fin;code;is_chgt_systeme_conduite;nom;raison_chgt_systeme_conduite;surface_totale;dispositif_key;chgt_stc_key;géolocalisation_key;lie_key;stc_key;tpd_key
+;2014;1998;;QA;true;QualiAgro;Parcelle agricole localisée chez un exploitant en agriculture biologique;60000.0;1288;48;;733;49;10
+;;2011;;DSP_F;false;DSP_Fictif;;2000.0;1291;;;735;50;17
+1993;;1974;;Ambares;false;Couhins_Ambares;;513.0;1292;;;737;49;10
+1981;;1976;;Louis Fargue;false;Couhins_Louis Fargue;;513.0;1293;;;737;49;10
+1998;;1976;;St Denis de Pile;false;Couhins_Saint Denis de Pile;;1091.0;1294;;;737;49;10
+;;2013;;SOEREPRO Reunion;false;SOEREPRO_la Reunion;;11990.0;1295;;;739;49;10
+;;2012;2032;EFELE_TS_MO;false;EFELE_essai_TS_MO;;;1296;;;738;50;10
+;;2012;2032;EFELE_PROs;false;EFELE_essai_PROs;;;1297;;;738;50;12
+;;2000;;PROspective;false;PROspective;;20160.0;1298;;;736;49;10
+2002;;1996;;Bouzule;false;La Bouzule;;3420.0;1299;;;734;49;10
+9999;;2016;9999;SOEREPRO_Dakar;false;SOEREPRO site de Dakar;;1008.0;181507;;1222;1221;50;16
