@@ -10,13 +10,17 @@ compositeReferences:
       -
         parentKeyColumn: b1_b2
         reference: a
-  localizations: 
+  localizations:
+    components:
+      -
+        reference: site
+      -
+        reference: plateforme
+        parentKeyColumn: codeSite
+  projects:
     components:
       -
         reference: projet
-      - 
-        parentKeyColumn: projet
-        reference: site
 dataTypes: 
   hautefrequence: 
     authorization: 
@@ -31,7 +35,7 @@ dataTypes:
             - outil
           label: "Toutes les données"
       localizationScope: 
-        component: site
+        component: plateforme
         variable: localization
       timeScope: 
         component: day
@@ -172,6 +176,7 @@ references:
   plateforme: 
     columns: 
       codePlateforme: ~
+      codeSite: ~
     keyColumns: [codePlateforme]
   projet: 
     columns: 
@@ -180,7 +185,6 @@ references:
   site: 
     columns: 
       codeSite: ~
-      projet: ~
     keyColumns: [codeSite]
   variable: 
     columns: 
