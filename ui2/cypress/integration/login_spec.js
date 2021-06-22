@@ -8,8 +8,9 @@ describe('test login', () => {
 
     })
     it('login admin', () => {
-        cy.login("admin")
+        cy.login("admin", ['applications/acbb/acbb_application_description.json'])
         cy.url().should('include', '/application')
+        cy.get('[type=button').contains(" Créer l'application ")
 
     })
 })

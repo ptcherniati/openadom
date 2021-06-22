@@ -26,9 +26,19 @@
 import 'cypress-file-upload';
 
 
-Cypress.Commands.add('login', (userRole) => {
+Cypress.Commands.add('login', (userRole, applications) => {
     localStorage.clear()
-    cy.fixture('users.json').as('users')
+    let applicationsResponse = []
+    if (applications && applications instanceof Array) {
+        console.log(applications);
+        applicationsResponse = applications
+            .map(app => {
+                cy.fixture(app).as("appli")
+                return cy.get('@appli')
+            })
+            .reduce((acc, app) => [...acc, ], applicationsResponse)
+    }
+    cy.fixture('users/users.json').as('users')
     cy.get('@users').then((users) => {
         const user = users[userRole]
         cy.visit(Cypress.env('login_url'))
@@ -38,6 +48,9 @@ Cypress.Commands.add('login', (userRole) => {
         cy.intercept(
             'POST',
             'http://localhost:8081/api/v1/login', user.response)
+        cy.intercept(
+            'GET',
+            'http://localhost:8081/api/v1/applications', applicationsResponse)
         cy.get('.buttons button').contains(" Se connecter ").click()
     })
 })
