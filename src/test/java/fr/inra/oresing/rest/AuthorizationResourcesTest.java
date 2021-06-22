@@ -79,7 +79,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"localizationScope\":\"theix.theix__22\",\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -123,7 +123,7 @@ public class AuthorizationResourcesTest {
     }
 
     @Test
-    public void testAddAuthorizationOnTwo() throws Exception {
+    public void testAddAuthorizationOnTwoScopes() throws Exception {
 
         Cookie authCookie = fixtures.addApplicationHauteFrequence();
 
@@ -135,7 +135,7 @@ public class AuthorizationResourcesTest {
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         {
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"localizationScope\":\"bimont.bim13\",\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"bimont.bim13\",\"projet\":\"sou\"},\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -158,9 +158,13 @@ public class AuthorizationResourcesTest {
             Assert.assertFalse(json.contains("30/01/2017"));
             Assert.assertTrue(json.contains("14/06/2016"));
 
-            // contrôle sur la localization
+            // contrôle sur la localisation
             Assert.assertFalse(json.contains("bimont.bim14"));
             Assert.assertTrue(json.contains("bimont.bim13"));
+
+            // contrôle sur le projet
+            Assert.assertFalse(json.contains("rnt"));
+            Assert.assertTrue(json.contains("sou"));
         }
     }
 }

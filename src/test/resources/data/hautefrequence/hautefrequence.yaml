@@ -34,9 +34,13 @@ dataTypes:
             - pression
             - outil
           label: "Toutes les données"
-      localizationScope: 
-        component: plateforme
-        variable: localization
+      authorizationScopes:
+        localization:
+          component: plateforme
+          variable: localization
+        projet:
+          component: projet
+          variable: localization
       timeScope: 
         component: day
         variable: date

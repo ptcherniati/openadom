@@ -493,7 +493,11 @@ public class OreSiService {
             String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
-            String localizationScope = values.get(dataTypeDescription.getAuthorization().getLocalizationScope());
+            Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
+            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
+                String requiredAuthorization = values.get(variableComponentKey);
+                requiredAuthorizations.put(authorizationScope, requiredAuthorization);
+            });
 
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
@@ -522,7 +526,7 @@ public class OreSiService {
                 e.setRefsLinkedTo(refsLinkedTo);
                 e.setDataValues(toStore);
                 e.setTimeScope(timeScope);
-                e.setLocalizationScope(localizationScope);
+                e.setRequiredAuthorizations(requiredAuthorizations);
                 return e;
             });
 

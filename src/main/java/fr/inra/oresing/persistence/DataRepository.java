@@ -29,8 +29,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, dataGroup, localizationScope, timeScope, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, rowId, dataGroup, localizationScope, timeScope, refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, dataGroup=EXCLUDED.rowId, localizationScope=EXCLUDED.localizationScope, timeScope=EXCLUDED.timeScope, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, dataGroup, requiredAuthorizations, timeScope, refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, rowId, dataGroup, requiredAuthorizations, timeScope, refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
+                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, dataGroup=EXCLUDED.rowId, requiredAuthorizations=EXCLUDED.requiredAuthorizations, timeScope=EXCLUDED.timeScope, refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
 

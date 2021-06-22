@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,7 +21,7 @@ public class OreSiAuthorization {
 
     String dataGroup;
 
-    String localizationScope;
+    Map<String, String> authorizedScopes;
 
     LocalDate fromDay;
 

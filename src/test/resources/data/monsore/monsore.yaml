@@ -198,9 +198,10 @@ dataTypes:
             variable: site
             component: chemin
     authorization:
-      localizationScope:
-        variable: site
-        component: chemin
+      authorizationScopes:
+        localization:
+          variable: site
+          component: chemin
       timeScope:
         variable: date
         component: value

@@ -86,7 +86,7 @@ public class Configuration {
     @ToString
     public static class AuthorizationDescription {
         VariableComponentKey timeScope;
-        VariableComponentKey localizationScope;
+        LinkedHashMap<String, VariableComponentKey> authorizationScopes = new LinkedHashMap<>();
         LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
     }
 

@@ -164,9 +164,10 @@ dataTypes:
             variable: Fc gf
             component: value
     authorization:
-      localizationScope:
-        variable: parcelle
-        component: chemin
+      authorizationScopes:
+        localization:
+          variable: parcelle
+          component: chemin
       timeScope:
         variable: date
         component: day
@@ -743,9 +744,10 @@ dataTypes:
             variable: MOR
             component: IQ
     authorization:
-      localizationScope:
-        variable: parcelle
-        component: chemin
+      authorizationScopes:
+        localization:
+          variable: parcelle
+          component: chemin
       timeScope:
         variable: date de mesure
         component: valeur
@@ -858,9 +860,10 @@ dataTypes:
             component: qualité
           exportHeader: "qc"
     authorization:
-      localizationScope:
-        variable: Nom parcelle
-        component: chemin
+      authorizationScopes:
+        localization:
+          variable: Nom parcelle
+          component: chemin
       timeScope:
         variable: Date
         component: day
