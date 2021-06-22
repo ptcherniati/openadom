@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @Getter
@@ -27,19 +26,19 @@ public class OreSiAuthorization {
 
     LocalDate toDay;
 
-    public Optional<LocalDateTimeRange> getTimeScope() {
-        Optional<LocalDateTimeRange> timeScope;
+    public LocalDateTimeRange getTimeScope() {
+        LocalDateTimeRange timeScope;
         if (getFromDay() == null) {
             if (getToDay() == null) {
-                timeScope = Optional.empty();
+                timeScope = LocalDateTimeRange.always();
             } else {
-                timeScope = Optional.of(LocalDateTimeRange.until(getToDay()));
+                timeScope = LocalDateTimeRange.until(getToDay());
             }
         } else {
             if (getToDay() == null) {
-                timeScope = Optional.of(LocalDateTimeRange.since(getFromDay()));
+                timeScope = LocalDateTimeRange.since(getFromDay());
             } else {
-                timeScope = Optional.of(LocalDateTimeRange.between(getFromDay(), getToDay()));
+                timeScope = LocalDateTimeRange.between(getFromDay(), getToDay());
             }
         }
         return timeScope;

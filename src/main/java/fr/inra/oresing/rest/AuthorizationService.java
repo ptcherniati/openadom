@@ -52,10 +52,8 @@ public class AuthorizationService {
         usingExpressionElements.add("dataType = '" + dataType + "'");
         usingExpressionElements.add("dataGroup = '" + dataGroup + "'");
 
-        authorization.getTimeScope().ifPresent(timeScope -> {
-            String timeScopeSqlExpression = timeScope.toSqlExpression();
-            usingExpressionElements.add("timeScope <@ '" + timeScopeSqlExpression + "'");
-        });
+        String timeScopeSqlExpression = authorization.getTimeScope().toSqlExpression();
+        usingExpressionElements.add("timeScope <@ '" + timeScopeSqlExpression + "'");
 
         authorizationDescription.getAuthorizationScopes().keySet().stream().map(authorizationScope -> {
             String authorizedScope = authorization.getAuthorizedScopes().get(authorizationScope);
