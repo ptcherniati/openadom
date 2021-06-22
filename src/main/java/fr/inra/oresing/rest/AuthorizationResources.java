@@ -16,7 +16,7 @@ public class AuthorizationResources {
     private AuthorizationService authorizationService;
 
     @PostMapping(value = "/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<OreSiAuthorization> addAuthorization(@RequestBody OreSiAuthorization authorization) {
+    public ResponseEntity<CreateAuthorizationRequest> addAuthorization(@RequestBody CreateAuthorizationRequest authorization) {
         authorizationService.addAuthorization(authorization);
         return ResponseEntity.ok(authorization);
     }

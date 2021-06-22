@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class OreSiAuthorization {
+public class CreateAuthorizationRequest {
 
     UUID userId;
 

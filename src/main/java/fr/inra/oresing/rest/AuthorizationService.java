@@ -2,7 +2,9 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.OreSiAuthorization;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.AuthorizationRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
@@ -33,9 +35,8 @@ public class AuthorizationService {
     @Autowired
     private OreSiRepository repository;
 
-    public OreSiAuthorization addAuthorization(OreSiAuthorization authorization) {
+    public CreateAuthorizationRequest addAuthorization(CreateAuthorizationRequest authorization) {
         OreSiUserRole userRole = authenticationService.getUserRole(authorization.getUserId());
-        Set<String> usingExpressionElements = new LinkedHashSet<>();
 
         Application application = repository.application().findApplication(authorization.getApplicationNameOrId());
 
@@ -48,22 +49,52 @@ public class AuthorizationService {
 
         Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(dataGroup));
 
-        usingExpressionElements.add("application = '" + application.getId() + "'::uuid");
+        OreSiAuthorization entity = new OreSiAuthorization();
+        entity.setOreSiUser(authorization.getUserId());
+        entity.setApplication(application.getId());
+        entity.setDataType(dataType);
+        entity.setDataGroup(dataGroup);
+        entity.setAuthorizedScopes(authorization.getAuthorizedScopes());
+        entity.setTimeScope(authorization.getTimeScope());
+
+        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        authorizationRepository.store(entity);
+
+        SqlPolicy sqlPolicy = toPolicy(entity);
+        db.addUserInRole(userRole, OreSiRightOnApplicationRole.readerOn(application));
+        db.createPolicy(sqlPolicy);
+
+        return authorization;
+    }
+
+    private SqlPolicy toPolicy(OreSiAuthorization authorization) {
+        Set<String> usingExpressionElements = new LinkedHashSet<>();
+
+        String dataType = authorization.getDataType();
+
+        usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
         usingExpressionElements.add("dataType = '" + dataType + "'");
-        usingExpressionElements.add("dataGroup = '" + dataGroup + "'");
+        usingExpressionElements.add("dataGroup = '" + authorization.getDataGroup() + "'");
 
         String timeScopeSqlExpression = authorization.getTimeScope().toSqlExpression();
         usingExpressionElements.add("timeScope <@ '" + timeScopeSqlExpression + "'");
 
-        authorizationDescription.getAuthorizationScopes().keySet().stream().map(authorizationScope -> {
-            String authorizedScope = authorization.getAuthorizedScopes().get(authorizationScope);
-            String usingElement = "jsonb_extract_path_text(requiredAuthorizations, '" + authorizationScope + "')::ltree <@ '" + authorizedScope + "'::ltree";
-            return usingElement;
-        }).forEach(usingExpressionElements::add);
+        authorization.getAuthorizedScopes().entrySet().stream()
+                .map(authorizationEntry -> {
+                    String authorizationScope = authorizationEntry.getKey();
+                    String authorizedScope = authorizationEntry.getValue();
+                    String usingElement = "jsonb_extract_path_text(requiredAuthorizations, '" + authorizationScope + "')::ltree <@ '" + authorizedScope + "'::ltree";
+                    return usingElement;
+                })
+                .forEach(usingExpressionElements::add);
 
         String usingExpression = usingExpressionElements.stream()
                 .map(statement -> "(" + statement + ")")
                 .collect(Collectors.joining(" AND "));
+
+        OreSiUserRole userRole = authenticationService.getUserRole(authorization.getOreSiUser());
+
+        Application application = repository.application().findApplication(authorization.getApplication());
 
         SqlPolicy sqlPolicy = new SqlPolicy(
                 SqlSchema.forApplication(application).data(),
@@ -73,10 +104,7 @@ public class AuthorizationService {
                 usingExpression
         );
 
-        db.addUserInRole(userRole, OreSiRightOnApplicationRole.readerOn(application));
-        db.createPolicy(sqlPolicy);
-
-        return authorization;
+        return sqlPolicy;
     }
 
 }

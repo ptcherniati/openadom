@@ -24,4 +24,8 @@ public class SqlSchemaForApplication implements SqlSchema {
     public SqlTable binaryFile() {
         return new SqlTable(this, "binaryFile");
     }
+
+    public SqlTable authorization() {
+        return new SqlTable(this, "oreSiAuthorization");
+    }
 }
