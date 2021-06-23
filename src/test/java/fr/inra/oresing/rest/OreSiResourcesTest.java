@@ -567,9 +567,9 @@ public class OreSiResourcesTest {
         }
 
         // ajout de data
-        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getEfeleTsMoPlanteDataResourceName())) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "EFELE_TS_MO_plante.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/EFELE_TS_MO_plante")
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdPrelevementProDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
                     .file(refFile)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());

@@ -78,7 +78,7 @@ references:
       code unique:
       répétition traitement:
 dataTypes:
-  EFELE_TS_MO_plante:
+  donnees_prelevement_pro:
     authorization:
       dataGroups:
         all:
@@ -86,9 +86,11 @@ dataTypes:
           data:
             - localization
             - date
+            - context
+            - prelevement
       localizationScope:
         variable: localization
-        component: dispositifs
+        component: code dispositif
       timeScope:
         variable: date
         component: day
@@ -101,55 +103,97 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
           time:
-            checker:
-              name: Date
-              params:
-                pattern: hh:mm:ss
       localization:
         components:
-          dispositif:
+          code dispositif:
             checker:
               name: Reference
               params:
                 refType: dispositifs
-          bloc:
+          nom bloc:
             checker:
               name: Reference
               params:
                 refType: blocs
-          parcelle_elementaire:
+          nom parcelle elementaire:
             checker:
               name: Reference
               params:
                 refType: parcelles_elementaires
+          nom placette:
+            checker:
+              name: Reference
+              params:
+                refType: placettes
+      prelevement:
+        components:
+          endroit prelevement:
+          repetition:
+          code prelevement:
+          outil prelevement:
+          commentaire fr:
+          commentaire en:
+      context:
+        components:
+          produit:
+          traitement:
+            checker:
+              name: Reference
+              params:
+                refType: traitements
     format:
-      constants:
-        - rowNumber: 1
-          columnNumber: 2
-          boundTo:
-            variable: localization
-            component: dispositif
-          exportHeader: "Dispositif"
-      headerLine: 7
-      firstRowLine: 8
+      headerLine: 1
+      firstRowLine: 2
       columns:
-        - header: "dispositif"
-          boundTo:
-            variable: localization
-            component: dispositif
-        - header: "bloc"
-          boundTo:
-            variable: localization
-            component: bloc
-        - header: "parcelle elementaire"
-          boundTo:
-            variable: localization
-            component: parcelle_elementaire
-        - header: "date"
+        - header: "Date de prelevement (jj/mm/aaaa)"
           boundTo:
             variable: date
             component: day
-        - header: "heure"
+        - header: "Code Dispositif"
           boundTo:
-            variable: date
-            component: time
+            variable: localization
+            component: code dispositif
+        - header: "Code Produit"
+          boundTo:
+            variable: context
+            component: produit
+        - header: "Code Traitement"
+          boundTo:
+            variable: context
+            component: traitement
+        - header: "Nom Bloc"
+          boundTo:
+            variable: localization
+            component: nom bloc
+        - header: "Nom Parcelle Elementaire"
+          boundTo:
+            variable: localization
+            component: nom parcelle elementaire
+        - header: "Nom Placette"
+          boundTo:
+            variable: localization
+            component: nom placette
+        - header: "Numero repetition"
+          boundTo:
+            variable: prelevement
+            component: repetition
+        - header: "Endroit prelevement"
+          boundTo:
+            variable: prelevement
+            component: endroit prelevement
+        - header: "Outil Prelevement"
+          boundTo:
+            variable: prelevement
+            component: outil prelevement
+        - header: "commentaire_fr"
+          boundTo:
+            variable: prelevement
+            component: commentaire fr
+        - header: "commentaire_en"
+          boundTo:
+            variable: prelevement
+            component: commentaire en
+        - header: "code prelevement"
+          boundTo:
+            variable: prelevement
+            component: code prelevement

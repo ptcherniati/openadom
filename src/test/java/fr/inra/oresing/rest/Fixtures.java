@@ -357,14 +357,19 @@ public class Fixtures {
 
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "EFELE_TS_MO_plante.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/EFELE_TS_MO_plante")
+            MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
                     .file(file)
                     .cookie(authCookie))
                     .andExpect(status().isOk());
         }
 
         return authCookie;
+    }
+
+
+    public String getdPrelevementProDataResourceName() {
+        return "/data/pros/donnees_prelevement_pro.csv";
     }
 
 
