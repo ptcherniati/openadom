@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
@@ -124,11 +125,24 @@ public class AuthorizationService {
         authorizationRepository.delete(authorizationId);
     }
 
+    public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId) {
+        Application application = repository.application().findApplication(applicationNameOrId);
+        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findAll().stream()
+                .map(this::toGetAuthorizationResult)
+                .collect(ImmutableSet.toImmutableSet());
+        return authorizations;
+    }
+
     public GetAuthorizationResult getAuthorization(AuthorizationRequest authorizationRequest) {
         Application application = repository.application().findApplication(authorizationRequest.getApplicationNameOrId());
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         UUID authorizationId = authorizationRequest.getAuthorizationId();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
+        return toGetAuthorizationResult(oreSiAuthorization);
+    }
+
+    private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization) {
         Range<LocalDateTime> timeScopeRange = oreSiAuthorization.getTimeScope().getRange();
         LocalDate fromDay;
         if (timeScopeRange.hasLowerBound()) {
