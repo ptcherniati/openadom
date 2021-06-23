@@ -322,18 +322,16 @@ public class Fixtures {
 
     public Map<String, String> getProReferentielFiles() {
         Map<String, String> referentielFiles = new HashMap<>();
-        referentielFiles.put("dispositif", "/data/pro/dispositif.csv");
-        referentielFiles.put("bloc", "/data/pro/bloc.csv");
-        referentielFiles.put("parcelle_elementaire", "/data/pro/parcelle_elementaire.csv");
-        referentielFiles.put("placette", "/data/pro/placette.csv");
-        referentielFiles.put("code_bloc", "/data/pro/code_bloc.csv");
-        referentielFiles.put("application_traitement_parcelle", "/data/pro/application_traitement_parcelle.csv");
-        referentielFiles.put("description_traitement", "/data/pro/description_traitement.csv");
+        referentielFiles.put("dispositifs", "/data/pros/dispositif_complet.csv");
+        referentielFiles.put("blocs", "/data/pros/bloc_complet.csv");
+        referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
+        referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
+        referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
         return referentielFiles;
     }
 
     public String getProApplicationConfigurationResourceName() {
-        return "/data/pro/pro.yaml";
+        return "/data/pros/pro.yaml";
     }
 
     public Cookie addApplicationPRO() throws Exception {
@@ -367,5 +365,10 @@ public class Fixtures {
         }
 
         return authCookie;
+    }
+
+
+    public String getEfeleTsMoPlanteDataResourceName() {
+        return "/data/pros/EFELE_TS_MO_plante.csv";
     }
 }

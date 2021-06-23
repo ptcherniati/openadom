@@ -16,79 +16,67 @@ references:
   dispositifs:
     keyColumns: [dispositif_key]
     columns:
-      annee_arret_epandage:
-      annee_chgt_systeme_conduite:
-      annee_debut:
-      annee_fin:
-      code:
-      is_chgt_systeme_conduite:
-      nom:
-      raison_chgt_systeme_conduite:
-      surface_totale:
       dispositif_key:
-      chgt_stc_key:
-      géolocalisation_key:
-      lie_key:
-      stc_key:
-      tpd_key:
+      annee debut:
+      annee fin:
+      annee arret epandage:
+      code:
+      nom dispositif:
+      nom type de dispositif:
+      libelle du syteme conduite:
+      changement systeme conduite fait:
+      année changement systeme conduite:
+      raison chgt systeme conduite:
+      surface totale:
+      nom du lieu:
+      latitude:
+      logitude:
   blocs:
-    keyColumns: [dispositif_key, bloc_key]
+    keyColumns: [bloc_key, dispositif_key ]
     columns:
       bloc_key:
-      nom:
-      code_bloc_key:
+      nom du bloc:
+      code bloc:
       dispositif_key:
+      nom du dispositif:
   parcelles_elementaires:
-    keyColumns: [dispositif_key, bloc_key, parcelle_key]
+    keyColumns: [parcellekey, bloc_key, dispositif_key]
     columns:
       mycode:
-      nom:
+      nom de la parcelle:
       parcelle_key:
       bloc_key:
-      code_parcelle_key:
+      nom du bloc:
+      code de la parcelle:
       dispositif_key:
-      géolocalisation_key:
+      nom du dispositif:
+      longitude:
+      latitude:
   placettes:
     keyColumns: [parcelle_key, placette_key]
     columns:
       placette_key:
-      annee_debut:
-      annee-fin:
-      code:
+      année debut:
+      année fin:
+      code placette:
       commentaire:
-      nom:
-      géolocalisation_key:
+      nom placette:
+      latitude:
+      longitude:
       parcelle_key:
-  code_bloc:
-    keyColumns: [code_bloc_key]
+      nom parcelle:
+  traitements:
+    keyColumns: [parcelle_key ,traitement parcelle_key]
     columns:
-      code_bloc_key:
-      code:
-  application_traitement_parcelle:
-    keyColumns: [parcelle_key, traitement_parcelle_key]
-    columns:
-      traitement_parcelle_key:
-      annee_debut_application:
-      annee_fin_application:
-      numero_repetition:
-      description_traitement_key:
-      modalité_key:
+      traitement parcelle_key:
+      année début:
+      année fin:
       parcelle_key:
-  description_traitement:
-    keyColumns: [deccription_traitement_key]
-    columns:
-      description_traitement_key:
-      annee_validite_debut:
-      annee_validite_fin:
-      annee_modif_mineure:
-      code:
-      code_unique:
-      commentaire:
-      nombre_repetition:
-      nom:
-      disp_key:
-      traitement_origine_key:
-      tptrt_key:
+      nom parcelle:
+      modalité:
+      description du traitement:
+      code unique:
+      répétition traitement:
 dataTypes:
   EFELE_TS_MO_plante:
     authorization:

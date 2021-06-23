@@ -543,58 +543,38 @@ public class OreSiResourcesTest {
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
-    
 
     @Test
     public void addApplicationPRO() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
-
-        String appId;
-        URL resource = getClass().getResource(fixtures.getProApplicationConfigurationResourceName());
-        try (InputStream in = resource.openStream()) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", in);
-
-            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
+        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getProApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
                     .file(configuration)
                     .cookie(authCookie))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                    .andReturn().getResponse().getContentAsString();
-
-            appId = JsonPath.parse(response).read("$.id");
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
-
 
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getProReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-
-                String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
                         .file(refFile)
                         .cookie(authCookie))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                String refFileId = JsonPath.parse(response).read("$.id");
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
             }
         }
 
         // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(fixtures.getBiomasseProductionTeneurDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "EFELE_TS_MO_plante.csv", "text/plain", in);
-
-            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/EFELE_TS_MO_plante")
-                    .file(file)
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getEfeleTsMoPlanteDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "EFELE_TS_MO_plante.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/EFELE_TS_MO_plante")
+                    .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
-
-            log.debug(response);
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
-
 
     @Test
     @Ignore("utile comme benchmark, ne vérifie rien")
