@@ -150,6 +150,7 @@ public class OreSiService {
         db.createRole(readerOnApplicationRole);
 
         db.createPolicy(new SqlPolicy(
+                String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
@@ -158,6 +159,7 @@ public class OreSiService {
         ));
 
         db.createPolicy(new SqlPolicy(
+                String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,

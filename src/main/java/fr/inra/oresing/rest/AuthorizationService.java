@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.google.common.collect.Range;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.OreSiAuthorization;
@@ -17,8 +18,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,7 +39,7 @@ public class AuthorizationService {
     @Autowired
     private OreSiRepository repository;
 
-    public CreateAuthorizationRequest addAuthorization(CreateAuthorizationRequest authorization) {
+    public UUID addAuthorization(CreateAuthorizationRequest authorization) {
         OreSiUserRole userRole = authenticationService.getUserRole(authorization.getUserId());
 
         Application application = repository.application().findApplication(authorization.getApplicationNameOrId());
@@ -48,6 +52,8 @@ public class AuthorizationService {
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
 
         Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(dataGroup));
+
+        Preconditions.checkArgument(authorization.getAuthorizedScopes().keySet().equals(authorizationDescription.getAuthorizationScopes().keySet()));
 
         OreSiAuthorization entity = new OreSiAuthorization();
         entity.setOreSiUser(authorization.getUserId());
@@ -64,7 +70,7 @@ public class AuthorizationService {
         db.addUserInRole(userRole, OreSiRightOnApplicationRole.readerOn(application));
         db.createPolicy(sqlPolicy);
 
-        return authorization;
+        return entity.getId();
     }
 
     private SqlPolicy toPolicy(OreSiAuthorization authorization) {
@@ -97,6 +103,7 @@ public class AuthorizationService {
         Application application = repository.application().findApplication(authorization.getApplication());
 
         SqlPolicy sqlPolicy = new SqlPolicy(
+                OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString(),
                 SqlSchema.forApplication(application).data(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
@@ -107,4 +114,43 @@ public class AuthorizationService {
         return sqlPolicy;
     }
 
+    public void revoke(AuthorizationRequest revokeAuthorizationRequest) {
+        Application application = repository.application().findApplication(revokeAuthorizationRequest.getApplicationNameOrId());
+        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        UUID authorizationId = revokeAuthorizationRequest.getAuthorizationId();
+        OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
+        SqlPolicy sqlPolicy = toPolicy(oreSiAuthorization);
+        db.dropPolicy(sqlPolicy);
+        authorizationRepository.delete(authorizationId);
+    }
+
+    public GetAuthorizationResult getAuthorization(AuthorizationRequest authorizationRequest) {
+        Application application = repository.application().findApplication(authorizationRequest.getApplicationNameOrId());
+        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        UUID authorizationId = authorizationRequest.getAuthorizationId();
+        OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
+        Range<LocalDateTime> timeScopeRange = oreSiAuthorization.getTimeScope().getRange();
+        LocalDate fromDay;
+        if (timeScopeRange.hasLowerBound()) {
+            fromDay = timeScopeRange.lowerEndpoint().toLocalDate();
+        } else {
+            fromDay = null;
+        }
+        LocalDate toDay;
+        if (timeScopeRange.hasUpperBound()) {
+            toDay = timeScopeRange.upperEndpoint().toLocalDate();
+        } else {
+            toDay = null;
+        }
+        return new GetAuthorizationResult(
+            oreSiAuthorization.getId(),
+            oreSiAuthorization.getOreSiUser(),
+            oreSiAuthorization.getApplication(),
+            oreSiAuthorization.getDataType(),
+            oreSiAuthorization.getDataGroup(),
+            oreSiAuthorization.getAuthorizedScopes(),
+            fromDay,
+            toDay
+        );
+    }
 }

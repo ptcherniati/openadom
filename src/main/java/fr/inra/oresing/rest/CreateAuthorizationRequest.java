@@ -1,15 +1,13 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.LocalDateTimeRange;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Value;
 
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Value
 public class CreateAuthorizationRequest {
 
     UUID userId;
