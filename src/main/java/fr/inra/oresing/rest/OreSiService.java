@@ -494,6 +494,7 @@ public class OreSiService {
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
 
             String localizationScope = values.get(dataTypeDescription.getAuthorization().getLocalizationScope());
+            checkHierarchicalKeySyntax(localizationScope);
 
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
