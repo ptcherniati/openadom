@@ -130,8 +130,8 @@ dataTypes:
             variable: localization
             component: dispositif
           exportHeader: "Dispositif"
-      headerLine: 1
-      firstRowLine: 2
+      headerLine: 7
+      firstRowLine: 8
       columns:
         - header: "dispositif"
           boundTo:
