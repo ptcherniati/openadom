@@ -321,7 +321,7 @@ public class Fixtures {
 
 
     public Map<String, String> getProReferentielFiles() {
-        Map<String, String> referentielFiles = new HashMap<>();
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
         referentielFiles.put("dispositifs", "/data/pros/dispositif_complet.csv");
         referentielFiles.put("blocs", "/data/pros/bloc_complet.csv");
         referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
