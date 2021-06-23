@@ -40,7 +40,7 @@ references:
       dispositif_key:
       nom du dispositif:
   parcelles_elementaires:
-    keyColumns: [parcellekey, bloc_key, dispositif_key]
+    keyColumns: [parcelle_key, bloc_key, dispositif_key]
     columns:
       mycode:
       nom de la parcelle:
