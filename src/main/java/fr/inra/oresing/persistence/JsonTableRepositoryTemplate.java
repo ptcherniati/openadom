@@ -99,7 +99,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
     protected abstract Class<T> getEntityClass();
 
     public List<T> findAll() {
-        String query = String.format("SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t", getEntityClass().getName(), getEntityClass().getSimpleName());
+        String query = String.format("SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t", getEntityClass().getName(), getTable().getSqlIdentifier());
         List<T> result = namedParameterJdbcTemplate.query(query, getJsonRowMapper());
         return result;
     }
