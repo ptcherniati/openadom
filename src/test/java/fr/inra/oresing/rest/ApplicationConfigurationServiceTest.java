@@ -46,7 +46,8 @@ public class ApplicationConfigurationServiceTest {
                 fixtures.getMonsoreApplicationConfigurationResourceName(),
                 fixtures.getAcbbApplicationConfigurationResourceName(),
                 fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
-                fixtures.getValidationApplicationConfigurationResourceName()
+                fixtures.getValidationApplicationConfigurationResourceName(),
+                fixtures.getProApplicationConfigurationResourceName()
         ).forEach(resource -> {
             try (InputStream in = getClass().getResourceAsStream(resource)) {
                 byte[] bytes = in.readAllBytes();
