@@ -1,5 +1,6 @@
 package fr.inra.oresing.groovy;
 
+import com.google.common.base.MoreObjects;
 import fr.inra.oresing.OreSiTechnicalException;
 import lombok.Value;
 
@@ -15,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class GroovyExpression {
+public class GroovyExpression implements Expression<Object> {
 
     private static final Map<String, GroovyExpression> INSTANCES = new ConcurrentHashMap<>();
 
@@ -61,16 +62,13 @@ public class GroovyExpression {
         return ((Compilable) ENGINE).compile(expression);
     }
 
-    public Boolean evaluate(Map<String, Object> context) {
+    @Override
+    public Object evaluate(Map<String, Object> context) {
         try {
             Bindings bindings = new SimpleBindings();
             context.forEach(bindings::put);
             Object evaluation = script.eval(bindings);
-            if (evaluation instanceof Boolean) {
-                return (Boolean) evaluation;
-            } else {
-                throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + expression + ", donnée = " + context);
-            }
+            return evaluation;
         } catch (ScriptException e) {
             int lineNumber = e.getLineNumber();
             int columnNumber = e.getColumnNumber();
@@ -82,5 +80,12 @@ public class GroovyExpression {
 //            }
             throw new OreSiTechnicalException(MessageFormat.format("L’évaluation de l’expression a provoqué une erreur. Expression = {0}, donnée = {1}, ligne = {2}, colonne = {3}", expression, context, lineNumber, columnNumber), e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("expression", expression)
+                .toString();
     }
 }

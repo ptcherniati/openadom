@@ -1,6 +1,7 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.groovy.BooleanGroovyExpression;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
@@ -16,10 +17,10 @@ public class GroovyLineChecker implements LineChecker {
 
     public static final String PARAM_EXPRESSION = "expression";
 
-    private final GroovyExpression expression;
+    private final BooleanGroovyExpression expression;
 
     public static GroovyLineChecker forExpression(String expression) {
-        GroovyExpression groovyExpression = GroovyExpression.forExpression(expression);
+        BooleanGroovyExpression groovyExpression = BooleanGroovyExpression.forExpression(expression);
         return new GroovyLineChecker(groovyExpression);
     }
 
@@ -27,7 +28,7 @@ public class GroovyLineChecker implements LineChecker {
         return GroovyExpression.validateExpression(expression);
     }
 
-    private GroovyLineChecker(GroovyExpression expression) {
+    private GroovyLineChecker(BooleanGroovyExpression expression) {
         this.expression = expression;
     }
 
