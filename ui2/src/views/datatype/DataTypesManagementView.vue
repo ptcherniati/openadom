@@ -48,7 +48,9 @@ export default class DataTypesManagementView extends Vue {
       (label) => this.consultDataType(label),
       "is-primary"
     ),
-    new Button(this.$t("referencesManagement.download"), "download"),
+    new Button(this.$t("referencesManagement.download"), "download", (label) =>
+      this.downloadDataType(label)
+    ),
   ];
   dataTypes = [];
 
@@ -90,12 +92,16 @@ export default class DataTypesManagementView extends Vue {
   }
 
   async uploadDataTypeCsv(label, file) {
-    const dataType = this.dataTypes.find((dt) => dt.label === label);
     try {
-      await this.dataService.addData(this.applicationName, dataType.label, file);
+      await this.dataService.addData(this.applicationName, label, file);
+      this.alertService.toastSuccess(this.$t("alert.data-updated"));
     } catch (error) {
       this.alertService.toastServerError(error);
     }
+  }
+
+  async downloadDataType(label) {
+    this.dataService.getDataTypesCsv(this.applicationName, label);
   }
 }
 </script>

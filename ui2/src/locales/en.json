@@ -33,7 +33,8 @@
     "reference-deletion-msg": "You're about to delete the reference : {label}. Are you sure ?",
     "delete": "Delete",
     "reference-csv-upload-error": "An error occured while uploading the csv file",
-    "reference-updated": "Reference updated"
+    "reference-updated": "Reference updated",
+    "data-updated": "Data type updated"
   },
   "message": {
     "app-config-error": "Error in yaml file",

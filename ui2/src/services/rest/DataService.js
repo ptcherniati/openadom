@@ -12,7 +12,7 @@ export class DataService extends Fetcher {
   }
 
   async getDataTypesCsv(applicationName, dataTypeId) {
-    return this.get(`applications/${applicationName}/data/${dataTypeId}/csv`);
+    return this.downloadFile(`applications/${applicationName}/data/${dataTypeId}/csv`);
   }
 
   async addData(applicationName, dataTypeId, dataTypeFile) {
