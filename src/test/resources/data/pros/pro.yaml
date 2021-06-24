@@ -1,0 +1,185 @@
+version: 0 
+application:
+  name: Pros
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: dispositifs
+      - reference: blocs
+        parentKeyColumn: dispositif_key
+      - reference: parcelles_elementaires
+        parentKeyColumn: bloc_key
+      - reference: placettes
+        parentKeyColumn: parcelle_key
+references:
+  dispositifs:
+    keyColumns: [code,nom du lieu]
+    columns:
+      dispositif_key:
+      annee debut:
+      annee fin:
+      annee arret epandage:
+      code:
+      nom dispositif:
+      nom type de dispositif:
+      libelle du syteme conduite:
+      changement systeme conduite fait:
+      année changement systeme conduite:
+      raison chgt systeme conduite:
+      surface totale:
+      nom du lieu:
+      latitude:
+      logitude:
+  blocs:
+    keyColumns: [nom du bloc]
+    columns:
+      bloc_key:
+      nom du bloc:
+      code bloc:
+      dispositif_key:
+      nom du dispositif:
+  parcelles_elementaires:
+    keyColumns: [code de la parcelle]
+    columns:
+      mycode:
+      nom de la parcelle:
+      parcelle_key:
+      bloc_key:
+      nom du bloc:
+      code de la parcelle:
+      dispositif_key:
+      nom du dispositif:
+      longitude:
+      latitude:
+  placettes:
+    keyColumns: [code placette]
+    columns:
+      placette_key:
+      année debut:
+      année fin:
+      code placette:
+      commentaire:
+      nom placette:
+      latitude:
+      longitude:
+      parcelle_key:
+      nom parcelle:
+  traitements:
+    keyColumns: [traitement parcelle_key]
+    columns:
+      traitement parcelle_key:
+      année début:
+      année fin:
+      parcelle_key:
+      nom parcelle:
+      modalité:
+      description du traitement:
+      code traitement:
+      code unique:
+      répétition traitement:
+dataTypes:
+  donnees_prelevement_pro:
+    authorization:
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - localization
+            - date
+            - context
+            - prelevement
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: code dispositif
+      timeScope:
+        variable: date
+        component: day
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      localization:
+        components:
+          code dispositif:
+            checker:
+              name: Reference
+              params:
+                refType: dispositifs
+          nom bloc:
+          nom parcelle elementaire:
+          nom placette:
+      prelevement:
+        components:
+          endroit prelevement:
+          repetition:
+          code prelevement:
+          outil prelevement:
+          commentaire fr:
+          commentaire en:
+      context:
+        components:
+          produit:
+          traitement:
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "Date de prelevement (jj/mm/aaaa)"
+          boundTo:
+            variable: date
+            component: day
+        - header: "Code Dispositif"
+          boundTo:
+            variable: localization
+            component: code dispositif
+        - header: "Code Produit"
+          boundTo:
+            variable: context
+            component: produit
+        - header: "Code Traitement"
+          boundTo:
+            variable: context
+            component: traitement
+        - header: "Nom Bloc"
+          boundTo:
+            variable: localization
+            component: nom bloc
+        - header: "Nom Parcelle Elementaire"
+          boundTo:
+            variable: localization
+            component: nom parcelle elementaire
+        - header: "Nom Placette"
+          boundTo:
+            variable: localization
+            component: nom placette
+        - header: "Numero repetition"
+          boundTo:
+            variable: prelevement
+            component: repetition
+        - header: "Endroit prelevement"
+          boundTo:
+            variable: prelevement
+            component: endroit prelevement
+        - header: "Outil Prelevement"
+          boundTo:
+            variable: prelevement
+            component: outil prelevement
+        - header: "commentaire_fr"
+          boundTo:
+            variable: prelevement
+            component: commentaire fr
+        - header: "commentaire_en"
+          boundTo:
+            variable: prelevement
+            component: commentaire en
+        - header: "code prelevement"
+          boundTo:
+            variable: prelevement
+            component: code prelevement

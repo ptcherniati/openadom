@@ -77,7 +77,8 @@
     "illegalGroovyExpression": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, l’expression renseignée <code>{expression}</code> n’est pas correcte. Erreur de compilation de l’expression à la ligne <code>{compilationError.lineNumber}</code> (colonne <code>{compilationError.columnNumber}</code>) message '<code>{compilationError.message}</code>'",
     "unknownCheckerName": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' est déclaré mais ce n’est pas un contrôle connu",
     "csvBoundToUnknownVariable": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n’est pas connue. Variables connues <code>{variables}</code>",
-    "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>"
+    "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>",
+    "invalidKeyColumns": "Dans la description du référentiel <code>{reference}</code>, les colonnes <code>{unknownUsedAsKeyElementColumns}</code> sont déclarées comme faisant partie de la clé alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>"
   },
   "referencesManagement": {
     "actions": "Actions",

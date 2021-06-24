@@ -1,0 +1,61 @@
+"bloc_key";"nom du bloc";"code bloc";"dispositif_key";"nom du dispositif"
+1;Bloc 1;Bloc 1;1288;QualiAgro
+2;Bloc 2;Bloc 2;1288;QualiAgro
+3;Bloc 3;Bloc 3;1288;QualiAgro
+4;Bloc 4;Bloc 4;1288;QualiAgro
+5;X;X;1288;QualiAgro
+6;Sans bloc;Sans bloc;1291;DSP_Fictif
+7;X;X;1291;DSP_Fictif
+8;Bloc 1;Bloc 1;1299;La Bouzule
+9;Bloc 2;Bloc 2;1299;La Bouzule
+10;Bloc 3;Bloc 3;1299;La Bouzule
+11;Bloc 4;Bloc 4;1299;La Bouzule
+12;X;X;1299;La Bouzule
+13;Bloc 1;Bloc 1;1292;Couhins_Ambares
+14;Bloc 2;Bloc 2;1292;Couhins_Ambares
+15;Bloc 3;Bloc 3;1292;Couhins_Ambares
+16;Bloc 4;Bloc 4;1292;Couhins_Ambares
+17;Bloc 5;Bloc 5;1292;Couhins_Ambares
+18;X;X;1292;Couhins_Ambares
+19;Bloc 1;Bloc 1;1293;Couhins_Louis Fargue
+20;Bloc 2;Bloc 2;1293;Couhins_Louis Fargue
+21;Bloc 3;Bloc 3;1293;Couhins_Louis Fargue
+22;Bloc 4;Bloc 4;1293;Couhins_Louis Fargue
+23;Bloc 5;Bloc 5;1293;Couhins_Louis Fargue
+24;X;X;1293;Couhins_Louis Fargue
+25;Bloc 1;Bloc 1;1294;Couhins_Saint Denis de Pile
+26;Bloc 2;Bloc 2;1294;Couhins_Saint Denis de Pile
+27;Bloc 3;Bloc 3;1294;Couhins_Saint Denis de Pile
+28;Bloc 4;Bloc 4;1294;Couhins_Saint Denis de Pile
+29;X;X;1294;Couhins_Saint Denis de Pile
+30;Bloc 1;Bloc 1;1297;EFELE_essai_PROs
+31;Bloc 2;Bloc 2;1297;EFELE_essai_PROs
+32;Bloc 3;Bloc 3;1297;EFELE_essai_PROs
+33;Bloc 4;Bloc 4;1297;EFELE_essai_PROs
+34;X;X;1297;EFELE_essai_PROs
+35;Bloc 1;Bloc 1;1296;EFELE_essai_TS_MO
+36;Bloc 2;Bloc 2;1296;EFELE_essai_TS_MO
+37;Bloc 3;Bloc 3;1296;EFELE_essai_TS_MO
+38;X;X;1296;EFELE_essai_TS_MO
+39;Bloc 1;Bloc 1;1298;PROspective
+40;Bloc 2;Bloc 2;1298;PROspective
+41;Bloc 3;Bloc 3;1298;PROspective
+42;Bloc 4;Bloc 4;1298;PROspective
+43;Bloc 5;Bloc 5;1298;PROspective
+44;X;X;1298;PROspective
+45;Bloc 1;Bloc 1;1295;SOEREPRO_la Reunion
+46;Bloc 2;Bloc 2;1295;SOEREPRO_la Reunion
+47;Bloc 3;Bloc 3;1295;SOEREPRO_la Reunion
+48;Bloc 4;Bloc 4;1295;SOEREPRO_la Reunion
+49;Bloc 5;Bloc 5;1295;SOEREPRO_la Reunion
+50;Sans Bloc;Sans bloc;1295;SOEREPRO_la Reunion
+51;Sans bloc;Sans bloc;1298;PROspective
+52;Sans bloc;Sans bloc;1295;SOEREPRO_la Reunion
+53;Sans bloc;Sans bloc;1288;QualiAgro
+54;Sans bloc;Sans bloc;1299;La Bouzule
+55;Sans bloc;Sans bloc;1292;Couhins_Ambares
+56;Sans bloc;Sans bloc;1293;Couhins_Louis Fargue
+57;Sans bloc;Sans bloc;1294;Couhins_Saint Denis de Pile
+58;Sans bloc;Sans bloc;1297;EFELE_essai_PROs
+59;Sans bloc;Sans bloc;1296;EFELE_essai_TS_MO
+60;Sans;Sans bloc;181507;SOEREPRO site de Dakar

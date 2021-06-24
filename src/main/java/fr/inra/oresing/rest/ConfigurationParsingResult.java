@@ -184,5 +184,13 @@ public class ConfigurationParsingResult {
                     "components", components
             ));
         }
+
+        public Builder recordInvalidKeyColumns(String reference, Set<String> unknownUsedAsKeyElementColumns, Set<String> knownColumns) {
+            return recordError("invalidKeyColumns", ImmutableMap.of(
+                    "reference", reference,
+                    "unknownUsedAsKeyElementColumns", unknownUsedAsKeyElementColumns,
+                    "knownColumns", knownColumns
+            ));
+        }
     }
 }

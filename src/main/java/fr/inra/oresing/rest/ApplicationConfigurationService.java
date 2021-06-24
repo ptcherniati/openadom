@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -82,6 +83,19 @@ public class ApplicationConfigurationService {
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
         Set<String> references = configuration.getReferences().keySet();
+
+        for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
+            String reference = referenceEntry.getKey();
+            Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+            List<String> keyColumns = referenceDescription.getKeyColumns();
+            Set<String> columns = referenceDescription.getColumns().keySet();
+            ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
+            ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
+            if (!unknownUsedAsKeyElementColumns.isEmpty()) {
+                builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+            }
+        }
+
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();

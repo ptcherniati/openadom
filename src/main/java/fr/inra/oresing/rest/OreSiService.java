@@ -479,6 +479,7 @@ public class OreSiService {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
 //            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
             List<UUID> refsLinkedTo = new ArrayList<>();
+            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
@@ -490,9 +491,14 @@ public class OreSiService {
                         }
                     }
                 } else {
-                    errors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
+                    rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
                 }
             });
+
+            if (!rowErrors.isEmpty()) {
+                errors.addAll(rowErrors);
+                return Stream.empty();
+            }
 
             String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
@@ -500,6 +506,7 @@ public class OreSiService {
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
                 String requiredAuthorization = values.get(variableComponentKey);
+                checkHierarchicalKeySyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
             });
 
@@ -769,7 +776,7 @@ public class OreSiService {
      * build a csvParser from file
      *
      * @param file
-     * @param formatDesc
+     * @param formatDescription
      * ription
      * @return
      * @throws IOException
