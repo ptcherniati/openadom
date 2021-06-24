@@ -1,5 +1,6 @@
 package fr.inra.oresing.groovy;
 
+import com.google.common.base.MoreObjects;
 import fr.inra.oresing.OreSiTechnicalException;
 
 import java.util.Map;
@@ -24,5 +25,12 @@ public class BooleanGroovyExpression implements Expression<Boolean> {
         } else {
             throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + expression + ", donnée = " + context);
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("expression", expression)
+                .toString();
     }
 }

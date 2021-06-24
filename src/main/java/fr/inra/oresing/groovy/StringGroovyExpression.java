@@ -1,5 +1,6 @@
 package fr.inra.oresing.groovy;
 
+import com.google.common.base.MoreObjects;
 import fr.inra.oresing.OreSiTechnicalException;
 
 import java.util.Map;
@@ -26,5 +27,12 @@ public class StringGroovyExpression implements Expression<String> {
         } else {
             throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur de type chaîne de caractères mais " + evaluation + ". Expression = " + expression + ", donnée = " + context);
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("expression", expression)
+                .toString();
     }
 }

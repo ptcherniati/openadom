@@ -144,7 +144,7 @@ dataTypes:
               params:
                 refType: valeurs_qualitatives
           unit:
-            defaultValue: "sans_unite"
+            defaultValue: "return \"sans_unite\""
             checker:
               name: Reference
               params:
@@ -152,11 +152,11 @@ dataTypes:
       Nombre d'individus:
         components:
           value:
-            defaultValue: "0"
+            defaultValue: "return 0"
             checker:
               name: Integer
           unit:
-            defaultValue: "sans_unite"
+            defaultValue: "return \"sans_unite\""
             checker:
               name: Reference
               params:
