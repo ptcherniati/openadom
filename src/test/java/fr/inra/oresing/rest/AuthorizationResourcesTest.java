@@ -88,7 +88,7 @@ public class AuthorizationResourcesTest {
                     .cookie(authCookie)
                     .content(json);
             String response = mockMvc.perform(create)
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
