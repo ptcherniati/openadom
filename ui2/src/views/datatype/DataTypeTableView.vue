@@ -5,13 +5,10 @@
     <h1 class="title main-title">{{ dataTypeId }}</h1>
 
     <div class="b-table">
-      <div
-        class="DataSetTableView-wrapper table-wrapper has-mobile-cards has-sticky-header"
-        style="height: 100%"
-      >
+      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 700px">
         <table class="table is-striped">
           <thead>
-            <tr>
+            <tr class="DataSetTableView-variable-row">
               <th
                 v-for="variable in variables"
                 :key="variable.id"
@@ -132,5 +129,14 @@ export default class DataTypeTableView extends Vue {
 <style lang="scss" scoped>
 .DataSetTableView-wrapper {
   margin-bottom: 1.5rem;
+
+  &.table-wrapper.has-sticky-header {
+    th {
+      position: sticky;
+      top: 114px;
+      z-index: 2;
+      background: white;
+    }
+  }
 }
 </style>
