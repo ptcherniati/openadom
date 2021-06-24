@@ -80,6 +80,15 @@ public class SqlService {
         execute(createPolicySql);
     }
 
+    public void dropPolicy(SqlPolicy sqlPolicy) {
+        String createPolicySql = String.format(
+                "DROP POLICY %s ON %s",
+                sqlPolicy.getSqlIdentifier(),
+                sqlPolicy.getTable().getSqlIdentifier()
+        );
+        execute(createPolicySql);
+    }
+
     public void createRole(OreSiRoleManagedByApplication roleManagedByApplication) {
         String sql = "CREATE ROLE " + roleManagedByApplication.getSqlIdentifier() + "";
         execute(sql);

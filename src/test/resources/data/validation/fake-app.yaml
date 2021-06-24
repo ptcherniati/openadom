@@ -68,9 +68,10 @@ dataTypes:
           label: "Données qualitatives"
           data:
             - Couleur des individus
-      localizationScope:
-        variable: localization
-        component: site
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: site
       timeScope:
         variable: date
         component: day

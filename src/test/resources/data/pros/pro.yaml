@@ -89,9 +89,10 @@ dataTypes:
             - date
             - context
             - prelevement
-      localizationScope:
-        variable: localization
-        component: code dispositif
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: code dispositif
       timeScope:
         variable: date
         component: day
