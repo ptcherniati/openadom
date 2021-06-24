@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.checker.GroovyLineChecker;
+import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
 import lombok.Value;
@@ -153,7 +153,7 @@ public class ConfigurationParsingResult {
             ));
         }
 
-        public Builder recordIllegalGroovyExpression(String lineValidationRuleKey, String expression, GroovyLineChecker.CompilationError compilationError) {
+        public Builder recordIllegalGroovyExpression(String lineValidationRuleKey, String expression, GroovyExpression.CompilationError compilationError) {
             return recordError("illegalGroovyExpression", ImmutableMap.of(
                     "lineValidationRuleKey", lineValidationRuleKey,
                     "expression", expression,

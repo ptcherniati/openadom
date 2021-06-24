@@ -13,6 +13,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -129,7 +130,7 @@ public class ApplicationConfigurationService {
                     if (StringUtils.isBlank(expression)) {
                         builder.recordMissingRequiredExpression(lineValidationRuleKey);
                     } else {
-                        Optional<GroovyLineChecker.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
+                        Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
                         compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(lineValidationRuleKey, expression, compilationError));
                     }
                 } else {
