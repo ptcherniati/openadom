@@ -21,24 +21,19 @@
               </th>
             </tr>
             <tr>
-              <th
-                v-for="(comp, index) in variablesComponents"
-                :key="`${comp.label}-${index}`"
-                colspan="1"
-              >
+              <th v-for="(comp, index) in variableComponents" :key="`${comp.label}-${index}`">
                 {{ comp.label }}
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in rows" :key="row.id"></tr>
-            <tr>
-              <td>Donnée 1.a</td>
-              <td>Donnée 1.b</td>
-            </tr>
-            <tr>
-              <td>Donnée 2.a</td>
-              <td>Donnée 2.b</td>
+            <tr v-for="(row, rowIndex) in rows" :key="`row_${rowIndex}`">
+              <td
+                v-for="(component, index) in variableComponents"
+                :key="`row_${rowIndex}-${index}`"
+              >
+                {{ row[variables[getVariableIndex(index)].id][component.id] }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -71,7 +66,8 @@ export default class DataTypeTableView extends Vue {
   subMenuPaths = [];
   rows = [];
   variables = [];
-  variablesComponents = [];
+  variableComponents = [];
+  mapVariableIndexByColumnIndex = new Map();
 
   async created() {
     await this.init();
@@ -93,13 +89,42 @@ export default class DataTypeTableView extends Vue {
   async init() {
     this.application = await this.applicationService.getApplication(this.applicationName);
     const dataTypes = await this.dataService.getDataType(this.applicationName, this.dataTypeId);
+
     this.rows = dataTypes.rows.map((r) => {
-      return r.values;
+      return { ...r.values };
     });
+
     const variablesModels = this.application.dataTypes[this.dataTypeId].variables;
     this.variables = dataTypes.variables.map((v) => variablesModels[v]);
-    this.variablesComponents = this.variables.map((v) => Object.values(v.components)).flat();
-    console.log(this.rows);
+    this.variableComponents = this.variables
+      .map((v) => {
+        return Object.values(v.components);
+      })
+      .flat();
+
+    let columnIndex = 0;
+    this.variables.forEach((variable, variableIndex) => {
+      Object.values(variable.components).forEach(() => {
+        let columnIndexes = this.mapVariableIndexByColumnIndex.get(variableIndex);
+        if (!columnIndexes) {
+          columnIndexes = [];
+        }
+        columnIndexes.push(columnIndex);
+        this.mapVariableIndexByColumnIndex.set(variableIndex, columnIndexes);
+        columnIndex++;
+      });
+    });
+  }
+
+  getVariableIndex(columnIndex) {
+    let variableIndex = 0;
+    for (const [key, value] of this.mapVariableIndexByColumnIndex) {
+      if (value.some((v) => v === columnIndex)) {
+        variableIndex = key;
+        break;
+      }
+    }
+    return variableIndex;
   }
 }
 </script>
