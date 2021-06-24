@@ -58,13 +58,12 @@ public class RelationalServiceTest {
     public void createApplication() throws Exception {
         fixtures.addMonsoreApplication();
         fixtures.addApplicationAcbb();
-        fixtures.addApplicationPRO();
     }
 
     @Test
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
-        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.PRO);
+        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE,Fixtures.Application.ACBB);
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.createViews(applicationName, ViewStrategy.VIEW);
@@ -93,12 +92,6 @@ public class RelationalServiceTest {
         {
 //            request.setRequestClient(applicationCreatorRequestClient);
             List<Map<String, Object>> viewContent = relationalService.readView("acbb", "SWC", ViewStrategy.VIEW);
-            Assert.assertEquals(1456, viewContent.size());
-        }
-
-
-        {
-            List<Map<String, Object>> viewContent = relationalService.readView("pro", "EFELE_TS_MO_plante", ViewStrategy.VIEW);
             Assert.assertEquals(1456, viewContent.size());
         }
 

@@ -38,7 +38,7 @@ public class Fixtures {
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
-        PRO("pro", ImmutableSet.of("EfeleEssaiTsMo")),
+        PRO("pro", ImmutableSet.of("donnees_prelevement_pro")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -367,13 +367,7 @@ public class Fixtures {
         return authCookie;
     }
 
-
     public String getdPrelevementProDataResourceName() {
         return "/data/pros/donnees_prelevement_pro.csv";
-    }
-
-
-    public String getEfeleTsMoPlanteDataResourceName() {
-        return "/data/pros/EFELE_TS_MO_plante.csv";
     }
 }
