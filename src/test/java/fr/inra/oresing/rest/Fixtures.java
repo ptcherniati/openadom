@@ -38,7 +38,7 @@ public class Fixtures {
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
-        PRO("pro", ImmutableSet.of("donnees_prelevement_pro")),
+        PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -356,7 +356,7 @@ public class Fixtures {
         }
 
         // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
+        try (InputStream in = getClass().getResourceAsStream(getdPrelevementProDataResourceName())) {
             MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
                     .file(file)
