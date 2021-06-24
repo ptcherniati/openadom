@@ -14,7 +14,7 @@ compositeReferences:
         parentKeyColumn: parcelle_key
 references:
   dispositifs:
-    keyColumns: [dispositif_key]
+    keyColumns: [code,nom du lieu]
     columns:
       dispositif_key:
       annee debut:
@@ -32,7 +32,7 @@ references:
       latitude:
       logitude:
   blocs:
-    keyColumns: [bloc_key, dispositif_key ]
+    keyColumns: [nom du bloc]
     columns:
       bloc_key:
       nom du bloc:
@@ -40,7 +40,7 @@ references:
       dispositif_key:
       nom du dispositif:
   parcelles_elementaires:
-    keyColumns: [parcelle_key, bloc_key, dispositif_key]
+    keyColumns: [code de la parcelle]
     columns:
       mycode:
       nom de la parcelle:
@@ -53,7 +53,7 @@ references:
       longitude:
       latitude:
   placettes:
-    keyColumns: [parcelle_key, placette_key]
+    keyColumns: [code placette]
     columns:
       placette_key:
       année debut:
@@ -66,7 +66,7 @@ references:
       parcelle_key:
       nom parcelle:
   traitements:
-    keyColumns: [parcelle_key ,traitement parcelle_key]
+    keyColumns: [traitement parcelle_key]
     columns:
       traitement parcelle_key:
       année début:
@@ -75,6 +75,7 @@ references:
       nom parcelle:
       modalité:
       description du traitement:
+      code traitement:
       code unique:
       répétition traitement:
 dataTypes:
@@ -111,20 +112,8 @@ dataTypes:
               params:
                 refType: dispositifs
           nom bloc:
-            checker:
-              name: Reference
-              params:
-                refType: blocs
           nom parcelle elementaire:
-            checker:
-              name: Reference
-              params:
-                refType: parcelles_elementaires
           nom placette:
-            checker:
-              name: Reference
-              params:
-                refType: placettes
       prelevement:
         components:
           endroit prelevement:
@@ -137,10 +126,6 @@ dataTypes:
         components:
           produit:
           traitement:
-            checker:
-              name: Reference
-              params:
-                refType: traitements
     format:
       headerLine: 1
       firstRowLine: 2
