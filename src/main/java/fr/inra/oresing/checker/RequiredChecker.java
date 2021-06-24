@@ -3,6 +3,7 @@ package fr.inra.oresing.checker;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import org.assertj.core.util.Strings;
 
 public class RequiredChecker implements ILineCheckerDecorator{
     public static final String PARAMS_REQUIRED = "required";
@@ -16,7 +17,7 @@ public class RequiredChecker implements ILineCheckerDecorator{
     boolean required = false;
     @Override
     public ValidationCheckResult check(String value) {
-        if(value==null){
+        if(Strings.isNullOrEmpty(value)){
             if(!required){
                 return DefaultValidationCheckResult.success();
             }

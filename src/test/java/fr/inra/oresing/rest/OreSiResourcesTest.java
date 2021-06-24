@@ -463,7 +463,7 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
             Assert.assertTrue(actualCsv.contains("Parcelle"));
-            Assert.assertTrue(actualCsv.contains("laqueuille.laqueuille__1"));
+            Assert.assertTrue(actualCsv.contains("laqueuille;1"));
         }
 
         // ajout de data

@@ -102,6 +102,7 @@ public class Fixtures {
         referentielFiles.put("agroecosystemes", "/data/acbb/agroecosysteme.csv");
         referentielFiles.put("sites", "/data/acbb/sites.csv");
         referentielFiles.put("parcelles", "/data/acbb/parcelle.csv");
+        referentielFiles.put("unites", "/data/acbb/unites.csv");
         return referentielFiles;
     }
 

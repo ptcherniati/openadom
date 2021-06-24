@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,7 +85,10 @@ public class CheckerFactory {
                         throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
                     }
                     Preconditions.checkState(variableComponentChecker.getVariableComponentKey().equals(variableComponentKey));
-                    boolean hasRequiredParam = checkerDescription.getParams().containsKey(RequiredChecker.PARAMS_REQUIRED);
+                    boolean hasRequiredParam = Optional.ofNullable(checkerDescription)
+                            .map(cd->cd.getParams())
+                            .filter(p->p.containsKey(RequiredChecker.PARAMS_REQUIRED))
+                            .isPresent();
                     if(hasRequiredParam){
                         String requiredString = checkerDescription.getParams().get(RequiredChecker.PARAMS_REQUIRED);
                         if(requiredString==null || "true".equalsIgnoreCase(requiredString)){
