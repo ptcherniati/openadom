@@ -127,16 +127,23 @@ export default class DataTypeTableView extends Vue {
 </script>
 
 <style lang="scss" scoped>
+$row-variable-height: 60px;
+
 .DataSetTableView-wrapper {
   margin-bottom: 1.5rem;
 
   &.table-wrapper.has-sticky-header {
     th {
       position: sticky;
-      top: 114px;
+      top: $row-variable-height;
       z-index: 2;
       background: white;
+      white-space: nowrap;
     }
   }
+}
+
+.DataSetTableView-variable-row {
+  height: $row-variable-height;
 }
 </style>
