@@ -1,0 +1,230 @@
+version: 0
+application:
+  name: olac
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: typeSites
+      - parentKeyColumn: nom du type de site
+        reference: sites
+      - parentKeyColumn: nom du site
+        reference: plateformes
+  plateforme:
+    components:
+      - reference: typePlateformes
+      - reference: plateformes
+        parentKeyColumn: nom du type de plateforme
+references:
+  projets:
+    keyColumns: [nom du projet_key]
+    columns:
+      nom du projet_key:
+      nom du projet_fr:
+      nom du projet_en:
+      description du projet_fr:
+      description du projet_en:
+  typeSites:
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      contexte:
+      description_fr:
+      description_en:
+  sites:
+    keyColumns: [nom du site_key]
+    columns:
+      nom du type de site:
+      nom du site_key:
+      nom du site_fr:
+      nom du site_en:
+      description du site_fr:
+      description du site_en:
+      code sandre:
+      code sandre du contexte:
+  typePlateformes:
+    keyColumns: [nom du type de plateforme_key]
+    columns:
+      nom du type de plateforme_key:
+      nom du type de plateforme_fr:
+      nom du type de plateforme_en:
+      description_fr:
+      description_en:
+      code sandre:
+      code sandre du contexte:
+  plateformes:
+    keyColumns: [nom de la plateforme_key]
+    columns:
+      nom de la plateforme_key:
+      nom du site:
+      nom de la plateforme_fr:
+      nom de la plateforme_en:
+      latitude:
+      longitude:
+      altitude:
+      nom du type de plateforme:
+      code sandre:
+      code sandre du contexte:
+  valeurs_qualitatives:
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      valeur_key:
+      valeur_fr:
+      valeur_en:
+dataTypes:
+  condition_prelevement:
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: hh:mm:ss
+      projet:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      site:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+          nom de la plateforme:
+      valeurs qualitatives:
+        components:
+          couleur de l'eau:
+          direction du vent:
+          ensoleillement:
+          temps:
+          aspect de l'eau:
+          etat de surface:
+          nebulosite:
+          vitesse du vent:
+      valeurs quantitatives:
+        components:
+          pression atmospherique:
+          temperature de l'air:
+          transparence par disque inra:
+          transparence par secchi:
+      commentaire:
+        components:
+          value:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - date
+            - projet
+            - site
+            - commentaire
+        qualitatif:
+          label: "Données qualitatives"
+          data:
+            - valeurs qualitatives
+        quantitatif:
+          label: "Données quantitatives"
+          data:
+            - valeurs quantitatives
+      authorizationScopes:
+        localization_site:
+          variable: localization
+          component: nom du site
+        localization_projet:
+          variable: localization
+          component: projet
+      timeScope:
+        variable: date
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projet
+            component: value
+        - header: "nom du site"
+          boundTo:
+            variable: site
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: site
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: date
+            component: day
+        - header: "heure de prélèvement"
+          boundTo:
+            variable: date
+            component: time
+        - header: "commentaire"
+          boundTo:
+            variable: commentaire
+            component: value
+        - header: "aspect de l'eau"
+          boundTo:
+            variable: valeurs qualitatives
+            component: aspect de l'eau
+        - header: "couleur de l'eau"
+          boundTo:
+            variable: valeurs qualitatives
+            component: couleur de l'eau
+        - header: "direction du vent"
+          boundTo:
+            variable: valeurs qualitatives
+            component: direction du vent
+        - header: "ensoleillement"
+          boundTo:
+            variable: valeurs qualitatives
+            component: ensoleillement
+        - header: "etat de surface"
+          boundTo:
+            variable: valeurs qualitatives
+            component: etat de surface
+        - header: "nebulosite"
+          boundTo:
+            variable: valeurs qualitatives
+            component: nebulosite
+        - header: "pression atmospherique (mbar)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: pression atmospherique
+        - header: "temperature de l'air (°c)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: temperature de l'air
+        - header: "temps"
+          boundTo:
+            variable: valeurs qualitatives
+            component: temps
+        - header: "transparence par disque inra (m)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: transparence par disque inra
+        - header: "transparence par secchi 20 cm (m)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: transparence par secchi
+        - header: "vitesse du vent"
+          boundTo:
+            variable: valeurs qualitatives
+            component: vitesse du vent

@@ -1,0 +1,143 @@
+nom_key;nom_en;nom_fr;valeur_key;valeur_fr;valeur_en
+ensoleillement;sunshine;ensoleillement;ensoleille;ensoleille;sunny
+ensoleillement;sunshine;ensoleillement;ombre;ombre;shadow
+temps;weather;temps;clair;clair;clear
+temps;weather;temps;brume;brume;mist
+temps;weather;temps;brouillard;brouillard;fog
+temps;weather;temps;pluie;pluie;rain
+temps;weather;temps;neige;neige;snow
+temps;weather;temps;grele;grele;hail
+direction du vent;wind direction;direction du vent;N;N;N
+direction du vent;wind direction;direction du vent;E;E;E
+direction du vent;wind direction;direction du vent;NE;NE;NE
+direction du vent;wind direction;direction du vent;SE;SE;SE
+direction du vent;wind direction;direction du vent;S;S;S
+direction du vent;wind direction;direction du vent;SW;SW;SW
+direction du vent;wind direction;direction du vent;W;W;W
+direction du vent;wind direction;direction du vent;NW;NW;NW
+aspect de l'eau;water aspect;aspect de l'eau;plat;plat;even
+aspect de l'eau;water aspect;aspect de l'eau;friselis;friselis;rustling
+aspect de l'eau;water aspect;aspect de l'eau;vaguelettes;vaguelettes;wavelets
+aspect de l'eau;water aspect;aspect de l'eau;petites vagues;petites vagues;small waves
+aspect de l'eau;water aspect;aspect de l'eau;vagues plates;vagues plates;flat waves
+aspect de l'eau;water aspect;aspect de l'eau;vagues deferlantes;vagues deferlantes;surf
+aspect de l'eau;water aspect;aspect de l'eau;houle courte;houle courte;short swell
+aspect de l'eau;water aspect;aspect de l'eau;houle longue;houle longue;long swell
+etat de surface;surface condition;etat de surface;propre;propre;clean
+etat de surface;surface condition;etat de surface;branches;branches;branches
+etat de surface;surface condition;etat de surface;feuilles;feuilles;leaves
+etat de surface;surface condition;etat de surface;pollen;pollen;pollen
+etat de surface;surface condition;etat de surface;perchettes mortes;perchettes mortes;dead small perchs
+etat de surface;surface condition;etat de surface;amas d'algues;amas d'algues;clumps of algae
+etat de surface;surface condition;etat de surface;eau d'egout divers;eau d'egout divers;sewage water
+etat de surface;surface condition;etat de surface;hydrocarbure;hydrocarbure;hydrocarbon
+couleur de l'eau;water color;couleur de l'eau;bleu;bleu;blue
+couleur de l'eau;water color;couleur de l'eau;bleu-bleu;bleu-bleu;blue-blue
+couleur de l'eau;water color;couleur de l'eau;bleu-brun;bleu-brun;blue-brown
+couleur de l'eau;water color;couleur de l'eau;bleu-gris;bleu-gris;blue-gray
+couleur de l'eau;water color;couleur de l'eau;bleu-jaune;bleu-jaune;Blue-yellow
+couleur de l'eau;water color;couleur de l'eau;bleu-rouge;bleu-rouge;Blue-red
+couleur de l'eau;water color;couleur de l'eau;bleu-vert;bleu-vert;Blue-green
+couleur de l'eau;water color;couleur de l'eau;brun;brun;brown
+couleur de l'eau;water color;couleur de l'eau;brun-bleu;brun-bleu;Brown-blue
+couleur de l'eau;water color;couleur de l'eau;brun-brun;brun-brun;Brown-brown
+couleur de l'eau;water color;couleur de l'eau;brun-gris;brun-gris;Brown-gray
+couleur de l'eau;water color;couleur de l'eau;brun-jaune;brun-jaune;Brown-yellow
+couleur de l'eau;water color;couleur de l'eau;brun-rouge;brun-rouge;Brown-red
+couleur de l'eau;water color;couleur de l'eau;brun-vert;brun-vert;Brown-green
+couleur de l'eau;water color;couleur de l'eau;gris;gris;gray
+couleur de l'eau;water color;couleur de l'eau;gris-bleu;gris-bleu;Gray-blue
+couleur de l'eau;water color;couleur de l'eau;gris-brun;gris-brun;Gray-brown
+couleur de l'eau;water color;couleur de l'eau;gris-gris;gris-gris;Gray-gray
+couleur de l'eau;water color;couleur de l'eau;gris-jaune;gris-jaune;Gray-yellow
+couleur de l'eau;water color;couleur de l'eau;gris-rouge;gris-rouge;Gray-red
+couleur de l'eau;water color;couleur de l'eau;gris-vert;gris-vert;Gray-green
+couleur de l'eau;water color;couleur de l'eau;jaune;jaune;yellow
+couleur de l'eau;water color;couleur de l'eau;jaune-bleu;jaune-bleu;Yellow-blue
+couleur de l'eau;water color;couleur de l'eau;jaune-brun;jaune-brun;Yellow-brown
+couleur de l'eau;water color;couleur de l'eau;jaune-gris;jaune-gris;Yellow-gray
+couleur de l'eau;water color;couleur de l'eau;jaune-jaune;jaune-jaune;Yellow-yellow
+couleur de l'eau;water color;couleur de l'eau;jaune-rouge;jaune-rouge;Yellow-red
+couleur de l'eau;water color;couleur de l'eau;jaune-vert;jaune-vert;Yellow-green
+couleur de l'eau;water color;couleur de l'eau;rouge;rouge;red
+couleur de l'eau;water color;couleur de l'eau;rouge-bleu;rouge-bleu;Red-blue
+couleur de l'eau;water color;couleur de l'eau;rouge-brun;rouge-brun;Red-brown
+couleur de l'eau;water color;couleur de l'eau;rouge-gris;rouge-gris;Red-gray
+couleur de l'eau;water color;couleur de l'eau;rouge-jaune;rouge-jaune;Red-yellow
+couleur de l'eau;water color;couleur de l'eau;rouge-rouge;rouge-rouge;Red-red
+couleur de l'eau;water color;couleur de l'eau;rouge-vert;rouge-vert;Red-green
+couleur de l'eau;water color;couleur de l'eau;vert;vert;green
+couleur de l'eau;water color;couleur de l'eau;vert-bleu;vert-bleu;Green-blue
+couleur de l'eau;water color;couleur de l'eau;vert-brun;vert-brun;Green-brown
+couleur de l'eau;water color;couleur de l'eau;vert-gris;vert-gris;Green-gray
+couleur de l'eau;water color;couleur de l'eau;vert-jaune;vert-jaune;Green-yellow
+couleur de l'eau;water color;couleur de l'eau;vert-rouge;vert-rouge;Green-red
+couleur de l'eau;water color;couleur de l'eau;vert-vert;vert-vert;Green-green
+nebulosite;nebulosity;nebulosite;0;0;0
+nebulosite;nebulosity;nebulosite;1;1;1
+nebulosite;nebulosity;nebulosite;2;2;2
+nebulosite;nebulosity;nebulosite;3;3;3
+nebulosite;nebulosity;nebulosite;4;4;4
+nebulosite;nebulosity;nebulosite;5;5;5
+nebulosite;nebulosity;nebulosite;6;6;6
+nebulosite;nebulosity;nebulosite;7;7;7
+nebulosite;nebulosity;nebulosite;8;8;8
+nebulosite;nebulosity;nebulosite;9;9;9
+nebulosite;nebulosity;nebulosite;10;10;10
+vitesse du vent;wind speed;vitesse du vent;0;0;0
+vitesse du vent;wind speed;vitesse du vent;1;1;1
+vitesse du vent;wind speed;vitesse du vent;2;2;2
+vitesse du vent;wind speed;vitesse du vent;3;3;3
+vitesse du vent;wind speed;vitesse du vent;4;4;4
+vitesse du vent;wind speed;vitesse du vent;5;5;5
+vitesse du vent;wind speed;vitesse du vent;6;6;6
+vitesse du vent;wind speed;vitesse du vent;7;7;7
+vitesse du vent;wind speed;vitesse du vent;8;8;8
+vitesse du vent;wind speed;vitesse du vent;9;9;9
+vitesse du vent;wind speed;vitesse du vent;10;10;10
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Chlorophycées;Chlorophycées;Chlorophyceae
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Chrysophycées;Chrysophycées;Chrysophyceae
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Cryptophycées;Cryptophycées;Cryptophyceae
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Cyanobactéries;Cyanobactéries;Cyanobacteria
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Diatomées;Diatomées;Diatoms
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Dinophycées;Dinophycées;Dinophyceae
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Euglenophycées;Euglenophycées;Euglenophyceae
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Indéterminées;Indéterminées;Indeterminated
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Xantophycées;Xantophycées;Xantophyceae
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Non algue;Non algue;Not seaweed
+classe algale sensu bourrelly;algal class sensu bourrelly;classe algale sensu bourrelly;Zygophycées;Zygophycées;Zygophyceae
+unité de comptage du taxon;taxon count unit;unité de comptage du taxon;bille;bille;ball
+unité de comptage du taxon;taxon count unit;unité de comptage du taxon;cellule;cellule;cell
+unité de comptage du taxon;taxon count unit;unité de comptage du taxon;colonie;colonie;colony
+unité de comptage du taxon;taxon count unit;unité de comptage du taxon;filament;filament;filament
+unité de comptage du taxon;taxon count unit;unité de comptage du taxon;grain de pollen;grain de pollen;pollen grain
+Erreur sur le biovolume;Biovolume error;Erreur sur le biovolume;ok;ok;ok
+Erreur sur le biovolume;Biovolume error;Erreur sur le biovolume;erreur;erreur;error
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;tub;tub;tub
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;sphe;sphe;sphe
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;ell;ell;ell
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;trel;trel;trel
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;doco;doco;doco
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;con;con;con
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;prisme;prisme;prisme
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;box;box;box
+Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;rhp;rhp;rhp
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;tub;tub;tub
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;sphe;sphe;sphe
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;ell;ell;ell
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;trel;trel;trel
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;doco;doco;doco
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;con;con;con
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;prisme;prisme;prisme
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;box;box;box
+Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;rhp;rhp;rhp
+type_outil;tool_type;type_outil;prélèvement;prélèvement;sampling
+type_outil;tool_type;type_outil;mesure;mesure;measure
+direction du vent;wind direction;direction du vent;variable;variable;changing
+ensoleillement;sunshine;ensoleillement;soleil voile;soleil voile;obscured sun
+temps;weather;temps;nuageux;nuageux;cloudy
+temps;weather;temps;tres nuageux;tres nuageux;very cloudy
+vitesse du vent;wind speed;vitesse du vent;11;11;11
+vitesse du vent;wind speed;vitesse du vent;12;12;12
+temps;weather;temps;soleil et nuage;soleil et nuage;sun and cloud
+temps;weather;temps;soleil;soleil;sunny

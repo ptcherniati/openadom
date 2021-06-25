@@ -1,0 +1,86 @@
+nom du projet;nom du site;commanditaire du projet;date de début;date de fin;commentaire de projet
+Suivi des rivières;Dranse;SOERE  - CIPEL;01/01/1970;;Données chimie sur la dranse
+Suivi des lacs;Annecy;SOERE - SILA;01/01/1967;;Deux points suivis sur grand lac et petit lac. Données sporadiques avant 1967 puis arrêt des suivis de 1981 à 1991
+Suivi des lacs;Léman;SOERE  - CIPEL;01/01/1957;;Suivi du Léman avce de plus en plus de paramètres suivis au cours du temps
+Suivi des lacs;Bourget;SOERE - CISALB;01/01/2003;;Suivi par le carrtel depuis 2003, mais il existe des données dans la base transmises par le cisalb qui sont antérieures
+DCE;Annecy;SILA;01/01/2011;;4 suivis par an spécifiques pour la chimie et le phytoplancton. Les données sondes sont celles des suivis à long terme des lacs.
+DCE;Bourget;CISALB;01/01/2011;;4 suivis par an spécifiques pour la chimie et le phytoplancton. Les données sondes sont celles des suivis à long terme des lacs.
+DCE;Léman;;;;
+Suivi des lacs sentinelles;Brévent;réseau Lacs sentinelles;01/09/2014;;Des données dans la base antérieures correspondant aux suivis  réalisés par Asters/INRA
+Suivi des lacs sentinelles;Cornu;réseau Lacs sentinelles;01/09/2014;;Des données dans la base antérieures correspondant aux suivis  réalisés par Asters/INRA
+Suivi des lacs sentinelles;Jovet;réseau Lacs sentinelles;01/09/2014;;Des données dans la base antérieures correspondant aux suivis  réalisés par Asters/INRA
+Suivi des lacs sentinelles;Pormenaz;réseau Lacs sentinelles;01/09/2014;;Des données dans la base antérieures correspondant aux suivis  réalisés par Asters/INRA
+Suivi des lacs sentinelles;Anterne;réseau Lacs sentinelles;01/09/2014;;Des données dans la base antérieures correspondant aux suivis  réalisés par Asters/INRA
+Suivi des lacs sentinelles;Muzelle;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Pisses;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Pétarel;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Merlet Supérieur;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Arpont;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Mont Coua;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Port Bielh;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Oncet;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Isaby;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Cos;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Corne;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Rabuons;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Lauzanier;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Bresses inférieur;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Bresses supérieur;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Pavé;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Malrif;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Blanc du Carro;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Noir du Carro;réseau Lacs sentinelles;01/01/2014;;
+DCE;Aiguebelette;;;;
+Suivi des lacs;Aiguebelette;;;;
+Suivi des rivières;Mercube;CARRTEL;28/12/1992;31/12/2007;Données chimie et débit sur le Mercube
+Suivi des lacs sentinelles;Plan Vianney;réseau Lacs sentinelles;01/01/2014;;
+Suivi des lacs sentinelles;Izourt;réseau Lacs sentinelles;01/01/2018;;
+Suivi des lacs sentinelles;Aumar;réseau Lacs sentinelles;01/01/2018;;
+Suivi des lacs sentinelles;Estany Gros;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Gourg Gaudet;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Arbu;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Port-Bielh;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Aratilles;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Barroude;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Gentau;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Espingo;réseau Lacs sentinelles;01/01/2019;;lac suivi par le laboratoire GEODE de Toulouse
+Suivi des lacs sentinelles;Bramant;réseau Lacs sentinelles;01/01/2019;;lac suivi par CARRTEL
+Suivi des lacs sentinelles;Blanc du Bramant;réseau Lacs sentinelles;01/01/2019;;lac suivi par CARRTEL
+Suivi des lacs;Anterne;;;;
+Suivi des lacs;Aratilles;;;;
+Suivi des lacs;Arbu;;;;
+Suivi des lacs;Arpont;;;;
+Suivi des lacs;Aumar;;;;
+Suivi des lacs;Barroude;;;;
+Suivi des lacs;Blanc du Bramant;;;;
+Suivi des lacs;Blanc du Carro;;;;
+Suivi des lacs;Bramant;;;;
+Suivi des lacs;Bresses inférieur;;;;
+Suivi des lacs;Bresses supérieur;;;;
+Suivi des lacs;Brévent;;;;
+Suivi des lacs;Corne;;;;
+Suivi des lacs;Cornu;;;;
+Suivi des lacs;Cos;;;;
+Suivi des lacs;Espingo;;;;
+Suivi des lacs;Estany Gros;;;;
+Suivi des lacs;Gentau;;;;
+Suivi des lacs;Gourg Gaudet;;;;
+Suivi des lacs;Isaby;;;;
+Suivi des lacs;Izourt;;;;
+Suivi des lacs;Jovet;;;;
+Suivi des lacs;Lauzanier;;;;
+Suivi des lacs;Malrif;;;;
+Suivi des lacs;Merlet Supérieur;;;;
+Suivi des lacs;Mont Coua;;;;
+Suivi des lacs;Muzelle;;;;
+Suivi des lacs;Noir du Carro;;;;
+Suivi des lacs;Oncet;;;;
+Suivi des lacs;Pavé;;;;
+Suivi des lacs;Pétarel;;;;
+Suivi des lacs;Pisses;;;;
+Suivi des lacs;Plan Vianney;;;;
+Suivi des lacs;Pormenaz;;;;
+Suivi des lacs;Port Bielh;;;;
+Suivi des lacs;Port-Bielh;;;;
+Suivi des lacs;Rabuons;;;;
+Suivi des lacs;Dranse;;;;

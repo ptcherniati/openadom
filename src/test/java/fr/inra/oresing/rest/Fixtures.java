@@ -39,6 +39,7 @@ public class Fixtures {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
+        OLAC("olac", ImmutableSet.of("condition_prelevement")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -369,5 +370,59 @@ public class Fixtures {
 
     public String getdPrelevementProDataResourceName() {
         return "/data/pros/donnees_prelevement_pro.csv";
+    }
+
+
+    public Map<String, String> getOlaReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("projets", "/data/olac/projets.csv");
+        referentielFiles.put("typeSites", "/data/olac/types_de_site.csv");
+        referentielFiles.put("sites", "/data/olac/sites.csv");
+        referentielFiles.put("typePlateformes", "/data/olac/types_de_plateforme.csv");
+        referentielFiles.put("plateformes", "/data/olac/plateformes.csv");
+        referentielFiles.put("valeurs_quantitatives", "/data/olac/valeurs_quantitatives.csv");
+        return referentielFiles;
+    }
+
+    public String getOlaApplicationConfigurationResourceName() {
+        return "/data/pros/pro.yaml";
+    }
+
+
+    public Cookie addApplicationOLAC() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().isCreated());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getProReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "condition_prelevement.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevement")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isOk());
+        }
+
+        return authCookie;
+    }
+
+    public String getConditionPrelevementDataResourceName() {
+        return "/data/pros/condition_prelevement.csv";
     }
 }
