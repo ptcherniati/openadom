@@ -35,7 +35,7 @@ create table Data (
     dataGroup TEXT NOT NULL,
     requiredAuthorizations jsonb NOT NULL,
     timeScope tsrange NOT NULL,
-    refsLinkedTo ListEntityRef CHECK(refs_check('${applicationSchema}', application, refsLinkedTo)),
+    refsLinkedTo jsonb,
     dataValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );

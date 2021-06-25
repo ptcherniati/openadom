@@ -20,6 +20,7 @@ import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,27 +186,30 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String dataAfterDataGroupsMergingQuery = repository.getRepository(application).data().getSqlToMergeData(dataType);
             String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
-            for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
-                String referenceType = referenceChecker.getRefType();
-                String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
-
-                String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
-                selectClauseElements.add(quotedViewName + "." + quotedViewIdColumnName);
-                referenceColumnIds.add(quotedViewIdColumnName);
-                fromClauseJoinElements.add("LEFT OUTER JOIN " + quotedViewName + " ON " + dataTableName + ".refsLinkedTo::uuid[] @> ARRAY[" + quotedViewName + "." + quotedViewIdColumnName + "::uuid]");
-            }
-
-            for (VariableComponentKey reference : getReferences(dataTypeDescription)) {
-                String variable = reference.getVariable();
-                String component = reference.getComponent();
+            for (VariableComponentKey variableComponentKey : getVariableComponentKeys(dataTypeDescription)) {
+                String variable = variableComponentKey.getVariable();
+                String component = variableComponentKey.getComponent();
+                String escapedVariableName = StringUtils.replace(variable, "'", "''");
+                String escapedComponentName = StringUtils.replace(component, "'", "''");
                 String selectClauseElement = String.format(
                         "jsonb_extract_path_text(%s.dataValues, '%s', '%s') %s",
                         dataTableName,
-                        StringUtils.replace(variable, "'", "''"),
-                        StringUtils.replace(component, "'", "''"),
-                        getColumnName(reference)
+                        escapedVariableName,
+                        escapedComponentName,
+                        getColumnName(variableComponentKey)
                 );
                 selectClauseElements.add(selectClauseElement);
+
+                if (referenceCheckers.containsKey(variableComponentKey)) {
+                    String selectTechnicalIdClauseElement = String.format(
+                            "jsonb_extract_path_text(%s.refsLinkedTo, '%s', '%s') %s",
+                            dataTableName,
+                            escapedVariableName,
+                            escapedComponentName,
+                            getTechnicalIdColumnName(variableComponentKey)
+                    );
+                    selectClauseElements.add(selectTechnicalIdClauseElement);
+                }
             }
 
             String selectClause = "SELECT " + String.join(", ", selectClauseElements);
@@ -221,7 +225,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
         return views;
     }
 
-    private ImmutableSet<VariableComponentKey> getReferences(Configuration.DataTypeDescription dataTypeDescription) {
+    private ImmutableSet<VariableComponentKey> getVariableComponentKeys(Configuration.DataTypeDescription dataTypeDescription) {
         Set<VariableComponentKey> references = new LinkedHashSet<>();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
@@ -246,19 +250,21 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();  // especes
+                VariableComponentKey variableComponentKey = referenceChecker.getVariableComponentKey();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
-                String quotedViewIdColumnName = quoteSqlIdentifier(referenceType + "_id");
+                String foreignKeyColumnName = getTechnicalIdColumnName(variableComponentKey);
+                String alias = getAliasForColumnName(variableComponentKey);
 
                 application.getConfiguration().getReferences().get(referenceType).getColumns().keySet().stream()
-                        .map(referenceColumn -> quotedViewName + "." + quoteSqlIdentifier(referenceColumn) + " as " + quoteSqlIdentifier(referenceType + "_" + referenceColumn))
+                        .map(referenceColumn -> alias + "." + quoteSqlIdentifier(referenceColumn) + " as " + getColumnName("ref", variableComponentKey.getVariable(), variableComponentKey.getComponent(), referenceColumn))
                         .forEach(selectClauseReferenceElements::add);
-                fromClauseJoinElements.add("left outer join " + quotedViewName + " on " + dataTableName + "." + quotedViewIdColumnName + " = " + quotedViewName + "." + quotedViewIdColumnName);
+                fromClauseJoinElements.add("left outer join " + quotedViewName + " " + alias + " on " + dataTableName + "." + foreignKeyColumnName + "::uuid = " + alias + "." + quoteSqlIdentifier(referenceType + "_id") + "::uuid");
             }
 
             Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
 
-            getReferences(dataTypeDescription).stream()
+            getVariableComponentKeys(dataTypeDescription).stream()
                     .map(this::getColumnName)
                     .map(columnName -> dataTableName + "." + columnName)
                     .forEach(selectClauseElements::add);
@@ -276,8 +282,23 @@ public class RelationalService implements InitializingBean, DisposableBean {
         return views;
     }
 
+    private String getTechnicalIdColumnName(VariableComponentKey variableComponentKey) {
+        return getColumnName(variableComponentKey.getVariable(), variableComponentKey.getComponent(), "technicalId");
+    }
+
+    private String getAliasForColumnName(VariableComponentKey variableComponentKey) {
+        return getColumnName("ref", variableComponentKey.getVariable(), variableComponentKey.getComponent());
+    }
+
     private String getColumnName(VariableComponentKey variableComponentKey) {
-        return "\"" + StringUtils.replace(StringUtils.replace(variableComponentKey.getVariable() + "_" + variableComponentKey.getComponent(), " ", "_"), "'", "_") + "\"";
+        return getColumnName(variableComponentKey.getVariable(), variableComponentKey.getComponent());
+    }
+
+    private String getColumnName(String firstElement, String... otherElements) {
+        String joined = Strings.join(Lists.asList(firstElement, otherElements)).with("_");
+        String escaped = StringUtils.replace(StringUtils.replace(joined, " ", "_"), "'", "_");
+        String quoted = "\"" + escaped + "\"";
+        return quoted;
     }
 
     private List<ViewCreationCommand> getViewsForReferences(SqlSchemaForRelationalViewsForApplication sqlSchema, Application app) {
