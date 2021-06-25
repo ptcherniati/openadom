@@ -62,17 +62,17 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         if (refsLinkedToToAdd.isEmpty()) {
             setRefsLinkedToClause = "";
         } else {
-            setRefsLinkedToClause = ", refsLinkedTo = refsLinkedTo || :refsLinkedToToAdd ";
+            String refsLinkedToToAddAsJson = getJsonRowMapper().toJson(refsLinkedToToAdd);
+            setRefsLinkedToClause = ", refsLinkedTo = refsLinkedTo || '" + refsLinkedToToAddAsJson + "'::jsonb";
         }
-        String json = getJsonRowMapper().toJson(variablesToAdd);
+        String dataValuesAsJson = getJsonRowMapper().toJson(variablesToAdd);
         String sql = " UPDATE " + getTable().getSqlIdentifier()
-                + " SET dataValues = dataValues || '" + json + "'::jsonb"
+                + " SET dataValues = dataValues || '" + dataValuesAsJson + "'::jsonb"
                 + setRefsLinkedToClause
                 + " WHERE application = :applicationId::uuid AND dataType = :dataType AND dataGroup = :dataGroup";
         MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
                 .addValue("dataType", dataType)
-                .addValue("dataGroup", dataGroup)
-                .addValue("refsLinkedToToAdd", refsLinkedToToAdd);
+                .addValue("dataGroup", dataGroup);
         int count = getNamedParameterJdbcTemplate().update(sql, sqlParams);
         return count;
     }
