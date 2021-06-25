@@ -41,7 +41,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public List<DataRow> findAllByDataType(String dataType) {
         String toMergeDataGroupsQuery = getSqlToMergeData(dataType);
         String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
-                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  jsonb_build_object('rowId', rowId, 'values', dataValues) AS json"
+                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  jsonb_build_object('rowId', rowId, 'values', dataValues, 'refsLinkedTo', refsLinkedTo) AS json"
                 + " FROM my_data";
         List result = getNamedParameterJdbcTemplate().query(query, Collections.emptyMap(), getJsonRowMapper());
         return (List<DataRow>) result;
