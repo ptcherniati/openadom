@@ -226,7 +226,7 @@ public class OreSiService {
                         String dataGroup = migration.getDataGroup();
                         String variable = migration.getVariable();
                         Map<String, String> variableValue = new LinkedHashMap<>();
-                        Set<UUID> refsLinkedToToAdd = new LinkedHashSet<>();
+                        Map<String, UUID> refsLinkedToAddForVariable = new LinkedHashMap<>();
                         for (Map.Entry<String, Configuration.AddVariableMigrationDescription> componentEntry : migration.getComponents().entrySet()) {
                             String component = componentEntry.getKey();
                             String componentValue = Optional.ofNullable(componentEntry.getValue())
@@ -238,12 +238,13 @@ public class OreSiService {
                                 ReferenceValidationCheckResult referenceCheckResult = referenceLineChecker.check(componentValue);
                                 Preconditions.checkState(referenceCheckResult.isSuccess(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
                                 UUID referenceId = referenceCheckResult.getReferenceId();
-                                refsLinkedToToAdd.add(referenceId);
+                                refsLinkedToAddForVariable.put(component, referenceId);
                             }
                             variableValue.put(component, componentValue);
                         }
                         Map<String, Map<String, String>> variablesToAdd = Map.of(variable, variableValue);
-                        int migratedCount = dataRepository.migrate(dataType, dataGroup, variablesToAdd, refsLinkedToToAdd);
+                        Map<String, Map<String, UUID>> refsLinkedToAdd = Map.of(variable, refsLinkedToAddForVariable);
+                        int migratedCount = dataRepository.migrate(dataType, dataGroup, variablesToAdd, refsLinkedToAdd);
                         if (log.isInfoEnabled()) {
                             log.info(migratedCount + " lignes migrées");
                         }
@@ -478,17 +479,17 @@ public class OreSiService {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
 //            Preconditions.checkState(line.keySet().containsAll(defaultValues.keySet()), Sets.difference(defaultValues.keySet(), line.keySet()) + " ont des valeur par défaut mais ne sont pas inclus dans la ligne");
-            List<UUID> refsLinkedTo = new ArrayList<>();
+            Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                        UUID referenceId = ((ReferenceValidationCheckResult) validationCheckResult).getReferenceId();
-                        if(!refsLinkedTo.contains(referenceId)){
-                            refsLinkedTo.add(referenceId);
-                        }
+                        ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
+                        VariableComponentKey variableComponentKey = referenceValidationCheckResult.getVariableComponentKey();
+                        UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                        refsLinkedTo.put(variableComponentKey, referenceId);
                     }
                 } else {
                     rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
@@ -521,11 +522,14 @@ public class OreSiService {
                 Map<VariableComponentKey, String> dataGroupValues = Maps.filterKeys(values, includeInDataGroupPredicate);
 
                 Map<String, Map<String, String>> toStore = new LinkedHashMap<>();
+                Map<String, Map<String, UUID>> refsLinkedToToStore = new LinkedHashMap<>();
                 for (Map.Entry<VariableComponentKey, String> entry2 : dataGroupValues.entrySet()) {
-                    String variable = entry2.getKey().getVariable();
-                    String component = entry2.getKey().getComponent();
+                    VariableComponentKey variableComponentKey = entry2.getKey();
+                    String variable = variableComponentKey.getVariable();
+                    String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
+                    refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
                 }
 
                 Data e = new Data();
@@ -534,7 +538,7 @@ public class OreSiService {
                 e.setRowId(rowId);
                 e.setDataGroup(dataGroup);
                 e.setApplication(app.getId());
-                e.setRefsLinkedTo(refsLinkedTo);
+                e.setRefsLinkedTo(refsLinkedToToStore);
                 e.setDataValues(toStore);
                 e.setTimeScope(timeScope);
                 e.setRequiredAuthorizations(requiredAuthorizations);

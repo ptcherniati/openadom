@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -51,14 +50,14 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public String getSqlToMergeData(String dataType) {
         Preconditions.checkArgument(getApplication().getDataType().contains(dataType), "pas de type de données " + dataType + " dans l'application " + getApplication());
         String applicationId = getApplication().getId().toString();
-        String sql = " SELECT rowId, jsonb_object_agg(dataValues) AS dataValues, aggregate_by_array_concatenation(refsLinkedTo) AS refsLinkedTo"
+        String sql = " SELECT rowId, jsonb_object_agg(dataValues) AS dataValues, jsonb_object_agg(refsLinkedTo) AS refsLinkedTo"
                 + " FROM " + getTable().getSqlIdentifier()
                 + " WHERE application = '" + applicationId + "'::uuid AND dataType = '" + dataType + "'"
                 + " GROUP BY rowId";
         return sql;
     }
 
-    public int migrate(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Set<UUID> refsLinkedToToAdd) {
+    public int migrate(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Map<String, Map<String, UUID>> refsLinkedToToAdd) {
         String setRefsLinkedToClause;
         if (refsLinkedToToAdd.isEmpty()) {
             setRefsLinkedToClause = "";
