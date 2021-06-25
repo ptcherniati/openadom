@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest;
 
+import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import javax.servlet.http.Cookie;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -80,12 +81,12 @@ public class AuthorizationResourcesTest {
         {
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
             String response = mockMvc.perform(create)
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
@@ -133,17 +134,45 @@ public class AuthorizationResourcesTest {
                 .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
+        String authorizationId;
+
         {
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"bimont.bim13\",\"projet\":\"sou\"},\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
             String response = mockMvc.perform(create)
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
+
+            authorizationId = JsonPath.parse(response).read("$.authorizationId");
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(json);
+
+            Assert.assertTrue(json.contains("[2016,1,1]"));
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/authorization/")
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(json);
+
+            Assert.assertTrue(json.contains("[2016,1,1]"));
         }
 
         {
@@ -164,6 +193,27 @@ public class AuthorizationResourcesTest {
             // contrôle sur le projet
             Assert.assertFalse(json.contains("rnt"));
             Assert.assertTrue(json.contains("sou"));
+        }
+
+        {
+            String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(json);
+
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
+                    .cookie(authReaderCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            Assert.assertEquals("{\"variables\":[],\"rows\":[]}", json);
         }
     }
 }

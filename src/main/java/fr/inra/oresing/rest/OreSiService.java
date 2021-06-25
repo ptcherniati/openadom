@@ -4,7 +4,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
@@ -16,12 +15,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceValidationCheckResult;
+import fr.inra.oresing.groovy.CommonExpression;
+import fr.inra.oresing.groovy.Expression;
+import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
@@ -152,6 +154,7 @@ public class OreSiService {
         db.createRole(readerOnApplicationRole);
 
         db.createPolicy(new SqlPolicy(
+                String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
@@ -160,6 +163,7 @@ public class OreSiService {
         ));
 
         db.createPolicy(new SqlPolicy(
+                String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
@@ -415,7 +419,7 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
             Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-            ImmutableMap<VariableComponentKey, String> defaultValues = getDefaultValues(dataTypeDescription);
+            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription);
 
             readPreHeader(formatDescription, constantValues, linesIterator);
 
@@ -426,7 +430,7 @@ public class OreSiService {
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValues))
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
 
             repo.getRepository(app).data().storeAll(dataStream);
@@ -473,6 +477,7 @@ public class OreSiService {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
             List<UUID> refsLinkedTo = new ArrayList<>();
+            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
@@ -484,9 +489,14 @@ public class OreSiService {
                         }
                     }
                 } else {
-                    errors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
+                    rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
                 }
             });
+
+            if (!rowErrors.isEmpty()) {
+                errors.addAll(rowErrors);
+                return Stream.empty();
+            }
 
             String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
@@ -494,6 +504,7 @@ public class OreSiService {
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
                 String requiredAuthorization = values.get(variableComponentKey);
+                checkHierarchicalKeySyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
             });
 
@@ -537,8 +548,10 @@ public class OreSiService {
      *
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, String> defaultValues) {
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions) {
         return rowWithData -> {
+            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum());
+            Map<VariableComponentKey, String> defaultValues = Maps.transformValues(defaultValueExpressions, expression -> expression.evaluate(evaluationContext));
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
             rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
             return new RowWithData(rowWithData.getLineNumber(), ImmutableMap.copyOf(rowWithDefaults));
@@ -759,24 +772,34 @@ public class OreSiService {
         Iterators.advance(linesIterator, lineToSkipAfterHeader);
     }
 
-    private ImmutableMap<VariableComponentKey, String> getDefaultValues(Configuration.DataTypeDescription dataTypeDescription) {
-        ImmutableMap.Builder<VariableComponentKey, String> defaultValuesBuilder = ImmutableMap.builder();
+    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription) {
+        ImmutableMap.Builder<VariableComponentKey, Expression<String>> defaultValueExpressionsBuilder = ImmutableMap.builder();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
+                Configuration.VariableComponentDescription componentDescription = componentEntry.getValue();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                String defaultValue;
-                if (componentEntry.getValue() == null) {
-                    defaultValue = null;
+                Expression<String> defaultValueExpression;
+                if (componentDescription == null) {
+                    defaultValueExpression = CommonExpression.EMPTY_STRING;
                 } else {
-                    defaultValue = componentEntry.getValue().getDefaultValue();
+                    String defaultValue = componentDescription.getDefaultValue();
+                    if (StringUtils.isEmpty(defaultValue)) {
+                        defaultValueExpression = CommonExpression.EMPTY_STRING;
+                    } else {
+                        defaultValueExpression = StringGroovyExpression.forExpression(defaultValue);
+                    }
                 }
-                defaultValuesBuilder.put(variableComponentKey, Strings.nullToEmpty(defaultValue));
+                defaultValueExpressionsBuilder.put(variableComponentKey, defaultValueExpression);
             }
         }
-        return defaultValuesBuilder.build();
+        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
+        if (log.isDebugEnabled()) {
+            log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
+        }
+        return defaultValueExpressions;
     }
 
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {

@@ -23,6 +23,7 @@ const ERRORS = {
   unknownCheckerName: (params) => i18n.t("errors.unknownCheckerName", params),
   csvBoundToUnknownVariable: (params) => i18n.t("errors.csvBoundToUnknownVariable", params),
   csvBoundToUnknownVariableComponent: (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  invalidKeyColumns: (params) => i18n.t("errors.invalidKeyColumns", params),
 };
 
 export class ErrorsService {

@@ -13,6 +13,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,6 +83,19 @@ public class ApplicationConfigurationService {
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
         Set<String> references = configuration.getReferences().keySet();
+
+        for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
+            String reference = referenceEntry.getKey();
+            Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+            List<String> keyColumns = referenceDescription.getKeyColumns();
+            Set<String> columns = referenceDescription.getColumns().keySet();
+            ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
+            ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
+            if (!unknownUsedAsKeyElementColumns.isEmpty()) {
+                builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+            }
+        }
+
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
@@ -115,7 +130,7 @@ public class ApplicationConfigurationService {
                     if (StringUtils.isBlank(expression)) {
                         builder.recordMissingRequiredExpression(lineValidationRuleKey);
                     } else {
-                        Optional<GroovyLineChecker.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
+                        Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
                         compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(lineValidationRuleKey, expression, compilationError));
                     }
                 } else {

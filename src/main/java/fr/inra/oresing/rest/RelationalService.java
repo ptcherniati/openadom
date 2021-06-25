@@ -11,14 +11,12 @@ import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.SqlPolicy;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.SqlTable;
 import fr.inra.oresing.persistence.WithSqlIdentifier;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
-import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -324,24 +322,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
         Application application = getApplication(appName);
         SqlTable view = SqlSchema.forRelationalViewsOf(application, viewStrategy).forDataType(dataType);
         return namedParameterJdbcTemplate.queryForList("select * from " + view.getSqlIdentifier(), Collections.emptyMap());
-    }
-
-    public void addRestrictedUser(OreSiRoleToAccessDatabase role, Set<String> excludedReferenceIds, String appName, ViewStrategy viewStrategy) {
-        authenticationService.resetRole();
-        Application app = getApplication(appName);
-        SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
-        List<ViewCreationCommand> viewCreationCommands = new LinkedList<>();
-        viewCreationCommands.addAll(getViewsForReferences(sqlSchema, app));
-        viewCreationCommands.addAll(getViewsForDataTypes(sqlSchema, app));
-        for (ViewCreationCommand viewCreationCommand : viewCreationCommands) {
-            Set<String> referenceIdColumns = viewCreationCommand.getReferenceIdColumns();
-            String usingExpression = referenceIdColumns.stream().map(referenceIdColumn -> referenceIdColumn + "::uuid").collect(Collectors.joining(", ", "ARRAY[", "]"))
-                                   + " && "
-                                   + excludedReferenceIds.stream().map(excludedReferenceId -> "'" + excludedReferenceId + "'::uuid").collect(Collectors.joining(", ", "ARRAY[", "]"))
-                                   ;
-            SqlPolicy sqlPolicy = new SqlPolicy(viewCreationCommand.getView(), SqlPolicy.PermissiveOrRestrictive.PERMISSIVE, SqlPolicy.Statement.SELECT, role, "(" + usingExpression + ") is false");
-            db.createPolicy(sqlPolicy);
-        }
     }
 
     public void onDataUpdate(String appName) {

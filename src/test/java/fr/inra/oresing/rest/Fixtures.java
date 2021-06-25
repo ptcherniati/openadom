@@ -38,6 +38,7 @@ public class Fixtures {
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
+        PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -316,5 +317,57 @@ public class Fixtures {
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
         return authCookie;
+    }
+
+
+    public Map<String, String> getProReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("dispositifs", "/data/pros/dispositif_complet.csv");
+        referentielFiles.put("blocs", "/data/pros/bloc_complet.csv");
+        referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
+        referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
+        referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
+        return referentielFiles;
+    }
+
+    public String getProApplicationConfigurationResourceName() {
+        return "/data/pros/pro.yaml";
+    }
+
+    public Cookie addApplicationPRO() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getProApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().isCreated());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getProReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getdPrelevementProDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        return authCookie;
+    }
+
+    public String getdPrelevementProDataResourceName() {
+        return "/data/pros/donnees_prelevement_pro.csv";
     }
 }
