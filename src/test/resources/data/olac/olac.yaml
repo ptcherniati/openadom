@@ -30,9 +30,10 @@ references:
       nom_key:
       nom_fr:
       nom_en:
-      contexte:
       description_fr:
       description_en:
+      code sandre:
+      code sandre du contexte:
   sites:
     keyColumns: [nom du site_key]
     columns:
@@ -42,8 +43,8 @@ references:
       nom du site_en:
       description du site_fr:
       description du site_en:
-      code sandre:
-      code sandre du contexte:
+      code sandre du Plan d'eau:
+      code sandre de la Masse d'eau plan d'eau:
   typePlateformes:
     keyColumns: [nom du type de plateforme_key]
     columns:

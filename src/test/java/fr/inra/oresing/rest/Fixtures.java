@@ -385,7 +385,7 @@ public class Fixtures {
     }
 
     public String getOlaApplicationConfigurationResourceName() {
-        return "/data/pros/pro.yaml";
+        return "/data/olac/olac.yaml";
     }
 
 
