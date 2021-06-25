@@ -512,7 +512,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(StringUtils.abbreviate(actualJson, 500));
-            Assert.assertEquals(1456, StringUtils.countMatches(actualJson, "\"SWC\":"));
+            Assert.assertEquals(2912, StringUtils.countMatches(actualJson, "\"SWC\":"));
         }
 
         {
