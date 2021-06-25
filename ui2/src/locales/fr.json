@@ -38,7 +38,8 @@
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",
-    "close": "Fermer le message"
+    "close": "Fermer le message",
+    "data-type-config-error": "Erreur dans le fichier csv"
   },
   "menu": {
     "logout": "Se déconnecter",

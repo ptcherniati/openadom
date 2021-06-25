@@ -15,6 +15,19 @@
         :buttons="buttons"
       />
     </div>
+    <div v-if="errorsMessages.length">
+      <div v-for="msg in errorsMessages" v-bind:key="msg">
+        <b-message
+          :title="$t('message.data-type-config-error')"
+          type="is-danger"
+          has-icon
+          :aria-close-label="$t('message.close')"
+          class="mt-4"
+        >
+          <span v-html="msg" />
+        </b-message>
+      </div>
+    </div>
   </PageView>
 </template>
 
@@ -28,6 +41,8 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 import { Button } from "@/model/Button";
 import { AlertService } from "@/services/AlertService";
 import { DataService } from "@/services/rest/DataService";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
+import { ErrorsService } from "@/services/ErrorsService";
 
 @Component({
   components: { CollapsibleTree, PageView, SubMenu },
@@ -38,6 +53,7 @@ export default class DataTypesManagementView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
+  errorsService = ErrorsService.INSTANCE;
 
   application = new ApplicationResult();
   subMenuPaths = [];
@@ -53,6 +69,7 @@ export default class DataTypesManagementView extends Vue {
     ),
   ];
   dataTypes = [];
+  errorsMessages = [];
 
   created() {
     this.subMenuPaths = [
@@ -92,16 +109,25 @@ export default class DataTypesManagementView extends Vue {
   }
 
   async uploadDataTypeCsv(label, file) {
+    this.errorsMessages = [];
     try {
       await this.dataService.addData(this.applicationName, label, file);
       this.alertService.toastSuccess(this.$t("alert.data-updated"));
     } catch (error) {
-      this.alertService.toastServerError(error);
+      this.checkMessageErrors(error);
     }
   }
 
   async downloadDataType(label) {
     this.dataService.getDataTypesCsv(this.applicationName, label);
+  }
+
+  checkMessageErrors(error) {
+    if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      this.errorsMessages = this.errorsService.getCsvErrorsMessages(error.content);
+    } else {
+      this.alertService.toastServerError(error);
+    }
   }
 }
 </script>
