@@ -24,6 +24,16 @@ const ERRORS = {
   csvBoundToUnknownVariable: (params) => i18n.t("errors.csvBoundToUnknownVariable", params),
   csvBoundToUnknownVariableComponent: (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
   invalidKeyColumns: (params) => i18n.t("errors.invalidKeyColumns", params),
+  unexpectedHeaderColumn : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  headerColumnPatternNotMatching :(params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  unexpectedTokenCount : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  invalidHeaders : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  duplicatedHeaders : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  patternNotMatched : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  invalidDate : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  invalidInteger : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  invalidFloat : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  checkerExpressionReturnedFalse : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
 };
 
 export class ErrorsService {
@@ -36,6 +46,24 @@ export class ErrorsService {
         throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
       }
       return func(error.messageParams);
+    });
+  }
+
+  getCsvErrorsMessages(csvErrors) {
+    return csvErrors.map((csvError) => {
+      const func = ERRORS[csvError.validationCheckResult.message];
+      if (!func) {
+        throw new Error(
+          "Il manque la chaine de traduction pour l'erreur : " +
+            csvError.validationCheckResult.message
+        );
+      }
+      const params = {
+        lineNumber: csvError.lineNumber,
+        ...csvError.validationCheckResult.messageParams,
+      };
+
+      return func(params);
     });
   }
 }

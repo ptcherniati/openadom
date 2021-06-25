@@ -38,7 +38,8 @@
   },
   "message": {
     "app-config-error": "Error in yaml file",
-    "close": "Close message"
+    "close": "Close message",
+    "data-type-config-error": "Error in csv file"
   },
   "menu": {
     "logout": "Log out",
