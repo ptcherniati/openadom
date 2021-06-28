@@ -7,11 +7,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
-import fr.inra.oresing.checker.CheckerException;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -216,13 +217,19 @@ public class OreSiResources {
 
     /** export as JSON */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Map<String, Map<String, String>>>> getAllDataJson(
+    public ResponseEntity<GetDataResult> getAllDataJson(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
         DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        List<Map<String, Map<String, String>>> list = service.findData(downloadDatasetQuery);
-        return ResponseEntity.ok(list);
+        List<DataRow> list = service.findData(downloadDatasetQuery);
+        ImmutableSet<String> variables = list.stream()
+                .limit(1)
+                .map(DataRow::getValues)
+                .map(Map::keySet)
+                .flatMap(Set::stream)
+                .collect(ImmutableSet.toImmutableSet());
+        return ResponseEntity.ok(new GetDataResult(variables, list));
     }
 
     /** export as CSV */
@@ -246,14 +253,16 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<CsvRowValidationCheckResult>> createData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam("file") MultipartFile file) throws IOException, CheckerException {
+    public ResponseEntity<?> createData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        List<CsvRowValidationCheckResult> errors = service.addData(nameOrId, dataType, file);
-        if (errors.isEmpty()) {
-            return ResponseEntity.ok().build();
-        } else {
+        try {
+            UUID fileId = service.addData(nameOrId, dataType, file);
+            String uri = UriUtils.encodePath(String.format("/applications/%s/file/%s", nameOrId, fileId), Charset.defaultCharset());
+            return ResponseEntity.created(URI.create(uri)).body(Map.of("fileId", fileId.toString()));
+        } catch (InvalidDatasetContentException e) {
+            List<CsvRowValidationCheckResult> errors = e.getErrors();
             return ResponseEntity.badRequest().body(errors);
         }
     }

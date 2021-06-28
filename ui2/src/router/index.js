@@ -5,6 +5,8 @@ import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
 import ReferenceTable from "@/views/references/ReferenceTableView.vue";
+import DataTypeTableView from "@/views/datatype/DataTypeTableView.vue";
+import DataTypesManagementView from "@/views/datatype/DataTypesManagementView.vue";
 
 Vue.use(VueRouter);
 
@@ -37,6 +39,16 @@ const routes = [
   {
     path: "/applications/:applicationName/references/:refId",
     component: ReferenceTable,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/dataTypes",
+    component: DataTypesManagementView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/dataTypes/:dataTypeId",
+    component: DataTypeTableView,
     props: true,
   },
 ];

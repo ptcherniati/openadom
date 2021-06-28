@@ -49,9 +49,7 @@ public class AuthorizationResourcesTest {
 
     @Test
     public void testAddAuthorization() throws Exception {
-
         Cookie authCookie = fixtures.addApplicationAcbb();
-
         CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
@@ -215,7 +213,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            Assert.assertEquals("[]", json);
+            Assert.assertEquals("{\"variables\":[],\"rows\":[]}", json);
         }
     }
 }

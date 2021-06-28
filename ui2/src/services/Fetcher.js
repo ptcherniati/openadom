@@ -100,6 +100,11 @@ export class Fetcher {
     return Promise.reject({ httpResponseCode: response.status });
   }
 
+  async downloadFile(urlPath) {
+    const url = new URL(`${config.API_URL}${urlPath}`);
+    window.open(url, "_blank");
+  }
+
   notifyCrendentialsLost() {
     localStorage.removeItem(LOCAL_STORAGE_AUTHENTICATED_USER);
     app.$router.push("/login").catch(() => {});
