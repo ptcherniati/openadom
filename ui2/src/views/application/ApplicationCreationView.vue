@@ -108,6 +108,7 @@ export default class ApplicationCreationView extends Vue {
     try {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
+      this.$router.push("/applications");
     } catch (error) {
       this.checkMessageErrors(error);
     }
