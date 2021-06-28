@@ -181,6 +181,8 @@ public class OreSiResources {
             @PathVariable("refType") String refType,
             @RequestParam MultiValueMap<String, String> params) {
         List<ReferenceValue> list = service.findReference(nameOrId, refType, params);
+
+
         ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
                 .map(referenceValue ->
                         new GetReferenceResult.ReferenceValue(
@@ -191,6 +193,15 @@ public class OreSiResources {
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
         return ResponseEntity.ok(new GetReferenceResult(referenceValues));
+    }
+
+    @GetMapping(value = "/applications/{nameOrId}/references/{refType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> listReferencesCsv(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("refType") String refType,
+            @RequestParam MultiValueMap<String, String> params) {
+        String csv = service.getReferenceValuesCsv(nameOrId, refType, params);
+        return ResponseEntity.ok(csv);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)

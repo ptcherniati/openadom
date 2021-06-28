@@ -919,6 +919,34 @@ public class OreSiService {
         return list;
     }
 
+    public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
+        Configuration.ReferenceDescription referenceDescription = getApplication(applicationNameOrId)
+                .getConfiguration()
+                .getReferences()
+                .get(referenceType);
+        ImmutableMap<String, Function<ReferenceValue, String>> model = referenceDescription.getColumns().keySet().stream()
+                .collect(ImmutableMap.toImmutableMap(Function.identity(), column -> referenceValue -> referenceValue.getRefValues().get(column)));
+        CSVFormat csvFormat = CSVFormat.DEFAULT
+                .withDelimiter(referenceDescription.getSeparator())
+                .withSkipHeaderRecord();
+        StringWriter out = new StringWriter();
+        try {
+            CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
+            csvPrinter.printRecord(model.keySet());
+            List<ReferenceValue> list = repo.getRepository(applicationNameOrId).referenceValue().findAllByReferenceType(referenceType, params);
+            for (ReferenceValue referenceValue : list) {
+                ImmutableList<String> rowAsRecord = model.values().stream()
+                        .map(getCellContentFn -> getCellContentFn.apply(referenceValue))
+                        .collect(ImmutableList.toImmutableList());
+                csvPrinter.printRecord(rowAsRecord);
+            }
+        } catch (IOException e) {
+            throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+        }
+        String csv = out.toString();
+        return csv;
+    }
+
     public Optional<BinaryFile> getFile(String name, UUID id) {
         authenticationService.setRoleForClient();
         Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindById(id);
