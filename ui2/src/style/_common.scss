@@ -70,3 +70,8 @@ a {
 .message .media {
   align-items: center;
 }
+
+.pagination-link.is-current {
+  background-color: $dark;
+  border-color: $dark;
+}
