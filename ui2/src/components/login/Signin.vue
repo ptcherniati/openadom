@@ -45,6 +45,7 @@
             v-model="password"
             :placeholder="$t('login.pwd-placeholder')"
             :password-reveal="true"
+            @keyup.native.enter="handleSubmit(signIn)"
           >
           </b-input>
         </b-field>
