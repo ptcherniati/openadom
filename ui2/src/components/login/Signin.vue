@@ -53,7 +53,7 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-right="plus">
+      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-left="sign-in-alt">
         {{ $t("login.signin") }}
       </b-button>
       <router-link :to="{ path: '/' }">

@@ -15,7 +15,7 @@
       <template #end>
         <b-navbar-item tag="div">
           <div class="buttons">
-            <b-button type="is-info" @click="logout" icon-right="sign-out-alt">{{
+            <b-button type="is-info" @click="logout" icon-left="sign-out-alt">{{
               $t("menu.logout")
             }}</b-button>
           </div>
