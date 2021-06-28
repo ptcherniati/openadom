@@ -106,6 +106,7 @@
     "data": "Données"
   },
   "dataTypesManagement": {
-    "data-types": "Type de données"
+    "data-types": "Type de données",
+    "consult-authorization": "Consulter les autorisations"
   }
 }

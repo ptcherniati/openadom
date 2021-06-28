@@ -14,6 +14,12 @@
         :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"
         :buttons="buttons"
       />
+      <DataTypeDetailsPanel
+        :leftAlign="false"
+        :open="openPanel"
+        :dataType="chosenDataType"
+        :closeCb="(newVal) => (openPanel = newVal)"
+      />
     </div>
     <div v-if="errorsMessages.length">
       <div v-for="msg in errorsMessages" v-bind:key="msg">
@@ -43,9 +49,10 @@ import { AlertService } from "@/services/AlertService";
 import { DataService } from "@/services/rest/DataService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
+import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 
 @Component({
-  components: { CollapsibleTree, PageView, SubMenu },
+  components: { CollapsibleTree, PageView, SubMenu, DataTypeDetailsPanel },
 })
 export default class DataTypesManagementView extends Vue {
   @Prop() applicationName;
@@ -70,6 +77,8 @@ export default class DataTypesManagementView extends Vue {
   ];
   dataTypes = [];
   errorsMessages = [];
+  openPanel = false;
+  chosenDataType = null;
 
   created() {
     this.subMenuPaths = [
@@ -104,8 +113,9 @@ export default class DataTypesManagementView extends Vue {
 
   openDataTypeCb(event, label) {
     event.stopPropagation();
-
-    console.log("OPEN", label);
+    this.openPanel =
+      this.chosenDataType && this.chosenDataType.label === label ? !this.openPanel : true;
+    this.chosenDataType = this.dataTypes.find((dt) => dt.label === label);
   }
 
   async uploadDataTypeCsv(label, file) {
