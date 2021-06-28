@@ -24,16 +24,16 @@ const ERRORS = {
   csvBoundToUnknownVariable: (params) => i18n.t("errors.csvBoundToUnknownVariable", params),
   csvBoundToUnknownVariableComponent: (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
   invalidKeyColumns: (params) => i18n.t("errors.invalidKeyColumns", params),
-  unexpectedHeaderColumn : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  headerColumnPatternNotMatching :(params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  unexpectedTokenCount : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  invalidHeaders : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  duplicatedHeaders : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  patternNotMatched : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  invalidDate : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  invalidInteger : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  invalidFloat : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  checkerExpressionReturnedFalse : (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  unexpectedHeaderColumn : (params) => i18n.t("errors.unexpectedHeaderColumn", params),
+  headerColumnPatternNotMatching :(params) => i18n.t("errors.headerColumnPatternNotMatching", params),
+  unexpectedTokenCount : (params) => i18n.t("errors.unexpectedTokenCount", params),
+  invalidHeaders : (params) => i18n.t("errors.invalidHeaders", params),
+  duplicatedHeaders : (params) => i18n.t("errors.duplicatedHeaders", params),
+  patternNotMatched : (params) => i18n.t("errors.patternNotMatched", params),
+  invalidDate : (params) => i18n.t("errors.invalidDate", params),
+  invalidInteger : (params) => i18n.t("errors.invalidInteger", params),
+  invalidFloat : (params) => i18n.t("errors.invalidFloat", params),
+  checkerExpressionReturnedFalse : (params) => i18n.t("errors.checkerExpressionReturnedFalse", params),
 };
 
 export class ErrorsService {
@@ -62,7 +62,6 @@ export class ErrorsService {
         lineNumber: csvError.lineNumber,
         ...csvError.validationCheckResult.messageParams,
       };
-
       return func(params);
     });
   }

@@ -82,7 +82,17 @@
     "unknownCheckerName": "For the validation rule : <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' is declared but is not a known checker",
     "csvBoundToUnknownVariable": "In the CSV format, header <code>{header}</code> is bound to unknown variable <code>{variable}</code>. Known variables: <code>{variables}</code>",
     "csvBoundToUnknownVariableComponent": "In the CSV format, header <code>{header}</code> is bound to <code>{variable}</code> but it has no <code>{component}</code> component. Known components: <code>{components}</code>",
-    "invalidKeyColumns": "In the description of reference <code>{reference}</code>, colomns <code>{unknownUsedAsKeyElementColumns}</code> are declared as components of the key but there are no such columns. Known columns are <code>{knownColumns}</code>"
+    "invalidKeyColumns": "In the description of reference <code>{reference}</code>, colomns <code>{unknownUsedAsKeyElementColumns}</code> are declared as components of the key but there are no such columns. Known columns are <code>{knownColumns}</code>",
+    "unexpectedHeaderColumn": "Unexpected column header. Expected : <code>{expectedHeaderColumn}</code> <br />Actual : <code>{actualHeaderColumn}</code>",
+    "headerColumnPatternNotMatching": "Column header pattern not matching. Pattern to match : <code>{expectedHeaderColumnPattern}</code><br/>Actual header : <code>{actualHeaderColumn}</code>",
+    "unexpectedTokenCount": "Unexpected token count. Expected : <code>{expectedTokenCount}</code><br/>Actual header : <code>{actualHeader}</code> has <code>{actualTokenCount}</code> tokens",
+    "invalidHeaders": "Invalid headers. Expected columns : <code>{expectedColumns}</code><br/>Actual columns : <code>{actualColumns}</code><br/>Missing columns : <code>{missingColumns}</code><br/>Unknown columns : <code>{unknownColumns}</code>",
+    "duplicatedHeaders": "These headers are duplicated : <code>{duplicatedHeaders}</code>",
+    "patternNotMatched": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> doesn't match expected pattern : <code>{pattern}</code>.",
+    "invalidDate": "For the component : <code>{variableComponentKey}</code> the date <code>{value}</code> doesn't match expected pattern : <code>{pattern}</code>. ",
+    "invalidInteger": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> must be an integer.",
+    "invalidFloat": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> must be a float.",
+    "checkerExpressionReturnedFalse": "The following checker expression isn't fulfilled : <code>{expression}</code>"
   },
   "referencesManagement": {
     "actions": "Actions",
