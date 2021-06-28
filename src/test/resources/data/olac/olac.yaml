@@ -10,11 +10,6 @@ compositeReferences:
         reference: sites
       - parentKeyColumn: nom du site
         reference: plateformes
-  plateforme:
-    components:
-      - reference: typePlateformes
-      - reference: plateformes
-        parentKeyColumn: nom du type de plateforme
 references:
   projets:
     keyColumns: [nom du projet_key]
@@ -45,16 +40,6 @@ references:
       description du site_en:
       code sandre du Plan d'eau:
       code sandre de la Masse d'eau plan d'eau:
-  typePlateformes:
-    keyColumns: [nom du type de plateforme_key]
-    columns:
-      nom du type de plateforme_key:
-      nom du type de plateforme_fr:
-      nom du type de plateforme_en:
-      description_fr:
-      description_en:
-      code sandre:
-      code sandre du contexte:
   plateformes:
     keyColumns: [nom de la plateforme_key]
     columns:
@@ -65,7 +50,10 @@ references:
       latitude:
       longitude:
       altitude:
-      nom du type de plateforme:
+      nom du type de plateforme_fr:
+      nom du type de plateforme_en:
+      description du type de plateforme_fr:
+      description du type de plateforme_en:
       code sandre:
       code sandre du contexte:
   valeurs_qualitatives:
