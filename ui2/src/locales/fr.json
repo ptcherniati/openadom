@@ -4,7 +4,8 @@
     "applications-page": "Mes applications",
     "references-page": "Référentiels de {applicationName}",
     "references-data": "Données de {refName}",
-    "application-creation": "Créer une application"
+    "application-creation": "Créer une application",
+    "data-types-page": "Type de données de {applicationName}"
   },
   "login": {
     "signin": "Se connecter",
@@ -32,11 +33,13 @@
     "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
     "delete": "Supprimer",
     "reference-csv-upload-error": "Une erreur s'est produite au téléversement du fichier csv",
-    "reference-updated": "Référentiel mis à jour"
+    "reference-updated": "Référentiel mis à jour",
+    "data-updated": "Type de donnée mis à jour"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",
-    "close": "Fermer le message"
+    "close": "Fermer le message",
+    "data-type-config-error": "Erreur dans le fichier csv"
   },
   "menu": {
     "logout": "Se déconnecter",
@@ -54,7 +57,8 @@
     "name-placeholder": "Ex : olac",
     "creation-date": "Date de création",
     "actions": "Actions",
-    "references": "Référentiels"
+    "references": "Référentiels",
+    "dataset": "Données"
   },
   "errors": {
     "emptyFile": "Le fichier est vide",
@@ -77,7 +81,18 @@
     "illegalGroovyExpression": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, l’expression renseignée <code>{expression}</code> n’est pas correcte. Erreur de compilation de l’expression à la ligne <code>{compilationError.lineNumber}</code> (colonne <code>{compilationError.columnNumber}</code>) message '<code>{compilationError.message}</code>'",
     "unknownCheckerName": "Pour la règle de validation <code>{lineValidationRuleKey}</code>, '<code>{checkerName}</code>' est déclaré mais ce n’est pas un contrôle connu",
     "csvBoundToUnknownVariable": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n’est pas connue. Variables connues <code>{variables}</code>",
-    "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>"
+    "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>",
+    "invalidKeyColumns": "Dans la description du référentiel <code>{reference}</code>, les colonnes <code>{unknownUsedAsKeyElementColumns}</code> sont déclarées comme faisant partie de la clé alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
+    "unexpectedHeaderColumn": "En-tête de colonne inattendu. En-tête attendu : <code>{expectedHeaderColumn}</code> <br />En-tête actuel : <code>{actualHeaderColumn}</code>",
+    "headerColumnPatternNotMatching": "Erreur dans le format de l'en-tête de colonne. Format à respecter : <code>{expectedHeaderColumnPattern}</code><br/>En-tête actuel : <code>{actualHeaderColumn}</code>",
+    "unexpectedTokenCount": "Le nombre de token est inattendu. Nombre attendu : <code>{expectedTokenCount}</code><br/>L'en-tête actuel : <code>{actualHeader}</code> comprend <code>{actualTokenCount}</code> tokens",
+    "invalidHeaders": "En-têtes de colonne invalides. Les colonnes attendues sont : <code>{expectedColumns}</code><br/>Les colonnes actuelles sont : <code>{actualColumns}</code><br/> Il manque les colonnes : <code>{missingColumns}</code><br/>Les colonnes suivantes sont inconnues : <code>{unknownColumns}</code>",
+    "duplicatedHeaders": "Les en-têtes suivants sont dupliqués : <code>{duplicatedHeaders}</code>",
+    "patternNotMatched": "Pour le composant identifié : <code>{variableComponentKey}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",
+    "invalidDate": "Pour le composant identifié : <code>{variableComponentKey}</code> la date <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>. ",
+    "invalidInteger": "Pour le composant identifié : <code>{variableComponentKey}</code> la valeur <code>{value}</code> doit être un entier.",
+    "invalidFloat": "Pour le composant identifié : <code>{variableComponentKey}</code> la valeur <code>{value}</code> doit être un nombre décimal.",
+    "checkerExpressionReturnedFalse": "La contrainte suivante n'est pas respectée : <code>{expression}</code>"
   },
   "referencesManagement": {
     "actions": "Actions",
@@ -86,5 +101,8 @@
     "delete": "Supprimer",
     "references": "Référentiels",
     "data": "Données"
+  },
+  "dataTypesManagement": {
+    "data-types": "Type de données"
   }
 }

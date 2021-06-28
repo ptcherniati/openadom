@@ -2,6 +2,7 @@ package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import jdk.jshell.JShell;
@@ -32,7 +33,7 @@ public class GroovyLineCheckerTest {
         String wrongExpression = expression.replace("Integer", "Integre");
 
         Assert.assertFalse(GroovyLineChecker.validateExpression(expression).isPresent());
-        Optional<GroovyLineChecker.CompilationError> compilationErrorOptional = GroovyLineChecker.validateExpression(wrongExpression);
+        Optional<GroovyExpression.CompilationError> compilationErrorOptional = GroovyLineChecker.validateExpression(wrongExpression);
         Assert.assertTrue(compilationErrorOptional.isPresent());
         compilationErrorOptional.ifPresent(compilationError -> {
             Assert.assertTrue(compilationError.getMessage().contains("Integre"));

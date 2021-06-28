@@ -8,6 +8,7 @@ import fr.inra.oresing.persistence.roles.OreSiRoleToBeGranted;
 import fr.inra.oresing.persistence.roles.OreSiRoleWeCanGrantOtherRolesTo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,6 +80,15 @@ public class SqlService {
         execute(createPolicySql);
     }
 
+    public void dropPolicy(SqlPolicy sqlPolicy) {
+        String createPolicySql = String.format(
+                "DROP POLICY %s ON %s",
+                sqlPolicy.getSqlIdentifier(),
+                sqlPolicy.getTable().getSqlIdentifier()
+        );
+        execute(createPolicySql);
+    }
+
     public void createRole(OreSiRoleManagedByApplication roleManagedByApplication) {
         String sql = "CREATE ROLE " + roleManagedByApplication.getSqlIdentifier() + "";
         execute(sql);
@@ -114,6 +124,12 @@ public class SqlService {
     public void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
         String sql = "SET LOCAL ROLE " + roleToAccessDatabase.getSqlIdentifier();
         execute(sql);
+    }
+
+    public boolean hasRole(OreSiRole role) {
+        String sql = "SELECT pg_has_role('" + role.getAsSqlRole() + "', 'MEMBER')";
+        boolean hasRole = namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class);
+        return hasRole;
     }
 
     private void execute(String sql) {

@@ -33,22 +33,36 @@ create table Data (
     dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
     rowId TEXT NOT NULL,
     dataGroup TEXT NOT NULL,
-    localizationScope ltree NOT NULL,
+    requiredAuthorizations jsonb NOT NULL,
     timeScope tsrange NOT NULL,
-    refsLinkedTo ListEntityRef CHECK(refs_check('${applicationSchema}', application, refsLinkedTo)),
+    refsLinkedTo jsonb,
     dataValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );
 
 ALTER TABLE Data ADD CONSTRAINT row_uniqueness UNIQUE (rowId, dataGroup);
 
+CREATE TABLE OreSiAuthorization (
+    id EntityId PRIMARY KEY,
+    creationDate DateOrNow,
+    updateDate DateOrNow,
+    oreSiUser EntityRef REFERENCES OreSiUser(id),
+    application EntityRef REFERENCES Application(id),
+    dataType TEXT CHECK(name_check(application, 'dataType', dataType)),
+    dataGroup TEXT NOT NULL,
+    authorizedScopes jsonb NOT NULL,
+    timeScope tsrange NOT NULL
+);
+
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON OreSiAuthorization TO "superadmin" WITH GRANT OPTION;
 
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiAuthorization TO public;
 
 --ALTER TABLE BinaryFile ENABLE ROW LEVEL SECURITY;
 --ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;

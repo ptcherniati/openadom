@@ -1,7 +1,7 @@
 <template>
   <PageView>
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
-    <div class="buttons">
+    <div class="buttons" v-if="canCreateApplication">
       <b-button type="is-primary" @click="createApplication" icon-right="plus">
         {{ $t("applications.create") }}
       </b-button>
@@ -31,6 +31,9 @@
         <b-button icon-left="drafting-compass" @click="displayReferencesManagement(props.row)">{{
           $t("applications.references")
         }}</b-button>
+        <b-button icon-left="poll" @click="displayDataSetManagement(props.row)">{{
+          $t("applications.dataset")
+        }}</b-button>
       </b-table-column>
     </b-table>
   </PageView>
@@ -40,6 +43,7 @@
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { Component, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
+import { LoginService } from "@/services/rest/LoginService";
 
 @Component({
   components: { PageView },
@@ -48,6 +52,7 @@ export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
+  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
 
   created() {
     this.init();
@@ -66,6 +71,13 @@ export default class ApplicationsView extends Vue {
       return;
     }
     this.$router.push("/applications/" + application.name + "/references");
+  }
+
+  displayDataSetManagement(application) {
+    if (!application) {
+      return;
+    }
+    this.$router.push("/applications/" + application.name + "/dataTypes");
   }
 }
 </script>

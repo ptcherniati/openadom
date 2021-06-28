@@ -50,5 +50,9 @@ public class OreSiRepository {
         public BinaryFileRepository binaryFile() {
             return beanFactory.getBean(BinaryFileRepository.class, application);
         }
+
+        public AuthorizationRepository authorization() {
+            return beanFactory.getBean(AuthorizationRepository.class, application);
+        }
     }
 }

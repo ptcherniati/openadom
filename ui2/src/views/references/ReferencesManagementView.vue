@@ -66,8 +66,10 @@ export default class ReferencesManagementView extends Vue {
 
   created() {
     this.subMenuPaths = [
-      new SubMenuPath(this.$t("referencesManagement.references").toLowerCase(), () =>
-        this.$router.push(`/applications/${this.applicationName}/references`)
+      new SubMenuPath(
+        this.$t("referencesManagement.references").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/references`),
+        () => this.$router.push(`/applications`)
       ),
     ];
     this.init();
