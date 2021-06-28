@@ -29,6 +29,7 @@ import {
   faCaretRight,
   faArrowLeft,
   faSignInAlt,
+  faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -55,7 +56,8 @@ library.add(
   faVial,
   faCaretRight,
   faArrowLeft,
-  faSignInAlt
+  faSignInAlt,
+  faUserPlus
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
@@ -79,7 +81,7 @@ export const i18n = new VueI18n({
 
 // Validation
 import "vee-validate";
-import { required } from "vee-validate/dist/rules";
+import { confirmed, required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
 // Ici on surcharge les messages d'erreur de vee-validate.
 // Pour plus de règles :  https://logaretm.github.io/vee-validate/guide/rules.html
@@ -87,6 +89,11 @@ import { extend } from "vee-validate";
 extend("required", {
   ...required,
   message: i18n.t("validation.invalid-required"),
+});
+
+extend("confirmed", {
+  ...confirmed,
+  message: i18n.t("validation.invalid-confirmed").toString(),
 });
 
 extend("validApplicationName", {

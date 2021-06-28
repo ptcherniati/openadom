@@ -9,19 +9,21 @@
   },
   "login": {
     "signin": "Se connecter",
-    "signup": "Créer un compte",
     "login": "Identifiant",
     "login-placeholder": "Ex: michel",
     "pwd": "Mot de passe",
     "pwd-placeholder": "Ex: xxxx",
-    "pwd-forgotten": "Mot de passe oublié ?"
+    "pwd-forgotten": "Mot de passe oublié ?",
+    "register": "Créer un compte",
+    "confirm-pwd": "Confirmer le mot de passe"
   },
   "validation": {
     "obligatoire": "Obligatoire",
     "facultatif": "Facultatif",
     "invalid-required": "Merci de remplir le champ",
-    "invalid-application-name": "Le nom ne doit comporter que des lettresminuscules .",
-    "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères."
+    "invalid-application-name": "Le nom ne doit comporter que des lettres minuscules .",
+    "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères.",
+    "invalid-confirmed": "Les deux champs ne correspondent pas."
   },
   "alert": {
     "cancel": "Annuler",
@@ -34,7 +36,8 @@
     "delete": "Supprimer",
     "reference-csv-upload-error": "Une erreur s'est produite au téléversement du fichier csv",
     "reference-updated": "Référentiel mis à jour",
-    "data-updated": "Type de donnée mis à jour"
+    "data-updated": "Type de donnée mis à jour",
+    "registered-user": "Compte utilisateur créé"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",

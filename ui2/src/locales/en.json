@@ -9,19 +9,21 @@
   },
   "login": {
     "signin": "Sign in",
-    "signup": "Sign up",
     "login": "Login",
     "login-placeholder": "Ex: michel",
     "pwd": "Password",
     "pwd-placeholder": "Ex: xxxx",
-    "pwd-forgotten": "Forgotten password ? "
+    "pwd-forgotten": "Forgotten password ? ",
+    "register": "Register",
+    "confirm-pwd": "Confirmer le mot de passe"
   },
   "validation": {
     "obligatoire": "Mandatory",
     "facultatif": "Optional",
     "invalid-required": "Please fill the field",
     "invalid-application-name": "The name must only includes lowercase letters.",
-    "invalid-application-name-length": "The name's length should be between 4 and 20 characters."
+    "invalid-application-name-length": "The name's length should be between 4 and 20 characters.",
+    "invalid-confirmed": "Fields don't match."
   },
   "alert": {
     "cancel": "Cancel",
@@ -34,7 +36,8 @@
     "delete": "Delete",
     "reference-csv-upload-error": "An error occured while uploading the csv file",
     "reference-updated": "Reference updated",
-    "data-updated": "Data type updated"
+    "data-updated": "Data type updated",
+    "registered-user": "User registered"
   },
   "message": {
     "app-config-error": "Error in yaml file",
