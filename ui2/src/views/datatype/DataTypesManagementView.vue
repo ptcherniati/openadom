@@ -22,7 +22,7 @@
           type="is-danger"
           has-icon
           :aria-close-label="$t('message.close')"
-          class="mt-4"
+          class="mt-4 DataTypesManagementView-message"
         >
           <span v-html="msg" />
         </b-message>
@@ -131,3 +131,12 @@ export default class DataTypesManagementView extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.DataTypesManagementView-message {
+  .media-content {
+    width: calc(100% - 3em - 4rem);
+    overflow-wrap: break-word;
+  }
+}
+</style>
