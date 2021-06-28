@@ -2,6 +2,11 @@
   <div class="menu-view-container">
     <b-navbar class="menu-view" v-if="open">
       <template #start>
+        <b-navbar-item href="https://www.inrae.fr/">
+          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
+          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
+        </b-navbar-item>
+        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
         <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
           {{ $t("menu.applications") }}
         </b-navbar-item>
@@ -28,11 +33,6 @@
             </b-select>
           </b-field>
         </b-navbar-item>
-        <b-navbar-item href="https://www.inrae.fr/">
-          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
-          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
-        </b-navbar-item>
-        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
       </template>
     </b-navbar>
     <FontAwesomeIcon
