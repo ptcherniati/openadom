@@ -75,3 +75,8 @@ a {
   background-color: $dark;
   border-color: $dark;
 }
+
+a.dropdown-item {
+  display: flex;
+  align-items: center;
+}

@@ -30,6 +30,7 @@ import {
   faArrowLeft,
   faSignInAlt,
   faUserPlus,
+  faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -57,7 +58,8 @@ library.add(
   faCaretRight,
   faArrowLeft,
   faSignInAlt,
-  faUserPlus
+  faUserPlus,
+  faUserAstronaut
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

@@ -14,13 +14,6 @@
 
       <template #end>
         <b-navbar-item tag="div">
-          <div class="buttons">
-            <b-button type="is-info" @click="logout" icon-left="sign-out-alt">{{
-              $t("menu.logout")
-            }}</b-button>
-          </div>
-        </b-navbar-item>
-        <b-navbar-item tag="div">
           <b-field>
             <b-select
               v-model="chosenLocale"
@@ -33,8 +26,26 @@
             </b-select>
           </b-field>
         </b-navbar-item>
+
+        <b-navbar-item tag="div" class="MenuView-user">
+          <b-dropdown position="is-bottom-left" append-to-body aria-role="menu">
+            <template #trigger>
+              <a class="navbar-item" role="button">
+                <b-icon icon="user-astronaut" class="mr-1" />
+                <span>{{ currentUser.login }}</span>
+                <b-icon icon="caret-down" class="ml-2" />
+              </a>
+            </template>
+
+            <b-dropdown-item @click="logout()" aria-role="menuitem">
+              <b-icon icon="sign-out-alt" />
+              {{ $t("menu.logout") }}
+            </b-dropdown-item>
+          </b-dropdown>
+        </b-navbar-item>
       </template>
     </b-navbar>
+
     <FontAwesomeIcon
       @click="open = !open"
       :icon="open ? 'caret-up' : 'caret-down'"
@@ -62,9 +73,11 @@ export default class MenuView extends Vue {
   locales = Locales;
   chosenLocale = "";
   open = false;
+  currentUser = null;
 
   created() {
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
+    this.currentUser = this.loginService.getAuthenticatedUser();
   }
 
   logout() {
@@ -125,6 +138,15 @@ export default class MenuView extends Vue {
     div.navbar-start {
       justify-content: space-around;
       margin: 0;
+    }
+  }
+
+  .MenuView-user.navbar-item {
+    .navbar-item {
+      color: white;
+      &:hover {
+        color: $primary;
+      }
     }
   }
 }
