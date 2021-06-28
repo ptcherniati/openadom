@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
+import com.google.common.base.Preconditions;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
@@ -87,6 +88,7 @@ public class AuthenticationService {
      * @return l'objet OreSiUser qui vient d'être créé
      */
     public CreateUserResult createUser(String login, String password) {
+        Preconditions.checkArgument(userRepository.findByLogin(login).isEmpty(), "Il existe déjà un utilisateur dont l’identifiant est " + login);
         String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, password.toCharArray());
         OreSiUser result = new OreSiUser();
         result.setLogin(login);

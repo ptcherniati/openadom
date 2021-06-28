@@ -45,8 +45,8 @@ create table OreSiUser (
     id EntityId PRIMARY KEY,
     creationDate DateOrNow,
     updateDate DateOrNow,
-    login Text,
-    password text
+    login Text UNIQUE NOT NULL,
+    password text NOT NULL
 );
 
 create table Application (
