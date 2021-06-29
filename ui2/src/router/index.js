@@ -53,7 +53,7 @@ const routes = [
     props: true,
   },
   {
-    path: "/applications/acbb/dataTypes/:dataTypeId/authorizations",
+    path: "/applications/:applicationName/dataTypes/:dataTypeId/authorizations",
     component: DataTypeAuthorizationsView,
     props: true,
   },

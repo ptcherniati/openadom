@@ -25,9 +25,12 @@ export default class DataTypeDetailsPanel extends Vue {
   @Prop({ default: false }) open;
   @Prop() dataType;
   @Prop() closeCb;
+  @Prop() applicationName;
 
   consultAuthorization() {
-    this.$router.push(`/applications/acbb/dataTypes/${this.dataType.id}/authorizations`);
+    this.$router.push(
+      `/applications/${this.applicationName}/dataTypes/${this.dataType.id}/authorizations`
+    );
   }
 }
 </script>
