@@ -125,10 +125,10 @@ public class AuthorizationService {
         authorizationRepository.delete(authorizationId);
     }
 
-    public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId) {
+    public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType) {
         Application application = repository.application().findApplication(applicationNameOrId);
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
-        ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findAll().stream()
+        ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findByDataType(dataType).stream()
                 .map(this::toGetAuthorizationResult)
                 .collect(ImmutableSet.toImmutableSet());
         return authorizations;

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AuthorizationRepository extends JsonTableInApplicationSchemaRepositoryTemplate<OreSiAuthorization> {
@@ -29,5 +31,9 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
     @Override
     protected Class<OreSiAuthorization> getEntityClass() {
         return OreSiAuthorization.class;
+    }
+
+    public List<OreSiAuthorization> findByDataType(String dataType) {
+        return findByPropertyEquals("dataType", dataType);
     }
 }

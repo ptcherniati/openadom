@@ -25,26 +25,26 @@ public class AuthorizationResources {
     @Autowired
     private AuthorizationService authorizationService;
 
-    @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAuthorization(@RequestBody CreateAuthorizationRequest authorization) {
         UUID authorizationId = authorizationService.addAuthorization(authorization);
-        String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/authorization/" + authorizationId.toString(), Charset.defaultCharset());
+        String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authorizationId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authorizationId.toString()));
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
         GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, authorizationId));
         return ResponseEntity.ok(getAuthorizationResult);
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ImmutableSet<GetAuthorizationResult>> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId) {
-        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId);
+    @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ImmutableSet<GetAuthorizationResult>> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
+        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, dataType);
         return ResponseEntity.ok(getAuthorizationResults);
     }
 
-    @DeleteMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
         authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, authorizationId));
         return ResponseEntity.noContent().build();
