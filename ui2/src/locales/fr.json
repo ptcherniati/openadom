@@ -119,6 +119,13 @@
     "users-placeholder": "Choisir les utilisateurs à autoriser",
     "data-groups": "Groupes de données",
     "data-groups-placeholder": "Choisir les données à autoriser",
-    "authorization-scopes": "Périmètres d'autorisation"
+    "authorization-scopes": "Périmètres d'autorisation",
+    "start-date": "Date de début",
+    "end-date": "Date de fin",
+    "period": "Période d'autorisation",
+    "from-date": "À partir de",
+    "to-date": "Jusqu'au",
+    "from-date-to-date": "De date à date",
+    "always": "Toujours"
   }
 }
