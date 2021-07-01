@@ -8,28 +8,29 @@
       @click="displayChildren = !displayChildren"
     >
       <div class="CollapsibleTree-header-infos">
-        <FontAwesomeIcon
-          v-if="option.children && option.children.length !== 0"
-          :icon="displayChildren ? 'caret-down' : 'caret-right'"
-          class="clickable mr-3"
-        />
-        <b-checkbox
-          v-if="withCheckBoxes"
-          v-model="innerChecked"
-          :native-value="option.id"
-          :style="`transform:translate(${level * 50}px);`"
-          @click.native="stopPropagation"
-          :disabled="hasParentChecked"
-        >
-          {{ option.label }}
-        </b-checkbox>
-        <div
-          v-else
-          :class="onClickLabelCb ? 'link' : ''"
-          :style="`transform:translate(${level * 50}px);`"
-          @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-        >
-          {{ option.label }}
+        <div class="CollapsibleTree-header-infos" :style="`transform:translate(${level * 50}px);`">
+          <FontAwesomeIcon
+            v-if="option.children && option.children.length !== 0"
+            :icon="displayChildren ? 'caret-down' : 'caret-right'"
+            class="clickable mr-3"
+          />
+
+          <b-radio
+            v-if="withRadios"
+            v-model="innerOptionChecked"
+            :name="radioName"
+            @click.native="stopPropagation"
+            :native-value="option.id"
+          >
+            {{ option.label }}
+          </b-radio>
+          <div
+            v-else
+            :class="onClickLabelCb ? 'link' : ''"
+            @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+          >
+            {{ option.label }}
+          </div>
         </div>
       </div>
       <div class="CollapsibleTree-buttons">
@@ -69,10 +70,10 @@
       :onClickLabelCb="onClickLabelCb"
       :onUploadCb="onUploadCb"
       :buttons="buttons"
-      :withCheckBoxes="withCheckBoxes"
-      :hasParentChecked="innerChecked"
       :class="displayChildren ? '' : 'hide'"
-      @childCheck="updateChildrenChecked"
+      :withRadios="withRadios"
+      :radioName="radioName"
+      @optionChecked="onInnerOptionChecked"
     />
   </div>
 </template>
@@ -90,32 +91,16 @@ export default class CollapsibleTree extends Vue {
   @Prop() onClickLabelCb;
   @Prop() onUploadCb;
   @Prop() buttons;
-  @Prop({ default: false }) withCheckBoxes;
-  @Prop({ default: false }) hasParentChecked;
+  @Prop({ default: false }) withRadios;
+  @Prop() radioName;
 
   displayChildren = false;
   refFile = null;
-  innerChecked = false;
-  innerChildrenChecked = [];
+  innerOptionChecked = null;
 
-  @Watch("hasParentChecked")
-  onParentChecked(newVal) {
-    this.innerChecked = newVal;
-  }
-
-  @Watch("innerChecked")
-  onInnerChecked() {
-    this.$emit("childCheck", { id: this.option.id, checked: this.innerChecked });
-  }
-
-  updateChildrenChecked({ id, checked }) {
-    if (checked) {
-      this.innerChildrenChecked.push(id);
-    } else {
-      const removalIndex = this.innerChildrenChecked.indexOf(id);
-      this.innerChildrenChecked.splice(removalIndex, 1);
-    }
-    this.$emit("updateChildrenChecked", this.innerChildrenChecked);
+  @Watch("innerOptionChecked")
+  onInnerOptionChecked(value) {
+    this.$emit("optionChecked", value);
   }
 
   stopPropagation(event) {

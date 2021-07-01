@@ -60,8 +60,9 @@
               v-for="option in scope.options"
               :key="option.id"
               :option="option"
-              :withCheckBoxes="true"
-              @updateChildrenChecked="updateScopesToAuthorize"
+              :withRadios="true"
+              :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
+              @optionChecked="(value) => (scopeToAuthorize = value)"
             />
           </div>
         </div>
@@ -76,7 +77,7 @@ import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AuthorizationService } from "@/services/rest/AuthorizationService";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 
 @Component({
@@ -99,7 +100,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   usersToAuthorize = [];
   dataGroupToAuthorize = {};
   openCollapse = null;
-  scopesToAuthorize = [];
+  scopeToAuthorize = null;
 
   created() {
     this.init();
@@ -145,19 +146,19 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         users: this.users,
       } = grantableInfos);
       console.log(this.authorizationScopes, this.dataGroups, this.users);
-      this.authorizationScopes[0].options[0].children[0].children.push({
-        children: [],
-        id: "toto",
-        label: "toto",
-      });
+      // this.authorizationScopes[0].options[0].children[0].children.push({
+      //   children: [],
+      //   id: "toto",
+      //   label: "toto",
+      // });
     } catch (error) {
-      console.log(error);
       this.alertService.toastServerError(error);
     }
   }
 
-  updateScopesToAuthorize(scopesChecked) {
-    console.log(scopesChecked);
+  @Watch("scopeToAuthorize")
+  onScopeToAuthorizeChanged() {
+    console.log(this.scopeToAuthorize);
   }
 }
 </script>
