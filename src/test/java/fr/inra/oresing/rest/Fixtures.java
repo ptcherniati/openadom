@@ -180,7 +180,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isOk());
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
         return authCookie;
     }
@@ -210,7 +210,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp/data/jeu1")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isOk());
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
         return authCookie;
@@ -243,7 +243,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         try (InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
@@ -251,7 +251,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         try (InputStream in = openSwcDataResourceName(true)) {
@@ -259,7 +259,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().is2xxSuccessful());
         }
         return authCookie;
     }
@@ -362,7 +362,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
         }
 
         return authCookie;

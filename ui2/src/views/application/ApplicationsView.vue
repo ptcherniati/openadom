@@ -31,6 +31,9 @@
         <b-button icon-left="drafting-compass" @click="displayReferencesManagement(props.row)">{{
           $t("applications.references")
         }}</b-button>
+        <b-button icon-left="poll" @click="displayDataSetManagement(props.row)">{{
+          $t("applications.dataset")
+        }}</b-button>
       </b-table-column>
     </b-table>
   </PageView>
@@ -68,6 +71,13 @@ export default class ApplicationsView extends Vue {
       return;
     }
     this.$router.push("/applications/" + application.name + "/references");
+  }
+
+  displayDataSetManagement(application) {
+    if (!application) {
+      return;
+    }
+    this.$router.push("/applications/" + application.name + "/dataTypes");
   }
 }
 </script>

@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -18,7 +17,7 @@ public class Data extends OreSiEntity {
     private String dataGroup;
     private Map<String, String> requiredAuthorizations;
     private LocalDateTimeRange timeScope;
-    private List<UUID> refsLinkedTo;
+    private Map<String, Map<String, UUID>> refsLinkedTo;
     private Map<String, Map<String, String>> dataValues;
     private UUID binaryFile;
 }

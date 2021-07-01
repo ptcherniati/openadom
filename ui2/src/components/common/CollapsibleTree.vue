@@ -100,13 +100,13 @@ $row-height: 40px;
   }
 
   .file-name {
-    border-top-style: none;
-    border-right-style: none;
-    border-bottom-style: none;
-    border-left-width: 2px;
-    border-radius: 0px;
-    opacity: 0.8;
-    background-color: rgba(250, 250, 250, 1);
+    border: none;
+    height: 100%;
+    display: inherit;
+    border-right: solid 2px;
+    border-radius: 0;
+    padding-right: 0 0.5em;
+    background-color: rgba(255, 255, 255, 0.2);
 
     &:hover {
       opacity: 1;
@@ -129,7 +129,6 @@ $row-height: 40px;
 
     .file-cta {
       height: 100%;
-      background-color: transparent;
       border-color: transparent;
     }
   }

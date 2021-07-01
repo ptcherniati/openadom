@@ -49,9 +49,7 @@ public class AuthorizationResourcesTest {
 
     @Test
     public void testAddAuthorization() throws Exception {
-
         Cookie authCookie = fixtures.addApplicationAcbb();
-
         CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
@@ -83,7 +81,7 @@ public class AuthorizationResourcesTest {
         {
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -141,7 +139,7 @@ public class AuthorizationResourcesTest {
         {
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"bimont.bim13\",\"projet\":\"sou\"},\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -154,7 +152,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -166,7 +164,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/authorization/")
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/")
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -198,7 +196,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
+            String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
                     .cookie(authCookie)
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
@@ -215,7 +213,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            Assert.assertEquals("[]", json);
+            Assert.assertEquals("{\"variables\":[],\"rows\":[]}", json);
         }
     }
 }

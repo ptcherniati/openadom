@@ -61,13 +61,17 @@ export default class ReferencesManagementView extends Vue {
       (label) => this.consultReference(label),
       "is-primary"
     ),
-    new Button(this.$t("referencesManagement.download"), "download"),
+    new Button(this.$t("referencesManagement.download"), "download", (label) =>
+      this.downloadReference(label)
+    ),
   ];
 
   created() {
     this.subMenuPaths = [
-      new SubMenuPath(this.$t("referencesManagement.references").toLowerCase(), () =>
-        this.$router.push(`/applications/${this.applicationName}/references`)
+      new SubMenuPath(
+        this.$t("referencesManagement.references").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/references`),
+        () => this.$router.push(`/applications`)
       ),
     ];
     this.init();
@@ -88,24 +92,35 @@ export default class ReferencesManagementView extends Vue {
   openRefDetails(event, label) {
     event.stopPropagation();
     this.openPanel = this.chosenRef && this.chosenRef.label === label ? !this.openPanel : true;
-    this.chosenRef = Object.values(this.application.references).find((ref) => ref.label === label);
+    this.chosenRef = this.findReferenceByLabel(label);
   }
 
   consultReference(label) {
-    const ref = Object.values(this.application.references).find((ref) => ref.label === label);
+    const ref = this.findReferenceByLabel(label);
     if (ref) {
       this.$router.push(`/applications/${this.applicationName}/references/${ref.id}`);
     }
   }
 
+  downloadReference(label) {
+    const reference = this.findReferenceByLabel(label);
+    if (reference) {
+      this.referenceService.getReferenceCsv(this.applicationName, reference.id);
+    }
+  }
+
   async uploadReferenceCsv(label, refFile) {
-    const reference = Object.values(this.application.references).find((ref) => ref.label === label);
+    const reference = this.findReferenceByLabel(label);
     try {
       await this.referenceService.createReference(this.applicationName, reference.id, refFile);
       this.alertService.toastSuccess(this.$t("alert.reference-updated"));
     } catch (error) {
       this.alertService.toastError(this.$t("alert.reference-csv-upload-error"), error);
     }
+  }
+
+  findReferenceByLabel(label) {
+    return Object.values(this.application.references).find((ref) => ref.label === label);
   }
 }
 </script>
