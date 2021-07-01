@@ -32,6 +32,8 @@ import {
   faUserPlus,
   faUserAstronaut,
   faKey,
+  faChevronUp,
+  faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -61,7 +63,9 @@ library.add(
   faSignInAlt,
   faUserPlus,
   faUserAstronaut,
-  faKey
+  faKey,
+  faChevronUp,
+  faChevronDown
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

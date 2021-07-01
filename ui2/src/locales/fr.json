@@ -113,7 +113,12 @@
   },
   "dataTypeAuthorizations": {
     "add-auhtorization": "Ajouter une autorisation",
-    "sub-menu-data-type-authorizations": "autorisations_{dataType}",
-    "sub-menu-new-authorization": "nouvelle autorisation"
+    "sub-menu-data-type-authorizations": "autorisations de {dataType}",
+    "sub-menu-new-authorization": "nouvelle autorisation",
+    "users": "Utilisateurs",
+    "users-placeholder": "Choisir les utilisateurs à autoriser",
+    "data-groups": "Groupes de données",
+    "data-groups-placeholder": "Choisir les données à autoriser",
+    "authorization-scopes": "Périmètres d'autorisation"
   }
 }

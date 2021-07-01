@@ -8,7 +8,7 @@
       <CollapsibleTree
         v-for="data in dataTypes"
         :key="data.id"
-        :label="data.label"
+        :option="data"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
         :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"

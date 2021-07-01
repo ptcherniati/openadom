@@ -113,7 +113,12 @@
   },
   "dataTypeAuthorizations": {
     "add-auhtorization": "Add an authorization",
-    "sub-menu-data-type-authorizations": "{dataType}_authorizations",
-    "sub-menu-new-authorization": "new authorization"
+    "sub-menu-data-type-authorizations": "{dataType} authorizations",
+    "sub-menu-new-authorization": "new authorization",
+    "users": "Users",
+    "users-placeholder": "Chose users to authorize",
+    "data-groups": "Data groups",
+    "data-groups-placeholder": "Chose data groups to authorize",
+    "authorization-scopes": "Authorization scopes"
   }
 }
