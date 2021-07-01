@@ -61,6 +61,7 @@
               :key="option.id"
               :option="option"
               :withCheckBoxes="true"
+              @updateChildrenChecked="updateScopesToAuthorize"
             />
           </div>
         </div>
@@ -98,6 +99,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   usersToAuthorize = [];
   dataGroupToAuthorize = {};
   openCollapse = null;
+  scopesToAuthorize = [];
 
   created() {
     this.init();
@@ -143,9 +145,19 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         users: this.users,
       } = grantableInfos);
       console.log(this.authorizationScopes, this.dataGroups, this.users);
+      this.authorizationScopes[0].options[0].children[0].children.push({
+        children: [],
+        id: "toto",
+        label: "toto",
+      });
     } catch (error) {
+      console.log(error);
       this.alertService.toastServerError(error);
     }
+  }
+
+  updateScopesToAuthorize(scopesChecked) {
+    console.log(scopesChecked);
   }
 }
 </script>

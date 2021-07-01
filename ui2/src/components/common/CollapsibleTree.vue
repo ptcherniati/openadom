@@ -15,8 +15,11 @@
         />
         <b-checkbox
           v-if="withCheckBoxes"
+          v-model="innerChecked"
           :native-value="option.id"
           :style="`transform:translate(${level * 50}px);`"
+          @click.native="stopPropagation"
+          :disabled="hasParentChecked"
         >
           {{ option.label }}
         </b-checkbox>
@@ -58,23 +61,24 @@
         </div>
       </div>
     </div>
-    <div v-if="displayChildren">
-      <CollapsibleTree
-        v-for="child in option.children"
-        :key="child.id"
-        :option="child"
-        :level="level + 1"
-        :onClickLabelCb="onClickLabelCb"
-        :onUploadCb="onUploadCb"
-        :buttons="buttons"
-        :withCheckBoxes="withCheckBoxes"
-      />
-    </div>
+    <CollapsibleTree
+      v-for="child in option.children"
+      :key="child.id"
+      :option="child"
+      :level="level + 1"
+      :onClickLabelCb="onClickLabelCb"
+      :onUploadCb="onUploadCb"
+      :buttons="buttons"
+      :withCheckBoxes="withCheckBoxes"
+      :hasParentChecked="innerChecked"
+      :class="displayChildren ? '' : 'hide'"
+      @childCheck="updateChildrenChecked"
+    />
   </div>
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
@@ -87,9 +91,36 @@ export default class CollapsibleTree extends Vue {
   @Prop() onUploadCb;
   @Prop() buttons;
   @Prop({ default: false }) withCheckBoxes;
+  @Prop({ default: false }) hasParentChecked;
 
   displayChildren = false;
   refFile = null;
+  innerChecked = false;
+  innerChildrenChecked = [];
+
+  @Watch("hasParentChecked")
+  onParentChecked(newVal) {
+    this.innerChecked = newVal;
+  }
+
+  @Watch("innerChecked")
+  onInnerChecked() {
+    this.$emit("childCheck", { id: this.option.id, checked: this.innerChecked });
+  }
+
+  updateChildrenChecked({ id, checked }) {
+    if (checked) {
+      this.innerChildrenChecked.push(id);
+    } else {
+      const removalIndex = this.innerChildrenChecked.indexOf(id);
+      this.innerChildrenChecked.splice(removalIndex, 1);
+    }
+    this.$emit("updateChildrenChecked", this.innerChildrenChecked);
+  }
+
+  stopPropagation(event) {
+    event.stopPropagation();
+  }
 }
 </script>
 
