@@ -8,6 +8,6 @@ export class AuthorizationService extends Fetcher {
   }
 
   async getDataAuthorizations(applicationName, dataTypeId) {
-    return this.get(`/applications/${applicationName}/dataType/${dataTypeId}/authorization`);
+    return this.get(`applications/${applicationName}/dataType/${dataTypeId}/authorization`);
   }
 }

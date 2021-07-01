@@ -1,14 +1,12 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu :root="application.title" :paths="subMenuPaths" />
+
     <h1 class="title main-title">
-      {{ $t("titles.data-type-authorizations", { dataType: dataTypeId }) }}
+      <span v-if="authorizationId === 'new'">{{
+        $t("titles.data-type-new-authorization", { dataType: dataTypeId })
+      }}</span>
     </h1>
-    <div class="buttons">
-      <b-button type="is-primary" @click="addAuthorization" icon-left="plus">
-        {{ $t("dataTypeAuthorizations.add-auhtorization") }}
-      </b-button>
-    </div>
   </PageView>
 </template>
 
@@ -23,9 +21,10 @@ import PageView from "../common/PageView.vue";
 @Component({
   components: { PageView, SubMenu },
 })
-export default class DataTypeAuthorizationsView extends Vue {
+export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() dataTypeId;
   @Prop() applicationName;
+  @Prop() authorizationId;
 
   authorizationService = AuthorizationService.INSTANCE;
   alertService = AlertService.INSTANCE;
@@ -53,25 +52,24 @@ export default class DataTypeAuthorizationsView extends Vue {
         },
         () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
+      new SubMenuPath(
+        this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
+        () => {},
+        () => {
+          this.$router.push(
+            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+          );
+        }
+      ),
     ];
   }
 
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      this.authorizations = await this.authorizationService.getDataAuthorizations(
-        this.applicationName,
-        this.dataTypeId
-      );
     } catch (error) {
       this.alertService.toastServerError(error);
     }
-  }
-
-  addAuthorization() {
-    this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
-    );
   }
 }
 </script>

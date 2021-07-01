@@ -5,7 +5,9 @@
     "references-page": "{applicationName} references",
     "references-data": "{refName} data",
     "application-creation": "Application creation",
-    "data-types-page": "{applicationName} data types"
+    "data-types-page": "{applicationName} data types",
+    "data-type-authorizations": "{dataType} authorizations",
+    "data-type-new-authorization": "New authorization for {dataType}"
   },
   "login": {
     "signin": "Sign in",
@@ -108,5 +110,10 @@
   "dataTypesManagement": {
     "data-types": "Data types",
     "consult-authorization": "Consult authorizations"
+  },
+  "dataTypeAuthorizations": {
+    "add-auhtorization": "Add an authorization",
+    "sub-menu-data-type-authorizations": "{dataType}_authorizations",
+    "sub-menu-new-authorization": "new authorization"
   }
 }

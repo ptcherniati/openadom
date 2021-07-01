@@ -5,7 +5,9 @@
     "references-page": "Référentiels de {applicationName}",
     "references-data": "Données de {refName}",
     "application-creation": "Créer une application",
-    "data-types-page": "Type de données de {applicationName}"
+    "data-types-page": "Type de données de {applicationName}",
+    "data-type-authorizations": "Autorisations de {dataType}",
+    "data-type-new-authorization": "Nouvelle autorisation pour {dataType}"
   },
   "login": {
     "signin": "Se connecter",
@@ -108,5 +110,10 @@
   "dataTypesManagement": {
     "data-types": "Type de données",
     "consult-authorization": "Consulter les autorisations"
+  },
+  "dataTypeAuthorizations": {
+    "add-auhtorization": "Ajouter une autorisation",
+    "sub-menu-data-type-authorizations": "autorisations_{dataType}",
+    "sub-menu-new-authorization": "nouvelle autorisation"
   }
 }

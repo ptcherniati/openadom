@@ -117,7 +117,6 @@ export default class DataTypesManagementView extends Vue {
     this.openPanel =
       this.chosenDataType && this.chosenDataType.label === label ? !this.openPanel : true;
     this.chosenDataType = this.dataTypes.find((dt) => dt.label === label);
-    console.log(this.chosenDataType);
   }
 
   async uploadDataTypeCsv(label, file) {
