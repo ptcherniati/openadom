@@ -32,6 +32,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   authorizations = [];
   application = {};
+  grantableInfos = {};
 
   created() {
     this.init();
@@ -67,6 +68,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
+        this.applicationName,
+        this.dataTypeId
+      );
+      console.log(this.grantableInfos);
     } catch (error) {
       this.alertService.toastServerError(error);
     }
