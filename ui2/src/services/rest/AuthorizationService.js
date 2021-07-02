@@ -14,4 +14,12 @@ export class AuthorizationService extends Fetcher {
   async getAuthorizationGrantableInfos(applicationName, dataTypeId) {
     return this.get(`applications/${applicationName}/dataType/${dataTypeId}/grantable`);
   }
+
+  async createAuthorization(applicationName, dataTypeId, authorizationModel) {
+    return this.post(
+      `applications/${applicationName}/dataType/${dataTypeId}/authorization`,
+      authorizationModel,
+      false
+    );
+  }
 }

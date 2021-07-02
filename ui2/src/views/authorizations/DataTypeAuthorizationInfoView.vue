@@ -241,7 +241,7 @@
                   :option="option"
                   :withRadios="true"
                   :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
-                  @optionChecked="(value) => (scopeToAuthorize = value)"
+                  @optionChecked="(value) => (scopesToAuthorize[scope.id] = value)"
                 />
               </div>
             </div>
@@ -261,6 +261,7 @@
 <script>
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { DataTypeAuthorization } from "@/model/DataTypeAuthorization";
 import { AlertService } from "@/services/AlertService";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AuthorizationService } from "@/services/rest/AuthorizationService";
@@ -297,7 +298,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   userToAuthorize = null;
   dataGroupToAuthorize = null;
   openCollapse = null;
-  scopeToAuthorize = null;
+  scopesToAuthorize = {};
   period = this.periods.FROM_DATE;
   startDate = null;
   endDate = null;
@@ -363,10 +364,31 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   }
 
   createAuthorization() {
-    console.log("CREATE AUTHORIZATION");
-    console.log(this.userToAuthorize);
-    console.log(this.startDate, this.endDate);
-    console.log(this.scopeToAuthorize, this.dataGroupToAuthorize);
+    const dataTypeAuthorization = new DataTypeAuthorization();
+    dataTypeAuthorization.userId = this.userToAuthorize;
+    dataTypeAuthorization.applicationNameOrId = this.applicationName;
+    dataTypeAuthorization.dataType = this.dataTypeId;
+    dataTypeAuthorization.dataGroup = this.dataGroupToAuthorize;
+    dataTypeAuthorization.authorizedScopes = this.scopesToAuthorize;
+    let fromDay = null;
+    if (this.startDate) {
+      fromDay = [
+        this.startDate.getFullYear(),
+        this.startDate.getMonth() + 1,
+        this.startDate.getDate(),
+      ];
+    }
+    dataTypeAuthorization.fromDay = fromDay;
+    let toDay = null;
+    if (this.endDate) {
+      toDay = [this.endDate.getFullYear(), this.endDate.getMonth() + 1, this.endDate.getDate()];
+    }
+    dataTypeAuthorization.toDay = toDay;
+    this.authorizationService.createAuthorization(
+      this.applicationName,
+      this.dataTypeId,
+      dataTypeAuthorization
+    );
   }
 }
 </script>

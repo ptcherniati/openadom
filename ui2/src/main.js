@@ -122,6 +122,14 @@ extend("validApplicationNameLength", {
   },
 });
 
+// extend("dateIsAfter", {
+//   message: i18n.t("validation.date-not-after").toString(),
+//   validate: (value, { min }: Record<string, any>) => {
+//     return isAfter(value, new Date(min))
+//   },
+//   params: ["min"],
+// })
+
 // Buefy
 Vue.use(Buefy, {
   defaultIconComponent: "vue-fontawesome",
