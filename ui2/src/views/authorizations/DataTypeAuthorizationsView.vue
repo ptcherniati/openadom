@@ -27,7 +27,7 @@
         sortable
         v-slot="props"
       >
-        {{ props.row.id }}
+        {{ props.row.user }}
       </b-table-column>
       <b-table-column
         b-table-column
@@ -56,6 +56,16 @@
         v-slot="props"
       >
         {{ props.row.authorizedScopes[scope] }}
+      </b-table-column>
+      <b-table-column b-table-column :label="$t('dataTypeAuthorizations.actions')" v-slot="props">
+        <b-button
+          type="is-danger"
+          size="is-small"
+          @click="revoke(props.row.id)"
+          icon-left="trash-alt"
+        >
+          {{ $t("dataTypeAuthorizations.revoke") }}
+        </b-button>
       </b-table-column>
     </b-table>
   </PageView>
@@ -125,6 +135,10 @@ export default class DataTypeAuthorizationsView extends Vue {
     this.$router.push(
       `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
     );
+  }
+
+  revoke(id) {
+    this.authorizationService.revokeAuthorization(this.applicationName, this.dataTypeId, id);
   }
 }
 </script>

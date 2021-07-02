@@ -22,4 +22,10 @@ export class AuthorizationService extends Fetcher {
       false
     );
   }
+
+  async revokeAuthorization(applicationName, dataTypeId, authorizationId) {
+    return this.delete(
+      `applications/${applicationName}/dataType/${dataTypeId}/authorization/${authorizationId}`
+    );
+  }
 }

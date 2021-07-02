@@ -129,6 +129,8 @@
     "create": "Create authorization",
     "user": "User",
     "data-group": "Data group",
-    "data-type": "Data type"
+    "data-type": "Data type",
+    "actions": "Actions",
+    "revoke": "Revoke"
   }
 }

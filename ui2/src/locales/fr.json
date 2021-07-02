@@ -129,6 +129,8 @@
     "create": "Créer l'autorisation",
     "user": "Utilisateur",
     "data-group": "Groupe de données",
-    "data-type": "Type de donnée"
+    "data-type": "Type de donnée",
+    "actions": "Actions",
+    "revoke": "Révoquer"
   }
 }
