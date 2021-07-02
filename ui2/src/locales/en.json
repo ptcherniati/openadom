@@ -126,6 +126,9 @@
     "from-date-to-date": "From date to date : ",
     "always": "Always",
     "to": "to",
-    "create": "Create authorization"
+    "create": "Create authorization",
+    "user": "User",
+    "data-group": "Data group",
+    "data-type": "Data type"
   }
 }

@@ -126,6 +126,9 @@
     "from-date-to-date": "De date à date",
     "always": "Toujours",
     "to": "à",
-    "create": "Créer l'autorisation"
+    "create": "Créer l'autorisation",
+    "user": "Utilisateur",
+    "data-group": "Groupe de données",
+    "data-type": "Type de donnée"
   }
 }

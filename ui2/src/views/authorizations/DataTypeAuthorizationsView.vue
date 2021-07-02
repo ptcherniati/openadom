@@ -9,6 +9,55 @@
         {{ $t("dataTypeAuthorizations.add-auhtorization") }}
       </b-button>
     </div>
+
+    <b-table
+      :data="authorizations"
+      :striped="true"
+      :isFocusable="true"
+      :isHoverable="true"
+      :sticky-header="true"
+      :paginated="true"
+      :per-page="15"
+      height="100%"
+    >
+      <b-table-column
+        b-table-column
+        field="user"
+        :label="$t('dataTypeAuthorizations.user')"
+        sortable
+        v-slot="props"
+      >
+        {{ props.row.id }}
+      </b-table-column>
+      <b-table-column
+        b-table-column
+        field="dataType"
+        :label="$t('dataTypeAuthorizations.data-type')"
+        sortable
+        v-slot="props"
+      >
+        {{ props.row.dataType }}
+      </b-table-column>
+      <b-table-column
+        b-table-column
+        field="dataGroup"
+        :label="$t('dataTypeAuthorizations.data-group')"
+        sortable
+        v-slot="props"
+      >
+        {{ props.row.dataGroup }}
+      </b-table-column>
+      <b-table-column
+        v-for="scope in scopes"
+        :key="scope"
+        b-table-column
+        :label="scope"
+        sortable
+        v-slot="props"
+      >
+        {{ props.row.authorizedScopes[scope] }}
+      </b-table-column>
+    </b-table>
   </PageView>
 </template>
 
@@ -33,6 +82,7 @@ export default class DataTypeAuthorizationsView extends Vue {
 
   authorizations = [];
   application = {};
+  scopes = [];
 
   created() {
     this.init();
@@ -63,6 +113,9 @@ export default class DataTypeAuthorizationsView extends Vue {
         this.applicationName,
         this.dataTypeId
       );
+      if (this.authorizations && this.authorizations.length !== 0) {
+        this.scopes = Object.keys(this.authorizations[0].authorizedScopes);
+      }
     } catch (error) {
       this.alertService.toastServerError(error);
     }
