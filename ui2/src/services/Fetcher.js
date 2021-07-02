@@ -12,16 +12,19 @@ export class Fetcher {
     if (withFormData) {
       body = this.convertToFormData(data);
     }
+    const headers = withFormData
+      ? { "Accept-Language": this.getUserPrefLocale() }
+      : {
+          "Accept-Language": this.getUserPrefLocale(),
+          "Content-Type": "application/json;charset=UTF-8;multipart/form-data",
+        };
 
     const response = await fetch(`${config.API_URL}${url}`, {
       method: "POST",
       mode: "cors",
       credentials: "include",
       body: body,
-      headers: {
-        "Accept-Language": this.getUserPrefLocale(),
-        "Content-Type": "application/json;charset=UTF-8",
-      },
+      headers: headers,
     });
 
     return this._handleResponse(response);
