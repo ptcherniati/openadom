@@ -35,6 +35,7 @@ import {
   faChevronUp,
   faChevronDown,
   faCalendarDay,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -67,7 +68,8 @@ library.add(
   faKey,
   faChevronUp,
   faChevronDown,
-  faCalendarDay
+  faCalendarDay,
+  faPaperPlane
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

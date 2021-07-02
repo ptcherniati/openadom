@@ -125,6 +125,7 @@
     "to-date": "To date : ",
     "from-date-to-date": "From date to date : ",
     "always": "Always",
-    "to": "to"
+    "to": "to",
+    "create": "Create authorization"
   }
 }

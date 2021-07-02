@@ -8,129 +8,253 @@
       }}</span>
     </h1>
 
-    <b-field
-      :label="$t('dataTypeAuthorizations.period')"
-      class="DataTypeAuthorizationInfoView-periods-container mb-4"
-    >
-      <b-radio
-        name="dataTypeAuthorization-period"
-        v-model="period"
-        :native-value="periods.FROM_DATE"
-        class="DataTypeAuthorizationInfoView-radio-field mb-2"
+    <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
+      <b-field
+        :label="$t('dataTypeAuthorizations.period')"
+        class="DataTypeAuthorizationInfoView-periods-container mb-4"
       >
-        <span class="DataTypeAuthorizationInfoView-radio-label">
-          {{ periods.FROM_DATE }}
-        </span>
-        <b-field>
-          <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
-          </b-datepicker>
+        <b-radio
+          name="dataTypeAuthorization-period"
+          v-model="period"
+          :native-value="periods.FROM_DATE"
+          class="DataTypeAuthorizationInfoView-radio-field mb-2"
+        >
+          <span class="DataTypeAuthorizationInfoView-radio-label">
+            {{ periods.FROM_DATE }}
+          </span>
+          <ValidationProvider
+            :rules="period === periods.FROM_DATE ? 'required' : ''"
+            name="period_fromDate"
+            v-slot="{ errors, valid }"
+            vid="period_fromDate"
+          >
+            <b-field
+              :type="{
+                'is-danger': errors && errors.length > 0,
+                'is-success': valid && period === periods.FROM_DATE,
+              }"
+              :message="errors[0]"
+            >
+              <b-datepicker
+                v-model="startDate"
+                show-week-number
+                :locale="chosenLocale"
+                icon="calendar-day"
+                trap-focus
+                :disabled="period !== periods.FROM_DATE"
+              >
+              </b-datepicker>
+            </b-field>
+          </ValidationProvider>
+        </b-radio>
+
+        <b-radio
+          name="dataTypeAuthorization-period"
+          v-model="period"
+          :native-value="periods.TO_DATE"
+          class="DataTypeAuthorizationInfoView-radio-field mb-2"
+        >
+          <span class="DataTypeAuthorizationInfoView-radio-label">
+            {{ periods.TO_DATE }}
+          </span>
+          <ValidationProvider
+            :rules="period === periods.TO_DATE ? 'required' : ''"
+            name="period_toDate"
+            v-slot="{ errors, valid }"
+            vid="period_toDate"
+          >
+            <b-field
+              :type="{
+                'is-danger': errors && errors.length > 0,
+                'is-success': valid && period === periods.TO_DATE,
+              }"
+              :message="errors[0]"
+            >
+              <b-datepicker
+                v-model="endDate"
+                show-week-number
+                :locale="chosenLocale"
+                icon="calendar-day"
+                trap-focus
+                :disabled="period !== periods.TO_DATE"
+              >
+              </b-datepicker>
+            </b-field>
+          </ValidationProvider>
+        </b-radio>
+
+        <b-radio
+          name="dataTypeAuthorization-period"
+          v-model="period"
+          :native-value="periods.FROM_DATE_TO_DATE"
+          class="DataTypeAuthorizationInfoView-radio-field mb-2"
+        >
+          <span class="DataTypeAuthorizationInfoView-radio-label">
+            {{ periods.FROM_DATE_TO_DATE }}
+          </span>
+          <ValidationProvider
+            :rules="period === periods.FROM_DATE_TO_DATE ? 'required' : ''"
+            name="period_fromDateToDate_1"
+            v-slot="{ errors, valid }"
+            vid="period_fromDateToDate_1"
+          >
+            <b-field
+              class="mr-4"
+              :type="{
+                'is-danger': errors && errors.length > 0,
+                'is-success': valid && period === periods.FROM_DATE_TO_DATE,
+              }"
+              :message="errors[0]"
+            >
+              <b-datepicker
+                v-model="startDate"
+                show-week-number
+                :locale="chosenLocale"
+                icon="calendar-day"
+                trap-focus
+                :disabled="period !== periods.FROM_DATE_TO_DATE"
+              >
+              </b-datepicker>
+            </b-field>
+          </ValidationProvider>
+          <span class="mr-4">{{ $t("dataTypeAuthorizations.to") }}</span>
+          <ValidationProvider
+            :rules="period === periods.FROM_DATE_TO_DATE ? 'required' : ''"
+            name="period_fromDateToDate_2"
+            v-slot="{ errors, valid }"
+            vid="period_fromDateToDate_2"
+          >
+            <b-field
+              :type="{
+                'is-danger': errors && errors.length > 0,
+                'is-success': valid && period === periods.FROM_DATE_TO_DATE,
+              }"
+              :message="errors[0]"
+            >
+              <b-datepicker
+                v-model="endDate"
+                show-week-number
+                :locale="chosenLocale"
+                icon="calendar-day"
+                trap-focus
+                :disabled="period !== periods.FROM_DATE_TO_DATE"
+              >
+              </b-datepicker>
+            </b-field>
+          </ValidationProvider>
+        </b-radio>
+
+        <b-radio
+          class="DataTypeAuthorizationInfoView-radio-field"
+          name="dataTypeAuthorization-period"
+          v-model="period"
+          :native-value="periods.ALWAYS"
+        >
+          <span class="DataTypeAuthorizationInfoView-radio-label">
+            {{ periods.ALWAYS }}</span
+          ></b-radio
+        >
+      </b-field>
+
+      <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
+        <b-field
+          :label="$t('dataTypeAuthorizations.users')"
+          class="mb-4"
+          :type="{
+            'is-danger': errors && errors.length > 0,
+            'is-success': valid,
+          }"
+          :message="errors[0]"
+        >
+          <b-select
+            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+            v-model="userToAuthorize"
+            expanded
+          >
+            <option v-for="user in users" :value="user.id" :key="user.id">
+              {{ user.label }}
+            </option>
+          </b-select>
         </b-field>
-      </b-radio>
+      </ValidationProvider>
 
-      <b-radio
-        name="dataTypeAuthorization-period"
-        v-model="period"
-        :native-value="periods.TO_DATE"
-        class="DataTypeAuthorizationInfoView-radio-field mb-2"
+      <ValidationProvider
+        rules="required"
+        name="dataGroups"
+        v-slot="{ errors, valid }"
+        vid="dataGroups"
       >
-        <span class="DataTypeAuthorizationInfoView-radio-label">
-          {{ periods.TO_DATE }}
-        </span>
-        <b-field>
-          <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
-          </b-datepicker>
+        <b-field
+          :label="$t('dataTypeAuthorizations.data-groups')"
+          class="mb-4"
+          :type="{
+            'is-danger': errors && errors.length > 0,
+            'is-success': valid,
+          }"
+          :message="errors[0]"
+        >
+          <b-select
+            :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
+            v-model="dataGroupToAuthorize"
+            expanded
+          >
+            <option v-for="dataGroup in dataGroups" :value="dataGroup.id" :key="dataGroup.id">
+              {{ dataGroup.label }}
+            </option>
+          </b-select>
         </b-field>
-      </b-radio>
+      </ValidationProvider>
 
-      <b-radio
-        name="dataTypeAuthorization-period"
-        v-model="period"
-        :native-value="periods.FROM_DATE_TO_DATE"
-        class="DataTypeAuthorizationInfoView-radio-field mb-2"
-      >
-        <span class="DataTypeAuthorizationInfoView-radio-label">
-          {{ periods.FROM_DATE_TO_DATE }}
-        </span>
-        <b-field class="mr-4">
-          <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
-          </b-datepicker>
+      <ValidationProvider rules="required" name="scopes" v-slot="{ errors, valid }" vid="scopes">
+        <b-field
+          :label="$t('dataTypeAuthorizations.authorization-scopes')"
+          class="mb-4"
+          :type="{
+            'is-danger': errors && errors.length > 0,
+            'is-success': valid,
+          }"
+          :message="errors[0]"
+        >
+          <b-collapse
+            class="card"
+            animation="slide"
+            v-for="(scope, index) of authorizationScopes"
+            :key="scope.id"
+            :open="openCollapse == index"
+            @open="openCollapse = index"
+          >
+            <template #trigger="props">
+              <div class="card-header" role="button">
+                <p class="card-header-title">
+                  {{ scope.label }}
+                </p>
+                <a class="card-header-icon">
+                  <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+                </a>
+              </div>
+            </template>
+            <div class="card-content">
+              <div class="content">
+                <CollapsibleTree
+                  v-for="option in scope.options"
+                  :key="option.id"
+                  :option="option"
+                  :withRadios="true"
+                  :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
+                  @optionChecked="(value) => (scopeToAuthorize = value)"
+                />
+              </div>
+            </div>
+          </b-collapse>
         </b-field>
-        <span class="mr-4">{{ $t("dataTypeAuthorizations.to") }}</span>
-        <b-field>
-          <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
-          </b-datepicker>
-        </b-field>
-      </b-radio>
+      </ValidationProvider>
 
-      <b-radio
-        class="DataTypeAuthorizationInfoView-radio-field"
-        name="dataTypeAuthorization-period"
-        v-model="period"
-        :native-value="periods.ALWAYS"
-      >
-        <span class="DataTypeAuthorizationInfoView-radio-label">
-          {{ periods.ALWAYS }}</span
-        ></b-radio
-      >
-    </b-field>
-
-    <b-field :label="$t('dataTypeAuthorizations.users')" class="mb-4">
-      <b-select
-        :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-        v-model="userToAuthorize"
-        expanded
-      >
-        <option v-for="user in users" :value="user.id" :key="user.id">
-          {{ user.label }}
-        </option>
-      </b-select>
-    </b-field>
-
-    <b-field :label="$t('dataTypeAuthorizations.data-groups')" class="mb-4">
-      <b-select
-        :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-        v-model="dataGroupToAuthorize"
-        expanded
-      >
-        <option v-for="dataGroup in dataGroups" :value="dataGroup.id" :key="dataGroup.id">
-          {{ dataGroup.label }}
-        </option>
-      </b-select>
-    </b-field>
-
-    <b-field :label="$t('dataTypeAuthorizations.authorization-scopes')">
-      <b-collapse
-        class="card"
-        animation="slide"
-        v-for="(scope, index) of authorizationScopes"
-        :key="scope.id"
-        :open="openCollapse == index"
-        @open="openCollapse = index"
-      >
-        <template #trigger="props">
-          <div class="card-header" role="button">
-            <p class="card-header-title">
-              {{ scope.label }}
-            </p>
-            <a class="card-header-icon">
-              <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
-            </a>
-          </div>
-        </template>
-        <div class="card-content">
-          <div class="content">
-            <CollapsibleTree
-              v-for="option in scope.options"
-              :key="option.id"
-              :option="option"
-              :withRadios="true"
-              :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
-              @optionChecked="(value) => (scopeToAuthorize = value)"
-            />
-          </div>
-        </div>
-      </b-collapse>
-    </b-field>
+      <div class="buttons">
+        <b-button type="is-primary" @click="handleSubmit(createAuthorization)" icon-left="plus">
+          {{ $t("dataTypeAuthorizations.create") }}
+        </b-button>
+      </div>
+    </ValidationObserver>
   </PageView>
 </template>
 
@@ -141,11 +265,12 @@ import { AlertService } from "@/services/AlertService";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AuthorizationService } from "@/services/rest/AuthorizationService";
 import { UserPreferencesService } from "@/services/UserPreferencesService";
+import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleTree },
+  components: { PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
 })
 export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() dataTypeId;
@@ -169,11 +294,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   users = [];
   dataGroups = [];
   authorizationScopes = [];
-  userToAuthorize = [];
-  dataGroupToAuthorize = {};
+  userToAuthorize = null;
+  dataGroupToAuthorize = null;
   openCollapse = null;
   scopeToAuthorize = null;
   period = this.periods.FROM_DATE;
+  startDate = null;
+  endDate = null;
 
   created() {
     this.init();
@@ -219,7 +346,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
-      console.log(this.authorizationScopes, this.dataGroups, this.users);
       // this.authorizationScopes[0].options[0].children[0].children.push({
       //   children: [],
       //   id: "toto",
@@ -230,9 +356,17 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     }
   }
 
-  @Watch("scopeToAuthorize")
-  onScopeToAuthorizeChanged() {
-    console.log(this.scopeToAuthorize);
+  @Watch("period")
+  onPeriodChanged() {
+    this.endDate = null;
+    this.startDate = null;
+  }
+
+  createAuthorization() {
+    console.log("CREATE AUTHORIZATION");
+    console.log(this.userToAuthorize);
+    console.log(this.startDate, this.endDate);
+    console.log(this.scopeToAuthorize, this.dataGroupToAuthorize);
   }
 }
 </script>
@@ -247,6 +381,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
 .DataTypeAuthorizationInfoView-radio-field {
   height: 40px;
+
   &.b-radio {
     .control-label {
       display: flex;
