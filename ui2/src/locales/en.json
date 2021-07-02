@@ -39,7 +39,9 @@
     "reference-csv-upload-error": "An error occured while uploading the csv file",
     "reference-updated": "Reference updated",
     "data-updated": "Data type updated",
-    "registered-user": "User registered"
+    "registered-user": "User registered",
+    "revoke-authorization": "Authorization revoked",
+    "create-authorization": "Authorization created"
   },
   "message": {
     "app-config-error": "Error in yaml file",

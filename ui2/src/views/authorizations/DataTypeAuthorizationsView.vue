@@ -29,15 +29,7 @@
       >
         {{ props.row.user }}
       </b-table-column>
-      <b-table-column
-        b-table-column
-        field="dataType"
-        :label="$t('dataTypeAuthorizations.data-type')"
-        sortable
-        v-slot="props"
-      >
-        {{ props.row.dataType }}
-      </b-table-column>
+
       <b-table-column
         b-table-column
         field="dataGroup"
@@ -137,8 +129,21 @@ export default class DataTypeAuthorizationsView extends Vue {
     );
   }
 
-  revoke(id) {
-    this.authorizationService.revokeAuthorization(this.applicationName, this.dataTypeId, id);
+  async revoke(id) {
+    try {
+      await this.authorizationService.revokeAuthorization(
+        this.applicationName,
+        this.dataTypeId,
+        id
+      );
+      this.alertService.toastSuccess(this.$t("alert.revoke-authorization"));
+      this.authorizations.splice(
+        this.authorizations.findIndex((a) => a.id === id),
+        1
+      );
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
   }
 }
 </script>

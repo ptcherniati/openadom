@@ -39,7 +39,9 @@
     "reference-csv-upload-error": "Une erreur s'est produite au téléversement du fichier csv",
     "reference-updated": "Référentiel mis à jour",
     "data-updated": "Type de donnée mis à jour",
-    "registered-user": "Compte utilisateur créé"
+    "registered-user": "Compte utilisateur créé",
+    "revoke-authorization": "Autorisation révoquée",
+    "create-authorization": "Autorisation créée"
   },
   "message": {
     "app-config-error": "Erreur dans le fichier yaml",

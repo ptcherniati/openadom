@@ -363,7 +363,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     this.startDate = null;
   }
 
-  createAuthorization() {
+  async createAuthorization() {
     const dataTypeAuthorization = new DataTypeAuthorization();
     dataTypeAuthorization.userId = this.userToAuthorize;
     dataTypeAuthorization.applicationNameOrId = this.applicationName;
@@ -384,11 +384,20 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       toDay = [this.endDate.getFullYear(), this.endDate.getMonth() + 1, this.endDate.getDate()];
     }
     dataTypeAuthorization.toDay = toDay;
-    this.authorizationService.createAuthorization(
-      this.applicationName,
-      this.dataTypeId,
-      dataTypeAuthorization
-    );
+
+    try {
+      await this.authorizationService.createAuthorization(
+        this.applicationName,
+        this.dataTypeId,
+        dataTypeAuthorization
+      );
+      this.alertService.toastSuccess(this.$t("alert.create-authorization"));
+      this.$router.push(
+        `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+      );
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
   }
 }
 </script>
