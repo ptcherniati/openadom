@@ -120,12 +120,11 @@
     "data-groups": "Data groups",
     "data-groups-placeholder": "Chose data groups to authorize",
     "authorization-scopes": "Authorization scopes",
-    "start-date": "Start date",
-    "end-date": "End date",
     "period": "Authorization period",
     "from-date": "From date : ",
     "to-date": "To date : ",
     "from-date-to-date": "From date to date : ",
-    "always": "Always"
+    "always": "Always",
+    "to": "to"
   }
 }

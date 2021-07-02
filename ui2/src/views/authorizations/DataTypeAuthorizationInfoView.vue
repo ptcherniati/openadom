@@ -16,10 +16,12 @@
         name="dataTypeAuthorization-period"
         v-model="period"
         :native-value="periods.FROM_DATE"
-        class="DataTypeAuthorizationInfoView-radio-field"
+        class="DataTypeAuthorizationInfoView-radio-field mb-2"
       >
-        {{ periods.FROM_DATE }}
-        <b-field :label="$t('dataTypeAuthorizations.start-date')" class="mb-4">
+        <span class="DataTypeAuthorizationInfoView-radio-label">
+          {{ periods.FROM_DATE }}
+        </span>
+        <b-field>
           <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
           </b-datepicker>
         </b-field>
@@ -29,10 +31,12 @@
         name="dataTypeAuthorization-period"
         v-model="period"
         :native-value="periods.TO_DATE"
-        class="DataTypeAuthorizationInfoView-radio-field"
+        class="DataTypeAuthorizationInfoView-radio-field mb-2"
       >
-        {{ periods.TO_DATE }}
-        <b-field :label="$t('dataTypeAuthorizations.end-date')" class="mb-4">
+        <span class="DataTypeAuthorizationInfoView-radio-label">
+          {{ periods.TO_DATE }}
+        </span>
+        <b-field>
           <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
           </b-datepicker>
         </b-field>
@@ -42,24 +46,31 @@
         name="dataTypeAuthorization-period"
         v-model="period"
         :native-value="periods.FROM_DATE_TO_DATE"
-        class="DataTypeAuthorizationInfoView-radio-field"
+        class="DataTypeAuthorizationInfoView-radio-field mb-2"
       >
-        {{ periods.FROM_DATE_TO_DATE }}
-        <b-field :label="$t('dataTypeAuthorizations.start-date')" class="mb-4">
+        <span class="DataTypeAuthorizationInfoView-radio-label">
+          {{ periods.FROM_DATE_TO_DATE }}
+        </span>
+        <b-field class="mr-4">
           <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
           </b-datepicker>
         </b-field>
-        <b-field :label="$t('dataTypeAuthorizations.end-date')" class="mb-4">
+        <span class="mr-4">{{ $t("dataTypeAuthorizations.to") }}</span>
+        <b-field>
           <b-datepicker show-week-number :locale="chosenLocale" icon="calendar-day" trap-focus>
           </b-datepicker>
         </b-field>
       </b-radio>
 
       <b-radio
+        class="DataTypeAuthorizationInfoView-radio-field"
         name="dataTypeAuthorization-period"
         v-model="period"
         :native-value="periods.ALWAYS"
-        >{{ periods.ALWAYS }}</b-radio
+      >
+        <span class="DataTypeAuthorizationInfoView-radio-label">
+          {{ periods.ALWAYS }}</span
+        ></b-radio
       >
     </b-field>
 
@@ -235,11 +246,17 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 }
 
 .DataTypeAuthorizationInfoView-radio-field {
+  height: 40px;
   &.b-radio {
     .control-label {
       display: flex;
       align-items: center;
+      width: 100%;
     }
   }
+}
+
+.DataTypeAuthorizationInfoView-radio-label {
+  width: 200px;
 }
 </style>
