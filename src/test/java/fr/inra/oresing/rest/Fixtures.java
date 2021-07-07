@@ -375,12 +375,13 @@ public class Fixtures {
 
     public Map<String, String> getOlaReferentielFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("themes", "/data/olac/themes.csv");
         referentielFiles.put("projets", "/data/olac/projets.csv");
         referentielFiles.put("typeSites", "/data/olac/types_de_site.csv");
         referentielFiles.put("sites", "/data/olac/sites.csv");
         referentielFiles.put("typePlateformes", "/data/olac/types_de_plateforme.csv");
         referentielFiles.put("plateformes", "/data/olac/plateformes.csv");
-        referentielFiles.put("valeurs_quantitatives", "/data/olac/valeurs_quantitatives.csv");
+        referentielFiles.put("valeurs_qualitatives", "/data/olac/valeurs_qualitatives.csv");
         return referentielFiles;
     }
 
@@ -423,6 +424,6 @@ public class Fixtures {
     }
 
     public String getConditionPrelevementDataResourceName() {
-        return "/data/pros/condition_prelevement.csv";
+        return "/data/pros/leman_condition_prelevements_2019.csv";
     }
 }

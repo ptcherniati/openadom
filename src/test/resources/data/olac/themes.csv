@@ -1,8 +1,8 @@
-nom_fr;nom_en;description_fr;description_en
-autres thÈmatiques (entrepÙt);Other themes (data storage);Documents dÈposÈs temporairement sur díautres types de donnÈes;Temporary deposit of files dealing with other data
-compartiments biologiques;Biological compartiments;contient les types de donnÈes tels que le phytoplancton, le zooplancton, la chloro, la produtcion primaire ...;contains data types such as phytoplankton, zooplankton, chloro, primary produtcion ...
-conditions gÈnÈrales;general conditions;Ce sont les conditions de prÈlËvements dont certaines variables qualitatives sont trËs subjectifs et opÈrateur dÈpendant;These are conditions which samples some qualitative variables are highly subjective and operator dependent
-ichtyologie;ichthyology;DonnÈes sur les poissons;Fishes data
-mÈtÈorologie;meteorology;;
-physico chimie;Physico-chemical;DonnÈes obtenues sur les prÈlËvements d'eau par le laboratoire de chimie.;Data obtained on samples of water from the chemistry lab.
-profils verticaux multiparamËtres;multiparameter vertical profiles;;
+nom_key;nom_fr;nom_en;description_fr;description_en
+autres thematiques entrepot;autres th√©matiques (entrep√¥t);Other themes (data storage);Documents d√©pos√©s temporairement sur d‚Äôautres types de donn√©es;Temporary deposit of files dealing with other data
+compartiments biologiques;compartiments biologiques;Biological compartiments;contient les types de donn√©es tels que le phytoplancton, le zooplancton, la chloro, la produtcion primaire ...;contains data types such as phytoplankton, zooplankton, chloro, primary produtcion ...
+conditions g√©n√©rales;conditions g√©n√©rales;general conditions;Ce sont les conditions de pr√©l√®vements dont certaines variables qualitatives sont tr√©s subjectifs et op√©rateur d√©pendant;These are conditions which samples some qualitative variables are highly subjective and operator dependent
+ichtyologie;ichtyologie;ichthyology;Donn√©es sur les poissons;Fishes data
+meteorologie;m√©t√©orologie;meteorology;;
+physico chimie;physico chimie;Physico-chemical;Donn√©es obtenues sur les pr√©l√®vements d'eau par le laboratoire de chimie.;Data obtained on samples of water from the chemistry lab.
+profils verticaux multiparam√®tres;profils verticaux multiparam√®tres;multiparameter vertical profiles;;
