@@ -6,7 +6,7 @@ body {
 
 .title {
   color: $primary;
-  margin-top: 1.5rem;
+  margin-top: $title-margin-top;
 
   &.main-title {
     display: flex;
@@ -17,6 +17,18 @@ body {
 
 a {
   color: $info;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.link {
+  cursor: pointer;
+  &:hover {
+    color: $primary;
+    text-decoration: underline;
+  }
 }
 
 // Input style

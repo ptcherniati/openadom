@@ -6,8 +6,10 @@ import com.google.common.collect.UnmodifiableIterator;
 import fr.inra.oresing.model.OreSiEntity;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -99,8 +101,20 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
     protected abstract Class<T> getEntityClass();
 
     public List<T> findAll() {
-        String query = String.format("SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t", getEntityClass().getName(), getEntityClass().getSimpleName());
-        List<T> result = namedParameterJdbcTemplate.query(query, getJsonRowMapper());
+        return find(null, EmptySqlParameterSource.INSTANCE);
+    }
+
+    protected List<T> findByPropertyEquals(String property, Object value) {
+        return find(property + " = :" + property, new MapSqlParameterSource(property, value));
+    }
+
+    private List<T> find(String whereClause, SqlParameterSource sqlParameterSource) {
+        String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t";
+        if (whereClause != null) {
+            sql += " WHERE " + whereClause;
+        }
+        String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
+        List<T> result = namedParameterJdbcTemplate.query(query, sqlParameterSource, getJsonRowMapper());
         return result;
     }
 }

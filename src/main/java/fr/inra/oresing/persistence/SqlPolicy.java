@@ -6,6 +6,8 @@ import lombok.Value;
 @Value
 public class SqlPolicy implements WithSqlIdentifier {
 
+    String id;
+
     SqlTable table;
 
     PermissiveOrRestrictive permissiveOrRestrictive;
@@ -18,7 +20,7 @@ public class SqlPolicy implements WithSqlIdentifier {
 
     @Override
     public String getSqlIdentifier() {
-        return WithSqlIdentifier.escapeSqlIdentifier(String.join("_", role.getAsSqlRole(), table.getName(), statement.name()));
+        return WithSqlIdentifier.escapeSqlIdentifier(id);
     }
 
     public enum PermissiveOrRestrictive {

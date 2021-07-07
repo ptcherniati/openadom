@@ -6,9 +6,13 @@ $font-family: "LiberationSans", Helvetica, Arial, sans-serif;
 
 $text-default-color: #2c3e50;
 $light-text: rgb(230, 230, 230);
-// InputWithValidation
-$input-field-margin-bot: 1rem;
-$input-help-margin-top: 0.25rem;
+$primary-slightly-transparent: rgba(0, 163, 166, 0.8);
+$info-transparent: rgba(78, 198, 194, 0.3);
+
+// PageView
+$container-padding-hor: 3rem;
+$container-padding-vert: $container-padding-hor / 2;
+$title-margin-top: 1.5rem;
 
 // MenuView
 $menu-height: 80px;
@@ -19,11 +23,11 @@ $menu-height: 80px;
 ***************************************************************************************************/
 
 // General variables
-$primary: rgb(0,163,166);
-$info: #4ec6c2;
+$primary: rgb(0, 163, 166);
+$info: rgb(78, 198, 194);
 $success: #bade81;
 $warning: #ffec60;
 $danger: #d13a18;
 $dark: #4b6464;
-$light: #aab7b7;
+$light: rgb(202, 216, 216);
 $family-primary: $font-family;

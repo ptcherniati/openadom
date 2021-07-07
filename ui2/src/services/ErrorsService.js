@@ -23,6 +23,17 @@ const ERRORS = {
   unknownCheckerName: (params) => i18n.t("errors.unknownCheckerName", params),
   csvBoundToUnknownVariable: (params) => i18n.t("errors.csvBoundToUnknownVariable", params),
   csvBoundToUnknownVariableComponent: (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
+  invalidKeyColumns: (params) => i18n.t("errors.invalidKeyColumns", params),
+  unexpectedHeaderColumn : (params) => i18n.t("errors.unexpectedHeaderColumn", params),
+  headerColumnPatternNotMatching :(params) => i18n.t("errors.headerColumnPatternNotMatching", params),
+  unexpectedTokenCount : (params) => i18n.t("errors.unexpectedTokenCount", params),
+  invalidHeaders : (params) => i18n.t("errors.invalidHeaders", params),
+  duplicatedHeaders : (params) => i18n.t("errors.duplicatedHeaders", params),
+  patternNotMatched : (params) => i18n.t("errors.patternNotMatched", params),
+  invalidDate : (params) => i18n.t("errors.invalidDate", params),
+  invalidInteger : (params) => i18n.t("errors.invalidInteger", params),
+  invalidFloat : (params) => i18n.t("errors.invalidFloat", params),
+  checkerExpressionReturnedFalse : (params) => i18n.t("errors.checkerExpressionReturnedFalse", params),
 };
 
 export class ErrorsService {
@@ -35,6 +46,23 @@ export class ErrorsService {
         throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
       }
       return func(error.messageParams);
+    });
+  }
+
+  getCsvErrorsMessages(csvErrors) {
+    return csvErrors.map((csvError) => {
+      const func = ERRORS[csvError.validationCheckResult.message];
+      if (!func) {
+        throw new Error(
+          "Il manque la chaine de traduction pour l'erreur : " +
+            csvError.validationCheckResult.message
+        );
+      }
+      const params = {
+        lineNumber: csvError.lineNumber,
+        ...csvError.validationCheckResult.messageParams,
+      };
+      return func(params);
     });
   }
 }

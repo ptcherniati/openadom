@@ -64,7 +64,7 @@ public class LocalDateTimeRange {
 
     public static LocalDateTimeRange forYear(Year year) {
         LocalDate fromDay = year.atMonthDay(MonthDay.of(Month.JANUARY, 1));
-        LocalDate toDay = year.atMonthDay(MonthDay.of(Month.DECEMBER, 31));
+        LocalDate toDay = year.plusYears(1).atMonthDay(MonthDay.of(Month.JANUARY, 1));
         return between(fromDay, toDay);
     }
 

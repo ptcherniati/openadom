@@ -1,11 +1,10 @@
 package fr.inra.oresing.rest;
 
+import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import javax.servlet.http.Cookie;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,17 +47,11 @@ public class AuthorizationResourcesTest {
     @Autowired
     private Fixtures fixtures;
 
-    private Cookie authCookie;
-
-    @Before
-    public void createApplication() throws Exception {
-        authCookie = fixtures.addApplicationAcbb();
-    }
-
     @Test
     public void testAddAuthorization() throws Exception {
-
-        OreSiUser reader = authenticationService.createUser("UnReader", "xxxxxxxx");
+        Cookie authCookie = fixtures.addApplicationAcbb();
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                 .param("login", "UnReader")
                 .param("password", "xxxxxxxx"))
@@ -85,15 +79,14 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String readerUserId = reader.getId().toString();
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"localizationScope\":\"theix.theix__22\",\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
             String response = mockMvc.perform(create)
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
@@ -126,6 +119,101 @@ public class AuthorizationResourcesTest {
             // contrôle sur la localization
             Assert.assertFalse(json.contains("theix.theix__7"));
             Assert.assertTrue(json.contains("theix.theix__22"));
+        }
+    }
+
+    @Test
+    public void testAddAuthorizationOnTwoScopes() throws Exception {
+
+        Cookie authCookie = fixtures.addApplicationHauteFrequence();
+
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        String readerUserId = createUserResult.getUserId().toString();
+        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+                .param("login", "UnReader")
+                .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+
+        String authorizationId;
+
+        {
+            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"bimont.bim13\",\"projet\":\"sou\"},\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
+
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie)
+                    .content(json);
+            String response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+
+            authorizationId = JsonPath.parse(response).read("$.authorizationId");
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(json);
+
+            Assert.assertTrue(json.contains("[2016,1,1]"));
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/")
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(json);
+
+            Assert.assertTrue(json.contains("[2016,1,1]"));
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
+                    .cookie(authReaderCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            // contrôle sur la fenêtre temporelle
+            Assert.assertFalse(json.contains("30/01/2017"));
+            Assert.assertTrue(json.contains("14/06/2016"));
+
+            // contrôle sur la localisation
+            Assert.assertFalse(json.contains("bimont.bim14"));
+            Assert.assertTrue(json.contains("bimont.bim13"));
+
+            // contrôle sur le projet
+            Assert.assertFalse(json.contains("rnt"));
+            Assert.assertTrue(json.contains("sou"));
+        }
+
+        {
+            String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
+                    .cookie(authCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(json);
+
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
+                    .cookie(authReaderCookie)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            Assert.assertEquals("{\"variables\":[],\"rows\":[]}", json);
         }
     }
 }

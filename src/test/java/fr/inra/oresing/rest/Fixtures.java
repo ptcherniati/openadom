@@ -4,7 +4,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,7 @@ import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -38,6 +38,7 @@ public class Fixtures {
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
+        PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -141,8 +142,8 @@ public class Fixtures {
         if (cookie == null) {
             String aPassword = "xxxxxxxx";
             String aLogin = "poussin";
-            OreSiUser user = authenticationService.createUser(aLogin, aPassword);
-            authenticationService.addUserRightCreateApplication(user.getId());
+            CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword);
+            authenticationService.addUserRightCreateApplication(createUserResult.getUserId());
             cookie = mockMvc.perform(post("/api/v1/login")
                     .param("login", aLogin)
                     .param("password", aPassword))
@@ -178,7 +179,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isOk());
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
         return authCookie;
     }
@@ -208,7 +209,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp/data/jeu1")
                     .file(refFile)
                     .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isOk());
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
         return authCookie;
@@ -241,7 +242,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         try (InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
@@ -249,7 +250,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         try (InputStream in = openSwcDataResourceName(true)) {
@@ -257,7 +258,7 @@ public class Fixtures {
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().is2xxSuccessful());
         }
         return authCookie;
     }
@@ -268,5 +269,105 @@ public class Fixtures {
 
     public String getHauteFrequenceApplicationConfigurationResourceName() {
         return "/data/hautefrequence/hautefrequence.yaml";
+    }
+
+    public Map<String, String> getHauteFrequenceReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("a", "/data/hautefrequence/a.csv");
+        referentielFiles.put("b", "/data/hautefrequence/b.csv");
+        referentielFiles.put("outil", "/data/hautefrequence/outil.csv");
+        referentielFiles.put("projet", "/data/hautefrequence/projet.csv");
+        referentielFiles.put("site", "/data/hautefrequence/site.csv");
+        referentielFiles.put("plateforme", "/data/hautefrequence/plateforme.csv");
+        referentielFiles.put("variable", "/data/hautefrequence/variable.csv");
+        return referentielFiles;
+    }
+
+    public String getHauteFrequenceDataResourceName() {
+        return "/data/hautefrequence/rnt_bimont_haute_frequence_14-06-2016_14-03-2017.csv";
+    }
+
+    public Cookie addApplicationHauteFrequence() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getHauteFrequenceReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+        try (InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+        return authCookie;
+    }
+
+
+    public Map<String, String> getProReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("dispositifs", "/data/pros/dispositif_complet.csv");
+        referentielFiles.put("blocs", "/data/pros/bloc_complet.csv");
+        referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
+        referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
+        referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
+        return referentielFiles;
+    }
+
+    public String getProApplicationConfigurationResourceName() {
+        return "/data/pros/pro.yaml";
+    }
+
+    public Cookie addApplicationPRO() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getProApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().isCreated());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getProReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getdPrelevementProDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        return authCookie;
+    }
+
+    public String getdPrelevementProDataResourceName() {
+        return "/data/pros/donnees_prelevement_pro.csv";
     }
 }

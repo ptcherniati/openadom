@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
-import org.apache.commons.lang3.time.FastDateFormat;
 
-import java.text.ParseException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker {
 
@@ -14,13 +14,13 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
 
     private final VariableComponentKey variableComponentKey;
 
-    private final FastDateFormat fastDateFormat;
+    private final DateTimeFormatter dateTimeFormatter;
 
     private final String pattern;
 
     public DateLineChecker(VariableComponentKey variableComponentKey, String pattern) {
         this.variableComponentKey = variableComponentKey;
-        this.fastDateFormat = FastDateFormat.getInstance(pattern);
+        this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
     }
 
@@ -37,9 +37,9 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
-            fastDateFormat.parse(value);
+            dateTimeFormatter.parse(value);
             validationCheckResult = DefaultValidationCheckResult.success();
-        } catch (ParseException e) {
+        } catch (DateTimeParseException e) {
             validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", variableComponentKey, "pattern", pattern, "value", value));
         }
         return validationCheckResult;
