@@ -40,6 +40,15 @@
         {{ props.row.dataGroup }}
       </b-table-column>
       <b-table-column
+        b-table-column
+        field="dataGroup"
+        :label="$t('dataTypeAuthorizations.period')"
+        sortable
+        v-slot="props"
+      >
+        {{ getPeriod(props.row) }}
+      </b-table-column>
+      <b-table-column
         v-for="scope in scopes"
         :key="scope"
         b-table-column
@@ -85,6 +94,12 @@ export default class DataTypeAuthorizationsView extends Vue {
   authorizations = [];
   application = {};
   scopes = [];
+  periods = {
+    FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
+    TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
+    FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
+    ALWAYS: this.$t("dataTypeAuthorizations.always"),
+  };
 
   created() {
     this.init();
@@ -115,6 +130,7 @@ export default class DataTypeAuthorizationsView extends Vue {
         this.applicationName,
         this.dataTypeId
       );
+      console.log(this.authorizations);
       if (this.authorizations && this.authorizations.length !== 0) {
         this.scopes = Object.keys(this.authorizations[0].authorizedScopes);
       }
@@ -143,6 +159,24 @@ export default class DataTypeAuthorizationsView extends Vue {
       );
     } catch (error) {
       this.alertService.toastServerError(error);
+    }
+  }
+
+  getPeriod(authorization) {
+    if (!authorization.fromDay && !authorization.toDay) {
+      return this.periods.ALWAYS;
+    } else if (authorization.fromDay && !authorization.toDay) {
+      return (
+        this.periods.FROM_DATE +
+        ` ${authorization.fromDay[2]}/${authorization.fromDay[1]}/${authorization.fromDay[0]}`
+      );
+    } else if (!authorization.fromDay && authorization.toDay) {
+      return (
+        this.periods.TO_DATE +
+        ` ${authorization.toDay[2]}/${authorization.toDay[1]}/${authorization.toDay[0]}`
+      );
+    } else {
+      return `${authorization.fromDay[2]}/${authorization.fromDay[1]}/${authorization.fromDay[0]} - ${authorization.toDay[2]}/${authorization.toDay[1]}/${authorization.toDay[0]}`;
     }
   }
 }
