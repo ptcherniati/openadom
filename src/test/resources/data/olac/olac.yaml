@@ -38,7 +38,7 @@ references:
       code sandre:
       code sandre du contexte:
   sites:
-    keyColumns: [nom du type de site, nom du site_key]
+    keyColumns: [nom du site_key]
     columns:
       nom du type de site:
       nom du site_key:
@@ -59,7 +59,7 @@ references:
       code sandre:
       code sandre du contexte:
   plateformes:
-    keyColumns: [nom du site, nom de la plateforme_key, nom du type de plateforme_key]
+    keyColumns: [nom de la plateforme_key, nom du type de plateforme_key]
     columns:
       nom du site:
       nom de la plateforme_key:
@@ -81,7 +81,7 @@ references:
       valeur_fr:
       valeur_en:
 dataTypes:
-  leman_condition_prelevements_2019:
+  condition_prelevements:
     data:
       date:
         components:
@@ -152,11 +152,11 @@ dataTypes:
             - valeurs quantitatives
       authorizationScopes:
         localization_site:
-          variable: localization
+          variable: site
           component: nom du site
         localization_projet:
-          variable: localization
-          component: projet
+          variable: projet
+          component: value
       timeScope:
         variable: date
         component: day

@@ -39,7 +39,7 @@ public class Fixtures {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
-        OLAC("olac", ImmutableSet.of("condition_prelevement")),
+        OLAC("olac", ImmutableSet.of("condition_prelevements")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -401,7 +401,7 @@ public class Fixtures {
         }
 
         // Ajout de referentiel
-        for (Map.Entry<String, String> e : getProReferentielFiles().entrySet()) {
+        for (Map.Entry<String, String> e : getOlaReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/references/{refType}", e.getKey())
@@ -413,17 +413,17 @@ public class Fixtures {
 
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "leman_condition_prelevements_2019.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/leman_condition_prelevements_2019")
+            MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevements")
                     .file(file)
                     .cookie(authCookie))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
         }
 
         return authCookie;
     }
 
     public String getConditionPrelevementDataResourceName() {
-        return "/data/olac/leman_condition_prelevements_2019.csv";
+        return "/data/olac/condition_prelevements.csv";
     }
 }

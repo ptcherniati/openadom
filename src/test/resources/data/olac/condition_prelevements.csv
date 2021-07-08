@@ -1,0 +1,20 @@
+nom du projet;nom du site;nom de la plateforme;date de prélèvement;heure de prélèvement;commentaire;aspect de l'eau;couleur de l'eau;direction du vent;ensoleillement;etat de surface;nebulosite;pression atmospherique (mbar);temperature de l'air (°c);temps;transparence par disque inra (m);transparence par secchi 20 cm (m);vitesse du vent
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;15/01/2019;10:00;difficultés à démarrer à cause du vent;vaguelettes;vert-bleu;;ensoleille;propre;1;978.0;5.0;clair;;13.2;4
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;14/02/2019;08:30;ras;plat;vert-vert;SW;ensoleille;propre;2;992.0;4.0;clair;;15.7;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;06/03/2019;10:00;;houle courte;vert-jaune;;ombre;propre;3;948.0;;clair;;7.5;2
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;21/03/2019;10:00;problème oxygène sode;plat;vert-vert;S;ensoleille;propre;1;984.0;4.0;brume;;9.2;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;01/04/2019;08:50;mélissa à remplacer vincent l'après midi;plat;vert-vert;NW;ensoleille;propre;3;978.0;8.0;clair;;7.1;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;23/04/2019;08:40;alexia plus phytopam pour serena;houle longue;vert-vert;W;ensoleille;pollen;4;954.0;10.7;nuageux;;5.1;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;20/05/2019;08:00;2 phytopam, along mekong production (cipel), ste, perte de la production retrouve le lendemain à 12:30;vaguelettes;vert-gris;E;ombre;propre;9;965.9;12.2;pluie;;7.2;2
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;03/06/2019;08:00;pas de funaqua en juin,  silac et saur fait plus tard;friselis;vert-bleu;W;ensoleille;pollen;1;972.0;19.0;clair;;6.7;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;26/06/2019;08:00;vincent le matin remplacé par pascal l après-midi;plat;vert-jaune;N;ensoleille;branches;1;978.0;22.0;clair;;5.2;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;11/07/2019;08:30;;vaguelettes;vert-vert;;ombre;propre;6;971.0;18.0;nuageux;;5.5;2
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;24/07/2019;08:30;remplacer laprem par philippe;plat;vert-vert;;ensoleille;propre;1;973.5;24.0;clair;;5.6;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;05/08/2019;08:30;plus comparatif prod, plus dce (présence de ste);houle courte;vert-bleu;SW;ensoleille;propre;3;971.3;21.0;nuageux;;8.3;3
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;28/08/2019;07:00;forte dérive;vaguelettes;vert-bleu;SW;ensoleille;propre;4;974.3;18.0;nuageux;;7.1;7
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;11/09/2019;09:30;début tardif à cause du vent fort, qui s'est affaiblit par la suite;petites vagues;vert-bleu;;ombre;propre;4;980.0;14.0;nuageux;;9.2;6
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;24/09/2019;09:00;;petites vagues;bleu-vert;;ombre;propre;4;969.0;17.0;nuageux;;8.5;6
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;14/10/2019;08:45;problème de treuil (enroulage);friselis;vert-vert;N;ensoleille;propre;1;973.0;12.0;clair;;8.4;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;28/10/2019;08:30;pam pour serena + ctm214 pour comparaison - phq l'am;friselis;vert-brun;NW;ombre;propre;8;973.0;14.0;brume;;7.0;1
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;13/11/2019;09:00;;vagues deferlantes;vert-vert;W;ensoleille;propre;2;962.3;7.0;nuageux;;4.7;5
+suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;10/12/2019;09:00;bateau licorne de forel, profil fait prof par prof;houle courte;vert-vert;;ensoleille;propre;2;981.0;5.0;clair;;7.4;4

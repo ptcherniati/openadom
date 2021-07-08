@@ -622,8 +622,8 @@ public class OreSiResourcesTest {
 
         // ajout de data
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getConditionPrelevementDataResourceName())) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "leman_condition_prelevements_2019.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/leman_condition_prelevements_2019")
+            MockMultipartFile refFile = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevements")
                     .file(refFile)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
