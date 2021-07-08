@@ -240,7 +240,7 @@
                   :key="option.id"
                   :option="option"
                   :withRadios="true"
-                  :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
+                  :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}_${option.id}`"
                   @optionChecked="(value) => (scopesToAuthorize[scope.id] = value)"
                 />
               </div>
