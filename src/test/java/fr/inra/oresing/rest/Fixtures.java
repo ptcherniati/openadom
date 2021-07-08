@@ -413,8 +413,8 @@ public class Fixtures {
 
         // ajout de data
         try (InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "condition_prelevement.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevement")
+            MockMultipartFile file = new MockMultipartFile("file", "leman_condition_prelevements_2019.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/leman_condition_prelevements_2019")
                     .file(file)
                     .cookie(authCookie))
                     .andExpect(status().isOk());
@@ -424,6 +424,6 @@ public class Fixtures {
     }
 
     public String getConditionPrelevementDataResourceName() {
-        return "/data/pros/leman_condition_prelevements_2019.csv";
+        return "/data/olac/leman_condition_prelevements_2019.csv";
     }
 }

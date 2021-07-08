@@ -15,64 +15,64 @@ direction du vent;wind direction;direction du vent;S;S;S
 direction du vent;wind direction;direction du vent;SW;SW;SW
 direction du vent;wind direction;direction du vent;W;W;W
 direction du vent;wind direction;direction du vent;NW;NW;NW
-aspect de l'eau;water aspect;aspect de l'eau;plat;plat;even
-aspect de l'eau;water aspect;aspect de l'eau;friselis;friselis;rustling
-aspect de l'eau;water aspect;aspect de l'eau;vaguelettes;vaguelettes;wavelets
-aspect de l'eau;water aspect;aspect de l'eau;petites vagues;petites vagues;small waves
-aspect de l'eau;water aspect;aspect de l'eau;vagues plates;vagues plates;flat waves
-aspect de l'eau;water aspect;aspect de l'eau;vagues deferlantes;vagues deferlantes;surf
-aspect de l'eau;water aspect;aspect de l'eau;houle courte;houle courte;short swell
-aspect de l'eau;water aspect;aspect de l'eau;houle longue;houle longue;long swell
+aspect de l_eau;water aspect;aspect de l'eau;plat;plat;even
+aspect de l_eau;water aspect;aspect de l'eau;friselis;friselis;rustling
+aspect de l_eau;water aspect;aspect de l'eau;vaguelettes;vaguelettes;wavelets
+aspect de l_eau;water aspect;aspect de l'eau;petites vagues;petites vagues;small waves
+aspect de l_eau;water aspect;aspect de l'eau;vagues plates;vagues plates;flat waves
+aspect de l_eau;water aspect;aspect de l'eau;vagues deferlantes;vagues deferlantes;surf
+aspect de l_eau;water aspect;aspect de l'eau;houle courte;houle courte;short swell
+aspect de l_eau;water aspect;aspect de l'eau;houle longue;houle longue;long swell
 etat de surface;surface condition;etat de surface;propre;propre;clean
 etat de surface;surface condition;etat de surface;branches;branches;branches
 etat de surface;surface condition;etat de surface;feuilles;feuilles;leaves
 etat de surface;surface condition;etat de surface;pollen;pollen;pollen
 etat de surface;surface condition;etat de surface;perchettes mortes;perchettes mortes;dead small perchs
-etat de surface;surface condition;etat de surface;amas d'algues;amas d'algues;clumps of algae
-etat de surface;surface condition;etat de surface;eau d'egout divers;eau d'egout divers;sewage water
+etat de surface;surface condition;etat de surface;amas d_algues;amas d'algues;clumps of algae
+etat de surface;surface condition;etat de surface;eau d_egout divers;eau d'egout divers;sewage water
 etat de surface;surface condition;etat de surface;hydrocarbure;hydrocarbure;hydrocarbon
-couleur de l'eau;water color;couleur de l'eau;bleu;bleu;blue
-couleur de l'eau;water color;couleur de l'eau;bleu-bleu;bleu-bleu;blue-blue
-couleur de l'eau;water color;couleur de l'eau;bleu-brun;bleu-brun;blue-brown
-couleur de l'eau;water color;couleur de l'eau;bleu-gris;bleu-gris;blue-gray
-couleur de l'eau;water color;couleur de l'eau;bleu-jaune;bleu-jaune;Blue-yellow
-couleur de l'eau;water color;couleur de l'eau;bleu-rouge;bleu-rouge;Blue-red
-couleur de l'eau;water color;couleur de l'eau;bleu-vert;bleu-vert;Blue-green
-couleur de l'eau;water color;couleur de l'eau;brun;brun;brown
-couleur de l'eau;water color;couleur de l'eau;brun-bleu;brun-bleu;Brown-blue
-couleur de l'eau;water color;couleur de l'eau;brun-brun;brun-brun;Brown-brown
-couleur de l'eau;water color;couleur de l'eau;brun-gris;brun-gris;Brown-gray
-couleur de l'eau;water color;couleur de l'eau;brun-jaune;brun-jaune;Brown-yellow
-couleur de l'eau;water color;couleur de l'eau;brun-rouge;brun-rouge;Brown-red
-couleur de l'eau;water color;couleur de l'eau;brun-vert;brun-vert;Brown-green
-couleur de l'eau;water color;couleur de l'eau;gris;gris;gray
-couleur de l'eau;water color;couleur de l'eau;gris-bleu;gris-bleu;Gray-blue
-couleur de l'eau;water color;couleur de l'eau;gris-brun;gris-brun;Gray-brown
-couleur de l'eau;water color;couleur de l'eau;gris-gris;gris-gris;Gray-gray
-couleur de l'eau;water color;couleur de l'eau;gris-jaune;gris-jaune;Gray-yellow
-couleur de l'eau;water color;couleur de l'eau;gris-rouge;gris-rouge;Gray-red
-couleur de l'eau;water color;couleur de l'eau;gris-vert;gris-vert;Gray-green
-couleur de l'eau;water color;couleur de l'eau;jaune;jaune;yellow
-couleur de l'eau;water color;couleur de l'eau;jaune-bleu;jaune-bleu;Yellow-blue
-couleur de l'eau;water color;couleur de l'eau;jaune-brun;jaune-brun;Yellow-brown
-couleur de l'eau;water color;couleur de l'eau;jaune-gris;jaune-gris;Yellow-gray
-couleur de l'eau;water color;couleur de l'eau;jaune-jaune;jaune-jaune;Yellow-yellow
-couleur de l'eau;water color;couleur de l'eau;jaune-rouge;jaune-rouge;Yellow-red
-couleur de l'eau;water color;couleur de l'eau;jaune-vert;jaune-vert;Yellow-green
-couleur de l'eau;water color;couleur de l'eau;rouge;rouge;red
-couleur de l'eau;water color;couleur de l'eau;rouge-bleu;rouge-bleu;Red-blue
-couleur de l'eau;water color;couleur de l'eau;rouge-brun;rouge-brun;Red-brown
-couleur de l'eau;water color;couleur de l'eau;rouge-gris;rouge-gris;Red-gray
-couleur de l'eau;water color;couleur de l'eau;rouge-jaune;rouge-jaune;Red-yellow
-couleur de l'eau;water color;couleur de l'eau;rouge-rouge;rouge-rouge;Red-red
-couleur de l'eau;water color;couleur de l'eau;rouge-vert;rouge-vert;Red-green
-couleur de l'eau;water color;couleur de l'eau;vert;vert;green
-couleur de l'eau;water color;couleur de l'eau;vert-bleu;vert-bleu;Green-blue
-couleur de l'eau;water color;couleur de l'eau;vert-brun;vert-brun;Green-brown
-couleur de l'eau;water color;couleur de l'eau;vert-gris;vert-gris;Green-gray
-couleur de l'eau;water color;couleur de l'eau;vert-jaune;vert-jaune;Green-yellow
-couleur de l'eau;water color;couleur de l'eau;vert-rouge;vert-rouge;Green-red
-couleur de l'eau;water color;couleur de l'eau;vert-vert;vert-vert;Green-green
+couleur de l_eau;water color;couleur de l'eau;bleu;bleu;blue
+couleur de l_eau;water color;couleur de l'eau;bleu_bleu;bleu-bleu;blue-blue
+couleur de l_eau;water color;couleur de l'eau;bleu_brun;bleu-brun;blue-brown
+couleur de l_eau;water color;couleur de l'eau;bleu_gris;bleu-gris;blue-gray
+couleur de l_eau;water color;couleur de l'eau;bleu_jaune;bleu-jaune;Blue-yellow
+couleur de l_eau;water color;couleur de l'eau;bleu_rouge;bleu-rouge;Blue-red
+couleur de l_eau;water color;couleur de l'eau;bleu_vert;bleu-vert;Blue-green
+couleur de l_eau;water color;couleur de l'eau;brun;brun;brown
+couleur de l_eau;water color;couleur de l'eau;brun_bleu;brun-bleu;Brown-blue
+couleur de l_eau;water color;couleur de l'eau;brun_brun;brun-brun;Brown-brown
+couleur de l_eau;water color;couleur de l'eau;brun_gris;brun-gris;Brown-gray
+couleur de l_eau;water color;couleur de l'eau;brun_jaune;brun-jaune;Brown-yellow
+couleur de l_eau;water color;couleur de l'eau;brun_rouge;brun-rouge;Brown-red
+couleur de l_eau;water color;couleur de l'eau;brun_vert;brun-vert;Brown-green
+couleur de l_eau;water color;couleur de l'eau;gris;gris;gray
+couleur de l_eau;water color;couleur de l'eau;gris_bleu;gris-bleu;Gray-blue
+couleur de l_eau;water color;couleur de l'eau;gris_brun;gris-brun;Gray-brown
+couleur de l_eau;water color;couleur de l'eau;gris_gris;gris-gris;Gray-gray
+couleur de l_eau;water color;couleur de l'eau;gris_jaune;gris-jaune;Gray-yellow
+couleur de l_eau;water color;couleur de l'eau;gris_rouge;gris-rouge;Gray-red
+couleur de l_eau;water color;couleur de l'eau;gris_vert;gris-vert;Gray-green
+couleur de l_eau;water color;couleur de l'eau;jaune;jaune;yellow
+couleur de l_eau;water color;couleur de l'eau;jaune_bleu;jaune-bleu;Yellow-blue
+couleur de l_eau;water color;couleur de l'eau;jaune_brun;jaune-brun;Yellow-brown
+couleur de l_eau;water color;couleur de l'eau;jaune_gris;jaune-gris;Yellow-gray
+couleur de l_eau;water color;couleur de l'eau;jaune_jaune;jaune-jaune;Yellow-yellow
+couleur de l_eau;water color;couleur de l'eau;jaune_rouge;jaune-rouge;Yellow-red
+couleur de l_eau;water color;couleur de l'eau;jaune_vert;jaune-vert;Yellow-green
+couleur de l_eau;water color;couleur de l'eau;rouge;rouge;red
+couleur de l_eau;water color;couleur de l'eau;rouge_bleu;rouge-bleu;Red-blue
+couleur de l_eau;water color;couleur de l'eau;rouge_brun;rouge-brun;Red-brown
+couleur de l_eau;water color;couleur de l'eau;rouge_gris;rouge-gris;Red-gray
+couleur de l_eau;water color;couleur de l'eau;rouge_jaune;rouge-jaune;Red-yellow
+couleur de l_eau;water color;couleur de l'eau;rouge_rouge;rouge-rouge;Red-red
+couleur de l_eau;water color;couleur de l'eau;rouge_vert;rouge-vert;Red-green
+couleur de l_eau;water color;couleur de l'eau;vert;vert;green
+couleur de l_eau;water color;couleur de l'eau;vert_bleu;vert-bleu;Green-blue
+couleur de l_eau;water color;couleur de l'eau;vert_brun;vert-brun;Green-brown
+couleur de l_eau;water color;couleur de l'eau;vert_gris;vert-gris;Green-gray
+couleur de l_eau;water color;couleur de l'eau;vert_jaune;vert-jaune;Green-yellow
+couleur de l_eau;water color;couleur de l'eau;vert_rouge;vert-rouge;Green-red
+couleur de l_eau;water color;couleur de l'eau;vert_vert;vert-vert;Green-green
 nebulosite;nebulosity;nebulosite;0;0;0
 nebulosite;nebulosity;nebulosite;1;1;1
 nebulosite;nebulosity;nebulosite;2;2;2
@@ -111,26 +111,26 @@ unité de comptage du taxon;taxon count unit;unité de comptage du taxon;cellule
 unité de comptage du taxon;taxon count unit;unité de comptage du taxon;colonie;colonie;colony
 unité de comptage du taxon;taxon count unit;unité de comptage du taxon;filament;filament;filament
 unité de comptage du taxon;taxon count unit;unité de comptage du taxon;grain de pollen;grain de pollen;pollen grain
-Erreur sur le biovolume;Biovolume error;Erreur sur le biovolume;ok;ok;ok
-Erreur sur le biovolume;Biovolume error;Erreur sur le biovolume;erreur;erreur;error
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;tub;tub;tub
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;sphe;sphe;sphe
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;ell;ell;ell
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;trel;trel;trel
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;doco;doco;doco
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;con;con;con
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;prisme;prisme;prisme
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;box;box;box
-Forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;rhp;rhp;rhp
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;tub;tub;tub
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;sphe;sphe;sphe
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;ell;ell;ell
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;trel;trel;trel
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;doco;doco;doco
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;con;con;con
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;prisme;prisme;prisme
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;box;box;box
-Forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;rhp;rhp;rhp
+erreur sur le biovolume;Biovolume error;Erreur sur le biovolume;ok;ok;ok
+erreur sur le biovolume;Biovolume error;Erreur sur le biovolume;erreur;erreur;error
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;tub;tub;tub
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;sphe;sphe;sphe
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;ell;ell;ell
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;trel;trel;trel
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;doco;doco;doco
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;con;con;con
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;prisme;prisme;prisme
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;box;box;box
+forme géométrique de la cellule;Geometric shape of the cell;Forme géométrique de la cellule;rhp;rhp;rhp
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;tub;tub;tub
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;sphe;sphe;sphe
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;ell;ell;ell
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;trel;trel;trel
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;doco;doco;doco
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;con;con;con
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;prisme;prisme;prisme
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;box;box;box
+forme géométrique de la colonie;Geometric shape of the cell;Forme géométrique de la colonie;rhp;rhp;rhp
 type_outil;tool_type;type_outil;prélèvement;prélèvement;sampling
 type_outil;tool_type;type_outil;mesure;mesure;measure
 direction du vent;wind direction;direction du vent;variable;variable;changing

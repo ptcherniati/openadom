@@ -1,44 +1,44 @@
-Nom du type de site;nom du site_key;nom du site_fr;nom du site_en;description du site_fr;description du site_en;code sandre du Plan d'eau;code sandre de la Masse d'eau plan d'eau
+nom du type de site;nom du site_key;nom du site_fr;nom du site_en;description du site_fr;description du site_en;code sandre du Plan d'eau;code sandre de la Masse d'eau plan d'eau
 grand_lac;aiguebelette;Aiguebelette;Aiguebelette;;;DL61;V1535003
 grand_lac;annecy;Annecy;Annecy;lac d' Annecy;lake of Annecy;DL66;V1235003
 grand_lac;bourget;Bourget;Bourget;lac du Bourget;lake of  Bourget;DL60;V1335003
 grand_lac;leman;Léman;Leman(Geneva Lake);lac Léman;Geneva lake (Leman);DL65;V03-4003
-lac_d'altitude;anterne;Anterne;Anterne;Lac d'Anterne;Anterne lake;DL62;V0115023
-lac_d'altitude;aratilles;Aratilles;Aratilles;lac des pyrénées française;french pyrenes lake;;
-lac_d'altitude;arbu;Arbu;Arbu;lac des pyrénées française;french pyrenes lake;;O1135003
-lac_d'altitude;arpont;Arpont;Arpont;Lac de l'Arpont;Arpont Lake;;W1015003
-lac_d'altitude;aumar;Aumar;Aumar;Ce lac est situé pyrénées française à une altitude de 2192 m au c?ur de la réserve naturelle de Néouvielle. Il fait partie de l'aménagement hydroélectrique de Pragnères (EDF) où ses eaux sont turbinées;This lake is located in the French pyrénées at 2192 m in the Néouvielle Reserve. This lake belongs to the EDF hydropower scheme of Pragnères;;O0115123
-lac_d'altitude;barroude;Barroude;Barroude;lac des pyrénées française;french pyrenes lake;;O0105023 (grand) et O0105013 (petit)
-lac_d'altitude;blanc du bramant;Blanc du Bramant;Blanc du Bramant;lac Blanc du Bramant;Blanc du Bramant Lake;;
-lac_d'altitude;blanc du carro;Blanc du Carro;Blanc du Carro;Lac Blanc du Caro;Carro Blanc lake;;W1005043
-lac_d'altitude;bramant;Bramant;Bramant;Lac Bramant;Bramant Lake;;
-lac_d'altitude;bresses inferieur;Bresses inférieur;Bresses inférieur;lac de Bresses inférieur;Lower Bresse lake;;Y6225043 bis
-lac_d'altitude;bresses superieur;Bresses supérieur;Bresses supérieur;lac de Bresses supérieur;Upper Bresse lake;;Y6225043
-lac_d'altitude;brevent;Brévent;Brevent;Lac du Brévent;Brevent lake;;V0015023
-lac_d'altitude;corne;Corne;Corne;Lac de Corne;Corne lake;;W2755063
-lac_d'altitude;cornu;Cornu;Cornu;Lac Cornu;Cornu lake;;V0015043
-lac_d'altitude;cos;Cos;Cos;lac de Cos;Cos lake;;W1205063
-lac_d'altitude;espingo;Espingo;Espingo;lac des pyrénées française;french pyrenes lake;;
-lac_d'altitude;estany gros;Estany Gros;Estany Gros;lac des pyrénées française;french pyrenes lake;;
-lac_d'altitude;gentau;Gentau;Gentau;lac des pyrénées française;french pyrenes lake;;
-lac_d'altitude;gourg gaudet;Gourg Gaudet;Gourg Gaudet;lac des pyrénées française;french pyrenes lake;;
-lac_d'altitude;isaby;Isaby;Isaby;lac d'Isaby;Isaby lake;;Q4425003
-lac_d'altitude;izourt;Izourt;Izourt;lac d'Izourt;Lake Izourt;;O1125103
-lac_d'altitude;jovet;Jovet;Jovet;Lac Jovet;Jovet lake;;V0025023 et V0025003 (lacs)
-lac_d'altitude;lauzanier;Lauzanier;Lauzanier;lac du Lauzanier;Lauzanier lake;;X0415043
-lac_d'altitude;malrif;Malrif;Malrif;lac de Malrif;Malrif lake;;X0215003 (petit laus), X0215023 (grand laus), Mezan ?
-lac_d'altitude;merlet superieur;Merlet supérieur;Merlet supérieur;Lac du Merlet supérieur;Upper Merlet lake;;W0225003
-lac_d'altitude;mont coua;Mont Coua;Mont Coua;lac du Mont Coua;Coua mont lake;;W0235063
-lac_d'altitude;muzelle;Muzelle;Muzelle;lac de la Muzelle;Muzelle lake;;W2735043
-lac_d'altitude;noir du carro;Noir du Carro;Noir du Carro;lac Noir du Caro;Carro Noir lake;;W1005023
-lac_d'altitude;oncet;Oncet;Oncet;lac d'Oncet;Oncet lake;;Q4305003
-lac_d'altitude;pave;Pavé;Pavé;lac du Pavé;Pave lake;;W2705003
-lac_d'altitude;petarel;Pétarel;Pétarel;Lac Pétarel;Petarel lake;;W2115023
-lac_d'altitude;pisses;Pisses;Pisses;Lac des Pisses;Pisses lake;;W2005023
-lac_d'altitude;plan vianney;Plan Vianney;Plan Vianney;Lac de Plan Vianney;Plan Vianney Lake;;W2735003
-lac_d'altitude;pormenaz;Pormenaz;Pormenaz;Lac de Pormenaz;Pormenaz lake;;V0015003
-lac_d'altitude;port bielh;Port-Bielh;Port-Bielh;lac des pyrénées française;french pyrenes lake;;O0115003
-lac_d'altitude;rabuons;Rabuons;Rabuons;lac du Rabuons;Rabuons lake;;Y6205283
+lac_d_altitude;anterne;Anterne;Anterne;Lac d'Anterne;Anterne lake;DL62;V0115023
+lac_d_altitude;aratilles;Aratilles;Aratilles;lac des pyrénées française;french pyrenes lake;;
+lac_d_altitude;arbu;Arbu;Arbu;lac des pyrénées française;french pyrenes lake;;O1135003
+lac_d_altitude;arpont;Arpont;Arpont;Lac de l'Arpont;Arpont Lake;;W1015003
+lac_d_altitude;aumar;Aumar;Aumar;Ce lac est situé pyrénées française à une altitude de 2192 m au cœur de la réserve naturelle de Néouvielle. Il fait partie de l'aménagement hydroélectrique de Pragnères (EDF) où ses eaux sont turbinées;This lake is located in the French pyrénées at 2192 m in the Néouvielle Reserve. This lake belongs to the EDF hydropower scheme of Pragnères;;O0115123
+lac_d_altitude;barroude;Barroude;Barroude;lac des pyrénées française;french pyrenes lake;;O0105023 (grand) et O0105013 (petit)
+lac_d_altitude;blanc_du_bramant;Blanc du Bramant;Blanc du Bramant;lac Blanc du Bramant;Blanc du Bramant Lake;;
+lac_d_altitude;blanc_du_carro;Blanc du Carro;Blanc du Carro;Lac Blanc du Caro;Carro Blanc lake;;W1005043
+lac_d_altitude;bramant;Bramant;Bramant;Lac Bramant;Bramant Lake;;
+lac_d_altitude;bresses_inferieur;Bresses inférieur;Bresses inférieur;lac de Bresses inférieur;Lower Bresse lake;;Y6225043 bis
+lac_d_altitude;bresses_superieur;Bresses supérieur;Bresses supérieur;lac de Bresses supérieur;Upper Bresse lake;;Y6225043
+lac_d_altitude;brevent;Brévent;Brevent;Lac du Brévent;Brevent lake;;V0015023
+lac_d_altitude;corne;Corne;Corne;Lac de Corne;Corne lake;;W2755063
+lac_d_altitude;cornu;Cornu;Cornu;Lac Cornu;Cornu lake;;V0015043
+lac_d_altitude;cos;Cos;Cos;lac de Cos;Cos lake;;W1205063
+lac_d_altitude;espingo;Espingo;Espingo;lac des pyrénées française;french pyrenes lake;;
+lac_d_altitude;estany_gros;Estany Gros;Estany Gros;lac des pyrénées française;french pyrenes lake;;
+lac_d_altitude;gentau;Gentau;Gentau;lac des pyrénées française;french pyrenes lake;;
+lac_d_altitude;gourg_gaudet;Gourg Gaudet;Gourg Gaudet;lac des pyrénées française;french pyrenes lake;;
+lac_d_altitude;isaby;Isaby;Isaby;lac d'Isaby;Isaby lake;;Q4425003
+lac_d_altitude;izourt;Izourt;Izourt;lac d'Izourt;Lake Izourt;;O1125103
+lac_d_altitude;jovet;Jovet;Jovet;Lac Jovet;Jovet lake;;V0025023 et V0025003 (lacs)
+lac_d_altitude;lauzanier;Lauzanier;Lauzanier;lac du Lauzanier;Lauzanier lake;;X0415043
+lac_d_altitude;malrif;Malrif;Malrif;lac de Malrif;Malrif lake;;X0215003 (petit laus), X0215023 (grand laus), Mezan ?
+lac_d_altitude;merlet_superieur;Merlet supérieur;Merlet supérieur;Lac du Merlet supérieur;Upper Merlet lake;;W0225003
+lac_d_altitude;mont_coua;Mont Coua;Mont Coua;lac du Mont Coua;Coua mont lake;;W0235063
+lac_d_altitude;muzelle;Muzelle;Muzelle;lac de la Muzelle;Muzelle lake;;W2735043
+lac_d_altitude;noir_du_carro;Noir du Carro;Noir du Carro;lac Noir du Caro;Carro Noir lake;;W1005023
+lac_d_altitude;oncet;Oncet;Oncet;lac d'Oncet;Oncet lake;;Q4305003
+lac_d_altitude;pave;Pavé;Pavé;lac du Pavé;Pave lake;;W2705003
+lac_d_altitude;petarel;Pétarel;Pétarel;Lac Pétarel;Petarel lake;;W2115023
+lac_d_altitude;pisses;Pisses;Pisses;Lac des Pisses;Pisses lake;;W2005023
+lac_d_altitude;plan_vianney;Plan Vianney;Plan Vianney;Lac de Plan Vianney;Plan Vianney Lake;;W2735003
+lac_d_altitude;pormenaz;Pormenaz;Pormenaz;Lac de Pormenaz;Pormenaz lake;;V0015003
+lac_d_altitude;port_bielh;Port-Bielh;Port-Bielh;lac des pyrénées française;french pyrenes lake;;O0115003
+lac_d_altitude;rabuons;Rabuons;Rabuons;lac du Rabuons;Rabuons lake;;Y6205283
 riviere;dranse;Dranse;Dranse;rivière Dranse;Dranse river;;V03-0400 ou V0321430
 riviere;mercube;Mercube;Mercube;rivière Mercube;Mercube river;;V0351440
-lac_d'altitude;port bielh;Port Bielh;Port Bielh;lac des pyrénées française;french pyrenes lake;;O0115002
+lac_d_altitude;port___bielh;Port Bielh;Port Bielh;lac des pyrénées française;french pyrenes lake;;O0115002

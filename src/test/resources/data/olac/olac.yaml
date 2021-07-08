@@ -38,7 +38,7 @@ references:
       code sandre:
       code sandre du contexte:
   sites:
-    keyColumns: [nom du site_key]
+    keyColumns: [nom du type de site, nom du site_key]
     columns:
       nom du type de site:
       nom du site_key:
@@ -59,7 +59,7 @@ references:
       code sandre:
       code sandre du contexte:
   plateformes:
-    keyColumns: [nom de la plateforme_key, nom du type de plateforme_key]
+    keyColumns: [nom du site, nom de la plateforme_key, nom du type de plateforme_key]
     columns:
       nom du site:
       nom de la plateforme_key:
@@ -72,7 +72,7 @@ references:
       code sandre:
       code sandre du contexte:
   valeurs_qualitatives:
-    keyColumns: [nom_key]
+    keyColumns: [nom_key, valeur_key]
     columns:
       nom_key:
       nom_fr:
@@ -81,7 +81,7 @@ references:
       valeur_fr:
       valeur_en:
 dataTypes:
-  condition_prelevement:
+  leman_condition_prelevements_2019:
     data:
       date:
         components:
@@ -94,7 +94,7 @@ dataTypes:
             checker:
               name: Date
               params:
-                pattern: hh:mm:ss
+                pattern: hh:mm
       projet:
         components:
           value:
@@ -102,13 +102,6 @@ dataTypes:
               name: Reference
               params:
                 refType: projets
-      theme:
-        components:
-          value:
-            checker:
-              name: Reference
-              params:
-                refType: themes
       site:
         components:
           nom du site:
@@ -117,6 +110,10 @@ dataTypes:
               params:
                 refType: sites
           nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
       valeurs qualitatives:
         components:
           couleur de l'eau:
@@ -143,7 +140,6 @@ dataTypes:
           data:
             - date
             - projet
-            - theme
             - site
             - commentaire
         qualitatif:
