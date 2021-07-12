@@ -628,6 +628,15 @@ public class OreSiResourcesTest {
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/physico-chimie")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
     }
 
     @Test

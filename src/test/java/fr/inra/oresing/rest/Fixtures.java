@@ -420,10 +420,23 @@ public class Fixtures {
                     .andExpect(status().isCreated());
         }
 
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/physico-chimie")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
         return authCookie;
     }
 
     public String getConditionPrelevementDataResourceName() {
         return "/data/olac/condition_prelevements.csv";
+    }
+
+    public String getPhysicoChimieDataResourceName() {
+        return "/data/olac/physico-chimie.csv";
     }
 }

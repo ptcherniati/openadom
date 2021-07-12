@@ -236,3 +236,275 @@ dataTypes:
           boundTo:
             variable: valeurs qualitatives
             component: vitesse du vent
+  physico-chimie:
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      projet:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      site:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateforme:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outil:
+        components:
+          prélèvement:
+          mesure:
+      profondeur:
+        components:
+          minimum:
+          maximum:
+          réelle observée:
+      température:
+        components:
+          valeur:
+      variables:
+        components:
+          azote total:
+          azote organique:
+          azote nitrates:
+          nitrates:
+          azote ammonium:
+          ammonium:
+          azote nitrites:
+          nitrites:
+          pH:
+          silice réactive:
+          titre alcalimetrique:
+          coductivité:
+          titre alcalimetrique complet:
+          demande biologique en oxygène en 5 jours:
+          balance ionique:
+          carbone organique total:
+          carbone organique dissous:
+          carbone organique particulaire:
+          calcium:
+          magnésium:
+          sodium:
+          potassium:
+          chlorures:
+          bicarbonate:
+          sulfates:
+          oxygène dissous:
+          matiéres en suspension:
+          phosphore total:
+          phosphore particulaire:
+          phosphore orthophosphates:
+          orthophosphates:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - date
+            - projet
+            - site
+            - plateforme
+        condition:
+          label: "Contexte"
+          data:
+            - outil
+            - profondeur
+            - température
+        variable:
+          label: "Données"
+          data:
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateforme
+          component: nom de la plateforme
+        localization_site:
+          variable: site
+          component: nom du site
+        localization_projet:
+          variable: projet
+          component: nom du projet
+      timeScope:
+        variable: date
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projet
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: site
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateforme
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: date
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outil
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outil
+            component: mesure
+        - header: "profondeur minimum (m)"
+          boundTo:
+            variable: profondeur
+            component: minimum
+        - header: "profondeur maximum (m)"
+          boundTo:
+            variable: profondeur
+            component: maximum
+        - header: "profondeur réelle observée  (m)"
+          boundTo:
+            variable: profondeur
+            component: réelle observée
+        - header: "Température (°c)"
+          boundTo:
+            variable: température
+            component: valeur
+        - header: "Azote total (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote total
+        - header: "Azote organique particulaire (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote organique
+        - header: "Azote Nitrates (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote nitrates
+        - header: "Nitrates [mg(NO3)/l]"
+          boundTo:
+            variable: variables
+            component: nitrates
+        - header: "Azote Ammonium (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote ammonium
+        - header: "Ammonium [mg(NH4)/l]"
+          boundTo:
+            variable: variables
+            component: ammonium
+        - header: "Azote Nitrites (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote nitrites
+        - header: "Nitrites [mg(NO2)/l]"
+          boundTo:
+            variable: variables
+            component: nitrites
+        - header: "pH (nounit)"
+          boundTo:
+            variable: variables
+            component: pH
+        - header: "Silice réactive (mg/l)"
+          boundTo:
+            variable: variables
+            component: silice réactive
+        - header: "Titre alcalimetrique (meq/l)"
+          boundTo:
+            variable: variables
+            component: titre alcalimetrique
+        - header: "Conductivité (μs/cm)"
+          boundTo:
+            variable: variables
+            component: coductivité
+        - header: "Titre alcalimetrique complet (meq/l)"
+          boundTo:
+            variable: variables
+            component: titre alcalimetrique complet
+        - header: "Balance ionique (%)"
+          boundTo:
+            variable: variables
+            component: balance ionique
+        - header: "Carbone organique total (mg/l)"
+          boundTo:
+            variable: variables
+            component: carbone organique total
+        - header: "Carbone organique dissous (mg/l)"
+          boundTo:
+            variable: variables
+            component: carbone organique dissous
+        - header: "Carbone organique particulaire (mg/l)"
+          boundTo:
+            variable: variables
+            component: carbone organique particulaire
+        - header: "Calcium (mg/l)"
+          boundTo:
+            variable: variables
+            component: calcium
+        - header: "Magnésium (mg/l)"
+          boundTo:
+            variable: variables
+            component: magnésium
+        - header: "Sodium (mg/l)"
+          boundTo:
+            variable: variables
+            component: sodium
+        - header: "Potassium (mg/l)"
+          boundTo:
+            variable: variables
+            component: potassium
+        - header: "Chlorures (mg/l)"
+          boundTo:
+            variable: variables
+            component: chlorures
+        - header: "Bicarbonate (meq/l)"
+          boundTo:
+            variable: variables
+            component: bicarbonate
+        - header: "Sulfates (mg/l)"
+          boundTo:
+            variable: variables
+            component: sulfates
+        - header: "Oxygène Dissous (mg/l)"
+          boundTo:
+            variable: variables
+            component: oxygène dissous
+        - header: "Matières en suspension (mg/l)"
+          boundTo:
+            variable: variables
+            component: matiéres en suspension
+        - header: "Phosphore Total (mg/l)"
+          boundTo:
+            variable: variables
+            component: phosphore total
+        - header: "Phosphore Particulaire (mg/l)"
+          boundTo:
+            variable: variables
+            component: phosphore particulaire
+        - header: "Phosphore Orthophosphates (mg/l)"
+          boundTo:
+            variable: variables
+            component: phosphore orthophosphates
+        - header: "Orthophosphates [mg(PO4)/l]"
+          boundTo:
+            variable: variables
+            component: orthophosphates
