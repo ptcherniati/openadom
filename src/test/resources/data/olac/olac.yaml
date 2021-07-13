@@ -360,11 +360,11 @@ dataTypes:
           boundTo:
             variable: plateforme
             component: nom de la plateforme
-        - header: "date de prélèvement"
+        - header: "date de prelevement"
           boundTo:
             variable: date
             component: day
-        - header: "outil de prélèvement"
+        - header: "outil de prelevement"
           boundTo:
             variable: outil
             component: prélèvement
@@ -380,11 +380,11 @@ dataTypes:
           boundTo:
             variable: profondeur
             component: maximum
-        - header: "profondeur réelle observée  (m)"
+        - header: "profondeur reelle observee  (m)"
           boundTo:
             variable: profondeur
             component: réelle observée
-        - header: "Température (°c)"
+        - header: "Temperature (°c)"
           boundTo:
             variable: température
             component: valeur
@@ -424,7 +424,7 @@ dataTypes:
           boundTo:
             variable: variables
             component: pH
-        - header: "Silice réactive (mg/l)"
+        - header: "Silice reactive (mg/l)"
           boundTo:
             variable: variables
             component: silice réactive
@@ -432,7 +432,7 @@ dataTypes:
           boundTo:
             variable: variables
             component: titre alcalimetrique
-        - header: "Conductivité (μs/cm)"
+        - header: "Conductivite (μs/cm)"
           boundTo:
             variable: variables
             component: coductivité
@@ -440,6 +440,10 @@ dataTypes:
           boundTo:
             variable: variables
             component: titre alcalimetrique complet
+        - header: "Demande biologique en oxygène en 5 jours (mg/l)"
+          boundTo:
+            variable: variables
+            component: demande biologique en oxygène en 5 jours
         - header: "Balance ionique (%)"
           boundTo:
             variable: variables
@@ -460,7 +464,7 @@ dataTypes:
           boundTo:
             variable: variables
             component: calcium
-        - header: "Magnésium (mg/l)"
+        - header: "Magnesium (mg/l)"
           boundTo:
             variable: variables
             component: magnésium
@@ -484,11 +488,11 @@ dataTypes:
           boundTo:
             variable: variables
             component: sulfates
-        - header: "Oxygène Dissous (mg/l)"
+        - header: "Oxygene Dissous (mg/l)"
           boundTo:
             variable: variables
             component: oxygène dissous
-        - header: "Matières en suspension (mg/l)"
+        - header: "Matieres en suspension (mg/l)"
           boundTo:
             variable: variables
             component: matiéres en suspension

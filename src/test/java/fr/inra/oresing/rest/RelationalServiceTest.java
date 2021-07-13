@@ -90,7 +90,7 @@ public class RelationalServiceTest {
 
         {
             List<Map<String, Object>> viewContent = relationalService.readView("olac", "physico-chimie", ViewStrategy.VIEW);
-            Assert.assertEquals(19, viewContent.size());
+            Assert.assertEquals(771, viewContent.size());
         }
 
         {
