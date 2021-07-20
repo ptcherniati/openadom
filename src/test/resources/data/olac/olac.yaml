@@ -702,3 +702,500 @@ dataTypes:
           boundTo:
             variable: variables
             component: turbidite
+  phytoplancton_aggregated:
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      variables:
+        components:
+          biovolume_algal:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          label: "Contexte"
+          data:
+            - outils
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "biovolume algal total de l'échantillon"
+          boundTo:
+            variable: variables
+            component: biovolume_algal
+  phytoplancton__truncated:
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      profondeurs:
+        components:
+          min:
+          max:
+      variables:
+        components:
+          nom du déterminateur:
+          volume sédimenté:
+          surface de comptage:
+          nom du taxon déterminé:
+          biovolume de l'espéce dans l'échantillon:
+          nombre d'objets comptés:
+          nombre d'objets par ml:
+          nombre de cellules par ml:
+          nombre de champs comptés:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          label: "Contexte"
+          data:
+            - outils
+            - profondeurs
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "profondeur min (m)"
+          boundTo:
+            variable: profondeurs
+            component: min
+        - header: "profondeur max (m)"
+          boundTo:
+            variable: profondeurs
+            component: max
+        - header: "nom du déterminateur"
+          boundTo:
+            variable: variables
+            component: nom du déterminateur
+        - header: "volume sédimenté"
+          boundTo:
+            variable: variables
+            component: volume sédimenté
+        - header: "surface de comptage"
+          boundTo:
+            variable: variables
+            component: surface de comptage
+        - header: "nom du taxon déterminé"
+          boundTo:
+            variable: variables
+            component: nom du taxon déterminé
+        - header: "biovolume de l'espéce dans l'échantillon (um3/ml)"
+          boundTo:
+            variable: variables
+            component: biovolume de l'espéce dans l'échantillon
+        - header: "nombre d'objets comptés (nounit)"
+          boundTo:
+            variable: variables
+            component: nombre d'objets comptés
+        - header: "nombre d'objets par ml (ind/ml)"
+          boundTo:
+            variable: variables
+            component: nombre d'objets par ml
+        - header: "nombre de cellules par ml (ind/ml)"
+          boundTo:
+            variable: variables
+            component: nombre de cellules par ml
+        - header: "nombre de champs comptés (nounit)"
+          boundTo:
+            variable: variables
+            component: nombre de champs comptés
+  zooplancton__truncated:
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      profondeurs:
+        components:
+          min:
+          max:
+      variables:
+        components:
+          nom du déterminateur:
+          biovolume sédimenté:
+          nom du taxon déterminé:
+          stade de développement:
+          variable:
+          valeur:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          label: "Contexte"
+          data:
+            - outils
+            - profondeurs
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "profondeur minimum (m)"
+          boundTo:
+            variable: profondeurs
+            component: min
+        - header: "profondeur maximum (m)"
+          boundTo:
+            variable: profondeurs
+            component: max
+        - header: "nom du déterminateur"
+          boundTo:
+            variable: variables
+            component: nom du déterminateur
+        - header: "biovolume sédimenté"
+          boundTo:
+            variable: variables
+            component: biovolume sédimenté
+        - header: "nom du taxon déterminé"
+          boundTo:
+            variable: variables
+            component: nom du taxon déterminé
+        - header: "stade de développement"
+          boundTo:
+            variable: variables
+            component: stade de développement
+        - header: "variable"
+          boundTo:
+            variable: variables
+            component: variable
+        - header: "valeur"
+          boundTo:
+            variable: variables
+            component: valeur
+  zooplancton_biovolumes:
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      profondeurs:
+        components:
+          min:
+          max:
+      variables:
+        components:
+          nom du déterminateur:
+          volume sédimenté:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          label: "Contexte"
+          data:
+            - outils
+            - profondeurs
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "profondeur minimum(m)"
+          boundTo:
+            variable: profondeurs
+            component: min
+        - header: "profondeur maximum(m)"
+          boundTo:
+            variable: profondeurs
+            component: max
+        - header: "nom du déterminateur"
+          boundTo:
+            variable: variables
+            component: nom du déterminateur
+        - header: "volume sédimenté"
+          boundTo:
+            variable: variables
+            component: volume sédimenté

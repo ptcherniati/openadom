@@ -438,6 +438,42 @@ public class Fixtures {
                     .andExpect(status().isCreated());
         }
 
+        // ajout de data phytoplancton_aggregated
+        try (InputStream in = getClass().getResourceAsStream(getPhytoAggregatedDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data phytoplancton_truncated
+        try (InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data  zooplancton_truncated
+        try (InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton__truncated")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data zooplancton_biovolumes
+        try (InputStream in = getClass().getResourceAsStream(getZooplactonBiovolumDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
         return authCookie;
     }
 
@@ -451,5 +487,21 @@ public class Fixtures {
 
     public String getSondeDataResourceName() {
         return "/data/olac/sonde_truncated.csv";
+    }
+
+    public String getPhytoAggregatedDataResourceName() {
+        return "/data/olac/phytoplancton_aggregated.csv";
+    }
+
+    public String getPhytoplanctonDataResourceName() {
+        return "/data/olac/phytoplancton__truncated.csv";
+    }
+
+    public String getZooplanctonDataResourceName() {
+        return "/data/olac/zooplancton__truncated.csv";
+    }
+
+    public String getZooplactonBiovolumDataResourceName() {
+        return "/data/olac/zooplancton_biovolumes.csv";
     }
 }
