@@ -94,7 +94,7 @@ dataTypes:
             checker:
               name: Date
               params:
-                pattern: hh:mm
+                pattern: HH:mm
       projet:
         components:
           value:
@@ -512,3 +512,193 @@ dataTypes:
           boundTo:
             variable: variables
             component: orthophosphates
+  sonde_truncated:
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          commentaire_sonde:
+          mesure:
+      variables:
+        components:
+          profondeur réelle observée:
+          chl a:
+          chl a corrigée labo:
+          cond25c corrigee labo:
+          cond25degres:
+          oxygene mg:
+          oxygene mg corrige winkler:
+          oxygene saturation:
+          oxygene saturation corrige winkler:
+          pah:
+          par a:
+          par w:
+          pc:
+          ph brut:
+          ph corrigé labo:
+          ph tc:
+          température:
+          turbidite:
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          label: "Contexte"
+          data:
+            - outils
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "commentaire sonde"
+          boundTo:
+            variable: outils
+            component: commentaire_sonde
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "heure de prélèvement"
+          boundTo:
+            variable: dates
+            component: time
+        - header: "profondeur réelle observée (m)"
+          boundTo:
+            variable: variables
+            component: profondeur réelle observée
+        - header: "chl a (mg/m3)"
+          boundTo:
+            variable: variables
+            component: chl a
+        - header: "chl a corrigée labo (mg/m3)"
+          boundTo:
+            variable: variables
+            component: chl a corrigée labo
+        - header: "cond25c corrigee labo (ms/cm)"
+          boundTo:
+            variable: variables
+            component: cond25c corrigee labo
+        - header: "cond25degres (ms/cm)"
+          boundTo:
+            variable: variables
+            component: cond25degres
+        - header: "oxygene mg (mg/l)"
+          boundTo:
+            variable: variables
+            component: oxygene mg
+        - header: "oxygene mg corrige winkler (mg/l)"
+          boundTo:
+            variable: variables
+            component: oxygene mg corrige winkler
+        - header: "oxygene saturation (%)"
+          boundTo:
+            variable: variables
+            component: oxygene saturation
+        - header: "oxygene saturation corrige winkler (%)"
+          boundTo:
+            variable: variables
+            component: oxygene saturation corrige winkler
+        - header: "pah (μg/l)"
+          boundTo:
+            variable: variables
+            component: pah
+        - header: "par a (μe)"
+          boundTo:
+            variable: variables
+            component: par a
+        - header: "par w (μe)"
+          boundTo:
+            variable: variables
+            component: par w
+        - header: "pc (μg/l)"
+          boundTo:
+            variable: variables
+            component: pc
+        - header: "ph brut (nounit)"
+          boundTo:
+            variable: variables
+            component: ph brut
+        - header: "ph corrigé labo (nounit)"
+          boundTo:
+            variable: variables
+            component: ph corrigé labo
+        - header: "ph tc (nounit)"
+          boundTo:
+            variable: variables
+            component: ph tc
+        - header: "température (°c)"
+          boundTo:
+            variable: variables
+            component: température
+        - header: "turbidite (ftu)"
+          boundTo:
+            variable: variables
+            component: turbidite

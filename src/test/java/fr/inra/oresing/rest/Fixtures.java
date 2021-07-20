@@ -411,7 +411,7 @@ public class Fixtures {
             }
         }
 
-        // ajout de data
+        // ajout de data condition_prelevements
         try (InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
             MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevements")
@@ -420,10 +420,19 @@ public class Fixtures {
                     .andExpect(status().isCreated());
         }
 
-        // ajout de data
+        // ajout de data physico-chimie
         try (InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
             MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/physico-chimie")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data sonde_truncated
+        try (InputStream in = getClass().getResourceAsStream(getSondeDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/sonde_truncated")
                     .file(file)
                     .cookie(authCookie))
                     .andExpect(status().isCreated());
@@ -438,5 +447,9 @@ public class Fixtures {
 
     public String getPhysicoChimieDataResourceName() {
         return "/data/olac/physico-chimie.csv";
+    }
+
+    public String getSondeDataResourceName() {
+        return "/data/olac/sonde_truncated.csv";
     }
 }

@@ -637,6 +637,15 @@ public class OreSiResourcesTest {
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getSondeDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/sonde_truncated")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
     }
 
     @Test
