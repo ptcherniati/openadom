@@ -63,17 +63,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -554,7 +544,13 @@ public class OreSiService {
      */
     private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions) {
         return rowWithData -> {
-            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum());
+            Map<String, Map<String, String>> datumByVariableAndComponent = new HashMap<>();
+            for (Map.Entry<VariableComponentKey, String> entry: rowWithData.getDatum().entrySet()){
+                datumByVariableAndComponent
+                        .computeIfAbsent(entry.getKey().getVariable(), k->new HashMap<String, String>())
+                        .put(entry.getKey().getComponent(), entry.getValue());
+            }
+            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum(), "datumByVariableAndComponent", datumByVariableAndComponent);
             Map<VariableComponentKey, String> defaultValues = Maps.transformValues(defaultValueExpressions, expression -> expression.evaluate(evaluationContext));
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
             rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
