@@ -48,6 +48,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
@@ -362,7 +363,16 @@ public class OreSiService {
 
     private String escapeKeyComponent(String key) {
         String toEscape = StringUtils.stripAccents(key.toLowerCase());
-        String escaped = StringUtils.remove(StringUtils.replace(toEscape, " ", "_"), "-");
+        String escaped = StringUtils.remove(
+                StringUtils.replace(
+                        RegExUtils.replaceAll(
+                                toEscape,
+                                "[^a-z0-9_]",
+                                ""
+                        ),
+                        " ", "_"
+                ), "-"
+        );
         checkNaturalKeySyntax(escaped);
         return escaped;
     }
