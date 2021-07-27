@@ -85,10 +85,9 @@ dataTypes:
     data:
       date:
         components:
-          datatime:
-            defaultValue: "
-              return datumByVariableAndComponent.get(\"date\").get(\"day\") +\" \" +datumByVariableAndComponent.get(\"date\").get(\"time\")+ \":00\"
-              "
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
             checker:
               name: Date
               params:
@@ -167,7 +166,7 @@ dataTypes:
           component: value
       timeScope:
         variable: date
-        component: datatime
+        component: datetime
     format:
       headerLine: 1
       firstRowLine: 2
