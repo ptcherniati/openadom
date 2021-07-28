@@ -7,29 +7,40 @@
       </b-button>
     </div>
 
-    <div class='container has-text-centered'>
-      <div class='columns is-mobile is-centered'>
+    <div class="container has-text-centered">
+      <div class="columns is-mobile is-centered" style="flex-wrap: wrap; margin:0px;">
         <div v-for="application in applications" :key="application.name">
-          <div class='column'>
+          <div class="column">
             <div class="card">
               <div class="card-header">
-                <div class="title card-header-title">
+                <div class="title card-header-title" style="margin-top: 0; text-transform: uppercase; margin-bottom: 0px;">
                   <h2 field="name"> {{ application.name }}</h2>
                 </div>
               </div>
               <div class="card-content">
-                <p field="creationDate">{{ new Date(application.creationDate) }}</p>
+                <div class="content">
+                  <p field="creationDate">{{ new Date(application.creationDate) }}</p><section>
+                  <b-collapse :open="false">
+                    <button class="button is-primary" slot="trigger">Description</button>
+                    <div class="notification">
+                      <div class="content">
+                        <p >description de l'ORE mis dans le fichier yaml</p>
+                      </div>
+                    </div>
+                  </b-collapse>
+                </section>
+                </div>
               </div>
               <div class="card-footer">
                 <div class="card-footer-item">
-                  <b-button icon-left="drafting-compass" @click="displayReferencesManagement(application)">{{
-                      $t("applications.references")
-                    }}</b-button>
+                  <a icon-left="drafting-compass"
+                      @click="displayReferencesManagement(application)">
+                    {{ $t("applications.references") }}</a>
                 </div>
                 <div class="card-footer-item">
-                  <b-button icon-left="poll" @click="displayDataSetManagement(application)">{{
-                      $t("applications.dataset")
-                    }}</b-button>
+                  <a icon-left="poll"
+                      @click="displayDataSetManagement(application)">
+                    {{ $t("applications.dataset") }}</a>
                 </div>
               </div>
             </div>
