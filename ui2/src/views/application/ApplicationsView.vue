@@ -6,6 +6,38 @@
         {{ $t("applications.create") }}
       </b-button>
     </div>
+
+    <div class='container has-text-centered'>
+      <div class='columns is-mobile is-centered'>
+        <div v-for="application in applications" :key="application.name">
+          <div class='column'>
+            <div class="card">
+              <div class="card-header">
+                <div class="title card-header-title">
+                  <h2 field="name"> {{ application.name }}</h2>
+                </div>
+              </div>
+              <div class="card-content">
+                <p field="creationDate">{{ new Date(application.creationDate) }}</p>
+              </div>
+              <div class="card-footer">
+                <div class="card-footer-item">
+                  <b-button icon-left="drafting-compass" @click="displayReferencesManagement(application)">{{
+                      $t("applications.references")
+                    }}</b-button>
+                </div>
+                <div class="card-footer-item">
+                  <b-button icon-left="poll" @click="displayDataSetManagement(application)">{{
+                      $t("applications.dataset")
+                    }}</b-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<!--
     <b-table
       :data="applications"
       :striped="true"
@@ -36,6 +68,7 @@
         }}</b-button>
       </b-table-column>
     </b-table>
+    --->
   </PageView>
 </template>
 
