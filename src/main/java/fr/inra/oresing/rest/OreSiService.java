@@ -243,6 +243,19 @@ public class OreSiService {
                 .forEach(validateRow);
     }
 
+    /*private void validateStoredReference(Application app, String reference) {
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, reference);
+        Consumer<ImmutableMap<String, String>> validateRow = line -> {
+            lineCheckers.forEach(lineChecker -> {
+                ValidationCheckResult validationCheckResult = lineChecker.checkReference(line);
+                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
+            });
+        };
+        repo.getRepository(app).referenceValue().findAllByReferenceType(reference).stream()
+                .map(this::valuesToIndexedPerReferenceMap)
+                .forEach(validateRow);
+    }*/
+
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
@@ -263,6 +276,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
         String parentHierarchicalKeyColumn;
         BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
@@ -304,9 +318,25 @@ public class OreSiService {
                 });
                 return recordAsMap;
             };
+
+            Map<String, UUID> refsLinkedTo = new LinkedHashMap<>();
+            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             Stream<ReferenceValue> referenceValuesStream = Streams.stream(csvParser)
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
+                        lineCheckers.forEach(lineChecker -> {
+                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(refValues);
+                            if (validationCheckResult.isSuccess()) {
+                                if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                                    ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
+                                    String reference = ((ReferenceLineChecker)lineChecker).getRefType();
+                                    UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                                    refsLinkedTo.put(escapeKeyComponent(reference), referenceId);
+                                }
+                            } else {
+                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
+                            }
+                        });
                         ReferenceValue e = new ReferenceValue();
                         String naturalKey;
                         String technicalId = e.getId().toString();
@@ -323,12 +353,14 @@ public class OreSiService {
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
+                        e.setRefsLinkedTo(refsLinkedTo);
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
                         e.setRefValues(refValues);
                         return e;
                     });
             referenceValueRepository.storeAll(referenceValuesStream);
+            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
 
         return fileId;

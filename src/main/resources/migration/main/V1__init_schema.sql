@@ -15,13 +15,40 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- check les foreign key pour le colonne references de la table data
+CREATE OR REPLACE FUNCTION public.jsonb_count_items(IN json jsonb)
+    RETURNS integer
+    LANGUAGE 'sql'
+    VOLATILE
+    PARALLEL UNSAFE
+    COST 100
+
+AS $BODY$
+select array_length(array_agg(A.key), 1) from (
+                                                  select jsonb_object_keys(json) as key
+                                              ) A;
+$BODY$;
+
+/*-- check les foreign key pour le colonne references de la table data
 CREATE OR REPLACE FUNCTION refs_check(aSchema text, application UUID, refValues UUID[])
 RETURNS BOOLEAN AS $$
 DECLARE
     result TEXT;
 BEGIN
-    EXECUTE 'select count(id) = array_length($2, 1) from ' || aSchema || '.ReferenceValue where application=$1 AND id = ANY ($2);' INTO result USING application, refValues;
+    EXECUTE 'select count(id) = array_length($2, 1) from ' || aSchema || '.ReferenceValue where application=$1 AND id = ANY ($2);' ||
+            '' INTO result USING application, refValues;
+    RETURN result;
+END;
+$$ language 'plpgsql';*/
+
+-- check les foreign key pour le colonne references de la table data
+
+CREATE OR REPLACE FUNCTION refs_check_for_reference(aSchema text, application UUID, refValues jsonb)
+RETURNS BOOLEAN AS $$
+DECLARE
+    result TEXT;
+BEGIN
+    EXECUTE 'select count(id) = jsonb_count_items($2) from ' || aSchema || '.referencevalue where application=$1::uuid and jsonb_build_object(referenceType, id) <@ $2 ' ||
+            '' INTO result USING application, refValues;
     RETURN result;
 END;
 $$ language 'plpgsql';

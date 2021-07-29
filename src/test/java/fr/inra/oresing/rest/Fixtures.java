@@ -17,6 +17,7 @@ import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -97,7 +98,8 @@ public class Fixtures {
     }
 
     public Map<String, String> getAcbbReferentielFiles() {
-        Map<String, String> referentielFiles = new HashMap<>();
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("agroecosystemes", "/data/acbb/agroecosysteme.csv");
         referentielFiles.put("sites", "/data/acbb/sites.csv");
         referentielFiles.put("parcelles", "/data/acbb/parcelle.csv");
         return referentielFiles;

@@ -3,8 +3,32 @@ application:
   name: ACBB
   version: 1
 references:
+  agroecosystemes :
+    keyColumns: [Agroécosystème_key]
+    columns:
+      Agroécosystème_key:
+      Agroécosystème_fr:
+      Agroécosystème_en:
+      region:
+      filter:
+      Département:
   sites:
     keyColumns: [nom du site_key]
+    validations:
+      agroecosystemRef:
+        description: "référence à l'agroécosystème"
+        checker:
+          name: Reference
+          params:
+            refType: agroecosystemes
+            columns: Agroécosystème
+      checkDateMiseEnService:
+        description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        checker:
+          name: Date
+          params:
+            pattern : "dd/MM/yyyy"
+            columns  : "date mise en service du dispositif"
     columns:
       Agroécosystème:
       nom du site_key:

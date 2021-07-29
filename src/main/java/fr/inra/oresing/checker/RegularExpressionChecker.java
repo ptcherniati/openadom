@@ -14,6 +14,8 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
 
     private final VariableComponentKey variableComponentKey;
 
+    private final String column;
+
     private final String patternString;
 
     private final Predicate<String> predicate;
@@ -22,11 +24,24 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
         this.variableComponentKey = variableComponentKey;
         this.patternString = patternString;
         predicate = Pattern.compile(patternString).asMatchPredicate();
+        this.column="";
+    }
+
+    public RegularExpressionChecker(String column, String patternString) {
+        this.column = column;
+        this.variableComponentKey = null;
+        this.patternString = patternString;
+        predicate = Pattern.compile(patternString).asMatchPredicate();
     }
 
     @Override
     public VariableComponentKey getVariableComponentKey() {
         return variableComponentKey;
+    }
+
+    @Override
+    public String getColumn() {
+        return this.column;
     }
 
     @Override

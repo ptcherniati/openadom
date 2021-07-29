@@ -9,7 +9,15 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
 
     public static final String PARAM_REFTYPE = "refType";
 
+
     private final VariableComponentKey variableComponentKey;
+
+    @Override
+    public String getColumn() {
+        return column;
+    }
+
+    private final String column;
 
     private final String reference;
 
@@ -17,6 +25,14 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
 
     ReferenceLineChecker(VariableComponentKey variableComponentKey, String reference, ImmutableMap<String, UUID> referenceValues) {
         this.variableComponentKey = variableComponentKey;
+        this.column = "";
+        this.reference = reference;
+        this.referenceValues = referenceValues;
+    }
+
+    ReferenceLineChecker(String column, String reference, ImmutableMap<String, UUID> referenceValues) {
+        this.variableComponentKey = null;
+        this.column = column;
         this.reference = reference;
         this.referenceValues = referenceValues;
     }
@@ -25,9 +41,13 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
     public ReferenceValidationCheckResult check(String value) {
         ReferenceValidationCheckResult validationCheckResult;
         if (referenceValues.containsKey(value)) {
-            validationCheckResult = ReferenceValidationCheckResult.success(getVariableComponentKey(), referenceValues.get(value));
-        } else {
-            validationCheckResult = ReferenceValidationCheckResult.error("invalidReference", ImmutableMap.of("variableComponentKey", variableComponentKey, "referenceValues", referenceValues, "value", value));
+            validationCheckResult = variableComponentKey!=null?
+                    ReferenceValidationCheckResult.success(variableComponentKey, referenceValues.get(value)):
+                    ReferenceValidationCheckResult.success(column, referenceValues.get(value));
+        } else{
+            validationCheckResult = variableComponentKey!=null?
+                    ReferenceValidationCheckResult.error("invalidReference", ImmutableMap.of("variableComponentKey", variableComponentKey, "referenceValues", referenceValues, "value", value)):
+                    ReferenceValidationCheckResult.error("invalidReference", ImmutableMap.of("column", column, "referenceValues", referenceValues, "value", value));
         }
         return validationCheckResult;
     }

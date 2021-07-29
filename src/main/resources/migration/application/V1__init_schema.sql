@@ -16,6 +16,7 @@ create table ReferenceValue (
     referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
     hierarchicalKey ltree NOT NULL,
     naturalKey TEXT NOT NULL,
+    refsLinkedTo jsonb check(refs_check_for_reference('${applicationSchema}', application, refsLinkedTo)),
     refValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id),
 

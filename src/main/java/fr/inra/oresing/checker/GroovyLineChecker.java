@@ -31,7 +31,6 @@ public class GroovyLineChecker implements LineChecker {
     private GroovyLineChecker(BooleanGroovyExpression expression) {
         this.expression = expression;
     }
-
     @Override
     public ValidationCheckResult check(Map<VariableComponentKey, String> datum) {
         Map<String, Map<String, String>> datumAsMap = new LinkedHashMap<>();
@@ -42,6 +41,15 @@ public class GroovyLineChecker implements LineChecker {
             datumAsMap.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
         }
         Map<String, Object> context = ImmutableMap.of("datum", datumAsMap);
+        return evaluate(context);
+    }
+    @Override
+    public ValidationCheckResult checkReference(Map<String, String> datum) {
+        Map<String, Object> context = ImmutableMap.of("datum", datum);
+        return evaluate(context);
+    }
+
+    private ValidationCheckResult evaluate(Map<String, Object> context) {
         Boolean evaluation = expression.evaluate(context);
         if (evaluation) {
             return DefaultValidationCheckResult.success();

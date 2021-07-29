@@ -39,6 +39,7 @@ public class Configuration {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
+        private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
     }
 
     @Getter
