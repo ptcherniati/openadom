@@ -5,20 +5,19 @@
     <div class="container has-text-centered">
       <div class="columns is-mobile">
         <div>
-          <div class="column">
-            <div class="applicationCard card">
+          <div class="column" v-if="canCreateApplication">
+            <div class="applicationCard card is-clickable"
+                 @click="createApplication" style="background-color: #00a3a6; opacity: 75%">
               <div class="card-header">
-                <div class="title card-header-title">
+                <div class="title card-header-title" style="color: white">
                   <p>{{ $t("applications.create") }}</p>
                 </div>
               </div>
-              <div class="card-content is-centered" style="padding:10px;">
-                <div class="buttons is-centered" v-if="canCreateApplication">
-                  <b-button class="btnModal" icon-left="plus"
-                            type="is-primary"
-                            size="is-large"
-                            @click="createApplication"/>
-                </div>
+              <div class="card-content buttons is-centered" style="padding:10px;">
+                <b-button class="btnModal" icon-left="plus"
+                  type="is-primary"
+                  size="is-large"
+                  style="color: white; opacity: 100%;"/>
               </div>
             </div>
           </div>
