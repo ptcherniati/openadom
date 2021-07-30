@@ -22,6 +22,14 @@ references:
       colonne_homonyme_entre_referentiels:
 
   sites:
+    validations:
+      typeSitesRef:
+        description: "référence au type de site"
+        checker:
+          name: Reference
+          params:
+            refType: type_de_sites
+            columns: tze_type_nom
     keyColumns: [zet_chemin_parent,zet_nom_key]
     columns:
       tze_type_nom:
