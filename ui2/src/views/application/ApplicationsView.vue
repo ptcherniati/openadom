@@ -11,7 +11,7 @@
       <div class="columns is-mobile is-centered" style="flex-wrap: wrap; margin:0px;">
         <div v-for="application in applications" :key="application.name">
           <div class="column">
-            <div class="card" :id=application.name >
+            <div class="card">
               <div class="card-header">
                 <div class="title card-header-title" style="margin-top: 0; text-transform: uppercase; margin-bottom: 0px;">
                   <p field="name"> {{ application.name }}</p>
@@ -19,7 +19,34 @@
                 <b-button icon-left="external-link-square-alt"
                     type="is-primary"
                     size="is-medium"
-                    @click="isCardModalActive = true" style="margin: 5px; opacity: 50%; color: #00a3a6; background-color: transparent;"/>
+                    @click="showModal(application.name)" style="margin: 5px; opacity: 50%; color: #00a3a6; background-color: transparent;"/>
+
+                <b-modal v-model="isCardModalActive" v-show="isSelectedName == application.name" :id="application.name">
+                  <div class="card">
+                    <div class="card-header">
+                      <div class="title card-header-title" style="margin-top: 0; text-transform: uppercase; margin-bottom: 0px;">
+                        <p field="name"> {{ application.name }}</p>
+                      </div>
+                    </div>
+                    <div class="card-content">
+                      <div class="content">
+                        <p>Bienvenue à la description de {{ application.name }}</p>
+                      </div>
+                    </div>
+                    <div class="card-footer">
+                      <div class="card-footer-item">
+                        <a icon-left="drafting-compass"
+                           @click="displayReferencesManagement(application)">
+                          {{ $t("applications.references") }}</a>
+                      </div>
+                      <div class="card-footer-item">
+                        <a icon-left="poll"
+                           @click="displayDataSetManagement(application)">
+                          {{ $t("applications.dataset") }}</a>
+                      </div>
+                    </div>
+                  </div>
+                </b-modal>
               </div>
               <div class="card-content">
                 <div class="content">
@@ -44,32 +71,6 @@
       </div>
     </div>
 
-    <b-modal v-model="isCardModalActive" :data="applications">
-      <div class="card">
-        <div class="card-header">
-          <div class="title card-header-title" style="margin-top: 0; text-transform: uppercase; margin-bottom: 0px;">
-            <p field="name"> {{ applications[0].name }}</p>
-          </div>
-        </div>
-        <div class="card-content">
-          <div class="content">
-            <p>Bienvenue à la description de {{ applications[0].name }}</p>
-          </div>
-        </div>
-        <div class="card-footer">
-          <div class="card-footer-item">
-            <a icon-left="drafting-compass"
-               @click="displayReferencesManagement(applications[0])">
-              {{ $t("applications.references") }}</a>
-          </div>
-          <div class="card-footer-item">
-            <a icon-left="poll"
-               @click="displayDataSetManagement(applications[0])">
-              {{ $t("applications.dataset") }}</a>
-          </div>
-        </div>
-      </div>
-    </b-modal>
 <!--
     <b-table
       :data="applications"
@@ -119,7 +120,8 @@ export default class ApplicationsView extends Vue {
 
   applications = [];
   canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
-  isCardModalActive=false;
+  isSelectedName='';
+  isCardModalActive = false;
 
   created() {
     this.init();
@@ -145,6 +147,10 @@ export default class ApplicationsView extends Vue {
       return;
     }
     this.$router.push("/applications/" + application.name + "/dataTypes");
+  }
+  showModal(name){
+    this.isSelectedName= name;
+    this.isCardModalActive = true;
   }
 }
 </script>
