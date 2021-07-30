@@ -22,7 +22,7 @@ references:
       colonne_homonyme_entre_referentiels:
 
   sites:
-    keyColumns: [chemin]
+    keyColumns: [zet_chemin_parent,zet_nom_key]
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -31,7 +31,6 @@ references:
       zet_description_fr:
       zet_description_en:
       zet_chemin_parent:
-      chemin:
 
   themes:
     keyColumns: [nom_key]

@@ -24,6 +24,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
+import org.assertj.core.util.Strings;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
@@ -344,7 +345,9 @@ public class OreSiService {
                             naturalKey = escapeKeyComponent(technicalId);
                         } else {
                             naturalKey = ref.getKeyColumns().stream()
-                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .map(kc->refValues.get(kc))
+                                    .filter(key->!Strings.isNullOrEmpty(key))
+                                    .map(key -> escapeKeyComponent(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkNaturalKeySyntax(naturalKey);
