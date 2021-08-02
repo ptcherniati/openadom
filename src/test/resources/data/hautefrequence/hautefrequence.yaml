@@ -56,7 +56,7 @@ dataTypes:
             checker: 
               name: Date
               params: 
-                pattern: hh:mm:ss
+                pattern: HH:mm:ss
       localization: 
         components: 
           plateforme: 
