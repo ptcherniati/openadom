@@ -390,6 +390,36 @@ public class OreSiService {
         Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkNaturalKeySyntax);
     }
 
+    HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferencesUsing(lowestLevelReference).orElseThrow();
+        BiMap<String, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
+        Map<ReferenceValue, String> parentHierarchicalKeys = new LinkedHashMap<>();
+        ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                .collect(ImmutableList.toImmutableList());
+        ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+        ImmutableSortedSet<String> includedReferences = sortedReferenceTypes.headSet(lowestLevelReference, true);
+        compositeReferenceDescription.getComponents().stream()
+                .filter(compositeReferenceComponentDescription -> includedReferences.contains(compositeReferenceComponentDescription.getReference()))
+                .forEach(compositeReferenceComponentDescription -> {
+            String reference = compositeReferenceComponentDescription.getReference();
+            String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
+            referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
+                indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
+                if (parentKeyColumn != null) {
+                    String parentHierarchicalKey = referenceValue.getRefValues().get(parentKeyColumn);
+                    parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
+                }
+            });
+        });
+        Map<ReferenceValue, ReferenceValue> childToParents = Maps.transformValues(parentHierarchicalKeys, indexedByHierarchicalKeyReferenceValues::get);
+        SetMultimap<ReferenceValue, ReferenceValue> tree = HashMultimap.create();
+        childToParents.forEach((child, parent) -> tree.put(parent, child));
+        ImmutableSet<ReferenceValue> roots = Sets.difference(indexedByHierarchicalKeyReferenceValues.values(), parentHierarchicalKeys.keySet()).immutableCopy();
+        return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
+    }
+
     @Value
     private static class RowWithData {
         int lineNumber;

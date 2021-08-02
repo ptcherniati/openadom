@@ -6,6 +6,8 @@
         "references-data": "{refName} data",
         "application-creation": "Application creation",
         "data-types-page": "{applicationName} data types"
+        "data-type-authorizations": "{dataType} authorizations",
+    	"data-type-new-authorization": "New authorization for {dataType}"
     },
     "login": {
         "signin": "Sign in",
@@ -15,6 +17,8 @@
         "pwd": "Password",
         "pwd-placeholder": "Ex: xxxx",
         "pwd-forgotten": "Forgotten password ? "
+	    "register": "Register",
+	    "confirm-pwd": "Confirmer le mot de passe"
     },
     "validation": {
         "obligatoire": "Mandatory",
@@ -22,7 +26,8 @@
         "invalid-required": "Please fill the field",
         "invalid-application-name": "The name must only includes lowercase letters.",
         "invalid-application-name-length": "The name's length should be between 4 and 20 characters."
-    },
+        "invalid-confirmed": "Fields don't match."
+  	},
     "alert": {
         "cancel": "Cancel",
         "server-error": "A server error occured",
@@ -35,6 +40,9 @@
         "reference-csv-upload-error": "An error occured while uploading the csv file",
         "reference-updated": "Reference updated",
         "data-updated": "Data type updated"
+	    "registered-user": "User registered",
+	    "revoke-authorization": "Authorization revoked",
+	    "create-authorization": "Authorization created"
     },
     "message": {
         "app-config-error": "Error in yaml file",
@@ -111,5 +119,28 @@
     },
     "dataTypesManagement": {
         "data-types": "Data types"
-    }
+  		  "consult-authorization": "Consult authorizations"
+    },
+  "dataTypeAuthorizations": {
+	    "add-auhtorization": "Add an authorization",
+	    "sub-menu-data-type-authorizations": "{dataType} authorizations",
+	    "sub-menu-new-authorization": "new authorization",
+	    "users": "Users",
+	    "users-placeholder": "Chose users to authorize",
+	    "data-groups": "Data groups",
+	    "data-groups-placeholder": "Chose data groups to authorize",
+	    "authorization-scopes": "Authorization scopes",
+	    "period": "Authorization period",
+	    "from-date": "From date : ",
+	    "to-date": "To date : ",
+	    "from-date-to-date": "From date to date : ",
+	    "always": "Always",
+	    "to": "to",
+	    "create": "Create authorization",
+	    "user": "User",
+	    "data-group": "Data group",
+	    "data-type": "Data type",
+	    "actions": "Actions",
+	    "revoke": "Revoke"
+  }
 }

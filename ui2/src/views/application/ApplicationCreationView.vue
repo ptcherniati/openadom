@@ -56,10 +56,10 @@
             </b-field>
           </ValidationProvider>
           <div class="buttons">
-            <b-button type="is-light" @click="handleSubmit(testApplication)" icon-right="vial">
+            <b-button type="is-light" @click="handleSubmit(testApplication)" icon-left="vial">
               {{ $t("applications.test") }}
             </b-button>
-            <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-right="plus">
+            <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-left="plus">
               {{ $t("applications.create") }}
             </b-button>
           </div>
@@ -108,6 +108,7 @@ export default class ApplicationCreationView extends Vue {
     try {
       await this.applicationService.createApplication(this.applicationConfig);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
+      this.$router.push("/applications");
     } catch (error) {
       this.checkMessageErrors(error);
     }
