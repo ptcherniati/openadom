@@ -1,868 +1,126 @@
-"traitement parcelle_key";"année début";"année fin";"parcelle_key";"nom parcelle";"modalité";"description du traitement";"code traitement";"commentaire";"code unique";"répétition traitement"
-1;"1998";"2013";1312;"201";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-2;"1998";"2013";1326;"305";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-3;"1998";"2013";1332;"401";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-4;"1998";"2013";1306;"105";Urbain_Compost_biodechets;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-5;"1998";"2013";1315;"204";Urbain_Compost_biodechets;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-6;"1998";"2013";1323;"302";Urbain_Compost_biodechets;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-7;"1998";"2013";1334;"403";Urbain_Compost_biodechets;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-8;"1998";"2013";1304;"103";Urbain_Compost_ordures menageres;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-9;"1998";"2013";1313;"202";Urbain_Compost_ordures menageres;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-10;"1998";"2013";1322;"301";Urbain_Compost_ordures menageres;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-11;"1998";"2013";1336;"405";Urbain_Compost_ordures menageres;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-12;"1998";"2013";1302;"101";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-13;"1998";"2013";1314;"203";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-14;"1998";"2013";1325;"304";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-15;"1998";"2013";1333;"402";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-16;"1998";"2013";1303;"102";Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-17;"1998";"2013";1316;"205";Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-18;"1998";"2013";1324;"303";Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-19;"1998";"2013";1335;"404";Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-20;"1998";"2013";1309;"108";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-21;"1998";"2013";1317;"206";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-22;"1998";"2013";1331;"310";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-23;"1998";"2013";1337;"406";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-24;"1998";"2013";1310;"109";Urbain_Compost_biodechets;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-25;"1998";"2013";1320;"209";Urbain_Compost_biodechets;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-26;"1998";"2013";1328;"307";Urbain_Compost_biodechets;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-27;"1998";"2013";1339;"408";Urbain_Compost_biodechets;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-28;"1998";"2013";1308;"107";Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-29;"1998";"2013";1321;"210";Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-30;"1998";"2013";1329;"308";Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-31;"1998";"2013";1338;"407";Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-32;"1998";"2013";1311;"110";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-33;"1998";"2013";1318;"207";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-34;"1998";"2013";1327;"306";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-35;"1998";"2013";1340;"409";Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-36;"1998";"2013";1307;"106";Sans;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-37;"1998";"2013";1319;"208";Sans;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-38;"1998";"2013";1330;"309";Sans;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-39;"1998";"2013";1341;"410";Sans;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-40;"1998";"2013";1305;"104";Optimal;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-41;"1998";"2013";1312;"201";Optimal;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-42;"1998";"2013";1326;"305";Optimal;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-43;"1998";"2013";1332;"401";Optimal;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-44;"1998";"2013";1306;"105";Optimal;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-45;"1998";"2013";1315;"204";Optimal;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-46;"1998";"2013";1323;"302";Optimal;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-47;"1998";"2013";1334;"403";Optimal;Compost de biodéchets, fertilisation N optimale;BIO avec N;"232437";feucherolles_qa_bio_avec_n;4
-48;"1998";"2013";1304;"103";Optimal;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-49;"1998";"2013";1313;"202";Optimal;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-50;"1998";"2013";1322;"301";Optimal;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-51;"1998";"2013";1336;"405";Optimal;Compost d ordures menageres résiduelles, fertilisation N optimale;OMR avec N;"232438";feucherolles_qa_omr_avec_n;4
-52;"1998";"2013";1302;"101";Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-53;"1998";"2013";1314;"203";Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-54;"1998";"2013";1325;"304";Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-55;"1998";"2013";1333;"402";Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232439";feucherolles_qa_fum_avec_n;4
-56;"1998";"2013";1303;"102";Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-57;"1998";"2013";1316;"205";Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-58;"1998";"2013";1324;"303";Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-59;"1998";"2013";1335;"404";Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232440";feucherolles_qa_tem_avec_n;4
-60;"1998";"2013";1309;"108";Minimal;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-61;"1998";"2013";1317;"206";Minimal;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-62;"1998";"2013";1331;"310";Minimal;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-63;"1998";"2013";1337;"406";Minimal;Compost de déchets verts et boues d'épuration, fertilisation N minimale;DVB sans N;"278922";feucherolles_qa_dvb_sans_n;4
-64;"1998";"2013";1310;"109";Minimal;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-65;"1998";"2013";1320;"209";Minimal;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-66;"1998";"2013";1328;"307";Minimal;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-67;"1998";"2013";1339;"408";Minimal;Compost de biodechets, fertilisation N minimale;BIO sans N;"232442";feucherolles_qa_bio_sans_n;4
-68;"1998";"2013";1308;"107";Minimal;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-69;"1998";"2013";1321;"210";Minimal;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-70;"1998";"2013";1329;"308";Minimal;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-71;"1998";"2013";1338;"407";Minimal;Compost d ordures menageres residuelles, fertilisation N minimale;OMR sans N;"232443";feucherolles_qa_omr_sans_n;4
-72;"1998";"2013";1311;"110";Minimal;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-73;"1998";"2013";1318;"207";Minimal;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-74;"1998";"2013";1327;"306";Minimal;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-75;"1998";"2013";1340;"409";Minimal;Fumier de bovins, fertilisation N minimale;FUM sans N;"232444";feucherolles_qa_fum_sans_n;4
-76;"1998";"2013";1307;"106";Minimal;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-77;"1998";"2013";1319;"208";Minimal;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-78;"1998";"2013";1330;"309";Minimal;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-79;"1998";"2013";1341;"410";Minimal;Temoin sans apport organique, fertilisation N minimale;TEM sans N;"232445";feucherolles_qa_tem_sans_n;4
-80;"1998";"2013";1305;"104";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration, fertilisation N optimale;DVB avec N;"278921";feucherolles_qa_dvb_avec_n;4
-82;"2000";;1344;I T101;Optimal;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-83;"2000";;1374;II T101;Optimal;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-84;"2000";;1386;III T101;Optimal;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-85;"2000";;1398;IV T101;Optimal;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-86;"2000";;1363;I T102;Optimal;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-87;"2000";;1375;II T102;Optimal;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-88;"2000";;1387;III T102;Optimal;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-89;"2000";;1399;IV T102;Optimal;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-90;"2000";;1364;I T103;Optimal;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-91;"2000";;1376;II T103;Optimal;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-92;"2000";;1388;III T103;Optimal;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-93;"2000";;1400;IV T103;Optimal;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-94;"2000";;1365;I T104;Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-95;"2000";;1377;II T104;Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-96;"2000";;1389;III T104;Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-97;"2000";;1401;IV T104;Optimal;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-98;"2000";;1366;I T105;Optimal;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-99;"2000";;1378;II T105;Optimal;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-100;"2000";;1390;III T105;Optimal;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-101;"2000";;1402;IV T105;Optimal;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-102;"2000";;1367;I T106;Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-103;"2000";;1379;II T106;Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-104;"2000";;1391;III T106;Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-105;"2000";;1403;IV T106;Optimal;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-130;"2000";;1344;I T101;Urbain_Boue station epuration_activee;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-131;"2000";;1374;II T101;Urbain_Boue station epuration_activee;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-132;"2000";;1386;III T101;Urbain_Boue station epuration_activee;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-133;"2000";;1398;IV T101;Urbain_Boue station epuration_activee;Boue d epuration, fertilisation N optimale;BOUE avec N;"232464";inra_colmar_seav_prospective_boue_avec_n;4
-134;"2000";;1363;I T102;Urbain_Compost_boue station epuration;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-135;"2000";;1375;II T102;Urbain_Compost_boue station epuration;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-136;"2000";;1387;III T102;Urbain_Compost_boue station epuration;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-137;"2000";;1399;IV T102;Urbain_Compost_boue station epuration;Compost de boue, fertilisation N optimale;DVB avec N;"232465";inra_colmar_seav_prospective_dvb_avec_n;4
-138;"2000";;1364;I T103;Urbain_Compost_biodechets;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-139;"2000";;1376;II T103;Urbain_Compost_biodechets;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-140;"2000";;1388;III T103;Urbain_Compost_biodechets;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-141;"2000";;1400;IV T103;Urbain_Compost_biodechets;Compost de biodechets, fertilisation N optimale;BIO avec N;"232466";inra_colmar_seav_prospective_bio_avec_n;4
-142;"2000";;1365;I T104;Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-143;"2000";;1377;II T104;Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-144;"2000";;1389;III T104;Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-145;"2000";;1401;IV T104;Effluent_Elevage_Fumier_bovins;Fumier de bovins, fertilisation N optimale;FUM avec N;"232467";inra_colmar_seav_prospective_fum_avec_n;4
-146;"2000";;1366;I T105;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-147;"2000";;1378;II T105;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-148;"2000";;1390;III T105;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-149;"2000";;1402;IV T105;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, fertilisation N optimale;FUMC avec N;"232468";inra_colmar_seav_prospective_fumc_avec_n;4
-150;"2000";;1367;I T106;Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-151;"2000";;1379;II T106;Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-152;"2000";;1391;III T106;Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-153;"2000";;1403;IV T106;Sans;Temoin sans apport organique, fertilisation N optimale;TEM avec N;"232469";inra_colmar_seav_prospective_tem_avec_n;4
-191;"1996";;1345;B2;Urbain_Boue station epuration_deshydratee;Boue de STEP deshydratee;BOUE STEP DES;"232449";la_bouzule_bouzule_boue_step_des;4
-192;"1996";;1346;B32;Urbain_Compost_boue station epuration;Compost de boue avec des déchets verts (B3.2) + polluants metalliques;DVB + ETM;"232452";la_bouzule_bouzule_dvb_+_etm;4
-193;"1996";;1347;Th;Sans;Temoin fertilisation haute;TEMOIN haut;"232457";la_bouzule_bouzule_temoin_haut;4
-194;"1996";;1348;B4;Industriel_Boue_papeterie;Boue de papeterie;BOUE PAPETERIE;"232453";la_bouzule_bouzule_boue_papeterie;4
-195;"1996";;1349;C2;Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles;OMR;"232455";la_bouzule_bouzule_omr;4
-196;"1996";;1350;C1;Autre_Cendres combustion;Cendre de combustion;CENDRE COMB;"232454";la_bouzule_bouzule_cendre_comb;4
-197;"1996";;1351;B3;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3);DVB;"232450";la_bouzule_bouzule_dvb;4
-198;"1996";;1352;B1;Urbain_Boue station epuration_liquide;Boue urbaine peu deshydratee;BOUE STEP P D;"232448";la_bouzule_bouzule_boue_step_p_d;4
-199;"1996";;1353;B31;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3.1) + polluants organiques;DVB + CTO;"232451";la_bouzule_bouzule_dvb_+_cto;4
-200;"1996";;1354;Tb;Sans;Temoin fertilisation basse;TEMOIN bas;"232456";la_bouzule_bouzule_temoin_bas;4
-201;"1996";;1355;B3;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3);DVB;"232450";la_bouzule_bouzule_dvb;4
-202;"1996";;1356;Th;Sans;Temoin fertilisation haute;TEMOIN haut;"232457";la_bouzule_bouzule_temoin_haut;4
-203;"1996";;1357;B2;Urbain_Boue station epuration_deshydratee;Boue de STEP deshydratee;BOUE STEP DES;"232449";la_bouzule_bouzule_boue_step_des;4
-204;"1996";;1358;B1;Urbain_Boue station epuration_liquide;Boue urbaine peu deshydratee;BOUE STEP P D;"232448";la_bouzule_bouzule_boue_step_p_d;4
-205;"1996";;1359;Tb;Sans;Temoin fertilisation basse;TEMOIN bas;"232456";la_bouzule_bouzule_temoin_bas;4
-206;"1996";;1360;B31;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3.1) + polluants organiques;DVB + CTO;"232451";la_bouzule_bouzule_dvb_+_cto;4
-207;"1996";;1361;C1;Autre_Cendres combustion;Cendre de combustion;CENDRE COMB;"232454";la_bouzule_bouzule_cendre_comb;4
-208;"1996";;1362;B32;Urbain_Compost_boue station epuration;Compost de boue avec des déchets verts (B3.2) + polluants metalliques;DVB + ETM;"232452";la_bouzule_bouzule_dvb_+_etm;4
-209;"1996";;1416;B4;Industriel_Boue_papeterie;Boue de papeterie;BOUE PAPETERIE;"232453";la_bouzule_bouzule_boue_papeterie;4
-210;"1996";;1417;C2;Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles;OMR;"232455";la_bouzule_bouzule_omr;4
-211;"1996";;1418;Th;Sans;Temoin fertilisation haute;TEMOIN haut;"232457";la_bouzule_bouzule_temoin_haut;4
-212;"1996";;1419;B2;Urbain_Boue station epuration_deshydratee;Boue de STEP deshydratee;BOUE STEP DES;"232449";la_bouzule_bouzule_boue_step_des;4
-213;"1996";;1420;B3;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3);DVB;"232450";la_bouzule_bouzule_dvb;4
-214;"1996";;1421;C2;Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles;OMR;"232455";la_bouzule_bouzule_omr;4
-215;"1996";;1422;Tb;Sans;Temoin fertilisation basse;TEMOIN bas;"232456";la_bouzule_bouzule_temoin_bas;4
-216;"1996";;1423;B31;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3.1) + polluants organiques;DVB + CTO;"232451";la_bouzule_bouzule_dvb_+_cto;4
-217;"1996";;1424;B32;Urbain_Compost_boue station epuration;Compost de boue avec des déchets verts (B3.2) + polluants metalliques;DVB + ETM;"232452";la_bouzule_bouzule_dvb_+_etm;4
-218;"1996";;1425;B4;Industriel_Boue_papeterie;Boue de papeterie;BOUE PAPETERIE;"232453";la_bouzule_bouzule_boue_papeterie;4
-219;"1996";;1426;C1;Autre_Cendres combustion;Cendre de combustion;CENDRE COMB;"232454";la_bouzule_bouzule_cendre_comb;4
-220;"1996";;1427;B1;Urbain_Boue station epuration_liquide;Boue urbaine peu deshydratee;BOUE STEP P D;"232448";la_bouzule_bouzule_boue_step_p_d;4
-221;"1996";;1428;B3;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3);DVB;"232450";la_bouzule_bouzule_dvb;4
-222;"1996";;1429;B31;Urbain_Compost_boue station epuration;Compost de boue avec des dechets verts (B3.1) + polluants organiques;DVB + CTO;"232451";la_bouzule_bouzule_dvb_+_cto;4
-223;"1996";;1430;Th;Sans;Temoin fertilisation haute;TEMOIN haut;"232457";la_bouzule_bouzule_temoin_haut;4
-224;"1996";;1431;B32;Urbain_Compost_boue station epuration;Compost de boue avec des déchets verts (B3.2) + polluants metalliques;DVB + ETM;"232452";la_bouzule_bouzule_dvb_+_etm;4
-225;"1996";;1432;B4;Industriel_Boue_papeterie;Boue de papeterie;BOUE PAPETERIE;"232453";la_bouzule_bouzule_boue_papeterie;4
-226;"1996";;1433;B2;Urbain_Boue station epuration_deshydratee;Boue de STEP deshydratee;BOUE STEP DES;"232449";la_bouzule_bouzule_boue_step_des;4
-227;"1996";;1434;B1;Urbain_Boue station epuration_liquide;Boue urbaine peu deshydratee;BOUE STEP P D;"232448";la_bouzule_bouzule_boue_step_p_d;4
-228;"1996";;1435;Tb;Sans;Temoin fertilisation basse;TEMOIN bas;"232456";la_bouzule_bouzule_temoin_bas;4
-229;"1996";;1436;C2;Urbain_Compost_ordures menageres;Compost d ordures menageres residuelles;OMR;"232455";la_bouzule_bouzule_omr;4
-230;"1996";;1437;C1;Autre_Cendres combustion;Cendre de combustion;CENDRE COMB;"232454";la_bouzule_bouzule_cendre_comb;4
-232;"2013";;1504;T1;Annuel;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-233;"2013";;1505;BA1;Annuel;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-234;"2013";;1506;LP1;Annuel;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-235;"2013";;1507;Ta1;Annuel;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-236;"2013";;1508;BR1;Replantation;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-237;"2013";;1509;LV1;Annuel;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-238;"2013";;1510;BR2;Replantation;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-239;"2013";;1511;LV2;Annuel;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-240;"2013";;1512;BA2;Annuel;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-241;"2013";;1513;SN;Annuel;Sol nu recevant 5 modalites, plus sans apport;SN;"232484";la_mare_soerepro_reunion_reunion_sn;1
-242;"2013";;1514;T2;Annuel;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-243;"2013";;1515;LP2;Annuel;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-244;"2013";;1516;BA3;Annuel;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-245;"2013";;1517;LP3;Annuel;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-246;"2013";;1518;BR3;Replantation;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-247;"2013";;1519;Ta3;Annuel;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-248;"2013";;1520;LV3;Annuel;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-249;"2013";;1596;T3;Annuel;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-250;"2013";;1597;LP4;Annuel;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-251;"2013";;1598;T4;Annuel;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-252;"2013";;1599;LV4;Annuel;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-253;"2013";;1600;Ta4;Annuel;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-254;"2013";;1601;BA4;Annuel;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-255;"2013";;1602;BR4;Replantation;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-256;"2013";;1603;LV5;Annuel;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-257;"2013";;1604;BR5;Replantation;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-258;"2013";;1605;T5;Annuel;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-259;"2013";;1606;Ta5;Annuel;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-260;"2013";;1607;LP5;Annuel;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-261;"2013";;1608;BA5;Annuel;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-262;"2013";;1504;T1;Sans;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-263;"2013";;1505;BA1;Urbain_Boue station epuration_sechee;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-264;"2013";;1506;LP1;Effluent_Elevage_Lisier_porc;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-265;"2013";;1507;Ta1;Sans;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-266;"2013";;1508;BR1;Urbain_Boue station epuration_sechee;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-267;"2013";;1509;LV1;Effluent_Elevage_Lisier_volailles;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-268;"2013";;1510;BR2;Urbain_Boue station epuration_sechee;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-269;"2013";;1511;LV2;Effluent_Elevage_Lisier_volailles;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-270;"2013";;1512;BA2;Urbain_Boue station epuration_sechee;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-271;"2013";;1513;SN;Effluent_Elevage_Lisier_volailles;Sol nu recevant 5 modalites, plus sans apport;SN;"232484";la_mare_soerepro_reunion_reunion_sn;1
-272;"2013";;1514;T2;Sans;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-273;"2013";;1515;LP2;Effluent_Elevage_Lisier_porc;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-274;"2013";;1516;BA3;Urbain_Boue station epuration_sechee;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-275;"2013";;1517;LP3;Effluent_Elevage_Lisier_porc;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-276;"2013";;1518;BR3;Urbain_Boue station epuration_sechee;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-277;"2013";;1519;Ta3;Sans;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-278;"2013";;1520;LV3;Effluent_Elevage_Lisier_volailles;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-279;"2013";;1596;T3;Sans;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-280;"2013";;1597;LP4;Effluent_Elevage_Lisier_porc;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-281;"2013";;1598;T4;Sans;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-282;"2013";;1599;LV4;Effluent_Elevage_Lisier_volailles;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-283;"2013";;1600;Ta4;Sans;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-284;"2013";;1601;BA4;Urbain_Boue station epuration_sechee;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-285;"2013";;1602;BR4;Urbain_Boue station epuration_sechee;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-286;"2013";;1603;LV5;Sans;Apport annuel de litiere de volaille;LV;"232483";la_mare_soerepro_reunion_reunion_lv;5
-287;"2013";;1604;BR5;Urbain_Boue station epuration_sechee;Apport en replantation de boues STEP;BR;"232481";la_mare_soerepro_reunion_reunion_br;5
-288;"2013";;1605;T5;Sans;Temoin fertilisation minerale;T;"232479";la_mare_soerepro_reunion_reunion_t;5
-289;"2013";;1606;Ta5;Sans;Temoin sans apport 1 annee sur 4;Ta;"232485";la_mare_soerepro_reunion_reunion_ta;4
-290;"2013";;1607;LP5;Effluent_Elevage_Lisier_porc;Apport annuel de lisier de porc;LP;"232482";la_mare_soerepro_reunion_reunion_lp;5
-291;"2013";;1608;BA5;Urbain_Boue station epuration_sechee;Apport annuel de boues STEP;BA;"232480";la_mare_soerepro_reunion_reunion_ba;5
-293;"1974";;1438;Temoin P1;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-294;"1974";;1439;B100 P2;"100 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-295;"1974";;1440;Fumier P3;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-296;"1974";;1441;B10 P4;"0 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-297;"1974";;1442;B10 P5;"0 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-298;"1974";;1443;Temoin P6;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-299;"1974";;1444;B100 P7;"0 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-300;"1974";;1445;Fumier P8;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-301;"1974";;1446;B100 P9;"0 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-302;"1974";;1447;Fumier P10;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-303;"1974";;1448;Temoin P11;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-304;"1974";;1449;B10 P12;"0 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-305;"1974";;1450;Fumier P13;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-306;"1974";;1451;Temoin P14;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-307;"1974";;1452;B10 P15;"0 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-308;"1974";;1453;B100 P16;"0 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-309;"1974";;1454;B100 P17;"0 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-310;"1974";;1455;B10 P18;"0 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-311;"1974";;1456;Fumier P19;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-312;"1974";;1457;Temoin P20;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-313;"1974";;1438;Temoin P1;Aucun apport;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-314;"1974";;1439;B100 P2;Aucun apport;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-315;"1974";;1440;Fumier P3;Aucun apport;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-316;"1974";;1441;B10 P4;Aucun apport;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-317;"1974";;1442;B10 P5;Aucun apport;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-318;"1974";;1443;Temoin P6;Aucun apport;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-319;"1974";;1444;B100 P7;Aucun apport;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-320;"1974";;1445;Fumier P8;Aucun apport;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-321;"1974";;1446;B100 P9;Aucun apport;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-322;"1974";;1447;Fumier P10;Aucun apport;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-323;"1974";;1448;Temoin P11;Aucun apport;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-324;"1974";;1449;B10 P12;Aucun apport;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-325;"1974";;1450;Fumier P13;Aucun apport;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-326;"1974";;1451;Temoin P14;Aucun apport;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-327;"1974";;1452;B10 P15;Aucun apport;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-328;"1974";;1453;B100 P16;Aucun apport;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-329;"1974";;1454;B100 P17;Aucun apport;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-330;"1974";;1455;B10 P18;Aucun apport;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-331;"1974";;1456;Fumier P19;Aucun apport;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-332;"1974";;1457;Temoin P20;Aucun apport;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-333;"1974";;1438;Temoin P1;Sans;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-334;"1974";;1439;B100 P2;Sans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-335;"1974";;1440;Fumier P3;Sans;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-336;"1974";;1441;B10 P4;Sans;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-337;"1974";;1442;B10 P5;Sans;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-338;"1974";;1443;Temoin P6;Sans;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-339;"1974";;1444;B100 P7;Sans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-340;"1974";;1445;Fumier P8;Sans;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-341;"1974";;1446;B100 P9;Sans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-342;"1974";;1447;Fumier P10;Sans;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-343;"1974";;1448;Temoin P11;Sans;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-344;"1974";;1449;B10 P12;Sans;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-345;"1974";;1450;Fumier P13;Sans;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-346;"1974";;1451;Temoin P14;Sans;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-347;"1974";;1452;B10 P15;Sans;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-348;"1974";;1453;B100 P16;Sans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-349;"1974";;1454;B100 P17;Sans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-350;"1974";;1455;B10 P18;Sans;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-351;"1974";;1456;Fumier P19;Sans;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-352;"1974";;1457;Temoin P20;Sans;Temoin en fertilisation minerale;Temoin;"232460";couhins_ambares_temoin;5
-354;"1976";;1458;Fumier P21;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-355;"1976";;1459;B10 P22;"10 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-356;"1976";;1460;B100 P23;"100 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-357;"1976";;1461;Temoin P24;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-358;"1976";;1462;Temoin P25;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-359;"1976";;1463;B10 P26;"10 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-360;"1976";;1464;Fumier P27;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-361;"1976";;1465;B100 P28;"0 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-362;"1976";;1609;B10 P29;"0 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-363;"1976";;1466;B100 P30;"0 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-364;"1976";;1467;Temoin P31;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-365;"1976";;1610;Fumier P32;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-366;"1976";;1468;Temoin P33;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-367;"1976";;1469;Fumier P34;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-368;"1976";;1470;B10 P35;"0 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-369;"1976";;1471;B100 P36;"0 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-370;"1976";;1472;B100 P37;"0 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-371;"1976";;1473;Temoin P38;"0 t matiere seche / ha";Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-372;"1976";;1611;Fumier P39;"0 t matiere seche / ha";Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-373;"1976";;1474;B10 P40;"10 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-374;"1976";;1458;Fumier P21;Aucun apport;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-375;"1976";;1459;B10 P22;Annuel;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-376;"1976";;1460;B100 P23;Tous les 2 ans;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-377;"1976";;1461;Temoin P24;Aucun apport;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-378;"1976";;1462;Temoin P25;Aucun apport;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-379;"1976";;1463;B10 P26;Annuel;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-380;"1976";;1464;Fumier P27;Aucun apport;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-381;"1976";;1465;B100 P28;Aucun apport;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-382;"1976";;1609;B10 P29;Aucun apport;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-383;"1976";;1466;B100 P30;Aucun apport;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-384;"1976";;1467;Temoin P31;Aucun apport;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-385;"1976";;1610;Fumier P32;Aucun apport;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-386;"1976";;1468;Temoin P33;Aucun apport;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-387;"1976";;1469;Fumier P34;Aucun apport;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-388;"1976";;1470;B10 P35;Aucun apport;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-389;"1976";;1471;B100 P36;Aucun apport;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-390;"1976";;1472;B100 P37;Aucun apport;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-391;"1976";;1473;Temoin P38;Aucun apport;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-392;"1976";;1611;Fumier P39;Aucun apport;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-393;"1976";;1474;B10 P40;Annuel;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-394;"1976";;1458;Fumier P21;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-395;"1976";;1459;B10 P22;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-396;"1976";;1460;B100 P23;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-397;"1976";;1461;Temoin P24;Sans;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-398;"1976";;1462;Temoin P25;Sans;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-399;"1976";;1463;B10 P26;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-400;"1976";;1464;Fumier P27;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-401;"1976";;1465;B100 P28;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-402;"1976";;1609;B10 P29;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-403;"1976";;1466;B100 P30;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-404;"1976";;1467;Temoin P31;Sans;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-405;"1976";;1610;Fumier P32;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-406;"1976";;1468;Temoin P33;Sans;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-407;"1976";;1469;Fumier P34;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-408;"1976";;1470;B10 P35;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-409;"1976";;1471;B100 P36;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-410;"1976";;1472;B100 P37;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-411;"1976";;1473;Temoin P38;Sans;Temoin en fertilisation minerale;Temoin;"232488";couhins_louis_fargue_fargue_temoin;5
-412;"1976";;1611;Fumier P39;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-413;"1976";;1474;B10 P40;Urbain_Boue station epuration_digeree;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-415;"1976";;1476;"1-C0";"0 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-416;"1976";;1477;"2-B50";"50 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-417;"1976";;1478;"3-C100";"400 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-418;"1976";;1612;"4-T0";"0 kg N total/ha";Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-419;"1976";;1479;"5-T200";"200 kg N total/ha";Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-420;"1976";;1480;"6-T400";"100 kg N total/ha";Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-421;"1976";;1481;"7-T100";"400 kg N total/ha";Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-422;"1976";;1482;"8-B0";"0 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-423;"1976";;1483;"9-B400";"100 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-424;"1976";;1484;"10-T50";"50 kg N total/ha";Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-425;"1976";;1485;"11-C200";"200 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-426;"1976";;1486;"12-B100";"400 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-427;"1976";;1487;"13-C400";"100 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-428;"1976";;1488;"14-B200";"200 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-429;"1976";;1489;"15-C50";"50 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-430;"1976";;1490;"16-T100";"400 kg N total/ha";Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-431;"1976";;1491;"17-T50";"50 kg N total/ha";Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-432;"1976";;1492;"18-T400";"100 kg N total/ha";Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-433;"1976";;1493;"19-C100";"400 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-434;"1976";;1494;"20-B100";"400 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-435;"1976";;1495;"21-C400";"100 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-436;"1976";;1496;"22-B400";"100 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-437;"1976";;1497;"23-C50";"50 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-438;"1976";;1498;"24-T0";"0 kg N total/ha";Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-439;"1976";;1499;"25-C0";"0 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-440;"1976";;1500;"26-B50";"50 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-441;"1976";;1501;"27-C200";"200 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-442;"1976";;1521;"28-B0";"0 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-443;"1976";;1522;"29-T200";"200 kg N total/ha";Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-444;"1976";;1523;"30-B200";"200 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-445;"1976";;1524;"31-B100";"400 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-446;"1976";;1525;"32-T200";"200 kg N total/ha";Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-447;"1976";;1526;"33-C100";"400 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-448;"1976";;1527;"34-C50";"50 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-449;"1976";;1528;"35-T50";"50 kg N total/ha";Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-450;"1976";;1529;"36-B0";"0 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-451;"1976";;1530;"37-T0";"0 kg N total/ha";Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-452;"1976";;1531;"38-B200";"200 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-453;"1976";;1532;"39-T400";"100 kg N total/ha";Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-454;"1976";;1533;"40-C200";"200 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-455;"1976";;1534;"41-B400";"100 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-456;"1976";;1535;"42-C400";"100 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-457;"1976";;1536;"43-C0";"0 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-458;"1976";;1537;"44-B50";"50 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-459;"1976";;1538;"45-T100";"400 kg N total/ha";Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-460;"1976";;1539;"46-B400";"100 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-461;"1976";;1540;"47-C50";"50 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-462;"1976";;1541;"48-B50";"50 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-463;"1976";;1542;"49-T400";"100 kg N total/ha";Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-464;"1976";;1543;"50-B200";"200 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-465;"1976";;1544;"51-C200";"200 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-466;"1976";;1545;"52-C0";"0 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-467;"1976";;1546;"53-T100";"400 kg N total/ha";Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-468;"1976";;1547;"54-C100";"400 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-469;"1976";;1548;"55-B0";"0 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-470;"1976";;1549;"56-T0";"0 kg N total/ha";Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-471;"1976";;1550;"57-T200";"200 kg N total/ha";Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-472;"1976";;1551;"58-T50";"50 kg N total/ha";Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-473;"1976";;1552;"59-C400";"100 kg N total/ha";Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-474;"1976";;1553;"60-B100";"400 kg N total/ha";Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-475;"1976";;1476;"1-C0";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-476;"1976";;1477;"2-B50";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-477;"1976";;1478;"3-C100";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-478;"1976";;1612;"4-T0";Sans;Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-479;"1976";;1479;"5-T200";Sans;Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-480;"1976";;1480;"6-T400";Sans;Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-481;"1976";;1481;"7-T100";Sans;Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-482;"1976";;1482;"8-B0";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-483;"1976";;1483;"9-B400";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-484;"1976";;1484;"10-T50";Sans;Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-485;"1976";;1485;"11-C200";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-486;"1976";;1486;"12-B100";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-487;"1976";;1487;"13-C400";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-488;"1976";;1488;"14-B200";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-489;"1976";;1489;"15-C50";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-490;"1976";;1490;"16-T100";Sans;Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-491;"1976";;1491;"17-T50";Sans;Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-492;"1976";;1492;"18-T400";Sans;Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-493;"1976";;1493;"19-C100";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-494;"1976";;1494;"20-B100";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-495;"1976";;1495;"21-C400";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-496;"1976";;1496;"22-B400";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-497;"1976";;1497;"23-C50";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-498;"1976";;1498;"24-T0";Sans;Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-499;"1976";;1499;"25-C0";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-500;"1976";;1500;"26-B50";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-501;"1976";;1501;"27-C200";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-502;"1976";;1521;"28-B0";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-503;"1976";;1522;"29-T200";Sans;Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-504;"1976";;1523;"30-B200";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-505;"1976";;1524;"31-B100";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-506;"1976";;1525;"32-T200";Sans;Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-507;"1976";;1526;"33-C100";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-508;"1976";;1527;"34-C50";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-509;"1976";;1528;"35-T50";Sans;Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-510;"1976";;1529;"36-B0";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-511;"1976";;1530;"37-T0";Sans;Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-512;"1976";;1531;"38-B200";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-513;"1976";;1532;"39-T400";Sans;Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-514;"1976";;1533;"40-C200";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-515;"1976";;1534;"41-B400";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-516;"1976";;1535;"42-C400";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-517;"1976";;1536;"43-C0";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-518;"1976";;1537;"44-B50";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-519;"1976";;1538;"45-T100";Sans;Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-520;"1976";;1539;"46-B400";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;Boue 400;"232494";couhins_st_denis_de_pile_denis_de_pile_boue_400;4
-521;"1976";;1540;"47-C50";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;C-OMR 50;"232496";couhins_st_denis_de_pile_denis_de_pile_c-omr_50;4
-522;"1976";;1541;"48-B50";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;Boue 50;"232491";couhins_st_denis_de_pile_denis_de_pile_boue_50;4
-523;"1976";;1542;"49-T400";Sans;Temoin en fertilisation minerale, 400 kg /ha ammonitrate;Temoin 400;"232504";couhins_st_denis_de_pile_denis_de_pile_temoin_400;4
-524;"1976";;1543;"50-B200";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;Boue 200;"232493";couhins_st_denis_de_pile_denis_de_pile_boue_200;4
-525;"1976";;1544;"51-C200";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;C-OMR200;"232498";couhins_st_denis_de_pile_denis_de_pile_c-omr200;4
-526;"1976";;1545;"52-C0";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;C-OMR 0;"232495";couhins_st_denis_de_pile_denis_de_pile_c-omr_0;4
-527;"1976";;1546;"53-T100";Sans;Temoin en fertilisation minerale, 100 kg /ha ammonitrate;Temoin 100;"232502";couhins_st_denis_de_pile_denis_de_pile_temoin_100;4
-528;"1976";;1547;"54-C100";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;C-OMR 100;"232497";couhins_st_denis_de_pile_denis_de_pile_c-omr_100;4
-529;"1976";;1548;"55-B0";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;Boue 0;"232490";couhins_st_denis_de_pile_denis_de_pile_boue_0;4
-530;"1976";;1549;"56-T0";Sans;Temoin en fertilisation minerale, 0 kg /ha ammonitrate;Temoin 0;"232500";couhins_st_denis_de_pile_denis_de_pile_temoin_0;4
-531;"1976";;1550;"57-T200";Sans;Temoin en fertilisation minerale, 200 kg /ha ammonitrate;Temoin 200;"232503";couhins_st_denis_de_pile_denis_de_pile_temoin_200;4
-532;"1976";;1551;"58-T50";Sans;Temoin en fertilisation minerale, 50 kg /ha ammonitrate;Temoin 50;"232501";couhins_st_denis_de_pile_denis_de_pile_temoin_50;4
-533;"1976";;1552;"59-C400";Urbain_Compost_ordures menageres;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;C-OMR 400;"232499";couhins_st_denis_de_pile_denis_de_pile_c-omr_400;4
-534;"1976";;1553;"60-B100";Urbain_Boue station epuration_digeree;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;Boue 100;"232492";couhins_st_denis_de_pile_denis_de_pile_boue_100;4
-536;"2012";"2032";1554;CP+N_Bloc_1;Optimal;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-537;"2012";"2032";1555;LP_Bloc_1;Optimal;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-538;"2012";"2032";1556;MIN_Bloc_1;Optimal;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-539;"2012";"2032";1557;FB+N_Bloc_1;Optimal;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-540;"2012";"2032";1558;FV_Bloc_1;Optimal;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-541;"2012";"2032";1559;DIG-LP_Bloc_1;Optimal;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-542;"2012";"2032";1560;CP_Bloc_1;N infra optimale;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-543;"2012";"2032";1561;"0N_Bloc_1";N infra optimale;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-544;"2012";"2032";1562;FB_Bloc_1;N infra optimale;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-545;"2012";"2032";1563;CP+N_Bloc_2;Optimal;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-546;"2012";"2032";1564;LP_Bloc_2;Optimal;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-547;"2012";"2032";1565;"0N_Bloc_2";N infra optimale;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-548;"2012";"2032";1566;FB+N_Bloc_2;Optimal;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-549;"2012";"2032";1567;CP_Bloc_2;N infra optimale;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-550;"2012";"2032";1568;FV_Bloc_2;Optimal;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-551;"2012";"2032";1569;FB_Bloc_2;N infra optimale;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-552;"2012";"2032";1570;DIG-LP_Bloc_2;Optimal;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-553;"2012";"2032";1571;MIN_Bloc_2;Optimal;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-554;"2012";"2032";1572;"0N_Bloc_3";N infra optimale;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-555;"2012";"2032";1573;CP_Bloc_3;N infra optimale;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-556;"2012";"2032";1574;FB_Bloc_3;N infra optimale;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-557;"2012";"2032";1575;DIG-LP_Bloc_3;Optimal;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-558;"2012";"2032";1576;FV_Bloc_3;Optimal;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-559;"2012";"2032";1577;CP+N_Bloc_3;Optimal;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-560;"2012";"2032";1578;MIN_Bloc_3;Optimal;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-561;"2012";"2032";1615;LP_Bloc_3;Optimal;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-562;"2012";"2032";1616;FB+N_Bloc_3;Optimal;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-563;"2012";"2032";1617;CP_Bloc_4;N infra optimale;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-564;"2012";"2032";1618;FB_Bloc_4;N infra optimale;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-565;"2012";"2032";1619;CP+N_Bloc_4;Optimal;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-566;"2012";"2032";1620;LP_Bloc_4;Optimal;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-567;"2012";"2032";1621;FB+N_Bloc_4;Optimal;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-568;"2012";"2032";1622;"0N_Bloc_4";N infra optimale;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-569;"2012";"2032";1623;DIG-LP_Bloc_4;Optimal;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-570;"2012";"2032";1624;FV_Bloc_4;Optimal;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-571;"2012";"2032";1614;MIN_Bloc_4;Optimal;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-572;"2012";"2032";1554;CP+N_Bloc_1;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-573;"2012";"2032";1555;LP_Bloc_1;Effluent_Elevage_Lisier_porc;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-574;"2012";"2032";1556;MIN_Bloc_1;Sans;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-575;"2012";"2032";1557;FB+N_Bloc_1;Effluent_Elevage_Fumier_bovins;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-576;"2012";"2032";1558;FV_Bloc_1;Effluent_Elevage_Fumier_volailles;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-577;"2012";"2032";1559;DIG-LP_Bloc_1;Effluent_Elevage_Digestat_lisier porc;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-578;"2012";"2032";1560;CP_Bloc_1;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-579;"2012";"2032";1561;"0N_Bloc_1";Sans;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-580;"2012";"2032";1562;FB_Bloc_1;Effluent_Elevage_Fumier_bovins;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-581;"2012";"2032";1563;CP+N_Bloc_2;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-582;"2012";"2032";1564;LP_Bloc_2;Effluent_Elevage_Lisier_porc;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-583;"2012";"2032";1565;"0N_Bloc_2";Sans;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-584;"2012";"2032";1566;FB+N_Bloc_2;Effluent_Elevage_Fumier_bovins;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-585;"2012";"2032";1567;CP_Bloc_2;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-586;"2012";"2032";1568;FV_Bloc_2;Effluent_Elevage_Fumier_volailles;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-587;"2012";"2032";1569;FB_Bloc_2;Effluent_Elevage_Fumier_bovins;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-588;"2012";"2032";1570;DIG-LP_Bloc_2;Effluent_Elevage_Digestat_lisier porc;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-589;"2012";"2032";1571;MIN_Bloc_2;Sans;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-590;"2012";"2032";1572;"0N_Bloc_3";Sans;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-591;"2012";"2032";1573;CP_Bloc_3;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-592;"2012";"2032";1574;FB_Bloc_3;Effluent_Elevage_Fumier_bovins;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-593;"2012";"2032";1575;DIG-LP_Bloc_3;Effluent_Elevage_Digestat_lisier porc;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-594;"2012";"2032";1576;FV_Bloc_3;Effluent_Elevage_Fumier_volailles;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-595;"2012";"2032";1577;CP+N_Bloc_3;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-596;"2012";"2032";1578;MIN_Bloc_3;Sans;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-597;"2012";"2032";1615;LP_Bloc_3;Effluent_Elevage_Lisier_porc;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-598;"2012";"2032";1616;FB+N_Bloc_3;Effluent_Elevage_Fumier_bovins;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-599;"2012";"2032";1617;CP_Bloc_4;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte;CP;"232511";la_brassardiere_efele_pros_pros_cp;4
-600;"2012";"2032";1618;FB_Bloc_4;Effluent_Elevage_Fumier_bovins;Fumier de bovins;FB;"232508";la_brassardiere_efele_pros_pros_fb;4
-601;"2012";"2032";1619;CP+N_Bloc_4;Effluent_Elevage_Compost_fumier porc;Fumier de porc composte complemente en N;CP+N;"232527";la_brassardiere_efele_pros_pros_cp+n;4
-602;"2012";"2032";1620;LP_Bloc_4;Effluent_Elevage_Lisier_porc;Lisier de porc;LP;"232512";la_brassardiere_efele_pros_pros_lp;4
-603;"2012";"2032";1621;FB+N_Bloc_4;Effluent_Elevage_Fumier_bovins;Fumier de bovins complemente en N;FB+N;"232509";la_brassardiere_efele_pros_pros_fb+n;4
-604;"2012";"2032";1622;"0N_Bloc_4";Sans;Temoin non fertilise en N;"0N";"232506";la_brassardiere_efele_pros_pros_0n;4
-605;"2012";"2032";1623;DIG-LP_Bloc_4;Effluent_Elevage_Digestat_lisier porc;Digestat de lisier de porc;DIG-LP;"232513";la_brassardiere_efele_pros_pros_dig-lp;4
-606;"2012";"2032";1624;FV_Bloc_4;Effluent_Elevage_Fumier_volailles;Fumier de volailles;FV;"232510";la_brassardiere_efele_pros_pros_fv;4
-607;"2012";"2032";1614;MIN_Bloc_4;Sans;Temoin en fertilisation minerale N;MIN;"232507";la_brassardiere_efele_pros_pros_min;4
-609;"2012";"2032";1625;L-MIN_Bloc_1;Optimal;Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-610;"2012";"2032";1626;TS-FB_Bloc_1;N infra optimale;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-611;"2012";"2032";1579;L-FB_Bloc_1;N infra optimale;Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-612;"2012";"2032";1627;TS-MIN_Bloc_1;Optimal;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-613;"2012";"2032";1580;L-FB_Bloc_2;N infra optimale;Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-614;"2012";"2032";1628;TS-MIN_Bloc_2;Optimal;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-615;"2012";"2032";1581;L-MIN_Bloc_2;Optimal;Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-616;"2012";"2032";1629;TS-FB_Bloc_2;N infra optimale;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-617;"2012";"2032";1582;L-MIN_Bloc_3;Optimal;Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-618;"2012";"2032";1583;TS-MIN_Bloc_3;Optimal;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-619;"2012";"2032";1584;L-FB_Bloc_3;N infra optimale;Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-620;"2012";"2032";1585;TS-FB_Bloc_3;N infra optimale;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-621;"2012";"2032";1625;L-MIN_Bloc_1;"25 - 30 cm";Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-622;"2012";"2032";1626;TS-FB_Bloc_1;< 10 cm;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-623;"2012";"2032";1579;L-FB_Bloc_1;"25 - 30 cm";Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-624;"2012";"2032";1627;TS-MIN_Bloc_1;< 10 cm;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-625;"2012";"2032";1580;L-FB_Bloc_2;"25 - 30 cm";Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-626;"2012";"2032";1628;TS-MIN_Bloc_2;< 10 cm;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-627;"2012";"2032";1581;L-MIN_Bloc_2;"25 - 30 cm";Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-628;"2012";"2032";1629;TS-FB_Bloc_2;< 10 cm;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-629;"2012";"2032";1582;L-MIN_Bloc_3;"25 - 30 cm";Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-630;"2012";"2032";1583;TS-MIN_Bloc_3;< 10 cm;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-631;"2012";"2032";1584;L-FB_Bloc_3;"25 - 30 cm";Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-632;"2012";"2032";1585;TS-FB_Bloc_3;< 10 cm;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-633;"2012";"2032";1625;L-MIN_Bloc_1;Sans;Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-634;"2012";"2032";1626;TS-FB_Bloc_1;Effluent_Elevage_Fumier_bovins;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-635;"2012";"2032";1579;L-FB_Bloc_1;Effluent_Elevage_Fumier_bovins;Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-636;"2012";"2032";1627;TS-MIN_Bloc_1;Sans;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-637;"2012";"2032";1580;L-FB_Bloc_2;Effluent_Elevage_Fumier_bovins;Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-638;"2012";"2032";1628;TS-MIN_Bloc_2;Sans;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-639;"2012";"2032";1581;L-MIN_Bloc_2;Sans;Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-640;"2012";"2032";1629;TS-FB_Bloc_2;Effluent_Elevage_Fumier_bovins;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-641;"2012";"2032";1582;L-MIN_Bloc_3;Sans;Fertilisation minerale_modalite labour;L-MIN;"232514";la_brassardiere_efele_ts_mo_ts_mo_l-min;3
-642;"2012";"2032";1583;TS-MIN_Bloc_3;Sans;Fertilisation minerale_modalite travail sol simplifie;TS-MIN;"232516";la_brassardiere_efele_ts_mo_ts_mo_ts-min;3
-643;"2012";"2032";1584;L-FB_Bloc_3;Effluent_Elevage_Fumier_bovins;Fumier de bovins_modalite labour;L-FB;"232515";la_brassardiere_efele_ts_mo_ts_mo_l-fb;3
-644;"2012";"2032";1585;TS-FB_Bloc_3;Effluent_Elevage_Fumier_bovins;Fumier de bovins_modalite travail sol simplifie;TS-FB;"232517";la_brassardiere_efele_ts_mo_ts_mo_ts-fb;3
-650;"1974";;1440;Fumier P3;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-651;"1974";;1441;B10 P4;"10 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-652;"1974";;1442;B10 P5;"10 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-653;"1974";;1444;B100 P7;"100 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-654;"1974";;1445;Fumier P8;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-655;"1974";;1446;B100 P9;"100 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-656;"1974";;1447;Fumier P10;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-657;"1974";;1449;B10 P12;"10 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-658;"1974";;1450;Fumier P13;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-659;"1974";;1452;B10 P15;"10 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-660;"1974";;1453;B100 P16;"100 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-661;"1974";;1454;B100 P17;"100 t matiere seche / ha";Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-662;"1974";;1455;B10 P18;"10 t matiere seche / ha";Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-663;"1974";;1456;Fumier P19;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-664;"1974";;1439;B100 P2;Tous les 2 ans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-665;"1974";;1440;Fumier P3;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-666;"1974";;1441;B10 P4;Annuel;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-667;"1974";;1442;B10 P5;Annuel;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-668;"1974";;1444;B100 P7;Tous les 2 ans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-669;"1974";;1445;Fumier P8;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-670;"1974";;1446;B100 P9;Tous les 2 ans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-671;"1974";;1447;Fumier P10;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-672;"1974";;1449;B10 P12;Annuel;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-673;"1974";;1450;Fumier P13;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-674;"1974";;1452;B10 P15;Annuel;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-675;"1974";;1453;B100 P16;Tous les 2 ans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-676;"1974";;1454;B100 P17;Tous les 2 ans;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-677;"1974";;1455;B10 P18;Annuel;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-678;"1974";;1456;Fumier P19;A preciser;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-679;"1974";;1439;B100 P2;Urbain_Boue station epuration_digeree;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-680;"1974";;1440;Fumier P3;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-681;"1974";;1441;B10 P4;Urbain_Boue station epuration_digeree;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-682;"1974";;1442;B10 P5;Urbain_Boue station epuration_digeree;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-683;"1974";;1444;B100 P7;Urbain_Boue station epuration_digeree;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-684;"1974";;1445;Fumier P8;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-685;"1974";;1446;B100 P9;Urbain_Boue station epuration_digeree;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-686;"1974";;1447;Fumier P10;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-687;"1974";;1449;B10 P12;Urbain_Boue station epuration_digeree;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-688;"1974";;1450;Fumier P13;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-689;"1974";;1452;B10 P15;Urbain_Boue station epuration_digeree;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-690;"1974";;1453;B100 P16;Urbain_Boue station epuration_digeree;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-691;"1974";;1454;B100 P17;Urbain_Boue station epuration_digeree;Fumier de porc composte complemente en N;Boue 100;"232447";couhins_ambares_boue_100;5
-692;"1974";;1455;B10 P18;Urbain_Boue station epuration_digeree;Fumier de porc composte complémenté en N;Boue 10;"232526";couhins_ambares_boue_10;5
-693;"1974";;1456;Fumier P19;Effluent_Elevage_Fumier_bovins;Fumier de bovins;Fumier;"232459";couhins_ambares_fumier;5
-695;"1976";;1458;Fumier P21;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-696;"1976";;1464;Fumier P27;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-697;"1976";;1465;B100 P28;"100 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-698;"1976";;1609;B10 P29;"10 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-699;"1976";;1466;B100 P30;"100 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-700;"1976";;1610;Fumier P32;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-701;"1976";;1469;Fumier P34;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-702;"1976";;1470;B10 P35;"10 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-703;"1976";;1471;B100 P36;"100 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-704;"1976";;1472;B100 P37;"100 t matiere seche / ha";Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-705;"1976";;1611;Fumier P39;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-706;"1976";;1458;Fumier P21;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-707;"1976";;1464;Fumier P27;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-708;"1976";;1465;B100 P28;Tous les 2 ans;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-709;"1976";;1609;B10 P29;Annuel;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-710;"1976";;1466;B100 P30;Tous les 2 ans;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-711;"1976";;1610;Fumier P32;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-712;"1976";;1469;Fumier P34;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-713;"1976";;1470;B10 P35;Annuel;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;Boue 10;"232462";couhins_louis_fargue_fargue_boue_10;5
-714;"1976";;1471;B100 P36;Tous les 2 ans;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-715;"1976";;1472;B100 P37;Tous les 2 ans;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;Boue 100;"232463";couhins_louis_fargue_fargue_boue_100;5
-716;"1976";;1611;Fumier P39;A preciser;Fumier de bovins;Fumier;"232487";couhins_louis_fargue_fargue_fumier;5
-722;"1996";;1592;X;Sans;X;X;"232458";la_bouzule_bouzule_x;1
-723;"2012";;1613;X;Sans;X;X;"232519";la_brassardiere_efele_pros_pros_x;1
-724;"1974";;1594;X;Sans;X;X;"232461";couhins_ambares_x;1
-725;"2013";;1593;X;Sans;X;X;"232486";la_mare_soerepro_reunion_reunion_x;1
-726;"1976";;1475;X;Sans;X;X;"232489";couhins_louis_fargue_fargue_x;1
-727;"1976";;1595;X;Sans;X;X;"232505";couhins_st_denis_de_pile_denis_de_pile_x;1
-728;"2000";;1591;X;Sans;X;X;"232478";inra_colmar_seav_prospective_x;1
-729;"2012";;1586;X;Sans;X;X;"232518";la_brassardiere_efele_ts_mo_ts_mo_x;1
-106;"2000";"2014";1368;I T1;Minimal;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-154;"2000";"2014";1368;I T1;Urbain_Boue station epuration_activee;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-110;"2000";"2014";1369;I T2;Minimal;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-158;"2000";"2014";1369;I T2;Urbain_Compost_boue station epuration;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-114;"2000";"2014";1370;I T3;Minimal;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-162;"2000";"2014";1370;I T3;Urbain_Compost_biodechets;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-118;"2000";"2014";1371;I T4;Minimal;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-166;"2000";"2014";1371;I T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-122;"2000";"2014";1372;I T5;Minimal;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-170;"2000";"2014";1372;I T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-126;"2000";"2014";1373;I T6;Minimal;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-174;"2000";"2014";1373;I T6;Sans;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-107;"2000";"2014";1380;II T1;Minimal;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-155;"2000";"2014";1380;II T1;Urbain_Boue station epuration_activee;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-111;"2000";"2014";1381;II T2;Minimal;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-159;"2000";"2014";1381;II T2;Urbain_Compost_boue station epuration;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-115;"2000";"2014";1382;II T3;Minimal;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-163;"2000";"2014";1382;II T3;Urbain_Compost_biodechets;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-119;"2000";"2014";1383;II T4;Minimal;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-167;"2000";"2014";1383;II T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-123;"2000";"2014";1384;II T5;Minimal;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-171;"2000";"2014";1384;II T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-127;"2000";"2014";1385;II T6;Minimal;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-175;"2000";"2014";1385;II T6;Sans;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-108;"2000";"2014";1392;III T1;Minimal;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-156;"2000";"2014";1392;III T1;Urbain_Boue station epuration_activee;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-112;"2000";"2014";1393;III T2;Minimal;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-160;"2000";"2014";1393;III T2;Urbain_Compost_boue station epuration;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-116;"2000";"2014";1394;III T3;Minimal;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-164;"2000";"2014";1394;III T3;Urbain_Compost_biodechets;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-120;"2000";"2014";1395;III T4;Minimal;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-168;"2000";"2014";1395;III T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-124;"2000";"2014";1396;III T5;Minimal;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-172;"2000";"2014";1396;III T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-128;"2000";"2014";1397;III T6;Minimal;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-176;"2000";"2014";1397;III T6;Sans;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-109;"2000";"2014";1404;IV T1;Minimal;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-157;"2000";"2014";1404;IV T1;Urbain_Boue station epuration_activee;Boue d'epuration, sans fertilisation minerale;BOUE sans N;"278989";inra_colmar_seav_prospective_boue_sans_n;4
-113;"2000";"2014";1405;IV T2;Minimal;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-161;"2000";"2014";1405;IV T2;Urbain_Compost_boue station epuration;Compost de boue, sans fertilisation minerale;DVB sans N;"278986";inra_colmar_seav_prospective_dvb_sans_n;4
-117;"2000";"2014";1406;IV T3;Minimal;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-165;"2000";"2014";1406;IV T3;Urbain_Compost_biodechets;Compost de biodechets, sans fertilisation minerale;BIO sans N;"278984";inra_colmar_seav_prospective_bio_sans_n;4
-121;"2000";"2014";1407;IV T4;Minimal;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-169;"2000";"2014";1407;IV T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins, sans fertilisation minerale;FUM sans N;"278987";inra_colmar_seav_prospective_fum_sans_n;4
-125;"2000";"2014";1408;IV T5;Minimal;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-173;"2000";"2014";1408;IV T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins, sans fertilisation minerale;FUMC sans N;"278988";inra_colmar_seav_prospective_fumc_sans_n;4
-129;"2000";"2014";1409;IV T6;Minimal;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-177;"2000";"2014";1409;IV T6;Sans;Temoin sans apport organique, sans fertilisation minerale;TEM sans N;"278985";inra_colmar_seav_prospective_tem_sans_n;4
-730;"2014";;1368;I T1;Urbain_Digestat de méthanisation de biodéchets;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-731;"2014";;1368;I T1;Urbain_Boue station epuration_activee;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-732;"2014";;1369;I T2;Urbain_Digestat de méthanisation de biodéchets;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-733;"2014";;1369;I T2;Urbain_Compost_boue station epuration;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-734;"2014";;1370;I T3;Urbain_Digestat de méthanisation de biodéchets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-735;"2014";;1370;I T3;Urbain_Compost_biodechets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-736;"2014";;1371;I T4;Urbain_Digestat de méthanisation de biodéchets;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-737;"2014";;1371;I T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-738;"2014";;1372;I T5;Urbain_Digestat de méthanisation de biodéchets;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-739;"2014";;1372;I T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-740;"2014";;1373;I T6;Urbain_Digestat de méthanisation de biodéchets;Temoin Digestat de méthanisation;TEM DIG;"278982";inra_colmar_seav_prospective_tem_dig;4
-741;"2014";;1380;II T1;Urbain_Digestat de méthanisation de biodéchets;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-742;"2014";;1380;II T1;Urbain_Boue station epuration_activee;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-743;"2014";;1381;II T2;Urbain_Digestat de méthanisation de biodéchets;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-744;"2014";;1381;II T2;Urbain_Compost_boue station epuration;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-745;"2014";;1382;II T3;Urbain_Digestat de méthanisation de biodéchets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-746;"2014";;1382;II T3;Urbain_Compost_biodechets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-747;"2014";;1383;II T4;Urbain_Digestat de méthanisation de biodéchets;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-748;"2014";;1383;II T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-749;"2014";;1384;II T5;Urbain_Digestat de méthanisation de biodéchets;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-750;"2014";;1384;II T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-751;"2014";;1385;II T6;Urbain_Digestat de méthanisation de biodéchets;Temoin Digestat de méthanisation;TEM DIG;"278982";inra_colmar_seav_prospective_tem_dig;4
-752;"2014";;1392;III T1;Urbain_Digestat de méthanisation de biodéchets;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-753;"2014";;1392;III T1;Urbain_Boue station epuration_activee;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-754;"2014";;1393;III T2;Urbain_Digestat de méthanisation de biodéchets;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-755;"2014";;1393;III T2;Urbain_Compost_boue station epuration;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-756;"2014";;1394;III T3;Urbain_Digestat de méthanisation de biodéchets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-757;"2014";;1394;III T3;Urbain_Compost_biodechets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-758;"2014";;1395;III T4;Urbain_Digestat de méthanisation de biodéchets;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-759;"2014";;1395;III T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-760;"2014";;1396;III T5;Urbain_Digestat de méthanisation de biodéchets;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-761;"2014";;1396;III T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-762;"2014";;1397;III T6;Urbain_Digestat de méthanisation de biodéchets;Temoin Digestat de méthanisation;TEM DIG;"278982";inra_colmar_seav_prospective_tem_dig;4
-763;"2014";;1404;IV T1;Urbain_Digestat de méthanisation de biodéchets;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-764;"2014";;1404;IV T1;Urbain_Boue station epuration_activee;Boue d'epuration + Digestat de méthanisation;BOUE + DIG;"278978";inra_colmar_seav_prospective_boue_+_dig;4
-765;"2014";;1405;IV T2;Urbain_Digestat de méthanisation de biodéchets;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-766;"2014";;1405;IV T2;Urbain_Compost_boue station epuration;Compost de boue + Digestat de méthanisation;DVB + DIG;"278979";inra_colmar_seav_prospective_dvb_+_dig;4
-767;"2014";;1406;IV T3;Urbain_Digestat de méthanisation de biodéchets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-768;"2014";;1406;IV T3;Urbain_Compost_biodechets;Compost de biodechets + Digestat de méthanisation;BIO + DIG;"278977";inra_colmar_seav_prospective_bio_+_dig;4
-769;"2014";;1407;IV T4;Urbain_Digestat de méthanisation de biodéchets;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-770;"2014";;1407;IV T4;Effluent_Elevage_Fumier_bovins;Fumier de bovins + Digestat de méthanisation;FUM + DIG;"278980";inra_colmar_seav_prospective_fum_+_dig;4
-771;"2014";;1408;IV T5;Urbain_Digestat de méthanisation de biodéchets;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-772;"2014";;1408;IV T5;Effluent_Elevage_Compost_fumier bovins;Compost de fumier de bovins + Digestat de méthanisation;FUMC + DIG;"278981";inra_colmar_seav_prospective_fumc_+_dig;4
-773;"2014";;1409;IV T6;Urbain_Digestat de méthanisation de biodéchets;Temoin Digestat de méthanisation;TEM DIG;"278982";inra_colmar_seav_prospective_tem_dig;4
-774;"2014";;1302;"101";Effluent_Elevage_Fumier_bovins;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-775;"2014";;1302;"101";Sans rotation legumineuses;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-776;"2014";;1303;"102";Sans;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-777;"2014";;1303;"102";Sans rotation legumineuses;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-778;"2014";;1304;"103";Urbain_Compost_ordures menageres;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-779;"2014";;1304;"103";Sans rotation legumineuses;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-780;"2014";;1305;"104";Sans rotation legumineuses;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-781;"2014";;1305;"104";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-782;"2014";;1306;"105";Urbain_Compost_biodechets;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-783;"2014";;1306;"105";Sans rotation legumineuses;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-784;"2014";;1307;"106";Anciennement_Sans;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-785;"2014";;1307;"106";Avec rotation legumineuses;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-786;"2014";;1308;"107";Anciennement_Urbain_Compost_ordures menageres;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-787;"2014";;1308;"107";Avec rotation legumineuses;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-788;"2014";;1309;"108";Anciennement_Urbain_Compost_boue station epuration;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-789;"2014";;1309;"108";Avec rotation legumineuses;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-790;"2014";;1310;"109";Anciennement_Urbain_Compost_biodechets;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-791;"2014";;1310;"109";Avec rotation legumineuses;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-792;"2014";;1311;"110";Anciennement_Effluent_Elevage_Fumier_bovins;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-793;"2014";;1311;"110";Avec rotation legumineuses;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-794;"2014";;1312;"201";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-795;"2014";;1312;"201";Sans rotation legumineuses;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-796;"2014";;1313;"202";Urbain_Compost_ordures menageres;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-797;"2014";;1313;"202";Sans rotation legumineuses;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-798;"2014";;1314;"203";Effluent_Elevage_Fumier_bovins;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-799;"2014";;1314;"203";Sans rotation legumineuses;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-800;"2014";;1315;"204";Urbain_Compost_biodechets;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-801;"2014";;1315;"204";Sans rotation legumineuses;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-802;"2014";;1316;"205";Sans;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-803;"2014";;1316;"205";Sans rotation legumineuses;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-804;"2014";;1317;"206";Anciennement_Urbain_Compost_boue station epuration;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-805;"2014";;1317;"206";Avec rotation legumineuses;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-806;"2014";;1318;"207";Anciennement_Effluent_Elevage_Fumier_bovins;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-807;"2014";;1318;"207";Avec rotation legumineuses;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-808;"2014";;1319;"208";Anciennement_Sans;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-809;"2014";;1319;"208";Avec rotation legumineuses;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-810;"2014";;1320;"209";Anciennement_Urbain_Compost_biodechets;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-811;"2014";;1320;"209";Avec rotation legumineuses;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-812;"2014";;1321;"210";Anciennement_Urbain_Compost_ordures menageres;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-813;"2014";;1321;"210";Avec rotation legumineuses;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-814;"2014";;1322;"301";Urbain_Compost_ordures menageres;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-815;"2014";;1322;"301";Sans rotation legumineuses;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-816;"2014";;1323;"302";Urbain_Compost_biodechets;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-817;"2014";;1323;"302";Sans rotation legumineuses;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-818;"2014";;1324;"303";Sans;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-819;"2014";;1324;"303";Sans rotation legumineuses;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-820;"2014";;1325;"304";Effluent_Elevage_Fumier_bovins;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-821;"2014";;1325;"304";Sans rotation legumineuses;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-822;"2014";;1326;"305";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-823;"2014";;1326;"305";Sans rotation legumineuses;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-824;"2014";;1327;"306";Anciennement_Effluent_Elevage_Fumier_bovins;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-825;"2014";;1327;"306";Avec rotation legumineuses;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-826;"2014";;1328;"307";Anciennement_Urbain_Compost_biodechets;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-827;"2014";;1328;"307";Avec rotation legumineuses;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-828;"2014";;1329;"308";Anciennement_Urbain_Compost_ordures menageres;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-829;"2014";;1329;"308";Avec rotation legumineuses;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-830;"2014";;1330;"309";Anciennement_Sans;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-831;"2014";;1330;"309";Avec rotation legumineuses;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-832;"2014";;1331;"310";Anciennement_Urbain_Compost_boue station epuration;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-833;"2014";;1331;"310";Avec rotation legumineuses;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-834;"2014";;1332;"401";Urbain_Compost_boue station epuration;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-835;"2014";;1332;"401";Sans rotation legumineuses;Compost de déchets verts et boues d'épuration;DVB-PRO;"278920";feucherolles_qa_dvb-pro;4
-836;"2014";;1333;"402";Effluent_Elevage_Fumier_bovins;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-837;"2014";;1333;"402";Sans rotation legumineuses;Fumier de bovins;FUM-PRO;"278924";feucherolles_qa_fum-pro;4
-838;"2014";;1334;"403";Urbain_Compost_biodechets;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-839;"2014";;1334;"403";Sans rotation legumineuses;Compost de biodéchets;BIO-PRO;"278882";feucherolles_qa_bio-pro;4
-840;"2014";;1335;"404";Sans;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-841;"2014";;1335;"404";Sans rotation legumineuses;Temoin sans apport organique;TEM-PRO;"278928";feucherolles_qa_tem-pro;4
-842;"2014";;1336;"405";Urbain_Compost_ordures menageres;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-843;"2014";;1336;"405";Sans rotation legumineuses;Compost d'ordures menagères résiduelles;OMR-PRO;"278926";feucherolles_qa_omr-pro;4
-844;"2014";;1337;"406";Anciennement_Urbain_Compost_boue station epuration;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-845;"2014";;1337;"406";Avec rotation legumineuses;Anciennement compost de déchets verts et boues d'épuration;DVB-LEG;"278923";feucherolles_qa_dvb-leg;4
-846;"2014";;1338;"407";Anciennement_Urbain_Compost_ordures menageres;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-847;"2014";;1338;"407";Avec rotation legumineuses;Anciennement compost d'ordures menagères résiduelles;OMR-LEG;"278927";feucherolles_qa_omr-leg;4
-848;"2014";;1339;"408";Anciennement_Urbain_Compost_biodechets;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-849;"2014";;1339;"408";Avec rotation legumineuses;Anciennement compost de biodéchets;BIO-LEG;"278883";feucherolles_qa_bio-leg;4
-850;"2014";;1340;"409";Anciennement_Effluent_Elevage_Fumier_bovins;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-851;"2014";;1340;"409";Avec rotation legumineuses;Anciennement fumier de bovins;FUM-LEG;"278925";feucherolles_qa_fum-leg;4
-852;"2014";;1341;"410";Anciennement_Sans;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-853;"2014";;1341;"410";Avec rotation legumineuses;Anciennement temoin sans apport organique;TEM-LEG;"278929";feucherolles_qa_tem-leg;4
-721;"2014";;1343;X;Sans;X;X;"232446";feucherolles_qa_x;1
-864;"2016";;181509;T100_1;Sans;Témoin fertilisation minérale (N-P-K);TM;"323243";dakar_soerepro_dakar_tm;3
-865;"2016";;181510;BS100_1;Urbain_Boue station epuration_deshydratee;Boue de station dépuration à dose optimisée (100) en N, P et K;BS1;"323244";dakar_soerepro_dakar_bs1;3
-866;"2016";;181511;BS200_1;Urbain_Boue station epuration_deshydratee;Boue de station dépuration à dose double (200) en N, P et K;BS2;"323245";dakar_soerepro_dakar_bs2;3
-867;"2016";;181512;LV100_1;Effluent_Elevage_Fumier_volailles;Litière de volaille à dose optimisée (100) en N, P et K;LV1;"323246";dakar_soerepro_dakar_lv1;3
-868;"2016";;181513;LV200_1;Effluent_Elevage_Fumier_volailles;Litière de volaille à dose double (200) en N, P et K;LV2;"323247";dakar_soerepro_dakar_lv2;3
-869;"2017";;181514;DM100_1;Effluent_Elevage_Digestat_fumier bovins;Digestat de méthanisation  à dose optimisée (100) en N, P et K;DM1;"323248";dakar_soerepro_dakar_dm1;3
-870;"2017";;181515;DM200_1;Effluent_Elevage_Digestat_fumier bovins;Digestat de méthanisation  à dose double (200) en N, P et K;DM2;"323249";dakar_soerepro_dakar_dm2;3
-871;"2016";;181516;T100_2;Sans;Témoin fertilisation minérale (N-P-K);TM;"323243";dakar_soerepro_dakar_tm;3
-872;"2016";;181517;BS100_2;Urbain_Boue station epuration_deshydratee;Boue de station dépuration à dose optimisée (100) en N, P et K;BS1;"323244";dakar_soerepro_dakar_bs1;3
-873;"2016";;181518;BS200_2;Urbain_Boue station epuration_deshydratee;Boue de station dépuration à dose double (200) en N, P et K;BS2;"323245";dakar_soerepro_dakar_bs2;3
-874;"2016";;181519;LV100_2;Effluent_Elevage_Fumier_volailles;Litière de volaille à dose optimisée (100) en N, P et K;LV1;"323246";dakar_soerepro_dakar_lv1;3
-875;"2016";;181520;LV200_2;Effluent_Elevage_Fumier_volailles;Litière de volaille à dose double (200) en N, P et K;LV2;"323247";dakar_soerepro_dakar_lv2;3
-876;"2017";;181521;DM100_2;Effluent_Elevage_Digestat_fumier bovins;Digestat de méthanisation  à dose optimisée (100) en N, P et K;DM1;"323248";dakar_soerepro_dakar_dm1;3
-877;"2017";;181522;DM200_2;Effluent_Elevage_Digestat_fumier bovins;Digestat de méthanisation  à dose double (200) en N, P et K;DM2;"323249";dakar_soerepro_dakar_dm2;3
-878;"2016";;181523;T100_3;Sans;Témoin fertilisation minérale (N-P-K);TM;"323243";dakar_soerepro_dakar_tm;3
-879;"2016";;181524;BS100_3;Urbain_Boue station epuration_deshydratee;Boue de station dépuration à dose optimisée (100) en N, P et K;BS1;"323244";dakar_soerepro_dakar_bs1;3
-880;"2016";;181525;BS200_3;Urbain_Boue station epuration_deshydratee;Boue de station dépuration à dose double (200) en N, P et K;BS2;"323245";dakar_soerepro_dakar_bs2;3
-881;"2016";;181526;LV100_3;Effluent_Elevage_Fumier_volailles;Litière de volaille à dose optimisée (100) en N, P et K;LV1;"323246";dakar_soerepro_dakar_lv1;3
-882;"2016";;181527;LV200_3;Effluent_Elevage_Fumier_volailles;Litière de volaille à dose double (200) en N, P et K;LV2;"323247";dakar_soerepro_dakar_lv2;3
-883;"2017";;181528;DM100_3;Effluent_Elevage_Digestat_fumier bovins;Digestat de méthanisation  à dose optimisée (100) en N, P et K;DM1;"323248";dakar_soerepro_dakar_dm1;3
-884;"2017";;181529;DM200_3;Effluent_Elevage_Digestat_fumier bovins;Digestat de méthanisation  à dose double (200) en N, P et K;DM2;"323249";dakar_soerepro_dakar_dm2;3
-885;"2016";;181530;SN;Placettes différenciées;Sol nu recevant 7 modalités;SN_TM_BS_DM_LV;"323250";dakar_soerepro_dakar_sn_tm_bs_dm_lv;1
-886;"2016";;181509;T100_1;Optimal;Témoin fertilisation minérale (N-P-K);TM;"323243";dakar_soerepro_dakar_tm;3
-887;"2016";;181510;BS100_1;Optimal;Boue de station dépuration à dose optimisée (100) en N, P et K;BS1;"323244";dakar_soerepro_dakar_bs1;3
-888;"2016";;181511;BS200_1;Double dose;Boue de station dépuration à dose double (200) en N, P et K;BS2;"323245";dakar_soerepro_dakar_bs2;3
-889;"2016";;181512;LV100_1;Optimal;Litière de volaille à dose optimisée (100) en N, P et K;LV1;"323246";dakar_soerepro_dakar_lv1;3
-890;"2016";;181513;LV200_1;Double dose;Litière de volaille à dose double (200) en N, P et K;LV2;"323247";dakar_soerepro_dakar_lv2;3
-891;"2017";;181514;DM100_1;Optimal;Digestat de méthanisation  à dose optimisée (100) en N, P et K;DM1;"323248";dakar_soerepro_dakar_dm1;3
-892;"2017";;181515;DM200_1;Double dose;Digestat de méthanisation  à dose double (200) en N, P et K;DM2;"323249";dakar_soerepro_dakar_dm2;3
-893;"2016";;181516;T100_2;Optimal;Témoin fertilisation minérale (N-P-K);TM;"323243";dakar_soerepro_dakar_tm;3
-894;"2016";;181517;BS100_2;Optimal;Boue de station dépuration à dose optimisée (100) en N, P et K;BS1;"323244";dakar_soerepro_dakar_bs1;3
-895;"2016";;181518;BS200_2;Double dose;Boue de station dépuration à dose double (200) en N, P et K;BS2;"323245";dakar_soerepro_dakar_bs2;3
-896;"2016";;181519;LV100_2;Optimal;Litière de volaille à dose optimisée (100) en N, P et K;LV1;"323246";dakar_soerepro_dakar_lv1;3
-897;"2016";;181520;LV200_2;Double dose;Litière de volaille à dose double (200) en N, P et K;LV2;"323247";dakar_soerepro_dakar_lv2;3
-898;"2017";;181521;DM100_2;Optimal;Digestat de méthanisation  à dose optimisée (100) en N, P et K;DM1;"323248";dakar_soerepro_dakar_dm1;3
-899;"2017";;181522;DM200_2;Double dose;Digestat de méthanisation  à dose double (200) en N, P et K;DM2;"323249";dakar_soerepro_dakar_dm2;3
-900;"2016";;181523;T100_3;Optimal;Témoin fertilisation minérale (N-P-K);TM;"323243";dakar_soerepro_dakar_tm;3
-901;"2016";;181524;BS100_3;Optimal;Boue de station dépuration à dose optimisée (100) en N, P et K;BS1;"323244";dakar_soerepro_dakar_bs1;3
-902;"2016";;181525;BS200_3;Double dose;Boue de station dépuration à dose double (200) en N, P et K;BS2;"323245";dakar_soerepro_dakar_bs2;3
-903;"2016";;181526;LV100_3;Optimal;Litière de volaille à dose optimisée (100) en N, P et K;LV1;"323246";dakar_soerepro_dakar_lv1;3
-904;"2016";;181527;LV200_3;Double dose;Litière de volaille à dose double (200) en N, P et K;LV2;"323247";dakar_soerepro_dakar_lv2;3
-905;"2017";;181528;DM100_3;Optimal;Digestat de méthanisation  à dose optimisée (100) en N, P et K;DM1;"323248";dakar_soerepro_dakar_dm1;3
-906;"2017";;181529;DM200_3;Double dose;Digestat de méthanisation  à dose double (200) en N, P et K;DM2;"323249";dakar_soerepro_dakar_dm2;3
-907;"2016";;181530;SN;Placettes différenciées;Sol nu recevant 7 modalités;SN_TM_BS_DM_LV;"323250";dakar_soerepro_dakar_sn_tm_bs_dm_lv;1
+Code du dispositif_Nom du lieu;Nom du traitement;Code du traitement;Nombre de répétitions prévues;Type de traitement;Année de début de validité;Année de fin de validité
+efele_pros_la_brassardiere;Temoin non fertilise en N;0n;4;Fixe;2012;2032
+soerepro_reunion_la_mare;Apport annuel de boues STEP;ba;5;Fixe;2013;
+prospective_inra_colmar_seav;Compost de biodechets;bio;1;Fixe;2000;
+qa_feucherolles;Compost de biodéchets;bio;3;Fixe;1998;
+prospective_inra_colmar_seav;Compost de biodechets + Digestat de méthanisation;bio_dig;4;Fixe;2014;
+qa_feucherolles;Compost de biodéchets, fertilisation N optimale;bio_avec_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Compost de biodechets, fertilisation N optimale;bio_avec_n;4;Fixe;2000;
+qa_feucherolles;Compost de biodechets, fertilisation N minimale;bio_sans_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Compost de biodechets, sans fertilisation minerale;bio_sans_n;4;Fixe;2000;2014
+prospective_inra_colmar_seav;Compost de biodechets, fertilisation N optimale;bio_sur_sols_nus;4;Fixe;2000;
+qa_feucherolles;Anciennement compost de biodéchets;bio_leg;4;Fixe;2014;
+qa_feucherolles;Compost de biodéchets;bio_pro;4;Fixe;2014;
+prospective_inra_colmar_seav;Boue d'epuration;boue;1;Fixe;2000;
+prospective_inra_colmar_seav;Boue d'epuration + Digestat de méthanisation;boue_dig;4;Fixe;2014;
+bouzule_la_bouzule;Boue de papeterie;boue_papeterie;4;Fixe;1996;2002
+bouzule_la_bouzule;Boue de STEP deshydratee;boue_step_des;4;Fixe;1996;2002
+bouzule_la_bouzule;Boue urbaine peu deshydratee;boue_step_p_d;4;Fixe;1996;2002
+prospective_inra_colmar_seav;Boue d epuration, fertilisation N optimale;boue_avec_n;4;Fixe;2000;
+prospective_inra_colmar_seav;Boue d'epuration, sans fertilisation minerale;boue_sans_n;4;Fixe;2000;2014
+prospective_inra_colmar_seav;Boue d epuration, fertilisation N optimale;boue_sur_sols_nus;4;Fixe;2000;
+soerepro_reunion_la_mare;Apport en replantation de boues STEP;br;5;Fixe;2013;
+soerepro_dakar_dakar;Boue de station déépuration é dose optimisée (100) en N, P et K;bs1;3;Fixe;2016;
+soerepro_dakar_dakar;Boue de station déépuration é dose double (200) en N, P et K;bs2;3;Fixe;2016;
+st_denis_de_pile_couhins;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 0 kg /ha ammonitrate;boue_0;4;Fixe;1976;
+ambares_couhins;Fumier de porc composte complémenté en N;boue_10;5;Fixe;1974;
+louis_fargue_couhins;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 10 t / ha / an;boue_10;5;Fixe;1976;
+ambares_couhins;Fumier de porc composte complemente en N;boue_100;5;Fixe;1974;
+louis_fargue_couhins;Boue de STEP biologique digeree anaerobie deshydratee (note Louis Fargue), 100 t / ha / 2 ans;boue_100;5;Fixe;1976;
+st_denis_de_pile_couhins;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 100 kg /ha ammonitrate;boue_100;4;Fixe;1976;
+st_denis_de_pile_couhins;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 200 kg /ha ammonitrate;boue_200;4;Fixe;1976;
+st_denis_de_pile_couhins;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 400 kg /ha ammonitrate;boue_400;4;Fixe;1976;
+st_denis_de_pile_couhins;Boue de STEP biologique anaerobie semi-deshydratee (note Ambares), 10 t / ha / an, 50 kg /ha ammonitrate;boue_50;4;Fixe;1976;
+st_denis_de_pile_couhins;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 0 kg /ha ammonitrate;c_omr_0;4;Fixe;1976;
+st_denis_de_pile_couhins;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 100 kg /ha ammonitrate;c_omr_100;4;Fixe;1976;
+st_denis_de_pile_couhins;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 400 kg /ha ammonitrate;c_omr_400;4;Fixe;1976;
+st_denis_de_pile_couhins;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 50 kg /ha ammonitrate;c_omr_50;4;Fixe;1976;
+st_denis_de_pile_couhins;Compost ordures menageres (note St Denis de Pile), 10 t / ha / an, 200 kg /ha ammonitrate;c_omr200;4;Fixe;1976;
+bouzule_la_bouzule;Cendre de combustion;cendre_comb;4;Fixe;1996;2002
+efele_pros_la_brassardiere;Fumier de porc composte;cp;4;Fixe;2012;2032
+efele_pros_la_brassardiere;Fumier de porc composte complemente en N;cp_n;4;Fixe;2012;2032
+efele_pros_la_brassardiere;Digestat de lisier de porc;dig_lp;4;Fixe;2012;2032
+soerepro_dakar_dakar;Digestat de méthanisation  à dose optimisée (100) en N, P et K;dm1;3;Fixe;2017;
+soerepro_dakar_dakar;Digestat de méthanisation  à dose double (200) en N, P et K;dm2;3;Fixe;2017;
+prospective_inra_colmar_seav;Compost de boue;dvb;1;Fixe;2000;
+bouzule_la_bouzule;Compost de boue avec des dechets verts (B3);dvb;4;Fixe;1996;2002
+qa_feucherolles;Compost de déchets verts et boues d'épuration;dvb;3;Fixe;1998;
+bouzule_la_bouzule;Compost de boue avec des dechets verts (B3.1) + polluants organiques;dvb_cto;4;Fixe;1996;2002
+prospective_inra_colmar_seav;Compost de boue + Digestat de méthanisation;dvb_dig;4;Fixe;2014;
+bouzule_la_bouzule;Compost de boue avec des déchets verts (B3.2) + polluants metalliques;dvb_etm;4;Fixe;1996;2002
+qa_feucherolles;Compost de déchets verts et boues d'épuration, fertilisation N optimale;dvb_avec_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Compost de boue, fertilisation N optimale;dvb_avec_n;4;Fixe;2000;
+qa_feucherolles;Compost de déchets verts et boues d'épuration, fertilisation N minimale;dvb_sans_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Compost de boue, sans fertilisation minerale;dvb_sans_n;4;Fixe;2000;2014
+prospective_inra_colmar_seav;Compost de boue, fertilisation N optimale;dvb_sur_sols_nus;4;Fixe;2000;
+qa_feucherolles;Anciennement compost de déchets verts et boues d'épuration;dvb_leg;4;Fixe;2014;
+qa_feucherolles;Compost de déchets verts et boues d'épuration;dvb_pro;4;Fixe;2014;
+efele_pros_la_brassardiere;Fumier de bovins;fb;4;Fixe;2012;2032
+efele_pros_la_brassardiere;Fumier de bovins complemente en N;fb_n;4;Fixe;2012;2032
+prospective_inra_colmar_seav;Fumier de bovins;fum;1;Fixe;2000;
+qa_feucherolles;Fumier de bovins;fum;3;Fixe;1998;
+prospective_inra_colmar_seav;Fumier de bovins + Digestat de méthanisation;fum_dig;4;Fixe;2014;
+qa_feucherolles;Fumier de bovins, fertilisation N optimale;fum_avec_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Fumier de bovins, fertilisation N optimale;fum_avec_n;4;Fixe;2000;
+qa_feucherolles;Fumier de bovins, fertilisation N minimale;fum_sans_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Fumier de bovins, sans fertilisation minerale;fum_sans_n;4;Fixe;2000;2014
+prospective_inra_colmar_seav;Fumier de bovins, fertilisation N optimale;fum_sur_sols_nus;4;Fixe;2000;
+qa_feucherolles;Anciennement fumier de bovins;fum_leg;4;Fixe;2014;
+qa_feucherolles;Fumier de bovins;fum_pro;4;Fixe;2014;
+prospective_inra_colmar_seav;Compost de fumier de bovins;fumc;1;Fixe;2000;
+prospective_inra_colmar_seav;Compost de fumier de bovins + Digestat de méthanisation;fumc_dig;4;Fixe;2014;
+prospective_inra_colmar_seav;Compost de fumier de bovins, fertilisation N optimale;fumc_avec_n;4;Fixe;2000;
+prospective_inra_colmar_seav;Compost de fumier de bovins, sans fertilisation minerale;fumc_sans_n;4;Fixe;2000;2014
+prospective_inra_colmar_seav;Compost de fumier de bovins, fertilisation N optimale;fumc_sur_sols_nus;4;Fixe;2000;
+efele_pros_la_brassardiere;Fumier de volailles;fv;4;Fixe;2012;2032
+ambares_couhins;Fumier de bovins;fumier;5;Fixe;1974;
+louis_fargue_couhins;Fumier de bovins;fumier;5;Fixe;1976;
+efele_ts_mo_la_brassardiere;Fumier de bovins_modalite labour;l_fb;3;Fixe;2012;2032
+efele_ts_mo_la_brassardiere;Fertilisation minerale_modalite labour;l_min;3;Fixe;2012;2032
+soerepro_reunion_la_mare;Apport annuel de lisier de porc;lp;5;Fixe;2013;
+efele_pros_la_brassardiere;Lisier de porc;lp;4;Fixe;2012;2032
+soerepro_reunion_la_mare;Apport annuel de litiere de volaille;lv;5;Fixe;2013;
+soerepro_dakar_dakar;Litiére de volaille à dose optimisée (100) en N, P et K;lv1;3;Fixe;2016;
+soerepro_dakar_dakar;Litiére de volaille à dose double (200) en N, P et K;lv2;3;Fixe;2016;
+efele_pros_la_brassardiere;Temoin en fertilisation minerale N;min;4;Fixe;2012;2032
+bouzule_la_bouzule;Compost d ordures menageres residuelles;omr;4;Fixe;1996;2002
+qa_feucherolles;Compost d'ordures menagéres résiduelles;omr;3;Fixe;1998;
+qa_feucherolles;Compost d ordures menageres résiduelles, fertilisation N optimale;omr_avec_n;4;Fixe;1998;2013
+qa_feucherolles;Compost d ordures menageres residuelles, fertilisation N minimale;omr_sans_n;4;Fixe;1998;2013
+qa_feucherolles;Anciennement compost d'ordures menagéres résiduelles;omr_leg;4;Fixe;2014;
+qa_feucherolles;Compost d'ordures menagéres résiduelles;omr_pro;4;Fixe;2014;
+soerepro_reunion_la_mare;Sol nu recevant 5 modalites, plus sans apport;sn;1;Fixe;2013;
+prospective_inra_colmar_seav;Sols nus avec apports organiques;sn;1;Fixe;2000;
+soerepro_dakar_dakar;Sol nu recevant 7 modalités;sn_tm_bs_dm_lv;1;Fixe;2016;
+soerepro_reunion_la_mare;Temoin fertilisation minerale;t;5;Fixe;2013;
+prospective_inra_colmar_seav;Temoin Digestat de méthanisation;tem_dig;4;Fixe;2014;
+prospective_inra_colmar_seav;Temoin azote tournant;tem_n_tournant;6;Tournant;2000;
+qa_feucherolles;Temoin sans apport organique, fertilisation N optimale;tem_avec_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Temoin sans apport organique, fertilisation N optimale;tem_avec_n;4;Fixe;2000;
+qa_feucherolles;Temoin sans apport organique, fertilisation N minimale;tem_sans_n;4;Fixe;1998;2013
+prospective_inra_colmar_seav;Temoin sans apport organique, sans fertilisation minerale;tem_sans_n;4;Fixe;2000;2014
+prospective_inra_colmar_seav;Temoin sans apport organique, fertilisation N optimale;tem_sur_sols_nus;4;Fixe;2000;
+qa_feucherolles;Anciennement temoin sans apport organique;tem_leg;4;Fixe;2014;
+qa_feucherolles;Temoin sans apport organique;tem_pro;4;Fixe;2014;
+bouzule_la_bouzule;Temoin fertilisation basse;temoin_bas;4;Fixe;1996;2002
+bouzule_la_bouzule;Temoin fertilisation haute;temoin_haut;4;Fixe;1996;2002
+soerepro_dakar_dakar;Témoin fertilisation minérale (N-P-K);tm;3;Fixe;2016;
+efele_ts_mo_la_brassardiere;Fumier de bovins_modalite travail sol simplifie;ts_fb;3;Fixe;2012;2032
+efele_ts_mo_la_brassardiere;Fertilisation minerale_modalite travail sol simplifie;ts_min;3;Fixe;2012;2032
+soerepro_reunion_la_mare;Temoin sans apport 1 annee sur 4;ta;4;Tournant;2013;
+ambares_couhins;Temoin en fertilisation minerale;temoin;5;Fixe;1974;
+louis_fargue_couhins;Temoin en fertilisation minerale;temoin;5;Fixe;1976;
+st_denis_de_pile_couhins;Temoin en fertilisation minerale, 0 kg /ha ammonitrate;temoin_0;4;Fixe;1976;
+st_denis_de_pile_couhins;Temoin en fertilisation minerale, 100 kg /ha ammonitrate;temoin_100;4;Fixe;1976;
+st_denis_de_pile_couhins;Temoin en fertilisation minerale, 200 kg /ha ammonitrate;temoin_200;4;Fixe;1976;
+st_denis_de_pile_couhins;Temoin en fertilisation minerale, 400 kg /ha ammonitrate;temoin_400;4;Fixe;1976;
+st_denis_de_pile_couhins;Temoin en fertilisation minerale, 50 kg /ha ammonitrate;temoin_50;4;Fixe;1976;
+qa_feucherolles;X;x;1;Fixe;1998;
+ambares_couhins;X;x;1;Fixe;1974;
+louis_fargue_couhins;X;x;1;Fixe;1976;
+st_denis_de_pile_couhins;X;x;1;Fixe;1976;
+soerepro_reunion_la_mare;X;x;1;Fixe;2013;
+efele_ts_mo_la_brassardiere;X;x;1;Fixe;2012;
+efele_pros_la_brassardiere;X;x;1;Fixe;2012;
+prospective_inra_colmar_seav;X;x;1;Fixe;2000;
+bouzule_la_bouzule;X;x;1;Fixe;1996;

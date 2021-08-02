@@ -85,6 +85,11 @@ public class RelationalServiceTest {
         }
 
         {
+            List<Map<String, Object>> viewContent = relationalService.readView("pros", "physico_chimie_sols", ViewStrategy.VIEW);
+            Assert.assertEquals(80, viewContent.size());
+        }
+
+        {
             List<Map<String, Object>> viewContent = relationalService.readView("olac", "condition_prelevements", ViewStrategy.VIEW);
             Assert.assertEquals(19, viewContent.size());
         }
@@ -111,11 +116,6 @@ public class RelationalServiceTest {
 //            request.setRequestClient(applicationCreatorRequestClient);
             List<Map<String, Object>> viewContent = relationalService.readView("acbb", "SWC", ViewStrategy.VIEW);
             Assert.assertEquals(1456, viewContent.size());
-        }
-
-        {
-            List<Map<String, Object>> viewContent = relationalService.readView("foret", "flux_meteo_dataResult", ViewStrategy.VIEW);
-            Assert.assertEquals(24, viewContent.size());
         }
 
         for (Fixtures.Application application : applications) {

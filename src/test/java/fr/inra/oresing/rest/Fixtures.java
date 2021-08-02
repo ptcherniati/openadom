@@ -360,10 +360,19 @@ public class Fixtures {
             }
         }
 
-        // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(getdPrelevementProDataResourceName())) {
+        // ajout de data Prelevement
+        try (InputStream in = getClass().getResourceAsStream(getPrelevementProDataResourceName())) {
             MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data PhysicoChimieSols
+        try (InputStream in = getClass().getResourceAsStream(getPhysicoChimieSolsProDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
                     .file(file)
                     .cookie(authCookie))
                     .andExpect(status().isCreated());
@@ -372,8 +381,11 @@ public class Fixtures {
         return authCookie;
     }
 
-    public String getdPrelevementProDataResourceName() {
+    public String getPrelevementProDataResourceName() {
         return "/data/pros/donnees_prelevement_pro.csv";
+    }
+    public String getPhysicoChimieSolsProDataResourceName() {
+        return "/data/pros/physico_chimie_sols.csv";
     }
 
 

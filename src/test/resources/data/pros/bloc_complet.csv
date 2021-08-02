@@ -1,61 +1,61 @@
-"bloc_key";"nom du bloc";"code bloc";"dispositif_key";"nom du dispositif"
-1;Bloc 1;Bloc 1;1288;QualiAgro
-2;Bloc 2;Bloc 2;1288;QualiAgro
-3;Bloc 3;Bloc 3;1288;QualiAgro
-4;Bloc 4;Bloc 4;1288;QualiAgro
-5;X;X;1288;QualiAgro
-6;Sans bloc;Sans bloc;1291;DSP_Fictif
-7;X;X;1291;DSP_Fictif
-8;Bloc 1;Bloc 1;1299;La Bouzule
-9;Bloc 2;Bloc 2;1299;La Bouzule
-10;Bloc 3;Bloc 3;1299;La Bouzule
-11;Bloc 4;Bloc 4;1299;La Bouzule
-12;X;X;1299;La Bouzule
-13;Bloc 1;Bloc 1;1292;Couhins_Ambares
-14;Bloc 2;Bloc 2;1292;Couhins_Ambares
-15;Bloc 3;Bloc 3;1292;Couhins_Ambares
-16;Bloc 4;Bloc 4;1292;Couhins_Ambares
-17;Bloc 5;Bloc 5;1292;Couhins_Ambares
-18;X;X;1292;Couhins_Ambares
-19;Bloc 1;Bloc 1;1293;Couhins_Louis Fargue
-20;Bloc 2;Bloc 2;1293;Couhins_Louis Fargue
-21;Bloc 3;Bloc 3;1293;Couhins_Louis Fargue
-22;Bloc 4;Bloc 4;1293;Couhins_Louis Fargue
-23;Bloc 5;Bloc 5;1293;Couhins_Louis Fargue
-24;X;X;1293;Couhins_Louis Fargue
-25;Bloc 1;Bloc 1;1294;Couhins_Saint Denis de Pile
-26;Bloc 2;Bloc 2;1294;Couhins_Saint Denis de Pile
-27;Bloc 3;Bloc 3;1294;Couhins_Saint Denis de Pile
-28;Bloc 4;Bloc 4;1294;Couhins_Saint Denis de Pile
-29;X;X;1294;Couhins_Saint Denis de Pile
-30;Bloc 1;Bloc 1;1297;EFELE_essai_PROs
-31;Bloc 2;Bloc 2;1297;EFELE_essai_PROs
-32;Bloc 3;Bloc 3;1297;EFELE_essai_PROs
-33;Bloc 4;Bloc 4;1297;EFELE_essai_PROs
-34;X;X;1297;EFELE_essai_PROs
-35;Bloc 1;Bloc 1;1296;EFELE_essai_TS_MO
-36;Bloc 2;Bloc 2;1296;EFELE_essai_TS_MO
-37;Bloc 3;Bloc 3;1296;EFELE_essai_TS_MO
-38;X;X;1296;EFELE_essai_TS_MO
-39;Bloc 1;Bloc 1;1298;PROspective
-40;Bloc 2;Bloc 2;1298;PROspective
-41;Bloc 3;Bloc 3;1298;PROspective
-42;Bloc 4;Bloc 4;1298;PROspective
-43;Bloc 5;Bloc 5;1298;PROspective
-44;X;X;1298;PROspective
-45;Bloc 1;Bloc 1;1295;SOEREPRO_la Reunion
-46;Bloc 2;Bloc 2;1295;SOEREPRO_la Reunion
-47;Bloc 3;Bloc 3;1295;SOEREPRO_la Reunion
-48;Bloc 4;Bloc 4;1295;SOEREPRO_la Reunion
-49;Bloc 5;Bloc 5;1295;SOEREPRO_la Reunion
-50;Sans Bloc;Sans bloc;1295;SOEREPRO_la Reunion
-51;Sans bloc;Sans bloc;1298;PROspective
-52;Sans bloc;Sans bloc;1295;SOEREPRO_la Reunion
-53;Sans bloc;Sans bloc;1288;QualiAgro
-54;Sans bloc;Sans bloc;1299;La Bouzule
-55;Sans bloc;Sans bloc;1292;Couhins_Ambares
-56;Sans bloc;Sans bloc;1293;Couhins_Louis Fargue
-57;Sans bloc;Sans bloc;1294;Couhins_Saint Denis de Pile
-58;Sans bloc;Sans bloc;1297;EFELE_essai_PROs
-59;Sans bloc;Sans bloc;1296;EFELE_essai_TS_MO
-60;Sans;Sans bloc;181507;SOEREPRO site de Dakar
+Code du dispositif_Nom du lieu;Nom du bloc;Code du bloc
+qa_feucherolles;bloc_1;Bloc 1
+bouzule_la_bouzule;bloc_1;Bloc 1
+ambares_couhins;bloc_1;Bloc 1
+louis_fargue_couhins;bloc_1;Bloc 1
+st_denis_de_pile_couhins;bloc_1;Bloc 1
+efele_pros_la_brassardiere;bloc_1;Bloc 1
+efele_ts_mo_la_brassardiere;bloc_1;Bloc 1
+prospective_inra_colmar_seav;bloc_1;Bloc 1
+soerepro_reunion_la_mare;bloc_1;Bloc 1
+qa_feucherolles;bloc_2;Bloc 2
+bouzule_la_bouzule;bloc_2;Bloc 2
+ambares_couhins;bloc_2;Bloc 2
+louis_fargue_couhins;bloc_2;Bloc 2
+st_denis_de_pile_couhins;bloc_2;Bloc 2
+efele_pros_la_brassardiere;bloc_2;Bloc 2
+efele_ts_mo_la_brassardiere;bloc_2;Bloc 2
+prospective_inra_colmar_seav;bloc_2;Bloc 2
+soerepro_reunion_la_mare;bloc_2;Bloc 2
+qa_feucherolles;bloc_3;Bloc 3
+bouzule_la_bouzule;bloc_3;Bloc 3
+ambares_couhins;bloc_3;Bloc 3
+louis_fargue_couhins;bloc_3;Bloc 3
+st_denis_de_pile_couhins;bloc_3;Bloc 3
+efele_pros_la_brassardiere;bloc_3;Bloc 3
+efele_ts_mo_la_brassardiere;bloc_3;Bloc 3
+prospective_inra_colmar_seav;bloc_3;Bloc 3
+soerepro_reunion_la_mare;bloc_3;Bloc 3
+qa_feucherolles;bloc_4;Bloc 4
+bouzule_la_bouzule;bloc_4;Bloc 4
+ambares_couhins;bloc_4;Bloc 4
+louis_fargue_couhins;bloc_4;Bloc 4
+st_denis_de_pile_couhins;bloc_4;Bloc 4
+efele_pros_la_brassardiere;bloc_4;Bloc 4
+prospective_inra_colmar_seav;bloc_4;Bloc 4
+soerepro_reunion_la_mare;bloc_4;Bloc 4
+ambares_couhins;bloc_5;Bloc 5
+louis_fargue_couhins;bloc_5;Bloc 5
+prospective_inra_colmar_seav;bloc_5;Bloc 5
+soerepro_reunion_la_mare;bloc_5;Bloc 5
+soerepro_dakar_dakar;sans;Sans bloc
+soerepro_reunion_la_mare;sans_bloc;Sans bloc
+dsp_f_dsp_fictif;sans_bloc;Sans bloc
+prospective_inra_colmar_seav;sans_bloc;Sans bloc
+qa_feucherolles;sans_bloc;Sans bloc
+bouzule_la_bouzule;sans_bloc;Sans bloc
+ambares_couhins;sans_bloc;Sans bloc
+louis_fargue_couhins;sans_bloc;Sans bloc
+st_denis_de_pile_couhins;sans_bloc;Sans bloc
+efele_pros_la_brassardiere;sans_bloc;Sans bloc
+efele_ts_mo_la_brassardiere;sans_bloc;Sans bloc
+qa_feucherolles;x;X
+dsp_f_dsp_fictif;x;X
+bouzule_la_bouzule;x;X
+ambares_couhins;x;X
+louis_fargue_couhins;x;X
+st_denis_de_pile_couhins;x;X
+efele_pros_la_brassardiere;x;X
+efele_ts_mo_la_brassardiere;x;X
+prospective_inra_colmar_seav;x;X
+fd_fertidig;x;X

@@ -588,10 +588,19 @@ public class OreSiResourcesTest {
             }
         }
 
-        // ajout de data
-        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdPrelevementProDataResourceName())) {
+        // ajout de data PrelevementPro
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPrelevementProDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data PhysicoChimieSols
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieSolsProDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
                     .file(refFile)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
