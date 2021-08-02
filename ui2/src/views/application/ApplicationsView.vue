@@ -2,55 +2,73 @@
   <PageView>
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
 
-    <div class="columns">
+    <div class="columns" style="margin-left: 100px">
       <div class="column is-3">
-        <b-collapse class="card" animation="slide" aria-id="contentIdForA11y3">
-        <template #trigger="props">
-          <div
-              class="card-header"
-              role="button"
-              aria-controls="contentIdForA11y3">
-            <p class="card-header-title">
-              Filtre
-            </p>
-            <a class="card-header-icon">
-              <b-icon
-                  :icon="props.open ? 'menu-down' : 'menu-up'">
-              </b-icon>
-            </a>
+        <section>
+          <div class="card is-clickable" v-if="canCreateApplication">
+            <div class="card-header" role="button" @click="createApplication" style="background-color: #00a3a6; opacity: 75%;">
+              <a class="card-header-icon" style="color: white">
+                <b-icon icon="plus">
+                </b-icon>
+              </a>
+              <p class="card-header-title" style="color: white">
+              {{ $t("applications.create") }}
+              </p>
+            </div>
           </div>
-        </template>
-        <div class="card-content">
-          <div class="content">
-          </div>
-        </div>
-        <footer class="card-footer">
-        </footer>
-      </b-collapse>
-      </div>
-      <div class="column">
-        <div class="columns is-9">
-          <div>
-            <div class="column" v-if="canCreateApplication">
-              <div class="applicationCard card is-clickable"
-                   @click="createApplication" style="background-color: #00a3a6; opacity: 75%; height: 195px;">
-                <div class="card-header">
-                  <div class="title card-header-title" style="color: white">
-                    <p>{{ $t("applications.create") }}</p>
-                  </div>
-                </div>
-                <div class="card-content buttons is-centered" style="padding:10px;">
-                  <b-button class="btnModal" icon-left="plus"
-                            type="is-primary"
-                            size="is-large"
-                            style="color: white; opacity: 100%;"/>
-                </div>
+          <div class="card">
+            <div class="card-header">
+              <p class="card-header-title">
+                Trier
+              </p>
+            </div>
+            <div class="card-content">
+              <div class="content">
+                <b-field>
+                  <b-checkbox>Nom</b-checkbox>
+                </b-field>
+                <b-field>
+                  <b-checkbox>Plus récent</b-checkbox>
+                </b-field>
               </div>
             </div>
           </div>
-          <div v-for="application in applications" :key="application.name">
+          <div class="card">
+            <div
+                class="card-header"
+                role="button">
+              <p class="card-header-title">
+                Filtrer
+              </p>
+            </div>
+            <div class="card-content">
+              <div class="content">
+                <b-field label="Name">
+                  <b-input value="Kevin Garvey"></b-input>
+                </b-field>
+                <b-field label="Select datetime">
+                  <b-datetimepicker
+                      placeholder="Type or select a date..."
+                      icon="calendar-today"
+                      :locale="locale"
+                      editable>
+                  </b-datetimepicker>
+                </b-field>
+              </div>
+            </div>
+            <footer class="card-footer">
+              <i class="card-footer-item"></i>
+              <i class="card-footer-item"></i>
+              <a class="card-footer-item">Confirmer</a>
+            </footer>
+          </div>
+        </section>
+      </div>
+      <div class="column">
+        <div class="columns is-9">
+          <div v-for="application in visiblePages(applications)" :key="application.name">
             <div class="column">
-              <div class="applicationCard card">
+              <b-card class="applicationCard card">
                 <div class="card-header">
                   <div class="title card-header-title">
                     <p field="name"> {{ application.name }}</p>
@@ -88,28 +106,37 @@
                 </div>
                 <div class="card-content">
                   <div class="content">
-                    <p field="creationDate">{{ (new Date(application.creationDate)).toLocaleString("fr") }}</p>
+                    <p field="creationDate">{{ (new Date(application.creationDate)).toLocaleString(localLang) }}</p>
                   </div>
                 </div>
                 <div class="card-footer">
                   <div class="card-footer-item">
-                    <b-button icon-left="drafting-compass" @click="displayReferencesManagement(application)">{{
-                        $t("applications.references")
-                      }}</b-button>
+                    <b-button icon-left="drafting-compass" @click="displayReferencesManagement(application)">
+                      {{ $t("applications.references") }}</b-button>
                   </div>
                   <div class="card-footer-item">
-                    <b-button icon-left="poll" @click="displayDataSetManagement(application)">{{
-                        $t("applications.dataset")
-                      }}</b-button>
+                    <b-button icon-left="poll" @click="displayDataSetManagement(application)">
+                      {{ $t("applications.dataset") }}</b-button>
                   </div>
                 </div>
-              </div>
+              </b-card>
             </div>
           </div>
         </div>
+        <hr />
+        <b-pagination
+          :total="applications.length"
+          :current.sync="current"
+          :range-before="2"
+          :range-after="2"
+          :rounded="true"
+          :per-page="perPage"
+          :icon-prev="prevIcon"
+          :icon-next="nextIcon"
+        >
+        </b-pagination>
       </div>
     </div>
-
   </PageView>
 </template>
 
@@ -126,9 +153,17 @@ export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
-  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
-  isSelectedName='';
+  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser()
+    .authorizedForApplicationCreation;
+  isSelectedName = "";
   isCardModalActive = false;
+  localLang = localStorage.getItem("lang");
+  current = 1;
+  perPage = 12;
+
+  visiblePages() {
+    return this.applications.slice((this.current - 1) * this.perPage, this.current * this.perPage);
+  }
 
   created() {
     this.init();
@@ -159,7 +194,6 @@ export default class ApplicationsView extends Vue {
     this.isSelectedName= name;
     this.isCardModalActive = true;
   }
-
 }
 </script>
 

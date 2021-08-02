@@ -51,7 +51,7 @@
   },
   "applications": {
     "chose-config": "Choisir une configuration",
-    "create": "Créer l'application",
+    "create": "Ajouter une application",
     "test": "Tester",
     "name": "Nom de l'application",
     "name-placeholder": "Ex : olac",
