@@ -460,6 +460,7 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         String timeScopeColumnPattern = lineCheckers.stream()
+                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator?((ILineCheckerDecorator) lineChecker).getChecker():lineChecker)
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                 .map(lineChecker -> (DateLineChecker) lineChecker)
                 .filter(dateLineChecker -> dateLineChecker.getVariableComponentKey().equals(dataTypeDescription.getAuthorization().getTimeScope()))

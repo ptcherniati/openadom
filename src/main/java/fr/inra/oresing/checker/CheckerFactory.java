@@ -28,11 +28,13 @@ public class CheckerFactory {
 
     public static final String COLUMNS = "columns";
     public static final String VARIABLE_COMPONENT_KEY = "variableComponentKey";
+    public static final String REQUIRED = "required";
     @Autowired
     private OreSiRepository repository;
 
     public ImmutableMap<VariableComponentKey, ReferenceLineChecker> getReferenceLineCheckers(Application app, String dataType) {
         return getLineCheckers(app, dataType).stream()
+                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator?((ILineCheckerDecorator) lineChecker).getChecker():lineChecker)
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
                 .map(lineChecker -> (ReferenceLineChecker) lineChecker)
                 .collect(ImmutableMap.toImmutableMap(ReferenceLineChecker::getVariableComponentKey, Function.identity()));
@@ -86,6 +88,15 @@ public class CheckerFactory {
                         throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
                     }
                     Preconditions.checkState(variableComponentChecker.getVariableComponentKey().equals(variableComponentKey));
+                    boolean hasRequiredParam = checkerDescription.getParams().containsKey(RequiredChecker.PARAMS_REQUIRED);
+                    if(hasRequiredParam){
+                        String requiredString = checkerDescription.getParams().get(RequiredChecker.PARAMS_REQUIRED);
+                        if(requiredString==null || "true".equalsIgnoreCase(requiredString)){
+                            variableComponentChecker = RequiredChecker.requiredChecker(variableComponentChecker);
+                        }else{
+                            variableComponentChecker = RequiredChecker.notRequiredChecker(variableComponentChecker);
+                        }
+                    }
                     checkersBuilder.add(variableComponentChecker);
                 }
             }

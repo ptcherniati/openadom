@@ -1,0 +1,41 @@
+package fr.inra.oresing.checker;
+
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.ValidationCheckResult;
+
+public class RequiredChecker implements ILineCheckerDecorator{
+    public static final String PARAMS_REQUIRED = "required";
+    CheckerOnOneVariableComponentLineChecker checker;
+    public static final RequiredChecker notRequiredChecker(CheckerOnOneVariableComponentLineChecker checker){
+        return new RequiredChecker(checker, false);
+    }
+    public static final RequiredChecker requiredChecker(CheckerOnOneVariableComponentLineChecker checker){
+        return new RequiredChecker(checker, true);
+    }
+    boolean required = false;
+    @Override
+    public ValidationCheckResult check(String value) {
+        if(value==null){
+            if(!required){
+                return DefaultValidationCheckResult.success();
+            }
+            return DefaultValidationCheckResult.error("requiredValue", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey()));
+        }
+        return checker.check(value);
+    }
+
+    private RequiredChecker(CheckerOnOneVariableComponentLineChecker checker, boolean required) {
+        this.checker = checker;
+        this.required = required;
+    }
+
+    private RequiredChecker(CheckerOnOneVariableComponentLineChecker checker) {
+        this.checker = checker;
+    }
+
+    @Override
+    public CheckerOnOneVariableComponentLineChecker getChecker() {
+        return checker;
+    }
+}

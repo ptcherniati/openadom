@@ -50,7 +50,7 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
             dateTimeFormatter.parse(value);
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (DateTimeParseException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", variableComponentKey, "pattern", pattern, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", pattern, "value", value));
         }
         return validationCheckResult;
     }

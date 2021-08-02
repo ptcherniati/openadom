@@ -68,6 +68,36 @@ references:
       tze_definition_en:
 
   types_de_donnees_par_themes_de_sites_et_projet:
+    validations:
+      projetRef:
+        description: "référence au projet"
+        checker:
+          name: Reference
+          params:
+            refType: projet
+            columns: nom du projet
+      sitesRef:
+        description: "référence au site"
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            columns: nom du site
+      themesRef:
+        description: "référence au theme"
+        checker:
+          name: Reference
+          params:
+            refType: themes
+            columns: nom du thème
+      checkDatatype:
+        description: "type de données autorisés"
+        checker:
+          name: GroovyExpression
+          params:
+            expression: >
+              Set.of("piegeage_en_montee", "piegeage_en_descente").contains(datum.get("nom du type de données"))
+    keyColumns: ["nom du projet","nom du site","nom du thème","nom du type de données" ]
     columns:
       nom du projet:
       nom du site:
@@ -136,6 +166,7 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
+                required:
       espece:
         components:
           value:
@@ -156,18 +187,22 @@ dataTypes:
               name: Reference
               params:
                 refType: unites
+                required:
       Nombre d'individus:
         components:
           value:
             defaultValue: "return 0"
             checker:
               name: Integer
+              params:
+                required:
           unit:
             defaultValue: "return \"sans_unite\""
             checker:
               name: Reference
               params:
                 refType: unites
+                required:
     format:
       headerLine: 4
       firstRowLine: 5

@@ -33,7 +33,7 @@ public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
             Float.parseFloat(value);
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidFloat", ImmutableMap.of("variableComponentKey", variableComponentKey, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("invalidFloat", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "value", value));
         }
         return validationCheckResult;
     }

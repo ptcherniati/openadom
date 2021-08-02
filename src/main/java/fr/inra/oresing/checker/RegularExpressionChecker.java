@@ -50,7 +50,7 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
         if (predicate.test(value)) {
             validationCheckResult = DefaultValidationCheckResult.success();
         } else {
-            validationCheckResult = DefaultValidationCheckResult.error("patternNotMatched", ImmutableMap.of("variableComponentKey", getVariableComponentKey(), "pattern", patternString, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("patternNotMatched", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", patternString, "value", value));
         }
         return validationCheckResult;
     }

@@ -23,7 +23,7 @@ references:
             refType: agroecosystemes
             columns: Agroécosystème
       checkDateMiseEnService:
-        description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        description: "validation de date"
         checker:
           name: Date
           params:

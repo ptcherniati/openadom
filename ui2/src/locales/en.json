@@ -98,7 +98,8 @@
         "invalidDate": "For the component : <code>{variableComponentKey}</code> the date <code>{value}</code> doesn't match expected pattern : <code>{pattern}</code>. ",
         "invalidInteger": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> must be an integer.",
         "invalidFloat": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> must be a float.",
-        "checkerExpressionReturnedFalse": "The following checker expression isn't fulfilled : <code>{expression}</code>"
+        "checkerExpressionReturnedFalse": "The following checker expression isn't fulfilled : <code>{expression}</code>",
+        "requiredValue": "For the component : <code>{variableComponentKey}</code> the value can't be null.",
     },
     "referencesManagement": {
         "actions": "Actions",
