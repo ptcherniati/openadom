@@ -67,6 +67,11 @@ a {
   color: $primary;
 }
 
+.pagination-link.is-current {
+  background-color: $dark;
+  border-color: $dark;
+}
+
 .message .media {
   align-items: center;
 }
