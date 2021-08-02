@@ -685,18 +685,48 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    public void addApplicationFORET() throws Exception {
+        authenticationService.addUserRightCreateApplication(userId);
+        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getForetReferentielFiles().entrySet()) {
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdFluxMeteoForetDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+    }
+
+    @Test
     @Ignore("utile comme benchmark, ne vérifie rien")
     public void benchmarkImportData() throws Exception {
         addApplicationAcbb();
         try (InputStream in = fixtures.openSwcDataResourceName(false)) {
             MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
-
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-
             log.debug(response);
         }
     }

@@ -59,13 +59,14 @@ public class RelationalServiceTest {
         fixtures.addMonsoreApplication();
         fixtures.addApplicationPRO();
         fixtures.addApplicationOLAC();
+        fixtures.addApplicationFORET();
         fixtures.addApplicationAcbb();
     }
 
     @Test
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
-        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.PRO, Fixtures.Application.OLAC, Fixtures.Application.ACBB);
+        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.PRO, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.createViews(applicationName, ViewStrategy.VIEW);
@@ -110,6 +111,11 @@ public class RelationalServiceTest {
 //            request.setRequestClient(applicationCreatorRequestClient);
             List<Map<String, Object>> viewContent = relationalService.readView("acbb", "SWC", ViewStrategy.VIEW);
             Assert.assertEquals(1456, viewContent.size());
+        }
+
+        {
+            List<Map<String, Object>> viewContent = relationalService.readView("foret", "flux_meteo_dataResult", ViewStrategy.VIEW);
+            Assert.assertEquals(24, viewContent.size());
         }
 
         for (Fixtures.Application application : applications) {

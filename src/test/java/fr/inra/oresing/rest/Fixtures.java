@@ -41,6 +41,7 @@ public class Fixtures {
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         OLAC("olac", ImmutableSet.of("condition_prelevements")),
+        FORET("foret", ImmutableSet.of("flux_meteo_dataResult")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -506,5 +507,58 @@ public class Fixtures {
 
     public String getZooplactonBiovolumDataResourceName() {
         return "/data/olac/zooplancton_biovolumes.csv";
+    }
+
+    public Map<String, String> getForetReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("types_de_zones_etudes", "/data/foret/contexte_dispositif_types_de_zones_etudes.csv");
+        referentielFiles.put("zones_etudes", "/data/foret/contexte_dispositif_zones_etudes.csv");
+        referentielFiles.put("traitements", "/data/foret/contexte_dispositif_traitements.csv");
+        referentielFiles.put("themes", "/data/foret/contexte_dispositif_themes.csv");
+        referentielFiles.put("data_types", "/data/foret/contexte_dispositif_data_types.csv");
+        referentielFiles.put("theme_types_de_donnees_par_zone_etudes", "/data/foret/contexte_dispositif_theme_types_de_donnees_par_zone_etudes.csv");
+        referentielFiles.put("variables_par_types_de_donnees", "/data/foret/contexte_mesure_variables_par_types_de_donnees.csv");
+        return referentielFiles;
+    }
+
+    public String getForetApplicationConfigurationResourceName() {
+        return "/data/foret/foret.yaml";
+    }
+
+    public Cookie addApplicationFORET() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().isCreated());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getForetReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getdFluxMeteoForetDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
+                    .file(file)
+                    .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        return authCookie;
+    }
+
+    public String getdFluxMeteoForetDataResourceName() {
+        return "/data/foret/flux_meteo_dataResult.csv";
     }
 }
