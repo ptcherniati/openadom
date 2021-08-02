@@ -50,7 +50,7 @@
                   <b-datetimepicker
                       placeholder="Type or select a date..."
                       icon="calendar-today"
-                      :locale="locale"
+                      :locale="localLang"
                       editable>
                   </b-datetimepicker>
                 </b-field>
@@ -68,7 +68,7 @@
         <div class="columns is-9">
           <div v-for="application in visiblePages(applications)" :key="application.name">
             <div class="column">
-              <b-card class="applicationCard card">
+              <div class="applicationCard card">
                 <div class="card-header">
                   <div class="title card-header-title">
                     <p field="name"> {{ application.name }}</p>
@@ -119,7 +119,7 @@
                       {{ $t("applications.dataset") }}</b-button>
                   </div>
                 </div>
-              </b-card>
+              </div>
             </div>
           </div>
         </div>
