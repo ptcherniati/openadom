@@ -34,6 +34,7 @@ const ERRORS = {
   invalidInteger : (params) => i18n.t("errors.invalidInteger", params),
   invalidFloat : (params) => i18n.t("errors.invalidFloat", params),
   checkerExpressionReturnedFalse : (params) => i18n.t("errors.checkerExpressionReturnedFalse", params),
+  invalidReference: (params) => i18n.t("errors.invalidReference", params)
 };
 
 export class ErrorsService {
@@ -58,9 +59,15 @@ export class ErrorsService {
             csvError.validationCheckResult.message
         );
       }
+      const messageParams = csvError.validationCheckResult.messageParams;
+
+      Object.entries(messageParams).forEach(([key, value]) => {
+        messageParams[key] = JSON.stringify(value);
+      });
+
       const params = {
         lineNumber: csvError.lineNumber,
-        ...csvError.validationCheckResult.messageParams,
+        ...messageParams,
       };
       return func(params);
     });
