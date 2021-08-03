@@ -58,7 +58,12 @@
     "creation-date": "Date de création",
     "actions": "Actions",
     "references": "Référentiels",
-    "dataset": "Données"
+    "dataset": "Données",
+    "trier": "Trier",
+    "trierA_z": "A - z",
+    "trierZ_a": "Z - a",
+    "trierRecent": "Plus récent",
+    "trierAncien": "Plus ancien"
   },
   "errors": {
     "emptyFile": "Le fichier est vide",

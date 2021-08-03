@@ -2,16 +2,16 @@
   <PageView>
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
 
-    <div class="columns" style="margin-left: 100px">
+    <div class="columns columnPrincipale">
       <div class="column is-3">
         <section>
           <div class="card is-clickable" v-if="canCreateApplication">
-            <div class="card-header" role="button" @click="createApplication" style="background-color: #00a3a6; opacity: 75%;">
-              <a class="card-header-icon" style="color: white">
+            <div class="card-header createApplication" role="button" @click="createApplication">
+              <a class="card-header-icon createApplication">
                 <b-icon icon="plus">
                 </b-icon>
               </a>
-              <p class="card-header-title" style="color: white">
+              <p class="card-header-title createApplication">
               {{ $t("applications.create") }}
               </p>
             </div>
@@ -19,37 +19,44 @@
           <div class="card">
             <div class="card-header">
               <p class="card-header-title">
-                Trier
+                {{ $t("applications.trier") }}
               </p>
             </div>
             <div class="card-content">
               <div class="content">
-                <b-field>
-                  <b-checkbox>Nom</b-checkbox>
+                <b-field class="columns">
+                  <b-checkbox class="column">{{ $t("applications.trierA_z") }}</b-checkbox>
+                  <b-checkbox class="column">{{ $t("applications.trierZ_a") }}</b-checkbox>
                 </b-field>
-                <b-field>
-                  <b-checkbox>Plus récent</b-checkbox>
+                <b-field class="columns">
+                  <b-checkbox class="column">{{ $t("applications.trierRecent") }}</b-checkbox>
+                  <b-checkbox class="column">{{ $t("applications.trierAncien") }}</b-checkbox>
                 </b-field>
               </div>
             </div>
           </div>
           <div class="card">
-            <div
-                class="card-header"
-                role="button">
+            <div class="card-header">
               <p class="card-header-title">
                 Filtrer
               </p>
             </div>
             <div class="card-content">
               <div class="content">
-                <b-field label="Name">
-                  <b-input value="Kevin Garvey"></b-input>
+                <b-field> {{ $t("applications.name") }}
+                  <b-autocomplete
+                    v-model="name"
+                    :data="applications"
+                    field="name"
+                    :open-on-focus="true"
+                    placeholder="Olac"
+                    @typing="getAsyncData"
+                    @select="option => (selected = option)">
+                  </b-autocomplete>
                 </b-field>
-                <b-field label="Select datetime">
+                <b-field> {{ $t("applications.creation-date") }}
                   <b-datetimepicker
-                      placeholder="Type or select a date..."
-                      icon="calendar-today"
+                      icon="calendar"
                       :locale="localLang"
                       editable>
                   </b-datetimepicker>
@@ -57,8 +64,6 @@
               </div>
             </div>
             <footer class="card-footer">
-              <i class="card-footer-item"></i>
-              <i class="card-footer-item"></i>
               <a class="card-footer-item">Confirmer</a>
             </footer>
           </div>
@@ -131,8 +136,6 @@
           :range-after="2"
           :rounded="true"
           :per-page="perPage"
-          :icon-prev="prevIcon"
-          :icon-next="nextIcon"
         >
         </b-pagination>
       </div>
@@ -158,11 +161,36 @@ export default class ApplicationsView extends Vue {
   isSelectedName = "";
   isCardModalActive = false;
   localLang = localStorage.getItem("lang");
+  // pagination variable
   current = 1;
   perPage = 12;
+  // filtre variable
+  selected = null;
+  isFetching= false;
+  name='';
 
+  // filtre application name fonction
+  getAsyncData(name) {
+    this.isFetching = true;
+    this.applications.get(this.applications.name=name)
+      .then(({ applications }) => {
+        this.applications = [];
+        applications.results.forEach((item) => this.applications.push(item));
+      })
+      .catch((error) => {
+        this.applications = [];
+        throw error;
+      })
+      .finally(() => {
+        this.isFetching = false;
+      });
+  }
+
+  // visibilité des card fonction
   visiblePages() {
-    return this.applications.slice((this.current - 1) * this.perPage, this.current * this.perPage);
+    let numberCardDebut =(this.current - 1) * this.perPage;
+    let numberCardFin =this.current * this.perPage;
+    return this.applications.slice(numberCardDebut,numberCardFin);
   }
 
   created() {
@@ -201,7 +229,11 @@ export default class ApplicationsView extends Vue {
 // card & modal style
 .columns {
   flex-wrap: wrap;
-  margin:0px;
+  margin: 0px;
+  &.columnPrincipale {
+    margin-left: 100px;
+    margin-top: 50px;
+  }
 }
 .column {
   display: grid;
@@ -215,13 +247,17 @@ export default class ApplicationsView extends Vue {
     .btnModal {
       margin: 5px;
       opacity: 50%;
-      color: #00a3a6;
+      color: $primary;
       background-color: transparent;
     }
     .card-footer-item {
       border-right: none;
     }
   }
+}
+.createApplication {
+  background-color: $dark ;
+  color: white;
 }
 .card-header-title{
   &.title {
