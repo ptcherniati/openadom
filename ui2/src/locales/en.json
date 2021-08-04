@@ -5,9 +5,9 @@
         "references-page": "{applicationName} references",
         "references-data": "{refName} data",
         "application-creation": "Application creation",
-        "data-types-page": "{applicationName} data types"
+        "data-types-page": "{applicationName} data types",
         "data-type-authorizations": "{dataType} authorizations",
-    	"data-type-new-authorization": "New authorization for {dataType}"
+        "data-type-new-authorization": "New authorization for {dataType}"
     },
     "login": {
         "signin": "Sign in",
@@ -16,18 +16,18 @@
         "login-placeholder": "Ex: michel",
         "pwd": "Password",
         "pwd-placeholder": "Ex: xxxx",
-        "pwd-forgotten": "Forgotten password ? "
-	    "register": "Register",
-	    "confirm-pwd": "Confirmer le mot de passe"
+        "pwd-forgotten": "Forgotten password ? ",
+        "register": "Register",
+        "confirm-pwd": "Confirmer le mot de passe"
     },
     "validation": {
         "obligatoire": "Mandatory",
         "facultatif": "Optional",
         "invalid-required": "Please fill the field",
         "invalid-application-name": "The name must only includes lowercase letters.",
-        "invalid-application-name-length": "The name's length should be between 4 and 20 characters."
+        "invalid-application-name-length": "The name's length should be between 4 and 20 characters.",
         "invalid-confirmed": "Fields don't match."
-  	},
+    },
     "alert": {
         "cancel": "Cancel",
         "server-error": "A server error occured",
@@ -39,10 +39,10 @@
         "delete": "Delete",
         "reference-csv-upload-error": "An error occured while uploading the csv file",
         "reference-updated": "Reference updated",
-        "data-updated": "Data type updated"
-	    "registered-user": "User registered",
-	    "revoke-authorization": "Authorization revoked",
-	    "create-authorization": "Authorization created"
+        "data-updated": "Data type updated",
+        "registered-user": "User registered",
+        "revoke-authorization": "Authorization revoked",
+        "create-authorization": "Authorization created"
     },
     "message": {
         "app-config-error": "Error in yaml file",
@@ -118,29 +118,29 @@
         "data": "Data"
     },
     "dataTypesManagement": {
-        "data-types": "Data types"
-  		  "consult-authorization": "Consult authorizations"
+        "data-types": "Data types",
+        "consult-authorization": "Consult authorizations"
     },
-  "dataTypeAuthorizations": {
-	    "add-auhtorization": "Add an authorization",
-	    "sub-menu-data-type-authorizations": "{dataType} authorizations",
-	    "sub-menu-new-authorization": "new authorization",
-	    "users": "Users",
-	    "users-placeholder": "Chose users to authorize",
-	    "data-groups": "Data groups",
-	    "data-groups-placeholder": "Chose data groups to authorize",
-	    "authorization-scopes": "Authorization scopes",
-	    "period": "Authorization period",
-	    "from-date": "From date : ",
-	    "to-date": "To date : ",
-	    "from-date-to-date": "From date to date : ",
-	    "always": "Always",
-	    "to": "to",
-	    "create": "Create authorization",
-	    "user": "User",
-	    "data-group": "Data group",
-	    "data-type": "Data type",
-	    "actions": "Actions",
-	    "revoke": "Revoke"
-  }
+    "dataTypeAuthorizations": {
+        "add-auhtorization": "Add an authorization",
+        "sub-menu-data-type-authorizations": "{dataType} authorizations",
+        "sub-menu-new-authorization": "new authorization",
+        "users": "Users",
+        "users-placeholder": "Chose users to authorize",
+        "data-groups": "Data groups",
+        "data-groups-placeholder": "Chose data groups to authorize",
+        "authorization-scopes": "Authorization scopes",
+        "period": "Authorization period",
+        "from-date": "From date : ",
+        "to-date": "To date : ",
+        "from-date-to-date": "From date to date : ",
+        "always": "Always",
+        "to": "to",
+        "create": "Create authorization",
+        "user": "User",
+        "data-group": "Data group",
+        "data-type": "Data type",
+        "actions": "Actions",
+        "revoke": "Revoke"
+    }
 }
