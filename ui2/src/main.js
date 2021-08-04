@@ -82,7 +82,7 @@ export const i18n = new VueI18n({
 import "vee-validate";
 import { required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
-import {faCalendar} from "@fortawesome/free-solid-svg-icons/faCalendar";
+import { faCalendar } from "@fortawesome/free-solid-svg-icons/faCalendar";
 // Ici on surcharge les messages d'erreur de vee-validate.
 // Pour plus de règles :  https://logaretm.github.io/vee-validate/guide/rules.html
 

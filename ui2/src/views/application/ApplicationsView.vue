@@ -5,14 +5,18 @@
     <div class="columns columnPrincipale">
       <div class="column is-3">
         <section>
-          <div class="card is-clickable" v-if="canCreateApplication">
-            <div class="card-header createApplication" role="button" @click="createApplication">
+          <div v-if="canCreateApplication" class="card is-clickable">
+            <div
+                class="card-header createApplication"
+                role="button"
+                style="margin-bottom: 50px"
+                @click="createApplication"
+            >
               <a class="card-header-icon createApplication">
-                <b-icon icon="plus">
-                </b-icon>
+                <b-icon icon="plus"></b-icon>
               </a>
               <p class="card-header-title createApplication">
-              {{ $t("applications.create") }}
+                {{ $t("applications.create") }}
               </p>
             </div>
           </div>
@@ -37,29 +41,48 @@
           </div>
           <div class="card">
             <div class="card-header">
-              <p class="card-header-title">
-                Filtrer
-              </p>
+              <p class="card-header-title">Filtrer</p>
             </div>
             <div class="card-content">
               <div class="content">
-                <b-field> {{ $t("applications.name") }}
-                  <b-autocomplete
-                    v-model="name"
-                    :data="applications"
-                    field="name"
-                    :open-on-focus="true"
-                    placeholder="Olac"
-                    @typing="getAsyncData"
-                    @select="option => (selected = option)">
-                  </b-autocomplete>
+                <b-field>
+                  {{ $t("applications.name") }}
+                  <b-taginput
+                      ref="taginput"
+                      v-model="applications[name]"
+                      :data="applications"
+                      :open-on-focus="true"
+                      :type="'is-primary'"
+                      autocomplete
+                      field="name"
+                      placeholder="olac"
+                      rounded
+                      style="width: 100%"
+                  >
+                    <template slot-scope="props">
+                      {{ props.option.name }}
+                    </template>
+                  </b-taginput>
                 </b-field>
-                <b-field> {{ $t("applications.creation-date") }}
-                  <b-datetimepicker
-                      icon="calendar"
-                      :locale="localLang"
-                      editable>
-                  </b-datetimepicker>
+
+                <!--
+                <p v-if="selected != null" class="content"><b>Selected:</b> {{ selected.name }}</p>
+                <b-field>
+                  {{ $t("applications.name") }}
+                  <b-autocomplete
+                      v-model="name"
+                      :data="applications"
+                      field="name"
+                      placeholder="Olac"
+                      @select="(option) => (selected = option)"
+                      @typing="getFilterByName"
+                  >
+                  </b-autocomplete>
+                </b-field>-->
+                <b-field>
+                  {{ $t("applications.creation-date") }}
+                  <b-datepicker id="dateFilter" :locale="localLang" editable icon="calendar">
+                  </b-datepicker>
                 </b-field>
               </div>
             </div>
@@ -71,39 +94,48 @@
       </div>
       <div class="column">
         <div class="columns is-9">
-          <div v-for="application in visiblePages(applications)" :key="application.name">
+          <div v-for="application in visiblePages(applications)" v-bind:key="application.name">
             <div class="column">
               <div class="applicationCard card">
                 <div class="card-header">
                   <div class="title card-header-title">
-                    <p field="name"> {{ application.name }}</p>
+                    <p field="name">{{ application.name }}</p>
                   </div>
-                  <b-button class="btnModal" icon-left="external-link-square-alt"
-                            type="is-primary"
-                            size="is-medium"
-                            @click="showModal(application.name)"/>
-                  <b-modal v-model="isCardModalActive" v-show="isSelectedName == application.name" :id="application.name">
+                  <b-button
+                      class="btnModal"
+                      icon-left="external-link-square-alt"
+                      size="is-medium"
+                      type="is-primary"
+                      @click="showModal(application.name)"
+                  />
+                  <b-modal
+                      v-show="isSelectedName == application.name"
+                      :id="application.name"
+                      v-model="isCardModalActive"
+                  >
                     <div class="card">
                       <div class="card-header">
                         <div class="title card-header-title">
-                          <p field="name"> {{ application.name }}</p>
+                          <p field="name">{{ application.name }}</p>
                         </div>
                       </div>
                       <div class="card-content">
                         <div class="content">
-                          <p>{{ application.referenceType }}, {{ application.dataType}}</p>
+                          <p>{{ application.referenceType }}, {{ application.dataType }}</p>
                         </div>
                       </div>
                       <div class="card-footer">
                         <div class="card-footer-item">
-                          <b-button icon-left="drafting-compass" @click="displayReferencesManagement(application)">{{
-                              $t("applications.references")
-                            }}</b-button>
+                          <b-button
+                              icon-left="drafting-compass"
+                              @click="displayReferencesManagement(application)"
+                          >{{ $t("applications.references") }}
+                          </b-button>
                         </div>
                         <div class="card-footer-item">
-                          <b-button icon-left="poll" @click="displayDataSetManagement(application)">{{
-                              $t("applications.dataset")
-                            }}</b-button>
+                          <b-button icon-left="poll" @click="displayDataSetManagement(application)"
+                          >{{ $t("applications.dataset") }}
+                          </b-button>
                         </div>
                       </div>
                     </div>
@@ -111,31 +143,38 @@
                 </div>
                 <div class="card-content">
                   <div class="content">
-                    <p field="creationDate">{{ (new Date(application.creationDate)).toLocaleString(localLang) }}</p>
+                    <p field="creationDate">
+                      {{ new Date(application.creationDate).toLocaleString(localLang) }}
+                    </p>
                   </div>
                 </div>
                 <div class="card-footer">
                   <div class="card-footer-item">
-                    <b-button icon-left="drafting-compass" @click="displayReferencesManagement(application)">
-                      {{ $t("applications.references") }}</b-button>
+                    <b-button
+                        icon-left="drafting-compass"
+                        @click="displayReferencesManagement(application)"
+                    >
+                      {{ $t("applications.references") }}
+                    </b-button>
                   </div>
                   <div class="card-footer-item">
                     <b-button icon-left="poll" @click="displayDataSetManagement(application)">
-                      {{ $t("applications.dataset") }}</b-button>
+                      {{ $t("applications.dataset") }}
+                    </b-button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <hr />
+        <hr/>
         <b-pagination
-          :total="applications.length"
-          :current.sync="current"
-          :range-before="2"
-          :range-after="2"
-          :rounded="true"
-          :per-page="perPage"
+            :current.sync="current"
+            :per-page="perPage"
+            :range-after="2"
+            :range-before="2"
+            :rounded="true"
+            :total="applications.length"
         >
         </b-pagination>
       </div>
@@ -144,20 +183,20 @@
 </template>
 
 <script>
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { Component, Vue } from "vue-property-decorator";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {Component, Vue} from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import { LoginService } from "@/services/rest/LoginService";
+import {LoginService} from "@/services/rest/LoginService";
 
 @Component({
-  components: { PageView },
+  components: {PageView},
 })
 export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
   canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser()
-    .authorizedForApplicationCreation;
+      .authorizedForApplicationCreation;
   isSelectedName = "";
   isCardModalActive = false;
   localLang = localStorage.getItem("lang");
@@ -166,31 +205,21 @@ export default class ApplicationsView extends Vue {
   perPage = 12;
   // filtre variable
   selected = null;
-  isFetching= false;
-  name='';
+  name = "";
+  reste=[];
 
-  // filtre application name fonction
-  getAsyncData(name) {
-    this.isFetching = true;
-    this.applications.get(this.applications.name=name)
-      .then(({ applications }) => {
-        this.applications = [];
-        applications.results.forEach((item) => this.applications.push(item));
-      })
-      .catch((error) => {
-        this.applications = [];
-        throw error;
-      })
-      .finally(() => {
-        this.isFetching = false;
-      });
+  // liste application name fonction
+  getFilterByName() {
+    return this.applications.name.filter((option) => {
+      return option.toString().toLowerCase().indexOf(this.name.toLowerCase()) >= 0;
+    });
   }
 
   // visibilité des card fonction
   visiblePages() {
-    let numberCardDebut =(this.current - 1) * this.perPage;
-    let numberCardFin =this.current * this.perPage;
-    return this.applications.slice(numberCardDebut,numberCardFin);
+    let numberCardDebut = (this.current - 1) * this.perPage;
+    let numberCardFin = this.current * this.perPage;
+    return this.applications.slice(numberCardDebut, numberCardFin);
   }
 
   created() {
@@ -218,8 +247,9 @@ export default class ApplicationsView extends Vue {
     }
     this.$router.push("/applications/" + application.name + "/dataTypes");
   }
-  showModal(name){
-    this.isSelectedName= name;
+
+  showModal(name) {
+    this.isSelectedName = name;
     this.isCardModalActive = true;
   }
 }
@@ -230,36 +260,44 @@ export default class ApplicationsView extends Vue {
 .columns {
   flex-wrap: wrap;
   margin: 0px;
+
   &.columnPrincipale {
     margin-left: 100px;
     margin-top: 50px;
   }
 }
+
 .column {
   display: grid;
+
   .card {
     &.applicationCard {
       width: 300px;
+
       .card-footer {
         border: none;
       }
     }
+
     .btnModal {
       margin: 5px;
       opacity: 50%;
       color: $primary;
       background-color: transparent;
     }
+
     .card-footer-item {
       border-right: none;
     }
   }
 }
+
 .createApplication {
-  background-color: $dark ;
+  background-color: $dark;
   color: white;
 }
-.card-header-title{
+
+.card-header-title {
   &.title {
     margin-top: 0;
     text-transform: uppercase;
