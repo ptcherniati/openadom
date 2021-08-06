@@ -60,6 +60,23 @@ references:
       date de création:
       commentaire_fr:
       commentaire_en:
+  blocs:
+    validations:
+      creationDate:
+        description: "date de création"
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: date creation
+    keyColumns: [site,nom_du_bloc,répétition]
+    columns:
+      site:
+      nom_du_bloc:
+      répétition:
+      date creation:
+      decription_fr:
+      description_en:
   unites:
     keyColumns: [nom_key]
     columns:
