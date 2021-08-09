@@ -7,10 +7,10 @@
         <section>
           <div v-if="canCreateApplication" class="card is-clickable">
             <div
-                class="card-header createApplication"
-                role="button"
-                style="margin-bottom: 50px"
-                @click="createApplication"
+              class="card-header createApplication"
+              role="button"
+              style="margin-bottom: 50px"
+              @click="createApplication"
             >
               <a class="card-header-icon createApplication">
                 <b-icon icon="plus"></b-icon>
@@ -45,11 +45,12 @@
             </div>
             <div class="card-content">
               <div class="content">
+                <!--
                 <b-field>
                   {{ $t("applications.name") }}
                   <b-taginput
                       ref="taginput"
-                      v-model="applications[name]"
+                      v-model="applications.name"
                       :data="applications"
                       :open-on-focus="true"
                       :type="'is-primary'"
@@ -63,22 +64,21 @@
                       {{ props.option.name }}
                     </template>
                   </b-taginput>
-                </b-field>
+                </b-field>-->
 
-                <!--
                 <p v-if="selected != null" class="content"><b>Selected:</b> {{ selected.name }}</p>
                 <b-field>
                   {{ $t("applications.name") }}
                   <b-autocomplete
-                      v-model="name"
-                      :data="applications"
-                      field="name"
-                      placeholder="Olac"
-                      @select="(option) => (selected = option)"
-                      @typing="getFilterByName"
+                    v-model="name"
+                    :data="getFilterByName"
+                    field="name"
+                    :open-on-focus="true"
+                    placeholder="olac"
+                    @select="(option) => (selected = option)"
                   >
                   </b-autocomplete>
-                </b-field>-->
+                </b-field>
                 <b-field>
                   {{ $t("applications.creation-date") }}
                   <b-datepicker id="dateFilter" :locale="localLang" editable icon="calendar">
@@ -102,16 +102,16 @@
                     <p field="name">{{ application.name }}</p>
                   </div>
                   <b-button
-                      class="btnModal"
-                      icon-left="external-link-square-alt"
-                      size="is-medium"
-                      type="is-primary"
-                      @click="showModal(application.name)"
+                    class="btnModal"
+                    icon-left="external-link-square-alt"
+                    size="is-medium"
+                    type="is-primary"
+                    @click="showModal(application.name)"
                   />
                   <b-modal
-                      v-show="isSelectedName == application.name"
-                      :id="application.name"
-                      v-model="isCardModalActive"
+                    v-show="isSelectedName == application.name"
+                    :id="application.name"
+                    v-model="isCardModalActive"
                   >
                     <div class="card">
                       <div class="card-header">
@@ -127,14 +127,14 @@
                       <div class="card-footer">
                         <div class="card-footer-item">
                           <b-button
-                              icon-left="drafting-compass"
-                              @click="displayReferencesManagement(application)"
-                          >{{ $t("applications.references") }}
+                            icon-left="drafting-compass"
+                            @click="displayReferencesManagement(application)"
+                            >{{ $t("applications.references") }}
                           </b-button>
                         </div>
                         <div class="card-footer-item">
                           <b-button icon-left="poll" @click="displayDataSetManagement(application)"
-                          >{{ $t("applications.dataset") }}
+                            >{{ $t("applications.dataset") }}
                           </b-button>
                         </div>
                       </div>
@@ -151,8 +151,8 @@
                 <div class="card-footer">
                   <div class="card-footer-item">
                     <b-button
-                        icon-left="drafting-compass"
-                        @click="displayReferencesManagement(application)"
+                      icon-left="drafting-compass"
+                      @click="displayReferencesManagement(application)"
                     >
                       {{ $t("applications.references") }}
                     </b-button>
@@ -167,14 +167,14 @@
             </div>
           </div>
         </div>
-        <hr/>
+        <hr />
         <b-pagination
-            :current.sync="current"
-            :per-page="perPage"
-            :range-after="2"
-            :range-before="2"
-            :rounded="true"
-            :total="applications.length"
+          :current.sync="current"
+          :per-page="perPage"
+          :range-after="2"
+          :range-before="2"
+          :rounded="true"
+          :total="applications.length"
         >
         </b-pagination>
       </div>
@@ -183,20 +183,20 @@
 </template>
 
 <script>
-import {ApplicationService} from "@/services/rest/ApplicationService";
-import {Component, Vue} from "vue-property-decorator";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { Component, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import {LoginService} from "@/services/rest/LoginService";
+import { LoginService } from "@/services/rest/LoginService";
 
 @Component({
-  components: {PageView},
+  components: { PageView },
 })
 export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
   canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser()
-      .authorizedForApplicationCreation;
+    .authorizedForApplicationCreation;
   isSelectedName = "";
   isCardModalActive = false;
   localLang = localStorage.getItem("lang");
@@ -206,12 +206,10 @@ export default class ApplicationsView extends Vue {
   // filtre variable
   selected = null;
   name = "";
-  reste=[];
 
-  // liste application name fonction
-  getFilterByName() {
-    return this.applications.name.filter((option) => {
-      return option.toString().toLowerCase().indexOf(this.name.toLowerCase()) >= 0;
+  get getFilterByName() {
+    return this.applications.filter((option) => {
+      return option.name.toString().toLowerCase().indexOf(this.name.toLowerCase()) >= 0;
     });
   }
 
