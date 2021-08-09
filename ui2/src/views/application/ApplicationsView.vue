@@ -29,8 +29,8 @@
             <div class="card-content">
               <div class="content">
                 <b-field class="columns">
-                  <b-checkbox class="column">{{ $t("applications.trierA_z") }}</b-checkbox>
-                  <b-checkbox class="column">{{ $t("applications.trierZ_a") }}</b-checkbox>
+                  <b-checkbox id="A_z" class="column">{{ $t("applications.trierA_z") }}</b-checkbox>
+                  <b-checkbox id="Z_a" class="column">{{ $t("applications.trierZ_a") }}</b-checkbox>
                 </b-field>
                 <b-field class="columns">
                   <b-checkbox class="column">{{ $t("applications.trierRecent") }}</b-checkbox>
@@ -41,36 +41,18 @@
           </div>
           <div class="card">
             <div class="card-header">
-              <p class="card-header-title">Filtrer</p>
+              <p class="card-header-title">{{ $t("applications.filter") }}</p>
             </div>
             <div class="card-content">
               <div class="content">
-                <!--
-                <b-field>
-                  {{ $t("applications.name") }}
-                  <b-taginput
-                      ref="taginput"
-                      v-model="applications.name"
-                      :data="applications"
-                      :open-on-focus="true"
-                      :type="'is-primary'"
-                      autocomplete
-                      field="name"
-                      placeholder="olac"
-                      rounded
-                      style="width: 100%"
-                  >
-                    <template slot-scope="props">
-                      {{ props.option.name }}
-                    </template>
-                  </b-taginput>
-                </b-field>-->
-
-                <p v-if="selected != null" class="content"><b>Selected:</b> {{ selected.name }}</p>
+                <p v-if="selected != null" class="content">
+                  <b>{{ $t("applications.selected") }}</b>
+                  {{ selected.name }}
+                </p>
                 <b-field>
                   {{ $t("applications.name") }}
                   <b-autocomplete
-                    v-model="name"
+                    v-model="filterName"
                     :data="getFilterByName"
                     field="name"
                     :open-on-focus="true"
@@ -81,7 +63,7 @@
                 </b-field>
                 <b-field>
                   {{ $t("applications.creation-date") }}
-                  <b-datepicker id="dateFilter" :locale="localLang" editable icon="calendar">
+                  <b-datepicker v-model="filterDate" :locale="localLang" editable icon="calendar">
                   </b-datepicker>
                 </b-field>
               </div>
@@ -205,12 +187,28 @@ export default class ApplicationsView extends Vue {
   perPage = 12;
   // filtre variable
   selected = null;
-  name = "";
+  filterName = "";
+  filterDate = "";
 
+  // filtre par nom application
   get getFilterByName() {
     return this.applications.filter((option) => {
-      return option.name.toString().toLowerCase().indexOf(this.name.toLowerCase()) >= 0;
+      return option.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0;
     });
+  }
+  compare(a, b) {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return 0;
+  }
+  orderByNameAz() {
+    return this.applications.sort(this.compare);
+  }
+  orderByNameZa() {
+    return this.applications.sort(this.compare).reverse(this.compare);
+  }
+  orderByDateRecent() {
+    return this.applications.reverse(this.compare);
   }
 
   // visibilité des card fonction
@@ -220,12 +218,13 @@ export default class ApplicationsView extends Vue {
     return this.applications.slice(numberCardDebut, numberCardFin);
   }
 
-  created() {
-    this.init();
+  async created() {
+    await this.init();
   }
 
   async init() {
     this.applications = await this.applicationService.getApplications();
+    return this.applications.sort(this.compare);
   }
 
   createApplication() {
