@@ -281,6 +281,7 @@ public class OreSiService {
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
         String parentHierarchicalKeyColumn;
         BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
+        Map<String, String> buildedHierarchicalKeys = new HashMap<>();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -354,6 +355,7 @@ public class OreSiService {
                         }
                         checkNaturalKeySyntax(naturalKey);
                         String hierarchicalKey = getHierarchicalKeyFn.apply(naturalKey, refValues);
+                        buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
