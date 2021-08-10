@@ -29,12 +29,21 @@
             <div class="card-content">
               <div class="content">
                 <b-field class="columns">
-                  <b-checkbox id="A_z" class="column">{{ $t("applications.trierA_z") }}</b-checkbox>
-                  <b-checkbox id="Z_a" class="column">{{ $t("applications.trierZ_a") }}</b-checkbox>
-                </b-field>
-                <b-field class="columns">
-                  <b-checkbox class="column">{{ $t("applications.trierRecent") }}</b-checkbox>
-                  <b-checkbox class="column">{{ $t("applications.trierAncien") }}</b-checkbox>
+                  <b-checkbox
+                    v-model="checkboxDate"
+                    field="name"
+                    class="column"
+                    @input="recalculate"
+                  >{{ $t("applications.trierRecent") }}</b-checkbox>
+                  <b-checkbox
+                    v-model="checkboxName"
+                    false-value="Z_a"
+                    true-value="A_z"
+                    field="name"
+                    class="column"
+                    @input="recalculate"
+                    >{{ checkboxName }}</b-checkbox
+                  >
                 </b-field>
               </div>
             </div>
@@ -53,32 +62,39 @@
                   {{ $t("applications.name") }}
                   <b-autocomplete
                     v-model="filterName"
-                    :data="getFilterByName"
+                    :data="selectedApplications"
                     field="name"
-                    :open-on-focus="true"
                     placeholder="olac"
-                    @select="(option) => (selected = option)"
+                    @click.native="recalculate"
+                    @keyup.native="recalculate"
                   >
                   </b-autocomplete>
                 </b-field>
+                <hr />
                 <b-field>
                   {{ $t("applications.creation-date") }}
-                  <b-datepicker v-model="filterDate" :locale="localLang" editable icon="calendar">
-                  </b-datepicker>
+                  <b-datepicker v-model="filterDateDebut" :locale="localLang" editable icon="calendar"> </b-datepicker>
+                </b-field>
+                <b-field>
+                  {{ $t("applications.creation-date") }}
+                  <b-datepicker v-model="filterDateFin" :locale="localLang" editable icon="calendar"> </b-datepicker>
                 </b-field>
               </div>
             </div>
             <footer class="card-footer">
-              <a class="card-footer-item">Confirmer</a>
+              <a class="card-footer-item">Recherche par date</a>
             </footer>
           </div>
         </section>
       </div>
       <div class="column">
         <div class="columns is-9">
-          <div v-for="application in visiblePages(applications)" v-bind:key="application.name">
+          <div v-for="(application, index) in selectedApplications" v-bind:key="application.name">
             <div class="column">
-              <div class="applicationCard card">
+              <div
+                v-if="index >= (current - 1) * perPage && index < current * perPage"
+                class="applicationCard card"
+              >
                 <div class="card-header">
                   <div class="title card-header-title">
                     <p field="name">{{ application.name }}</p>
@@ -177,45 +193,37 @@ export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
-  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser()
-    .authorizedForApplicationCreation;
+  canCreateApplication =
+    LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
+  // show modal and cards
   isSelectedName = "";
   isCardModalActive = false;
   localLang = localStorage.getItem("lang");
   // pagination variable
   current = 1;
   perPage = 12;
+  selectedApplications = [];
   // filtre variable
-  selected = null;
   filterName = "";
-  filterDate = "";
+  filterDateDebut = "";
+  filterDateFin = "";
+  checkboxName = "A_z";
+  //checkboxDate = false;
 
-  // filtre par nom application
-  get getFilterByName() {
-    return this.applications.filter((option) => {
-      return option.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0;
-    });
+  copyOfApplications(application) {
+    return [...application];
   }
-  compare(a, b) {
-    if (a.name < b.name) return -1;
-    if (a.name > b.name) return 1;
-    return 0;
-  }
-  orderByNameAz() {
-    return this.applications.sort(this.compare);
-  }
-  orderByNameZa() {
-    return this.applications.sort(this.compare).reverse(this.compare);
-  }
-  orderByDateRecent() {
-    return this.applications.reverse(this.compare);
-  }
+  recalculate() {
+    this.selectedApplications = this.copyOfApplications(this.applications);
+    this.selectedApplications = this.selectedApplications.filter(
+      (a) => a.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
+    );
+    if (this.filterDateDebut && this.filterDateFin)
+      this.selectedApplications = this.filterDateDebut <= this.selectedApplications.creationDate && this.selectedApplications.creationDate <= this.filterDateFin;
 
-  // visibilité des card fonction
-  visiblePages() {
-    let numberCardDebut = (this.current - 1) * this.perPage;
-    let numberCardFin = this.current * this.perPage;
-    return this.applications.slice(numberCardDebut, numberCardFin);
+    //if (this.checkboxDate != false) this.selectedApplications.sort((a, b) => b.date - a.date);
+
+    if (this.checkboxName != "A_z") this.selectedApplications.reverse();
   }
 
   async created() {
@@ -224,7 +232,8 @@ export default class ApplicationsView extends Vue {
 
   async init() {
     this.applications = await this.applicationService.getApplications();
-    return this.applications.sort(this.compare);
+    this.applications = this.applications.sort((a, b) => a.name.localeCompare(b.name));
+    this.selectedApplications = this.applications;
   }
 
   createApplication() {
