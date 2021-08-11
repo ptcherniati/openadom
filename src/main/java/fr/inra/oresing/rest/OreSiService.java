@@ -219,7 +219,7 @@ public class OreSiService {
                 }
             }
 
-            validateStoredData(app, dataType);
+            validateStoredData(app, dataType, null, null);
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
@@ -231,7 +231,7 @@ public class OreSiService {
         return uuid;
     }
 
-    private void validateStoredData(Application app, String dataType) {
+    private void validateStoredData(Application app, String dataType, Long offset, Long limit) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             lineCheckers.forEach(lineChecker -> {
@@ -239,7 +239,7 @@ public class OreSiService {
                 Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
             });
         };
-        repo.getRepository(app).data().findAllByDataType(dataType).stream()
+        repo.getRepository(app).data().findAllByDataType(dataType,offset, limit).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
@@ -854,10 +854,10 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, Long offset, Long limit) {
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         String dataType = downloadDatasetQuery.getDataType();
-        List<DataRow> list = findData(downloadDatasetQuery);
+        List<DataRow> list = findData(downloadDatasetQuery, offset, limit);
         Configuration.FormatDescription format = getApplication(applicationNameOrId)
                 .getConfiguration()
                 .getDataTypes()
@@ -916,11 +916,11 @@ public class OreSiService {
                 .build();
     }
 
-    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery) {
+    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery, Long offset, Long limit) {
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
+        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType(), offset, limit);
         return data;
     }
 

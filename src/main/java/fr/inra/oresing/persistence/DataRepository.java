@@ -38,11 +38,24 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return Data.class;
     }
 
-    public List<DataRow> findAllByDataType(String dataType) {
+    public List<DataRow> findAllByDataType(String dataType, Long offset, Long limit) {
         String toMergeDataGroupsQuery = getSqlToMergeData(dataType);
         String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
-                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  jsonb_build_object('rowId', rowId, 'values', dataValues, 'refsLinkedTo', refsLinkedTo) AS json"
-                + " FROM my_data";
+                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
+                "jsonb_build_object(" +
+                "'rowNumber', row_number() over (), " +
+                "'totalRows', count(*) over (), " +
+                "'rowId', rowId, " +
+                "'values', dataValues, " +
+                "'refsLinkedTo', refsLinkedTo" +
+                ") AS json"
+                + " FROM my_data ";
+        if (offset != null) {
+            query = String.format("%s \nOFFSET %d ROWS", query, offset);
+        }
+        if (limit != null) {
+            query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, limit);
+        }
         List result = getNamedParameterJdbcTemplate().query(query, Collections.emptyMap(), getJsonRowMapper());
         return (List<DataRow>) result;
     }

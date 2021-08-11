@@ -231,16 +231,19 @@ public class OreSiResources {
     public ResponseEntity<GetDataResult> getAllDataJson(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
+            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds,
+            @RequestParam(value = "offset", required = false) Long offset,
+            @RequestParam(value = "limit", required = false) Long limit) {
         DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        List<DataRow> list = service.findData(downloadDatasetQuery);
+        List<DataRow> list = service.findData(downloadDatasetQuery , offset, limit);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
                 .map(DataRow::getValues)
                 .map(Map::keySet)
                 .flatMap(Set::stream)
                 .collect(ImmutableSet.toImmutableSet());
-        return ResponseEntity.ok(new GetDataResult(variables, list));
+        Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows));
     }
 
     /** export as CSV */
@@ -248,8 +251,10 @@ public class OreSiResources {
     public ResponseEntity<String> getAllDataCsvForce(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
-        return getAllDataCsv(nameOrId, dataType, variableComponentIds);
+            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds,
+            @RequestParam(value = "offset", required = false) Long offset,
+            @RequestParam(value = "limit", required = false) Long limit) {
+        return getAllDataCsv(nameOrId, dataType, variableComponentIds, offset, limit);
     }
 
     /** export as CSV */
@@ -257,9 +262,11 @@ public class OreSiResources {
     public ResponseEntity<String> getAllDataCsv(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
+            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds,
+            @RequestParam(value = "offset", required = false) Long offset,
+            @RequestParam(value = "limit", required = false) Long limit) {
         DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        String result = service.getDataCsv(downloadDatasetQuery);
+        String result = service.getDataCsv(downloadDatasetQuery, offset, limit);
         return ResponseEntity.ok(result);
     }
 

@@ -85,7 +85,7 @@ public class GroovyLineChecker implements LineChecker {
                 .ifPresent(datas -> {
                     Arrays.stream(datas.split(","))
                             .forEach(data -> {
-                                List<DataRow> allByDataType = repository.data().findAllByDataType(data);
+                                List<DataRow> allByDataType = repository.data().findAllByDataType(data, null, null);
                                 datatypes.put(data, allByDataType);
                                 allByDataType.stream()
                                         .map(datatValues -> datatValues.getValues())

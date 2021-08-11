@@ -10,4 +10,5 @@ import java.util.Set;
 public class GetDataResult {
     Set<String> variables;
     List<DataRow> rows;
+    Long totalRows;
 }

@@ -5,7 +5,7 @@
     <h1 class="title main-title">{{ dataTypeId }}</h1>
 
     <div class="b-table">
-      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 700px">
+      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 750px">
         <table class="table is-striped">
           <thead>
             <tr class="DataSetTableView-variable-row">
@@ -35,6 +35,21 @@
           </tbody>
         </table>
       </div>
+      <b-pagination
+        :total="totalRows"
+        v-model="currentPage"
+        :per-page="limit"
+        size="is-large"
+        order="is-centered"
+        range-before="3"
+        range-after="3"
+        aria-next-label="Next page"
+        aria-previous-label="Previous page"
+        aria-page-label="Page"
+        aria-current-label="Current page"
+        @change="changePage"
+      >
+      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -65,6 +80,10 @@ export default class DataTypeTableView extends Vue {
   variables = [];
   variableComponents = [];
   mapVariableIndexByColumnIndex = new Map();
+  offset = 0;
+  limit = 15;
+  totalRows = -1;
+  currentPage = 1;
 
   async created() {
     await this.init();
@@ -85,8 +104,17 @@ export default class DataTypeTableView extends Vue {
 
   async init() {
     this.application = await this.applicationService.getApplication(this.applicationName);
-    const dataTypes = await this.dataService.getDataType(this.applicationName, this.dataTypeId);
+    await this.initDatatype();
+  }
 
+  async initDatatype(){
+    const dataTypes = await this.dataService.getDataType(
+      this.applicationName,
+      this.dataTypeId,
+      this.offset,
+      this.limit
+    );
+    this.totalRows = dataTypes.totalRows;
     this.rows = dataTypes.rows.map((r) => {
       return { ...r.values };
     });
@@ -112,7 +140,10 @@ export default class DataTypeTableView extends Vue {
       });
     });
   }
-
+  async changePage(value) {
+    this.offset = (value - 1) * this.limit;
+    await this.initDatatype();
+  }
   getVariableIndex(columnIndex) {
     let variableIndex = 0;
     for (const [key, value] of this.mapVariableIndexByColumnIndex) {
