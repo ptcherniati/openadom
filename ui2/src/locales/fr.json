@@ -5,7 +5,9 @@
         "references-page": "Référentiels de {applicationName}",
         "references-data": "Données de {refName}",
         "application-creation": "Créer une application",
-        "data-types-page": "Type de données de {applicationName}"
+        "data-types-page": "Type de données de {applicationName}",
+        "data-type-authorizations": "Autorisations de {dataType}",
+        "data-type-new-authorization": "Nouvelle autorisation pour {dataType}"
     },
     "login": {
         "signin": "Se connecter",
@@ -14,14 +16,17 @@
         "login-placeholder": "Ex: michel",
         "pwd": "Mot de passe",
         "pwd-placeholder": "Ex: xxxx",
-        "pwd-forgotten": "Mot de passe oublié ?"
+        "pwd-forgotten": "Mot de passe oublié ?",
+        "register": "Créer un compte",
+        "confirm-pwd": "Confirmer le mot de passe"
     },
     "validation": {
         "obligatoire": "Obligatoire",
         "facultatif": "Facultatif",
         "invalid-required": "Merci de remplir le champ",
         "invalid-application-name": "Le nom ne doit comporter que des lettresminuscules .",
-        "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères."
+        "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères.",
+        "invalid-confirmed": "Les deux champs ne correspondent pas."
     },
     "alert": {
         "cancel": "Annuler",
@@ -34,7 +39,10 @@
         "delete": "Supprimer",
         "reference-csv-upload-error": "Une erreur s'est produite au téléversement du fichier csv",
         "reference-updated": "Référentiel mis à jour",
-        "data-updated": "Type de donnée mis à jour"
+        "data-updated": "Type de donnée mis à jour",
+        "registered-user": "Compte utilisateur créé",
+        "revoke-authorization": "Autorisation révoquée",
+        "create-authorization": "Autorisation créée"
     },
     "message": {
         "app-config-error": "Erreur dans le fichier yaml",
@@ -111,6 +119,29 @@
         "data": "Données"
     },
     "dataTypesManagement": {
-        "data-types": "Type de données"
+        "data-types": "Type de données",
+        "consult-authorization": "Consulter les autorisations"
+    },
+    "dataTypeAuthorizations": {
+        "add-auhtorization": "Ajouter une autorisation",
+        "sub-menu-data-type-authorizations": "autorisations de {dataType}",
+        "sub-menu-new-authorization": "nouvelle autorisation",
+        "users": "Utilisateurs",
+        "users-placeholder": "Choisir les utilisateurs à autoriser",
+        "data-groups": "Groupes de données",
+        "data-groups-placeholder": "Choisir les données à autoriser",
+        "authorization-scopes": "Périmètres d'autorisation",
+        "period": "Période d'autorisation",
+        "from-date": "À partir du",
+        "to-date": "Jusqu'au",
+        "from-date-to-date": "De date à date",
+        "always": "Toujours",
+        "to": "à",
+        "create": "Créer l'autorisation",
+        "user": "Utilisateur",
+        "data-group": "Groupe de données",
+        "data-type": "Type de donnée",
+        "actions": "Actions",
+        "revoke": "Révoquer"
     }
 }

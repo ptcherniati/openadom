@@ -28,6 +28,14 @@ import {
   faVial,
   faCaretRight,
   faArrowLeft,
+  faSignInAlt,
+  faUserPlus,
+  faUserAstronaut,
+  faKey,
+  faChevronUp,
+  faChevronDown,
+  faCalendarDay,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -53,7 +61,15 @@ library.add(
   faDownload,
   faVial,
   faCaretRight,
-  faArrowLeft
+  faArrowLeft,
+  faSignInAlt,
+  faUserPlus,
+  faUserAstronaut,
+  faKey,
+  faChevronUp,
+  faChevronDown,
+  faCalendarDay,
+  faPaperPlane
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
@@ -77,7 +93,7 @@ export const i18n = new VueI18n({
 
 // Validation
 import "vee-validate";
-import { required } from "vee-validate/dist/rules";
+import { confirmed, required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
 // Ici on surcharge les messages d'erreur de vee-validate.
 // Pour plus de règles :  https://logaretm.github.io/vee-validate/guide/rules.html
@@ -85,6 +101,11 @@ import { extend } from "vee-validate";
 extend("required", {
   ...required,
   message: i18n.t("validation.invalid-required"),
+});
+
+extend("confirmed", {
+  ...confirmed,
+  message: i18n.t("validation.invalid-confirmed").toString(),
 });
 
 extend("validApplicationName", {
@@ -100,6 +121,14 @@ extend("validApplicationNameLength", {
     return value && value.length >= 4 && value.length <= 20;
   },
 });
+
+// extend("dateIsAfter", {
+//   message: i18n.t("validation.date-not-after").toString(),
+//   validate: (value, { min }: Record<string, any>) => {
+//     return isAfter(value, new Date(min))
+//   },
+//   params: ["min"],
+// })
 
 // Buefy
 Vue.use(Buefy, {

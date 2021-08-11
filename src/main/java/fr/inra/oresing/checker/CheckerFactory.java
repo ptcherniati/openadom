@@ -119,7 +119,7 @@ public class CheckerFactory {
             String pattern;
             if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
                 String expression = params.get(GroovyLineChecker.PARAM_EXPRESSION);
-                lineChecker = GroovyLineChecker.forExpression(expression);
+                lineChecker = GroovyLineChecker.forExpression(expression, app, repository.getRepository(app), params);
                 checkersBuilder.add(lineChecker);
             } else {
                 List<String> columns = buildColumns(params);

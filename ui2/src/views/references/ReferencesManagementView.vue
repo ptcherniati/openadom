@@ -8,8 +8,7 @@
       <CollapsibleTree
         v-for="ref in references"
         :key="ref.id"
-        :label="ref.label"
-        :children="ref.children"
+        :option="ref"
         :level="0"
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"

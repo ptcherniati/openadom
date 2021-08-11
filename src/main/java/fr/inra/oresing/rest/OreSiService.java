@@ -281,6 +281,7 @@ public class OreSiService {
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
         String parentHierarchicalKeyColumn;
         BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
+        Map<String, String> buildedHierarchicalKeys = new HashMap<>();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -320,7 +321,7 @@ public class OreSiService {
                 return recordAsMap;
             };
 
-            Map<String, UUID> refsLinkedTo = new LinkedHashMap<>();
+            Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             Stream<ReferenceValue> referenceValuesStream = Streams.stream(csvParser)
                     .map(csvRecordToLineAsMapFn)
@@ -330,9 +331,11 @@ public class OreSiService {
                             if (validationCheckResult.isSuccess()) {
                                 if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                                     ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                                    String reference = ((ReferenceLineChecker)lineChecker).getRefType();
+                                    String reference = ((ReferenceLineChecker) lineChecker).getRefType();
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
-                                    refsLinkedTo.put(escapeKeyComponent(reference), referenceId);
+                                    refsLinkedTo
+                                            .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
+                                            .add(referenceId);
                                 }
                             } else {
                                 rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
@@ -345,13 +348,14 @@ public class OreSiService {
                             naturalKey = escapeKeyComponent(technicalId);
                         } else {
                             naturalKey = ref.getKeyColumns().stream()
-                                    .map(kc->refValues.get(kc))
-                                    .filter(key->!Strings.isNullOrEmpty(key))
+                                    .map(kc -> refValues.get(kc))
+                                    .filter(key -> !Strings.isNullOrEmpty(key))
                                     .map(key -> escapeKeyComponent(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkNaturalKeySyntax(naturalKey);
                         String hierarchicalKey = getHierarchicalKeyFn.apply(naturalKey, refValues);
+                        buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
@@ -388,6 +392,36 @@ public class OreSiService {
 
     private void checkHierarchicalKeySyntax(String compositeKey) {
         Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkNaturalKeySyntax);
+    }
+
+    HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferencesUsing(lowestLevelReference).orElseThrow();
+        BiMap<String, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
+        Map<ReferenceValue, String> parentHierarchicalKeys = new LinkedHashMap<>();
+        ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                .collect(ImmutableList.toImmutableList());
+        ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+        ImmutableSortedSet<String> includedReferences = sortedReferenceTypes.headSet(lowestLevelReference, true);
+        compositeReferenceDescription.getComponents().stream()
+                .filter(compositeReferenceComponentDescription -> includedReferences.contains(compositeReferenceComponentDescription.getReference()))
+                .forEach(compositeReferenceComponentDescription -> {
+                    String reference = compositeReferenceComponentDescription.getReference();
+                    String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
+                    referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
+                        indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
+                        if (parentKeyColumn != null) {
+                            String parentHierarchicalKey = referenceValue.getRefValues().get(parentKeyColumn);
+                            parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
+                        }
+                    });
+                });
+        Map<ReferenceValue, ReferenceValue> childToParents = Maps.transformValues(parentHierarchicalKeys, indexedByHierarchicalKeyReferenceValues::get);
+        SetMultimap<ReferenceValue, ReferenceValue> tree = HashMultimap.create();
+        childToParents.forEach((child, parent) -> tree.put(parent, child));
+        ImmutableSet<ReferenceValue> roots = Sets.difference(indexedByHierarchicalKeyReferenceValues.values(), parentHierarchicalKeys.keySet()).immutableCopy();
+        return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
     @Value
@@ -460,7 +494,7 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         String timeScopeColumnPattern = lineCheckers.stream()
-                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator?((ILineCheckerDecorator) lineChecker).getChecker():lineChecker)
+                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator ? ((ILineCheckerDecorator) lineChecker).getChecker() : lineChecker)
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                 .map(lineChecker -> (DateLineChecker) lineChecker)
                 .filter(dateLineChecker -> dateLineChecker.getVariableComponentKey().equals(dataTypeDescription.getAuthorization().getTimeScope()))
