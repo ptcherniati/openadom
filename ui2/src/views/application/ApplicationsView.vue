@@ -31,18 +31,34 @@
                 <b-field class="columns">
                   <b-checkbox
                     v-model="checkboxDate"
+                    false-value="false"
+                    true-value="true"
                     field="name"
                     class="column"
                     @input="recalculate"
                   >{{ $t("applications.trierRecent") }}</b-checkbox>
+                </b-field>
+              </div>
+              <div class="content">
+                <b-field class="columns">
                   <b-checkbox
-                    v-model="checkboxName"
-                    false-value="Z_a"
-                    true-value="A_z"
+                    id="checkboxTrieA_z"
+                    v-model="checkboxTrieA_z"
+                    false-value="false"
+                    true-value="true"
                     field="name"
                     class="column"
                     @input="recalculate"
-                    >{{ checkboxName }}</b-checkbox
+                  >{{ $t("applications.trierA_z") }}</b-checkbox>
+                  <b-checkbox
+                    id="checkboxTrieZ_a"
+                    v-model="checkboxTrieZ_a"
+                    false-value="false"
+                    true-value="true"
+                    field="name"
+                    class="column"
+                    @input="recalculate"
+                    >{{ $t("applications.trierZ_a") }}</b-checkbox
                   >
                 </b-field>
               </div>
@@ -70,7 +86,7 @@
                   >
                   </b-autocomplete>
                 </b-field>
-                <hr />
+<!--                <hr />
                 <b-field>
                   {{ $t("applications.creation-date") }}
                   <b-datepicker v-model="filterDateDebut" :locale="localLang" editable icon="calendar"> </b-datepicker>
@@ -78,7 +94,7 @@
                 <b-field>
                   {{ $t("applications.creation-date") }}
                   <b-datepicker v-model="filterDateFin" :locale="localLang" editable icon="calendar"> </b-datepicker>
-                </b-field>
+                </b-field>-->
               </div>
             </div>
             <footer class="card-footer">
@@ -205,10 +221,12 @@ export default class ApplicationsView extends Vue {
   selectedApplications = [];
   // filtre variable
   filterName = "";
-  filterDateDebut = "";
-  filterDateFin = "";
-  checkboxName = "A_z";
-  //checkboxDate = false;
+  selected = null;
+  /*filterDateDebut = "";
+  filterDateFin = "";*/
+  checkboxTrieA_z = "false";
+  checkboxTrieZ_a = "false";
+  checkboxDate = "true";
 
   copyOfApplications(application) {
     return [...application];
@@ -218,12 +236,24 @@ export default class ApplicationsView extends Vue {
     this.selectedApplications = this.selectedApplications.filter(
       (a) => a.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
     );
-    if (this.filterDateDebut && this.filterDateFin)
-      this.selectedApplications = this.filterDateDebut <= this.selectedApplications.creationDate && this.selectedApplications.creationDate <= this.filterDateFin;
 
-    //if (this.checkboxDate != false) this.selectedApplications.sort((a, b) => b.date - a.date);
+    if (this.checkboxDate == "true") this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
+    else
+      this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate).reverse();
 
-    if (this.checkboxName != "A_z") this.selectedApplications.reverse();
+    if (this.checkboxTrieZ_a == "true" || this.checkboxTrieA_z == "true") {
+      if (this.checkboxTrieA_z == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieZ_a")) {
+        this.checkboxTrieA_z = "false";
+        this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      else if (this.checkboxTrieZ_a == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieA_z")) {
+        this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name)).reverse();
+        this.checkboxTrieZ_a = "false";
+      }
+    }else {
+      this.checkboxTrieA_z = "false";
+      this.checkboxTrieZ_a = "false";
+    }
   }
 
   async created() {
@@ -232,8 +262,8 @@ export default class ApplicationsView extends Vue {
 
   async init() {
     this.applications = await this.applicationService.getApplications();
-    this.applications = this.applications.sort((a, b) => a.name.localeCompare(b.name));
     this.selectedApplications = this.applications;
+    if (this.checkboxDate == "true") this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
   }
 
   createApplication() {
