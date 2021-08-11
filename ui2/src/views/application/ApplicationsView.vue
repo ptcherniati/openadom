@@ -86,15 +86,6 @@
                   >
                   </b-autocomplete>
                 </b-field>
-<!--                <hr />
-                <b-field>
-                  {{ $t("applications.creation-date") }}
-                  <b-datepicker v-model="filterDateDebut" :locale="localLang" editable icon="calendar"> </b-datepicker>
-                </b-field>
-                <b-field>
-                  {{ $t("applications.creation-date") }}
-                  <b-datepicker v-model="filterDateFin" :locale="localLang" editable icon="calendar"> </b-datepicker>
-                </b-field>-->
               </div>
             </div>
             <footer class="card-footer">
@@ -222,8 +213,7 @@ export default class ApplicationsView extends Vue {
   // filtre variable
   filterName = "";
   selected = null;
-  /*filterDateDebut = "";
-  filterDateFin = "";*/
+  // tie variable
   checkboxTrieA_z = "false";
   checkboxTrieZ_a = "false";
   checkboxDate = "true";
@@ -233,14 +223,16 @@ export default class ApplicationsView extends Vue {
   }
   recalculate() {
     this.selectedApplications = this.copyOfApplications(this.applications);
+    
+    // filter by name
     this.selectedApplications = this.selectedApplications.filter(
       (a) => a.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
     );
 
+    // order by date or name
     if (this.checkboxDate == "true") this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
     else
       this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate).reverse();
-
     if (this.checkboxTrieZ_a == "true" || this.checkboxTrieA_z == "true") {
       if (this.checkboxTrieA_z == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieZ_a")) {
         this.checkboxTrieA_z = "false";
@@ -250,9 +242,6 @@ export default class ApplicationsView extends Vue {
         this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name)).reverse();
         this.checkboxTrieZ_a = "false";
       }
-    }else {
-      this.checkboxTrieA_z = "false";
-      this.checkboxTrieZ_a = "false";
     }
   }
 
