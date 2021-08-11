@@ -58,7 +58,12 @@
     "creation-date": "Creation date",
     "actions": "Actions",
     "references": "References",
-    "dataset": "Data types"
+    "dataset": "Data types",
+    "trier": "Sort by",
+    "trierA_z": "Name A - z",
+    "trierZ_a": "Name Z - a",
+    "trierRecent": "Recent date",
+    "filter": "Filter by"
   },
   "errors": {
     "emptyFile": "File is empty",

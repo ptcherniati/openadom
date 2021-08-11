@@ -70,10 +70,6 @@
             </div>
             <div class="card-content">
               <div class="content">
-                <p v-if="selected != null" class="content">
-                  <b>{{ $t("applications.selected") }}</b>
-                  {{ selected.name }}
-                </p>
                 <b-field>
                   {{ $t("applications.name") }}
                   <b-autocomplete
@@ -88,9 +84,6 @@
                 </b-field>
               </div>
             </div>
-            <footer class="card-footer">
-              <a class="card-footer-item">Recherche par date</a>
-            </footer>
           </div>
         </section>
       </div>
@@ -234,13 +227,13 @@ export default class ApplicationsView extends Vue {
     else
       this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate).reverse();
     if (this.checkboxTrieZ_a == "true" || this.checkboxTrieA_z == "true") {
-      if (this.checkboxTrieA_z == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieZ_a")) {
-        this.checkboxTrieA_z = "false";
+      if (this.checkboxTrieA_z == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieA_z")) {
         this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name));
-      }
-      else if (this.checkboxTrieZ_a == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieA_z")) {
-        this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name)).reverse();
         this.checkboxTrieZ_a = "false";
+      }
+      else if (this.checkboxTrieZ_a == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieZ_a")) {
+        this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name)).reverse();
+        this.checkboxTrieA_z = "false";
       }
     }
   }
