@@ -1,307 +1,307 @@
-date;site;espece;projet;plateforme;"Nombre d'individus";"Couleur des individus"
-"01/01/1984";Nivelle;lpf;"Projet atlantique";"P1";"54";bleu
-"01/01/1984";Nivelle;ang;"Projet atlantique";"P1";"38";vert
-"01/01/1984";Nivelle;lpm;"Projet atlantique";"P1";"27";rouge
-"01/01/1984";Nivelle;alo;"Projet atlantique";"P1";"15";bleu
-"01/01/1984";Nivelle;trm;"Projet atlantique";"P1";"25";vert
-"01/01/1984";Nivelle;trf;"Projet atlantique";"P1";"18";rouge
-"01/01/1984";Nivelle;sat;"Projet atlantique";"P1";"39";bleu
-"02/01/1984";Nivelle;lpf;"Projet atlantique";"P1";;vert
-"02/01/1984";Nivelle;ang;"Projet atlantique";"P1";"25";rouge
-"02/01/1984";Nivelle;lpm;"Projet atlantique";"P1";"32";bleu
-"02/01/1984";Nivelle;alo;"Projet atlantique";"P1";"18";vert
-"02/01/1984";Nivelle;trm;"Projet atlantique";"P1";"25";rouge
-"02/01/1984";Nivelle;trf;"Projet atlantique";"P1";"14";bleu
-"02/01/1984";Nivelle;sat;"Projet atlantique";"P1";"15";vert
-"03/01/1984";Nivelle;lpf;"Projet atlantique";"P1";"45";rouge
-"03/01/1984";Nivelle;ang;"Projet atlantique";"P1";;bleu
-"03/01/1984";Nivelle;lpm;"Projet atlantique";"P1";"41";vert
-"03/01/1984";Nivelle;alo;"Projet atlantique";"P1";"16";rouge
-"03/01/1984";Nivelle;trm;"Projet atlantique";"P1";"27";bleu
-"03/01/1984";Nivelle;trf;"Projet atlantique";"P1";;vert
-"04/01/1984";Nivelle;lpf;"Projet atlantique";"P1";"51";bleu
-"04/01/1984";Nivelle;ang;"Projet atlantique";"P1";"22";vert
-"04/01/1984";Nivelle;lpm;"Projet atlantique";"P1";"43";rouge
-"04/01/1984";Nivelle;alo;"Projet atlantique";"P1";"15";bleu
-"04/01/1984";Nivelle;trm;"Projet atlantique";"P1";"27";vert
-"04/01/1984";Nivelle;trf;"Projet atlantique";"P1";;rouge
-"04/01/1984";Nivelle;sat;"Projet atlantique";"P1";"24";bleu
-"05/01/1984";Nivelle;lpf;"Projet atlantique";"P1";"59";vert
-"05/01/1984";Nivelle;ang;"Projet atlantique";"P1";"27";rouge
-"05/01/1984";Nivelle;lpm;"Projet atlantique";"P1";"49";bleu
-"05/01/1984";Nivelle;alo;"Projet atlantique";"P1";"17";vert
-"05/01/1984";Nivelle;trm;"Projet atlantique";"P1";"25";rouge
-"05/01/1984";Nivelle;trf;"Projet atlantique";"P1";"21";bleu
-"05/01/1984";Nivelle;sat;"Projet atlantique";"P1";"24";vert
-"01/01/1984";oir;lpf;"Projet atlantique";"p1/a";"54";bleu
-"01/01/1984";oir;ang;"Projet atlantique";"p1/a";"38";vert
-"01/01/1984";oir;lpm;"Projet atlantique";"p1/a";"27";rouge
-"01/01/1984";oir;alo;"Projet atlantique";"p1/a";"15";bleu
-"01/01/1984";oir;trm;"Projet atlantique";"p1/a";"25";vert
-"01/01/1984";oir;trf;"Projet atlantique";"p1/a";"18";rouge
-"01/01/1984";oir;sat;"Projet atlantique";"p1/a";"39";bleu
-"02/01/1984";oir;lpf;"Projet atlantique";"p1/a";;vert
-"02/01/1984";oir;ang;"Projet atlantique";"p1/a";"25";rouge
-"02/01/1984";oir;lpm;"Projet atlantique";"p1/a";"32";bleu
-"02/01/1984";oir;alo;"Projet atlantique";"p1/a";"18";vert
-"02/01/1984";oir;trm;"Projet atlantique";"p1/a";"25";rouge
-"02/01/1984";oir;trf;"Projet atlantique";"p1/a";"14";bleu
-"02/01/1984";oir;sat;"Projet atlantique";"p1/a";"15";vert
-"03/01/1984";oir;lpf;"Projet atlantique";"p1/a";"45";rouge
-"03/01/1984";oir;ang;"Projet atlantique";"p1/a";;bleu
-"03/01/1984";oir;lpm;"Projet atlantique";"p1/a";"41";vert
-"03/01/1984";oir;alo;"Projet atlantique";"p1/a";"16";rouge
-"03/01/1984";oir;trm;"Projet atlantique";"p1/a";"27";bleu
-"03/01/1984";oir;trf;"Projet atlantique";"p1/a";;vert
-"04/01/1984";oir;lpf;"Projet atlantique";"p1/a";"51";bleu
-"04/01/1984";oir;ang;"Projet atlantique";"p1/a";"22";vert
-"04/01/1984";oir;lpm;"Projet atlantique";"p1/a";"43";rouge
-"04/01/1984";oir;alo;"Projet atlantique";"p1/a";"15";bleu
-"04/01/1984";oir;trm;"Projet atlantique";"p1/a";"27";vert
-"04/01/1984";oir;trf;"Projet atlantique";"p1/a";;rouge
-"04/01/1984";oir;sat;"Projet atlantique";"p1/a";"24";bleu
-"05/01/1984";oir;lpf;"Projet atlantique";"p1/a";"59";vert
-"05/01/1984";oir;ang;"Projet atlantique";"p1/a";"27";rouge
-"05/01/1984";oir;lpm;"Projet atlantique";"p1/a";"49";bleu
-"05/01/1984";oir;alo;"Projet atlantique";"p1/a";"17";vert
-"05/01/1984";oir;trm;"Projet atlantique";"p1/a";"25";rouge
-"05/01/1984";oir;trf;"Projet atlantique";"p1/a";"21";bleu
-"05/01/1984";oir;sat;"Projet atlantique";"p1/a";"24";vert
-"01/01/1984";Oir;lpf;"Projet atlantique";"P2";"54";bleu
-"01/01/1984";Oir;ang;"Projet atlantique";"P2";"38";vert
-"01/01/1984";Oir;lpm;"Projet atlantique";"P2";"27";rouge
-"01/01/1984";Oir;alo;"Projet atlantique";"P2";"15";bleu
-"01/01/1984";Oir;trm;"Projet atlantique";"P2";"25";vert
-"01/01/1984";Oir;trf;"Projet atlantique";"P2";"18";rouge
-"01/01/1984";Oir;sat;"Projet atlantique";"P2";"39";bleu
-"02/01/1984";Oir;lpf;"Projet atlantique";"P2";;vert
-"02/01/1984";Oir;ang;"Projet atlantique";"P2";"25";rouge
-"02/01/1984";Oir;lpm;"Projet atlantique";"P2";"32";bleu
-"02/01/1984";Oir;alo;"Projet atlantique";"P2";"18";vert
-"02/01/1984";Oir;trm;"Projet atlantique";"P2";"25";rouge
-"02/01/1984";Oir;trf;"Projet atlantique";"P2";"14";bleu
-"02/01/1984";Oir;sat;"Projet atlantique";"P2";"15";vert
-"03/01/1984";Oir;lpf;"Projet atlantique";"P2";"45";rouge
-"03/01/1984";Oir;ang;"Projet atlantique";"P2";;bleu
-"03/01/1984";Oir;lpm;"Projet atlantique";"P2";"41";vert
-"03/01/1984";Oir;alo;"Projet atlantique";"P2";"16";rouge
-"03/01/1984";Oir;trm;"Projet atlantique";"P2";"27";bleu
-"03/01/1984";Oir;trf;"Projet atlantique";"P2";;vert
-"04/01/1984";Oir;lpf;"Projet atlantique";"P2";"51";bleu
-"04/01/1984";Oir;ang;"Projet atlantique";"P2";"22";vert
-"04/01/1984";Oir;lpm;"Projet atlantique";"P2";"43";rouge
-"04/01/1984";Oir;alo;"Projet atlantique";"P2";"15";bleu
-"04/01/1984";Oir;trm;"Projet atlantique";"P2";"27";vert
-"04/01/1984";Oir;trf;"Projet atlantique";"P2";;rouge
-"04/01/1984";Oir;sat;"Projet atlantique";"P2";"24";bleu
-"05/01/1984";Oir;lpf;"Projet atlantique";"P2";"59";vert
-"05/01/1984";Oir;ang;"Projet atlantique";"P2";"27";rouge
-"05/01/1984";Oir;lpm;"Projet atlantique";"P2";"49";bleu
-"05/01/1984";Oir;alo;"Projet atlantique";"P2";"17";vert
-"05/01/1984";Oir;trm;"Projet atlantique";"P2";"25";rouge
-"05/01/1984";Oir;trf;"Projet atlantique";"P2";"21";bleu
-"05/01/1984";Oir;sat;"Projet atlantique";"P2";"24";vert
-"01/01/1984";Scarff;lpf;"Projet atlantique";"P1";"54";bleu
-"01/01/1984";Scarff;ang;"Projet atlantique";"P1";"38";vert
-"01/01/1984";Scarff;lpm;"Projet atlantique";"P1";"27";rouge
-"01/01/1984";Scarff;alo;"Projet atlantique";"P1";"15";bleu
-"01/01/1984";Scarff;trm;"Projet atlantique";"P1";"25";vert
-"01/01/1984";Scarff;trf;"Projet atlantique";"P1";"18";rouge
-"01/01/1984";Scarff;sat;"Projet atlantique";"P1";"39";bleu
-"02/01/1984";Scarff;lpf;"Projet atlantique";"P1";;vert
-"02/01/1984";Scarff;ang;"Projet atlantique";"P1";"25";rouge
-"02/01/1984";Scarff;lpm;"Projet atlantique";"P1";"32";bleu
-"02/01/1984";Scarff;alo;"Projet atlantique";"P1";"18";vert
-"02/01/1984";Scarff;trm;"Projet atlantique";"P1";"25";rouge
-"02/01/1984";Scarff;trf;"Projet atlantique";"P1";"14";bleu
-"02/01/1984";Scarff;sat;"Projet atlantique";"P1";"15";vert
-"03/01/1984";Scarff;lpf;"Projet atlantique";"P1";"45";rouge
-"03/01/1984";Scarff;ang;"Projet atlantique";"P1";;bleu
-"03/01/1984";Scarff;lpm;"Projet atlantique";"P1";"41";vert
-"03/01/1984";Scarff;alo;"Projet atlantique";"P1";"16";rouge
-"03/01/1984";Scarff;trm;"Projet atlantique";"P1";"27";bleu
-"03/01/1984";Scarff;trf;"Projet atlantique";"P1";;vert
-"04/01/1984";Scarff;lpf;"Projet atlantique";"P1";"51";bleu
-"04/01/1984";Scarff;ang;"Projet atlantique";"P1";"22";vert
-"04/01/1984";Scarff;lpm;"Projet atlantique";"P1";"43";rouge
-"04/01/1984";Scarff;alo;"Projet atlantique";"P1";"15";bleu
-"04/01/1984";Scarff;trm;"Projet atlantique";"P1";"27";vert
-"04/01/1984";Scarff;trf;"Projet atlantique";"P1";;rouge
-"04/01/1984";Scarff;sat;"Projet atlantique";"P1";"24";bleu
-"05/01/1984";Scarff;lpf;"Projet atlantique";"P1";"59";vert
-"05/01/1984";Scarff;ang;"Projet atlantique";"P1";"27";rouge
-"05/01/1984";Scarff;lpm;"Projet atlantique";"P1";"49";bleu
-"05/01/1984";Scarff;alo;"Projet atlantique";"P1";"17";vert
-"05/01/1984";Scarff;trm;"Projet atlantique";"P1";"25";rouge
-"05/01/1984";Scarff;trf;"Projet atlantique";"P1";"21";bleu
-"05/01/1984";Scarff;sat;"Projet atlantique";"P1";"24";vert
-"01/01/1984";Nivelle;lpf;"Projet manche";"P1";"54";bleu
-"01/01/1984";Nivelle;ang;"Projet manche";"P1";"38";vert
-"01/01/1984";Nivelle;lpm;"Projet manche";"P1";"27";rouge
-"01/01/1984";Nivelle;alo;"Projet manche";"P1";"15";bleu
-"01/01/1984";Nivelle;trm;"Projet manche";"P1";"25";vert
-"01/01/1984";Nivelle;trf;"Projet manche";"P1";"18";rouge
-"01/01/1984";Nivelle;sat;"Projet manche";"P1";"39";bleu
-"02/01/1984";Nivelle;lpf;"Projet manche";"P1";;vert
-"02/01/1984";Nivelle;ang;"Projet manche";"P1";"25";rouge
-"02/01/1984";Nivelle;lpm;"Projet manche";"P1";"32";bleu
-"02/01/1984";Nivelle;alo;"Projet manche";"P1";"18";vert
-"02/01/1984";Nivelle;trm;"Projet manche";"P1";"25";rouge
-"02/01/1984";Nivelle;trf;"Projet manche";"P1";"14";bleu
-"02/01/1984";Nivelle;sat;"Projet manche";"P1";"15";vert
-"03/01/1984";Nivelle;lpf;"Projet manche";"P1";"45";rouge
-"03/01/1984";Nivelle;ang;"Projet manche";"P1";;bleu
-"03/01/1984";Nivelle;lpm;"Projet manche";"P1";"41";vert
-"03/01/1984";Nivelle;alo;"Projet manche";"P1";"16";rouge
-"03/01/1984";Nivelle;trm;"Projet manche";"P1";"27";bleu
-"03/01/1984";Nivelle;trf;"Projet manche";"P1";;vert
-"04/01/1984";Nivelle;lpf;"Projet manche";"P1";"51";bleu
-"04/01/1984";Nivelle;ang;"Projet manche";"P1";"22";vert
-"04/01/1984";Nivelle;lpm;"Projet manche";"P1";"43";rouge
-"04/01/1984";Nivelle;alo;"Projet manche";"P1";"15";bleu
-"04/01/1984";Nivelle;trm;"Projet manche";"P1";"27";vert
-"04/01/1984";Nivelle;trf;"Projet manche";"P1";;rouge
-"04/01/1984";Nivelle;sat;"Projet manche";"P1";"24";bleu
-"05/01/1984";Nivelle;lpf;"Projet manche";"P1";"59";vert
-"05/01/1984";Nivelle;ang;"Projet manche";"P1";"27";rouge
-"05/01/1984";Nivelle;lpm;"Projet manche";"P1";"49";bleu
-"05/01/1984";Nivelle;alo;"Projet manche";"P1";"17";vert
-"05/01/1984";Nivelle;trm;"Projet manche";"P1";"25";rouge
-"05/01/1984";Nivelle;trf;"Projet manche";"P1";"21";bleu
-"05/01/1984";Nivelle;sat;"Projet manche";"P1";"24";vert
-"01/01/1984";Oir;ALO;"Projet manche";"P1";"15";bleu
-"01/01/1984";Oir;ANG;"Projet manche";"P1";"38";vert
-"01/01/1984";Oir;LPF;"Projet manche";"P1";"54";bleu
-"01/01/1984";Oir;LPM;"Projet manche";"P1";"27";rouge
-"01/01/1984";Oir;SAT;"Projet manche";"P1";"39";bleu
-"01/01/1984";Oir;TRF;"Projet manche";"P1";"18";rouge
-"01/01/1984";Oir;TRM;"Projet manche";"P1";"25";vert
-"02/01/1984";Oir;ALO;"Projet manche";"P1";"18";vert
-"02/01/1984";Oir;ANG;"Projet manche";"P1";"25";rouge
-"02/01/1984";Oir;LPF;"Projet manche";"P1";"50";vert
-"02/01/1984";Oir;LPM;"Projet manche";"P1";"32";bleu
-"02/01/1984";Oir;SAT;"Projet manche";"P1";"15";vert
-"02/01/1984";Oir;TRF;"Projet manche";"P1";"14";bleu
-"02/01/1984";Oir;TRM;"Projet manche";"P1";"25";rouge
-"03/01/1984";Oir;ALO;"Projet manche";"P1";"16";rouge
-"03/01/1984";Oir;ANG;"Projet manche";"P1";"20";bleu
-"03/01/1984";Oir;LPF;"Projet manche";"P1";"45";rouge
-"03/01/1984";Oir;LPM;"Projet manche";"P1";"41";vert
-"03/01/1984";Oir;TRF;"Projet manche";"P1";"20";vert
-"03/01/1984";Oir;TRM;"Projet manche";"P1";"27";bleu
-"04/01/1984";Oir;ALO;"Projet manche";"P1";"15";bleu
-"04/01/1984";Oir;ANG;"Projet manche";"P1";"22";vert
-"04/01/1984";Oir;LPF;"Projet manche";"P1";"51";bleu
-"04/01/1984";Oir;LPM;"Projet manche";"P1";"43";rouge
-"04/01/1984";Oir;SAT;"Projet manche";"P1";"24";bleu
-"04/01/1984";Oir;TRF;"Projet manche";"P1";"20";rouge
-"04/01/1984";Oir;TRM;"Projet manche";"P1";"27";vert
-"05/01/1984";Oir;ALO;"Projet manche";"P1";"17";vert
-"05/01/1984";Oir;ANG;"Projet manche";"P1";"27";rouge
-"05/01/1984";Oir;LPF;"Projet manche";"P1";"59";vert
-"05/01/1984";Oir;LPM;"Projet manche";"P1";"49";bleu
-"05/01/1984";Oir;SAT;"Projet manche";"P1";"24";vert
-"05/01/1984";Oir;TRF;"Projet manche";"P1";"21";bleu
-"05/01/1984";Oir;TRM;"Projet manche";"P1";"25";rouge
-"01/01/1984";Oir;lpf;"Projet manche";"P2";"54";bleu
-"01/01/1984";Oir;ang;"Projet manche";"P2";"38";vert
-"01/01/1984";Oir;lpm;"Projet manche";"P2";"27";rouge
-"01/01/1984";Oir;alo;"Projet manche";"P2";"15";bleu
-"01/01/1984";Oir;trm;"Projet manche";"P2";"25";vert
-"01/01/1984";Oir;trf;"Projet manche";"P2";"18";rouge
-"01/01/1984";Oir;sat;"Projet manche";"P2";"39";bleu
-"02/01/1984";Oir;lpf;"Projet manche";"P2";;vert
-"02/01/1984";Oir;ang;"Projet manche";"P2";"25";rouge
-"02/01/1984";Oir;lpm;"Projet manche";"P2";"32";bleu
-"02/01/1984";Oir;alo;"Projet manche";"P2";"18";vert
-"02/01/1984";Oir;trm;"Projet manche";"P2";"25";rouge
-"02/01/1984";Oir;trf;"Projet manche";"P2";"14";bleu
-"02/01/1984";Oir;sat;"Projet manche";"P2";"15";vert
-"03/01/1984";Oir;lpf;"Projet manche";"P2";"45";rouge
-"03/01/1984";Oir;ang;"Projet manche";"P2";;bleu
-"03/01/1984";Oir;lpm;"Projet manche";"P2";"41";vert
-"03/01/1984";Oir;alo;"Projet manche";"P2";"16";rouge
-"03/01/1984";Oir;trm;"Projet manche";"P2";"27";bleu
-"03/01/1984";Oir;trf;"Projet manche";"P2";;vert
-"04/01/1984";Oir;lpf;"Projet manche";"P2";"51";bleu
-"04/01/1984";Oir;ang;"Projet manche";"P2";"22";vert
-"04/01/1984";Oir;lpm;"Projet manche";"P2";"43";rouge
-"04/01/1984";Oir;alo;"Projet manche";"P2";"15";bleu
-"04/01/1984";Oir;trm;"Projet manche";"P2";"27";vert
-"04/01/1984";Oir;trf;"Projet manche";"P2";;rouge
-"04/01/1984";Oir;sat;"Projet manche";"P2";"24";bleu
-"05/01/1984";Oir;lpf;"Projet manche";"P2";"59";vert
-"05/01/1984";Oir;ang;"Projet manche";"P2";"27";rouge
-"05/01/1984";Oir;lpm;"Projet manche";"P2";"49";bleu
-"05/01/1984";Oir;alo;"Projet manche";"P2";"17";vert
-"05/01/1984";Oir;trm;"Projet manche";"P2";"25";rouge
-"05/01/1984";Oir;trf;"Projet manche";"P2";"21";bleu
-"05/01/1984";Oir;sat;"Projet manche";"P2";"24";vert
-"01/01/1984";Scarff;lpf;"Projet manche";"P1";"54";bleu
-"01/01/1984";Scarff;ang;"Projet manche";"P1";"38";vert
-"01/01/1984";Scarff;lpm;"Projet manche";"P1";"27";rouge
-"01/01/1984";Scarff;alo;"Projet manche";"P1";"15";bleu
-"01/01/1984";Scarff;trm;"Projet manche";"P1";"25";vert
-"01/01/1984";Scarff;trf;"Projet manche";"P1";"18";rouge
-"01/01/1984";Scarff;sat;"Projet manche";"P1";"39";bleu
-"02/01/1984";Scarff;lpf;"Projet manche";"P1";;vert
-"02/01/1984";Scarff;ang;"Projet manche";"P1";"25";rouge
-"02/01/1984";Scarff;lpm;"Projet manche";"P1";"32";bleu
-"02/01/1984";Scarff;alo;"Projet manche";"P1";"18";vert
-"02/01/1984";Scarff;trm;"Projet manche";"P1";"25";rouge
-"02/01/1984";Scarff;trf;"Projet manche";"P1";"14";bleu
-"02/01/1984";Scarff;sat;"Projet manche";"P1";"15";vert
-"03/01/1984";Scarff;lpf;"Projet manche";"P1";"45";rouge
-"03/01/1984";Scarff;ang;"Projet manche";"P1";;bleu
-"03/01/1984";Scarff;lpm;"Projet manche";"P1";"41";vert
-"03/01/1984";Scarff;alo;"Projet manche";"P1";"16";rouge
-"03/01/1984";Scarff;trm;"Projet manche";"P1";"27";bleu
-"03/01/1984";Scarff;trf;"Projet manche";"P1";;vert
-"04/01/1984";Scarff;lpf;"Projet manche";"P1";"51";bleu
-"04/01/1984";Scarff;ang;"Projet manche";"P1";"22";vert
-"04/01/1984";Scarff;lpm;"Projet manche";"P1";"43";rouge
-"04/01/1984";Scarff;alo;"Projet manche";"P1";"15";bleu
-"04/01/1984";Scarff;trm;"Projet manche";"P1";"27";vert
-"04/01/1984";Scarff;trf;"Projet manche";"P1";;rouge
-"04/01/1984";Scarff;sat;"Projet manche";"P1";"24";bleu
-"05/01/1984";Scarff;lpf;"Projet manche";"P1";"59";vert
-"05/01/1984";Scarff;ang;"Projet manche";"P1";"27";rouge
-"05/01/1984";Scarff;lpm;"Projet manche";"P1";"49";bleu
-"05/01/1984";Scarff;alo;"Projet manche";"P1";"17";vert
-"05/01/1984";Scarff;trm;"Projet manche";"P1";"25";rouge
-"05/01/1984";Scarff;trf;"Projet manche";"P1";"21";bleu
-"05/01/1984";Scarff;sat;"Projet manche";"P1";"24";vert
-"01/01/1984";Scarff;lpf;"Projet manche";"P1";"54";bleu
-"01/01/1984";Scarff;ang;"Projet manche";"P1";"38";vert
-"01/01/1984";Scarff;lpm;"Projet manche";"P1";"27";rouge
-"01/01/1984";Scarff;alo;"Projet manche";"P1";"15";bleu
-"01/01/1984";Scarff;trm;"Projet manche";"P1";"25";vert
-"01/01/1984";Scarff;trf;"Projet manche";"P1";"18";rouge
-"01/01/1984";Scarff;sat;"Projet manche";"P1";"39";bleu
-"02/01/1984";Scarff;lpf;"Projet manche";"P1";;vert
-"02/01/1984";Scarff;ang;"Projet manche";"P1";"25";rouge
-"02/01/1984";Scarff;lpm;"Projet manche";"P1";"32";bleu
-"02/01/1984";Scarff;alo;"Projet manche";"P1";"18";vert
-"02/01/1984";Scarff;trm;"Projet manche";"P1";"25";rouge
-"02/01/1984";Scarff;trf;"Projet manche";"P1";"14";bleu
-"02/01/1984";Scarff;sat;"Projet manche";"P1";"15";vert
-"03/01/1984";Scarff;lpf;"Projet manche";"P1";"45";rouge
-"03/01/1984";Scarff;ang;"Projet manche";"P1";;bleu
-"03/01/1984";Scarff;lpm;"Projet manche";"P1";"41";vert
-"03/01/1984";Scarff;alo;"Projet manche";"P1";"16";rouge
-"03/01/1984";Scarff;trm;"Projet manche";"P1";"27";bleu
-"03/01/1984";Scarff;trf;"Projet manche";"P1";;vert
-"04/01/1984";Scarff;lpf;"Projet manche";"P1";"51";bleu
-"04/01/1984";Scarff;ang;"Projet manche";"P1";"22";vert
-"04/01/1984";Scarff;lpm;"Projet manche";"P1";"43";rouge
-"04/01/1984";Scarff;alo;"Projet manche";"P1";"15";bleu
-"04/01/1984";Scarff;trm;"Projet manche";"P1";"27";vert
-"04/01/1984";Scarff;trf;"Projet manche";"P1";;rouge
-"04/01/1984";Scarff;sat;"Projet manche";"P1";"24";bleu
-"05/01/1984";Scarff;lpf;"Projet manche";"P1";"59";vert
-"05/01/1984";Scarff;ang;"Projet manche";"P1";"27";rouge
-"05/01/1984";Scarff;lpm;"Projet manche";"P1";"49";bleu
-"05/01/1984";Scarff;alo;"Projet manche";"P1";"17";vert
-"05/01/1984";Scarff;trm;"Projet manche";"P1";"25";rouge
-"05/01/1984";Scarff;trf;"Projet manche";"P1";"21";bleu
-"05/01/1984";Scarff;sat;"Projet manche";"P1";"24";vert
+projet;site;plateforme;date;espece;Couleur des individus;Nombre d'individus
+projet_atlantique;nivelle;p1;05/01/1984;sat;couleur_des_individus__vert;24
+projet_atlantique;oir;p2;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_manche;oir;p1;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_manche;oir;p1;04/01/1984;trm;couleur_des_individus__vert;27
+projet_manche;oir;p2;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_atlantique;oir__p1;a;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_atlantique;oir__p1;a;03/01/1984;trf;couleur_des_individus__vert;0
+projet_atlantique;scarff;p1;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_manche;oir;p2;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_atlantique;oir;p2;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_manche;oir;p2;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_manche;nivelle;p1;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_atlantique;nivelle;p1;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_manche;oir;p1;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_manche;oir;p2;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;oir;p2;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_manche;nivelle;p1;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_manche;scarff;p1;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_manche;scarff;p1;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_atlantique;scarff;p1;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;oir;p2;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_manche;scarff;p1;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;scarff;p1;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;oir;p2;01/01/1984;trm;couleur_des_individus__vert;25
+projet_manche;oir;p2;04/01/1984;ang;couleur_des_individus__vert;22
+projet_atlantique;oir;p2;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_atlantique;oir;p2;04/01/1984;trm;couleur_des_individus__vert;27
+projet_atlantique;oir;p2;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;nivelle;p1;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;oir;p1;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_atlantique;oir__p1;a;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_manche;scarff;p1;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_manche;scarff;p1;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_atlantique;oir;p2;02/01/1984;alo;couleur_des_individus__vert;18
+projet_atlantique;oir__p1;a;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_atlantique;oir;p2;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_atlantique;oir;p2;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_atlantique;oir__p1;a;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;nivelle;p1;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_manche;scarff;p1;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_atlantique;scarff;p1;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_manche;nivelle;p1;02/01/1984;sat;couleur_des_individus__vert;15
+projet_manche;scarff;p1;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_manche;oir;p1;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_atlantique;nivelle;p1;02/01/1984;alo;couleur_des_individus__vert;18
+projet_manche;oir;p1;03/01/1984;ang;couleur_des_individus__bleu;20
+projet_manche;nivelle;p1;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_manche;nivelle;p1;04/01/1984;ang;couleur_des_individus__vert;22
+projet_atlantique;scarff;p1;03/01/1984;trf;couleur_des_individus__vert;0
+projet_atlantique;scarff;p1;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_manche;nivelle;p1;04/01/1984;trm;couleur_des_individus__vert;27
+projet_manche;nivelle;p1;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_atlantique;oir;p2;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_atlantique;nivelle;p1;04/01/1984;trm;couleur_des_individus__vert;27
+projet_manche;scarff;p1;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_atlantique;scarff;p1;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_manche;oir;p2;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;oir;p1;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_atlantique;oir__p1;a;01/01/1984;ang;couleur_des_individus__vert;38
+projet_atlantique;oir__p1;a;01/01/1984;trm;couleur_des_individus__vert;25
+projet_manche;scarff;p1;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_manche;oir;p2;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_atlantique;oir__p1;a;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_atlantique;oir__p1;a;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_atlantique;oir;p2;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_atlantique;nivelle;p1;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_atlantique;nivelle;p1;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;oir;p1;01/01/1984;ang;couleur_des_individus__vert;38
+projet_atlantique;oir__p1;a;05/01/1984;sat;couleur_des_individus__vert;24
+projet_atlantique;oir__p1;a;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_manche;oir;p2;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;scarff;p1;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_atlantique;oir__p1;a;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_manche;oir;p2;04/01/1984;trm;couleur_des_individus__vert;27
+projet_manche;nivelle;p1;01/01/1984;ang;couleur_des_individus__vert;38
+projet_manche;scarff;p1;05/01/1984;alo;couleur_des_individus__vert;17
+projet_atlantique;nivelle;p1;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_atlantique;nivelle;p1;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_atlantique;oir;p2;05/01/1984;sat;couleur_des_individus__vert;24
+projet_manche;nivelle;p1;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_atlantique;scarff;p1;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;oir;p1;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_manche;scarff;p1;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_manche;oir;p2;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;oir;p2;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_manche;nivelle;p1;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;nivelle;p1;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_manche;nivelle;p1;01/01/1984;trm;couleur_des_individus__vert;25
+projet_manche;scarff;p1;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_atlantique;scarff;p1;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_manche;nivelle;p1;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_atlantique;nivelle;p1;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;scarff;p1;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_manche;scarff;p1;01/01/1984;trm;couleur_des_individus__vert;25
+projet_manche;scarff;p1;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_atlantique;oir__p1;a;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_atlantique;oir__p1;a;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;nivelle;p1;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_atlantique;oir__p1;a;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;oir;p1;04/01/1984;ang;couleur_des_individus__vert;22
+projet_manche;oir;p2;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_manche;scarff;p1;03/01/1984;trf;couleur_des_individus__vert;0
+projet_atlantique;nivelle;p1;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;nivelle;p1;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_atlantique;oir;p2;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_atlantique;oir__p1;a;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_manche;scarff;p1;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_manche;scarff;p1;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_manche;scarff;p1;04/01/1984;trm;couleur_des_individus__vert;27
+projet_atlantique;nivelle;p1;02/01/1984;sat;couleur_des_individus__vert;15
+projet_manche;scarff;p1;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;oir;p2;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_atlantique;nivelle;p1;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_atlantique;oir__p1;a;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_atlantique;oir;p2;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;nivelle;p1;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_manche;oir;p1;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_atlantique;nivelle;p1;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_atlantique;scarff;p1;02/01/1984;alo;couleur_des_individus__vert;18
+projet_atlantique;nivelle;p1;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_manche;scarff;p1;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_atlantique;oir;p2;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_manche;scarff;p1;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;oir;p1;05/01/1984;sat;couleur_des_individus__vert;24
+projet_atlantique;scarff;p1;02/01/1984;sat;couleur_des_individus__vert;15
+projet_atlantique;scarff;p1;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_manche;scarff;p1;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_manche;scarff;p1;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;nivelle;p1;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_atlantique;scarff;p1;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_manche;oir;p2;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_atlantique;scarff;p1;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_manche;scarff;p1;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_atlantique;oir;p2;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_atlantique;oir__p1;a;02/01/1984;alo;couleur_des_individus__vert;18
+projet_atlantique;nivelle;p1;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;02/01/1984;sat;couleur_des_individus__vert;15
+projet_manche;nivelle;p1;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_atlantique;nivelle;p1;04/01/1984;ang;couleur_des_individus__vert;22
+projet_manche;scarff;p1;04/01/1984;trm;couleur_des_individus__vert;27
+projet_atlantique;oir__p1;a;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_atlantique;nivelle;p1;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_manche;oir;p1;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_manche;scarff;p1;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_manche;oir;p2;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_atlantique;scarff;p1;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_manche;oir;p2;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_atlantique;oir__p1;a;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_manche;oir;p2;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_atlantique;scarff;p1;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;oir;p2;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_manche;oir;p2;02/01/1984;sat;couleur_des_individus__vert;15
+projet_manche;nivelle;p1;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_manche;scarff;p1;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_manche;oir;p1;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_atlantique;scarff;p1;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_atlantique;oir__p1;a;04/01/1984;ang;couleur_des_individus__vert;22
+projet_manche;oir;p1;05/01/1984;trf;couleur_des_individus__bleu;21
+projet_atlantique;scarff;p1;04/01/1984;trm;couleur_des_individus__vert;27
+projet_atlantique;scarff;p1;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_manche;oir;p2;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_manche;scarff;p1;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_manche;scarff;p1;01/01/1984;ang;couleur_des_individus__vert;38
+projet_manche;oir;p1;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;oir;p2;02/01/1984;ang;couleur_des_individus__rouge;25
+projet_manche;oir;p2;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_atlantique;oir;p2;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_atlantique;oir;p2;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_atlantique;oir;p2;01/01/1984;ang;couleur_des_individus__vert;38
+projet_atlantique;scarff;p1;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;nivelle;p1;01/01/1984;trm;couleur_des_individus__vert;25
+projet_manche;oir;p1;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_manche;oir;p2;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;nivelle;p1;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;oir;p2;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_manche;scarff;p1;01/01/1984;trm;couleur_des_individus__vert;25
+projet_atlantique;oir__p1;a;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;nivelle;p1;02/01/1984;alo;couleur_des_individus__vert;18
+projet_manche;scarff;p1;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_atlantique;oir__p1;a;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;nivelle;p1;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;nivelle;p1;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_atlantique;oir__p1;a;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;nivelle;p1;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;scarff;p1;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_atlantique;oir;p2;04/01/1984;ang;couleur_des_individus__vert;22
+projet_manche;scarff;p1;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;oir;p2;02/01/1984;alo;couleur_des_individus__vert;18
+projet_atlantique;oir__p1;a;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;oir;p2;05/01/1984;sat;couleur_des_individus__vert;24
+projet_manche;oir;p1;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_manche;oir;p2;01/01/1984;ang;couleur_des_individus__vert;38
+projet_manche;oir;p1;03/01/1984;trf;couleur_des_individus__vert;20
+projet_atlantique;oir__p1;a;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_atlantique;oir;p2;02/01/1984;sat;couleur_des_individus__vert;15
+projet_atlantique;scarff;p1;04/01/1984;ang;couleur_des_individus__vert;22
+projet_manche;oir;p2;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;oir__p1;a;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_atlantique;oir;p2;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;oir__p1;a;04/01/1984;trm;couleur_des_individus__vert;27
+projet_atlantique;scarff;p1;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_atlantique;nivelle;p1;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_atlantique;oir;p2;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;scarff;p1;03/01/1984;trf;couleur_des_individus__vert;0
+projet_manche;scarff;p1;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;scarff;p1;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;oir;p1;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_manche;scarff;p1;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_manche;scarff;p1;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_atlantique;nivelle;p1;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_atlantique;nivelle;p1;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_manche;nivelle;p1;05/01/1984;sat;couleur_des_individus__vert;24
+projet_atlantique;oir;p2;03/01/1984;trf;couleur_des_individus__vert;0
+projet_manche;scarff;p1;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;scarff;p1;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;oir;p1;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;oir;p1;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;scarff;p1;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_manche;nivelle;p1;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_atlantique;oir;p2;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_manche;oir;p1;02/01/1984;alo;couleur_des_individus__vert;18
+projet_manche;nivelle;p1;03/01/1984;alo;couleur_des_individus__rouge;16
+projet_atlantique;oir__p1;a;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_manche;scarff;p1;01/01/1984;ang;couleur_des_individus__vert;38
+projet_atlantique;oir;p2;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_atlantique;nivelle;p1;03/01/1984;trf;couleur_des_individus__vert;0
+projet_manche;oir;p1;01/01/1984;lpf;couleur_des_individus__bleu;54
+projet_manche;oir;p1;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;oir;p2;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_atlantique;scarff;p1;01/01/1984;trm;couleur_des_individus__vert;25
+projet_atlantique;oir;p2;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_atlantique;oir;p2;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_atlantique;oir;p2;01/01/1984;alo;couleur_des_individus__bleu;15
+projet_atlantique;nivelle;p1;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;scarff;p1;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_atlantique;nivelle;p1;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_manche;nivelle;p1;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_manche;scarff;p1;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_manche;scarff;p1;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;nivelle;p1;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;scarff;p1;02/01/1984;alo;couleur_des_individus__vert;18
+projet_atlantique;scarff;p1;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_atlantique;nivelle;p1;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_atlantique;oir;p2;01/01/1984;trm;couleur_des_individus__vert;25
+projet_manche;scarff;p1;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_atlantique;scarff;p1;05/01/1984;sat;couleur_des_individus__vert;24
+projet_atlantique;nivelle;p1;03/01/1984;ang;couleur_des_individus__bleu;0
+projet_atlantique;scarff;p1;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_atlantique;oir;p2;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_atlantique;oir__p1;a;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_manche;oir;p1;04/01/1984;trf;couleur_des_individus__rouge;20
+projet_atlantique;nivelle;p1;01/01/1984;ang;couleur_des_individus__vert;38
+projet_atlantique;nivelle;p1;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_atlantique;scarff;p1;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_manche;oir;p1;01/01/1984;sat;couleur_des_individus__bleu;39
+projet_manche;scarff;p1;04/01/1984;lpm;couleur_des_individus__rouge;43
+projet_manche;nivelle;p1;03/01/1984;trf;couleur_des_individus__vert;0
+projet_manche;scarff;p1;04/01/1984;lpf;couleur_des_individus__bleu;51
+projet_atlantique;scarff;p1;05/01/1984;alo;couleur_des_individus__vert;17
+projet_atlantique;scarff;p1;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_atlantique;nivelle;p1;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_atlantique;nivelle;p1;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;scarff;p1;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_atlantique;scarff;p1;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;scarff;p1;02/01/1984;sat;couleur_des_individus__vert;15
+projet_atlantique;oir;p2;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_atlantique;scarff;p1;01/01/1984;trf;couleur_des_individus__rouge;18
+projet_manche;oir;p1;02/01/1984;lpf;couleur_des_individus__vert;50
+projet_manche;scarff;p1;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_manche;nivelle;p1;03/01/1984;trm;couleur_des_individus__bleu;27
+projet_atlantique;nivelle;p1;05/01/1984;ang;couleur_des_individus__rouge;27
+projet_manche;oir;p1;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_atlantique;nivelle;p1;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_manche;scarff;p1;04/01/1984;ang;couleur_des_individus__vert;22
+projet_manche;nivelle;p1;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_manche;oir;p1;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;oir;p2;03/01/1984;trf;couleur_des_individus__vert;0
+projet_atlantique;scarff;p1;05/01/1984;lpm;couleur_des_individus__bleu;49
+projet_manche;scarff;p1;05/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;oir;p1;05/01/1984;alo;couleur_des_individus__vert;17
+projet_manche;oir;p1;01/01/1984;trm;couleur_des_individus__vert;25
+projet_atlantique;oir__p1;a;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;04/01/1984;alo;couleur_des_individus__bleu;15
+projet_manche;scarff;p1;02/01/1984;lpf;couleur_des_individus__vert;0
+projet_manche;nivelle;p1;02/01/1984;trm;couleur_des_individus__rouge;25
+projet_manche;scarff;p1;05/01/1984;sat;couleur_des_individus__vert;24
+projet_manche;oir;p2;04/01/1984;trf;couleur_des_individus__rouge;0
+projet_manche;scarff;p1;05/01/1984;sat;couleur_des_individus__vert;24
+projet_manche;scarff;p1;04/01/1984;ang;couleur_des_individus__vert;22
+projet_atlantique;scarff;p1;01/01/1984;ang;couleur_des_individus__vert;38
+projet_atlantique;scarff;p1;03/01/1984;lpm;couleur_des_individus__vert;41
+projet_atlantique;oir__p1;a;02/01/1984;sat;couleur_des_individus__vert;15
+projet_atlantique;oir__p1;a;04/01/1984;sat;couleur_des_individus__bleu;24
+projet_manche;scarff;p1;02/01/1984;alo;couleur_des_individus__vert;18
+projet_atlantique;oir;p2;01/01/1984;lpm;couleur_des_individus__rouge;27
+projet_manche;nivelle;p1;03/01/1984;lpf;couleur_des_individus__rouge;45
+projet_manche;oir;p2;02/01/1984;trf;couleur_des_individus__bleu;14
+projet_manche;oir;p1;05/01/1984;lpf;couleur_des_individus__vert;59
+projet_manche;oir;p1;02/01/1984;sat;couleur_des_individus__vert;15
+projet_atlantique;oir__p1;a;02/01/1984;lpm;couleur_des_individus__bleu;32
+projet_atlantique;oir;p2;03/01/1984;ang;couleur_des_individus__bleu;0

@@ -520,11 +520,16 @@ public class OreSiService {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
+            Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
                 if (validationCheckResult.isSuccess()) {
+                    if(validationCheckResult instanceof DateValidationCheckResult){
+                        VariableComponentKey variableComponentKey = ((DateValidationCheckResult) validationCheckResult).getVariableComponentKey();
+                        dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
+                    }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = referenceValidationCheckResult.getVariableComponentKey();
@@ -568,6 +573,9 @@ public class OreSiService {
                     String variable = variableComponentKey.getVariable();
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
+                    if(dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())){
+                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getMessage(), value);
+                    }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
                 }

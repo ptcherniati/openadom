@@ -221,7 +221,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            Assert.assertEquals("{\"variables\":[],\"rows\":[]}", json);
+            Assert.assertEquals("{\"variables\":[],\"rows\":[],\"totalRows\":-1}", json);
         }
     }
 }
