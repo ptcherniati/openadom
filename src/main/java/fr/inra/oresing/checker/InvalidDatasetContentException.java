@@ -89,6 +89,12 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         }
     }
 
+    public static void checkReferenceErrorsIsEmpty(List<CsvRowValidationCheckResult> errors) {
+        if (!errors.isEmpty()) {
+            throw new InvalidDatasetContentException(errors);
+        }
+    }
+
     public List<CsvRowValidationCheckResult> getErrors() {
         return errors;
     }

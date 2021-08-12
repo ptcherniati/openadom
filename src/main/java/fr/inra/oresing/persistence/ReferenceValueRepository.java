@@ -31,7 +31,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, hierarchicalKey, naturalKey, refValues, binaryFile) SELECT id, application, referenceType, hierarchicalKey, naturalKey, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile) SELECT id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
                 + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" DO UPDATE SET updateDate=current_timestamp, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }

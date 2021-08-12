@@ -1,0 +1,278 @@
+version: 0
+application:
+  name: foret
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: types_de_zones_etudes
+      - reference: zones_etudes
+        parentKeyColumn: type de site
+      - reference: traitements
+        parentKeyColumn: nom du site
+references:
+  types_de_zones_etudes:
+    keyColumns: [nom_fr]
+    columns:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  zones_etudes:
+    keyColumns: [nom]
+    columns:
+      type de site:
+      nom:
+      description_fr:
+      description_en:
+      date début:
+      date fin:
+      latitude:
+      longitude:
+      surface:
+      altitude:
+      pente:
+      direction pente_fr:
+      direction pente_en:
+      pays_fr:
+      pays_en:
+      région_fr:
+      région_en:
+      temps moyenne:
+      précip moyenne:
+      direction vent_fr:
+      direction vent_en:
+      type foret_fr:
+      type foret_en:
+      parent:
+  traitements:
+    keyColumns: [code]
+    columns:
+      nom du site:
+      code:
+      libellé_fr:
+      libellé_en:
+      description_fr:
+      description_en:
+  data_types:
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_key:
+      description_fr:
+      description_en:
+  themes:
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  theme_types_de_donnees_par_zone_etudes:
+    keyColumns: [nom du site, nom du thème, nom du type de données]
+    columns:
+      nom du site:
+      nom du thème:
+      nom du type de données:
+  variables_par_types_de_donnees:
+    keyColumns: [nom du type de données, nom de la variable]
+    columns:
+      nom du type de données:
+      nom de la variable:
+      nom de l'unité:
+      min:
+      max:
+dataTypes:
+  flux_meteo_dataResult:
+    authorization:
+      dataGroups:
+        reference:
+          data:
+            - localization
+            - Date
+          label: "Reference"
+        variable:
+          label: "Variable"
+          data:
+            - Ta
+            - Tarbre
+            - Rr
+            - PPFDr
+            - Pa
+            - Rh
+            - PPFDbc
+            - G
+            - WD
+            - P
+            - Rn
+            - WS
+            - LWin
+            - PPFDd
+            - LWout
+            - Rg
+            - PPFD
+            - APAR
+      authorizationScopes:
+        authorization_zoneEtude:
+          component: zones_etudes
+          variable: localization
+      timeScope:
+        component: day
+        variable: Date
+    data:
+      Date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      localization:
+        components:
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                refType: zones_etudes
+      Ta:
+        components:
+          °C:
+      Tarbre:
+        components:
+          °C:
+      Rr:
+        components:
+          MJ m-2 m-1:
+      PPFDr:
+        components:
+          µmol m-2 m-1:
+      Pa:
+        components:
+          kPa:
+      Rh:
+        components:
+          _%:
+      PPFDbc:
+        components:
+          µmol m-2 m-1:
+      G:
+        components:
+          MJ m-2 m-1:
+      WD:
+        components:
+          °:
+      P:
+        components:
+          m:
+      Rn:
+        components:
+          MJ m-2 m-1:
+      WS:
+        components:
+          m s-1:
+      LWin:
+        components:
+          MJ m-2 m-1:
+      PPFDd:
+        components:
+          µmol m-2 m-1:
+      LWout:
+        components:
+          MJ m-2 m-1:
+      Rg:
+        components:
+          MJ m-2 m-1:
+      PPFD:
+        components:
+          µmol m-2 m-1:
+      APAR:
+        components:
+          µmol m-2 m-1:
+    format:
+      headerLine: 2
+      firstRowLine: 4
+      columns:
+        - header: "site"
+          boundTo:
+            variable: localization
+            component: zones_etudes
+        - header: "date"
+          boundTo:
+            variable: Date
+            component: day
+        - header: "Ta"
+          boundTo:
+            variable: Ta
+            component: °C
+        - header: "Tarbre"
+          boundTo:
+            variable: Tarbre
+            component: °C
+        - header: "Rr"
+          boundTo:
+            variable: Rr
+            component: MJ m-2 m-1
+        - header: "PPFDr"
+          boundTo:
+            variable: PPFDr
+            component: µmol m-2 m-1
+        - header: "Pa"
+          boundTo:
+            variable: Pa
+            component: kPa
+        - header: "Rh"
+          boundTo:
+            variable: Rh
+            component: _%
+        - header: "PPFDbc"
+          boundTo:
+            variable: PPFDbc
+            component: µmol m-2 m-1
+        - header: "G"
+          boundTo:
+            variable: G
+            component: MJ m-2 m-1
+        - header: "WD"
+          boundTo:
+            variable: WD
+            component: °
+        - header: "P"
+          boundTo:
+            variable: P
+            component: m
+        - header: "Rn"
+          boundTo:
+            variable: Rn
+            component: MJ m-2 m-1
+        - header: "WS"
+          boundTo:
+            variable: WS
+            component: m s-1
+        - header: "LWin"
+          boundTo:
+            variable: LWin
+            component: MJ m-2 m-1
+        - header: "PPFDd"
+          boundTo:
+            variable: PPFDd
+            component: µmol m-2 m-1
+        - header: "LWout"
+          boundTo:
+            variable: LWout
+            component: MJ m-2 m-1
+        - header: "Rg"
+          boundTo:
+            variable: Rg
+            component: MJ m-2 m-1
+        - header: "PPFD"
+          boundTo:
+            variable: PPFD
+            component: µmol m-2 m-1
+        - header: "APAR"
+          boundTo:
+            variable: APAR
+            component: µmol m-2 m-1

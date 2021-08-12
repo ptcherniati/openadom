@@ -79,6 +79,14 @@ public class AuthorizationResourcesTest {
         }
 
         {
+            String response = mockMvc.perform(get("/api/v1/applications/acbb/dataType/biomasse_production_teneur/grantable")
+                    .cookie(authCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertTrue(response.contains("lusignan"));
+            Assert.assertTrue(response.contains("laqueuille.laqueuille__1"));
+        }
+
+        {
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")

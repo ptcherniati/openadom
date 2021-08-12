@@ -14,12 +14,22 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
 
     private final VariableComponentKey variableComponentKey;
 
+    private final String column;
+
     private final DateTimeFormatter dateTimeFormatter;
 
     private final String pattern;
 
     public DateLineChecker(VariableComponentKey variableComponentKey, String pattern) {
         this.variableComponentKey = variableComponentKey;
+        this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
+        this.pattern = pattern;
+        this.column="";
+    }
+
+    public DateLineChecker(String column, String pattern) {
+        this.column = column;
+        this.variableComponentKey=null;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
     }
@@ -40,8 +50,13 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
             dateTimeFormatter.parse(value);
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (DateTimeParseException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", variableComponentKey, "pattern", pattern, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", pattern, "value", value));
         }
         return validationCheckResult;
+    }
+
+    @Override
+    public String getColumn() {
+        return column;
     }
 }

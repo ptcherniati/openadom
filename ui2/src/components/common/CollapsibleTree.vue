@@ -1,24 +1,36 @@
 <template>
   <div>
     <div
-      :class="`CollapsibleTree-header ${children && children.length !== 0 ? 'clickable' : ''} ${
-        children && children.length !== 0 && displayChildren ? '' : 'mb-1'
-      }`"
+      :class="`CollapsibleTree-header ${
+        option.children && option.children.length !== 0 ? 'clickable' : ''
+      } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
       :style="`background-color:rgba(240, 245, 245, ${1 - level / 2})`"
       @click="displayChildren = !displayChildren"
     >
       <div class="CollapsibleTree-header-infos">
-        <FontAwesomeIcon
-          v-if="children && children.length !== 0"
-          :icon="displayChildren ? 'caret-down' : 'caret-right'"
-          class="clickable mr-3"
-        />
-        <div
-          class="link"
-          :style="`transform:translate(${level * 50}px);`"
-          @click="(event) => onClickLabelCb(event, label)"
-        >
-          {{ label }}
+        <div class="CollapsibleTree-header-infos" :style="`transform:translate(${level * 50}px);`">
+          <FontAwesomeIcon
+            v-if="option.children && option.children.length !== 0"
+            :icon="displayChildren ? 'caret-down' : 'caret-right'"
+            class="clickable mr-3"
+          />
+
+          <b-radio
+            v-if="withRadios"
+            v-model="innerOptionChecked"
+            :name="radioName"
+            @click.native="stopPropagation"
+            :native-value="option.id"
+          >
+            {{ option.label }}
+          </b-radio>
+          <div
+            v-else
+            :class="onClickLabelCb ? 'link' : ''"
+            @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+          >
+            {{ option.label }}
+          </div>
         </div>
       </div>
       <div class="CollapsibleTree-buttons">
@@ -27,7 +39,7 @@
             v-model="refFile"
             class="file-label"
             accept=".csv"
-            @input="() => onUploadCb(label, refFile)"
+            @input="() => onUploadCb(option.label, refFile)"
           >
             <span class="file-name" v-if="refFile">
               {{ refFile.name }}
@@ -41,7 +53,7 @@
           <b-button
             :icon-left="button.iconName"
             size="is-small"
-            @click="button.clickCb(label)"
+            @click="button.clickCb(option.label)"
             class="ml-1"
             :type="button.type"
           >
@@ -50,38 +62,50 @@
         </div>
       </div>
     </div>
-    <div v-if="displayChildren">
-      <CollapsibleTree
-        v-for="child in children"
-        :key="child.id"
-        :label="child.label"
-        :children="child.children"
-        :level="level + 1"
-        :onClickLabelCb="onClickLabelCb"
-        :onUploadCb="onUploadCb"
-        :buttons="buttons"
-      />
-    </div>
+    <CollapsibleTree
+      v-for="child in option.children"
+      :key="child.id"
+      :option="child"
+      :level="level + 1"
+      :onClickLabelCb="onClickLabelCb"
+      :onUploadCb="onUploadCb"
+      :buttons="buttons"
+      :class="displayChildren ? '' : 'hide'"
+      :withRadios="withRadios"
+      :radioName="radioName"
+      @optionChecked="onInnerOptionChecked"
+    />
   </div>
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
   components: { FontAwesomeIcon },
 })
 export default class CollapsibleTree extends Vue {
-  @Prop() label;
-  @Prop() children;
-  @Prop() level;
+  @Prop() option;
+  @Prop({ default: 0 }) level;
   @Prop() onClickLabelCb;
   @Prop() onUploadCb;
   @Prop() buttons;
+  @Prop({ default: false }) withRadios;
+  @Prop() radioName;
 
   displayChildren = false;
   refFile = null;
+  innerOptionChecked = null;
+
+  @Watch("innerOptionChecked")
+  onInnerOptionChecked(value) {
+    this.$emit("optionChecked", value);
+  }
+
+  stopPropagation(event) {
+    event.stopPropagation();
+  }
 }
 </script>
 

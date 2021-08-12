@@ -463,7 +463,7 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(actualCsv, 500));
             Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
             Assert.assertTrue(actualCsv.contains("Parcelle"));
-            Assert.assertTrue(actualCsv.contains("laqueuille.laqueuille__1"));
+            Assert.assertTrue(actualCsv.contains("laqueuille;1"));
         }
 
         // ajout de data
@@ -588,10 +588,137 @@ public class OreSiResourcesTest {
             }
         }
 
-        // ajout de data
-        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdPrelevementProDataResourceName())) {
+        // ajout de data PrelevementPro
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPrelevementProDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data PhysicoChimieSols
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieSolsProDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+    }
+
+    @Test
+    public void addApplicationOLAC() throws Exception {
+        authenticationService.addUserRightCreateApplication(userId);
+        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getOlaApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getOlaReferentielFiles().entrySet()) {
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getConditionPrelevementDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevements")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/physico-chimie")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getSondeDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/sonde_truncated")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhytoAggregatedDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhytoplanctonDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton__truncated.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getZooplanctonDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton__truncated.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton__truncated")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getZooplactonBiovolumDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
+                    .file(refFile)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+    }
+
+    @Test
+    public void addApplicationFORET() throws Exception {
+        authenticationService.addUserRightCreateApplication(userId);
+        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
+                    .file(configuration)
+                    .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getForetReferentielFiles().entrySet()) {
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
+                        .file(refFile)
+                        .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdFluxMeteoForetDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
                     .file(refFile)
                     .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
@@ -604,13 +731,11 @@ public class OreSiResourcesTest {
         addApplicationAcbb();
         try (InputStream in = fixtures.openSwcDataResourceName(false)) {
             MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
-
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
                     .file(file)
                     .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-
             log.debug(response);
         }
     }
