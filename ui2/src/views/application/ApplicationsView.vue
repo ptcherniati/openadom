@@ -36,7 +36,8 @@
                     field="name"
                     class="column"
                     @input="recalculate"
-                  >{{ $t("applications.trierRecent") }}</b-checkbox>
+                    >{{ $t("applications.trierRecent") }}</b-checkbox
+                  >
                 </b-field>
               </div>
               <div class="content">
@@ -49,7 +50,8 @@
                     field="name"
                     class="column"
                     @input="recalculate"
-                  >{{ $t("applications.trierA_z") }}</b-checkbox>
+                    >{{ $t("applications.trierA_z") }}</b-checkbox
+                  >
                   <b-checkbox
                     id="checkboxTrieZ_a"
                     v-model="checkboxTrieZ_a"
@@ -216,22 +218,27 @@ export default class ApplicationsView extends Vue {
   }
   recalculate() {
     this.selectedApplications = this.copyOfApplications(this.applications);
-    
+
     // filter by name
     this.selectedApplications = this.selectedApplications.filter(
       (a) => a.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
     );
 
     // order by date or name
-    if (this.checkboxDate == "true") this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
-    else
-      this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate).reverse();
+    if (this.checkboxDate == "true")
+      this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
+    else this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate).reverse();
     if (this.checkboxTrieZ_a == "true" || this.checkboxTrieA_z == "true") {
-      if (this.checkboxTrieA_z == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieA_z")) {
+      if (
+        this.checkboxTrieA_z == "true" &&
+        document.activeElement.parentElement == document.getElementById("checkboxTrieA_z")
+      ) {
         this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name));
         this.checkboxTrieZ_a = "false";
-      }
-      else if (this.checkboxTrieZ_a == "true" && document.activeElement.parentElement == document.getElementById("checkboxTrieZ_a")) {
+      } else if (
+        this.checkboxTrieZ_a == "true" &&
+        document.activeElement.parentElement == document.getElementById("checkboxTrieZ_a")
+      ) {
         this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name)).reverse();
         this.checkboxTrieA_z = "false";
       }
@@ -245,7 +252,8 @@ export default class ApplicationsView extends Vue {
   async init() {
     this.applications = await this.applicationService.getApplications();
     this.selectedApplications = this.applications;
-    if (this.checkboxDate == "true") this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
+    if (this.checkboxDate == "true")
+      this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
   }
 
   createApplication() {
