@@ -233,9 +233,10 @@ public class OreSiResources {
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds,
             @RequestParam(value = "offset", required = false) Long offset,
-            @RequestParam(value = "limit", required = false) Long limit) {
+            @RequestParam(value = "limit", required = false) Long limit,
+            @RequestParam(value = "orderBy", required = false) String orderBy) {
         DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        List<DataRow> list = service.findData(downloadDatasetQuery , offset, limit);
+        List<DataRow> list = service.findData(downloadDatasetQuery , offset, limit, orderBy);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
                 .map(DataRow::getValues)
@@ -253,8 +254,9 @@ public class OreSiResources {
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds,
             @RequestParam(value = "offset", required = false) Long offset,
-            @RequestParam(value = "limit", required = false) Long limit) {
-        return getAllDataCsv(nameOrId, dataType, variableComponentIds, offset, limit);
+            @RequestParam(value = "limit", required = false) Long limit,
+            @RequestParam(value = "orderBy", required = false) String orderBy) {
+        return getAllDataCsv(nameOrId, dataType, variableComponentIds, offset, limit, orderBy);
     }
 
     /** export as CSV */
@@ -264,9 +266,10 @@ public class OreSiResources {
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds,
             @RequestParam(value = "offset", required = false) Long offset,
-            @RequestParam(value = "limit", required = false) Long limit) {
+            @RequestParam(value = "limit", required = false) Long limit,
+            @RequestParam(value = "orderBy", required = false) String orderBy) {
         DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        String result = service.getDataCsv(downloadDatasetQuery, offset, limit);
+        String result = service.getDataCsv(downloadDatasetQuery, offset, limit, orderBy);
         return ResponseEntity.ok(result);
     }
 

@@ -3,15 +3,15 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
+import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -38,7 +38,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return Data.class;
     }
 
-    public List<DataRow> findAllByDataType(String dataType, Long offset, Long limit) {
+    public List<DataRow> findAllByDataType(String dataType, Long offset, Long limit, String orderBy) {
         String toMergeDataGroupsQuery = getSqlToMergeData(dataType);
         String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
                 + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
@@ -50,10 +50,16 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 "'refsLinkedTo', refsLinkedTo" +
                 ") AS json"
                 + " FROM my_data ";
-        if (offset != null) {
+        if (!Strings.isNullOrEmpty(orderBy)) {
+            String _order = Arrays.stream(orderBy.split(","))
+                    .map(order -> String.format("datavalues->%s->>%s", order.split("_")))
+                    .collect(Collectors.joining(","));
+            query = String.format("%s \nORDER by %s", query, _order);
+        }
+        if (offset != null && limit>=0) {
             query = String.format("%s \nOFFSET %d ROWS", query, offset);
         }
-        if (limit != null) {
+        if (limit != null && limit>=0) {
             query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, limit);
         }
         List result = getNamedParameterJdbcTemplate().query(query, Collections.emptyMap(), getJsonRowMapper());

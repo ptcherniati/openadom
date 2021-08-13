@@ -219,7 +219,7 @@ public class OreSiService {
                 }
             }
 
-            validateStoredData(app, dataType, null, null);
+            validateStoredData(app, dataType, null, null, null);
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
@@ -231,7 +231,7 @@ public class OreSiService {
         return uuid;
     }
 
-    private void validateStoredData(Application app, String dataType, Long offset, Long limit) {
+    private void validateStoredData(Application app, String dataType, Long offset, Long limit, String orderBy) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             lineCheckers.forEach(lineChecker -> {
@@ -239,7 +239,7 @@ public class OreSiService {
                 Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
             });
         };
-        repo.getRepository(app).data().findAllByDataType(dataType,offset, limit).stream()
+        repo.getRepository(app).data().findAllByDataType(dataType, offset, limit, orderBy).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
@@ -526,7 +526,7 @@ public class OreSiService {
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
                 if (validationCheckResult.isSuccess()) {
-                    if(validationCheckResult instanceof DateValidationCheckResult){
+                    if (validationCheckResult instanceof DateValidationCheckResult) {
                         VariableComponentKey variableComponentKey = ((DateValidationCheckResult) validationCheckResult).getVariableComponentKey();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
@@ -573,7 +573,7 @@ public class OreSiService {
                     String variable = variableComponentKey.getVariable();
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
-                    if(dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())){
+                    if (dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())) {
                         value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getMessage(), value);
                     }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
@@ -862,10 +862,10 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, Long offset, Long limit) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, Long offset, Long limit, String orderBy) {
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         String dataType = downloadDatasetQuery.getDataType();
-        List<DataRow> list = findData(downloadDatasetQuery, offset, limit);
+        List<DataRow> list = findData(downloadDatasetQuery, offset, limit, orderBy);
         Configuration.FormatDescription format = getApplication(applicationNameOrId)
                 .getConfiguration()
                 .getDataTypes()
@@ -924,11 +924,20 @@ public class OreSiService {
                 .build();
     }
 
-    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery, Long offset, Long limit) {
+    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery, Long offset, Long limit, String orderBy) {
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType(), offset, limit);
+        orderBy = Optional.ofNullable(orderBy)
+                .filter(s -> Strings.isNullOrEmpty(s))
+                .orElseGet(() -> {
+                            VariableComponentKey timeScope = app.getConfiguration().getDataTypes().get(downloadDatasetQuery.getDataType()).getAuthorization().getTimeScope();
+                            String timeScopeVariableComponent = String.format("'%s'_'%s'", timeScope.getVariable(), timeScope.getComponent());
+                            String localizationsScopes = app.getConfiguration().getDataTypes().get(downloadDatasetQuery.getDataType()).getAuthorization().getAuthorizationScopes().values().stream().map(vc->String.format("'%s'_'%s'", vc.getVariable(), vc.getComponent())).collect(Collectors.joining(","));
+                            return String.format("%s,%s", timeScopeVariableComponent, localizationsScopes);
+                        }
+                );
+        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType(), offset, limit, orderBy);
         return data;
     }
 
