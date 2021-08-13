@@ -344,6 +344,14 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("missingReferenceForCheckerInReference", onlyError.getMessage());
     }
 
+    @Test
+    public void testUnknownCheckerNameForVariableComponent() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("name: Integer", "name: Integerr");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownCheckerNameForVariableComponent", onlyError.getMessage());
+    }
 
     // ne passe pas car la référence n'est pas bonne nous avons un NullPointerException.
     @Test
@@ -359,7 +367,7 @@ public class ApplicationConfigurationServiceTest {
                 "        checker:\n" +
                 "          name: Reference\n" +
                 "          params:\n" +
-                "            refType: sit\n" +
+                "            refType: typeSites\n" +
                 "            columns: nom du site");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());

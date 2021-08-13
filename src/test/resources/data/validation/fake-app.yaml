@@ -52,6 +52,14 @@ references:
       description_fr:
       description_en:
   sites:
+    validations:
+      typeSitesRef:
+        description: "référence au type de site"
+        checker:
+          name: Reference
+          params:
+            refType: typeSites
+            columns: nom du type de site
     separator:
     keyColumns: [nom du site_key]
     columns:
@@ -111,6 +119,11 @@ dataTypes:
       Couleur des individus:
         components:
           value:
+            defaultValue: "return 0"
+            checker:
+              name: Integer
+              params:
+                required:
     validations:
       exempldeDeRegleDeValidation:
         description: "Juste un exemple"
