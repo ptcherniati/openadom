@@ -322,4 +322,111 @@ public class ApplicationConfigurationServiceTest {
         log.debug(onlyError.getMessage());
         Assert.assertEquals("invalidKeyColumns", onlyError.getMessage());
     }
+
+    @Test
+    public void testMissingReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du site", "sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refTypes: sites\n" +
+                "            columns: nom du site");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceForCheckerInReference", onlyError.getMessage());
+    }
+
+
+    // ne passe pas car la référence n'est pas bonne nous avons un NullPointerException.
+    @Test
+    public void testUnknownReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du site", "sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sit\n" +
+                "            columns: nom du site");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceForCheckerInReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingColumnReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du site", "sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du sites");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingColumnReferenceForCheckerInReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testUnknownCheckerNameForVariableComponentCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du site", "sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: References\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du site");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownCheckerNameForVariableComponentCheckerInReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingParamColumnReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: nom du site", "sitesRef:\n" +
+                "        description: \"référence au site\"\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: sites\n" +
+                "            columns: ");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingParamColumnReferenceForCheckerInReference", onlyError.getMessage());
+    }
 }

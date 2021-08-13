@@ -23,6 +23,14 @@ references:
   plateformes:
     separator:
     keyColumns: [nom de la plateforme_key]
+    validations:
+      sitesRef:
+        description: "référence au site"
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            columns: nom du site
     columns:
       nom de la plateforme_key:
       nom du site:
