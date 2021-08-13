@@ -9,6 +9,7 @@ import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.DownloadDatasetQuery;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.*;
@@ -84,12 +85,12 @@ public class GroovyLineChecker implements LineChecker {
                 .map(p -> p.get(PARAM_DATATYPES))
                 .ifPresent(datas -> {
                     Arrays.stream(datas.split(","))
-                            .forEach(data -> {
-                                List<DataRow> allByDataType = repository.data().findAllByDataType(data, null, null, null);
-                                datatypes.put(data, allByDataType);
+                            .forEach(dataType -> {
+                                List<DataRow> allByDataType = repository.data().findAllByDataType(DownloadDatasetQuery.buildDownloadDatasetQuery(null, null, dataType, application));
+                                datatypes.put(dataType, allByDataType);
                                 allByDataType.stream()
                                         .map(datatValues -> datatValues.getValues())
-                                        .forEach(dv -> datatypesValues.computeIfAbsent(data, k->new LinkedList<>()).add(dv));
+                                        .forEach(dv -> datatypesValues.computeIfAbsent(dataType, k->new LinkedList<>()).add(dv));
                             });
                 });
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();

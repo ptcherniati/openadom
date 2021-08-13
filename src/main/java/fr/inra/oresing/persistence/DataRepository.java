@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
+import fr.inra.oresing.rest.DownloadDatasetQuery;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -38,35 +39,15 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return Data.class;
     }
 
-    public List<DataRow> findAllByDataType(String dataType, Long offset, Long limit, String orderBy) {
-        String toMergeDataGroupsQuery = getSqlToMergeData(dataType);
-        String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
-                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
-                "jsonb_build_object(" +
-                "'rowNumber', row_number() over (), " +
-                "'totalRows', count(*) over (), " +
-                "'rowId', rowId, " +
-                "'values', dataValues, " +
-                "'refsLinkedTo', refsLinkedTo" +
-                ") AS json"
-                + " FROM my_data ";
-        if (!Strings.isNullOrEmpty(orderBy)) {
-            String _order = Arrays.stream(orderBy.split(","))
-                    .map(order -> String.format("datavalues->%s->>%s", order.split("_")))
-                    .collect(Collectors.joining(","));
-            query = String.format("%s \nORDER by %s", query, _order);
-        }
-        if (offset != null && limit>=0) {
-            query = String.format("%s \nOFFSET %d ROWS", query, offset);
-        }
-        if (limit != null && limit>=0) {
-            query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, limit);
-        }
+    public List<DataRow> findAllByDataType(DownloadDatasetQuery downloadDatasetQuery) {
+        String toMergeDataGroupsQuery = getSqlToMergeData(downloadDatasetQuery);
+        String query = downloadDatasetQuery.buildQuery(toMergeDataGroupsQuery);
         List result = getNamedParameterJdbcTemplate().query(query, Collections.emptyMap(), getJsonRowMapper());
         return (List<DataRow>) result;
     }
 
-    public String getSqlToMergeData(String dataType) {
+    public String getSqlToMergeData(DownloadDatasetQuery downloadDatasetQuery) {
+        String dataType = downloadDatasetQuery.getDataType();
         Preconditions.checkArgument(getApplication().getDataType().contains(dataType), "pas de type de données " + dataType + " dans l'application " + getApplication());
         String applicationId = getApplication().getId().toString();
         String sql = " SELECT rowId, jsonb_object_agg(regexp_replace(datavalues::text, 'date:\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}:(.*)', '\\1')::jsonb) AS dataValues, jsonb_object_agg(refsLinkedTo) AS refsLinkedTo"

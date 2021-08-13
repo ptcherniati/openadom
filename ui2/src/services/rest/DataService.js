@@ -7,10 +7,9 @@ export class DataService extends Fetcher {
         super();
     }
 
-    async getDataType(applicationName, dataTypeId, offset, limit) {
+    async getDataType(applicationName, dataTypeId, params) {
         return this.get(`applications/${applicationName}/data/${dataTypeId}`, {
-            offset: offset,
-            limit: limit,
+            downloadDatasetQuery: JSON.stringify(params),
         });
     }
 

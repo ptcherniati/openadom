@@ -3,7 +3,78 @@
     <SubMenu :root="application.title" :paths="subMenuPaths" />
 
     <h1 class="title main-title">{{ dataTypeId }}</h1>
-
+    <b-collapse v-model="showSort" aria-id="contentIdForA11y1">
+      <template #trigger>
+        <b-button label="Sort" type="is-primary" aria-controls="contentIdForA11y1" />
+      </template>
+      <div class="notification">
+        <div class="content">
+          <div class="rows">
+            <div class="row">
+              <div class="columns">
+                <div class="column">
+                  <b-field>
+                    <ul>
+                      <div class="rows">
+                        <div
+                          class="row variableComponent"
+                          v-for="(variableComponent, index) in variableComponentsListToSort"
+                          :key="index"
+                          :class="variableComponent.order"
+                        >
+                          <div class="columns">
+                            <div class="column orderLabel">
+                              {{ variableComponent.order
+                              }}{{ variableComponent.variableComponentKey.variable }} :
+                              {{ variableComponent.variableComponentKey.component }}
+                            </div>
+                            <div
+                              class="column asc"
+                              @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
+                            >
+                              ASC
+                            </div>
+                            <div
+                              class="column desc"
+                              @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
+                            >
+                              DESC
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </ul>
+                  </b-field>
+                </div>
+                <div class="column">
+                  <div class="rows">
+                    <div
+                      class="row"
+                      v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                      :key="index"
+                      :class="variableComponent.order"
+                    >
+                      <div class="columns">
+                        <div class="column orderLabel">
+                          {{ variableComponent.order }} ->
+                          {{ variableComponent.variableComponentKey.variable }} :
+                          {{ variableComponent.variableComponentKey.component }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <b-button type="is-success" expanded size="is-large" @click="initDatatype"
+                >order</b-button
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </b-collapse>
     <div class="b-table">
       <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 750px">
         <table class="table is-striped">
@@ -13,13 +84,20 @@
                 v-for="variable in variables"
                 :key="variable.id"
                 :colspan="Object.values(variable.components).length"
+                :variable="variable.id"
               >
                 {{ variable.label }}
               </th>
             </tr>
             <tr>
-              <th v-for="(comp, index) in variableComponents" :key="`${comp.label}-${index}`">
+              <th
+                v-for="(comp, index) in variableComponents"
+                :key="`${comp.label}-${index}`"
+                :variable="comp.variable"
+                :component="comp.component"
+              >
                 {{ comp.label }}
+                <b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon>
               </th>
             </tr>
           </thead>
@@ -28,6 +106,8 @@
               <td
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
+                :variable="component.variable"
+                :component="component.component"
               >
                 {{ row[variables[getVariableIndex(index)].id][component.id] }}
               </td>
@@ -38,7 +118,7 @@
       <b-pagination
         :total="totalRows"
         v-model="currentPage"
-        :per-page="limit"
+        :per-page="params.limit"
         size="is-large"
         order="is-centered"
         range-before="3"
@@ -80,10 +160,16 @@ export default class DataTypeTableView extends Vue {
   variables = [];
   variableComponents = [];
   mapVariableIndexByColumnIndex = new Map();
-  offset = 0;
-  limit = 15;
+  params = {
+    offset: 0,
+    limit: 15,
+    variableComponentOrderBy: [],
+  };
+  showSort = false;
+  controlPanels = null
   totalRows = -1;
   currentPage = 1;
+  variableComponentsListToSort = [];
 
   async created() {
     await this.init();
@@ -107,12 +193,12 @@ export default class DataTypeTableView extends Vue {
     await this.initDatatype();
   }
 
-  async initDatatype(){
+  async initDatatype() {
+    this.showSort = false;
     const dataTypes = await this.dataService.getDataType(
       this.applicationName,
       this.dataTypeId,
-      this.offset,
-      this.limit
+      this.params
     );
     this.totalRows = dataTypes.totalRows;
     this.rows = dataTypes.rows.map((r) => {
@@ -123,7 +209,20 @@ export default class DataTypeTableView extends Vue {
     this.variables = dataTypes.variables.map((v) => variablesModels[v]);
     this.variableComponents = this.variables
       .map((v) => {
-        return Object.values(v.components);
+        return Object.values(v.components).map((c) =>
+          Object.assign(c, { variable: v.label, component: c.id })
+        );
+      })
+      .flat();
+    this.variableComponentsListToSort = this.variables
+      .map((v) => {
+        return Object.keys(v.components).reduce(
+          (acc, comp) => [
+            ...acc,
+            { variableComponentKey: { variable: v.id, component: comp }, order: null },
+          ],
+          []
+        );
       })
       .flat();
 
@@ -141,7 +240,7 @@ export default class DataTypeTableView extends Vue {
     });
   }
   async changePage(value) {
-    this.offset = (value - 1) * this.limit;
+    this.params.offset = (value - 1) * this.params.limit;
     await this.initDatatype();
   }
   getVariableIndex(columnIndex) {
@@ -153,6 +252,34 @@ export default class DataTypeTableView extends Vue {
       }
     }
     return variableIndex;
+  }
+  addVariableComponentToSortedList(variableComponentSorted, order) {
+    variableComponentSorted.order = variableComponentSorted.order == order ? null : order;
+    this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
+      (c) =>
+        c.variableComponentKey.variable != variableComponentSorted.variableComponentKey.variable ||
+        c.variableComponentKey.component != variableComponentSorted.variableComponentKey.component
+    );
+    if (variableComponentSorted.order) {
+      this.params.variableComponentOrderBy.push(variableComponentSorted);
+    }
+  }
+  getSortIcon(variable, component) {
+    return this.params.variableComponentOrderBy
+      .filter(
+        (c) =>
+          c.variableComponentKey.variable == variable &&
+          c.variableComponentKey.component == component
+      )
+      .map((vc) => {
+        if (vc.order == "ASC") {
+          return "arrow-down";
+        } else if (vc.order == "DESC") {
+          return "arrow-up";
+        } else {
+          return "";
+        }
+      })[0];
   }
 }
 </script>
@@ -177,4 +304,17 @@ $row-variable-height: 60px;
 .DataSetTableView-variable-row {
   height: $row-variable-height;
 }
+.orderLabel {
+  flex-grow: 10;
+}
+.row.variableComponent:hover {
+  background-color: grey;
+  color: white;
+}
+.ASC .asc,
+.DESC .desc {
+  background-color: rgb(87, 141, 87);
+}
 </style>
+this.params.variableComponentSelects.map( (comp) => comp.variableComponentKey.variable +
+this.variable + comp.variableComponentKey.component + this.component, component )
