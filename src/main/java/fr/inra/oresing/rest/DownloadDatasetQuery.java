@@ -1,15 +1,18 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
 import lombok.Getter;
 import lombok.Setter;
+import org.assertj.core.util.Strings;
 import org.springframework.util.CollectionUtils;
 import org.testcontainers.shaded.org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.Nullable;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,14 +28,14 @@ public class DownloadDatasetQuery {
     @Nullable
     Set<VariableComponentKey> variableComponentSelects;
     @Nullable
-    Set<VariableComponentKey> variableComponentFilters;
+    Set<VariableComponentFilters> variableComponentFilters;
     @Nullable
     Set<VariableComponentOrderBy> variableComponentOrderBy;
 
     public DownloadDatasetQuery() {
     }
 
-    public DownloadDatasetQuery(Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentKey> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy) {
+    public DownloadDatasetQuery(Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy) {
         this.offset = offset;
         this.limit = limit;
         this.variableComponentSelects = variableComponentSelects;
@@ -43,7 +46,7 @@ public class DownloadDatasetQuery {
         dataType = null;
     }
 
-    public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentKey> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
+    public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
         this.applicationNameOrId = applicationNameOrId;
         this.dataType = dataType;
         this.offset = offset;
@@ -100,6 +103,17 @@ public class DownloadDatasetQuery {
         return String.format("%s \nORDER by %s", query, orderBy);
     }
 
+    String sortedBy(String query) {
+        Set<VariableComponentFilters> variableComponentKeySet = new LinkedHashSet<>();
+        String filter = Optional.ofNullable(variableComponentFilters)
+                .filter(vck->!CollectionUtils.isEmpty(vck))
+                .orElseGet(LinkedHashSet::new)
+                .stream()
+                .map(vck -> String.format("datavalues->'%s'->>'%s' like %s", StringEscapeUtils.escapeSql(vck.getVariable()), StringEscapeUtils.escapeSql(vck.getComponent()), vck.getFilter()))
+                .collect(Collectors.joining(" AND "));
+        return Strings.isNullOrEmpty(filter)?query:String.format("%s \nWhere %s", query, filter);
+    }
+
     public String buildQuery(String toMergeDataGroupsQuery) {
         String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
                 + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
@@ -111,6 +125,7 @@ public class DownloadDatasetQuery {
                 "'refsLinkedTo', refsLinkedTo" +
                 ") AS json"
                 + " FROM my_data ";
+        query = sortedBy(query);
         query = addOrderBy(query);
         if (offset != null && limit >= 0) {
             query = String.format("%s \nOFFSET %d ROWS", query, offset);
@@ -151,6 +166,35 @@ public class DownloadDatasetQuery {
 
         public String getOrder() {
             return order!=null?order.name():"ASC";
+        }
+    }
+
+    public static class VariableComponentFilters {
+        public VariableComponentKey variableComponentKey;
+        public String filter;
+
+        public VariableComponentFilters() {
+        }
+
+        public VariableComponentFilters(VariableComponentKey variableComponentKey, String  filter) {
+            this.variableComponentKey = variableComponentKey;
+            this.filter = filter;
+        }
+
+        String getId() {
+            return variableComponentKey == null ? null : variableComponentKey.getId();
+        }
+
+        String getVariable() {
+            return variableComponentKey == null ? null : variableComponentKey.getVariable();
+        }
+
+        String getComponent() {
+            return variableComponentKey == null ? null : variableComponentKey.getComponent();
+        }
+
+        public String getFilter() {
+            return filter!=null?String.format(" '%%%s%%'", filter):null;
         }
     }
 }

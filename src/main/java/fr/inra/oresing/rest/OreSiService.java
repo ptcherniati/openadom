@@ -935,6 +935,27 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
+        /*Map<VariableComponentKey, LineChecker> checkers = checkerFactory.getLineCheckers(app, dataType)
+                .stream()
+                .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
+                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker))
+                .collect(
+                        Collectors.toMap(
+                                c -> {
+                                    VariableComponentKey vc;
+                                    if (c instanceof DateLineChecker) {
+                                        vc = ((DateLineChecker) c).getVariableComponentKey();
+                                    } else if (c instanceof IntegerChecker) {
+                                        vc = ((IntegerChecker) c).getVariableComponentKey();
+                                    } else {
+                                        vc = ((FloatChecker) c).getVariableComponentKey();
+                                    }
+                                    return vc;
+                                },
+                                c -> c
+                        )
+                );*/
+
         List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery);
         return data;
     }

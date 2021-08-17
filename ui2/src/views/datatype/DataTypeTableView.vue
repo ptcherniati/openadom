@@ -97,11 +97,39 @@
                 :component="comp.component"
               >
                 {{ comp.label }}
-                <b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon>
+                <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
               </th>
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td
+                v-for="(component, index) in variableComponents"
+                :key="`${index}`"
+                :variable="component.variable"
+                :component="component.component"
+              >
+                <b-field>
+                  <b-input
+                    v-model="search[component.variable + '-' +component.component]"
+                    placeholder="Search..."
+                    type="search"
+                    icon-pack="fas"
+                    icon="search"
+                    icon-clickable
+                    @icon-click="
+                      addSearch(
+                        component.variable + '-' + component.component,
+                        component.variable,
+                        component.component,
+                        $event
+                      )
+                    "
+                  >
+                  </b-input>
+                </b-field>
+              </td>
+            </tr>
             <tr v-for="(row, rowIndex) in rows" :key="`row_${rowIndex}`">
               <td
                 v-for="(component, index) in variableComponents"
@@ -149,11 +177,12 @@ import { AlertService } from "@/services/AlertService";
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
   @Prop() dataTypeId;
+  @Prop() applicationConfiguration;
 
   applicationService = ApplicationService.INSTANCE;
   dataService = DataService.INSTANCE;
   alertService = AlertService.INSTANCE;
-
+  arrow;
   application = new ApplicationResult();
   subMenuPaths = [];
   rows = [];
@@ -164,12 +193,14 @@ export default class DataTypeTableView extends Vue {
     offset: 0,
     limit: 15,
     variableComponentOrderBy: [],
+    variableComponentFilters: [],
   };
   showSort = false;
-  controlPanels = null
+  controlPanels = null;
   totalRows = -1;
   currentPage = 1;
   variableComponentsListToSort = [];
+  search = {};
 
   async created() {
     await this.init();
@@ -265,7 +296,8 @@ export default class DataTypeTableView extends Vue {
     }
   }
   getSortIcon(variable, component) {
-    return this.params.variableComponentOrderBy
+    variable, component, event;
+    let icon = this.params.variableComponentOrderBy
       .filter(
         (c) =>
           c.variableComponentKey.variable == variable &&
@@ -280,6 +312,25 @@ export default class DataTypeTableView extends Vue {
           return "";
         }
       })[0];
+    return icon ? icon : null;
+  }
+  addSearch(key, variable, component, event) {
+    console.log(variable, component, event);
+    let value = this.search[key];
+    this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
+      (c) =>
+        c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
+    );
+    if (value && value.length > 0) {
+      this.params.variableComponentFilters.push({
+        variableComponentKey: {
+          variable: variable,
+          component: component,
+        },
+        filter: value,
+      });
+      this.initDatatype();
+    }
   }
 }
 </script>
