@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -236,7 +234,8 @@ public class OreSiResources {
                 .flatMap(Set::stream)
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
-        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows));
+        Map<String, Map<String, LineChecker>> checkedFormatariableComponents = service.getCheckedFormatariableComponents(nameOrId, dataType);
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatariableComponents));
     }
 
     /**

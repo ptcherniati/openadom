@@ -111,7 +111,7 @@
               >
                 <b-field>
                   <b-input
-                    v-model="search[component.variable + '-' +component.component]"
+                    v-model="search[component.variable + '-' + component.component]"
                     placeholder="Search..."
                     type="search"
                     icon-pack="fas"
@@ -241,19 +241,26 @@ export default class DataTypeTableView extends Vue {
     this.variableComponents = this.variables
       .map((v) => {
         return Object.values(v.components).map((c) =>
-          Object.assign(c, { variable: v.label, component: c.id })
+          Object.assign(c, {
+            variable: v.label,
+            component: c.id,
+            ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
+          })
         );
       })
       .flat();
     this.variableComponentsListToSort = this.variables
       .map((v) => {
-        return Object.keys(v.components).reduce(
-          (acc, comp) => [
+        return Object.keys(v.components).reduce((acc, comp) => {
+          return [
             ...acc,
-            { variableComponentKey: { variable: v.id, component: comp }, order: null },
-          ],
-          []
-        );
+            {
+              variableComponentKey: { variable: v.id, component: comp },
+              order: null,
+              ...this.getVariableComponentInfos(v.id, comp, dataTypes),
+            },
+          ];
+        }, []);
       })
       .flat();
 
@@ -331,6 +338,40 @@ export default class DataTypeTableView extends Vue {
       });
       this.initDatatype();
     }
+  }
+  getVariableComponentInfos(variableId, componentId, dataTypes) {
+    let type = null;
+    let format = null;
+    let key = variableId + "_" + componentId;
+    if (dataTypes.checkedFormatariableComponents) {
+      if (
+        dataTypes.checkedFormatariableComponents.DateLineChecker &&
+        dataTypes.checkedFormatariableComponents.DateLineChecker[key]
+      ) {
+        type = "date";
+        format = dataTypes.checkedFormatariableComponents.DateLineChecker[key].pattern;
+      } else if (
+        dataTypes.checkedFormatariableComponents.IntegerChecker &&
+        dataTypes.checkedFormatariableComponents.IntegerChecker[key]
+      ) {
+        type = "numeric";
+        format = "integer";
+      } else if (
+        dataTypes.checkedFormatariableComponents.FloatChecker &&
+        dataTypes.checkedFormatariableComponents.FloatChecker[key]
+      ) {
+        type = "numeric";
+        format = "float";
+      } else {
+        type = null;
+        format = null;
+      }
+    }
+    return {
+      type: type,
+      format: format,
+      key: key,
+    };
   }
 }
 </script>

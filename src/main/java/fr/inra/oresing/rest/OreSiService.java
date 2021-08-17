@@ -930,32 +930,37 @@ public class OreSiService {
                 .build();
     }
 
+    public Map<String, Map<String, LineChecker>> getCheckedFormatariableComponents(String nameOrId, String dataType) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
+                .stream()
+                .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
+                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker))
+                .collect(
+                        Collectors.groupingBy(
+                                c -> c.getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            VariableComponentKey vc;
+                                            if (c instanceof DateLineChecker) {
+                                                vc = ((DateLineChecker) c).getVariableComponentKey();
+                                            } else if (c instanceof IntegerChecker) {
+                                                vc = ((IntegerChecker) c).getVariableComponentKey();
+                                            } else {
+                                                vc = ((FloatChecker) c).getVariableComponentKey();
+                                            }
+                                            return vc.getId();
+                                        },
+                                        c -> c
+                                )
+                        )
+                );
+    }
+
     public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
         downloadDatasetQuery = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        /*Map<VariableComponentKey, LineChecker> checkers = checkerFactory.getLineCheckers(app, dataType)
-                .stream()
-                .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
-                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker))
-                .collect(
-                        Collectors.toMap(
-                                c -> {
-                                    VariableComponentKey vc;
-                                    if (c instanceof DateLineChecker) {
-                                        vc = ((DateLineChecker) c).getVariableComponentKey();
-                                    } else if (c instanceof IntegerChecker) {
-                                        vc = ((IntegerChecker) c).getVariableComponentKey();
-                                    } else {
-                                        vc = ((FloatChecker) c).getVariableComponentKey();
-                                    }
-                                    return vc;
-                                },
-                                c -> c
-                        )
-                );*/
-
         List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery);
         return data;
     }
