@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
@@ -11,10 +10,7 @@ import org.springframework.util.CollectionUtils;
 import org.testcontainers.shaded.org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.Nullable;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -83,7 +79,7 @@ public class DownloadDatasetQuery {
     String addOrderBy(String query) {
         Set<VariableComponentOrderBy> variableComponentKeySet = new LinkedHashSet<>();
         String orderBy = Optional.ofNullable(variableComponentOrderBy)
-                .filter(vck->!CollectionUtils.isEmpty(vck))
+                .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(() -> {
                             variableComponentKeySet.add(
                                     new VariableComponentOrderBy(
@@ -99,19 +95,71 @@ public class DownloadDatasetQuery {
                         }
                 ).stream()
                 .map(vck -> String.format("datavalues->'%s'->>'%s' %s", StringEscapeUtils.escapeSql(vck.getVariable()), StringEscapeUtils.escapeSql(vck.getComponent()), vck.getOrder()))
-                .collect(Collectors.joining(","));
-        return String.format("%s \nORDER by %s", query, orderBy);
+                .filter(sorted ->!Strings.isNullOrEmpty(sorted))
+                .collect(Collectors.joining(",  "));
+        return Strings.isNullOrEmpty(orderBy) ? query : String.format("%s \nORDER by %s", query, orderBy);
     }
 
-    String sortedBy(String query) {
+    String filterBy(String query) {
         Set<VariableComponentFilters> variableComponentKeySet = new LinkedHashSet<>();
         String filter = Optional.ofNullable(variableComponentFilters)
-                .filter(vck->!CollectionUtils.isEmpty(vck))
+                .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(LinkedHashSet::new)
                 .stream()
-                .map(vck -> String.format("datavalues->'%s'->>'%s' like %s", StringEscapeUtils.escapeSql(vck.getVariable()), StringEscapeUtils.escapeSql(vck.getComponent()), vck.getFilter()))
+                .map(vck -> getFormat(vck))
+                .filter(f->!Strings.isNullOrEmpty(f))
                 .collect(Collectors.joining(" AND "));
-        return Strings.isNullOrEmpty(filter)?query:String.format("%s \nWhere %s", query, filter);
+        return Strings.isNullOrEmpty(filter) ? query : String.format("%s \nWHERE %s", query, filter);
+    }
+
+    private String getFormat(VariableComponentFilters vck) {
+        List<String> filters = new LinkedList<>();
+        if (!Strings.isNullOrEmpty(vck.filter)) {
+            filters.add(String.format(
+                    "datavalues->'%s'->>'%s' like %s",
+                    StringEscapeUtils.escapeSql(vck.getVariable()),
+                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                    vck.getFilter())
+            );
+
+        } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
+            if (! Strings.isNullOrEmpty(vck.intervalValues.from) || ! Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                filters.add(
+                        String.format(
+                                "to_timestamp(datavalues->'%s'->>'%s', '%s')  BETWEEN '%s'::TIMESTAMP AND '%s'::TIMESTAMP",
+                                StringEscapeUtils.escapeSql(vck.getVariable()),
+                                StringEscapeUtils.escapeSql(vck.getComponent()),
+                                vck.format,
+                                Strings.isNullOrEmpty(vck.intervalValues.from) ? "-infinity" :vck.intervalValues.from ,
+                                Strings.isNullOrEmpty(vck.intervalValues.to) ? "infinity" : vck.intervalValues.to
+                        )
+                );
+            }
+        } else if (vck.intervalValues != null && "numeric".equals(vck.type)) {
+            if(!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                if (!Strings.isNullOrEmpty(vck.intervalValues.from)) {
+                    filters.add(String.format(
+                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric >= '%s'::numeric",
+                                    StringEscapeUtils.escapeSql(vck.getVariable()),
+                                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                                    vck.intervalValues.from
+                            )
+                    );
+                }
+                if (!Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                    filters.add(String.format(
+                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric < '%s'::numeric",
+                                    StringEscapeUtils.escapeSql(vck.getVariable()),
+                                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                                    vck.intervalValues.to
+                            )
+                    );
+                }
+            }
+        }
+        return filters.stream()
+                .filter(filter ->!Strings.isNullOrEmpty(filter))
+                .collect(Collectors.joining(" AND "));
     }
 
     public String buildQuery(String toMergeDataGroupsQuery) {
@@ -125,7 +173,7 @@ public class DownloadDatasetQuery {
                 "'refsLinkedTo', refsLinkedTo" +
                 ") AS json"
                 + " FROM my_data ";
-        query = sortedBy(query);
+        query = filterBy(query);
         query = addOrderBy(query);
         if (offset != null && limit >= 0) {
             query = String.format("%s \nOFFSET %d ROWS", query, offset);
@@ -143,6 +191,9 @@ public class DownloadDatasetQuery {
     public static class VariableComponentOrderBy {
         public VariableComponentKey variableComponentKey;
         public Order order;
+        public String type;
+        public String format;
+        public String key;
 
         public VariableComponentOrderBy() {
         }
@@ -165,20 +216,26 @@ public class DownloadDatasetQuery {
         }
 
         public String getOrder() {
-            return order!=null?order.name():"ASC";
+            return order != null ? order.name() : "ASC";
         }
     }
 
     public static class VariableComponentFilters {
         public VariableComponentKey variableComponentKey;
         public String filter;
+        public String type;
+        public String format;
+        public IntervalValues intervalValues;
 
         public VariableComponentFilters() {
         }
 
-        public VariableComponentFilters(VariableComponentKey variableComponentKey, String  filter) {
+        public VariableComponentFilters(VariableComponentKey variableComponentKey, String filter, String type, String format, IntervalValues intervalValues) {
             this.variableComponentKey = variableComponentKey;
             this.filter = filter;
+            this.type = type;
+            this.format = format;
+            this.intervalValues = intervalValues;
         }
 
         String getId() {
@@ -194,7 +251,28 @@ public class DownloadDatasetQuery {
         }
 
         public String getFilter() {
-            return filter!=null?String.format(" '%%%s%%'", filter):null;
+            return filter != null ? String.format(" '%%%s%%'", filter) : null;
+        }
+
+        public Boolean isNumeric() {
+            return "numeric".equals(type);
+        }
+
+        public Boolean isdDate() {
+            return "date".equals(type);
+        }
+    }
+
+    public static class IntervalValues {
+        public String from;
+        public String to;
+
+        public IntervalValues(String from, String to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        public IntervalValues() {
         }
     }
 }
