@@ -78,7 +78,7 @@ public class DownloadDatasetQuery {
 
     String addOrderBy(String query) {
         Set<VariableComponentOrderBy> variableComponentKeySet = new LinkedHashSet<>();
-        String orderBy = Optional.ofNullable(variableComponentOrderBy)
+       String orderBy = Optional.ofNullable(variableComponentOrderBy)
                 .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(() -> {
                             variableComponentKeySet.add(
@@ -94,7 +94,16 @@ public class DownloadDatasetQuery {
                             return variableComponentKeySet;
                         }
                 ).stream()
-                .map(vck -> String.format("datavalues->'%s'->>'%s' %s", StringEscapeUtils.escapeSql(vck.getVariable()), StringEscapeUtils.escapeSql(vck.getComponent()), vck.getOrder()))
+                .map(vck -> {
+                    String format;
+                    if("numeric".equals(vck.type)){
+                        format = "(nullif(datavalues->'%s'->>'%s', ''))::numeric  %s";
+                    }else{
+                        format = "datavalues->'%s'->>'%s' %s";
+                    }
+
+                    return String.format(format, StringEscapeUtils.escapeSql(vck.getVariable()), StringEscapeUtils.escapeSql(vck.getComponent()), vck.getOrder());
+                })
                 .filter(sorted ->!Strings.isNullOrEmpty(sorted))
                 .collect(Collectors.joining(",  "));
         return Strings.isNullOrEmpty(orderBy) ? query : String.format("%s \nORDER by %s", query, orderBy);
