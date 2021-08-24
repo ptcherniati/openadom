@@ -91,7 +91,18 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingReferenceForChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("localization:\n" +
+                "        components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sites","localization:\n" +
+                "        components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -100,7 +111,19 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceForChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("localization:\n" +
+                "        components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sites","localization:\n" +
+                "        components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sitee");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -356,7 +379,9 @@ public class ApplicationConfigurationServiceTest {
     // /!\ ne passe pas car lorsque la référence n'est pas bonne nous avons un NullPointerException.
     @Test
     public void testUnknownReferenceForCheckerInReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites\n" +
+                "            columns: nom du site", "refType: site\n" +
+                "            columns: nom du site");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
