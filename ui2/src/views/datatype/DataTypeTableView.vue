@@ -7,7 +7,11 @@
       <table class="table is-striped">
         <tr>
           <td>
-            <b-button label="trier" @click="showSort = !showSort" type="is-primary" icon-left="filter"
+            <b-button
+              label="trier"
+              @click="showSort = !showSort"
+              type="is-primary"
+              icon-left="filter"
               >réinitialiser</b-button
             >
           </td>
@@ -148,14 +152,24 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, rowIndex) in rows" :key="`row_${rowIndex}`">
+            <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
               <td
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
                 :variable="component.variable"
                 :component="component.component"
               >
-                {{ row[variables[getVariableIndex(index)].id][component.id] }}
+                <span>
+                  {{ row[component.variable][component.component] }}
+                  {{ row.result }}
+                </span>
+                <b-button
+                  v-if="getRefsLinkedToId(row, component)"
+                  size="is-small"
+                  icon-right="eye"
+                  @click="getReferenceValues(row, component)"
+                >
+                </b-button>
               </td>
             </tr>
           </tbody>
@@ -189,6 +203,12 @@ import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { DataService } from "@/services/rest/DataService";
 import { AlertService } from "@/services/AlertService";
 import CollapsibleInterval from "@/components/common/CollapsibleInterval.vue";
+import { ReferenceService } from "@/services/rest/ReferenceService";
+import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
+import { VariableComponentFilters } from "@/model/application/VariableComponentFilters";
+import { VariableComponentKey } from "@/model/application/VariableComponentKey";
+import { IntervalValues } from "@/model/application/IntervalValues";
+import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleInterval },
@@ -200,6 +220,7 @@ export default class DataTypeTableView extends Vue {
 
   applicationService = ApplicationService.INSTANCE;
   dataService = DataService.INSTANCE;
+  referenceService = ReferenceService.INSTANCE;
   alertService = AlertService.INSTANCE;
   arrow;
   application = new ApplicationResult();
@@ -208,18 +229,25 @@ export default class DataTypeTableView extends Vue {
   variables = [];
   variableComponents = [];
   mapVariableIndexByColumnIndex = new Map();
-  params = {
+  params = new DownloadDatasetQuery({
+    application: null,
+    applicationNameOrId: this.applicationName,
+    dataType: this.dataTypeId,
     offset: 0,
     limit: 15,
-    variableComponentOrderBy: [],
+    variableComponentSelects: [],
     variableComponentFilters: [],
-  };
+    variableComponentOrderBy: [],
+  });
+  showDetails = false;
   showSort = false;
   controlPanels = null;
   totalRows = -1;
   currentPage = 1;
   variableComponentsListToSort = [];
   search = {};
+  refsLinkedTo = {};
+  loadedReferences = {};
 
   async created() {
     await this.init();
@@ -238,12 +266,16 @@ export default class DataTypeTableView extends Vue {
     ];
   }
   async reInit() {
-    this.params = {
+    this.params = new DownloadDatasetQuery({
+      application: null,
+      applicationNameOrId: this.applicationName,
+      dataType: this.dataTypeId,
       offset: 0,
       limit: 15,
-      variableComponentOrderBy: [],
+      variableComponentSelects: [],
       variableComponentFilters: [],
-    };
+      variableComponentOrderBy: [],
+    });
     this.initDatatype();
   }
 
@@ -251,7 +283,6 @@ export default class DataTypeTableView extends Vue {
     this.application = await this.applicationService.getApplication(this.applicationName);
     await this.initDatatype();
   }
-
   async initDatatype() {
     this.showSort = false;
     const dataTypes = await this.dataService.getDataType(
@@ -259,9 +290,13 @@ export default class DataTypeTableView extends Vue {
       this.dataTypeId,
       this.params
     );
+    this.refsLinkedTo = dataTypes.rows.reduce((acc, d) => {
+      acc[d.rowId] = d.refsLinkedTo;
+      return acc;
+    }, {});
     this.totalRows = dataTypes.totalRows;
     this.rows = dataTypes.rows.map((r) => {
-      return { ...r.values };
+      return { rowId: r.rowId, ...r.values };
     });
 
     const variablesModels = this.application.dataTypes[this.dataTypeId].variables;
@@ -305,6 +340,43 @@ export default class DataTypeTableView extends Vue {
       });
     });
   }
+  getRefsLinkedToId(row, component) {
+    return this.refsLinkedTo[row.rowId][component.variable][component.component];
+  }
+  async getReferenceValues(row, component) {
+    const rowId = this.getRefsLinkedToId(row, component);
+    const variable = component.checker.refType;
+    if (!this.loadedReferences[rowId]) {
+      let params = { _row_id_: [rowId] };
+      if (!variable) {
+        params.any = true;
+      }
+      const reference = await this.referenceService.getReferenceValues(
+        this.applicationName,
+        variable,
+        params
+      );
+      const result = {};
+      result[rowId] = reference;
+      this.loadedReferences = { ...this.loadedReferences, ...result };
+    }
+    let referenceValue = this.loadedReferences[rowId];
+    const result = Promise.resolve(referenceValue);
+    let template = Object.entries(referenceValue.referenceValues[0].values)
+      .map((entry) => `<tr><td>${entry[0]}</td><td>${entry[1]}</td></tr>`)
+      .reduce((acc, v) => (acc += v), "");
+    this.$buefy.toast.open({
+      duration: 6000,
+      message: `<div style="background-color:white;border:solid black 1px;"><table>
+        <caption>${variable}</caption>
+        ${template}
+        </table></div>`,
+      position: "is-top",
+      queue: false,
+      type: "white",
+    });
+    return result;
+  }
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;
     await this.initDatatype();
@@ -327,7 +399,9 @@ export default class DataTypeTableView extends Vue {
         c.variableComponentKey.component != variableComponentSorted.variableComponentKey.component
     );
     if (variableComponentSorted.order) {
-      this.params.variableComponentOrderBy.push(variableComponentSorted);
+      this.params.variableComponentOrderBy.push(
+        new VariableComponentOrderBy(variableComponentSorted)
+      );
     }
   }
   getSortIcon(variable, component) {
@@ -358,27 +432,27 @@ export default class DataTypeTableView extends Vue {
     );
     let search = null;
     if (value && value.length > 0) {
-      search = {
-        variableComponentKey: {
+      search = new VariableComponentFilters({
+        variableComponentKey: new VariableComponentKey({
           variable: variable,
           component: component,
-        },
+        }),
         filter: value,
         type: type,
         format: format,
-      };
+      });
     }
     if (variableComponent.intervalValues) {
-      search = {
-        variableComponentKey: {
+      search = new VariableComponentFilters({
+        variableComponentKey: new VariableComponentKey({
           variable: variable,
           component: component,
-        },
+        }),
         type: type,
         format: format,
         intervalValues: variableComponent.intervalValues,
-        ...(search || {}),
-      };
+        ...(search ? new IntervalValues(search) : {}),
+      });
     }
     if (search) {
       this.params.variableComponentFilters.push(search);
@@ -388,26 +462,37 @@ export default class DataTypeTableView extends Vue {
   getVariableComponentInfos(variableId, componentId, dataTypes) {
     let type = null;
     let format = null;
+    var checker = null;
     let key = variableId + "_" + componentId;
-    if (dataTypes.checkedFormatariableComponents) {
+    if (dataTypes.checkedFormatVariableComponents) {
       if (
-        dataTypes.checkedFormatariableComponents.DateLineChecker &&
-        dataTypes.checkedFormatariableComponents.DateLineChecker[key]
+        dataTypes.checkedFormatVariableComponents.DateLineChecker &&
+        dataTypes.checkedFormatVariableComponents.DateLineChecker[key]
       ) {
         type = "date";
-        format = dataTypes.checkedFormatariableComponents.DateLineChecker[key].pattern;
+        format = dataTypes.checkedFormatVariableComponents.DateLineChecker[key].pattern;
+        checker = dataTypes.checkedFormatVariableComponents.DateLineChecker[key];
       } else if (
-        dataTypes.checkedFormatariableComponents.IntegerChecker &&
-        dataTypes.checkedFormatariableComponents.IntegerChecker[key]
+        dataTypes.checkedFormatVariableComponents.IntegerChecker &&
+        dataTypes.checkedFormatVariableComponents.IntegerChecker[key]
       ) {
         type = "numeric";
         format = "integer";
+        checker = dataTypes.checkedFormatVariableComponents.IntegerChecker[key];
       } else if (
-        dataTypes.checkedFormatariableComponents.FloatChecker &&
-        dataTypes.checkedFormatariableComponents.FloatChecker[key]
+        dataTypes.checkedFormatVariableComponents.FloatChecker &&
+        dataTypes.checkedFormatVariableComponents.FloatChecker[key]
       ) {
         type = "numeric";
         format = "float";
+        checker = dataTypes.checkedFormatVariableComponents.FloatChecker[key];
+      } else if (
+        dataTypes.checkedFormatVariableComponents.ReferenceLineChecker &&
+        dataTypes.checkedFormatVariableComponents.ReferenceLineChecker[key]
+      ) {
+        type = "reference";
+        format = "uuid";
+        checker = dataTypes.checkedFormatVariableComponents.ReferenceLineChecker[key];
       } else {
         type = null;
         format = null;
@@ -417,6 +502,7 @@ export default class DataTypeTableView extends Vue {
       type: type,
       format: format,
       key: key,
+      checker: checker,
     };
   }
 }
@@ -437,6 +523,9 @@ $row-variable-height: 60px;
       white-space: nowrap;
     }
   }
+}
+.referenceToast {
+  background-color: rgb(61, 107, 8);
 }
 
 .DataSetTableView-variable-row {

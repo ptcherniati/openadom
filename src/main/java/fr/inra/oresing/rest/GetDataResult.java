@@ -15,5 +15,5 @@ public class GetDataResult {
     Set<String> variables;
     List<DataRow> rows;
     Long totalRows;
-    Map<String, Map<String, LineChecker>> checkedFormatariableComponents;
+    Map<String, Map<String, LineChecker>> checkedFormatVariableComponents;
 }

@@ -930,11 +930,11 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getCheckedFormatariableComponents(String nameOrId, String dataType) {
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
         return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
                 .stream()
                 .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
-                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker))
+                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
                 .collect(
                         Collectors.groupingBy(
                                 c -> c.getClass().getSimpleName(),
@@ -945,8 +945,10 @@ public class OreSiService {
                                                 vc = ((DateLineChecker) c).getVariableComponentKey();
                                             } else if (c instanceof IntegerChecker) {
                                                 vc = ((IntegerChecker) c).getVariableComponentKey();
-                                            } else {
+                                            } else if(c instanceof FloatChecker){
                                                 vc = ((FloatChecker) c).getVariableComponentKey();
+                                            } else {
+                                                vc = ((ReferenceLineChecker) c).getVariableComponentKey();
                                             }
                                             return vc.getId();
                                         },

@@ -234,8 +234,8 @@ public class OreSiResources {
                 .flatMap(Set::stream)
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
-        Map<String, Map<String, LineChecker>> checkedFormatariableComponents = service.getCheckedFormatariableComponents(nameOrId, dataType);
-        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatariableComponents));
+        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
     }
 
     /**
