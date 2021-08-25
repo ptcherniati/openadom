@@ -376,7 +376,6 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("unknownCheckerNameForVariableComponent", onlyError.getMessage());
     }
 
-    // /!\ ne passe pas car lorsque la référence n'est pas bonne nous avons un NullPointerException.
     @Test
     public void testUnknownReference() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites\n" +
