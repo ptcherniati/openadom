@@ -77,6 +77,9 @@ references:
       nom de la parcelle:
 ```
 
+Le nom des colonnes des references doivent être courte pour ne pas être tronqué lors de la création de l'application.
+Penser à mettre le même nom de colonnes dans le fichier *.csv* que dans la partie *columns* du fichier yaml.
+
 <span style="color: orange">*references* n'est pas indenté. *sites* et *parcelles* sont indentés de 1. *keyColumns* et 
 *columns* sont indentés de 2. Le contenue de *columns* seront indenté de 3.</span>
 
@@ -374,6 +377,7 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
     * pas de majuscules
     * pas de caratères spéciaux () , - : 
     * autorisé _ et .
+* le nom des colonnes doivent être le plus court possible
 
 ## lors de l'ouverture du fichier csv via libre office:  
 	
