@@ -378,14 +378,14 @@ public class ApplicationConfigurationServiceTest {
 
     // /!\ ne passe pas car lorsque la référence n'est pas bonne nous avons un NullPointerException.
     @Test
-    public void testUnknownReferenceForCheckerInReference() {
+    public void testUnknownReference() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites\n" +
-                "            columns: nom du site", "refType: site\n" +
+                "            columns: nom du site", "refType: sitee\n" +
                 "            columns: nom du site");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownReferenceForCheckerInReference", onlyError.getMessage());
+        Assert.assertEquals("unknownReference", onlyError.getMessage());
     }
 
     @Test

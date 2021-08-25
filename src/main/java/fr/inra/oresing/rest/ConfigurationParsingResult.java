@@ -78,12 +78,8 @@ public class ConfigurationParsingResult {
                     "references", references));
         }
 
-        public Builder unknownReferenceForCheckerInReference(String validationKey, String reference, String refType, Set<String> references) {
-            return recordError("unknownReferenceForCheckerInReference", ImmutableMap.of(
-                    "validationKey", validationKey,
-                    "refType", refType,
-                    "reference", reference,
-                    "references", references));
+        public Builder unknownReference(String reference) {
+            return recordError("unknownReference", ImmutableMap.of("reference", reference));
         }
 
         public Builder unknownReferenceForChecker(String dataType, String datum, String component, String refType, Set<String> references) {

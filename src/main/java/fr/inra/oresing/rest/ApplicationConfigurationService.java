@@ -253,61 +253,67 @@ public class ApplicationConfigurationService {
     private void verifyReferenceKeyColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
-        List<String> keyColumns = referenceDescription.getKeyColumns();
-        Set<String> columns = referenceDescription.getColumns().keySet();
-        ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
-        ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
-        if (!unknownUsedAsKeyElementColumns.isEmpty()) {
-            builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+        if (referenceDescription == null) {
+            builder.unknownReference(reference);
+        } else {
+            List<String> keyColumns = referenceDescription.getKeyColumns();
+            Set<String> columns = referenceDescription.getColumns().keySet();
+            ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
+            ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
+            if (!unknownUsedAsKeyElementColumns.isEmpty()) {
+                builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+            }
         }
     }
 
     private void verifyValidationCheckersAreValids(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
-        for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
-            String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
-            Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
-            Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
-            if (checker == null) {
-                continue;
-            }
-            ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
-            String columns = checker.getParams().get(CheckerFactory.COLUMNS);
+        if(referenceDescription != null) {
+            for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
+                String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
+                Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
+                Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
+                if (checker == null) {
+                    continue;
+                }
+                ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
+                String columns = checker.getParams().get(CheckerFactory.COLUMNS);
 
-            if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
-                if (StringUtils.isBlank(expression)) {
-                    builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
-                } else {
-                    Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
-                    compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
-                }
-            } else if (variableComponentCheckers.contains(checker.getName())) {
-                if (Strings.isNullOrEmpty(columns))
-                    builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
-                else {
-                    List<String> columnsList  = Stream.of(columns.split(",")).collect(Collectors.toList());
-                    Set<String> availablesColumns = referenceDescription.getColumns().keySet();
-                    List<String> missingColumns = columnsList.stream()
-                            .filter(c -> !availablesColumns.contains(c))
-                            .collect(Collectors.toList());
-                    if (!missingColumns.isEmpty()) {
-                        builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, availablesColumns, checker.getName(), missingColumns, reference);
-                    }
-                }
-                if ("Reference".equals(checker.getName())) {
-                    if (checker.getParams() != null && checker.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
-                        String refType = checker.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
-                        if (!references.contains(refType)) {
-                            builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
-                        }
+                if (GroovyLineChecker.NAME.equals(checker.getName())) {
+                    String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
+                    if (StringUtils.isBlank(expression)) {
+                        builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
                     } else {
-                        builder.missingReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, references);
+                        Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
+                        compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
                     }
+                } else if (variableComponentCheckers.contains(checker.getName())) {
+                    if (Strings.isNullOrEmpty(columns))
+                        builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
+                    else {
+                        List<String> columnsList  = Stream.of(columns.split(",")).collect(Collectors.toList());
+                        Set<String> availablesColumns = referenceDescription.getColumns().keySet();
+                        List<String> missingColumns = columnsList.stream()
+                                .filter(c -> !availablesColumns.contains(c))
+                                .collect(Collectors.toList());
+                        if (!missingColumns.isEmpty()) {
+                            builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, availablesColumns, checker.getName(), missingColumns, reference);
+                        }
+                    }
+                    if ("Reference".equals(checker.getName())) {
+                        if (checker.getParams() != null && checker.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
+                            String refType = checker.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+                            if (!references.contains(refType)) {
+                                //builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
+                            }
+                        } else {
+                            builder.missingReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, references);
+                        }
+                    }
+                } else {
+                    builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checker.getName(), variableComponentCheckers);
                 }
-            } else {
-                builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checker.getName(), variableComponentCheckers);
             }
         }
     }

@@ -78,7 +78,7 @@
         "missingReferenceForChecker": "Pour le type de données <code>{dataType}</code>, la donnée <code>{datum}</code>, le composant <code>{component}</code>, il faut préciser le référentiel parmi <code>{references}</code>",
         "missingReferenceForCheckerInReference": "Pour la reference <code>{reference}</code>, la validation <code>{validationKey}</code>, il faut préciser le référentiel parmi <code>{references}</code>",
         "unknownReferenceForChecker": "Pour le type de données <code>{dataType}</code>, la donnée <code>{datum}</code>, le composant <code>{component}</code>, la référence <code>{refType}</code> n’est pas dans les références acceptées qui sont : <code>{references}</code>",
-        "unknownReferenceForCheckerInReference": "Pour la référence <code>{reference}</code>, la validation <code>{validationKey}</code>, la référence <code>{refType}</code> n’est pas dans les références acceptées qui sont : <code>{references}</code>",
+        "unknownReference": "La référence <code>{reference}</code> n’est pas valide",
         "unsupportedVersion": "Les fichiers YAML de version <code>{actualVersion}</code> ne sont pas gérés, version attendue <code>{expectedVersion}</code>",
         "undeclaredDataGroupForVariable": "La variable <code>{variable}</code> n’est déclarée appartenir à aucun groupe de données, elle doit être présente dans un groupe",
         "variableInMultipleDataGroup": "La variable <code>{variable}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
