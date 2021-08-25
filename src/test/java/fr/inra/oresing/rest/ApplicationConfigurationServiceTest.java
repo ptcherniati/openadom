@@ -140,7 +140,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUndeclaredDataGroupForVariable() {
+    public void testUndeclaredDataGroupForVariableUnknownVariablesInDataGroup() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
                 "            - localization", "data:\n" +
                 "            - localizations");

@@ -147,7 +147,7 @@ public class ApplicationConfigurationService {
             Set<String> dataGroupVariables = dataGroupDescription.getData();
             variableOccurrencesInDataGroups.addAll(dataGroupVariables);
             ImmutableSet<String> unknownVariables = Sets.difference(dataGroupVariables, variables).immutableCopy();
-            if (!unknownVariables.isEmpty()) {
+            if (unknownVariables.size()!= 0) {
                 builder.recordUnknownVariablesInDataGroup(dataGroup, unknownVariables, variables);
             }
         }
