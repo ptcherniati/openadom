@@ -1,3 +1,4 @@
+/* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
     <SubMenu :root="application.title" :paths="subMenuPaths" />
@@ -21,6 +22,21 @@
         </tr>
       </table>
     </div>
+    <b-modal v-model="currentReferenceDetail.active" width="500" custom-class="referenceDetails">
+      <div class="card">
+        <header class="card-header is-align-content-center">
+          <p class="card-header-title">{{ currentReferenceDetail.reference }}</p>
+        </header>
+        <div class="card-content">
+          <div class="content is-align-content-center">
+            <b-table
+              :data="currentReferenceDetail.data"
+              :columns="currentReferenceDetail.columns"
+            />
+          </div>
+        </div>
+      </div>
+    </b-modal>
     <div class="notification" v-if="showSort">
       <div class="content">
         <div class="rows">
@@ -163,13 +179,14 @@
                   {{ row[component.variable][component.component] }}
                   {{ row.result }}
                 </span>
-                <b-button
-                  v-if="getRefsLinkedToId(row, component)"
-                  size="is-small"
-                  icon-right="eye"
-                  @click="getReferenceValues(row, component)"
-                >
-                </b-button>
+                <span v-if="getRefsLinkedToId(row, component)">
+                  <b-button
+                    size="is-small"
+                    icon-right="eye"
+                    @click="getReferenceValues(row, component)"
+                  >
+                  </b-button>
+                </span>
               </td>
             </tr>
           </tbody>
@@ -248,6 +265,7 @@ export default class DataTypeTableView extends Vue {
   search = {};
   refsLinkedTo = {};
   loadedReferences = {};
+  currentReferenceDetail = { active: false };
 
   async created() {
     await this.init();
@@ -356,26 +374,36 @@ export default class DataTypeTableView extends Vue {
         variable,
         params
       );
+      const data = Object.entries(reference.referenceValues[0].values)
+        .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
+        .reduce((acc, entry) => {
+          acc.push(entry);
+          return acc;
+        }, []);
       const result = {};
-      result[rowId] = reference;
-      this.loadedReferences = { ...this.loadedReferences, ...result };
+      result[rowId] = {
+        data: data,
+        columns: [
+          {
+            field: "colonne",
+            label: "Colonne",
+          },
+          {
+            field: "valeur",
+            label: "Valeur",
+          },
+        ],
+        active: true,
+        reference: variable,
+      };
+      this.loadedReferences = {
+        ...this.loadedReferences,
+        ...result,
+      };
     }
     let referenceValue = this.loadedReferences[rowId];
-    const result = Promise.resolve(referenceValue);
-    let template = Object.entries(referenceValue.referenceValues[0].values)
-      .map((entry) => `<tr><td>${entry[0]}</td><td>${entry[1]}</td></tr>`)
-      .reduce((acc, v) => (acc += v), "");
-    this.$buefy.toast.open({
-      duration: 6000,
-      message: `<div style="background-color:white;border:solid black 1px;"><table>
-        <caption>${variable}</caption>
-        ${template}
-        </table></div>`,
-      position: "is-top",
-      queue: false,
-      type: "white",
-    });
-    return result;
+    this.currentReferenceDetail = { ...referenceValue, active: true };
+    return referenceValue;
   }
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;

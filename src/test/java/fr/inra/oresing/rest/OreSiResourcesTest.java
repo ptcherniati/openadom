@@ -10,6 +10,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
@@ -40,6 +41,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -203,11 +205,19 @@ public class OreSiResourcesTest {
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.variables").isArray())
+                    .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
+                    .andExpect(jsonPath("$.variables").value(Stream.of("date","site","espece","projet","Nombre d'individus","Couleur des individus").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.totalRows", Is.is(306)))
                     .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
             Assert.assertEquals(306 * 2, StringUtils.countMatches(actualJson, "sans_unite"));
+
         }
 
         // restitution de data csv

@@ -5,7 +5,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -220,12 +223,7 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
-        DownloadDatasetQuery downloadDatasetQuery = null;
-        try {
-            downloadDatasetQuery = new ObjectMapper().readValue(params, DownloadDatasetQuery.class);
-        } catch (Exception e) {
-            throw new BadDownloadDatasetQuery(e.getMessage());
-        }
+        DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
         List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
@@ -257,14 +255,17 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
-        DownloadDatasetQuery downloadDatasetQuery = null;
+        DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
+        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType);
+        return ResponseEntity.ok(result);
+    }
+
+    private DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(String params) {
         try {
-            downloadDatasetQuery = new ObjectMapper().readValue(params, DownloadDatasetQuery.class);
+            return params != null ? new ObjectMapper().readValue(params, DownloadDatasetQuery.class):null;
         } catch (IOException e) {
             throw new BadDownloadDatasetQuery(e.getMessage());
         }
-        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType);
-        return ResponseEntity.ok(result);
     }
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
