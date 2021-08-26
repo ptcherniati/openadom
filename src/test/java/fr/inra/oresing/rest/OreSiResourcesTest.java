@@ -207,7 +207,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.variables").isArray())
                     .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
-                    .andExpect(jsonPath("$.variables").value(Stream.of("date","site","espece","projet","Nombre d'individus","Couleur des individus").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.variables").value(Stream.of("date", "site", "espece", "projet", "Nombre d'individus", "Couleur des individus").collect(Collectors.toList())))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
@@ -217,6 +217,34 @@ public class OreSiResourcesTest {
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
             Assert.assertEquals(306 * 2, StringUtils.countMatches(actualJson, "sans_unite"));
+
+        }
+        /**
+         *  restitution de data json ajout de filtres et de tri
+         * filtre :
+         *  date.value between  '01/01/1984' and '01/01/1984'
+         *  Nombre d\\'individus'.value between 20 and 29 (==25)
+         *  Couleur des individus.value == 'couleur_des_individus__vert'
+         *
+         *  tri:
+         *      par site.plateforme -> a < p1 < p2
+         *
+         */
+        {
+            String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
+            String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
+            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                            .cookie(authCookie)
+                            .param("downloadDatasetQuery", filter)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == '01/01/1984')]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(actualJson);
 
         }
 
