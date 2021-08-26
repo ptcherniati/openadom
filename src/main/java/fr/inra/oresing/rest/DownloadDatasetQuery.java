@@ -40,7 +40,7 @@ public class DownloadDatasetQuery {
         int i = this.i.incrementAndGet();
         String paramName = String.format("arg%d", i);
         paramSource.addValue(paramName, value);
-        return  String.format(":%s", paramName);
+        return String.format(":%s", paramName);
     }
 
     public DownloadDatasetQuery(Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy) {
@@ -140,13 +140,15 @@ public class DownloadDatasetQuery {
     }
 
     private String getFormat(VariableComponentFilters vck) {
+        boolean isRegExp = vck.isRegExp == null ? false : vck.isRegExp;
         List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(vck.filter)) {
             filters.add(String.format(
-                    "datavalues->'%s'->>'%s' ~ %s",
-                    StringEscapeUtils.escapeSql(vck.getVariable()),
-                    StringEscapeUtils.escapeSql(vck.getComponent()),
-                    addArgumentAndReturnSubstitution(vck.getFilter()))
+                            "datavalues->'%s'->>'%s' %s",
+                            StringEscapeUtils.escapeSql(vck.getVariable()),
+                            StringEscapeUtils.escapeSql(vck.getComponent()),
+                            String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", addArgumentAndReturnSubstitution(vck.getFilter()))
+                    )
             );
 
         } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
@@ -253,16 +255,18 @@ public class DownloadDatasetQuery {
         public String type;
         public String format;
         public IntervalValues intervalValues;
+        public Boolean isRegExp = false;
 
         public VariableComponentFilters() {
         }
 
-        public VariableComponentFilters(VariableComponentKey variableComponentKey, String filter, String type, String format, IntervalValues intervalValues) {
+        public VariableComponentFilters(VariableComponentKey variableComponentKey, String filter, String type, String format, IntervalValues intervalValues, Boolean isRegExp) {
             this.variableComponentKey = variableComponentKey;
             this.filter = filter;
             this.type = type;
             this.format = format;
             this.intervalValues = intervalValues;
+            this.isRegExp = isRegExp;
         }
 
         String getId() {

@@ -6,12 +6,14 @@ export class VariableComponentFilters {
     type;
     format;
     intervalValues;
+    isRegExp = false;
     constructor(
         variableComponentFiltersOrVariableComponentKey,
         filter,
         type,
         format,
-        intervalValues
+        intervalValues,
+        isRegExp,
     ) {
         if (typeof variableComponentFiltersOrVariableComponentKey == "object") {
             Object.keys(this).forEach(
@@ -28,6 +30,7 @@ export class VariableComponentFilters {
             this.type = type;
             this.format = format;
             this.intervalValues = new IntervalValues(intervalValues);
+            this.isRegExp = isRegExp == null ? false : isRegExp;
         }
     }
 }
