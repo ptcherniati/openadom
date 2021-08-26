@@ -6,16 +6,21 @@ import fr.inra.oresing.persistence.DataRow;
 import lombok.Getter;
 import lombok.Setter;
 import org.assertj.core.util.Strings;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.CollectionUtils;
 import org.testcontainers.shaded.org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 public class DownloadDatasetQuery {
+    private AtomicInteger i = new AtomicInteger();
+    private MapSqlParameterSource paramSource = new MapSqlParameterSource();
+
     Application application;
     String applicationNameOrId;
     String dataType;
@@ -31,6 +36,13 @@ public class DownloadDatasetQuery {
     public DownloadDatasetQuery() {
     }
 
+    public String addArgumentAndReturnSubstitution(Object value) {
+        int i = this.i.incrementAndGet();
+        String paramName = String.format("arg%d", i);
+        paramSource.addValue(paramName, value);
+        return  String.format(":%s", paramName);
+    }
+
     public DownloadDatasetQuery(Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy) {
         this.offset = offset;
         this.limit = limit;
@@ -40,6 +52,8 @@ public class DownloadDatasetQuery {
         application = null;
         applicationNameOrId = null;
         dataType = null;
+        this.paramSource = new MapSqlParameterSource("applicationId", getApplication().getId());
+        // .addValue("refType", refType);
     }
 
     public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
@@ -78,7 +92,7 @@ public class DownloadDatasetQuery {
 
     String addOrderBy(String query) {
         Set<VariableComponentOrderBy> variableComponentKeySet = new LinkedHashSet<>();
-       String orderBy = Optional.ofNullable(variableComponentOrderBy)
+        String orderBy = Optional.ofNullable(variableComponentOrderBy)
                 .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(() -> {
                             variableComponentKeySet.add(
@@ -96,15 +110,19 @@ public class DownloadDatasetQuery {
                 ).stream()
                 .map(vck -> {
                     String format;
-                    if("numeric".equals(vck.type)){
+                    if ("numeric".equals(vck.type)) {
                         format = "(nullif(datavalues->'%s'->>'%s', ''))::numeric  %s";
-                    }else{
+                    } else {
                         format = "datavalues->'%s'->>'%s' %s";
                     }
 
-                    return String.format(format, StringEscapeUtils.escapeSql(vck.getVariable()), StringEscapeUtils.escapeSql(vck.getComponent()), vck.getOrder());
+                    return String.format(
+                            format,
+                            StringEscapeUtils.escapeSql(vck.getVariable()),
+                            StringEscapeUtils.escapeSql(vck.getComponent()),
+                            vck.getOrder());
                 })
-                .filter(sorted ->!Strings.isNullOrEmpty(sorted))
+                .filter(sorted -> !Strings.isNullOrEmpty(sorted))
                 .collect(Collectors.joining(",  "));
         return Strings.isNullOrEmpty(orderBy) ? query : String.format("%s \nORDER by %s", query, orderBy);
     }
@@ -116,7 +134,7 @@ public class DownloadDatasetQuery {
                 .orElseGet(LinkedHashSet::new)
                 .stream()
                 .map(vck -> getFormat(vck))
-                .filter(f->!Strings.isNullOrEmpty(f))
+                .filter(f -> !Strings.isNullOrEmpty(f))
                 .collect(Collectors.joining(" AND "));
         return Strings.isNullOrEmpty(filter) ? query : String.format("%s \nWHERE %s", query, filter);
     }
@@ -125,49 +143,49 @@ public class DownloadDatasetQuery {
         List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(vck.filter)) {
             filters.add(String.format(
-                    "datavalues->'%s'->>'%s' like %s",
+                    "datavalues->'%s'->>'%s' ~ %s",
                     StringEscapeUtils.escapeSql(vck.getVariable()),
                     StringEscapeUtils.escapeSql(vck.getComponent()),
-                    vck.getFilter())
+                    addArgumentAndReturnSubstitution(vck.getFilter()))
             );
 
         } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
-            if (! Strings.isNullOrEmpty(vck.intervalValues.from) || ! Strings.isNullOrEmpty(vck.intervalValues.to)) {
+            if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
                 filters.add(
                         String.format(
-                                "to_timestamp(datavalues->'%s'->>'%s', '%s')  BETWEEN '%s'::TIMESTAMP AND '%s'::TIMESTAMP",
+                                "to_timestamp(datavalues->'%s'->>'%s', %s)  BETWEEN %s::TIMESTAMP AND %s::TIMESTAMP",
                                 StringEscapeUtils.escapeSql(vck.getVariable()),
                                 StringEscapeUtils.escapeSql(vck.getComponent()),
-                                vck.format,
-                                Strings.isNullOrEmpty(vck.intervalValues.from) ? "-infinity" :vck.intervalValues.from ,
-                                Strings.isNullOrEmpty(vck.intervalValues.to) ? "infinity" : vck.intervalValues.to
+                                addArgumentAndReturnSubstitution(vck.format),
+                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "-infinity" : vck.intervalValues.from),
+                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "infinity" : vck.intervalValues.to)
                         )
                 );
             }
         } else if (vck.intervalValues != null && "numeric".equals(vck.type)) {
-            if(!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
+            if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
                 if (!Strings.isNullOrEmpty(vck.intervalValues.from)) {
                     filters.add(String.format(
-                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric >= '%s'::numeric",
+                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric >= %s::numeric",
                                     StringEscapeUtils.escapeSql(vck.getVariable()),
                                     StringEscapeUtils.escapeSql(vck.getComponent()),
-                                    vck.intervalValues.from
+                                    addArgumentAndReturnSubstitution(vck.intervalValues.from)
                             )
                     );
                 }
                 if (!Strings.isNullOrEmpty(vck.intervalValues.to)) {
                     filters.add(String.format(
-                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric < '%s'::numeric",
+                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric < %s::numeric",
                                     StringEscapeUtils.escapeSql(vck.getVariable()),
                                     StringEscapeUtils.escapeSql(vck.getComponent()),
-                                    vck.intervalValues.to
+                                    addArgumentAndReturnSubstitution(vck.intervalValues.to)
                             )
                     );
                 }
             }
         }
         return filters.stream()
-                .filter(filter ->!Strings.isNullOrEmpty(filter))
+                .filter(filter -> !Strings.isNullOrEmpty(filter))
                 .collect(Collectors.joining(" AND "));
     }
 
@@ -260,7 +278,7 @@ public class DownloadDatasetQuery {
         }
 
         public String getFilter() {
-            return filter != null ? String.format(" '%%%s%%'", filter) : null;
+            return filter != null ? filter : null;
         }
 
         public Boolean isNumeric() {

@@ -42,7 +42,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public List<DataRow> findAllByDataType(DownloadDatasetQuery downloadDatasetQuery) {
         String toMergeDataGroupsQuery = getSqlToMergeData(downloadDatasetQuery);
         String query = downloadDatasetQuery.buildQuery(toMergeDataGroupsQuery);
-        List result = getNamedParameterJdbcTemplate().query(query, Collections.emptyMap(), getJsonRowMapper());
+        List result = getNamedParameterJdbcTemplate().query(query, downloadDatasetQuery.getParamSource(), getJsonRowMapper());
         return (List<DataRow>) result;
     }
 
