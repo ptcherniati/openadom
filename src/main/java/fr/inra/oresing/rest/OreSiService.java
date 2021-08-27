@@ -4,42 +4,15 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.DateLineChecker;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.checker.ReferenceValidationCheckResult;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.Data;
-import fr.inra.oresing.model.LocalDateTimeRange;
-import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.persistence.SqlPolicy;
-import fr.inra.oresing.persistence.SqlSchema;
-import fr.inra.oresing.persistence.SqlSchemaForApplication;
-import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.model.*;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.Value;
@@ -48,14 +21,17 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
+import org.assertj.core.util.Strings;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -63,17 +39,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -89,7 +55,7 @@ public class OreSiService {
 
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
-     *
+     * <p>
      * https://www.postgresql.org/docs/current/ltree.html
      */
     private static final String LTREE_SEPARATOR = ".";
@@ -254,7 +220,7 @@ public class OreSiService {
                 }
             }
 
-            validateStoredData(app, dataType);
+            validateStoredData(new DownloadDatasetQuery(nameOrId, dataType, null, null, null, null, null, app));
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
@@ -266,18 +232,33 @@ public class OreSiService {
         return uuid;
     }
 
-    private void validateStoredData(Application app, String dataType) {
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
+    private void validateStoredData(DownloadDatasetQuery downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.getApplication();
+        String dataType = downloadDatasetQuery.getDataType();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(application, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(line);
                 Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
             });
         };
-        repo.getRepository(app).data().findAllByDataType(dataType).stream()
+        repo.getRepository(application).data().findAllByDataType(downloadDatasetQuery).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
+
+    /*private void validateStoredReference(Application app, String reference) {
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, reference);
+        Consumer<ImmutableMap<String, String>> validateRow = line -> {
+            lineCheckers.forEach(lineChecker -> {
+                ValidationCheckResult validationCheckResult = lineChecker.checkReference(line);
+                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
+            });
+        };
+        repo.getRepository(app).referenceValue().findAllByReferenceType(reference).stream()
+                .map(this::valuesToIndexedPerReferenceMap)
+                .forEach(validateRow);
+    }*/
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
@@ -299,9 +280,11 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
         String parentHierarchicalKeyColumn;
         BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
+        Map<String, String> buildedHierarchicalKeys = new HashMap<>();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -340,9 +323,27 @@ public class OreSiService {
                 });
                 return recordAsMap;
             };
+
+            Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
+            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             Stream<ReferenceValue> referenceValuesStream = Streams.stream(csvParser)
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
+                        lineCheckers.forEach(lineChecker -> {
+                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(refValues);
+                            if (validationCheckResult.isSuccess()) {
+                                if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                                    ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
+                                    String reference = ((ReferenceLineChecker) lineChecker).getRefType();
+                                    UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                                    refsLinkedTo
+                                            .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
+                                            .add(referenceId);
+                                }
+                            } else {
+                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
+                            }
+                        });
                         ReferenceValue e = new ReferenceValue();
                         String naturalKey;
                         String technicalId = e.getId().toString();
@@ -350,21 +351,26 @@ public class OreSiService {
                             naturalKey = escapeKeyComponent(technicalId);
                         } else {
                             naturalKey = ref.getKeyColumns().stream()
-                                    .map(kc -> escapeKeyComponent(refValues.get(kc)))
+                                    .map(kc -> refValues.get(kc))
+                                    .filter(key -> !Strings.isNullOrEmpty(key))
+                                    .map(key -> escapeKeyComponent(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         checkNaturalKeySyntax(naturalKey);
                         String hierarchicalKey = getHierarchicalKeyFn.apply(naturalKey, refValues);
+                        buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
+                        e.setRefsLinkedTo(refsLinkedTo);
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
                         e.setRefValues(refValues);
                         return e;
                     });
             referenceValueRepository.storeAll(referenceValuesStream);
+            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
 
         return fileId;
@@ -372,7 +378,13 @@ public class OreSiService {
 
     private String escapeKeyComponent(String key) {
         String toEscape = StringUtils.stripAccents(key.toLowerCase());
-        String escaped = StringUtils.remove(StringUtils.replace(toEscape, " ", "_"), "-");
+        String escaped = StringUtils.remove(
+                RegExUtils.replaceAll(
+                        StringUtils.replace(toEscape, " ", "_"),
+                        "[^a-z0-9_]",
+                        ""
+                ), "-"
+        );
         checkNaturalKeySyntax(escaped);
         return escaped;
     }
@@ -383,6 +395,36 @@ public class OreSiService {
 
     private void checkHierarchicalKeySyntax(String compositeKey) {
         Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkNaturalKeySyntax);
+    }
+
+    HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferencesUsing(lowestLevelReference).orElseThrow();
+        BiMap<String, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
+        Map<ReferenceValue, String> parentHierarchicalKeys = new LinkedHashMap<>();
+        ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                .collect(ImmutableList.toImmutableList());
+        ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+        ImmutableSortedSet<String> includedReferences = sortedReferenceTypes.headSet(lowestLevelReference, true);
+        compositeReferenceDescription.getComponents().stream()
+                .filter(compositeReferenceComponentDescription -> includedReferences.contains(compositeReferenceComponentDescription.getReference()))
+                .forEach(compositeReferenceComponentDescription -> {
+                    String reference = compositeReferenceComponentDescription.getReference();
+                    String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
+                    referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
+                        indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
+                        if (parentKeyColumn != null) {
+                            String parentHierarchicalKey = referenceValue.getRefValues().get(parentKeyColumn);
+                            parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
+                        }
+                    });
+                });
+        Map<ReferenceValue, ReferenceValue> childToParents = Maps.transformValues(parentHierarchicalKeys, indexedByHierarchicalKeyReferenceValues::get);
+        SetMultimap<ReferenceValue, ReferenceValue> tree = HashMultimap.create();
+        childToParents.forEach((child, parent) -> tree.put(parent, child));
+        ImmutableSet<ReferenceValue> roots = Sets.difference(indexedByHierarchicalKeyReferenceValues.values(), parentHierarchicalKeys.keySet()).immutableCopy();
+        return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
     @Value
@@ -402,7 +444,7 @@ public class OreSiService {
      * Insérer un jeu de données.
      */
     public UUID addData(String nameOrId, String dataType, MultipartFile file) throws IOException, InvalidDatasetContentException {
-        List<CsvRowValidationCheckResult> errors= new LinkedList<>();
+        List<CsvRowValidationCheckResult> errors = new LinkedList<>();
         authenticationService.setRoleForClient();
 
         Application app = getApplication(nameOrId);
@@ -443,17 +485,19 @@ public class OreSiService {
 
     /**
      * return a function that transform each RowWithData to a stream of data entities
+     *
      * @param app
      * @param dataType
      * @param fileId
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors){
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         String timeScopeColumnPattern = lineCheckers.stream()
+                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator ? ((ILineCheckerDecorator) lineChecker).getChecker() : lineChecker)
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                 .map(lineChecker -> (DateLineChecker) lineChecker)
                 .filter(dateLineChecker -> dateLineChecker.getVariableComponentKey().equals(dataTypeDescription.getAuthorization().getTimeScope()))
@@ -465,6 +509,7 @@ public class OreSiService {
 
     /**
      * build the function that transform each RowWithData to a stream of data entities
+     *
      * @param app
      * @param dataType
      * @param fileId
@@ -478,11 +523,16 @@ public class OreSiService {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
+            Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
                 if (validationCheckResult.isSuccess()) {
+                    if (validationCheckResult instanceof DateValidationCheckResult) {
+                        VariableComponentKey variableComponentKey = ((DateValidationCheckResult) validationCheckResult).getVariableComponentKey();
+                        dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
+                    }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = referenceValidationCheckResult.getVariableComponentKey();
@@ -526,6 +576,9 @@ public class OreSiService {
                     String variable = variableComponentKey.getVariable();
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
+                    if (dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())) {
+                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getMessage(), value);
+                    }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
                 }
@@ -549,12 +602,18 @@ public class OreSiService {
 
     /**
      * Une fonction qui ajoute à une donnée les valeurs par défaut.
-     *
+     * <p>
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
     private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions) {
         return rowWithData -> {
-            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum());
+            Map<String, Map<String, String>> datumByVariableAndComponent = new HashMap<>();
+            for (Map.Entry<VariableComponentKey, String> entry : rowWithData.getDatum().entrySet()) {
+                datumByVariableAndComponent
+                        .computeIfAbsent(entry.getKey().getVariable(), k -> new HashMap<String, String>())
+                        .put(entry.getKey().getComponent(), entry.getValue());
+            }
+            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum(), "datumByVariableAndComponent", datumByVariableAndComponent);
             Map<VariableComponentKey, String> defaultValues = Maps.transformValues(defaultValueExpressions, expression -> expression.evaluate(evaluationContext));
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
             rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
@@ -564,7 +623,7 @@ public class OreSiService {
 
     /**
      * Une fonction qui ajoute à une donnée les données constantes.
-     *
+     * <p>
      * Les constantes sont des variables/composants qui ont la même valeur pour toutes les lignes
      * d'un fichier de données qu'on importe. Ce sont les données qu'on trouve dans l'entête
      * du fichier.
@@ -610,7 +669,7 @@ public class OreSiService {
      * build the function that Dispatch ParsedCsvRow into RowWithData when there are repeatedColumns
      */
     private Function<ParsedCsvRow, ImmutableSet<RowWithData>> buildLineAsMapWhenRepeatedColumnsToRecordsFn(Configuration.FormatDescription formatDescription) {
-        return  parsedCsvRow -> {
+        return parsedCsvRow -> {
             List<Map.Entry<String, String>> line = parsedCsvRow.getColumns();
             LinkedList<Map.Entry<String, String>> lineCopy = new LinkedList<>(line);
 
@@ -806,22 +865,25 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {
-        String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
-        String dataType = downloadDatasetQuery.getDataType();
-        List<DataRow> list = findData(downloadDatasetQuery);
-        Configuration.FormatDescription format = getApplication(applicationNameOrId)
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+        DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
+        List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
+        Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
                 .getConfiguration()
                 .getDataTypes()
                 .get(dataType)
                 .getFormat();
-        ImmutableMap<String, VariableComponentKey> allColumns = getExportColumns(format);
-        ImmutableMap<String, VariableComponentKey> columns;
-        if (downloadDatasetQuery.getVariableComponentIds() == null) {
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
+                )));
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
+        if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
         } else {
-            Map<String, VariableComponentKey> filter = Maps.filterValues(allColumns, variableComponent -> downloadDatasetQuery.getVariableComponentIds().contains(variableComponent.getId()));
-            columns = ImmutableMap.copyOf(filter);
+            columns = ImmutableMap.copyOf(downloadDatasetQueryCopy.getVariableComponentOrderBy().stream()
+                    .collect(Collectors.toMap(DownloadDatasetQuery.VariableComponentOrderBy::getId, k -> k)));
         }
         String result = "";
         if (list.size() > 0) {
@@ -835,9 +897,9 @@ public class OreSiService {
                 for (DataRow dataRow : list) {
                     Map<String, Map<String, String>> record = dataRow.getValues();
                     ImmutableList<String> rowAsRecord = columns.values().stream()
-                            .map(variableComponentKey -> {
-                                Map<String, String> components = record.computeIfAbsent(variableComponentKey.getVariable(), k -> Collections.emptyMap());
-                                return components.getOrDefault(variableComponentKey.getComponent(), "");
+                            .map(variableComponentSelect -> {
+                                Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
+                                return components.getOrDefault(variableComponentSelect.getComponent(), "");
                             })
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);
@@ -868,11 +930,40 @@ public class OreSiService {
                 .build();
     }
 
-    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery) {
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
+                .stream()
+                .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
+                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
+                .collect(
+                        Collectors.groupingBy(
+                                c -> c.getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            VariableComponentKey vc;
+                                            if (c instanceof DateLineChecker) {
+                                                vc = ((DateLineChecker) c).getVariableComponentKey();
+                                            } else if (c instanceof IntegerChecker) {
+                                                vc = ((IntegerChecker) c).getVariableComponentKey();
+                                            } else if(c instanceof FloatChecker){
+                                                vc = ((FloatChecker) c).getVariableComponentKey();
+                                            } else {
+                                                vc = ((ReferenceLineChecker) c).getVariableComponentKey();
+                                            }
+                                            return vc.getId();
+                                        },
+                                        c -> c
+                                )
+                        )
+                );
+    }
+
+    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+        downloadDatasetQuery = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
+        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery);
         return data;
     }
 
@@ -907,10 +998,9 @@ public class OreSiService {
     }
 
     /**
-     *
      * @param nameOrId l'id de l'application
-     * @param refType le type du referenciel
-     * @param params les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
+     * @param refType  le type du referenciel
+     * @param params   les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {

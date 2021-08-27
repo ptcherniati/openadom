@@ -4,8 +4,8 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "experimentalDecorators": true
   },
   "include": ["src/**/*.js", "src/**/*.vue"],
   "exclude": ["node_modules"],
 }
-  

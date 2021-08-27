@@ -79,6 +79,14 @@ public class AuthorizationResourcesTest {
         }
 
         {
+            String response = mockMvc.perform(get("/api/v1/applications/acbb/dataType/biomasse_production_teneur/grantable")
+                    .cookie(authCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertTrue(response.contains("lusignan"));
+            Assert.assertTrue(response.contains("laqueuille.laqueuille__1"));
+        }
+
+        {
             String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
@@ -213,7 +221,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            Assert.assertEquals("{\"variables\":[],\"rows\":[]}", json);
+            Assert.assertEquals("{\"variables\":[],\"rows\":[],\"totalRows\":-1,\"checkedFormatVariableComponents\":{\"DateLineChecker\":{\"date_time\":{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"time\",\"id\":\"date_time\"},\"column\":\"\",\"pattern\":\"HH:mm:ss\"},\"date_day\":{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\"},\"column\":\"\",\"pattern\":\"dd/MM/yyyy\"}},\"ReferenceLineChecker\":{\"outil_value\":{\"variableComponentKey\":{\"variable\":\"outil\",\"component\":\"value\",\"id\":\"outil_value\"},\"column\":\"\",\"refType\":\"outil\"},\"localization_site\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"site\",\"id\":\"localization_site\"},\"column\":\"\",\"refType\":\"site\"},\"localization_plateforme\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"plateforme\",\"id\":\"localization_plateforme\"},\"column\":\"\",\"refType\":\"plateforme\"},\"localization_projet\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"projet\",\"id\":\"localization_projet\"},\"column\":\"\",\"refType\":\"projet\"}},\"IntegerChecker\":{\"localization_profondeur\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"profondeur\",\"id\":\"localization_profondeur\"},\"column\":\"\"}},\"FloatChecker\":{\"temperature_value\":{\"variableComponentKey\":{\"variable\":\"temperature\",\"component\":\"value\",\"id\":\"temperature_value\"},\"column\":\"\"},\"pression_value\":{\"variableComponentKey\":{\"variable\":\"pression\",\"component\":\"value\",\"id\":\"pression_value\"},\"column\":\"\"},\"temperature_quality\":{\"variableComponentKey\":{\"variable\":\"temperature\",\"component\":\"quality\",\"id\":\"temperature_quality\"},\"column\":\"\"}}}}", json);
         }
     }
 }

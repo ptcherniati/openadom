@@ -10,4 +10,6 @@ public class DataRow {
     String rowId;
     Map<String, Map<String, String>> values;
     Map<String, Map<String, UUID>> refsLinkedTo;
+    Long totalRows = -1L;
+    Long rowNumber = -1L;
 }

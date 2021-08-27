@@ -15,13 +15,18 @@ public class ReferenceValidationCheckResult implements ValidationCheckResult {
     String message;
     Map<String, Object> messageParams;
     VariableComponentKey variableComponentKey;
+    String column;
     UUID referenceId;
 
     public static ReferenceValidationCheckResult success(VariableComponentKey variableComponentKey, UUID referenceId) {
-        return new ReferenceValidationCheckResult(ValidationLevel.SUCCESS, null, null, variableComponentKey, referenceId);
+        return new ReferenceValidationCheckResult(ValidationLevel.SUCCESS, null, null, variableComponentKey, null, referenceId);
+    }
+
+    public static ReferenceValidationCheckResult success(String column, UUID referenceId) {
+        return new ReferenceValidationCheckResult(ValidationLevel.SUCCESS, null, null, null, column, referenceId);
     }
 
     public static ReferenceValidationCheckResult error(String message, ImmutableMap<String, Object> messageParams) {
-        return new ReferenceValidationCheckResult(ValidationLevel.ERROR, message, messageParams, null, null);
+        return new ReferenceValidationCheckResult(ValidationLevel.ERROR, message, messageParams, null, null, null);
     }
 }

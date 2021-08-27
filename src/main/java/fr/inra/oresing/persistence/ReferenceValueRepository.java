@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ReferenceValue;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -31,7 +33,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, hierarchicalKey, naturalKey, refValues, binaryFile) SELECT id, application, referenceType, hierarchicalKey, naturalKey, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile) SELECT id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
                 + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" DO UPDATE SET updateDate=current_timestamp, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
@@ -51,6 +53,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findAllByReferenceType(String refType, MultiValueMap<String, String> params) {
+        MultiValueMap<String, String> toto = new LinkedMultiValueMap<>();
         String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
                 + getTable().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
         MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
@@ -60,7 +63,15 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
             String k = e.getKey();
-            if (StringUtils.equalsAnyIgnoreCase("any", k)) {
+            if (StringUtils.equalsAnyIgnoreCase("_row_id_", k)) {
+                String collect = e.getValue().stream().map(v -> {
+                            String arg = ":arg" + i.getAndIncrement();
+                            paramSource.addValue(arg, v);
+                            return String.format("'%s'::uuid", v);
+                        })
+                        .collect(Collectors.joining(", "));
+                return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
+            }else if (StringUtils.equalsAnyIgnoreCase("any", k)) {
                 return e.getValue().stream().map(v -> {
                     String arg = ":arg" + i.getAndIncrement();
                     paramSource.addValue(arg, v);
@@ -69,7 +80,9 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
             } else {
                 return e.getValue().stream().map(v -> "t.refvalues @> '{\"" + k + "\":\"" + v + "\"}'::jsonb");
             }
-        }).collect(Collectors.joining(" OR "));
+        })
+                .filter(k->k!=null).
+                collect(Collectors.joining(" OR "));
 
         if (StringUtils.isNotBlank(cond)) {
             cond = " AND (" + cond + ")";
