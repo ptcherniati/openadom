@@ -12,8 +12,10 @@ public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
 
     @Override
     default ValidationCheckResult check(Map<VariableComponentKey, String> values) {
-        String value = values.get(getVariableComponentKey());
-        return check(value);
+        VariableComponentKey variableComponentKey = getVariableComponentKey();
+        String value = values.get(variableComponentKey);
+        ValidationCheckResult check = check(value);
+        return check;
     }
 
     @Override

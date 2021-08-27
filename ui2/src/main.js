@@ -7,6 +7,9 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import {
     faAngleLeft,
     faAngleRight,
+    faFilter,
+    faSearch,
+    faSearchPlus,
     faArrowDown,
     faArrowUp,
     faCaretDown,
@@ -38,6 +41,7 @@ import {
     faPaperPlane,
     faExternalLinkSquareAlt,
     faCalendar,
+    faRedo,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -49,6 +53,9 @@ library.add(
     faSignOutAlt,
     faGlobe,
     faUpload,
+    faFilter,
+    faSearch,
+    faSearchPlus,
     faArrowUp,
     faArrowDown,
     faAngleLeft,
@@ -74,7 +81,8 @@ library.add(
     faPaperPlane,
     faArrowLeft,
     faExternalLinkSquareAlt,
-    faCalendar
+    faCalendar,
+    faRedo
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

@@ -10,6 +10,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
@@ -38,15 +39,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -78,8 +77,8 @@ public class OreSiResourcesTest {
     public void createUser() throws Exception {
         userId = authenticationService.createUser("poussin", "xxxxxxxx").getUserId();
         authCookie = mockMvc.perform(post("/api/v1/login")
-                .param("login", "poussin")
-                .param("password", "xxxxxxxx"))
+                        .param("login", "poussin")
+                        .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
     }
 
@@ -93,14 +92,14 @@ public class OreSiResourcesTest {
 
             // on a pas le droit de creer de nouvelle application
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(status().is4xxClientError());
             authenticationService.addUserRightCreateApplication(userId);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
@@ -109,8 +108,8 @@ public class OreSiResourcesTest {
         }
 
         String response = mockMvc.perform(get("/api/v1/applications/{appId}", appId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 // id
@@ -129,8 +128,8 @@ public class OreSiResourcesTest {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -140,8 +139,8 @@ public class OreSiResourcesTest {
         }
 
         String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
@@ -155,8 +154,8 @@ public class OreSiResourcesTest {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
 
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -169,8 +168,8 @@ public class OreSiResourcesTest {
             byte[] bytes = wrongData.getBytes(StandardCharsets.UTF_8);
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", bytes);
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(status().isBadRequest())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
@@ -180,7 +179,7 @@ public class OreSiResourcesTest {
 
         // list des type de data
         response = mockMvc.perform(get("/api/v1/applications/monsore/data")
-                .cookie(authCookie))
+                        .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -203,26 +202,69 @@ public class OreSiResourcesTest {
         {
             String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.variables").isArray())
+                    .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
+                    .andExpect(jsonPath("$.variables").value(Stream.of("date", "site", "espece", "projet", "Nombre d'individus", "Couleur des individus").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.totalRows", Is.is(306)))
                     .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
             Assert.assertEquals(306 * 2, StringUtils.countMatches(actualJson, "sans_unite"));
+
+        }
+        /**
+         *  restitution de data json ajout de filtres et de tri
+         * filtre :
+         *  date.value between  '01/01/1984' and '01/01/1984'
+         *  Nombre d\\'individus'.value between 20 and 29 (==25)
+         *  Couleur des individus.value == 'couleur_des_individus__vert'
+         *
+         *  tri:
+         *      par site.plateforme -> a < p1 < p2
+         *
+         */
+        {
+            String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
+            String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
+            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                            .cookie(authCookie)
+                            .param("downloadDatasetQuery", filter)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == '01/01/1984')]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(actualJson);
+
         }
 
         // restitution de data csv
         {
             String expectedCsv = Resources.toString(getClass().getResource("/data/monsore/compare/export.csv"), Charsets.UTF_8);
             String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                    .cookie(authCookie)
-                    .accept(MediaType.TEXT_PLAIN))
+                            .cookie(authCookie)
+                            .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
-//                    .andExpect(content().string(expectedCsv))
+                    //     .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualCsv);
+            List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r+\n"))
+                    .collect(Collectors.toList());
+            List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r+\n"))
+                    .collect(Collectors.toList());
+            Assert.assertEquals(expectedCsvToList.size(), actualCsvToList.size());
+            actualCsvToList.forEach(l -> expectedCsvToList.remove(l));
+            Assert.assertEquals(true, expectedCsvToList.isEmpty());
             Assert.assertEquals(306, StringUtils.countMatches(actualCsv, "/1984"));
         }
 
@@ -231,8 +273,8 @@ public class OreSiResourcesTest {
             String invalidCsv = csv.replace("projet_manche", "projet_manch");
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
@@ -354,8 +396,8 @@ public class OreSiResourcesTest {
             MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
@@ -369,8 +411,8 @@ public class OreSiResourcesTest {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -380,8 +422,8 @@ public class OreSiResourcesTest {
         }
 
         String getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
@@ -395,8 +437,8 @@ public class OreSiResourcesTest {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -406,8 +448,8 @@ public class OreSiResourcesTest {
         }
 
         getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
@@ -416,8 +458,8 @@ public class OreSiResourcesTest {
         Assert.assertEquals(103, refs.getReferenceValues().size());
 
         String getReferenceCsvResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles/csv")
-                .cookie(authCookie)
-                .accept(MediaType.TEXT_PLAIN))
+                        .cookie(authCookie)
+                        .accept(MediaType.TEXT_PLAIN))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -428,8 +470,8 @@ public class OreSiResourcesTest {
             MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
-                    .file(file)
-                    .cookie(authCookie))
+                            .file(file)
+                            .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -440,8 +482,8 @@ public class OreSiResourcesTest {
         {
 //            String expectedJson = Resources.toString(getClass().getResource("/data/acbb/compare/export.json"), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
 //                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
@@ -455,8 +497,8 @@ public class OreSiResourcesTest {
         {
 //            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
             String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
-                    .cookie(authCookie)
-                    .accept(MediaType.TEXT_PLAIN))
+                            .cookie(authCookie)
+                            .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
 //                    .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
@@ -471,8 +513,8 @@ public class OreSiResourcesTest {
             MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                    .file(file)
-                    .cookie(authCookie))
+                            .file(file)
+                            .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -481,8 +523,8 @@ public class OreSiResourcesTest {
 
         {
             String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -492,8 +534,8 @@ public class OreSiResourcesTest {
 
         {
             String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                    .cookie(authCookie)
-                    .accept(MediaType.TEXT_PLAIN))
+                            .cookie(authCookie)
+                            .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualCsv, 500));
@@ -504,8 +546,8 @@ public class OreSiResourcesTest {
             MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
-                    .file(file)
-                    .cookie(authCookie))
+                            .file(file)
+                            .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -514,8 +556,8 @@ public class OreSiResourcesTest {
 
         {
             String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/SWC")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -525,8 +567,8 @@ public class OreSiResourcesTest {
 
         {
             String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/SWC")
-                    .cookie(authCookie)
-                    .accept(MediaType.TEXT_PLAIN))
+                            .cookie(authCookie)
+                            .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualCsv, 500));
@@ -540,8 +582,8 @@ public class OreSiResourcesTest {
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getHauteFrequenceApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -550,8 +592,8 @@ public class OreSiResourcesTest {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
             }
         }
@@ -560,8 +602,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getHauteFrequenceDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
@@ -572,8 +614,8 @@ public class OreSiResourcesTest {
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getProApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -582,8 +624,8 @@ public class OreSiResourcesTest {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
             }
         }
@@ -592,8 +634,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPrelevementProDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -601,8 +643,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieSolsProDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
@@ -613,8 +655,8 @@ public class OreSiResourcesTest {
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getOlaApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -623,8 +665,8 @@ public class OreSiResourcesTest {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
             }
         }
@@ -633,8 +675,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getConditionPrelevementDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevements")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -642,8 +684,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/physico-chimie")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -651,8 +693,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getSondeDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/sonde_truncated")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -660,8 +702,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhytoAggregatedDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -669,8 +711,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhytoplanctonDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton__truncated.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -678,8 +720,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getZooplanctonDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton__truncated.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -687,8 +729,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getZooplactonBiovolumDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
@@ -699,8 +741,8 @@ public class OreSiResourcesTest {
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
-                    .file(configuration)
-                    .cookie(authCookie))
+                            .file(configuration)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
 
@@ -709,8 +751,8 @@ public class OreSiResourcesTest {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
+                                .file(refFile)
+                                .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
             }
         }
@@ -719,8 +761,8 @@ public class OreSiResourcesTest {
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdFluxMeteoForetDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                    .file(refFile)
-                    .cookie(authCookie))
+                            .file(refFile)
+                            .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
@@ -732,8 +774,8 @@ public class OreSiResourcesTest {
         try (InputStream in = fixtures.openSwcDataResourceName(false)) {
             MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
-                    .file(file)
-                    .cookie(authCookie))
+                            .file(file)
+                            .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);

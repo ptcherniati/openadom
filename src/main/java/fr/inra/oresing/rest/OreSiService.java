@@ -31,6 +31,7 @@ import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -219,7 +220,7 @@ public class OreSiService {
                 }
             }
 
-            validateStoredData(app, dataType);
+            validateStoredData(new DownloadDatasetQuery(nameOrId, dataType, null, null, null, null, null, app));
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé
@@ -231,15 +232,17 @@ public class OreSiService {
         return uuid;
     }
 
-    private void validateStoredData(Application app, String dataType) {
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
+    private void validateStoredData(DownloadDatasetQuery downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.getApplication();
+        String dataType = downloadDatasetQuery.getDataType();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(application, dataType);
         Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(line);
                 Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
             });
         };
-        repo.getRepository(app).data().findAllByDataType(dataType).stream()
+        repo.getRepository(application).data().findAllByDataType(downloadDatasetQuery).stream()
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
@@ -520,11 +523,16 @@ public class OreSiService {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
+            Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
                 if (validationCheckResult.isSuccess()) {
+                    if (validationCheckResult instanceof DateValidationCheckResult) {
+                        VariableComponentKey variableComponentKey = ((DateValidationCheckResult) validationCheckResult).getVariableComponentKey();
+                        dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
+                    }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = referenceValidationCheckResult.getVariableComponentKey();
@@ -568,6 +576,9 @@ public class OreSiService {
                     String variable = variableComponentKey.getVariable();
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
+                    if (dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())) {
+                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getMessage(), value);
+                    }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
                 }
@@ -854,22 +865,25 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery) {
-        String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
-        String dataType = downloadDatasetQuery.getDataType();
-        List<DataRow> list = findData(downloadDatasetQuery);
-        Configuration.FormatDescription format = getApplication(applicationNameOrId)
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+        DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
+        List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
+        Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
                 .getConfiguration()
                 .getDataTypes()
                 .get(dataType)
                 .getFormat();
-        ImmutableMap<String, VariableComponentKey> allColumns = getExportColumns(format);
-        ImmutableMap<String, VariableComponentKey> columns;
-        if (downloadDatasetQuery.getVariableComponentIds() == null) {
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
+                )));
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
+        if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
         } else {
-            Map<String, VariableComponentKey> filter = Maps.filterValues(allColumns, variableComponent -> downloadDatasetQuery.getVariableComponentIds().contains(variableComponent.getId()));
-            columns = ImmutableMap.copyOf(filter);
+            columns = ImmutableMap.copyOf(downloadDatasetQueryCopy.getVariableComponentOrderBy().stream()
+                    .collect(Collectors.toMap(DownloadDatasetQuery.VariableComponentOrderBy::getId, k -> k)));
         }
         String result = "";
         if (list.size() > 0) {
@@ -883,9 +897,9 @@ public class OreSiService {
                 for (DataRow dataRow : list) {
                     Map<String, Map<String, String>> record = dataRow.getValues();
                     ImmutableList<String> rowAsRecord = columns.values().stream()
-                            .map(variableComponentKey -> {
-                                Map<String, String> components = record.computeIfAbsent(variableComponentKey.getVariable(), k -> Collections.emptyMap());
-                                return components.getOrDefault(variableComponentKey.getComponent(), "");
+                            .map(variableComponentSelect -> {
+                                Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
+                                return components.getOrDefault(variableComponentSelect.getComponent(), "");
                             })
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);
@@ -916,11 +930,40 @@ public class OreSiService {
                 .build();
     }
 
-    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery) {
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
+                .stream()
+                .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
+                .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
+                .collect(
+                        Collectors.groupingBy(
+                                c -> c.getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            VariableComponentKey vc;
+                                            if (c instanceof DateLineChecker) {
+                                                vc = ((DateLineChecker) c).getVariableComponentKey();
+                                            } else if (c instanceof IntegerChecker) {
+                                                vc = ((IntegerChecker) c).getVariableComponentKey();
+                                            } else if(c instanceof FloatChecker){
+                                                vc = ((FloatChecker) c).getVariableComponentKey();
+                                            } else {
+                                                vc = ((ReferenceLineChecker) c).getVariableComponentKey();
+                                            }
+                                            return vc.getId();
+                                        },
+                                        c -> c
+                                )
+                        )
+                );
+    }
+
+    public List<DataRow> findData(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+        downloadDatasetQuery = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
-        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery.getDataType());
+        List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery);
         return data;
     }
 
