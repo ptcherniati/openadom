@@ -52,8 +52,8 @@ export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
-  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser()
-    .authorizedForApplicationCreation;
+  canCreateApplication =
+    LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
 
   created() {
     this.init();

@@ -1,7 +1,7 @@
 /* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.title"/>
+    <SubMenu :paths="subMenuPaths" :root="application.title" />
 
     <h1 class="title main-title">{{ dataTypeId }}</h1>
     <div class="DataSetTableView-wrapper table-wrapper">
@@ -9,12 +9,11 @@
         <tr>
           <td>
             <b-button
-                icon-left="filter"
-                label="trier"
-                type="is-primary"
-                @click="showSort = !showSort"
-            ></b-button
-            >
+              icon-left="filter"
+              label="trier"
+              type="is-primary"
+              @click="showSort = !showSort"
+            ></b-button>
           </td>
           <td>
             <b-button icon-left="redo" type="is-primary" @click="reInit">réinitialiser</b-button>
@@ -30,8 +29,8 @@
         <div class="card-content">
           <div class="content is-align-content-center">
             <b-table
-                :columns="currentReferenceDetail.columns"
-                :data="currentReferenceDetail.data"
+              :columns="currentReferenceDetail.columns"
+              :data="currentReferenceDetail.data"
             />
           </div>
         </div>
@@ -42,44 +41,47 @@
       <div class="content">
         <div class="columns">
           <div class="column">
-            <b-tabs v-model="activeTab" :multiline=true>
+            <b-tabs v-model="activeTab" :multiline="true">
               <template
-                  v-for="variable in variables"
-                  class="row variableComponent"
-                  style="text-transform: capitalize; text-decoration: none"
+                v-for="variable in variables"
+                class="row variableComponent"
+                style="text-transform: capitalize; text-decoration: none"
               >
                 <b-tab-item
-                    :key="variable.id"
-                    :label="variable.id"
-                    style="text-transform: capitalize"
+                  :key="variable.id"
+                  :label="variable.id"
+                  style="text-transform: capitalize"
                 >
                   <div
-                      v-for="(variableComponent, index) in variableComponentsListToSort"
-                      :key="index"
-                      :class="variableComponent.order"
-                      class="row variableComponent"
+                    v-for="(variableComponent, index) in variableComponentsListToSort"
+                    :key="index"
+                    :class="variableComponent.order"
+                    class="row variableComponent"
                   >
-                    <div v-if="variableComponent.variableComponentKey.variable == variable.id" class="columns">
+                    <div
+                      v-if="variableComponent.variableComponentKey.variable == variable.id"
+                      class="columns"
+                    >
                       <div class="column orderLabel">
                         {{ variableComponent.variableComponentKey.variable }} :
                         {{ variableComponent.variableComponentKey.component }}
                       </div>
                       <div>
                         <b-button
-                            class="column asc"
-                            style="margin: 10px"
-                            type="is-primary"
-                            @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
+                          class="column asc"
+                          style="margin: 10px; border-radius: 30%; border-color: #dbdbdb"
+                          type="is-white"
+                          @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
                         >
                           ASC
                         </b-button>
                       </div>
-                      <div>
+                      <div style="margin-right: 10px">
                         <b-button
-                            class="column desc"
-                            style="margin: 10px"
-                            type="is-primary"
-                            @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
+                          class="column desc"
+                          style="margin: 10px; border-radius: 30%; border-color: #dbdbdb"
+                          type="is-white"
+                          @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
                         >
                           DESC
                         </b-button>
@@ -93,12 +95,20 @@
           <div class="column">
             <div class="rows">
               <div
-                  v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
-                  :key="index"
-                  :class="variableComponent.order"
-                  class="row"
+                v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                :key="index"
+                :class="variableComponent.order"
+                class="row"
               >
                 <div class="columns">
+                  <b-tag
+                      class="is-primary"
+                      closable
+                      v-sortable="sortableOptions">
+                    {{ variableComponent.order }} ->
+                    {{ variableComponent.variableComponentKey.variable }} :
+                    {{ variableComponent.variableComponentKey.component }}
+                  </b-tag>
                   <div class="column orderLabel">
                     {{ variableComponent.order }} ->
                     {{ variableComponent.variableComponentKey.variable }} :
@@ -191,43 +201,43 @@
             <b-button icon-left="redo" type="is-primary" @click="reInit">réinitialiser</b-button>
           </caption>
           <thead>
-          <tr class="DataSetTableView-variable-row">
-            <th
+            <tr class="DataSetTableView-variable-row">
+              <th
                 v-for="variable in variables"
                 :key="variable.id"
                 :colspan="Object.values(variable.components).length"
                 :variable="variable.id"
-            >
-              {{ variable.label }}
-            </th>
-          </tr>
-          <tr>
-            <th
+              >
+                {{ variable.label }}
+              </th>
+            </tr>
+            <tr>
+              <th
                 v-for="(comp, index) in variableComponents"
                 :key="`${comp.label}-${index}`"
                 :component="comp.component"
                 :variable="comp.variable"
-            >
-              {{ comp.label }}
-              <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
-            </th>
-          </tr>
-          <tr>
-            <th
+              >
+                {{ comp.label }}
+                <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
+              </th>
+            </tr>
+            <tr>
+              <th
                 v-for="(component, index) in variableComponents"
                 :key="`${index}`"
                 :component="component.component"
                 :variable="component.variable"
-            >
-              <b-field grouped>
-                <b-field v-if="'date' == component.type || 'numeric' == component.type">
-                  <CollapsibleInterval
+              >
+                <b-field grouped>
+                  <b-field v-if="'date' == component.type || 'numeric' == component.type">
+                    <CollapsibleInterval
                       :variableComponent="component"
                       @setting_interval="addSearch"
-                  ></CollapsibleInterval>
-                </b-field>
-                <b-field>
-                  <b-input
+                    ></CollapsibleInterval>
+                  </b-field>
+                  <b-field>
+                    <b-input
                       v-model="search[component.variable + '_' + component.component]"
                       icon="search"
                       icon-clickable
@@ -235,51 +245,51 @@
                       placeholder="Search..."
                       type="search"
                       @icon-click="addSearch(component)"
-                  >
-                  </b-input>
+                    >
+                    </b-input>
+                  </b-field>
                 </b-field>
-              </b-field>
-            </th>
-          </tr>
+              </th>
+            </tr>
           </thead>
           <tbody>
-          <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
-            <td
+            <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
+              <td
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
                 :component="component.component"
                 :variable="component.variable"
-            >
+              >
                 <span>
                   {{ row[component.variable][component.component] }}
                   {{ row.result }}
                 </span>
-              <span v-if="getRefsLinkedToId(row, component)">
+                <span v-if="getRefsLinkedToId(row, component)">
                   <b-button
-                      icon-right="eye"
-                      size="is-small"
-                      @click="getReferenceValues(row, component)"
+                    icon-right="eye"
+                    size="is-small"
+                    @click="getReferenceValues(row, component)"
                   >
                   </b-button>
                 </span>
-            </td>
-          </tr>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
       <b-pagination
-          v-model="currentPage"
-          :per-page="params.limit"
-          :total="totalRows"
-          aria-current-label="Current page"
-          aria-next-label="Next page"
-          aria-page-label="Page"
-          aria-previous-label="Previous page"
-          order="is-centered"
-          range-after="3"
-          range-before="3"
-          size="is-large"
-          @change="changePage"
+        v-model="currentPage"
+        :per-page="params.limit"
+        :total="totalRows"
+        aria-current-label="Current page"
+        aria-next-label="Next page"
+        aria-page-label="Page"
+        aria-previous-label="Previous page"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        size="is-large"
+        @change="changePage"
       >
       </b-pagination>
     </div>
@@ -287,23 +297,23 @@
 </template>
 
 <script>
-import {Component, Prop, Vue} from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import {ApplicationService} from "@/services/rest/ApplicationService";
-import {ApplicationResult} from "@/model/ApplicationResult";
-import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import {DataService} from "@/services/rest/DataService";
-import {AlertService} from "@/services/AlertService";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { DataService } from "@/services/rest/DataService";
+import { AlertService } from "@/services/AlertService";
 import CollapsibleInterval from "@/components/common/CollapsibleInterval.vue";
-import {ReferenceService} from "@/services/rest/ReferenceService";
-import {DownloadDatasetQuery} from "@/model/application/DownloadDatasetQuery";
-import {VariableComponentFilters} from "@/model/application/VariableComponentFilters";
-import {VariableComponentKey} from "@/model/application/VariableComponentKey";
-import {IntervalValues} from "@/model/application/IntervalValues";
-import {VariableComponentOrderBy} from "@/model/application/VariableComponentOrderBy";
+import { ReferenceService } from "@/services/rest/ReferenceService";
+import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
+import { VariableComponentFilters } from "@/model/application/VariableComponentFilters";
+import { VariableComponentKey } from "@/model/application/VariableComponentKey";
+import { IntervalValues } from "@/model/application/IntervalValues";
+import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 
 @Component({
-  components: {PageView, SubMenu, CollapsibleInterval},
+  components: { PageView, SubMenu, CollapsibleInterval },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -340,22 +350,22 @@ export default class DataTypeTableView extends Vue {
   search = {};
   refsLinkedTo = {};
   loadedReferences = {};
-  currentReferenceDetail = {active: false};
+  currentReferenceDetail = { active: false };
   activeTab = 0;
 
   async created() {
     await this.init();
     this.subMenuPaths = [
       new SubMenuPath(
-          this.$t("dataTypesManagement.data-types").toLowerCase(),
-          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
-          () => this.$router.push(`/applications`)
+        this.$t("dataTypesManagement.data-types").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+        () => this.$router.push(`/applications`)
       ),
       new SubMenuPath(
-          this.dataTypeId,
-          () =>
-              this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`),
-          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+        this.dataTypeId,
+        () =>
+          this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`),
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
     ];
   }
@@ -382,9 +392,9 @@ export default class DataTypeTableView extends Vue {
   async initDatatype() {
     this.showSort = false;
     const dataTypes = await this.dataService.getDataType(
-        this.applicationName,
-        this.dataTypeId,
-        this.params
+      this.applicationName,
+      this.dataTypeId,
+      this.params
     );
     this.refsLinkedTo = dataTypes.rows.reduce((acc, d) => {
       acc[d.rowId] = d.refsLinkedTo;
@@ -392,36 +402,36 @@ export default class DataTypeTableView extends Vue {
     }, {});
     this.totalRows = dataTypes.totalRows;
     this.rows = dataTypes.rows.map((r) => {
-      return {rowId: r.rowId, ...r.values};
+      return { rowId: r.rowId, ...r.values };
     });
 
     const variablesModels = this.application.dataTypes[this.dataTypeId].variables;
     this.variables = dataTypes.variables.map((v) => variablesModels[v]);
     this.variableComponents = this.variables
-        .map((v) => {
-          return Object.values(v.components).map((c) =>
-              Object.assign(c, {
-                variable: v.label,
-                component: c.id,
-                ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
-              })
-          );
-        })
-        .flat();
+      .map((v) => {
+        return Object.values(v.components).map((c) =>
+          Object.assign(c, {
+            variable: v.label,
+            component: c.id,
+            ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
+          })
+        );
+      })
+      .flat();
     this.variableComponentsListToSort = this.variables
-        .map((v) => {
-          return Object.keys(v.components).reduce((acc, comp) => {
-            return [
-              ...acc,
-              {
-                variableComponentKey: {variable: v.id, component: comp},
-                order: null,
-                ...this.getVariableComponentInfos(v.id, comp, dataTypes),
-              },
-            ];
-          }, []);
-        })
-        .flat();
+      .map((v) => {
+        return Object.keys(v.components).reduce((acc, comp) => {
+          return [
+            ...acc,
+            {
+              variableComponentKey: { variable: v.id, component: comp },
+              order: null,
+              ...this.getVariableComponentInfos(v.id, comp, dataTypes),
+            },
+          ];
+        }, []);
+      })
+      .flat();
 
     let columnIndex = 0;
     this.variables.forEach((variable, variableIndex) => {
@@ -445,21 +455,21 @@ export default class DataTypeTableView extends Vue {
     const rowId = this.getRefsLinkedToId(row, component);
     const variable = component.checker.refType;
     if (!this.loadedReferences[rowId]) {
-      let params = {_row_id_: [rowId]};
+      let params = { _row_id_: [rowId] };
       if (!variable) {
         params.any = true;
       }
       const reference = await this.referenceService.getReferenceValues(
-          this.applicationName,
-          variable,
-          params
+        this.applicationName,
+        variable,
+        params
       );
       const data = Object.entries(reference.referenceValues[0].values)
-          .map((entry) => ({colonne: entry[0], valeur: entry[1]}))
-          .reduce((acc, entry) => {
-            acc.push(entry);
-            return acc;
-          }, []);
+        .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
+        .reduce((acc, entry) => {
+          acc.push(entry);
+          return acc;
+        }, []);
       const result = {};
       result[rowId] = {
         data: data,
@@ -482,7 +492,7 @@ export default class DataTypeTableView extends Vue {
       };
     }
     let referenceValue = this.loadedReferences[rowId];
-    this.currentReferenceDetail = {...referenceValue, active: true};
+    this.currentReferenceDetail = { ...referenceValue, active: true };
     return referenceValue;
   }
 
@@ -505,13 +515,13 @@ export default class DataTypeTableView extends Vue {
   addVariableComponentToSortedList(variableComponentSorted, order) {
     variableComponentSorted.order = variableComponentSorted.order == order ? null : order;
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
-        (c) =>
-            c.variableComponentKey.variable != variableComponentSorted.variableComponentKey.variable ||
-            c.variableComponentKey.component != variableComponentSorted.variableComponentKey.component
+      (c) =>
+        c.variableComponentKey.variable != variableComponentSorted.variableComponentKey.variable ||
+        c.variableComponentKey.component != variableComponentSorted.variableComponentKey.component
     );
     if (variableComponentSorted.order) {
       this.params.variableComponentOrderBy.push(
-          new VariableComponentOrderBy(variableComponentSorted)
+        new VariableComponentOrderBy(variableComponentSorted)
       );
     }
   }
@@ -519,29 +529,29 @@ export default class DataTypeTableView extends Vue {
   getSortIcon(variable, component) {
     variable, component, event;
     let icon = this.params.variableComponentOrderBy
-        .filter(
-            (c) =>
-                c.variableComponentKey.variable == variable &&
-                c.variableComponentKey.component == component
-        )
-        .map((vc) => {
-          if (vc.order == "ASC") {
-            return "arrow-down";
-          } else if (vc.order == "DESC") {
-            return "arrow-up";
-          } else {
-            return "";
-          }
-        })[0];
+      .filter(
+        (c) =>
+          c.variableComponentKey.variable == variable &&
+          c.variableComponentKey.component == component
+      )
+      .map((vc) => {
+        if (vc.order == "ASC") {
+          return "arrow-down";
+        } else if (vc.order == "DESC") {
+          return "arrow-up";
+        } else {
+          return "";
+        }
+      })[0];
     return icon ? icon : null;
   }
 
   addSearch(variableComponent) {
-    let {key, variable, component, type, format} = variableComponent;
+    let { key, variable, component, type, format } = variableComponent;
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
-        (c) =>
-            c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
+      (c) =>
+        c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
     );
     let search = null;
     if (value && value.length > 0) {
@@ -580,29 +590,29 @@ export default class DataTypeTableView extends Vue {
     let key = variableId + "_" + componentId;
     if (dataTypes.checkedFormatVariableComponents) {
       if (
-          dataTypes.checkedFormatVariableComponents.DateLineChecker &&
-          dataTypes.checkedFormatVariableComponents.DateLineChecker[key]
+        dataTypes.checkedFormatVariableComponents.DateLineChecker &&
+        dataTypes.checkedFormatVariableComponents.DateLineChecker[key]
       ) {
         type = "date";
         format = dataTypes.checkedFormatVariableComponents.DateLineChecker[key].pattern;
         checker = dataTypes.checkedFormatVariableComponents.DateLineChecker[key];
       } else if (
-          dataTypes.checkedFormatVariableComponents.IntegerChecker &&
-          dataTypes.checkedFormatVariableComponents.IntegerChecker[key]
+        dataTypes.checkedFormatVariableComponents.IntegerChecker &&
+        dataTypes.checkedFormatVariableComponents.IntegerChecker[key]
       ) {
         type = "numeric";
         format = "integer";
         checker = dataTypes.checkedFormatVariableComponents.IntegerChecker[key];
       } else if (
-          dataTypes.checkedFormatVariableComponents.FloatChecker &&
-          dataTypes.checkedFormatVariableComponents.FloatChecker[key]
+        dataTypes.checkedFormatVariableComponents.FloatChecker &&
+        dataTypes.checkedFormatVariableComponents.FloatChecker[key]
       ) {
         type = "numeric";
         format = "float";
         checker = dataTypes.checkedFormatVariableComponents.FloatChecker[key];
       } else if (
-          dataTypes.checkedFormatVariableComponents.ReferenceLineChecker &&
-          dataTypes.checkedFormatVariableComponents.ReferenceLineChecker[key]
+        dataTypes.checkedFormatVariableComponents.ReferenceLineChecker &&
+        dataTypes.checkedFormatVariableComponents.ReferenceLineChecker[key]
       ) {
         type = "reference";
         format = "uuid";
@@ -652,13 +662,14 @@ $row-variable-height: 60px;
 }
 
 .row.variableComponent:hover {
-  background-color: grey;
+  background-color: rgba(0, 163, 166, 0.2);
   color: white;
 }
 
 .ASC .asc,
 .DESC .desc {
-  background-color: rgb(87, 141, 87);
+  background-color: $primary;
+  color: white;
 }
 
 .numberInput {
