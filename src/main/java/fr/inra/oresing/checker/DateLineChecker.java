@@ -7,10 +7,16 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
+import java.util.Map;
 
 public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker {
 
     public static final String PARAM_PATTERN = "pattern";
+    public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
+    public static final String PARAM_COLUMN = "column";
+    public static final String PARAM_VARIABLE_COMPONENT_KEY = "variableComponentKey";
+    public static final String PARAM_DATE = "date";
 
     private final VariableComponentKey variableComponentKey;
 
@@ -47,10 +53,16 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
-            dateTimeFormatter.parse(value);
-            validationCheckResult = DefaultValidationCheckResult.success();
+            TemporalAccessor date = dateTimeFormatter.parse(value);
+            Map<String, Object> params = ImmutableMap.of(
+                    PARAM_PATTERN, pattern,
+                    PARAM_DATE_TIME_FORMATTER, dateTimeFormatter,
+                    variableComponentKey==null? PARAM_COLUMN : PARAM_VARIABLE_COMPONENT_KEY, variableComponentKey==null?column:variableComponentKey,
+                    PARAM_DATE, date
+            );
+            validationCheckResult = DateValidationCheckResult.success(params);
         } catch (DateTimeParseException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", pattern, "value", value));
+            validationCheckResult = DateValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", pattern, "value", value));
         }
         return validationCheckResult;
     }

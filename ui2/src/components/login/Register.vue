@@ -45,7 +45,37 @@
             v-model="password"
             :placeholder="$t('login.pwd-placeholder')"
             :password-reveal="true"
-            @keyup.native.enter="handleSubmit(signIn)"
+          >
+          </b-input>
+        </b-field>
+      </ValidationProvider>
+
+      <ValidationProvider
+        rules="required|confirmed:password"
+        name="confirm_password"
+        v-slot="{ errors, valid }"
+        vid="confirm_password"
+      >
+        <b-field
+          class="input-field"
+          :type="{
+            'is-danger': errors && errors.length > 0,
+            'is-success': valid,
+          }"
+          :message="errors[0]"
+        >
+          <template slot="label">
+            {{ $t("login.confirm-pwd") }}
+            <span class="mandatory">
+              {{ $t("validation.obligatoire") }}
+            </span>
+          </template>
+          <b-input
+            type="password"
+            v-model="confirmedPwd"
+            :placeholder="$t('login.pwd-placeholder')"
+            :password-reveal="true"
+            @keyup.native.enter="handleSubmit(register)"
           >
           </b-input>
         </b-field>
@@ -53,12 +83,9 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-left="sign-in-alt">
-        {{ $t("login.signin") }}
+      <b-button type="is-primary" @click="handleSubmit(register)" icon-left="user-plus">
+        {{ $t("login.register") }}
       </b-button>
-      <router-link :to="{ path: '/' }">
-        {{ $t("login.pwd-forgotten") }}
-      </router-link>
     </div>
   </ValidationObserver>
 </template>
@@ -68,28 +95,33 @@ import { Component, Vue } from "vue-property-decorator";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { LoginService } from "@/services/rest/LoginService";
 import { AlertService } from "@/services/AlertService";
-import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
   components: { ValidationObserver, ValidationProvider },
 })
-export default class SignIn extends Vue {
+export default class Register extends Vue {
   loginService = LoginService.INSTANCE;
   alertService = AlertService.INSTANCE;
 
   login = "";
   password = "";
+  confirmedPwd = "";
 
-  async signIn() {
+  async register() {
     try {
-      await this.loginService.signIn(this.login, this.password);
+      await this.loginService.register(this.login, this.password);
+      this.alertService.toastSuccess(this.$t("alert.registered-user"));
+      this.resetVariables();
+      this.$emit("userRegistered");
     } catch (error) {
-      if (error.httpResponseCode === HttpStatusCodes.FORBIDDEN) {
-        this.alertService.toastError(this.$t("alert.user-unknown"), error);
-      } else {
-        this.alertService.toastServerError(error);
-      }
+      this.alertService.toastServerError(error);
     }
+  }
+
+  resetVariables() {
+    this.login = "";
+    this.password = "";
+    this.confirmedPwd = "";
   }
 }
 </script>

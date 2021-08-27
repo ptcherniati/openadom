@@ -3,7 +3,9 @@ package fr.inra.oresing.checker;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.groovy.GroovyExpression;
+import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import jdk.jshell.JShell;
 import jdk.jshell.SnippetEvent;
@@ -11,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +43,9 @@ public class GroovyLineCheckerTest {
             Assert.assertTrue(compilationError.getMessage().contains("Integre"));
         });
 
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression);
+        Application application = Mockito.mock(Application.class);
+        OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository,null);
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
@@ -64,7 +70,7 @@ public class GroovyLineCheckerTest {
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));
             if (log.isDebugEnabled()) {
-                log.debug("erreur si le script lève une exception", e);
+                log.debug("Test : doit lever une erreur si le script lève une exception "+e.getMessage());
             }
         }
     }
@@ -81,8 +87,10 @@ public class GroovyLineCheckerTest {
                 , "}"
                 , "throw new IllegalArgumentException(\"unité inconnue, \" + unité);"
         );
+        Application application = Mockito.mock(Application.class);
+        OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
 
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository,null);
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",

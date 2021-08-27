@@ -30,6 +30,13 @@ export class LoginService extends Fetcher {
     return Promise.resolve(response);
   }
 
+  async register(login, pwd) {
+    return this.post("users", {
+      login: login,
+      password: pwd,
+    });
+  }
+
   async logout() {
     await this.delete("logout");
     this.notifyCrendentialsLost();
