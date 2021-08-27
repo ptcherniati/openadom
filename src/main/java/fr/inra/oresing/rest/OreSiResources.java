@@ -1,13 +1,10 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.Configuration;
@@ -20,24 +17,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -160,6 +147,7 @@ public class OreSiResources {
 
     /**
      * Liste les noms des types de referenciels disponible
+     *
      * @param nameOrId l'id ou le nom de l'application
      * @return un tableau de chaine
      */
@@ -171,8 +159,9 @@ public class OreSiResources {
 
     /**
      * Liste toutes les valeurs possibles pour un type de referenciel
+     *
      * @param nameOrId l'id ou le nom de l'application
-     * @param refType le type du referenciel
+     * @param refType  le type du referenciel
      * @return un tableau de chaine
      */
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -186,9 +175,9 @@ public class OreSiResources {
         ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
                 .map(referenceValue ->
                         new GetReferenceResult.ReferenceValue(
-                            referenceValue.getHierarchicalKey(),
-                            referenceValue.getNaturalKey(),
-                            referenceValue.getRefValues()
+                                referenceValue.getHierarchicalKey(),
+                                referenceValue.getNaturalKey(),
+                                referenceValue.getRefValues()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
@@ -226,41 +215,57 @@ public class OreSiResources {
         return ResponseEntity.ok(application.getDataType());
     }
 
-    /** export as JSON */
+    /**
+     * export as JSON
+     */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetDataResult> getAllDataJson(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
-        DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        List<DataRow> list = service.findData(downloadDatasetQuery);
+            @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+        DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
+        List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
                 .map(DataRow::getValues)
                 .map(Map::keySet)
                 .flatMap(Set::stream)
                 .collect(ImmutableSet.toImmutableSet());
-        return ResponseEntity.ok(new GetDataResult(variables, list));
+        Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
+        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
     }
 
-    /** export as CSV */
+    /**
+     * export as CSV
+     */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> getAllDataCsvForce(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
-        return getAllDataCsv(nameOrId, dataType, variableComponentIds);
+            @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+        return getAllDataCsv(nameOrId, dataType, params);
     }
 
-    /** export as CSV */
+    /**
+     * export as CSV
+     */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> getAllDataCsv(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "variableComponent", required = false) Set<String> variableComponentIds) {
-        DownloadDatasetQuery downloadDatasetQuery = new DownloadDatasetQuery(nameOrId, dataType, variableComponentIds);
-        String result = service.getDataCsv(downloadDatasetQuery);
+            @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+        DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
+        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType);
         return ResponseEntity.ok(result);
+    }
+
+    private DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(String params) {
+        try {
+            return params != null ? new ObjectMapper().readValue(params, DownloadDatasetQuery.class):null;
+        } catch (IOException e) {
+            throw new BadDownloadDatasetQuery(e.getMessage());
+        }
     }
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)

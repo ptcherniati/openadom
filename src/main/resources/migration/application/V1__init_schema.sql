@@ -16,11 +16,15 @@ create table ReferenceValue (
     referenceType TEXT CHECK(name_check(application, 'referenceType', referenceType)),
     hierarchicalKey ltree NOT NULL,
     naturalKey TEXT NOT NULL,
+    refsLinkedTo jsonb  check(refs_check_for_reference('${applicationSchema}', application, refsLinkedTo)),
     refValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id),
 
     CONSTRAINT "hierarchicalKey_uniqueness" UNIQUE (application, referenceType, hierarchicalKey)
 );
+CREATE INDEX ref_refslinkedto_index ON ReferenceValue USING gin (refsLinkedTo);
+CREATE INDEX ref_refvalues_index ON ReferenceValue USING gin (refValues);
+
 
 --CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
 CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
@@ -35,10 +39,12 @@ create table Data (
     dataGroup TEXT NOT NULL,
     requiredAuthorizations jsonb NOT NULL,
     timeScope tsrange NOT NULL,
-    refsLinkedTo jsonb,
+    refsLinkedTo jsonb  check(refs_check_for_datatype('${applicationSchema}',  application, refsLinkedTo, datatype)),
     dataValues jsonb,
     binaryFile EntityRef REFERENCES BinaryFile(id)
 );
+CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo);
+CREATE INDEX data_refvalues_index ON Data USING gin (dataValues);
 
 ALTER TABLE Data ADD CONSTRAINT row_uniqueness UNIQUE (rowId, dataGroup);
 
