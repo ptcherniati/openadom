@@ -77,6 +77,66 @@ references:
 ```
 
 <span style="color: orange">*references* n'est pas indenté. *sites* et *parcelles* sont indentés de 1. *keyColumns* et *columns* sont indentés de 2. Le contenue de *columns* seront indenté de 3.</span>
+#### On rajoute contraintes sur les données de référence
+
+Les contraintes se définissent pour chacune des données de référence dans la section validations.
+Chaque règle de validation peut porter sur plusieurs colonnes de la donnée de référence.
+Elle comporte une description et un checker (Reference, Integer, Float, RegularExpression, Date).
+
+
+``` yaml
+
+  types_de_donnees_par_themes_de_sites_et_projet:
+    validations:
+      projetRef: # la clef d'une validation
+        description: "référence au projet" # la description
+        checker: # le checker de validation
+          name: Reference #Le checker à utiliser
+          params: #liste de paramètres (dépend du checker choisi)
+            refType: projet #pour le checker référence la donnée référencée
+            columns: nom du projet #liste des colonnes sur lequel s'applique le checker
+      sitesRef:
+        description: "référence au site"
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            columns: nom du site
+      themesRef:
+        description: "référence au theme"
+        checker:
+          name: Reference
+          params:
+            refType: themes
+            columns: nom du thème
+
+      checkDatatype:
+        description: "test"
+        checker:
+          name: GroovyExpression # utilisation d'un script groovy de validation
+          params:
+            expression: >
+              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
+              return application.getDataType().contains(datatype);
+
+```
+
+Pour les checkers GroovyExpression, on récupère dans le script des informations :
+
+    datum : les valeurs de la ligne courante. 
+      On récupère la valeur d'un variable-component -> datum.get("nom de la variable").get("nom du composant")
+    application : le yaml de l'application
+    references: les valeurs d'une donnée de référence spécifique;
+      Il faut renseigner dans params la clef "references" qui définit les données de références accessibles dans references.
+      -> references.get("nom de la reference").getRefValues().get("nom de la colonne")
+    referencesValues : idem que references; 
+      -> referencesValues.get("nom de la reference").get("nom de la colonne")
+    datatypes : idem que references pour les datatypes. Il faut renseigner le param datatypes
+      -> datatypes.get("nom du datatype").getValues().get("nom de la colonne")
+    datatypesValues : idem que datatypes
+      -> datatypesValues.get("nom du datatype").get("nom de la colonne")
+    params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
+
 
 ### il est possible de définir des clefs composite entre différentes références
 
@@ -232,6 +292,43 @@ Les *variables/components* sont passés dans la map *datum*. On récupère la va
             expression: >
               Set.of("", "0", "1", "2").contains(datum.get("SWC").get("qualité"))
 ```
+
+Pour les checkers GroovyExpression, on récupère dans le script des informations :
+
+    datum : les valeurs de la ligne courante. 
+      On récupère la valeur d'un variable-component -> datum.get("nom de la variable").get("nom du composant")
+    application : le yaml de l'application
+    references: les valeurs d'une donnée de référence spécifique;
+      Il faut renseigner dans params la clef "references" qui définit les données de références accessibles dans references.
+      -> references.get("nom de la reference").getRefValues().get("nom de la variable").get("nom du composant")
+    referencesValues : idem que references; 
+      -> referencesValues.get("nom de la reference").get("nom de la variable").get("nom du composant")
+    datatypes : idem que references pour les datatypes. Il faut renseigner le param datatypes
+      -> datatypes.get("nom du datatype").getValues().get("nom de la variable").get("nom du composant")
+    datatypesValues : idem que datatypes
+      -> datatypesValues.get("nom du datatype").get("nom de la variable").get("nom du composant")
+    params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
+
+
+``` yaml
+  unitOfIndividus:
+        description: "vérifie l'unité du nombre d'individus"
+        checker:
+          name: GroovyExpression
+          params:
+            expression: >
+              return referencesValues.get("variables_et_unites_par_types_de_donnees")
+              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
+              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
+              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
+            references: variables_et_unites_par_types_de_donnees
+            datatype: "piegeage_en_montee"
+            variable: "Nombre d'individus"
+            codeVariable: nombre_d_individus
+            component: unit
+
+
+``` 
 Cette formulation vérifie que la valeur du component qualité de la variable SWC est vide ou égale à 0,1 ou 2
 L'expression doit renvoyer true
 
