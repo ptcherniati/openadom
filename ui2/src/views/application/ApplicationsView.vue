@@ -141,7 +141,7 @@
                     </div>
                   </b-modal>
                 </div>
-                <div class="card-content">
+                <div class="card-content" v-if="application.creation">
                   <div class="content">
                     <p field="creationDate">
                       {{ new Date(application.creationDate).toLocaleString(localLang) }}
@@ -169,6 +169,7 @@
         </div>
         <hr />
         <b-pagination
+          v-if="perPage <= applications.length"
           :current.sync="current"
           :per-page="perPage"
           :range-after="2"
