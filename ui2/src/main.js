@@ -5,79 +5,55 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
-    faAngleLeft,
-    faAngleRight,
-    faFilter,
-    faSearch,
-    faSearchPlus,
-    faArrowDown,
-    faArrowUp,
-    faCaretDown,
-    faCaretUp,
-    faCheck,
-    faDownload,
-    faDraftingCompass,
-    faExclamationCircle,
-    faEye,
-    faEyeSlash,
-    faGlobe,
-    faPlus,
-    faPoll,
-    faSignOutAlt,
-    faTimes,
-    faTrashAlt,
-    faUpload,
-    faWrench,
-    faVial,
-    faCaretRight,
-    faArrowLeft,
-    faSignInAlt,
-    faUserPlus,
-    faUserAstronaut,
-    faKey,
-    faChevronUp,
-    faChevronDown,
-    faCalendarDay,
-    faPaperPlane,
-    faRedo,
+  faAngleLeft,
+  faAngleRight,
+  faArrowDown,
+  faArrowUp,
+  faCaretDown,
+  faCaretUp,
+  faCheck,
+  faDownload,
+  faDraftingCompass,
+  faExclamationCircle,
+  faEye,
+  faEyeSlash,
+  faGlobe,
+  faPlus,
+  faPoll,
+  faSignOutAlt,
+  faTimes,
+  faTrashAlt,
+  faUpload,
+  faWrench,
+  faVial,
+  faCaretRight,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
-    faEye,
-    faEyeSlash,
-    faPlus,
-    faExclamationCircle,
-    faCheck,
-    faSignOutAlt,
-    faGlobe,
-    faUpload,
-    faFilter,
-    faSearch,
-    faSearchPlus,
-    faArrowUp,
-    faArrowDown,
-    faAngleLeft,
-    faAngleRight,
-    faWrench,
-    faPoll,
-    faDraftingCompass,
-    faCaretUp,
-    faCaretDown,
-    faTimes,
-    faTrashAlt,
-    faDownload,
-    faVial,
-    faCaretRight,
-    faArrowLeft,
-    faSignInAlt,
-    faUserPlus,
-    faUserAstronaut,
-    faKey,
-    faChevronUp,
-    faChevronDown,
-    faCalendarDay,
-    faPaperPlane,
-    faRedo
+  faEye,
+  faEyeSlash,
+  faPlus,
+  faExclamationCircle,
+  faCheck,
+  faSignOutAlt,
+  faGlobe,
+  faUpload,
+  faArrowUp,
+  faArrowDown,
+  faAngleLeft,
+  faAngleRight,
+  faWrench,
+  faPoll,
+  faDraftingCompass,
+  faCaretUp,
+  faCaretDown,
+  faTimes,
+  faTrashAlt,
+  faDownload,
+  faVial,
+  faCaretRight,
+  faArrowLeft
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
@@ -92,64 +68,51 @@ import i18n_fr from "@/locales/fr.json";
 Vue.use(VueI18n);
 const userPreferencesService = UserPreferencesService.INSTANCE;
 export const i18n = new VueI18n({
-    locale: userPreferencesService.getUserPrefLocale(),
-    messages: {
-        en: i18n_en,
-        fr: i18n_fr,
-    },
+  locale: userPreferencesService.getUserPrefLocale(),
+  messages: {
+    en: i18n_en,
+    fr: i18n_fr,
+  },
 });
 
 // Validation
 import "vee-validate";
-import { confirmed, required } from "vee-validate/dist/rules";
+import { required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
 // Ici on surcharge les messages d'erreur de vee-validate.
 // Pour plus de règles :  https://logaretm.github.io/vee-validate/guide/rules.html
 
 extend("required", {
-    ...required,
-    message: i18n.t("validation.invalid-required"),
-});
-
-extend("confirmed", {
-    ...confirmed,
-    message: i18n.t("validation.invalid-confirmed").toString(),
+  ...required,
+  message: i18n.t("validation.invalid-required"),
 });
 
 extend("validApplicationName", {
-    message: i18n.t("validation.invalid-application-name"),
-    validate: (value) => {
-        return value && value.match("^[a-z]*$") != null;
-    },
+  message: i18n.t("validation.invalid-application-name"),
+  validate: (value) => {
+    return value && value.match("^[a-z]*$") != null;
+  },
 });
 
 extend("validApplicationNameLength", {
-    message: i18n.t("validation.invalid-application-name-length"),
-    validate: (value) => {
-        return value && value.length >= 4 && value.length <= 20;
-    },
+  message: i18n.t("validation.invalid-application-name-length"),
+  validate: (value) => {
+    return value && value.length >= 4 && value.length <= 20;
+  },
 });
-
-// extend("dateIsAfter", {
-//   message: i18n.t("validation.date-not-after").toString(),
-//   validate: (value, { min }: Record<string, any>) => {
-//     return isAfter(value, new Date(min))
-//   },
-//   params: ["min"],
-// })
 
 // Buefy
 Vue.use(Buefy, {
-    defaultIconComponent: "vue-fontawesome",
-    defaultIconPack: "fas",
+  defaultIconComponent: "vue-fontawesome",
+  defaultIconPack: "fas",
 });
 
 Vue.config.productionTip = false;
 
 const app = new Vue({
-    router,
-    i18n,
-    render: (h) => h(App),
+  router,
+  i18n,
+  render: (h) => h(App),
 }).$mount("#app");
 
 export default app;

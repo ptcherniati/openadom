@@ -17,7 +17,6 @@ import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,8 +39,6 @@ public class Fixtures {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
-        OLAC("olac", ImmutableSet.of("condition_prelevements")),
-        FORET("foret", ImmutableSet.of("flux_meteo_dataResult")),
         FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
 
         private final String name;
@@ -99,11 +96,9 @@ public class Fixtures {
     }
 
     public Map<String, String> getAcbbReferentielFiles() {
-        Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("agroecosystemes", "/data/acbb/agroecosysteme.csv");
+        Map<String, String> referentielFiles = new HashMap<>();
         referentielFiles.put("sites", "/data/acbb/sites.csv");
         referentielFiles.put("parcelles", "/data/acbb/parcelle.csv");
-        referentielFiles.put("unites", "/data/acbb/unites.csv");
         return referentielFiles;
     }
 
@@ -360,8 +355,8 @@ public class Fixtures {
             }
         }
 
-        // ajout de data Prelevement
-        try (InputStream in = getClass().getResourceAsStream(getPrelevementProDataResourceName())) {
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(getdPrelevementProDataResourceName())) {
             MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
                     .file(file)
@@ -369,208 +364,10 @@ public class Fixtures {
                     .andExpect(status().isCreated());
         }
 
-        // ajout de data PhysicoChimieSols
-        try (InputStream in = getClass().getResourceAsStream(getPhysicoChimieSolsProDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
         return authCookie;
     }
 
-    public String getPrelevementProDataResourceName() {
+    public String getdPrelevementProDataResourceName() {
         return "/data/pros/donnees_prelevement_pro.csv";
-    }
-    public String getPhysicoChimieSolsProDataResourceName() {
-        return "/data/pros/physico_chimie_sols.csv";
-    }
-
-
-    public Map<String, String> getOlaReferentielFiles() {
-        Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("themes", "/data/olac/themes.csv");
-        referentielFiles.put("projets", "/data/olac/projets.csv");
-        referentielFiles.put("typeSites", "/data/olac/types_de_site.csv");
-        referentielFiles.put("sites", "/data/olac/sites.csv");
-        referentielFiles.put("typePlateformes", "/data/olac/types_de_plateforme.csv");
-        referentielFiles.put("plateformes", "/data/olac/plateformes.csv");
-        referentielFiles.put("valeurs_qualitatives", "/data/olac/valeurs_qualitatives.csv");
-        return referentielFiles;
-    }
-
-    public String getOlaApplicationConfigurationResourceName() {
-        return "/data/olac/olac.yaml";
-    }
-
-
-    public Cookie addApplicationOLAC() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
-        try (InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac")
-                    .file(configuration)
-                    .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
-        }
-
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : getOlaReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data condition_prelevements
-        try (InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/condition_prelevements")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data physico-chimie
-        try (InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/physico-chimie")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data sonde_truncated
-        try (InputStream in = getClass().getResourceAsStream(getSondeDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/sonde_truncated")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data phytoplancton_aggregated
-        try (InputStream in = getClass().getResourceAsStream(getPhytoAggregatedDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data phytoplancton_truncated
-        try (InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data  zooplancton_truncated
-        try (InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data zooplancton_biovolumes
-        try (InputStream in = getClass().getResourceAsStream(getZooplactonBiovolumDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        return authCookie;
-    }
-
-    public String getConditionPrelevementDataResourceName() {
-        return "/data/olac/condition_prelevements.csv";
-    }
-
-    public String getPhysicoChimieDataResourceName() {
-        return "/data/olac/physico-chimie.csv";
-    }
-
-    public String getSondeDataResourceName() {
-        return "/data/olac/sonde_truncated.csv";
-    }
-
-    public String getPhytoAggregatedDataResourceName() {
-        return "/data/olac/phytoplancton_aggregated.csv";
-    }
-
-    public String getPhytoplanctonDataResourceName() {
-        return "/data/olac/phytoplancton__truncated.csv";
-    }
-
-    public String getZooplanctonDataResourceName() {
-        return "/data/olac/zooplancton__truncated.csv";
-    }
-
-    public String getZooplactonBiovolumDataResourceName() {
-        return "/data/olac/zooplancton_biovolumes.csv";
-    }
-
-    public Map<String, String> getForetReferentielFiles() {
-        Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("types_de_zones_etudes", "/data/foret/contexte_dispositif_types_de_zones_etudes.csv");
-        referentielFiles.put("zones_etudes", "/data/foret/contexte_dispositif_zones_etudes.csv");
-        referentielFiles.put("traitements", "/data/foret/contexte_dispositif_traitements.csv");
-        referentielFiles.put("themes", "/data/foret/contexte_dispositif_themes.csv");
-        referentielFiles.put("data_types", "/data/foret/contexte_dispositif_data_types.csv");
-        referentielFiles.put("theme_types_de_donnees_par_zone_etudes", "/data/foret/contexte_dispositif_theme_types_de_donnees_par_zone_etudes.csv");
-        referentielFiles.put("variables_par_types_de_donnees", "/data/foret/contexte_mesure_variables_par_types_de_donnees.csv");
-        return referentielFiles;
-    }
-
-    public String getForetApplicationConfigurationResourceName() {
-        return "/data/foret/foret.yaml";
-    }
-
-    public Cookie addApplicationFORET() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
-        try (InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
-                    .file(configuration)
-                    .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
-        }
-
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : getForetReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
-                        .file(refFile)
-                        .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(getdFluxMeteoForetDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                    .file(file)
-                    .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        return authCookie;
-    }
-
-    public String getdFluxMeteoForetDataResourceName() {
-        return "/data/foret/flux_meteo_dataResult.csv";
     }
 }

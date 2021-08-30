@@ -22,15 +22,7 @@ references:
       colonne_homonyme_entre_referentiels:
 
   sites:
-    validations:
-      typeSitesRef:
-        description: "référence au type de site"
-        checker:
-          name: Reference
-          params:
-            refType: type_de_sites
-            columns: tze_type_nom
-    keyColumns: [zet_chemin_parent,zet_nom_key]
+    keyColumns: [chemin]
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -39,6 +31,7 @@ references:
       zet_description_fr:
       zet_description_en:
       zet_chemin_parent:
+      chemin:
 
   themes:
     keyColumns: [nom_key]
@@ -68,38 +61,6 @@ references:
       tze_definition_en:
 
   types_de_donnees_par_themes_de_sites_et_projet:
-    validations:
-      projetRef:
-        description: "référence au projet"
-        checker:
-          name: Reference
-          params:
-            refType: projet
-            columns: nom du projet
-      sitesRef:
-        description: "référence au site"
-        checker:
-          name: Reference
-          params:
-            refType: sites
-            columns: nom du site
-      themesRef:
-        description: "référence au theme"
-        checker:
-          name: Reference
-          params:
-            refType: themes
-            columns: nom du thème
-
-      checkDatatype:
-        description: "test"
-        checker:
-          name: GroovyExpression
-          params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
-    keyColumns: ["nom du projet","nom du site","nom du thème","nom du type de données" ]
     columns:
       nom du projet:
       nom du site:
@@ -137,30 +98,6 @@ references:
       isQualitative:
 
   variables_et_unites_par_types_de_donnees:
-    validations:
-      variableRef:
-        description: "référence à la variable"
-        checker:
-          name: Reference
-          params:
-            refType: variables
-            columns: nom de la variable
-      uniteRef:
-        description: "référence à l'unité'"
-        checker:
-          name: Reference
-          params:
-            refType: unites
-            columns: nom de l'unité
-      checkDatatype:
-        description: "test"
-        checker:
-          name: GroovyExpression
-          params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
-    keyColumns: [nom du type de données,nom de la variable]
     columns:
       nom du type de données:
       nom de la variable:
@@ -179,14 +116,8 @@ dataTypes:
       site:
         components:
           bassin:
-            checker:
-              name: Reference
-              params:
-                refType: sites
           plateforme:
           chemin:
-            defaultValue: >
-              return datumByVariableAndComponent.get("site").get("bassin") +"__" +datumByVariableAndComponent.get("site").get("plateforme")
             checker:
               name: Reference
               params:
@@ -198,7 +129,6 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-                required:
       espece:
         components:
           value:
@@ -219,53 +149,18 @@ dataTypes:
               name: Reference
               params:
                 refType: unites
-                required:
       Nombre d'individus:
         components:
           value:
             defaultValue: "return 0"
             checker:
               name: Integer
-              params:
-                required:
           unit:
             defaultValue: "return \"sans_unite\""
             checker:
               name: Reference
               params:
                 refType: unites
-                required:
-    validations:
-      unitOfColor:
-        description: "vérifie l'unité de la couleur des individus"
-        checker:
-          name: GroovyExpression
-          params:
-            expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Couleur des individus"
-            codeVariable: couleur_des_individus
-            component: unit
-      unitOfIndividus:
-        description: "vérifie l'unité du nombre d'individus"
-        checker:
-          name: GroovyExpression
-          params:
-            expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Nombre d'individus"
-            codeVariable: nombre_d_individus
-            component: unit
     format:
       headerLine: 4
       firstRowLine: 5
@@ -298,6 +193,10 @@ dataTypes:
           boundTo:
             variable: Nombre d'individus
             component: value
+        - header: "site_chemin"
+          boundTo:
+            variable: site
+            component: chemin
     authorization:
       authorizationScopes:
         localization:

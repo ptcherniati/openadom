@@ -23,8 +23,6 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -211,27 +209,9 @@ public class ApplicationConfigurationServiceTest {
                 "              name: Date", "checker:\n" +
                 "              name: Dates");
         Assert.assertFalse(configurationParsingResult.isValid());
-
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
-                .filter(e -> "unknownCheckerNameForVariableComponent".equals(e.getMessage()))
-                .filter(e -> "site".equals(e.getMessageParams().get("datatype")))
-                .filter(e -> "date".equals(e.getMessageParams().get("variable")))
-                .filter(e -> "day".equals(e.getMessageParams().get("component")))
-                .filter(e -> "Dates".equals(e.getMessageParams().get("checkerName")))
-                .collect(Collectors.toList()));
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
-                .filter(e -> "unknownCheckerNameForVariableComponent".equals(e.getMessage()))
-                .filter(e -> "site".equals(e.getMessageParams().get("datatype")))
-                .filter(e -> "date".equals(e.getMessageParams().get("variable")))
-                .filter(e -> "time".equals(e.getMessageParams().get("component")))
-                .filter(e -> "Dates".equals(e.getMessageParams().get("checkerName")))
-                .collect(Collectors.toList()));
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
-                .filter(e -> "timeScopeVariableComponentWrongChecker".equals(e.getMessage()))
-                .filter(e -> "Date".equals(e.getMessageParams().get("expectedChecker")))
-                .filter(e -> "date".equals(e.getMessageParams().get("variable")))
-                .filter(e -> "day".equals(e.getMessageParams().get("component")))
-                .collect(Collectors.toList()));
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("timeScopeVariableComponentWrongChecker", onlyError.getMessage());
     }
 
     @Test

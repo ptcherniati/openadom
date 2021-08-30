@@ -7,24 +7,17 @@ export const LOCAL_STORAGE_LANG = "lang";
 export const LOCAL_STORAGE_AUTHENTICATED_USER = "authenticatedUser";
 
 export class Fetcher {
-  async post(url, data, withFormData = true) {
-    let body = JSON.stringify(data);
-    if (withFormData) {
-      body = this.convertToFormData(data);
-    }
-    const headers = withFormData
-      ? { "Accept-Language": this.getUserPrefLocale() }
-      : {
-          "Accept-Language": this.getUserPrefLocale(),
-          "Content-Type": "application/json;charset=UTF-8;multipart/form-data",
-        };
+  async post(url, data) {
+    const formData = this.convertToFormData(data);
 
     const response = await fetch(`${config.API_URL}${url}`, {
       method: "POST",
       mode: "cors",
       credentials: "include",
-      body: body,
-      headers: headers,
+      body: formData,
+      headers: {
+        "Accept-Language": this.getUserPrefLocale(),
+      },
     });
 
     return this._handleResponse(response);

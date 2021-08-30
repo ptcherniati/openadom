@@ -5,5 +5,5 @@ import lombok.Value;
 @Value
 public class CsvRowValidationCheckResult {
     ValidationCheckResult validationCheckResult;
-    long lineNumber;
+    int lineNumber;
 }

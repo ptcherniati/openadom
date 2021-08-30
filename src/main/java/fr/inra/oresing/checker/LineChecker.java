@@ -8,5 +8,4 @@ import java.util.Map;
 public interface LineChecker {
 
     ValidationCheckResult check(Map<VariableComponentKey, String> values);
-    ValidationCheckResult checkReference(Map<String, String> values);
 }

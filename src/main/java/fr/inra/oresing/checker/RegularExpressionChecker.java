@@ -14,22 +14,12 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
 
     private final VariableComponentKey variableComponentKey;
 
-    private final String column;
-
     private final String patternString;
 
     private final Predicate<String> predicate;
 
     public RegularExpressionChecker(VariableComponentKey variableComponentKey, String patternString) {
         this.variableComponentKey = variableComponentKey;
-        this.patternString = patternString;
-        predicate = Pattern.compile(patternString).asMatchPredicate();
-        this.column="";
-    }
-
-    public RegularExpressionChecker(String column, String patternString) {
-        this.column = column;
-        this.variableComponentKey = null;
         this.patternString = patternString;
         predicate = Pattern.compile(patternString).asMatchPredicate();
     }
@@ -40,17 +30,12 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
     }
 
     @Override
-    public String getColumn() {
-        return this.column;
-    }
-
-    @Override
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         if (predicate.test(value)) {
             validationCheckResult = DefaultValidationCheckResult.success();
         } else {
-            validationCheckResult = DefaultValidationCheckResult.error("patternNotMatched", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", patternString, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error("patternNotMatched", ImmutableMap.of("variableComponentKey", getVariableComponentKey(), "pattern", patternString, "value", value));
         }
         return validationCheckResult;
     }

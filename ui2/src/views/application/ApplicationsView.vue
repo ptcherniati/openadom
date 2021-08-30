@@ -2,7 +2,7 @@
   <PageView>
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
     <div class="buttons" v-if="canCreateApplication">
-      <b-button type="is-primary" @click="createApplication" icon-left="plus">
+      <b-button type="is-primary" @click="createApplication" icon-right="plus">
         {{ $t("applications.create") }}
       </b-button>
     </div>
@@ -52,8 +52,7 @@ export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
 
   applications = [];
-  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser()
-    .authorizedForApplicationCreation;
+  canCreateApplication = LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
 
   created() {
     this.init();

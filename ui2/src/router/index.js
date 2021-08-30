@@ -7,8 +7,6 @@ import ReferencesManagementView from "@/views/references/ReferencesManagementVie
 import ReferenceTable from "@/views/references/ReferenceTableView.vue";
 import DataTypeTableView from "@/views/datatype/DataTypeTableView.vue";
 import DataTypesManagementView from "@/views/datatype/DataTypesManagementView.vue";
-import DataTypeAuthorizationsView from "@/views/authorizations/DataTypeAuthorizationsView.vue";
-import DataTypeAuthorizationInfoView from "@/views/authorizations/DataTypeAuthorizationInfoView.vue";
 
 Vue.use(VueRouter);
 
@@ -51,16 +49,6 @@ const routes = [
   {
     path: "/applications/:applicationName/dataTypes/:dataTypeId",
     component: DataTypeTableView,
-    props: true,
-  },
-  {
-    path: "/applications/:applicationName/dataTypes/:dataTypeId/authorizations",
-    component: DataTypeAuthorizationsView,
-    props: true,
-  },
-  {
-    path: "/applications/:applicationName/dataTypes/:dataTypeId/authorizations/:authorizationId",
-    component: DataTypeAuthorizationInfoView,
     props: true,
   },
 ];

@@ -2,17 +2,19 @@
   <div class="menu-view-container">
     <b-navbar class="menu-view" v-if="open">
       <template #start>
-        <b-navbar-item href="https://www.inrae.fr/">
-          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
-          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
-        </b-navbar-item>
-        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
         <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
           {{ $t("menu.applications") }}
         </b-navbar-item>
       </template>
 
       <template #end>
+        <b-navbar-item tag="div">
+          <div class="buttons">
+            <b-button type="is-info" @click="logout" icon-right="sign-out-alt">{{
+              $t("menu.logout")
+            }}</b-button>
+          </div>
+        </b-navbar-item>
         <b-navbar-item tag="div">
           <b-field>
             <b-select
@@ -26,26 +28,13 @@
             </b-select>
           </b-field>
         </b-navbar-item>
-
-        <b-navbar-item tag="div" class="MenuView-user">
-          <b-dropdown position="is-bottom-left" append-to-body aria-role="menu">
-            <template #trigger>
-              <a class="navbar-item" role="button">
-                <b-icon icon="user-astronaut" class="mr-1" />
-                <span>{{ currentUser.login }}</span>
-                <b-icon icon="caret-down" class="ml-2" />
-              </a>
-            </template>
-
-            <b-dropdown-item @click="logout()" aria-role="menuitem">
-              <b-icon icon="sign-out-alt" />
-              {{ $t("menu.logout") }}
-            </b-dropdown-item>
-          </b-dropdown>
+        <b-navbar-item href="https://www.inrae.fr/">
+          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
+          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
         </b-navbar-item>
+        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
       </template>
     </b-navbar>
-
     <FontAwesomeIcon
       @click="open = !open"
       :icon="open ? 'caret-up' : 'caret-down'"
@@ -73,11 +62,9 @@ export default class MenuView extends Vue {
   locales = Locales;
   chosenLocale = "";
   open = false;
-  currentUser = null;
 
   created() {
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
-    this.currentUser = this.loginService.getAuthenticatedUser();
   }
 
   logout() {
@@ -138,15 +125,6 @@ export default class MenuView extends Vue {
     div.navbar-start {
       justify-content: space-around;
       margin: 0;
-    }
-  }
-
-  .MenuView-user.navbar-item {
-    .navbar-item {
-      color: white;
-      &:hover {
-        color: $primary;
-      }
     }
   }
 }

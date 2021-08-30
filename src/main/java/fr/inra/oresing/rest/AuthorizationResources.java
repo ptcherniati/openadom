@@ -44,12 +44,6 @@ public class AuthorizationResources {
         return ResponseEntity.ok(getAuthorizationResults);
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, dataType);
-        return ResponseEntity.ok(getGrantableResult);
-    }
-
     @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
         authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, authorizationId));

@@ -45,7 +45,6 @@
             v-model="password"
             :placeholder="$t('login.pwd-placeholder')"
             :password-reveal="true"
-            @keyup.native.enter="handleSubmit(signIn)"
           >
           </b-input>
         </b-field>
@@ -53,7 +52,7 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-left="sign-in-alt">
+      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-right="plus">
         {{ $t("login.signin") }}
       </b-button>
       <router-link :to="{ path: '/' }">

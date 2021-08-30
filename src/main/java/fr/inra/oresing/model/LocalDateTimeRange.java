@@ -50,17 +50,6 @@ public class LocalDateTimeRange {
                 public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter) {
                     return LocalDateTimeRange.forDay(LocalDate.parse(str, dateTimeFormatter));
                 }
-            },
-            new StringToLocalDateTimeRangeConverter() {
-                @Override
-                public String getPattern() {
-                    return "dd/MM/yyyy HH:mm:ss";
-                }
-
-                @Override
-                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter) {
-                    return LocalDateTimeRange.forDay(LocalDate.parse(str, dateTimeFormatter));
-                }
             }
     );
 

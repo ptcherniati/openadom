@@ -8,18 +8,11 @@
       <CollapsibleTree
         v-for="data in dataTypes"
         :key="data.id"
-        :option="data"
+        :label="data.label"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
         :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"
         :buttons="buttons"
-      />
-      <DataTypeDetailsPanel
-        :leftAlign="false"
-        :open="openPanel"
-        :dataType="chosenDataType"
-        :closeCb="(newVal) => (openPanel = newVal)"
-        :applicationName="applicationName"
       />
     </div>
     <div v-if="errorsMessages.length">
@@ -50,10 +43,9 @@ import { AlertService } from "@/services/AlertService";
 import { DataService } from "@/services/rest/DataService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
-import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 
 @Component({
-  components: { CollapsibleTree, PageView, SubMenu, DataTypeDetailsPanel },
+  components: { CollapsibleTree, PageView, SubMenu },
 })
 export default class DataTypesManagementView extends Vue {
   @Prop() applicationName;
@@ -78,8 +70,6 @@ export default class DataTypesManagementView extends Vue {
   ];
   dataTypes = [];
   errorsMessages = [];
-  openPanel = false;
-  chosenDataType = null;
 
   created() {
     this.subMenuPaths = [
@@ -114,9 +104,8 @@ export default class DataTypesManagementView extends Vue {
 
   openDataTypeCb(event, label) {
     event.stopPropagation();
-    this.openPanel =
-      this.chosenDataType && this.chosenDataType.label === label ? !this.openPanel : true;
-    this.chosenDataType = this.dataTypes.find((dt) => dt.label === label);
+
+    console.log("OPEN", label);
   }
 
   async uploadDataTypeCsv(label, file) {

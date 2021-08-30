@@ -1,13 +1,12 @@
-nom du dispositif;code (nom court) du dispositif;libellé du type de dispositif;nom du lieu;surface expérimentale totale (m², hors bordures);année de début du dispositif;année de fin du dispositif;année d'arrêt des épandages de pro;système de conduite du dispositif lors de sa mise en place;changement de système de conduite de dispositif en cours d'expérimentation (oui/non);systeme de conduite après changement;année de changement de système de conduite du dispositif;raison chgt conduite_fr;raison chgt conduite_en;système de projection;latitude;longitude
-couhins_ambares;ambares;Blocs;couhins;513.0;1974;;1993;Non biologique;non;;;;;;;
-la_bouzule;bouzule;Blocs;la bouzule;3420.0;1996;;2002;Non biologique;non;;;;;;;
-dsp_fictif;dsp_f;Essai systeme sans repetition;dsp_fictif;2000.0;2011;;;Bas niveaux d'intrants;non;;;;;;;
-efele_essai_pros;efele_pros;Split-plot;la brassardiere;;2012;2032;;Bas niveaux d'intrants;non;;;;;;;
-efele_essai_ts_mo;efele_ts_mo;Blocs;la brassardiere;;2012;2032;;Bas niveaux d'intrants;non;;;;;;;
-fertidig;fd;Demonstratif sans repetition;fertidig;9999.0;2021;2023;;Bas niveaux d'intrants;non;;;;;;;
-couhins_louis_fargue;louis_fargue;Blocs;couhins;513.0;1976;;1981;Non biologique;non;;;;;;;
-prospective;prospective;Blocs;inra colmar seav;20160.0;2000;;;Non biologique;non;;;;;;;
-qualiagro;qa;Blocs;feucherolles;60000.0;1998;;;Non biologique;oui;Biologique;2014;Parcelle agricole localisée chez un exploitant en agriculture biologique;Parcelle agricole localisée chez un exploitant en agriculture biologique;;;
-soerepro_la_reunion;soerepro_reunion;Blocs;la mare;11990.0;2013;;;Non biologique;non;;;;;;;
-soerepro_site_de_dakar;soerepro_dakar;Randomisation totale;dakar;1008.0;2016;9999;9999;Bas niveaux d'intrants;non;;;;;GWS84;9999;9999
-couhins_saint_denis_de_pile;st_denis_de_pile;Blocs;couhins;1091.0;1976;;1998;Non biologique;non;;;;;;;
+"dispositif_key";"annee debut";"annee fin";"annee arret epandage";"code";"nom dispositif";"nom type de dispositif";"libelle du syteme conduite";"changement systeme conduite fait";"année changement systeme conduite";"raison chgt systeme conduite";"surface totale";"nom du lieu";"latitude";"longitude"
+1288;"1998";;;QA;QualiAgro;Blocs;Biologique;true;"2014";Parcelle agricole localisée chez un exploitant en agriculture biologique;60000.0;Feucherolles;;
+1291;"2011";;;DSP_F;DSP_Fictif;Essai systeme sans repetition;;false;;;2000.0;DSP_Fictif;;
+1292;"1974";;"1993";Ambares;Couhins_Ambares;Blocs;;false;;;513.0;Couhins;;
+1293;"1976";;"1981";Louis Fargue;Couhins_Louis Fargue;Blocs;;false;;;513.0;Couhins;;
+1294;"1976";;"1998";St Denis de Pile;Couhins_Saint Denis de Pile;Blocs;;false;;;1091.0;Couhins;;
+1295;"2013";;;SOEREPRO Reunion;SOEREPRO_la Reunion;Blocs;;false;;;11990.0;La Mare;;
+1296;"2012";"2032";;EFELE_TS_MO;EFELE_essai_TS_MO;Blocs;;false;;;;La Brassardiere;;
+1297;"2012";"2032";;EFELE_PROs;EFELE_essai_PROs;Split-plot;;false;;;;La Brassardiere;;
+1298;"2000";;;PROspective;PROspective;Blocs;;false;;;20160.0;INRA Colmar SEAV;;
+1299;"1996";;"2002";Bouzule;La Bouzule;Blocs;;false;;;3420.0;La Bouzule;;
+181507;"2016";"9999";"9999";SOEREPRO_Dakar;SOEREPRO site de Dakar;Randomisation totale;;false;;;1008.0;Dakar;"9999";"9999"

@@ -3,32 +3,8 @@ application:
   name: ACBB
   version: 1
 references:
-  agroecosystemes :
-    keyColumns: [Agroécosystème_key]
-    columns:
-      Agroécosystème_key:
-      Agroécosystème_fr:
-      Agroécosystème_en:
-      region:
-      filter:
-      Département:
   sites:
     keyColumns: [nom du site_key]
-    validations:
-      agroecosystemRef:
-        description: "référence à l'agroécosystème"
-        checker:
-          name: Reference
-          params:
-            refType: agroecosystemes
-            columns: Agroécosystème
-      checkDateMiseEnService:
-        description: "validation de date"
-        checker:
-          name: Date
-          params:
-            pattern : "dd/MM/yyyy"
-            columns  : "date mise en service du dispositif"
     columns:
       Agroécosystème:
       nom du site_key:
@@ -60,32 +36,6 @@ references:
       date de création:
       commentaire_fr:
       commentaire_en:
-  blocs:
-    validations:
-      creationDate:
-        description: "date de création"
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-            columns: date creation
-    keyColumns: [site,nom_du_bloc,répétition]
-    columns:
-      site:
-      nom_du_bloc:
-      répétition:
-      date creation:
-      decription_fr:
-      description_en:
-  unites:
-    keyColumns: [nom_key]
-    columns:
-      code_key:
-      code_fr:
-      code_en:
-      nom_key:
-      nom_fr:
-      nom_en:
 compositeReferences:
   localizations:
     components:
@@ -95,20 +45,9 @@ compositeReferences:
 dataTypes:
   flux_tours:
     data:
-      site:
-        components:
-          chemin:
-            checker:
-              name: Reference
-              params:
-                refType: sites
       parcelle:
         components:
           chemin:
-            defaultValue: >
-              String site = datumByVariableAndComponent.get("site").get("chemin");
-              String parcelle = datumByVariableAndComponent.get("parcelle").get("name");
-              return site+"."+site+"__"+parcelle;
             checker:
               name: Reference
               params:
@@ -124,158 +63,42 @@ dataTypes:
       CO2:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"micromole_par_mole\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
       H2O:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"millimole_par_mole\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
       ZL:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"pas_d_unite\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
       Fc:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"micromole_par_mettre_carre_et_par_seconde\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           quality:
-            checker:
-              name: Integer
-              params:
-                required: false
       H:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"watt_par_metre_carre\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           quality:
-            checker:
-              name: Integer
-              params:
-                required: false
       LE:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"watt_par_metre_carre\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           quality:
-            checker:
-              name: Integer
-              params:
-                required: false
       t:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"kilogramme_par_metre_et_par_seconde\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           quality:
-            checker:
-              name: Integer
-              params:
-                required: false
       u*:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"metre_par_seconde\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           quality:
-            checker:
-              name: Integer
-              params:
-                required: false
       Fc gf:
         components:
           value:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"micromole_par_mettre_carre_et_par_seconde\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
     format:
       constants:
         - rowNumber: 1
           columnNumber: 2
           boundTo:
-            variable: site
-            component: chemin
-          exportHeader: "Site"
-        - rowNumber: 1
-          columnNumber: 3
-          boundTo:
             variable: parcelle
-            component: name
+            component: chemin
           exportHeader: "Parcelle"
       headerLine: 8
       firstRowLine: 12
@@ -352,7 +175,6 @@ dataTypes:
         all:
           label: "Toutes les données"
           data:
-            - site
             - parcelle
             - date
             - CO2
@@ -379,24 +201,12 @@ dataTypes:
       rotation:
         components:
           valeur:
-            checker:
-              name: Integer
-              params:
-                required: false
       année:
         components:
           valeur:
-            checker:
-              name: Integer
-              params:
-                required: false
       période:
         components:
           valeur:
-            checker:
-              name: Integer
-              params:
-                required: false
       type intervention:
         components:
           valeur:
@@ -425,564 +235,122 @@ dataTypes:
       mav:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       N:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       DMS:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"pourcentage\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       C:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Pho:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       K:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Ca:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Mg:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Bo:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Cu:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Fe:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Mn:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Na:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"gramme_par_kilo\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       Zn:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       CBR:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"pourcentage\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       HUT:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"pourcentage\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
       MOR:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          unite:
-            defaultValue: "\"pourcentage\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
           nb:
-            checker:
-              name: Integer
-              params:
-                required: false
           et:
-            checker:
-              name: Float
-              params:
-                required: false
           methode:
-            checker:
-              name: Integer
-              params:
-                required: false
           IQ:
-            checker:
-              name: Integer
-              params:
-                required: false
     format:
       headerLine: 8
       firstRowLine: 12
@@ -1439,31 +807,11 @@ dataTypes:
       contexte:
         components:
           répétition:
-            checker:
-              name: Integer
-              params:
           profondeur:
-            checker:
-              name: Integer
-              params:
       SWC:
         components:
           valeur:
-            checker:
-              name: Float
-              params:
-                required: false
           qualité:
-            checker:
-              name: Integer
-              params:
-                required: false
-          unite:
-            defaultValue: "\"pourcentage\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
     validations:
       swcQualityEnumeration:
         description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"

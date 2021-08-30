@@ -1,14 +1,19 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.MoreCollectors;
-import fr.inra.oresing.checker.ReferenceLineChecker;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 
 @Getter
 @Setter
@@ -23,58 +28,6 @@ public class Configuration {
 
     private int version;
     private ApplicationDescription application;
-
-    class DependencyNode {
-        String value;
-        boolean isRoot = true;
-        Set<DependencyNode> children = new HashSet<>();
-
-        void addChild(DependencyNode childNode) {
-            childNode.isRoot = false;
-            this.children.add(childNode);
-
-        }
-
-        public DependencyNode(String value) {
-            this.value = value;
-        }
-    }
-
-    public LinkedHashMap<String, ReferenceDescription> getReferences() {
-        Map<String, Set<String>> dependsOf = new HashMap<>();
-        Map<String, DependencyNode> nodes = new LinkedHashMap<>();
-        for (Map.Entry<String, ReferenceDescription> reference : references.entrySet()) {
-            DependencyNode node = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
-            LinkedHashMap<String, LineValidationRuleDescription> validations = reference.getValue().getValidations();
-            if (!CollectionUtils.isEmpty(validations)) {
-                for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
-                    CheckerDescription checker = validation.getValue().getChecker();
-                    if (checker != null) {
-                        String refType = Optional.ofNullable(checker)
-                                .map(c -> c.getParams())
-                                .map(param -> param.get(ReferenceLineChecker.PARAM_REFTYPE))
-                                .orElse(null);
-                        if ("Reference".equals(checker.getName()) && refType != null) {
-                            DependencyNode dependencyNode = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
-                            dependencyNode.addChild(node);
-                        }
-                    }
-                }
-            }
-        }
-        LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
-        nodes.values().stream().filter(node->node.isRoot).forEach(node -> addRecursively(node, sortedReferences, references));
-        return sortedReferences;
-    }
-
-    private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
-        sortedReferences.put(node.value, references.get(node.value));
-        if (!node.children.isEmpty()) {
-            node.children.forEach(child-> addRecursively(child, sortedReferences,references));
-        }
-
-    }
-
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
     private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
@@ -86,7 +39,6 @@ public class Configuration {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
-        private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
     }
 
     @Getter
@@ -108,7 +60,6 @@ public class Configuration {
     public static class CompositeReferenceComponentDescription {
         String reference;
         String parentKeyColumn;
-        String recursive;
     }
 
     @Getter
@@ -199,8 +150,7 @@ public class Configuration {
     @ToString
     public static class VariableComponentDescription {
         CheckerDescription checker;
-        @Nullable
-        String defaultValue;
+        @Nullable String defaultValue;
     }
 
     @Getter

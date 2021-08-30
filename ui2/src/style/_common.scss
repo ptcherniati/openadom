@@ -31,10 +31,6 @@ a {
   }
 }
 
-.hide {
-  display: none;
-}
-
 // Input style
 
 .input-field {
@@ -72,15 +68,5 @@ a {
 }
 
 .message .media {
-  align-items: center;
-}
-
-.pagination-link.is-current {
-  background-color: $dark;
-  border-color: $dark;
-}
-
-a.dropdown-item {
-  display: flex;
   align-items: center;
 }
