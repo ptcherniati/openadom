@@ -40,13 +40,14 @@
     <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
       <div class="content">
         <div class="columns">
-          <div class="column">
-            <b-tabs v-model="activeTab" :multiline="true">
-              <template
-                v-for="variable in variables"
-                class="row variableComponent"
-                style="text-transform: capitalize; text-decoration: none"
-              >
+          <div class="column is-9">
+            <b-tabs
+              v-model="activeTab"
+              :multiline="true"
+              class="tabActive"
+              style="text-transform: capitalize; text-decoration: none"
+            >
+              <template v-for="variable in variables" class="row variableComponent">
                 <b-tab-item
                   :key="variable.id"
                   :label="variable.id"
@@ -69,7 +70,7 @@
                       <div>
                         <b-button
                           class="column asc"
-                          style="margin: 10px; border-radius: 30%; border-color: #dbdbdb"
+                          style="margin: 10px; border-color: #dbdbdb"
                           type="is-white"
                           @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
                         >
@@ -79,7 +80,7 @@
                       <div style="margin-right: 10px">
                         <b-button
                           class="column desc"
-                          style="margin: 10px; border-radius: 30%; border-color: #dbdbdb"
+                          style="margin: 10px; border-color: #dbdbdb"
                           type="is-white"
                           @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
                         >
@@ -92,31 +93,34 @@
               </template>
             </b-tabs>
           </div>
-          <div class="column">
-            <div class="rows">
+          <div class="column is-3">
+            <draggable class="rows">
               <div
-                v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
-                :key="index"
-                :class="variableComponent.order"
-                class="row"
+                  v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                  :key="index"
+                  :class="variableComponent.order"
+                  class="row"
+                  :id="
+                variableComponent.variableComponentKey.variable +
+                '_' +
+                variableComponent.variableComponentKey.component
+              "
               >
-                <div class="columns">
-                  <b-tag
-                      class="is-primary"
-                      closable
-                      v-sortable="sortableOptions">
+                <div class="control column" style="padding: 6px">
+                  <div class="tags has-addons">
+                  <span class="tag is-primary" style="font-size: 1rem">
+                    <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
+                  </span>
+                    <span class="tag is-primary orderLabel" style="font-size: 1rem">
                     {{ variableComponent.order }} ->
                     {{ variableComponent.variableComponentKey.variable }} :
                     {{ variableComponent.variableComponentKey.component }}
-                  </b-tag>
-                  <div class="column orderLabel">
-                    {{ variableComponent.order }} ->
-                    {{ variableComponent.variableComponentKey.variable }} :
-                    {{ variableComponent.variableComponentKey.component }}
+                  </span>
+                    <span class="tag is-delete is-primary" style="font-size: 1rem"></span>
                   </div>
                 </div>
               </div>
-            </div>
+            </draggable>
           </div>
         </div>
       </div>
@@ -311,9 +315,11 @@ import { VariableComponentFilters } from "@/model/application/VariableComponentF
 import { VariableComponentKey } from "@/model/application/VariableComponentKey";
 import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
+import draggable from 'vuedraggable';
+//import { Sortable } from "sortablejs";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval },
+  components: { PageView, SubMenu, CollapsibleInterval, draggable },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -524,6 +530,17 @@ export default class DataTypeTableView extends Vue {
         new VariableComponentOrderBy(variableComponentSorted)
       );
     }
+    console.log(
+      variableComponentSorted.variableComponentKey.variable +
+        "_" +
+        variableComponentSorted.variableComponentKey.component
+    );
+    /*Sortable.create(
+      document.getElementById(
+        variableComponentSorted.variableComponentKey.variable +
+          "_" +
+          variableComponentSorted.variableComponentKey.component
+      ), {  });*/
   }
 
   getSortIcon(variable, component) {
@@ -647,6 +664,10 @@ $row-variable-height: 60px;
       white-space: nowrap;
     }
   }
+}
+
+.tabs li.is-active a {
+  border-bottom-color: #024243;
 }
 
 .referenceToast {
