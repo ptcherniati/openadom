@@ -3,7 +3,7 @@
     "env": {
         "home_url": "/",
         "login_url": "/login",
-        "aplications_url": "/applications",
+        "applications_url": "/applications",
         "applicationCreation_url": "/applicationCreation"
     }
 }

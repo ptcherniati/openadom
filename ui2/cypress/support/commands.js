@@ -25,25 +25,27 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 import 'cypress-file-upload';
 
-
+Cypress.Commands.add('setLocale', (locale) => {
+    Cypress.on('window:before:load', window => {
+        Object.defineProperty(window.navigator, 'language', { value: locale });
+    });
+})
 Cypress.Commands.add('login', (userRole, applications) => {
+    console.log(userRole)
     localStorage.clear()
     let applicationsResponse = []
     if (applications && applications instanceof Array) {
         console.log(applications);
-        applicationsResponse = applications
-            .map(app => {
-                cy.fixture(app).as("appli")
-                return cy.get('@appli')
-            })
-            .reduce((acc, app) => [...acc, ], applicationsResponse)
+        cy.fixture(applications[0]).as("appli").then((app) => {
+            applicationsResponse = app
+        })
     }
     cy.fixture('users/users.json').as('users')
     cy.get('@users').then((users) => {
         const user = users[userRole]
         cy.visit(Cypress.env('login_url'))
-        cy.get(':nth-child(1) > .field > .control > .input').type(userRole)
-        cy.get(':nth-child(2) > .field > .control > .input').type("password")
+        cy.get(':nth-child(1) > .field > .control > input').first().type(userRole)
+        cy.get(':nth-child(2) > .field > .control > input').first().type("password")
 
         cy.intercept(
             'POST',
