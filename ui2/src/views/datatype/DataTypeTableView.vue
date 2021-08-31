@@ -10,13 +10,16 @@
           <td>
             <b-button
               icon-left="filter"
-              label="trier"
+              :label="$t('applications.trier')"
               type="is-primary"
               @click="showSort = !showSort"
+              outlined
             ></b-button>
           </td>
           <td>
-            <b-button icon-left="redo" type="is-primary" @click="reInit">réinitialiser</b-button>
+            <b-button icon-left="redo" type="is-danger" @click="reInit" outlined>{{
+              $t("dataTypesManagement.réinitialiser")
+            }}</b-button>
           </td>
         </tr>
       </table>
@@ -44,7 +47,8 @@
             <b-tabs
               v-model="activeTab"
               :multiline="true"
-              class="tabActive"
+              type="is-boxed"
+              position="is-right"
               style="text-transform: capitalize; text-decoration: none"
             >
               <template v-for="variable in variables" class="row variableComponent">
@@ -74,7 +78,7 @@
                           type="is-white"
                           @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
                         >
-                          ASC
+                          {{ $t("dataTypesManagement.ASC") }}
                         </b-button>
                       </div>
                       <div style="margin-right: 10px">
@@ -84,7 +88,7 @@
                           type="is-white"
                           @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
                         >
-                          DESC
+                          {{ $t("dataTypesManagement.DESC") }}
                         </b-button>
                       </div>
                     </div>
@@ -96,113 +100,59 @@
           <div class="column is-3">
             <draggable class="rows">
               <div
-                  v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
-                  :key="index"
-                  :class="variableComponent.order"
-                  class="row"
-                  :id="
-                variableComponent.variableComponentKey.variable +
-                '_' +
-                variableComponent.variableComponentKey.component
-              "
+                v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                :key="index"
+                :class="variableComponent.order"
+                class="row"
               >
                 <div class="control column" style="padding: 6px">
                   <div class="tags has-addons">
-                  <span class="tag is-primary" style="font-size: 1rem">
-                    <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
-                  </span>
+                    <span class="tag is-primary" style="font-size: 1rem">
+                      <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
+                    </span>
                     <span class="tag is-primary orderLabel" style="font-size: 1rem">
-                    {{ variableComponent.order }} ->
-                    {{ variableComponent.variableComponentKey.variable }} :
-                    {{ variableComponent.variableComponentKey.component }}
-                  </span>
-                    <span class="tag is-delete is-primary" style="font-size: 1rem"></span>
+                      {{ variableComponent.order }} ->
+                      {{ variableComponent.variableComponentKey.variable }} :
+                      {{ variableComponent.variableComponentKey.component }}
+                    </span>
+                    <a class="tag is-delete is-primary" style="font-size: 1rem; color: white"></a>
                   </div>
                 </div>
               </div>
             </draggable>
+            <div class="row">
+              <div class="columns">
+                <div class="column">
+                  <b-button icon-left="redo" expanded type="is-danger" @click="reInit" outlined>{{
+                    $t("dataTypesManagement.réinitialiser")
+                  }}</b-button>
+                </div>
+                <div class="column">
+                  <b-button
+                    icon-left="check"
+                    type="is-success"
+                    expanded
+                    @click="initDatatype"
+                    outlined
+                    >{{ $t("dataTypesManagement.validate") }}</b-button
+                  >
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!--    <div class="notification" v-if="showSort">
-          <div class="content">
-            <div class="rows">
-              <div class="row">
-                <div class="columns">
-                  <div class="column">
-                    <b-field>
-                      <ul>
-                        <div class="rows">
-                          <div
-                            class="row variableComponent"
-                            v-for="(variableComponent, index) in variableComponentsListToSort"
-                            :key="index"
-                            :class="variableComponent.order"
-                          >
-                            <div class="columns">
-                              <div class="column orderLabel">
-                                {{ variableComponent.variableComponentKey.variable }} :
-                                {{ variableComponent.variableComponentKey.component }}
-                              </div>
-                              <div>
-                                <b-button
-                                  class="column asc"
-                                  @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
-                                >
-                                  ASC
-                                </b-button>
-                              </div>
-
-                              <div>
-                                <button
-                                  class="column desc"
-                                  @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
-                                >
-                                  DESC
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </ul>
-                    </b-field>
-                  </div>
-                  <div class="column">
-                    <div class="rows">
-                      <div
-                        class="row"
-                        v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
-                        :key="index"
-                        :class="variableComponent.order"
-                      >
-                        <div class="columns">
-                          <div class="column orderLabel">
-                            {{ variableComponent.order }} ->
-                            {{ variableComponent.variableComponentKey.variable }} :
-                            {{ variableComponent.variableComponentKey.component }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <b-button type="is-success" expanded size="is-large" @click="initDatatype"
-                  >order</b-button
-                >
-              </div>
-            </div>
-          </div>
-        </div>-->
     <div class="b-table">
       <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 750px">
         <table class="table is-striped">
           <caption v-if="variables.length == 0">
-            Pas de données correspondant à vos critères
-            <b-button icon-left="redo" type="is-primary" @click="reInit">réinitialiser</b-button>
+            {{
+              $t("alert.dataTypeFiltreEmpty")
+            }}
+            <b-button icon-left="redo" type="is-primary" @click="reInit">{{
+              $t("dataTypesManagement.réinitialiser")
+            }}</b-button>
           </caption>
           <thead>
             <tr class="DataSetTableView-variable-row">
@@ -315,8 +265,7 @@ import { VariableComponentFilters } from "@/model/application/VariableComponentF
 import { VariableComponentKey } from "@/model/application/VariableComponentKey";
 import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
-import draggable from 'vuedraggable';
-//import { Sortable } from "sortablejs";
+import draggable from "vuedraggable";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleInterval, draggable },
@@ -530,17 +479,6 @@ export default class DataTypeTableView extends Vue {
         new VariableComponentOrderBy(variableComponentSorted)
       );
     }
-    console.log(
-      variableComponentSorted.variableComponentKey.variable +
-        "_" +
-        variableComponentSorted.variableComponentKey.component
-    );
-    /*Sortable.create(
-      document.getElementById(
-        variableComponentSorted.variableComponentKey.variable +
-          "_" +
-          variableComponentSorted.variableComponentKey.component
-      ), {  });*/
   }
 
   getSortIcon(variable, component) {
@@ -666,10 +604,6 @@ $row-variable-height: 60px;
   }
 }
 
-.tabs li.is-active a {
-  border-bottom-color: #024243;
-}
-
 .referenceToast {
   background-color: rgb(61, 107, 8);
 }
@@ -682,9 +616,11 @@ $row-variable-height: 60px;
   flex-grow: 10;
 }
 
+.row.variableComponent {
+  padding: 0;
+}
 .row.variableComponent:hover {
   background-color: rgba(0, 163, 166, 0.2);
-  color: white;
 }
 
 .ASC .asc,
@@ -695,5 +631,16 @@ $row-variable-height: 60px;
 
 .numberInput {
   width: 3em;
+}
+
+.button.is-success.is-outlined.is-fullwidth {
+  color: $primary-dark;
+  border-color: $primary-dark;
+}
+.button.is-success.is-outlined.is-fullwidth:hover {
+  border-color: $success;
+}
+.columns {
+  margin: 0;
 }
 </style>

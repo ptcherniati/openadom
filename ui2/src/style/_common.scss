@@ -71,6 +71,18 @@ a {
   color: $primary;
 }
 
+.tabs.is-boxed.is-right {
+  ul {
+    margin: 0;
+    li a {
+      text-decoration: none;
+    }
+  }
+}
+.b-tabs .tab-content {
+  padding: 0.5rem;
+}
+
 .pagination-link.is-current {
   background-color: $dark;
   border-color: $dark;

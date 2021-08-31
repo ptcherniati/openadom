@@ -42,7 +42,8 @@
         "data-updated": "Type de donnée mis à jour",
         "registered-user": "Compte utilisateur créé",
         "revoke-authorization": "Autorisation révoquée",
-        "create-authorization": "Autorisation créée"
+        "create-authorization": "Autorisation créée",
+        "dataTypeFiltreEmpty" : "Pas de données correspondant à vos critères"
     },
     "message": {
         "app-config-error": "Erreur dans le fichier yaml",
@@ -67,11 +68,11 @@
         "actions": "Actions",
         "references": "Référentiels",
         "dataset": "Données",
-	    "trier": "Trier par",
+	    "trier": "Trier",
 	    "trierA_z": "Nom A - z",
 	    "trierZ_a": "Nom Z - a",
 	    "trierRecent": "Date récente",
-	    "filter": "Filtrer par"
+	    "filter": "Filtrer"
     },
     "errors": {
         "emptyFile": "Le fichier est vide",
@@ -125,7 +126,11 @@
     },
     "dataTypesManagement": {
         "data-types": "Type de données",
-        "consult-authorization": "Consulter les autorisations"
+        "consult-authorization": "Consulter les autorisations",
+        "réinitialiser": "Réinitialiser",
+        "ASC": "ASC",
+        "DESC": "DESC",
+        "validate": "Valider"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",
