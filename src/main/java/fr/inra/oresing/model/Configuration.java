@@ -9,6 +9,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -26,12 +27,12 @@ public class Configuration {
 
     class DependencyNode {
         String value;
-        boolean isRoot = true;
-        Set<DependencyNode> children = new HashSet<>();
+        boolean isLeaf = true;
+        Set<DependencyNode> dependsOn = new HashSet<>();
 
-        void addChild(DependencyNode childNode) {
-            childNode.isRoot = false;
-            this.children.add(childNode);
+        void addDependance(DependencyNode dependencyNode) {
+            dependencyNode.isLeaf = false;
+            this.dependsOn.add(dependencyNode);
 
         }
 
@@ -44,7 +45,7 @@ public class Configuration {
         Map<String, Set<String>> dependsOf = new HashMap<>();
         Map<String, DependencyNode> nodes = new LinkedHashMap<>();
         for (Map.Entry<String, ReferenceDescription> reference : references.entrySet()) {
-            DependencyNode node = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
+            DependencyNode dependencyNode = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
             LinkedHashMap<String, LineValidationRuleDescription> validations = reference.getValue().getValidations();
             if (!CollectionUtils.isEmpty(validations)) {
                 for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
@@ -55,23 +56,27 @@ public class Configuration {
                                 .map(param -> param.get(ReferenceLineChecker.PARAM_REFTYPE))
                                 .orElse(null);
                         if ("Reference".equals(checker.getName()) && refType != null) {
-                            DependencyNode dependencyNode = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
-                            dependencyNode.addChild(node);
+                            DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
+                            dependencyNode.addDependance(node);
                         }
                     }
                 }
             }
         }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
-        nodes.values().stream().filter(node->node.isRoot).forEach(node -> addRecursively(node, sortedReferences, references));
+        nodes.values().stream()
+                .filter(node->node.isLeaf)
+                .sorted((a,b)->-1)
+                .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
     }
 
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
-        sortedReferences.put(node.value, references.get(node.value));
-        if (!node.children.isEmpty()) {
-            node.children.forEach(child-> addRecursively(child, sortedReferences,references));
+        if (!node.dependsOn.isEmpty()) {
+            node.dependsOn.forEach(dependencyNode-> addRecursively(dependencyNode, sortedReferences,references));
         }
+        sortedReferences.put(node.value, references.get(node.value));
+
 
     }
 

@@ -39,7 +39,7 @@
             v-model="refFile"
             class="file-label"
             accept=".csv"
-            @input="() => onUploadCb(option.label, refFile)"
+            @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
             <span class="file-name" v-if="refFile">
               {{ refFile.name }}
@@ -105,6 +105,9 @@ export default class CollapsibleTree extends Vue {
 
   stopPropagation(event) {
     event.stopPropagation();
+  }
+  showChildren(){
+    this.displayChildren=true;
   }
 }
 </script>
