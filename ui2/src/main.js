@@ -43,6 +43,7 @@ import {
   faCalendar,
   faRedo,
   faStream,
+  faSortAmountDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
@@ -85,7 +86,8 @@ library.add(
   faExternalLinkSquareAlt,
   faCalendar,
   faRedo,
-  faStream
+  faStream,
+  faSortAmountDown
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

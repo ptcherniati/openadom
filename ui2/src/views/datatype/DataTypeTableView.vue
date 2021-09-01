@@ -9,10 +9,19 @@
         <tr>
           <td>
             <b-button
-              icon-left="filter"
+              icon-left="sort-amount-down"
               :label="$t('applications.trier')"
               type="is-primary"
               @click="showSort = !showSort"
+              outlined
+            ></b-button>
+          </td>
+          <td>
+            <b-button
+              icon-left="filter"
+              :label="$t('applications.filter')"
+              type="is-primary"
+              @click="showFilter = !showFilter"
               outlined
             ></b-button>
           </td>
@@ -39,7 +48,35 @@
         </div>
       </div>
     </b-modal>
-
+    <div v-if="showFilter" class="notification">
+      <div class="columns">
+        <div
+          class="column"
+          v-for="(component, index) in variableComponents"
+          :key="`${index}`"
+          :component="component.component"
+          :variable="component.variable"
+        >
+          <b-field :label="component.variable+': '+component.component">
+            <b-field v-if="'date' === component.type || 'numeric' === component.type">
+              <CollapsibleInterval
+                  :variableComponent="component"
+                  @setting_interval="addSearch"
+              ></CollapsibleInterval>
+            </b-field>
+            <b-input
+                v-model="search[component.variable + '_' + component.component]"
+                icon="search"
+                icon-clickable
+                icon-pack="fas"
+                placeholder="Search..."
+                type="search"
+                @icon-click="addSearch(component)"
+            ></b-input>
+          </b-field>
+        </div>
+      </div>
+    </div>
     <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
       <div class="content">
         <div class="columns">
@@ -105,7 +142,14 @@
                 :class="variableComponent.order"
                 class="row"
               >
-                <div class="control column" style="padding: 6px" :id="variableComponent.variableComponentKey.variable+variableComponent.variableComponentKey.component">
+                <div
+                  class="control column"
+                  style="padding: 6px"
+                  :id="
+                    variableComponent.variableComponentKey.variable +
+                    variableComponent.variableComponentKey.component
+                  "
+                >
                   <div class="tags has-addons">
                     <span class="tag is-primary grape" style="font-size: 1rem">
                       <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
@@ -115,7 +159,16 @@
                       {{ variableComponent.variableComponentKey.variable }} :
                       {{ variableComponent.variableComponentKey.component }}
                     </span>
-                    <a class="tag is-delete is-primary" style="font-size: 1rem; color: white" @click="deleteTag(variableComponent.variableComponentKey.variable,variableComponent.variableComponentKey.component)"></a>
+                    <a
+                      class="tag is-delete is-primary"
+                      style="font-size: 1rem; color: white"
+                      @click="
+                        deleteTag(
+                          variableComponent.variableComponentKey.variable,
+                          variableComponent.variableComponentKey.component
+                        )
+                      "
+                    ></a>
                   </div>
                 </div>
               </div>
@@ -176,35 +229,6 @@
                 <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
               </th>
             </tr>
-            <tr>
-              <th
-                v-for="(component, index) in variableComponents"
-                :key="`${index}`"
-                :component="component.component"
-                :variable="component.variable"
-              >
-                <b-field grouped>
-                  <b-field v-if="'date' == component.type || 'numeric' == component.type">
-                    <CollapsibleInterval
-                      :variableComponent="component"
-                      @setting_interval="addSearch"
-                    ></CollapsibleInterval>
-                  </b-field>
-                  <b-field>
-                    <b-input
-                      v-model="search[component.variable + '_' + component.component]"
-                      icon="search"
-                      icon-clickable
-                      icon-pack="fas"
-                      placeholder="Search..."
-                      type="search"
-                      @icon-click="addSearch(component)"
-                    >
-                    </b-input>
-                  </b-field>
-                </b-field>
-              </th>
-            </tr>
           </thead>
           <tbody>
             <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
@@ -242,8 +266,9 @@
         order="is-centered"
         range-after="3"
         range-before="3"
-        size="is-large"
+        :rounded="true"
         @change="changePage"
+        style="padding-bottom: 20px"
       >
       </b-pagination>
     </div>
@@ -298,6 +323,7 @@ export default class DataTypeTableView extends Vue {
   });
   showDetails = false;
   showSort = false;
+  showFilter = false;
   controlPanels = null;
   totalRows = -1;
   currentPage = 1;
@@ -480,14 +506,13 @@ export default class DataTypeTableView extends Vue {
       );
     }
   }
-  deleteTag(variable,component) {
+  deleteTag(variable, component) {
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
       (c) =>
-        c.variableComponentKey.variable != variable ||
-        c.variableComponentKey.component != component
+        c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
     );
     this.params.variableComponentOrderBy.delete();
-    document.getElementById(variable+component).remove();
+    document.getElementById(variable + component).remove();
   }
 
   getSortIcon(variable, component) {
