@@ -17,6 +17,7 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public static final String PARAM_COLUMN = "column";
     public static final String PARAM_VARIABLE_COMPONENT_KEY = "variableComponentKey";
     public static final String PARAM_DATE = "date";
+    public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
 
     private final VariableComponentKey variableComponentKey;
 
@@ -25,6 +26,9 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     private final DateTimeFormatter dateTimeFormatter;
 
     private final String pattern;
+    public static String sortableDateToFormattedDate(String formattedDate){
+        return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
+    }
 
     public DateLineChecker(VariableComponentKey variableComponentKey, String pattern) {
         this.variableComponentKey = variableComponentKey;
@@ -53,6 +57,7 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
+            value = sortableDateToFormattedDate(value);
             TemporalAccessor date = dateTimeFormatter.parse(value);
             Map<String, Object> params = ImmutableMap.of(
                     PARAM_PATTERN, pattern,

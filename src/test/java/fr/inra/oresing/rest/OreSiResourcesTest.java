@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsNull;
+import org.json.JSONArray;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -201,6 +202,12 @@ public class OreSiResourcesTest {
         // restitution de data json
         {
             String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
+            JSONArray jsonArray = new JSONArray(expectedJson);
+            List list = new ArrayList<String>();
+            for (int i=0; i<jsonArray.length(); i++) {
+                list.add( jsonArray.getString(i) );
+            }
+
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
@@ -211,8 +218,10 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
+                    .andExpect(jsonPath("$.rows").isArray())
+                    .andExpect(jsonPath("$.rows", Matchers.hasSize(306)))
+                    //.andExpect(jsonPath("$.rows.value").value(list))
                     .andExpect(jsonPath("$.totalRows", Is.is(306)))
-                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
@@ -239,7 +248,7 @@ public class OreSiResourcesTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.rows", Matchers.hasSize(9)))
-                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == '01/01/1984')]", Matchers.hasSize(9)))
+                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == 'date:1984-01-01T00:00:00:01/01/1984')]", Matchers.hasSize(9)))
                     .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(9)))
                     .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(9)))
                     .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))

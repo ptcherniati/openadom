@@ -175,9 +175,11 @@
                 :variable="component.variable"
                 :component="component.component"
               >
-                <span>
-                  {{ row[component.variable][component.component] }}
-                  {{ row.result }}
+                <span v-if="row[component.variable][component.component] &&component.checker && component.checker.pattern">
+                  {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
+                </span>
+                <span v-else>
+                  {{row[component.variable][component.component]}}
                 </span>
                 <span v-if="getRefsLinkedToId(row, component)">
                   <b-button

@@ -50,10 +50,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         String dataType = downloadDatasetQuery.getDataType();
         Preconditions.checkArgument(getApplication().getDataType().contains(dataType), "pas de type de données " + dataType + " dans l'application " + getApplication());
         String applicationId = getApplication().getId().toString();
-        String sql = " SELECT rowId, jsonb_object_agg(regexp_replace(datavalues::text, 'date:\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}:(.*)', '\\1')::jsonb) AS dataValues, jsonb_object_agg(refsLinkedTo) AS refsLinkedTo"
-                + " FROM " + getTable().getSqlIdentifier()
-                + " WHERE application = '" + applicationId + "'::uuid AND dataType = '" + dataType + "'"
-                + " GROUP BY rowId";
+        String sql = " SELECT \n\trowId, \n\tjsonb_object_agg(datavalues) AS dataValues, \n\tjsonb_object_agg(refsLinkedTo) AS refsLinkedTo"
+                + " \nFROM " + getTable().getSqlIdentifier()
+                + " \nWHERE application = '" + applicationId + "'::uuid \n\tAND dataType = '" + dataType + "'"
+                + " \nGROUP BY rowId";
         return sql;
     }
 
