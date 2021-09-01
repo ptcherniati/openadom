@@ -105,9 +105,9 @@
                 :class="variableComponent.order"
                 class="row"
               >
-                <div class="control column" style="padding: 6px">
+                <div class="control column" style="padding: 6px" :id="variableComponent.variableComponentKey.variable+variableComponent.variableComponentKey.component">
                   <div class="tags has-addons">
-                    <span class="tag is-primary" style="font-size: 1rem">
+                    <span class="tag is-primary grape" style="font-size: 1rem">
                       <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
                     </span>
                     <span class="tag is-primary orderLabel" style="font-size: 1rem">
@@ -115,7 +115,7 @@
                       {{ variableComponent.variableComponentKey.variable }} :
                       {{ variableComponent.variableComponentKey.component }}
                     </span>
-                    <a class="tag is-delete is-primary" style="font-size: 1rem; color: white"></a>
+                    <a class="tag is-delete is-primary" style="font-size: 1rem; color: white" @click="deleteTag(variableComponent.variableComponentKey.variable,variableComponent.variableComponentKey.component)"></a>
                   </div>
                 </div>
               </div>
@@ -480,6 +480,15 @@ export default class DataTypeTableView extends Vue {
       );
     }
   }
+  deleteTag(variable,component) {
+    this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
+      (c) =>
+        c.variableComponentKey.variable != variable ||
+        c.variableComponentKey.component != component
+    );
+    this.params.variableComponentOrderBy.delete();
+    document.getElementById(variable+component).remove();
+  }
 
   getSortIcon(variable, component) {
     variable, component, event;
@@ -614,6 +623,9 @@ $row-variable-height: 60px;
 
 .orderLabel {
   flex-grow: 10;
+}
+.grape {
+  cursor: move;
 }
 
 .row.variableComponent {

@@ -141,7 +141,7 @@
                     </div>
                   </b-modal>
                 </div>
-                <div class="card-content" v-if="application.creation">
+                <div class="card-content">
                   <div class="content">
                     <p field="creationDate">
                       {{ new Date(application.creationDate).toLocaleString(localLang) }}
