@@ -208,7 +208,7 @@
                     @icon-click="addSearch(component)"
                     size="is-small"
                   ></b-input>
-<!--
+                  <!--
                     @keyup.native="RegExr = !RegExr"
                     <b-button
                       v-if="RegExr = true"
@@ -223,6 +223,22 @@
               </div>
             </div>
           </b-collapse>
+        </div>
+      </div>
+      <div class="columns">
+        <div class="column is-offset-8 is-2">
+          <b-button icon-left="redo" expanded type="is-danger" outlined>{{
+            $t("dataTypesManagement.réinitialiser")
+          }}</b-button>
+        </div>
+        <div class="column is-2">
+          <b-button
+              icon-left="check"
+              type="is-success"
+              expanded
+              outlined
+          >{{ $t("dataTypesManagement.validate") }}</b-button
+          >
         </div>
       </div>
     </div>
