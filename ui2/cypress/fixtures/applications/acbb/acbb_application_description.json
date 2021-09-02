@@ -1,0 +1,3339 @@
+[{
+        "id": "2a9e1c8a-c861-45ff-8346-6e61d3112ade",
+        "creationDate": 1628614099983,
+        "updateDate": 1628614099983,
+        "name": "monsoere",
+        "referenceType": [
+            "especes",
+            "projet",
+            "types_de_donnees_par_themes_de_sites_et_projet",
+            "type_de_sites",
+            "sites",
+            "themes",
+            "type de fichiers",
+            "unites",
+            "variables_et_unites_par_types_de_donnees",
+            "valeurs_qualitatives",
+            "variables"
+        ],
+        "dataType": [
+            "pem"
+        ],
+        "configuration": {
+            "version": 0,
+            "application": {
+                "name": "MONSORE",
+                "version": 1
+            },
+            "references": {
+                "type_de_sites": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "tze_nom_key"
+                    ],
+                    "columns": {
+                        "tze_nom_en": null,
+                        "tze_nom_fr": null,
+                        "tze_nom_key": null,
+                        "tze_definition_en": null,
+                        "tze_definition_fr": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "sites": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "zet_chemin_parent",
+                        "zet_nom_key"
+                    ],
+                    "columns": {
+                        "zet_nom_en": null,
+                        "zet_nom_fr": null,
+                        "zet_nom_key": null,
+                        "tze_type_nom": null,
+                        "zet_chemin_parent": null,
+                        "zet_description_en": null,
+                        "zet_description_fr": null
+                    },
+                    "validations": {
+                        "typeSitesRef": {
+                            "description": "référence au type de site",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "tze_type_nom",
+                                    "refType": "type_de_sites"
+                                }
+                            }
+                        }
+                    }
+                },
+                "types_de_donnees_par_themes_de_sites_et_projet": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom du projet",
+                        "nom du site",
+                        "nom du thème",
+                        "nom du type de données"
+                    ],
+                    "columns": {
+                        "nom du site": null,
+                        "nom du projet": null,
+                        "nom du thème": null,
+                        "nom du type de données": null
+                    },
+                    "validations": {
+                        "sitesRef": {
+                            "description": "référence au site",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "nom du site",
+                                    "refType": "sites"
+                                }
+                            }
+                        },
+                        "projetRef": {
+                            "description": "référence au projet",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "nom du projet",
+                                    "refType": "projet"
+                                }
+                            }
+                        },
+                        "themesRef": {
+                            "description": "référence au theme",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "nom du thème",
+                                    "refType": "themes"
+                                }
+                            }
+                        },
+                        "checkDatatype": {
+                            "description": "test",
+                            "checker": {
+                                "name": "GroovyExpression",
+                                "params": {
+                                    "expression": "String datatype = Arrays.stream(datum.get(\"nom du type de données\").split(\"_\")).collect{it.substring(0, 1)}.join(); return application.getDataType().contains(datatype);\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                "projet": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "nom_key": null,
+                        "definition_en": null,
+                        "definition_fr": null,
+                        "colonne_homonyme_entre_referentiels": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "themes": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "nom_key": null,
+                        "description_en": null,
+                        "description_fr": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "unites": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "code_en": null,
+                        "code_fr": null,
+                        "nom_key": null,
+                        "code_key": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "variables_et_unites_par_types_de_donnees": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom du type de données",
+                        "nom de la variable"
+                    ],
+                    "columns": {
+                        "nom de l'unité": null,
+                        "nom de la variable": null,
+                        "nom du type de données": null
+                    },
+                    "validations": {
+                        "uniteRef": {
+                            "description": "référence à l'unité'",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "nom de l'unité",
+                                    "refType": "unites"
+                                }
+                            }
+                        },
+                        "variableRef": {
+                            "description": "référence à la variable",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "nom de la variable",
+                                    "refType": "variables"
+                                }
+                            }
+                        },
+                        "checkDatatype": {
+                            "description": "test",
+                            "checker": {
+                                "name": "GroovyExpression",
+                                "params": {
+                                    "expression": "String datatype = Arrays.stream(datum.get(\"nom du type de données\").split(\"_\")).collect{it.substring(0, 1)}.join(); return application.getDataType().contains(datatype);\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                "especes": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "esp_nom"
+                    ],
+                    "columns": {
+                        "esp_nom": null,
+                        "esp_definition_en": null,
+                        "esp_definition_fr": null,
+                        "colonne_homonyme_entre_referentiels": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "variables": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "nom_key": null,
+                        "definition_en": null,
+                        "definition_fr": null,
+                        "isQualitative": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "type de fichiers": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "nom_key": null,
+                        "description_en": null,
+                        "description_fr": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "valeurs_qualitatives": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key",
+                        "valeur_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "nom_key": null,
+                        "valeur_en": null,
+                        "valeur_fr": null,
+                        "valeur_key": null
+                    },
+                    "validations": {
+
+                    }
+                }
+            },
+            "compositeReferences": {
+
+            },
+            "dataTypes": {
+                "pem": {
+                    "format": {
+                        "headerLine": 4,
+                        "firstRowLine": 5,
+                        "separator": ";",
+                        "columns": [{
+                                "header": "projet",
+                                "boundTo": {
+                                    "variable": "projet",
+                                    "component": "value",
+                                    "id": "projet_value"
+                                }
+                            },
+                            {
+                                "header": "site",
+                                "boundTo": {
+                                    "variable": "site",
+                                    "component": "bassin",
+                                    "id": "site_bassin"
+                                }
+                            },
+                            {
+                                "header": "plateforme",
+                                "boundTo": {
+                                    "variable": "site",
+                                    "component": "plateforme",
+                                    "id": "site_plateforme"
+                                }
+                            },
+                            {
+                                "header": "date",
+                                "boundTo": {
+                                    "variable": "date",
+                                    "component": "value",
+                                    "id": "date_value"
+                                }
+                            },
+                            {
+                                "header": "espece",
+                                "boundTo": {
+                                    "variable": "espece",
+                                    "component": "value",
+                                    "id": "espece_value"
+                                }
+                            },
+                            {
+                                "header": "Couleur des individus",
+                                "boundTo": {
+                                    "variable": "Couleur des individus",
+                                    "component": "value",
+                                    "id": "Couleur des individus_value"
+                                }
+                            },
+                            {
+                                "header": "Nombre d'individus",
+                                "boundTo": {
+                                    "variable": "Nombre d'individus",
+                                    "component": "value",
+                                    "id": "Nombre d'individus_value"
+                                }
+                            }
+                        ],
+                        "repeatedColumns": [
+
+                        ],
+                        "constants": [
+
+                        ]
+                    },
+                    "data": {
+                        "date": {
+                            "components": {
+                                "value": {
+                                    "checker": {
+                                        "name": "Date",
+                                        "params": {
+                                            "pattern": "dd/MM/yyyy",
+                                            "required": null
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "site": {
+                            "components": {
+                                "bassin": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "sites"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "chemin": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "sites"
+                                        }
+                                    },
+                                    "defaultValue": "return datumByVariableAndComponent.get(\"site\").get(\"bassin\") +\"__\" +datumByVariableAndComponent.get(\"site\").get(\"plateforme\")\n"
+                                },
+                                "plateforme": null
+                            }
+                        },
+                        "espece": {
+                            "components": {
+                                "value": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "especes"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "projet": {
+                            "components": {
+                                "value": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "projet"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Nombre d'individus": {
+                            "components": {
+                                "unit": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites",
+                                            "required": null
+                                        }
+                                    },
+                                    "defaultValue": "return \"sans_unite\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": null
+                                        }
+                                    },
+                                    "defaultValue": "return 0"
+                                }
+                            }
+                        },
+                        "Couleur des individus": {
+                            "components": {
+                                "unit": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites",
+                                            "required": null
+                                        }
+                                    },
+                                    "defaultValue": "return \"sans_unite\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "valeurs_qualitatives"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        }
+                    },
+                    "validations": {
+                        "unitOfColor": {
+                            "description": "vérifie l'unité de la couleur des individus",
+                            "checker": {
+                                "name": "GroovyExpression",
+                                "params": {
+                                    "datatype": "piegeage_en_montee",
+                                    "variable": "Couleur des individus",
+                                    "component": "unit",
+                                    "expression": "return referencesValues.get(\"variables_et_unites_par_types_de_donnees\") .findAll{it.get(\"nom du type de données\").equals(params.get(\"datatype\"))} .find{it.get(\"nom de la variable\").equals(params.get(\"codeVariable\"))} .get(\"nom de l'unité\").equals(datum.get(params.get(\"variable\")).get(params.get(\"component\")));\n",
+                                    "references": "variables_et_unites_par_types_de_donnees",
+                                    "codeVariable": "couleur_des_individus"
+                                }
+                            }
+                        },
+                        "unitOfIndividus": {
+                            "description": "vérifie l'unité du nombre d'individus",
+                            "checker": {
+                                "name": "GroovyExpression",
+                                "params": {
+                                    "datatype": "piegeage_en_montee",
+                                    "variable": "Nombre d'individus",
+                                    "component": "unit",
+                                    "expression": "return referencesValues.get(\"variables_et_unites_par_types_de_donnees\") .findAll{it.get(\"nom du type de données\").equals(params.get(\"datatype\"))} .find{it.get(\"nom de la variable\").equals(params.get(\"codeVariable\"))} .get(\"nom de l'unité\").equals(datum.get(params.get(\"variable\")).get(params.get(\"component\")));\n",
+                                    "references": "variables_et_unites_par_types_de_donnees",
+                                    "codeVariable": "nombre_d_individus"
+                                }
+                            }
+                        }
+                    },
+                    "migrations": {
+
+                    },
+                    "authorization": {
+                        "timeScope": {
+                            "variable": "date",
+                            "component": "value",
+                            "id": "date_value"
+                        },
+                        "authorizationScopes": {
+                            "localization": {
+                                "variable": "site",
+                                "component": "chemin",
+                                "id": "site_chemin"
+                            }
+                        },
+                        "dataGroups": {
+                            "qualitatif": {
+                                "label": "Données qualitatives",
+                                "data": [
+                                    "Couleur des individus"
+                                ]
+                            },
+                            "quantitatif": {
+                                "label": "Données quantitatives",
+                                "data": [
+                                    "Nombre d'individus"
+                                ]
+                            },
+                            "referentiel": {
+                                "label": "Référentiel",
+                                "data": [
+                                    "date",
+                                    "site",
+                                    "projet",
+                                    "espece"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "configFile": "3f5ea5d7-386b-49a3-9b65-5e3adecd3fb7"
+    },
+    {
+        "id": "8119574f-7721-43c0-a27f-30b45c11549a",
+        "creationDate": 1629212692049,
+        "updateDate": 1629212692049,
+        "name": "acbb",
+        "referenceType": [
+            "agroecosystemes",
+            "sites",
+            "parcelles",
+            "blocs",
+            "unites"
+        ],
+        "dataType": [
+            "flux_tours",
+            "biomasse_production_teneur",
+            "SWC"
+        ],
+        "configuration": {
+            "version": 0,
+            "application": {
+                "name": "ACBB",
+                "version": 1
+            },
+            "references": {
+                "blocs": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "site",
+                        "nom_du_bloc",
+                        "répétition"
+                    ],
+                    "columns": {
+                        "site": null,
+                        "nom_du_bloc": null,
+                        "répétition": null,
+                        "date creation": null,
+                        "decription_fr": null,
+                        "description_en": null
+                    },
+                    "validations": {
+                        "creationDate": {
+                            "description": "date de création",
+                            "checker": {
+                                "name": "Date",
+                                "params": {
+                                    "columns": "date creation",
+                                    "pattern": "dd/MM/yyyy"
+                                }
+                            }
+                        }
+                    }
+                },
+                "agroecosystemes": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "Agroécosystème_key"
+                    ],
+                    "columns": {
+                        "filter": null,
+                        "region": null,
+                        "Département": null,
+                        "Agroécosystème_en": null,
+                        "Agroécosystème_fr": null,
+                        "Agroécosystème_key": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "sites": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom du site_key"
+                    ],
+                    "columns": {
+                        "ville": null,
+                        "climat": null,
+                        "milieu": null,
+                        "adresse": null,
+                        "type de sol": null,
+                        "vent dominant": null,
+                        "nom du site_en": null,
+                        "nom du site_fr": null,
+                        "nom du site_key": null,
+                        "Agroécosystème": null,
+                        "altitude moyenne (m)": null,
+                        "cordonnées du dispositif": null,
+                        "pluviométrie moyenne (mm)": null,
+                        "température moyenne (°C)": null,
+                        "profondeur moyenne du sol (m)": null,
+                        "vitesse moyenne du vent (km/h)": null,
+                        "date mise en service du dispositif": null
+                    },
+                    "validations": {
+                        "agroecosystemRef": {
+                            "description": "référence à l'agroécosystème",
+                            "checker": {
+                                "name": "Reference",
+                                "params": {
+                                    "columns": "Agroécosystème",
+                                    "refType": "agroecosystemes"
+                                }
+                            }
+                        },
+                        "checkDateMiseEnService": {
+                            "description": "validation de date",
+                            "checker": {
+                                "name": "Date",
+                                "params": {
+                                    "columns": "date mise en service du dispositif",
+                                    "pattern": "dd/MM/yyyy"
+                                }
+                            }
+                        }
+                    }
+                },
+                "unites": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "nom_key"
+                    ],
+                    "columns": {
+                        "nom_en": null,
+                        "nom_fr": null,
+                        "code_en": null,
+                        "code_fr": null,
+                        "nom_key": null,
+                        "code_key": null
+                    },
+                    "validations": {
+
+                    }
+                },
+                "parcelles": {
+                    "separator": ";",
+                    "keyColumns": [
+                        "site",
+                        "nom de la parcelle_key"
+                    ],
+                    "columns": {
+                        "bloc": null,
+                        "site": null,
+                        "surface": null,
+                        "répétition": null,
+                        "commentaire_en": null,
+                        "commentaire_fr": null,
+                        "date de création": null,
+                        "nom de la parcelle_en": null,
+                        "nom de la parcelle_fr": null,
+                        "nom de la parcelle_key": null
+                    },
+                    "validations": {
+
+                    }
+                }
+            },
+            "compositeReferences": {
+                "localizations": {
+                    "components": [{
+                            "reference": "sites",
+                            "parentKeyColumn": null,
+                            "recursive": null
+                        },
+                        {
+                            "reference": "parcelles",
+                            "parentKeyColumn": "site",
+                            "recursive": null
+                        }
+                    ]
+                }
+            },
+            "dataTypes": {
+                "SWC": {
+                    "format": {
+                        "headerLine": 7,
+                        "firstRowLine": 10,
+                        "separator": ";",
+                        "columns": [{
+                                "header": "Nom parcelle",
+                                "boundTo": {
+                                    "variable": "Nom parcelle",
+                                    "component": "chemin",
+                                    "id": "Nom parcelle_chemin"
+                                }
+                            },
+                            {
+                                "header": "Nom traitement",
+                                "boundTo": {
+                                    "variable": "Nom traitement",
+                                    "component": "valeur",
+                                    "id": "Nom traitement_valeur"
+                                }
+                            },
+                            {
+                                "header": "Date",
+                                "boundTo": {
+                                    "variable": "Date",
+                                    "component": "day",
+                                    "id": "Date_day"
+                                }
+                            },
+                            {
+                                "header": "Time",
+                                "boundTo": {
+                                    "variable": "Date",
+                                    "component": "time",
+                                    "id": "Date_time"
+                                }
+                            }
+                        ],
+                        "repeatedColumns": [{
+                                "headerPattern": "SWC_([0-9]+)_([0-9]+)",
+                                "exportHeader": "SWC",
+                                "tokens": [{
+                                        "boundTo": {
+                                            "variable": "contexte",
+                                            "component": "répétition",
+                                            "id": "contexte_répétition"
+                                        },
+                                        "exportHeader": "Répétition"
+                                    },
+                                    {
+                                        "boundTo": {
+                                            "variable": "contexte",
+                                            "component": "profondeur",
+                                            "id": "contexte_profondeur"
+                                        },
+                                        "exportHeader": "Profondeur"
+                                    }
+                                ],
+                                "boundTo": {
+                                    "variable": "SWC",
+                                    "component": "valeur",
+                                    "id": "SWC_valeur"
+                                }
+                            },
+                            {
+                                "headerPattern": "qc",
+                                "exportHeader": "qc",
+                                "tokens": [
+
+                                ],
+                                "boundTo": {
+                                    "variable": "SWC",
+                                    "component": "qualité",
+                                    "id": "SWC_qualité"
+                                }
+                            }
+                        ],
+                        "constants": [
+
+                        ]
+                    },
+                    "data": {
+                        "SWC": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"pourcentage\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "qualité": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Date": {
+                            "components": {
+                                "day": {
+                                    "checker": {
+                                        "name": "Date",
+                                        "params": {
+                                            "pattern": "dd/MM/yyyy"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "time": null
+                            }
+                        },
+                        "contexte": {
+                            "components": {
+                                "profondeur": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": null
+                                    },
+                                    "defaultValue": null
+                                },
+                                "répétition": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": null
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Nom parcelle": {
+                            "components": {
+                                "chemin": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "parcelles"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Nom traitement": {
+                            "components": {
+                                "valeur": null
+                            }
+                        }
+                    },
+                    "validations": {
+                        "swcQualityEnumeration": {
+                            "description": "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3",
+                            "checker": {
+                                "name": "GroovyExpression",
+                                "params": {
+                                    "expression": "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
+                                }
+                            }
+                        }
+                    },
+                    "migrations": {
+
+                    },
+                    "authorization": {
+                        "timeScope": {
+                            "variable": "Date",
+                            "component": "day",
+                            "id": "Date_day"
+                        },
+                        "authorizationScopes": {
+                            "localization": {
+                                "variable": "Nom parcelle",
+                                "component": "chemin",
+                                "id": "Nom parcelle_chemin"
+                            }
+                        },
+                        "dataGroups": {
+                            "all": {
+                                "label": "Toutes les données",
+                                "data": [
+                                    "contexte",
+                                    "Nom traitement",
+                                    "Nom parcelle",
+                                    "Date",
+                                    "SWC"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "flux_tours": {
+                    "format": {
+                        "headerLine": 8,
+                        "firstRowLine": 12,
+                        "separator": ";",
+                        "columns": [{
+                                "header": "date",
+                                "boundTo": {
+                                    "variable": "date",
+                                    "component": "day",
+                                    "id": "date_day"
+                                }
+                            },
+                            {
+                                "header": "heure",
+                                "boundTo": {
+                                    "variable": "date",
+                                    "component": "time",
+                                    "id": "date_time"
+                                }
+                            },
+                            {
+                                "header": "CO2",
+                                "boundTo": {
+                                    "variable": "CO2",
+                                    "component": "value",
+                                    "id": "CO2_value"
+                                }
+                            },
+                            {
+                                "header": "H2O",
+                                "boundTo": {
+                                    "variable": "H2O",
+                                    "component": "value",
+                                    "id": "H2O_value"
+                                }
+                            },
+                            {
+                                "header": "ZL",
+                                "boundTo": {
+                                    "variable": "ZL",
+                                    "component": "value",
+                                    "id": "ZL_value"
+                                }
+                            },
+                            {
+                                "header": "Fc",
+                                "boundTo": {
+                                    "variable": "Fc",
+                                    "component": "value",
+                                    "id": "Fc_value"
+                                }
+                            },
+                            {
+                                "header": "qc1",
+                                "boundTo": {
+                                    "variable": "Fc",
+                                    "component": "quality",
+                                    "id": "Fc_quality"
+                                }
+                            },
+                            {
+                                "header": "H",
+                                "boundTo": {
+                                    "variable": "H",
+                                    "component": "value",
+                                    "id": "H_value"
+                                }
+                            },
+                            {
+                                "header": "qc2",
+                                "boundTo": {
+                                    "variable": "H",
+                                    "component": "quality",
+                                    "id": "H_quality"
+                                }
+                            },
+                            {
+                                "header": "LE",
+                                "boundTo": {
+                                    "variable": "LE",
+                                    "component": "value",
+                                    "id": "LE_value"
+                                }
+                            },
+                            {
+                                "header": "qc3",
+                                "boundTo": {
+                                    "variable": "LE",
+                                    "component": "quality",
+                                    "id": "LE_quality"
+                                }
+                            },
+                            {
+                                "header": "t",
+                                "boundTo": {
+                                    "variable": "t",
+                                    "component": "value",
+                                    "id": "t_value"
+                                }
+                            },
+                            {
+                                "header": "qc4",
+                                "boundTo": {
+                                    "variable": "t",
+                                    "component": "quality",
+                                    "id": "t_quality"
+                                }
+                            },
+                            {
+                                "header": "u*",
+                                "boundTo": {
+                                    "variable": "u*",
+                                    "component": "value",
+                                    "id": "u*_value"
+                                }
+                            },
+                            {
+                                "header": "Fc gf",
+                                "boundTo": {
+                                    "variable": "Fc gf",
+                                    "component": "value",
+                                    "id": "Fc gf_value"
+                                }
+                            }
+                        ],
+                        "repeatedColumns": [
+
+                        ],
+                        "constants": [{
+                                "rowNumber": 1,
+                                "columnNumber": 2,
+                                "boundTo": {
+                                    "variable": "site",
+                                    "component": "chemin",
+                                    "id": "site_chemin"
+                                },
+                                "exportHeader": "Site"
+                            },
+                            {
+                                "rowNumber": 1,
+                                "columnNumber": 3,
+                                "boundTo": {
+                                    "variable": "parcelle",
+                                    "component": "name",
+                                    "id": "parcelle_name"
+                                },
+                                "exportHeader": "Parcelle"
+                            }
+                        ]
+                    },
+                    "data": {
+                        "H": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"watt_par_metre_carre\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "quality": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "t": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"kilogramme_par_metre_et_par_seconde\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "quality": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Fc": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"micromole_par_mettre_carre_et_par_seconde\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "quality": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "LE": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"watt_par_metre_carre\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "quality": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "ZL": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"pas_d_unite\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "u*": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"metre_par_seconde\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "quality": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "CO2": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"micromole_par_mole\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "H2O": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"millimole_par_mole\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "date": {
+                            "components": {
+                                "day": {
+                                    "checker": {
+                                        "name": "Date",
+                                        "params": {
+                                            "pattern": "dd/MM/yyyy"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "time": null
+                            }
+                        },
+                        "site": {
+                            "components": {
+                                "chemin": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "sites"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Fc gf": {
+                            "components": {
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"micromole_par_mettre_carre_et_par_seconde\""
+                                },
+                                "value": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "parcelle": {
+                            "components": {
+                                "chemin": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "parcelles"
+                                        }
+                                    },
+                                    "defaultValue": "String site = datumByVariableAndComponent.get(\"site\").get(\"chemin\"); String parcelle = datumByVariableAndComponent.get(\"parcelle\").get(\"name\"); return site+\".\"+site+\"__\"+parcelle;\n"
+                                }
+                            }
+                        }
+                    },
+                    "validations": {
+
+                    },
+                    "migrations": {
+
+                    },
+                    "authorization": {
+                        "timeScope": {
+                            "variable": "date",
+                            "component": "day",
+                            "id": "date_day"
+                        },
+                        "authorizationScopes": {
+                            "localization": {
+                                "variable": "parcelle",
+                                "component": "chemin",
+                                "id": "parcelle_chemin"
+                            }
+                        },
+                        "dataGroups": {
+                            "all": {
+                                "label": "Toutes les données",
+                                "data": [
+                                    "date",
+                                    "site",
+                                    "ZL",
+                                    "H2O",
+                                    "t",
+                                    "u*",
+                                    "Fc gf",
+                                    "CO2",
+                                    "H",
+                                    "parcelle",
+                                    "LE",
+                                    "Fc"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "biomasse_production_teneur": {
+                    "format": {
+                        "headerLine": 8,
+                        "firstRowLine": 12,
+                        "separator": ";",
+                        "columns": [{
+                                "header": "parcelle",
+                                "boundTo": {
+                                    "variable": "parcelle",
+                                    "component": "chemin",
+                                    "id": "parcelle_chemin"
+                                }
+                            },
+                            {
+                                "header": "observation",
+                                "boundTo": {
+                                    "variable": "observation",
+                                    "component": "valeur",
+                                    "id": "observation_valeur"
+                                }
+                            },
+                            {
+                                "header": "rotation",
+                                "boundTo": {
+                                    "variable": "rotation",
+                                    "component": "valeur",
+                                    "id": "rotation_valeur"
+                                }
+                            },
+                            {
+                                "header": "année",
+                                "boundTo": {
+                                    "variable": "année",
+                                    "component": "valeur",
+                                    "id": "année_valeur"
+                                }
+                            },
+                            {
+                                "header": "période",
+                                "boundTo": {
+                                    "variable": "période",
+                                    "component": "valeur",
+                                    "id": "période_valeur"
+                                }
+                            },
+                            {
+                                "header": "type intervention",
+                                "boundTo": {
+                                    "variable": "type intervention",
+                                    "component": "valeur",
+                                    "id": "type intervention_valeur"
+                                }
+                            },
+                            {
+                                "header": "date ou num incrémental intervention",
+                                "boundTo": {
+                                    "variable": "date ou num incrémental intervention",
+                                    "component": "valeur",
+                                    "id": "date ou num incrémental intervention_valeur"
+                                }
+                            },
+                            {
+                                "header": "série",
+                                "boundTo": {
+                                    "variable": "série",
+                                    "component": "valeur",
+                                    "id": "série_valeur"
+                                }
+                            },
+                            {
+                                "header": "mav_nature",
+                                "boundTo": {
+                                    "variable": "mav_nature",
+                                    "component": "valeur",
+                                    "id": "mav_nature_valeur"
+                                }
+                            },
+                            {
+                                "header": "nature couvert",
+                                "boundTo": {
+                                    "variable": "nature couvert",
+                                    "component": "valeur",
+                                    "id": "nature couvert_valeur"
+                                }
+                            },
+                            {
+                                "header": "date de mesure",
+                                "boundTo": {
+                                    "variable": "date de mesure",
+                                    "component": "valeur",
+                                    "id": "date de mesure_valeur"
+                                }
+                            },
+                            {
+                                "header": "mav_dateDebut_PotProd",
+                                "boundTo": {
+                                    "variable": "mav_dateDebut_PotProd",
+                                    "component": "valeur",
+                                    "id": "mav_dateDebut_PotProd_valeur"
+                                }
+                            },
+                            {
+                                "header": "mav_valeur",
+                                "boundTo": {
+                                    "variable": "mav",
+                                    "component": "valeur",
+                                    "id": "mav_valeur"
+                                }
+                            },
+                            {
+                                "header": "mav_nb",
+                                "boundTo": {
+                                    "variable": "mav",
+                                    "component": "nb",
+                                    "id": "mav_nb"
+                                }
+                            },
+                            {
+                                "header": "mav_et",
+                                "boundTo": {
+                                    "variable": "mav",
+                                    "component": "et",
+                                    "id": "mav_et"
+                                }
+                            },
+                            {
+                                "header": "mav_methode",
+                                "boundTo": {
+                                    "variable": "mav",
+                                    "component": "methode",
+                                    "id": "mav_methode"
+                                }
+                            },
+                            {
+                                "header": "mav_IQ",
+                                "boundTo": {
+                                    "variable": "mav",
+                                    "component": "IQ",
+                                    "id": "mav_IQ"
+                                }
+                            },
+                            {
+                                "header": "N_valeur",
+                                "boundTo": {
+                                    "variable": "N",
+                                    "component": "valeur",
+                                    "id": "N_valeur"
+                                }
+                            },
+                            {
+                                "header": "N_nb",
+                                "boundTo": {
+                                    "variable": "N",
+                                    "component": "nb",
+                                    "id": "N_nb"
+                                }
+                            },
+                            {
+                                "header": "N_et",
+                                "boundTo": {
+                                    "variable": "N",
+                                    "component": "et",
+                                    "id": "N_et"
+                                }
+                            },
+                            {
+                                "header": "N_methode",
+                                "boundTo": {
+                                    "variable": "N",
+                                    "component": "methode",
+                                    "id": "N_methode"
+                                }
+                            },
+                            {
+                                "header": "N_IQ",
+                                "boundTo": {
+                                    "variable": "N",
+                                    "component": "IQ",
+                                    "id": "N_IQ"
+                                }
+                            },
+                            {
+                                "header": "DMS_valeur",
+                                "boundTo": {
+                                    "variable": "DMS",
+                                    "component": "valeur",
+                                    "id": "DMS_valeur"
+                                }
+                            },
+                            {
+                                "header": "DMS_nb",
+                                "boundTo": {
+                                    "variable": "DMS",
+                                    "component": "nb",
+                                    "id": "DMS_nb"
+                                }
+                            },
+                            {
+                                "header": "DMS_et",
+                                "boundTo": {
+                                    "variable": "DMS",
+                                    "component": "et",
+                                    "id": "DMS_et"
+                                }
+                            },
+                            {
+                                "header": "DMS_methode",
+                                "boundTo": {
+                                    "variable": "DMS",
+                                    "component": "methode",
+                                    "id": "DMS_methode"
+                                }
+                            },
+                            {
+                                "header": "DMS_IQ",
+                                "boundTo": {
+                                    "variable": "DMS",
+                                    "component": "IQ",
+                                    "id": "DMS_IQ"
+                                }
+                            },
+                            {
+                                "header": "C_valeur",
+                                "boundTo": {
+                                    "variable": "C",
+                                    "component": "valeur",
+                                    "id": "C_valeur"
+                                }
+                            },
+                            {
+                                "header": "C_nb",
+                                "boundTo": {
+                                    "variable": "C",
+                                    "component": "nb",
+                                    "id": "C_nb"
+                                }
+                            },
+                            {
+                                "header": "C_et",
+                                "boundTo": {
+                                    "variable": "C",
+                                    "component": "et",
+                                    "id": "C_et"
+                                }
+                            },
+                            {
+                                "header": "C_methode",
+                                "boundTo": {
+                                    "variable": "C",
+                                    "component": "methode",
+                                    "id": "C_methode"
+                                }
+                            },
+                            {
+                                "header": "C_IQ",
+                                "boundTo": {
+                                    "variable": "C",
+                                    "component": "IQ",
+                                    "id": "C_IQ"
+                                }
+                            },
+                            {
+                                "header": "Pho_valeur",
+                                "boundTo": {
+                                    "variable": "Pho",
+                                    "component": "valeur",
+                                    "id": "Pho_valeur"
+                                }
+                            },
+                            {
+                                "header": "Pho_nb",
+                                "boundTo": {
+                                    "variable": "Pho",
+                                    "component": "nb",
+                                    "id": "Pho_nb"
+                                }
+                            },
+                            {
+                                "header": "Pho_et",
+                                "boundTo": {
+                                    "variable": "Pho",
+                                    "component": "et",
+                                    "id": "Pho_et"
+                                }
+                            },
+                            {
+                                "header": "Pho_methode",
+                                "boundTo": {
+                                    "variable": "Pho",
+                                    "component": "methode",
+                                    "id": "Pho_methode"
+                                }
+                            },
+                            {
+                                "header": "Pho_IQ",
+                                "boundTo": {
+                                    "variable": "Pho",
+                                    "component": "IQ",
+                                    "id": "Pho_IQ"
+                                }
+                            },
+                            {
+                                "header": "K_valeur",
+                                "boundTo": {
+                                    "variable": "K",
+                                    "component": "valeur",
+                                    "id": "K_valeur"
+                                }
+                            },
+                            {
+                                "header": "K_nb",
+                                "boundTo": {
+                                    "variable": "K",
+                                    "component": "nb",
+                                    "id": "K_nb"
+                                }
+                            },
+                            {
+                                "header": "K_et",
+                                "boundTo": {
+                                    "variable": "K",
+                                    "component": "et",
+                                    "id": "K_et"
+                                }
+                            },
+                            {
+                                "header": "K_methode",
+                                "boundTo": {
+                                    "variable": "K",
+                                    "component": "methode",
+                                    "id": "K_methode"
+                                }
+                            },
+                            {
+                                "header": "K_IQ",
+                                "boundTo": {
+                                    "variable": "K",
+                                    "component": "IQ",
+                                    "id": "K_IQ"
+                                }
+                            },
+                            {
+                                "header": "Ca_valeur",
+                                "boundTo": {
+                                    "variable": "Ca",
+                                    "component": "valeur",
+                                    "id": "Ca_valeur"
+                                }
+                            },
+                            {
+                                "header": "Ca_nb",
+                                "boundTo": {
+                                    "variable": "Ca",
+                                    "component": "nb",
+                                    "id": "Ca_nb"
+                                }
+                            },
+                            {
+                                "header": "Ca_et",
+                                "boundTo": {
+                                    "variable": "Ca",
+                                    "component": "et",
+                                    "id": "Ca_et"
+                                }
+                            },
+                            {
+                                "header": "Ca_methode",
+                                "boundTo": {
+                                    "variable": "Ca",
+                                    "component": "methode",
+                                    "id": "Ca_methode"
+                                }
+                            },
+                            {
+                                "header": "Ca_IQ",
+                                "boundTo": {
+                                    "variable": "Ca",
+                                    "component": "IQ",
+                                    "id": "Ca_IQ"
+                                }
+                            },
+                            {
+                                "header": "Mg_valeur",
+                                "boundTo": {
+                                    "variable": "Mg",
+                                    "component": "valeur",
+                                    "id": "Mg_valeur"
+                                }
+                            },
+                            {
+                                "header": "Mg_nb",
+                                "boundTo": {
+                                    "variable": "Mg",
+                                    "component": "nb",
+                                    "id": "Mg_nb"
+                                }
+                            },
+                            {
+                                "header": "Mg_et",
+                                "boundTo": {
+                                    "variable": "Mg",
+                                    "component": "et",
+                                    "id": "Mg_et"
+                                }
+                            },
+                            {
+                                "header": "Mg_methode",
+                                "boundTo": {
+                                    "variable": "Mg",
+                                    "component": "methode",
+                                    "id": "Mg_methode"
+                                }
+                            },
+                            {
+                                "header": "Mg_IQ",
+                                "boundTo": {
+                                    "variable": "Mg",
+                                    "component": "IQ",
+                                    "id": "Mg_IQ"
+                                }
+                            },
+                            {
+                                "header": "Bo_valeur",
+                                "boundTo": {
+                                    "variable": "Bo",
+                                    "component": "valeur",
+                                    "id": "Bo_valeur"
+                                }
+                            },
+                            {
+                                "header": "Bo_nb",
+                                "boundTo": {
+                                    "variable": "Bo",
+                                    "component": "nb",
+                                    "id": "Bo_nb"
+                                }
+                            },
+                            {
+                                "header": "Bo_et",
+                                "boundTo": {
+                                    "variable": "Bo",
+                                    "component": "et",
+                                    "id": "Bo_et"
+                                }
+                            },
+                            {
+                                "header": "Bo_methode",
+                                "boundTo": {
+                                    "variable": "Bo",
+                                    "component": "methode",
+                                    "id": "Bo_methode"
+                                }
+                            },
+                            {
+                                "header": "Bo_IQ",
+                                "boundTo": {
+                                    "variable": "Bo",
+                                    "component": "IQ",
+                                    "id": "Bo_IQ"
+                                }
+                            },
+                            {
+                                "header": "Cu_valeur",
+                                "boundTo": {
+                                    "variable": "Cu",
+                                    "component": "valeur",
+                                    "id": "Cu_valeur"
+                                }
+                            },
+                            {
+                                "header": "Cu_nb",
+                                "boundTo": {
+                                    "variable": "Cu",
+                                    "component": "nb",
+                                    "id": "Cu_nb"
+                                }
+                            },
+                            {
+                                "header": "Cu_et",
+                                "boundTo": {
+                                    "variable": "Cu",
+                                    "component": "et",
+                                    "id": "Cu_et"
+                                }
+                            },
+                            {
+                                "header": "Cu_methode",
+                                "boundTo": {
+                                    "variable": "Cu",
+                                    "component": "methode",
+                                    "id": "Cu_methode"
+                                }
+                            },
+                            {
+                                "header": "Cu_IQ",
+                                "boundTo": {
+                                    "variable": "Cu",
+                                    "component": "IQ",
+                                    "id": "Cu_IQ"
+                                }
+                            },
+                            {
+                                "header": "Fe_valeur",
+                                "boundTo": {
+                                    "variable": "Fe",
+                                    "component": "valeur",
+                                    "id": "Fe_valeur"
+                                }
+                            },
+                            {
+                                "header": "Fe_nb",
+                                "boundTo": {
+                                    "variable": "Fe",
+                                    "component": "nb",
+                                    "id": "Fe_nb"
+                                }
+                            },
+                            {
+                                "header": "Fe_et",
+                                "boundTo": {
+                                    "variable": "Fe",
+                                    "component": "et",
+                                    "id": "Fe_et"
+                                }
+                            },
+                            {
+                                "header": "Fe_methode",
+                                "boundTo": {
+                                    "variable": "Fe",
+                                    "component": "methode",
+                                    "id": "Fe_methode"
+                                }
+                            },
+                            {
+                                "header": "Fe_IQ",
+                                "boundTo": {
+                                    "variable": "Fe",
+                                    "component": "IQ",
+                                    "id": "Fe_IQ"
+                                }
+                            },
+                            {
+                                "header": "Mn_valeur",
+                                "boundTo": {
+                                    "variable": "Mn",
+                                    "component": "valeur",
+                                    "id": "Mn_valeur"
+                                }
+                            },
+                            {
+                                "header": "Mn_nb",
+                                "boundTo": {
+                                    "variable": "Mn",
+                                    "component": "nb",
+                                    "id": "Mn_nb"
+                                }
+                            },
+                            {
+                                "header": "Mn_et",
+                                "boundTo": {
+                                    "variable": "Mn",
+                                    "component": "et",
+                                    "id": "Mn_et"
+                                }
+                            },
+                            {
+                                "header": "Mn_methode",
+                                "boundTo": {
+                                    "variable": "Mn",
+                                    "component": "methode",
+                                    "id": "Mn_methode"
+                                }
+                            },
+                            {
+                                "header": "Mn_IQ",
+                                "boundTo": {
+                                    "variable": "Mn",
+                                    "component": "IQ",
+                                    "id": "Mn_IQ"
+                                }
+                            },
+                            {
+                                "header": "Na_valeur",
+                                "boundTo": {
+                                    "variable": "Na",
+                                    "component": "valeur",
+                                    "id": "Na_valeur"
+                                }
+                            },
+                            {
+                                "header": "Na_nb",
+                                "boundTo": {
+                                    "variable": "Na",
+                                    "component": "nb",
+                                    "id": "Na_nb"
+                                }
+                            },
+                            {
+                                "header": "Na_et",
+                                "boundTo": {
+                                    "variable": "Na",
+                                    "component": "et",
+                                    "id": "Na_et"
+                                }
+                            },
+                            {
+                                "header": "Na_methode",
+                                "boundTo": {
+                                    "variable": "Na",
+                                    "component": "methode",
+                                    "id": "Na_methode"
+                                }
+                            },
+                            {
+                                "header": "Na_IQ",
+                                "boundTo": {
+                                    "variable": "Na",
+                                    "component": "IQ",
+                                    "id": "Na_IQ"
+                                }
+                            },
+                            {
+                                "header": "Zn_valeur",
+                                "boundTo": {
+                                    "variable": "Zn",
+                                    "component": "valeur",
+                                    "id": "Zn_valeur"
+                                }
+                            },
+                            {
+                                "header": "Zn_nb",
+                                "boundTo": {
+                                    "variable": "Zn",
+                                    "component": "nb",
+                                    "id": "Zn_nb"
+                                }
+                            },
+                            {
+                                "header": "Zn_et",
+                                "boundTo": {
+                                    "variable": "Zn",
+                                    "component": "et",
+                                    "id": "Zn_et"
+                                }
+                            },
+                            {
+                                "header": "Zn_methode",
+                                "boundTo": {
+                                    "variable": "Zn",
+                                    "component": "methode",
+                                    "id": "Zn_methode"
+                                }
+                            },
+                            {
+                                "header": "Zn_IQ",
+                                "boundTo": {
+                                    "variable": "Zn",
+                                    "component": "IQ",
+                                    "id": "Zn_IQ"
+                                }
+                            },
+                            {
+                                "header": "CBR_valeur",
+                                "boundTo": {
+                                    "variable": "CBR",
+                                    "component": "valeur",
+                                    "id": "CBR_valeur"
+                                }
+                            },
+                            {
+                                "header": "CBR_nb",
+                                "boundTo": {
+                                    "variable": "CBR",
+                                    "component": "nb",
+                                    "id": "CBR_nb"
+                                }
+                            },
+                            {
+                                "header": "CBR_et",
+                                "boundTo": {
+                                    "variable": "CBR",
+                                    "component": "et",
+                                    "id": "CBR_et"
+                                }
+                            },
+                            {
+                                "header": "CBR_methode",
+                                "boundTo": {
+                                    "variable": "CBR",
+                                    "component": "methode",
+                                    "id": "CBR_methode"
+                                }
+                            },
+                            {
+                                "header": "CBR_IQ",
+                                "boundTo": {
+                                    "variable": "CBR",
+                                    "component": "IQ",
+                                    "id": "CBR_IQ"
+                                }
+                            },
+                            {
+                                "header": "HUT_valeur",
+                                "boundTo": {
+                                    "variable": "HUT",
+                                    "component": "valeur",
+                                    "id": "HUT_valeur"
+                                }
+                            },
+                            {
+                                "header": "HUT_nb",
+                                "boundTo": {
+                                    "variable": "HUT",
+                                    "component": "nb",
+                                    "id": "HUT_nb"
+                                }
+                            },
+                            {
+                                "header": "HUT_et",
+                                "boundTo": {
+                                    "variable": "HUT",
+                                    "component": "et",
+                                    "id": "HUT_et"
+                                }
+                            },
+                            {
+                                "header": "HUT_methode",
+                                "boundTo": {
+                                    "variable": "HUT",
+                                    "component": "methode",
+                                    "id": "HUT_methode"
+                                }
+                            },
+                            {
+                                "header": "HUT_IQ",
+                                "boundTo": {
+                                    "variable": "HUT",
+                                    "component": "IQ",
+                                    "id": "HUT_IQ"
+                                }
+                            },
+                            {
+                                "header": "MOR_valeur",
+                                "boundTo": {
+                                    "variable": "MOR",
+                                    "component": "valeur",
+                                    "id": "MOR_valeur"
+                                }
+                            },
+                            {
+                                "header": "MOR_nb",
+                                "boundTo": {
+                                    "variable": "MOR",
+                                    "component": "nb",
+                                    "id": "MOR_nb"
+                                }
+                            },
+                            {
+                                "header": "MOR_et",
+                                "boundTo": {
+                                    "variable": "MOR",
+                                    "component": "et",
+                                    "id": "MOR_et"
+                                }
+                            },
+                            {
+                                "header": "MOR_methode",
+                                "boundTo": {
+                                    "variable": "MOR",
+                                    "component": "methode",
+                                    "id": "MOR_methode"
+                                }
+                            },
+                            {
+                                "header": "MOR_IQ",
+                                "boundTo": {
+                                    "variable": "MOR",
+                                    "component": "IQ",
+                                    "id": "MOR_IQ"
+                                }
+                            }
+                        ],
+                        "repeatedColumns": [
+
+                        ],
+                        "constants": [
+
+                        ]
+                    },
+                    "data": {
+                        "C": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "K": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "N": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Bo": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"milligramme_par_kilogramme\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Ca": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Cu": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"milligramme_par_kilogramme\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Fe": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"milligramme_par_kilogramme\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Mg": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"milligramme_par_kilogramme\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Mn": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"milligramme_par_kilogramme\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Na": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Zn": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"milligramme_par_kilogramme\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "CBR": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"pourcentage\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "DMS": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"pourcentage\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "HUT": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"pourcentage\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "MOR": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"pourcentage\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "Pho": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "mav": {
+                            "components": {
+                                "IQ": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "et": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "nb": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "unite": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "unites"
+                                        }
+                                    },
+                                    "defaultValue": "\"gramme_par_kilo\""
+                                },
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Float",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                },
+                                "methode": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "année": {
+                            "components": {
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "série": {
+                            "components": {
+                                "valeur": null
+                            }
+                        },
+                        "parcelle": {
+                            "components": {
+                                "chemin": {
+                                    "checker": {
+                                        "name": "Reference",
+                                        "params": {
+                                            "refType": "parcelles"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "période": {
+                            "components": {
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "rotation": {
+                            "components": {
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Integer",
+                                        "params": {
+                                            "required": "false"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "mav_nature": {
+                            "components": {
+                                "valeur": null
+                            }
+                        },
+                        "observation": {
+                            "components": {
+                                "valeur": null
+                            }
+                        },
+                        "date de mesure": {
+                            "components": {
+                                "valeur": {
+                                    "checker": {
+                                        "name": "Date",
+                                        "params": {
+                                            "pattern": "dd/MM/yyyy"
+                                        }
+                                    },
+                                    "defaultValue": null
+                                }
+                            }
+                        },
+                        "nature couvert": {
+                            "components": {
+                                "valeur": null
+                            }
+                        },
+                        "type intervention": {
+                            "components": {
+                                "valeur": null
+                            }
+                        },
+                        "mav_dateDebut_PotProd": {
+                            "components": {
+                                "valeur": null
+                            }
+                        },
+                        "date ou num incrémental intervention": {
+                            "components": {
+                                "valeur": null
+                            }
+                        }
+                    },
+                    "validations": {
+
+                    },
+                    "migrations": {
+
+                    },
+                    "authorization": {
+                        "timeScope": {
+                            "variable": "date de mesure",
+                            "component": "valeur",
+                            "id": "date de mesure_valeur"
+                        },
+                        "authorizationScopes": {
+                            "localization": {
+                                "variable": "parcelle",
+                                "component": "chemin",
+                                "id": "parcelle_chemin"
+                            }
+                        },
+                        "dataGroups": {
+                            "all": {
+                                "label": "Toutes les données",
+                                "data": [
+                                    "mav_dateDebut_PotProd",
+                                    "Mn",
+                                    "C",
+                                    "période",
+                                    "type intervention",
+                                    "K",
+                                    "N",
+                                    "Cu",
+                                    "CBR",
+                                    "Na",
+                                    "mav_nature",
+                                    "Zn",
+                                    "Pho",
+                                    "date ou num incrémental intervention",
+                                    "Fe",
+                                    "mav",
+                                    "observation",
+                                    "HUT",
+                                    "rotation",
+                                    "parcelle",
+                                    "nature couvert",
+                                    "DMS",
+                                    "Bo",
+                                    "MOR",
+                                    "date de mesure",
+                                    "année",
+                                    "série",
+                                    "Mg",
+                                    "Ca"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "configFile": "58c2c4a2-c4a8-44dd-b117-a4601ef33a98"
+    }
+]

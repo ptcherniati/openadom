@@ -879,6 +879,11 @@ public class OreSiService {
                         e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
                 )));
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
+        List<String> dateLineCheckerVaraibleComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
+                .filter(ch -> (ch instanceof DateLineChecker) || ((ch instanceof ILineCheckerDecorator) && (((ILineCheckerDecorator) ch).getChecker() instanceof DateLineChecker)))
+                .map(ch -> (ch instanceof ILineCheckerDecorator) ? (DateLineChecker) (((ILineCheckerDecorator) ch).getChecker()) : ((DateLineChecker) ch))
+                .map(ch -> ((DateLineChecker) ch).getVariableComponentKey().getId())
+                .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
         } else {
@@ -899,7 +904,11 @@ public class OreSiService {
                     ImmutableList<String> rowAsRecord = columns.values().stream()
                             .map(variableComponentSelect -> {
                                 Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
-                                return components.getOrDefault(variableComponentSelect.getComponent(), "");
+                                String value = components.getOrDefault(variableComponentSelect.getComponent(), "");
+                                if(dateLineCheckerVaraibleComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())){
+                                        value = DateLineChecker.sortableDateToFormattedDate(value);
+                                }
+                                return value;
                             })
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);

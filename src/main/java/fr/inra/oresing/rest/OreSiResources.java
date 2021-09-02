@@ -223,6 +223,7 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+        LinkedHashSet<String> orderedVariables = buildOrderedVariables(nameOrId, dataType);
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
         List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
         ImmutableSet<String> variables = list.stream()
@@ -230,10 +231,39 @@ public class OreSiResources {
                 .map(DataRow::getValues)
                 .map(Map::keySet)
                 .flatMap(Set::stream)
+                .sorted((a,b)-> {
+                    if(a.equals(b)){
+                        return 0;
+                    }
+                    return orderedVariables
+                            .stream()
+                            .dropWhile(i -> !i.equals(a) && !i.equals(b))
+                            .findFirst()
+                            .orElse("")
+                            .equals(a) ? -1 : 1;
+                })
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
+    }
+
+    private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {
+        Configuration.AuthorizationDescription authorization = service.getApplication(nameOrId).getConfiguration().getDataTypes().get(dataType).getAuthorization();
+        LinkedHashSet<String> orderedVariableComponents = new LinkedHashSet<String>();
+        orderedVariableComponents.add(authorization.getTimeScope().getVariable());
+        authorization.getAuthorizationScopes().values()
+                .stream()
+                .filter(vc -> !orderedVariableComponents.contains(vc))
+                .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
+        authorization.getDataGroups()
+                .values()
+                .stream()
+                .map(dg -> dg.getData())
+                .flatMap(Set::stream)
+                .filter(vc -> !orderedVariableComponents.contains(vc))
+                .forEach(vc -> orderedVariableComponents.add(vc));
+        return orderedVariableComponents;
     }
 
     /**
@@ -262,7 +292,7 @@ public class OreSiResources {
 
     private DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(String params) {
         try {
-            return params != null ? new ObjectMapper().readValue(params, DownloadDatasetQuery.class):null;
+            return params != null ? new ObjectMapper().readValue(params, DownloadDatasetQuery.class) : null;
         } catch (IOException e) {
             throw new BadDownloadDatasetQuery(e.getMessage());
         }

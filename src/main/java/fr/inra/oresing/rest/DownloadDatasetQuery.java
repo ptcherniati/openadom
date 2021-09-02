@@ -113,7 +113,7 @@ public class DownloadDatasetQuery {
                     if ("numeric".equals(vck.type)) {
                         format = "(nullif(datavalues->'%s'->>'%s', ''))::numeric  %s";
                     } else {
-                        format = "datavalues->'%s'->>'%s' %s";
+                        format = "datavalues->'%s'->'%s' %s";
                     }
 
                     return String.format(
@@ -155,10 +155,9 @@ public class DownloadDatasetQuery {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
                 filters.add(
                         String.format(
-                                "to_timestamp(datavalues->'%s'->>'%s', %s)  BETWEEN %s::TIMESTAMP AND %s::TIMESTAMP",
+                                "substring(datavalues->'%s'->>'%s' from 6 for 19)::timestamp  BETWEEN %s::TIMESTAMP AND %s::TIMESTAMP",
                                 StringEscapeUtils.escapeSql(vck.getVariable()),
                                 StringEscapeUtils.escapeSql(vck.getComponent()),
-                                addArgumentAndReturnSubstitution(vck.format),
                                 addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "-infinity" : vck.intervalValues.from),
                                 addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "infinity" : vck.intervalValues.to)
                         )
@@ -192,16 +191,16 @@ public class DownloadDatasetQuery {
     }
 
     public String buildQuery(String toMergeDataGroupsQuery) {
-        String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
-                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
-                "jsonb_build_object(" +
-                "'rowNumber', row_number() over (), " +
-                "'totalRows', count(*) over (), " +
-                "'rowId', rowId, " +
-                "'values', dataValues, " +
-                "'refsLinkedTo', refsLinkedTo" +
-                ") AS json"
-                + " FROM my_data ";
+        String query = "WITH my_data AS (\n" + toMergeDataGroupsQuery + "\n)" +
+                "\n SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
+                "\njsonb_build_object(" +
+                "\n\t'rowNumber', row_number() over (), " +
+                "\n\t'totalRows', count(*) over (), " +
+                "\n\t'rowId', rowId, " +
+                "\n\t'values', dataValues, " +
+                "\n\t'refsLinkedTo', refsLinkedTo" +
+                "\n) AS json"
+                + " \nFROM my_data ";
         query = filterBy(query);
         query = addOrderBy(query);
         if (offset != null && limit >= 0) {
