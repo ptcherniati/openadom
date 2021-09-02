@@ -4,34 +4,30 @@
     <SubMenu :paths="subMenuPaths" :root="application.title" />
 
     <h1 class="title main-title">{{ dataTypeId }}</h1>
-    <div class="DataSetTableView-wrapper table-wrapper">
-      <table class="table is-striped">
-        <tr>
-          <td>
-            <b-button
-              icon-left="sort-amount-down"
-              :label="$t('applications.trier')"
-              type="is-primary"
-              @click="showSort = !showSort"
-              outlined
-            ></b-button>
-          </td>
-          <td>
-            <b-button
-              icon-left="filter"
-              :label="$t('applications.filter')"
-              type="is-primary"
-              @click="showFilter = !showFilter"
-              outlined
-            ></b-button>
-          </td>
-          <td>
-            <b-button icon-left="redo" type="is-danger" @click="reInit" outlined>{{
-              $t("dataTypesManagement.réinitialiser")
-            }}</b-button>
-          </td>
-        </tr>
-      </table>
+    <div class="columns">
+      <div class="column is-2-desktop is-4-tablet">
+        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined>{{
+          $t("dataTypesManagement.réinitialiser")
+        }}</b-button>
+      </div>
+      <div class="column is-2-desktop is-4-tablet">
+        <b-button
+          icon-left="sort-amount-down"
+          :label="$t('applications.trier')"
+          type="is-primary"
+          @click="showSort = !showSort"
+          outlined
+        ></b-button>
+      </div>
+      <div class="column is-2-desktop is-4-tablet">
+        <b-button
+          icon-left="filter"
+          :label="$t('applications.filter')"
+          type="is-primary"
+          @click="showFilter = !showFilter"
+          outlined
+        ></b-button>
+      </div>
     </div>
     <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails" width="500">
       <div class="card">
@@ -48,44 +44,15 @@
         </div>
       </div>
     </b-modal>
-    <div v-if="showFilter" class="notification">
-      <div class="columns">
-        <div
-          class="column"
-          v-for="(component, index) in variableComponents"
-          :key="`${index}`"
-          :component="component.component"
-          :variable="component.variable"
-        >
-          <b-field :label="component.variable+': '+component.component">
-            <b-field v-if="'date' === component.type || 'numeric' === component.type">
-              <CollapsibleInterval
-                  :variableComponent="component"
-                  @setting_interval="addSearch"
-              ></CollapsibleInterval>
-            </b-field>
-            <b-input
-                v-model="search[component.variable + '_' + component.component]"
-                icon="search"
-                icon-clickable
-                icon-pack="fas"
-                placeholder="Search..."
-                type="search"
-                @icon-click="addSearch(component)"
-            ></b-input>
-          </b-field>
-        </div>
-      </div>
-    </div>
     <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
       <div class="content">
         <div class="columns">
-          <div class="column is-9">
+          <div class="column is-9-desktop">
             <b-tabs
               v-model="activeTab"
               :multiline="true"
               type="is-boxed"
-              position="is-right"
+              position="is-centered"
               style="text-transform: capitalize; text-decoration: none"
             >
               <template v-for="variable in variables" class="row variableComponent">
@@ -196,6 +163,35 @@
         </div>
       </div>
     </div>
+    <div v-if="showFilter" class="notification">
+      <div class="columns is-multiline">
+        <div
+          class="column is-2-desktop is-4-tablet is-12-mobile"
+          v-for="(component, index) in variableComponents"
+          :key="`${index}`"
+          :component="component.component"
+          :variable="component.variable"
+        >
+          <b-field :label="component.variable + ': ' + component.component">
+            <b-field v-if="'date' === component.type || 'numeric' === component.type">
+              <CollapsibleInterval
+                :variableComponent="component"
+                @setting_interval="addSearch"
+              ></CollapsibleInterval>
+            </b-field>
+            <b-input
+              v-model="search[component.variable + '_' + component.component]"
+              icon="search"
+              icon-clickable
+              icon-pack="fas"
+              placeholder="Search..."
+              type="search"
+              @icon-click="addSearch(component)"
+            ></b-input>
+          </b-field>
+        </div>
+      </div>
+    </div>
     <div class="b-table">
       <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 750px">
         <table class="table is-striped">
@@ -238,11 +234,17 @@
                 :component="component.component"
                 :variable="component.variable"
               >
-                <span v-if="row[component.variable][component.component] &&component.checker && component.checker.pattern">
+                <span
+                  v-if="
+                    row[component.variable][component.component] &&
+                    component.checker &&
+                    component.checker.pattern
+                  "
+                >
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
                 <span v-else>
-                  {{row[component.variable][component.component]}}
+                  {{ row[component.variable][component.component] }}
                 </span>
                 <span v-if="getRefsLinkedToId(row, component)">
                   <b-button
@@ -371,7 +373,7 @@ export default class DataTypeTableView extends Vue {
     this.application = await this.applicationService.getApplication(this.applicationName);
     await this.initDatatype();
   }
-
+  // bug lors du filtre du tableau retour erreur 500
   async initDatatype() {
     this.showSort = false;
     const dataTypes = await this.dataService.getDataType(

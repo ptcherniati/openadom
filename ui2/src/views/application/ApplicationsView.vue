@@ -3,7 +3,7 @@
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
 
     <div class="columns columnPrincipale">
-      <div class="column is-3">
+      <div class="column is-3-desktop is-12-tablet">
         <section>
           <div v-if="canCreateApplication" class="card is-clickable">
             <div
@@ -89,10 +89,10 @@
           </div>
         </section>
       </div>
-      <div class="column">
-        <div class="columns is-9">
+      <div class="column is-9-desktop is-12-tablet">
+        <div class="columns">
           <div v-for="(application, index) in selectedApplications" v-bind:key="application.name">
-            <div class="column">
+            <div class="column is-3-desktop is-6-tablet is-12-mobile">
               <div
                 v-if="index >= (current - 1) * perPage && index < current * perPage"
                 class="applicationCard card"
@@ -204,7 +204,7 @@ export default class ApplicationsView extends Vue {
   localLang = localStorage.getItem("lang");
   // pagination variable
   current = 1;
-  perPage = 12;
+  perPage = 8;
   selectedApplications = [];
   // filtre variable
   filterName = "";

@@ -106,8 +106,8 @@ export default class CollapsibleTree extends Vue {
   stopPropagation(event) {
     event.stopPropagation();
   }
-  showChildren(){
-    this.displayChildren=true;
+  showChildren() {
+    this.displayChildren = true;
   }
 }
 </script>
