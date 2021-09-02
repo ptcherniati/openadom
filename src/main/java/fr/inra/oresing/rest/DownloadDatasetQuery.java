@@ -111,7 +111,7 @@ public class DownloadDatasetQuery {
                 .map(vck -> {
                     String format;
                     if ("numeric".equals(vck.type)) {
-                        format = "(nullif(datavalues->'%s'->'%s', ''))::numeric  %s";
+                        format = "(nullif(datavalues->'%s'->>'%s', ''))::numeric  %s";
                     } else {
                         format = "datavalues->'%s'->'%s' %s";
                     }
