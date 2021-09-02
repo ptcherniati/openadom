@@ -214,7 +214,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.variables").isArray())
                     .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
-                    .andExpect(jsonPath("$.variables").value(Stream.of("date", "site", "espece", "projet", "Nombre d'individus", "Couleur des individus").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.variables").value(Stream.of("date","site","Couleur des individus","Nombre d'individus","projet","espece").collect(Collectors.toList())))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
