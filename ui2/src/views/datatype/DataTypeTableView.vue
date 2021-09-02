@@ -45,6 +45,7 @@
       </div>
     </b-modal>
     <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
+      <h2>{{ $t("applications.trier") }}</h2>
       <div class="content">
         <div class="columns is-multiline">
           <div class="column is-9-desktop is-12-tablet">
@@ -164,17 +165,23 @@
       </div>
     </div>
     <div v-if="showFilter" class="notification">
+      <h2>{{ $t("applications.filter") }}</h2>
       <div class="columns is-multiline">
         <div
           class="column is-2-desktop is-6-tablet is-12-mobile"
-          v-for="variable in variables"
+          v-for="(variable, index) in variables"
           :key="variable.id"
           :variable="variable.id"
         >
-          <b-collapse class="card">
-            <div class="card-header">
-              <p role="button" class="card-header-title">{{ variable.id }}</p>
-            </div>
+          <b-collapse class="card" animation="slide" :open="isOpen == index" @open="isOpen = index">
+            <template #trigger="props">
+              <div class="card-header" role="button">
+                <p class="card-header-title">{{ variable.id }}</p>
+                <a class="card-header-icon">
+                  <b-icon :icon="props.open ? 'sort-down' : 'sort-up'"> </b-icon>
+                </a>
+              </div>
+            </template>
             <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
               <div
                 class="content"
@@ -201,6 +208,17 @@
                     @icon-click="addSearch(component)"
                     size="is-small"
                   ></b-input>
+<!--
+                    @keyup.native="RegExr = !RegExr"
+                    <b-button
+                      v-if="RegExr = true"
+                    v-model="params.variableComponentFilters.isRegExp"
+                    class="is-small"
+                    :data="params.variableComponentFilters.isRegExp"
+                    @click="params.variableComponentFilters.isRegExp = !params.variableComponentFilters.isRegExp"
+                    style="border-top: none; border-bottom: none; border-right: none"
+                    >.*</b-button
+                  >-->
                 </b-field>
               </div>
             </div>
@@ -353,6 +371,8 @@ export default class DataTypeTableView extends Vue {
   loadedReferences = {};
   currentReferenceDetail = { active: false };
   activeTab = 0;
+  isOpen = 0;
+  RegExr = false;
 
   async created() {
     await this.init();
