@@ -44,6 +44,8 @@ import {
   faRedo,
   faStream,
   faSortAmountDown,
+  faSortUp,
+  faSortDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -86,7 +88,9 @@ library.add(
   faCalendar,
   faRedo,
   faStream,
-  faSortAmountDown
+  faSortAmountDown,
+  faSortDown,
+  faSortUp
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

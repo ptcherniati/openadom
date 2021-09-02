@@ -101,3 +101,7 @@ a.dropdown-item {
   display: flex;
   align-items: center;
 }
+
+.icon.is-right.is-small.is-clickable {
+  color: $primary;
+}

@@ -46,8 +46,8 @@
     </b-modal>
     <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
       <div class="content">
-        <div class="columns">
-          <div class="column is-9-desktop">
+        <div class="columns is-multiline">
+          <div class="column is-9-desktop is-12-tablet">
             <b-tabs
               v-model="activeTab"
               :multiline="true"
@@ -101,7 +101,7 @@
               </template>
             </b-tabs>
           </div>
-          <div class="column is-3">
+          <div class="column is-3-desktop is-12-tablet">
             <draggable class="rows">
               <div
                 v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
@@ -122,9 +122,9 @@
                       <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
                     </span>
                     <span class="tag is-primary orderLabel" style="font-size: 1rem">
-                      {{ variableComponent.order }} ->
                       {{ variableComponent.variableComponentKey.variable }} :
-                      {{ variableComponent.variableComponentKey.component }}
+                      {{ variableComponent.variableComponentKey.component }} ->
+                      {{ variableComponent.order }}
                     </span>
                     <a
                       class="tag is-delete is-primary"
@@ -166,29 +166,45 @@
     <div v-if="showFilter" class="notification">
       <div class="columns is-multiline">
         <div
-          class="column is-2-desktop is-4-tablet is-12-mobile"
-          v-for="(component, index) in variableComponents"
-          :key="`${index}`"
-          :component="component.component"
-          :variable="component.variable"
+          class="column is-2-desktop is-6-tablet is-12-mobile"
+          v-for="variable in variables"
+          :key="variable.id"
+          :variable="variable.id"
         >
-          <b-field :label="component.variable + ': ' + component.component">
-            <b-field v-if="'date' === component.type || 'numeric' === component.type">
-              <CollapsibleInterval
-                :variableComponent="component"
-                @setting_interval="addSearch"
-              ></CollapsibleInterval>
-            </b-field>
-            <b-input
-              v-model="search[component.variable + '_' + component.component]"
-              icon="search"
-              icon-clickable
-              icon-pack="fas"
-              placeholder="Search..."
-              type="search"
-              @icon-click="addSearch(component)"
-            ></b-input>
-          </b-field>
+          <b-collapse class="card">
+            <div class="card-header">
+              <p role="button" class="card-header-title">{{ variable.id }}</p>
+            </div>
+            <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
+              <div
+                class="content"
+                v-for="(component, index) in variableComponents"
+                :key="`${index}`"
+                :component="component.component"
+                :variable="component.variable"
+                style="margin-bottom: 10px"
+              >
+                <b-field v-if="variable.id === component.variable" :label="component.component">
+                  <b-field v-if="'date' === component.type || 'numeric' === component.type">
+                    <CollapsibleInterval
+                      :variableComponent="component"
+                      @setting_interval="addSearch"
+                    ></CollapsibleInterval>
+                  </b-field>
+                  <b-input
+                    v-model="search[component.variable + '_' + component.component]"
+                    icon-right="search"
+                    icon-right-clickable
+                    icon-right-pack="fas"
+                    placeholder="Search..."
+                    type="search"
+                    @icon-click="addSearch(component)"
+                    size="is-small"
+                  ></b-input>
+                </b-field>
+              </div>
+            </div>
+          </b-collapse>
         </div>
       </div>
     </div>
@@ -373,7 +389,7 @@ export default class DataTypeTableView extends Vue {
     this.application = await this.applicationService.getApplication(this.applicationName);
     await this.initDatatype();
   }
-  // bug lors du filtre du tableau retour erreur 500
+
   async initDatatype() {
     this.showSort = false;
     const dataTypes = await this.dataService.getDataType(

@@ -124,7 +124,11 @@
     },
     "dataTypesManagement": {
         "data-types": "Data types",
-        "consult-authorization": "Consult authorizations"
+        "consult-authorization": "Consult authorizations",
+        "réinitialiser": "Reset",
+        "ASC": "ASC",
+        "DESC": "DESC",
+        "validate": "Validate"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Add an authorization",
