@@ -3,6 +3,8 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
+import fr.inra.oresing.model.BinaryFileDataset;
+import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.OreSiEntity;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +13,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements InitializingBean {
@@ -108,7 +108,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         return find(property + " = :" + property, new MapSqlParameterSource(property, value));
     }
 
-    private List<T> find(String whereClause, SqlParameterSource sqlParameterSource) {
+    protected List<T> find(String whereClause, SqlParameterSource sqlParameterSource) {
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t";
         if (whereClause != null) {
             sql += " WHERE " + whereClause;

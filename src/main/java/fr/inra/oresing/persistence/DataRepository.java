@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.rest.DownloadDatasetQuery;
@@ -44,6 +45,12 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         String query = downloadDatasetQuery.buildQuery(toMergeDataGroupsQuery);
         List result = getNamedParameterJdbcTemplate().query(query, downloadDatasetQuery.getParamSource(), getJsonRowMapper());
         return (List<DataRow>) result;
+    }
+
+    public int removeByFileId(UUID fileId) {
+        String query = "DELETE FROM " + getTable().getSqlIdentifier() +
+                "\n  WHERE binaryfile = :binaryFile";
+        return getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("binaryFile", fileId));
     }
 
     public String getSqlToMergeData(DownloadDatasetQuery downloadDatasetQuery) {

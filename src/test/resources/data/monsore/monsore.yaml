@@ -300,6 +300,9 @@ dataTypes:
             component: value
     authorization:
       authorizationScopes:
+        projet:
+          variable: projet
+          component: value
         localization:
           variable: site
           component: chemin

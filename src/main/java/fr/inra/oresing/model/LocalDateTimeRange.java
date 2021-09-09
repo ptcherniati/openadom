@@ -224,3 +224,4 @@ public class LocalDateTimeRange {
         LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter);
     }
 }
+

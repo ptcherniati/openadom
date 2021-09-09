@@ -35,10 +35,18 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -60,6 +68,8 @@ public class OreSiService {
      */
     private static final String LTREE_SEPARATOR = ".";
     private static final String KEYCOLUMN_SEPARATOR = "__";
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
+    public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Autowired
     private OreSiRepository repo;
@@ -93,6 +103,10 @@ public class OreSiService {
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
+        if (binaryFile.getParams() != null) {
+            binaryFile.getParams().createuser = request.getRequestClient().getId();
+            binaryFile.getParams().createdate = LocalDateTime.now().toString();
+        }
         UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
         return result;
     }
@@ -427,34 +441,71 @@ public class OreSiService {
         return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
-    @Value
-    private static class RowWithData {
-        int lineNumber;
-        Map<VariableComponentKey, String> datum;
+    public List<BinaryFile> getFilesOnRepository(String nameOrId, String datatype, BinaryFileDataset fileDatasetID, boolean overlap) {
+        Application app = getApplication(nameOrId);
+        return repo.getRepository(app).binaryFile().findByBinaryFileDataset(datatype, fileDatasetID, overlap);
     }
-
-    @Value
-    private static class ParsedCsvRow {
-        int lineNumber;
-        List<Map.Entry<String, String>> columns;
-    }
-
 
     /**
      * Insérer un jeu de données.
      */
-    public UUID addData(String nameOrId, String dataType, MultipartFile file) throws IOException, InvalidDatasetContentException {
+    public UUID addData(String nameOrId, String dataType, MultipartFile file, FileOrUUID params) throws IOException, InvalidDatasetContentException {
         List<CsvRowValidationCheckResult> errors = new LinkedList<>();
         authenticationService.setRoleForClient();
 
         Application app = getApplication(nameOrId);
-        UUID fileId = storeFile(app, file);
-
+        Set<BinaryFile> filesToStore = new HashSet<>();
+        BinaryFile storedFile = loadOrCreateFile(file, params, app);
+        if (params != null && !params.topublish) {
+            if (storedFile.getParams() != null && storedFile.getParams().published) {
+                storedFile.getParams().published = false;
+                filesToStore.add(storedFile);
+                unPublishVersions(app, filesToStore);
+            }
+            return storedFile.getId();
+        }
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
+        InvalidDatasetContentException.checkErrorsIsEmpty(findPublishedVersion(nameOrId, dataType, params, filesToStore, true));
+        publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params==null?null:params.binaryfiledataset);
+        InvalidDatasetContentException.checkErrorsIsEmpty(errors);
+        relationalService.onDataUpdate(app.getName());
+        unPublishVersions(app, filesToStore);
+        storePublishedVersion(app, filesToStore, storedFile);
+        return storedFile.getId();
+    }
 
-        try (InputStream csv = file.getInputStream()) {
+    private void storePublishedVersion(Application app, Set<BinaryFile> filesToStore, BinaryFile storedFile) {
+        if (storedFile != null) {
+            if (storedFile.getParams() == null) {
+                storedFile.setParams(BinaryFileInfos.EMPTY_INSTANCE());
+            }
+            storedFile.getParams().published = true;
+            storedFile.getParams().publidheduser = request.getRequestClient().getId();
+            storedFile.getParams().publidheddate = LocalDateTime.now().toString();
+            repo.getRepository(app).binaryFile().store(storedFile);
+            filesToStore.add(storedFile);
+        }
+    }
+
+    private void unPublishVersions(Application app, Set<BinaryFile> filesToStore) {
+        filesToStore.stream()
+                .forEach(f -> {
+                    repo.getRepository(app).data().removeByFileId(f.getId());
+                    f.getParams().published = false;
+                    repo.getRepository(app).binaryFile().store(f);
+                });
+    }
+
+    private void publishVersion(String dataType,
+                                List<CsvRowValidationCheckResult> errors,
+                                Application app,
+                                BinaryFile storedFile,
+                                Configuration.DataTypeDescription dataTypeDescription,
+                                Configuration.FormatDescription formatDescription,
+                                BinaryFileDataset binaryFileDataset) throws IOException {
+        try (InputStream csv = new ByteArrayInputStream(storedFile.getData())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT
                     .withDelimiter(formatDescription.getSeparator())
                     .withSkipHeaderRecord();
@@ -474,13 +525,64 @@ public class OreSiService {
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
                     .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions))
-                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
+                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
             repo.getRepository(app).data().storeAll(dataStream);
         }
-        InvalidDatasetContentException.checkErrorsIsEmpty(errors);
-        relationalService.onDataUpdate(app.getName());
-        return fileId;
+    }
+
+    private List<CsvRowValidationCheckResult> findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps) {
+        if (params != null) {
+            if (searchOverlaps) {
+                List<BinaryFile> overlapingFiles = getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset, true);
+                if (!overlapingFiles.isEmpty()) {
+                    return List.of(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
+                            "overlappingpublishedversion",
+                            ImmutableMap.of("fileOrUUID", params, "files",
+                                    overlapingFiles.stream()
+                                            .map(f->f.getParams().binaryFiledataset.toString())
+                                            .collect(Collectors.toSet())
+                            )), -1));
+                }
+            }
+            getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset, false)
+                    .stream()
+                    .filter(f -> f.getParams().published)
+                    .forEach(f -> {
+                        f.getParams().published = false;
+                        f.getParams().publidheduser = null;
+                        f.getParams().publidheddate = null;
+                        filesToStore.add(f);
+                    });
+        }
+        return new LinkedList<>();
+    }
+
+    @Nullable
+    private BinaryFile loadOrCreateFile(MultipartFile file, FileOrUUID params, Application app) {
+        BinaryFile storedFile = Optional.ofNullable(params)
+                .map(param -> param.getFileid())
+                .map(uuid -> repo.getRepository(app).binaryFile().tryFindByIdWithData(uuid).orElse(null))
+                .orElseGet(() -> {
+                    UUID fileId = null;
+                    try {
+                        fileId = storeFile(app, file);
+                    } catch (IOException e) {
+                        return null;
+                    }
+                    BinaryFile binaryFile = repo.getRepository(app).binaryFile().tryFindByIdWithData(fileId).orElse(null);
+                    if (binaryFile == null) {
+                        return null;
+                    }
+                    BinaryFileInfos binaryFileInfos = BinaryFileInfos.EMPTY_INSTANCE();
+                    if (params != null) {
+                        binaryFileInfos.binaryFiledataset = params.binaryfiledataset;
+                        binaryFile.setParams(binaryFileInfos);
+                    }
+                    fileId = repo.getRepository(app).binaryFile().store(binaryFile);
+                    return repo.getRepository(app).binaryFile().tryFindByIdWithData(fileId).orElse(null);
+                });
+        return storedFile;
     }
 
     /**
@@ -491,7 +593,7 @@ public class OreSiService {
      * @param fileId
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors) {
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
@@ -504,7 +606,7 @@ public class OreSiService {
                 .collect(MoreCollectors.onlyElement())
                 .getPattern();
 
-        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, timeScopeColumnPattern);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, timeScopeColumnPattern, binaryFileDataset);
     }
 
     /**
@@ -519,7 +621,14 @@ public class OreSiService {
      * @param timeScopeColumnPattern
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, ImmutableSet<LineChecker> lineCheckers, Configuration.DataTypeDescription dataTypeDescription, String timeScopeColumnPattern) {
+    private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
+                                                                               String dataType,
+                                                                               UUID fileId,
+                                                                               List<CsvRowValidationCheckResult> errors,
+                                                                               ImmutableSet<LineChecker> lineCheckers,
+                                                                               Configuration.DataTypeDescription dataTypeDescription,
+                                                                               String timeScopeColumnPattern,
+                                                                               BinaryFileDataset binaryFileDataset) {
         return rowWithData -> {
             Map<VariableComponentKey, String> values = rowWithData.getDatum();
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
@@ -542,6 +651,7 @@ public class OreSiService {
                 } else {
                     rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
                 }
+
             });
 
             if (!rowErrors.isEmpty()) {
@@ -558,7 +668,8 @@ public class OreSiService {
                 checkHierarchicalKeySyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
             });
-
+            checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
+            checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
 
@@ -598,6 +709,60 @@ public class OreSiService {
 
             return dataStream;
         };
+    }
+
+    private void checkTimescopRangeInDatasetRange(LocalDateTimeRange timeScope,
+                                                  List<CsvRowValidationCheckResult> errors,
+                                                  BinaryFileDataset binaryFileDataset,
+                                                  int rowNumber) {
+        if (binaryFileDataset == null) {
+            return;
+        }
+        LocalDateTime from = LocalDate.from(DATE_TIME_FORMATTER.parse(binaryFileDataset.getFrom())).atStartOfDay();
+        LocalDateTime to = LocalDate.from(DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo()))
+                .plus(1, ChronoUnit.DAYS).atStartOfDay();
+        if (!LocalDateTimeRange.between(from, to).getRange().encloses(timeScope.getRange())) {
+            errors.add(
+                    new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
+                            "timerangeoutofinterval",
+                            ImmutableMap.of(
+                                    "from",DATE_FORMATTER_DDMMYYYY.format(from) ,
+                                    "to", DATE_TIME_FORMATTER.format(to),
+                                    "value", DATE_FORMATTER_DDMMYYYY.format(timeScope.getRange().lowerEndpoint())
+                            )
+                    ),
+                            rowNumber)
+            );
+        }
+
+    }
+
+
+    private void checkRequiredAuthorizationInDatasetRange(Map<String, String> requiredAuthorizations,
+                                                          List<CsvRowValidationCheckResult> errors,
+                                                          BinaryFileDataset binaryFileDataset,
+                                                          int rowNumber) {
+        if (binaryFileDataset == null) {
+            return;
+        }
+        binaryFileDataset.getRequiredauthorizations().entrySet().stream()
+                .forEach(entry -> {
+                    if (!requiredAuthorizations.get(entry.getKey()).equals(entry.getValue())) {
+                        errors.add(
+                                new CsvRowValidationCheckResult(
+                                        DefaultValidationCheckResult.error(
+                                                "badauthorizationscopeforrepository",
+                                                ImmutableMap.of(
+                                                        "authorization", entry.getKey(),
+                                                        "expectedValue", entry.getValue(),
+                                                        "givenValue", requiredAuthorizations.get(entry.getKey())
+                                                )
+                                        ),
+                                        rowNumber)
+                        );
+                    }
+                });
+
     }
 
     /**
@@ -754,7 +919,6 @@ public class OreSiService {
         };
     }
 
-
     /**
      * build the function Dispatch ParsedCsvRow into RowWithData
      *
@@ -768,7 +932,6 @@ public class OreSiService {
             return buildLineAsMapWhenRepeatedColumnsToRecordsFn(formatDescription);
         }
     }
-
 
     /**
      * build the function that diplay the line in a {@link ParsedCsvRow}
@@ -905,8 +1068,8 @@ public class OreSiService {
                             .map(variableComponentSelect -> {
                                 Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
                                 String value = components.getOrDefault(variableComponentSelect.getComponent(), "");
-                                if(dateLineCheckerVaraibleComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())){
-                                        value = DateLineChecker.sortableDateToFormattedDate(value);
+                                if (dateLineCheckerVaraibleComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())) {
+                                    value = DateLineChecker.sortableDateToFormattedDate(value);
                                 }
                                 return value;
                             })
@@ -954,7 +1117,7 @@ public class OreSiService {
                                                 vc = ((DateLineChecker) c).getVariableComponentKey();
                                             } else if (c instanceof IntegerChecker) {
                                                 vc = ((IntegerChecker) c).getVariableComponentKey();
-                                            } else if(c instanceof FloatChecker){
+                                            } else if (c instanceof FloatChecker) {
                                                 vc = ((FloatChecker) c).getVariableComponentKey();
                                             } else {
                                                 vc = ((ReferenceLineChecker) c).getVariableComponentKey();
@@ -1052,8 +1215,31 @@ public class OreSiService {
         return optionalBinaryFile;
     }
 
+    public boolean removeFile(String name, UUID id) {
+        authenticationService.setRoleForClient();
+        BinaryFile binaryFile = repo.getRepository(name).binaryFile().findById(id);
+        if (binaryFile.getParams() != null && binaryFile.getParams().published) {
+            Application app = getApplication(binaryFile.getApplication().toString());
+            unPublishVersions(app, Set.of(binaryFile));
+        }
+        boolean deleted = repo.getRepository(name).binaryFile().delete(id);
+        return deleted;
+    }
+
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
+    }
+
+    @Value
+    private static class RowWithData {
+        int lineNumber;
+        Map<VariableComponentKey, String> datum;
+    }
+
+    @Value
+    private static class ParsedCsvRow {
+        int lineNumber;
+        List<Map.Entry<String, String>> columns;
     }
 }

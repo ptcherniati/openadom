@@ -16,10 +16,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -88,6 +85,51 @@ public class Fixtures {
 
     public String getPemDataResourceName() {
         return "/data/monsore/data-pem.csv";
+    }
+
+    public String getPemRepositoryDataResourceName(String projet, String site) {
+        return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, site);
+    }
+
+    public String getPemRepositoryParamsWithId(String projet, String site, String fileId, boolean toPublish) {
+        return String.format("{\n" +
+                "   \"fileid\":\"%s\",\n" +
+                "   \"binaryfiledataset\":{\n" +
+                "      \"requiredauthorizations\":{\n" +
+                "         \"projet\":\"projet_%s\",\n" +
+                "         \"localization\":\"%s__p1\"\n" +
+                "      },\n" +
+                "      \"from\":\"1984-01-01 00:00:00\",\n" +
+                "      \"to\":\"1984-01-05 00:00:00\"\n" +
+                "   },\n" +
+                "   \"topublish\":%s\n" +
+                "}", fileId, projet, site, toPublish);
+    }
+
+    public String getPemRepositoryParams(String projet, String site, boolean toPublish) {
+        return String.format("{\n" +
+                "   \"fileid\":null,\n" +
+                "   \"binaryfiledataset\":{\n" +
+                "      \"requiredauthorizations\":{\n" +
+                "         \"projet\":\"projet_%s\",\n" +
+                "         \"localization\":\"%s__p1\"\n" +
+                "      },\n" +
+                "      \"from\":\"1984-01-01 00:00:00\",\n" +
+                "      \"to\":\"1984-01-05 00:00:00\"\n" +
+                "   },\n" +
+                "   \"topublish\":%s\n" +
+                "}", projet, site, toPublish);
+    }
+
+    public String getPemRepositoryId(String projet, String site) {
+        return String.format("{\n" +
+                "      \"requiredauthorizations\":{\n" +
+                "         \"projet\":\"projet_%s\",\n" +
+                "         \"localization\":\"%s__p1\"\n" +
+                "      },\n" +
+                "      \"from\":\"1984-01-01 00:00:00\",\n" +
+                "      \"to\":\"1984-01-05 00:00:00\"\n" +
+                "   }", projet, site);
     }
 
     public String getAcbbApplicationName() {

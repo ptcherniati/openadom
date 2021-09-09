@@ -5,12 +5,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
+import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,6 +38,27 @@ public class OreSiResources {
 
     @Autowired
     private OreSiService service;
+
+    @DeleteMapping(value = "/applications/{name}/file/{id}")
+    public ResponseEntity<String> removeFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
+        Optional<BinaryFile> optionalBinaryFile = service.getFile(name, id);
+        boolean deleted = service.removeFile(name, id);
+        if (optionalBinaryFile.isPresent()) {
+            return ResponseEntity.ok(id.toString());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+
+    }
+
+    @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<BinaryFile>> getFilesOnRepository(@PathVariable("nameOrId") String nameOrId,
+                                                                 @PathVariable("dataType") String dataType,
+                                                                 @RequestParam("repositoryId") String repositoryId) {
+        BinaryFileDataset binaryFileDataset = deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
+        List<BinaryFile> files = service.getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false);
+        return ResponseEntity.ok(files);
+    }
 
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
@@ -231,8 +250,8 @@ public class OreSiResources {
                 .map(DataRow::getValues)
                 .map(Map::keySet)
                 .flatMap(Set::stream)
-                .sorted((a,b)-> {
-                    if(a.equals(b)){
+                .sorted((a, b) -> {
+                    if (a.equals(b)) {
                         return 0;
                     }
                     return orderedVariables
@@ -298,13 +317,39 @@ public class OreSiResources {
         }
     }
 
-    @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createData(@PathVariable("nameOrId") String nameOrId, @PathVariable("dataType") String dataType, @RequestParam("file") MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
+    private FileOrUUID deserialiseFileOrUUIDQuery(String datatype, String params) {
         try {
-            UUID fileId = service.addData(nameOrId, dataType, file);
+            FileOrUUID fileOrUUID = params != null ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
+            if(fileOrUUID.binaryfiledataset.getDatatype() == null){
+                fileOrUUID.binaryfiledataset.setDatatype(datatype);
+            }
+            return fileOrUUID;
+        } catch (IOException e) {
+            throw new BadFileOrUUIDQuery(e.getMessage());
+        }
+    }
+
+    private BinaryFileDataset deserialiseBinaryFileDatasetQuery(String datatype, String params) {
+        try {
+            BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
+            if(binaryFileDataset.getDatatype() == null){
+                binaryFileDataset.setDatatype(datatype);
+            }
+            return  binaryFileDataset;
+        } catch (IOException e) {
+            throw new BadBinaryFileDatasetQuery(e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createData(@PathVariable("nameOrId") String nameOrId,
+                                        @PathVariable("dataType") String dataType,
+                                        @RequestParam(value = "file", required = false) MultipartFile file,
+                                        @RequestParam(value = "params", required = false) String params) throws IOException {
+        try {
+            FileOrUUID binaryFiledataset = Strings.isNullOrEmpty(params) ? null : deserialiseFileOrUUIDQuery(dataType, params);
+            Preconditions.checkArgument(file!= null || (binaryFiledataset !=null && binaryFiledataset.fileid!=null), "le fichier ou params.fileid est requis");
+            UUID fileId = service.addData(nameOrId, dataType, file, binaryFiledataset);
             String uri = UriUtils.encodePath(String.format("/applications/%s/file/%s", nameOrId, fileId), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of("fileId", fileId.toString()));
         } catch (InvalidDatasetContentException e) {

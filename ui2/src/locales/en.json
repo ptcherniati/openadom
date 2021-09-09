@@ -112,7 +112,10 @@
         "invalidInteger": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> must be an integer.",
         "invalidFloat": "For the component : <code>{variableComponentKey}</code> the value <code>{value}</code> must be a float.",
         "checkerExpressionReturnedFalse": "The following checker expression isn't fulfilled : <code>{expression}</code>",
-        "requiredValue": "For the component : <code>{variableComponentKey}</code> the value can't be null."
+        "requiredValue": "For the component : <code>{variableComponentKey}</code> the value can't be null.",
+        "timerangeoutofinterval": "The date <code> {value} </code> is incompatible with the date range of the deposit. It must be between <code> {from} </code> and <code> {to} </code>. ",
+        "badauthorizationscopeforrepository": "Authorization <code> {authorization} </code>) must be <code> {expectedValue} / code> and not <code> {givenValue} </code>",
+        "overlappingpublishedversion": "There is a deposited version in the deposit dates have an overlapping period with the deposited version. <code> {overlapingFiles] </code>"
     },
     "referencesManagement": {
         "actions": "Actions",
