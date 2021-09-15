@@ -22,7 +22,7 @@ export default class PageView extends Vue {
 
   created() {
     const authenticatedUser = this.loginService.getAuthenticatedUser();
-    if (!authenticatedUser || !authenticatedUser.id) {
+    if (!authenticatedUser?.id) {
       this.$router.push("/login").catch(() => {});
     }
   }

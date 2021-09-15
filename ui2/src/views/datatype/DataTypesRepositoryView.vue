@@ -1,0 +1,372 @@
+<template>
+  <div>
+    <PageView class="with-submenu">
+      <SubMenu :root="applicationName" :paths="subMenuPaths" />
+      <h1 class="title main-title">{{ title }}</h1>
+      <div class="card">
+        <div class="card-header">
+          <span v-for="(authReference, key) in authReferences" :key="key">
+            <span>{{ key }}</span>
+            <b-select placeholder="Select a name" @input="selectAuthorization(key, $event)">
+              <option
+                v-for="option in authReference.referenceValues"
+                :key="option.naturalKey"
+                :value="option.naturalKey"
+              >
+                {{ option.naturalKey }}
+              </option>
+            </b-select>
+            <span></span>
+          </span>
+        </div>
+        <div class="card-content" v-if="isAuthorisationsSelected()">
+          <form class="card">
+            <h1 class="card-header">
+              {{
+                Object.entries(this.selected.requiredauthorizations)
+                  .map((e) => e[0] + " : " + e[1])
+                  .join(", ")
+              }}
+            </h1>
+            <b-collapse :open="false">
+              <template #trigger>
+                <b-button icon-left="upload" label="Déposer une version sur ce dépot"></b-button>
+              </template>
+              <div class="card-content">
+                <b-upload v-model="file" class="file-label">
+                  <span class="file-cta">
+                    <b-icon class="file-icon" icon="upload"></b-icon>
+                    <span class="file-label">Choisir un fichier</span>
+                  </span>
+                  <span class="file-name" v-if="file">
+                    {{ file.name }}
+                  </span>
+                </b-upload>
+
+                <b-field>
+                  <input type="date" v-model="startDate" icon-left="calendar-today" />
+                </b-field>
+
+                <b-field>
+                  <input type="date" v-model="endDate" icon-left="calendar-today" />
+                </b-field>
+                <b-button @click="upload">Envoyer</b-button>
+              </div>
+            </b-collapse>
+          </form>
+          <table class="datasetsPanel" v-if="datasets && Object.keys(datasets).length">
+            <caption>
+              Liste des jeux de données sur ce dépôt
+            </caption>
+            <tr>
+              <th align>Période</th>
+              <th align>*</th>
+              <th align>publication</th>
+            </tr>
+            <tr
+              @click="showDatasets(dataset)"
+              v-for="(dataset, periode) in datasets"
+              :key="dataset.id"
+            >
+              <td align>{{ periode }}</td>
+              <td align>{{ Object.keys(dataset.datasets).length }}</td>
+              <td align>{{ dataset.publication }}</td>
+            </tr>
+          </table>
+          <div>toto<span v-if="currentDataset && currentDataset.length">tutut</span>iti</div>
+          <table class="datasetsPanel" v-if="currentDataset && currentDataset.length">
+            <caption>
+              Liste des versions pour la période
+              {{
+                currentDataset[0].periode
+              }}>
+            </caption>
+            <tr>
+              <th align>Taille</th>
+              <th align>Crée le :</th>
+              <th align>par :</th>
+              <th align>Publié le :</th>
+              <th align>par :</th>
+              <th align>publication</th>
+              <th align>supprimer</th>
+            </tr>
+            <tr v-for="dataset in currentDataset" :key="dataset.id">
+              <td align>{{ dataset.size }}</td>
+              <td align>{{ UTCToString(dataset.params.createdate) }}</td>
+              <td align>{{ dataset.createuser }}</td>
+              <td align>{{ UTCToString(dataset.params.publisheddate) }}</td>
+              <td align>{{ dataset.publisheduser }}</td>
+              <td align>
+                <b-field>
+                  <b-button
+                    type="is-primary is-light"
+                    size="is-large"
+                    :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                    @click="publish(dataset, !dataset.params.published)"
+                  />
+                </b-field>
+              </td>
+              <td>
+                <b-field>
+                  <b-button
+                    type="is-danger"
+                    size="is-medium"
+                    icon-right="trash-alt"
+                    @click="remove(dataset, dataset.params.published)"
+                  />
+                </b-field>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </PageView>
+  </div>
+</template>
+
+<script>
+import { Component, Prop, Vue } from "vue-property-decorator";
+import PageView from "@/views/common/PageView.vue";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
+import { AlertService } from "@/services/AlertService";
+import { DataService } from "@/services/rest/DataService";
+import { FileService } from "@/services/rest/FileService";
+import { ReferenceService } from "@/services/rest/ReferenceService";
+import { ErrorsService } from "@/services/ErrorsService";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { BinaryFileDataset } from "@/model/file/BinaryFileDataset";
+import { BinaryFile } from "@/model/file/BinaryFile";
+import { FileOrUUID } from "@/model/file/FileOrUUID";
+import { Dataset } from "@/model/file/Dataset";
+
+@Component({
+  components: { CollapsibleTree, PageView, SubMenu },
+})
+export default class DataTypesRepositoryView extends Vue {
+  @Prop() applicationName;
+  @Prop() dataTypeId;
+
+  referenceService = ReferenceService.INSTANCE;
+  fileService = FileService.INSTANCE;
+  applicationService = ApplicationService.INSTANCE;
+  alertService = AlertService.INSTANCE;
+  dataService = DataService.INSTANCE;
+  errorsService = ErrorsService.INSTANCE;
+
+  subMenuPaths = [];
+  title = "";
+  applications = [];
+  configuration = {};
+  authorizations = [];
+  authReferences = {};
+  selected = null;
+  datasets = {};
+  file = null;
+  startDate = null;
+  endDate = null;
+  currentDataset = null;
+  mounted() {
+    this.$on("authorizationChanged", this.updateDatasets);
+    this.$on("uploaded", this.updateDatasets);
+    this.$on("published", this.updateDatasets);
+    this.$on("deleted", this.updateDatasets);
+    this.$on("listFilesUploaded", this.getDatasetMap);
+  }
+
+  created() {
+    const prevPath = `/applications/${this.applicationName}/dataTypes`;
+    this.subMenuPaths = [
+      new SubMenuPath(
+        this.dataTypeId.toLowerCase(),
+        () => {},
+        () => this.$router.push(prevPath)
+      ),
+    ];
+
+    this.init();
+  }
+
+  async init() {
+    this.title = `Gestion des jeux de données de ${this.dataTypeId}`;
+
+    try {
+      this.applications = await this.applicationService.getApplications();
+      if (!this.applications?.length) {
+        return;
+      }
+      this.configuration = this.applications
+        .filter((a) => a.name == this.applicationName)
+        .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
+      this.authorizations = this.configuration.authorization.authorizationScopes;
+      let ret = {};
+      for (let auth in this.authorizations) {
+        let vc = this.authorizations[auth];
+        var reference =
+          this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
+        let ref = await this.referenceService.getReferenceValues(this.applicationName, reference);
+        ret[auth] = ref;
+      }
+      this.authReferences = ret;
+      this.selected = new BinaryFileDataset({
+        datatype: this.dataTypeId,
+        requiredauthorizations: Object.keys(this.authReferences).reduce((acc, auth) => {
+          acc[auth] = null;
+          return acc;
+        }, {}),
+        from: "",
+        to: "",
+      });
+    } catch (error) {
+      this.alertService.toastServerError();
+    }
+  }
+  UTCToString(utcString) {
+    return utcString && utcString.replace(/(\d{4})-(\d{2})-(\d{2}).*/, "$3/$2/$1");
+  }
+  periodeToString(dataset) {
+    return this.periodeToStringForBinaryFileDataset(dataset.params.binaryFiledataset);
+  }
+  periodeToStringForBinaryFileDataset(binaryFiledataset) {
+    return (
+      "du " +
+      this.dateToString(binaryFiledataset.from) +
+      " au " +
+      this.dateToString(binaryFiledataset.to)
+    );
+  }
+  async showDatasets(dataset) {
+    if (!dataset) {
+      this.currentDataset = null;
+    }
+    this.currentDataset = dataset.datasets;
+  }
+  async upload() {
+    if (this.file && this.startDate && this.endDate) {
+      var fileOrId = new FileOrUUID(
+        null,
+        new BinaryFileDataset(
+          this.dataTypeId,
+          this.selected.requiredauthorizations,
+          /(.{10})T(.{8}).*/
+            .exec(new Date(this.startDate).toISOString())
+            .filter((a, i) => i != 0)
+            .join(" "),
+          /(.{10})T(.{8}).*/
+            .exec(new Date(this.endDate).toISOString())
+            .filter((a, i) => i != 0)
+            .join(" ")
+        ),
+        false
+      );
+      var uuid = await this.dataService.addData(
+        this.applicationName,
+        this.dataTypeId,
+        this.file,
+        fileOrId
+      );
+      this.$emit("uploaded", uuid);
+    }
+  }
+  async publish(dataset, pusblished) {
+    dataset.params.published = pusblished;
+    var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
+    var uuid = await this.dataService.addData(
+      this.applicationName,
+      this.dataTypeId,
+      null,
+      fileOrId
+    );
+    this.$emit("published", uuid.fileId);
+  }
+  selectAuthorization(key, value) {
+    this.selected.requiredauthorizations[key] = value;
+    this.datasets = this.currentDataset = null;
+    if (this.isAuthorisationsSelected()) {
+      this.$emit("authorizationChanged");
+    }
+  }
+  dateToString(dateString) {
+    var today = new Date(dateString);
+    var dd = String(today.getDate()).padStart(2, "0");
+    var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+    var yyyy = today.getFullYear();
+
+    today = mm + "/" + dd + "/" + yyyy;
+    return today;
+  }
+  isAuthorisationsSelected() {
+    return (
+      this.selected && Object.values(this.selected.requiredauthorizations).every((v) => v?.length)
+    );
+  }
+  async updateDatasets(uuid) {
+    if (this.isAuthorisationsSelected()) {
+      let datasetsList = await this.fileService.getFiles(
+        this.applicationName,
+        this.dataTypeId,
+        this.selected
+      );
+      if (!datasetsList || !datasetsList.length) {
+        this.datasets = {};
+        this.currentDataset = null;
+        return;
+      }
+      this.$emit("listFilesUploaded", {
+        binaryFileList: datasetsList.map((d) => new BinaryFile(d)),
+        uuid: uuid,
+      });
+    }
+  }
+  getDatasetMap(fileList) {
+    var datasetMap = {};
+    for (var index in fileList.binaryFileList) {
+      var file = fileList.binaryFileList[index];
+      var currentDataset = datasetMap[this.periodeToString(file)] || new Dataset(file);
+      currentDataset.addDataset(file);
+      datasetMap[this.periodeToString(file)] = currentDataset;
+    }
+    this.datasets = datasetMap;
+    if (fileList.uuid) {
+      var periode =
+        fileList.uuid &&
+        this.datasets &&
+        Object.values(this.datasets).find((e) => e.findByUUID(fileList.uuid))?.periode;
+      this.currentDataset = this.datasets[periode].datasets;
+    }
+    return this.datasets;
+  }
+  remove(dataset, isPublished) {
+    this.$buefy.dialog.confirm({
+      message:
+        (isPublished
+          ? "<b>La version contient des données publiées.</b><br /> La supprimer entraînera la suppression de ces données.<br /><br />?"
+          : "") + "Etes vous sûr de vouloir supprimer cette version?",
+      onConfirm: () => this.deleteFile(dataset.id),
+    });
+  }
+  async deleteFile(uuid) {
+    var deleted = await this.fileService.remove(this.applicationName, uuid);
+    this.$emit("deleted", deleted);
+  }
+}
+</script>
+
+<style lang="scss">
+.DataTypesRepositoryView-message {
+  .media-content {
+    width: calc(100% - 3em - 4rem);
+    overflow-wrap: break-word;
+  }
+}
+table.datasetsPanel {
+  width: 50%;
+}
+table.datasetsPanel,
+table.datasetsPanel th,
+table.datasetsPanel td {
+  border: 1px solid rgb(94, 65, 219);
+  border-collapse: collapse;
+  text-align: center;
+}
+</style>

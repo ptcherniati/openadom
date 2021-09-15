@@ -8,6 +8,7 @@ import lombok.ToString;
 import org.postgresql.util.Base64;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.Date;
 import java.util.UUID;
 
 @Getter

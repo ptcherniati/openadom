@@ -57,8 +57,29 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, name, size, data, params) SELECT id, application, name, size, data, params FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, name=EXCLUDED.name, size=EXCLUDED.size, data=EXCLUDED.data, params=EXCLUDED.params"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, name, size, data, params) " +
+                "SELECT " +
+                "   id, application, name, size, data, " +
+                "jsonb_set(jsonb_set((case when params is null then '{}' else params end ),\n" +
+                "\t'{createdate}',('\"' ||CURRENT_TIMESTAMP::text ||'\"')::jsonb),\n" +
+                "\t'{create_user}' , ('\"' ||current_role::text ||'\"')::jsonb)" +
+                "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
+                + " ON CONFLICT (id) " +
+                "DO UPDATE " +
+                "SET " +
+                "   updateDate=current_timestamp, " +
+                "   application=EXCLUDED.application, " +
+                "   name=EXCLUDED.name, " +
+                "   size=EXCLUDED.size, " +
+                "   data=CASE WHEN EXCLUDED.data IS NULL THEN " + getTable().getSqlIdentifier() + ".data ELSE EXCLUDED.data END, " +
+                "   params=case \n" +
+                "\t\twhen EXCLUDED.params is not null and  not((EXCLUDED.params->>'published')::boolean )\n" +
+                "\t\t\tthen EXCLUDED.params\n" +
+                "\t\telse \n" +
+                "\t\t\tjsonb_set(jsonb_set((case when EXCLUDED.params is null then '{}' else EXCLUDED.params end),\n" +
+                "\t\t\t\t'{publisheddate}',('\"' ||CURRENT_TIMESTAMP::text ||'\"')::jsonb),\n" +
+                "\t\t\t\t'{publisheduser}' , ('\"' ||current_role::text ||'\"')::jsonb)\n" +
+                "\t\tend"
                 + " RETURNING id";
     }
 

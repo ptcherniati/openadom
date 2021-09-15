@@ -79,7 +79,7 @@ export default class ReferencesManagementView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      if (!this.application || !this.application.id) {
+      if (!this.application?.id) {
         return;
       }
       this.references = convertReferencesToTrees(Object.values(this.application.references));

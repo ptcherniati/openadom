@@ -11,8 +11,8 @@ public class BinaryFileInfos {
     }
     public BinaryFileDataset binaryFiledataset = BinaryFileDataset.EMPTY_INSTANCE();
     public boolean published;
-    public UUID publidheduser;
-    public String publidheddate;
+    public UUID publisheduser;
+    public String publisheddate;
     public UUID createuser;
     public String createdate;
 }

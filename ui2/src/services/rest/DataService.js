@@ -20,9 +20,10 @@ export class DataService extends Fetcher {
         });
     }
 
-    async addData(applicationName, dataTypeId, dataTypeFile) {
+    async addData(applicationName, dataTypeId, dataTypeFile, params) {
         return this.post(`applications/${applicationName}/data/${dataTypeId}`, {
             file: dataTypeFile,
+            params: JSON.stringify(params),
         });
     }
 }

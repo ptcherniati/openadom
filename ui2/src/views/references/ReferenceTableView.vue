@@ -80,7 +80,7 @@ export default class ReferenceTableView extends Vue {
   }
 
   setInitialVariables() {
-    if (!this.application || !this.application.references) {
+    if (!this.application?.references) {
       return;
     }
 

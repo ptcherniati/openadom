@@ -3,42 +3,42 @@ import { User } from "@/model/User";
 import { Fetcher, LOCAL_STORAGE_AUTHENTICATED_USER } from "@/services/Fetcher.js";
 
 export class LoginService extends Fetcher {
-  static INSTANCE = new LoginService();
-  authenticatedUser = new User();
+    static INSTANCE = new LoginService();
+    authenticatedUser = new User();
 
-  constructor() {
-    super();
-  }
-
-  getAuthenticatedUser() {
-    if (!this.authenticatedUser || !this.authenticatedUser.id) {
-      this.authenticatedUser = JSON.parse(localStorage.getItem(LOCAL_STORAGE_AUTHENTICATED_USER));
+    constructor() {
+        super();
     }
-    return this.authenticatedUser;
-  }
 
-  async signIn(login, pwd) {
-    let response = await this.post("login", {
-      login: login,
-      password: pwd,
-    });
+    getAuthenticatedUser() {
+        if (!this.authenticatedUser || !this.authenticatedUser.id) {
+            this.authenticatedUser = JSON.parse(localStorage.getItem(LOCAL_STORAGE_AUTHENTICATED_USER));
+        }
+        return this.authenticatedUser;
+    }
 
-    this.authenticatedUser = response;
-    localStorage.setItem(LOCAL_STORAGE_AUTHENTICATED_USER, JSON.stringify(this.authenticatedUser));
+    async signIn(login, pwd) {
+        let response = await this.post("login", {
+            login: login,
+            password: pwd,
+        });
 
-    app.$router.push("/applications");
-    return Promise.resolve(response);
-  }
+        this.authenticatedUser = response;
+        localStorage.setItem(LOCAL_STORAGE_AUTHENTICATED_USER, JSON.stringify(this.authenticatedUser));
 
-  async register(login, pwd) {
-    return this.post("users", {
-      login: login,
-      password: pwd,
-    });
-  }
+        app.$router.push("/applications");
+        return Promise.resolve(response);
+    }
 
-  async logout() {
-    await this.delete("logout");
-    this.notifyCrendentialsLost();
-  }
+    async register(login, pwd) {
+        return this.post("users", {
+            login: login,
+            password: pwd,
+        });
+    }
+
+    async logout() {
+        await this.delete("logout");
+        this.notifyCrendentialsLost();
+    }
 }

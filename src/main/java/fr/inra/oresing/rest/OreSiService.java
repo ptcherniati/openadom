@@ -45,8 +45,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -61,6 +59,8 @@ import java.util.stream.Stream;
 @Transactional
 public class OreSiService {
 
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
+    public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
      * <p>
@@ -68,9 +68,6 @@ public class OreSiService {
      */
     private static final String LTREE_SEPARATOR = ".";
     private static final String KEYCOLUMN_SEPARATOR = "__";
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
-    public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     @Autowired
     private OreSiRepository repo;
 
@@ -103,10 +100,10 @@ public class OreSiService {
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
-        if (binaryFile.getParams() != null) {
-            binaryFile.getParams().createuser = request.getRequestClient().getId();
-            binaryFile.getParams().createdate = LocalDateTime.now().toString();
-        }
+        BinaryFileInfos binaryFileInfos = new BinaryFileInfos();
+        binaryFile.setParams(binaryFileInfos);
+        binaryFile.getParams().createuser = request.getRequestClient().getId();
+        binaryFile.getParams().createdate = LocalDateTime.now().toString();
         UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
         return result;
     }
@@ -442,6 +439,7 @@ public class OreSiService {
     }
 
     public List<BinaryFile> getFilesOnRepository(String nameOrId, String datatype, BinaryFileDataset fileDatasetID, boolean overlap) {
+        authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
         return repo.getRepository(app).binaryFile().findByBinaryFileDataset(datatype, fileDatasetID, overlap);
     }
@@ -452,7 +450,7 @@ public class OreSiService {
     public UUID addData(String nameOrId, String dataType, MultipartFile file, FileOrUUID params) throws IOException, InvalidDatasetContentException {
         List<CsvRowValidationCheckResult> errors = new LinkedList<>();
         authenticationService.setRoleForClient();
-
+        log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
         BinaryFile storedFile = loadOrCreateFile(file, params, app);
@@ -468,11 +466,13 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
         InvalidDatasetContentException.checkErrorsIsEmpty(findPublishedVersion(nameOrId, dataType, params, filesToStore, true));
-        publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params==null?null:params.binaryfiledataset);
+        publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
         unPublishVersions(app, filesToStore);
         storePublishedVersion(app, filesToStore, storedFile);
+        filesToStore.stream()
+                .forEach(repo.getRepository(app.getId()).binaryFile()::store);
         return storedFile.getId();
     }
 
@@ -482,8 +482,8 @@ public class OreSiService {
                 storedFile.setParams(BinaryFileInfos.EMPTY_INSTANCE());
             }
             storedFile.getParams().published = true;
-            storedFile.getParams().publidheduser = request.getRequestClient().getId();
-            storedFile.getParams().publidheddate = LocalDateTime.now().toString();
+            storedFile.getParams().publisheduser = request.getRequestClient().getId();
+            storedFile.getParams().publisheddate = LocalDateTime.now().toString();
             repo.getRepository(app).binaryFile().store(storedFile);
             filesToStore.add(storedFile);
         }
@@ -540,7 +540,7 @@ public class OreSiService {
                             "overlappingpublishedversion",
                             ImmutableMap.of("fileOrUUID", params, "files",
                                     overlapingFiles.stream()
-                                            .map(f->f.getParams().binaryFiledataset.toString())
+                                            .map(f -> f.getParams().binaryFiledataset.toString())
                                             .collect(Collectors.toSet())
                             )), -1));
                 }
@@ -550,8 +550,8 @@ public class OreSiService {
                     .filter(f -> f.getParams().published)
                     .forEach(f -> {
                         f.getParams().published = false;
-                        f.getParams().publidheduser = null;
-                        f.getParams().publidheddate = null;
+                        f.getParams().publisheduser = null;
+                        f.getParams().publisheddate = null;
                         filesToStore.add(f);
                     });
         }
@@ -574,10 +574,8 @@ public class OreSiService {
                     if (binaryFile == null) {
                         return null;
                     }
-                    BinaryFileInfos binaryFileInfos = BinaryFileInfos.EMPTY_INSTANCE();
                     if (params != null) {
-                        binaryFileInfos.binaryFiledataset = params.binaryfiledataset;
-                        binaryFile.setParams(binaryFileInfos);
+                        binaryFile.getParams().binaryFiledataset = params.binaryfiledataset;
                     }
                     fileId = repo.getRepository(app).binaryFile().store(binaryFile);
                     return repo.getRepository(app).binaryFile().tryFindByIdWithData(fileId).orElse(null);
@@ -726,7 +724,7 @@ public class OreSiService {
                     new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
                             "timerangeoutofinterval",
                             ImmutableMap.of(
-                                    "from",DATE_FORMATTER_DDMMYYYY.format(from) ,
+                                    "from", DATE_FORMATTER_DDMMYYYY.format(from),
                                     "to", DATE_TIME_FORMATTER.format(to),
                                     "value", DATE_FORMATTER_DDMMYYYY.format(timeScope.getRange().lowerEndpoint())
                             )

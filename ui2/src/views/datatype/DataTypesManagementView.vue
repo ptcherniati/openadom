@@ -96,7 +96,7 @@ export default class DataTypesManagementView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      if (!this.application || !this.application.id) {
+      if (!this.application?.id) {
         return;
       }
       if (this.application.dataTypes) {

@@ -86,7 +86,8 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
+    public ResponseEntity<?> createApplication(@PathVariable("name") String name,
+                                               @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
         if (INVALID_APPLICATION_NAME_PREDICATE.test(name)) {
             return ResponseEntity.badRequest().body("'" + name + "' n’est pas un nom d'application valide, seules les lettres minuscules sont acceptées");
         }
