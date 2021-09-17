@@ -22,14 +22,14 @@
             @click.native="stopPropagation"
             :native-value="option.id"
           >
-            {{ option.label }}
+            {{ option.localName || option.label }}
           </b-radio>
           <div
             v-else
             :class="onClickLabelCb ? 'link' : ''"
             @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
           >
-            {{ option.label }}
+            {{ option.localName || option.label }}
           </div>
         </div>
       </div>

@@ -5,11 +5,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +27,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -117,7 +120,7 @@ public class OreSiResources {
         Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
             Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
             Set<String> children = childrenPerReferences.get(reference);
-            return new ApplicationResult.Reference(reference, reference, children, columns);
+            return new ApplicationResult.Reference(reference, reference, referenceDescription.getInternationalizationName(), referenceDescription.getInternationalizedColumns(), children, columns);
         });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
@@ -127,9 +130,9 @@ public class OreSiResources {
                 return new ApplicationResult.DataType.Variable(variable, variable, components);
             });
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
-            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
+            return new ApplicationResult.DataType(dataType, dataType, dataTypeDescription.getInternationalizationName(), variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references, dataTypes);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getConfiguration().getInternationalization(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -215,9 +218,9 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<String>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
+    public ResponseEntity<List<List<String>>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
         Application application = service.getApplication(nameOrId);
-        List<String> list = repo.getRepository(application).referenceValue().findReferenceValue(refType, column);
+        List<List<String>> list = repo.getRepository(application).referenceValue().findReferenceValue(refType, column);
         return ResponseEntity.ok(list);
     }
 
@@ -244,6 +247,7 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+        Locale locale = LocaleContextHolder.getLocale();
         LinkedHashSet<String> orderedVariables = buildOrderedVariables(nameOrId, dataType);
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
         List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
@@ -266,7 +270,8 @@ public class OreSiResources {
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
-        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
+        Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale.getLanguage(), dataType, checkedFormatVariableComponents);
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
     }
 
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {

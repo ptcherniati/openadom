@@ -82,6 +82,7 @@
               }}>
             </caption>
             <tr>
+              <th align>ID</th>
               <th align>Taille</th>
               <th align>Crée le :</th>
               <th align>par :</th>
@@ -91,6 +92,7 @@
               <th align>supprimer</th>
             </tr>
             <tr v-for="dataset in currentDataset" :key="dataset.id">
+              <td align>{{ dataset.id.slice(0,8) }}</td>
               <td align>{{ dataset.size }}</td>
               <td align>{{ UTCToString(dataset.params.createdate) }}</td>
               <td align>{{ dataset.createuser }}</td>
@@ -239,7 +241,8 @@ export default class DataTypesRepositoryView extends Vue {
     if (!dataset) {
       this.currentDataset = null;
     }
-    this.currentDataset = dataset.datasets;
+    var datasets = dataset?.datasets?.sort((d1, d2) => d1.params.createDate < d2.params.createDate);
+    this.currentDataset = datasets;
   }
   async upload() {
     if (this.file && this.startDate && this.endDate) {
@@ -292,7 +295,7 @@ export default class DataTypesRepositoryView extends Vue {
     var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
     var yyyy = today.getFullYear();
 
-    today = mm + "/" + dd + "/" + yyyy;
+    today = dd + "/" + mm + "/" + yyyy;
     return today;
   }
   isAuthorisationsSelected() {

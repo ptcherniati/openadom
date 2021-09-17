@@ -410,7 +410,10 @@ public class OreSiService {
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
-        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferencesUsing(lowestLevelReference).orElseThrow();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = application
+                .getConfiguration()
+                .getCompositeReferencesUsing(lowestLevelReference)
+                .orElseThrow();
         BiMap<String, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
         Map<ReferenceValue, String> parentHierarchicalKeys = new LinkedHashMap<>();
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -1227,6 +1230,59 @@ public class OreSiService {
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
+    }
+
+    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, String locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
+        Application application = getApplication(nameOrId);
+        Map<String, Map<String, String>> internationalizedReferences = application.getConfiguration().getReferences().entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> e.getValue().getInternationalizedColumns().entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(i -> i.getKey(), i -> (String) i.getValue().get(locale)))
+                ));
+        List<String> neddedReferenceTranslation = checkedFormatVariableComponents.entrySet().stream()
+                .filter(e -> "ReferenceLineChecker".equals(e.getKey()))
+                .map(e -> e.getValue().values()
+                        .stream()
+                        .map(l -> ((ReferenceLineChecker)l).getRefType())
+                        .collect(Collectors.toList())
+                )
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+        Map<String, Map<String, Map<String, String>>> collect = internationalizedReferences.entrySet()
+                .stream()
+                .filter(e -> neddedReferenceTranslation.contains(e.getKey()))
+                .collect(Collectors.toMap(
+                                e -> e.getKey(),
+                                e -> {
+                                    String collectingKeys = e.getValue().entrySet()
+                                            .stream()
+                                            .map(i -> String.format("%s,%s", i.getKey(), i.getValue()))
+                                            .collect(Collectors.joining(",")
+                                            );
+                                    List<List<String>> referenceTranslations = repo.getRepository(application).referenceValue().findReferenceValue(
+                                            e.getKey(),
+                                            collectingKeys
+                                    );
+                                    Map<String, Map<String, String>> translationsMap = new HashMap();
+                                    referenceTranslations.stream()
+                                            .forEach(list -> {
+                                                String[] collectingKey = collectingKeys.split(",");
+                                                for (int i = 0; i < collectingKey.length; i = i + 2) {
+                                                    if(list.size()>i && list.get(i)!= null && list.get(i+1)!= null) {
+                                                        translationsMap.
+                                                                computeIfAbsent(collectingKey[i], k -> new HashMap<>())
+                                                                .put(list.get(i), list.get(i + 1));
+                                                    }
+                                                }
+                                            });
+                                    return translationsMap;
+                                }
+                        )
+                );
+        return collect;
     }
 
     @Value

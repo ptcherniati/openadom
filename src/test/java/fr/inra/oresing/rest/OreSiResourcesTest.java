@@ -230,7 +230,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
             Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
-            Assert.assertEquals(306 * 2, StringUtils.countMatches(actualJson, "sans_unite"));
+            Assert.assertEquals(306 * 2+1, StringUtils.countMatches(actualJson, "sans_unite"));//2 columns no_unit + 1 translation
 
         }
         /**

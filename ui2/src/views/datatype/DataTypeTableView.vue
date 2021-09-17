@@ -1,9 +1,9 @@
 /* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
 
-    <h1 class="title main-title">{{ dataTypeId }}</h1>
+    <h1 class="title main-title">{{ localDatatypeName || dataTypeId }}</h1>
     <div class="DataSetTableView-wrapper table-wrapper">
       <table class="table is-striped">
         <tr>
@@ -184,16 +184,16 @@
                 >
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
-                <span v-else>
-                  {{ row[component.variable][component.component] }}
-                </span>
-                <span v-if="getRefsLinkedToId(row, component)">
+                <span v-else-if="getRefsLinkedToId(row, component)">
+                  {{ getTranslation(row, component) }}
                   <b-button
                     size="is-small"
                     icon-right="eye"
                     @click="getReferenceValues(row, component)"
                   >
                   </b-button>
+                </span>
+                <span v-else>
                 </span>
               </td>
             </tr>
@@ -274,6 +274,8 @@ export default class DataTypeTableView extends Vue {
   refsLinkedTo = {};
   loadedReferences = {};
   currentReferenceDetail = { active: false };
+  localDatatypeName = null;
+  translations=null;
 
   async created() {
     await this.init();
@@ -304,9 +306,21 @@ export default class DataTypeTableView extends Vue {
     });
     this.initDatatype();
   }
+  localeApplicationName(application) {
+    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
+  }
+  localeDatatypeName(datatype) {
+    return datatype?.internationalizationName?.[this.$i18n.locale] ?? datatype.name;
+  }
 
   async init() {
     this.application = await this.applicationService.getApplication(this.applicationName);
+    this.application = {
+      ...this.application,
+      localName: this.localeApplicationName(this.application),
+    };
+    this.localDatatypeName =
+      this.application.dataTypes[this.dataTypeId]?.internationalizationName?.[this.$i18n.locale];
     await this.initDatatype();
   }
   async initDatatype() {
@@ -316,6 +330,8 @@ export default class DataTypeTableView extends Vue {
       this.dataTypeId,
       this.params
     );
+    this.translations = dataTypes.entitiesTranslations;
+    this.data;
     this.refsLinkedTo = dataTypes.rows.reduce((acc, d) => {
       acc[d.rowId] = d.refsLinkedTo;
       return acc;
@@ -368,6 +384,13 @@ export default class DataTypeTableView extends Vue {
   }
   getRefsLinkedToId(row, component) {
     return this.refsLinkedTo[row.rowId][component.variable][component.component];
+  }
+  getTranslation(row, component){
+    var reference = component.checker.refType;
+    var translations = this.translations?.[reference];
+    console.log(translations);
+    var translation = row[component.variable][component.component];
+    return translation ;
   }
   async getReferenceValues(row, component) {
     const rowId = this.getRefsLinkedToId(row, component);

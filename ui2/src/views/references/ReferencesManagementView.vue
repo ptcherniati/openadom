@@ -1,8 +1,8 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName" :paths="subMenuPaths" />
     <h1 class="title main-title">
-      {{ $t("titles.references-page", { applicationName: application.title }) }}
+      {{ $t("titles.references-page", { applicationName: application.localName }) }}
     </h1>
     <div>
       <CollapsibleTree
@@ -13,7 +13,8 @@
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
-      />
+      >
+      </CollapsibleTree>
       <ReferencesDetailsPanel
         :leftAlign="false"
         :open="openPanel"
@@ -37,6 +38,7 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { Button } from "@/model/Button";
+import { i18n } from "@/main";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -65,6 +67,10 @@ export default class ReferencesManagementView extends Vue {
     ),
   ];
 
+  localeReferenceName(reference) {
+    return reference.configuration?.internationalization?.[this.$i18n.locale] ?? reference.name;
+  }
+
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
@@ -76,13 +82,24 @@ export default class ReferencesManagementView extends Vue {
     this.init();
   }
 
+  localeApplicationName(application) {
+    return application?.internationalization?.[this.$i18n.locale] ?? application?.name;
+  }
+
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.localeApplicationName(this.application),
+      };
       if (!this.application?.id) {
         return;
       }
-      this.references = convertReferencesToTrees(Object.values(this.application.references));
+      this.references = convertReferencesToTrees(
+        Object.values(this.application.references),
+        this.$i18n.locale
+      );
     } catch (error) {
       this.alertService.toastServerError();
     }
@@ -119,7 +136,8 @@ export default class ReferencesManagementView extends Vue {
   }
 
   findReferenceByLabel(label) {
-    return Object.values(this.application.references).find((ref) => ref.label === label);
+    var ref = Object.values(this.application.references).find((ref) => ref.label === label);
+    return { ...ref, 'localName':  ref?.internationalizationName?.[i18n.locale]};
   }
 }
 </script>

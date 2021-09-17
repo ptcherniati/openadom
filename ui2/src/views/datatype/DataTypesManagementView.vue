@@ -1,8 +1,12 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
     <h1 class="title main-title">
-      {{ $t("titles.data-types-page", { applicationName: application.title }) }}
+      {{
+        $t("titles.data-types-page", {
+          applicationName: application.localName || application.title,
+        })
+      }}
     </h1>
     <div>
       <CollapsibleTree
@@ -83,6 +87,13 @@ export default class DataTypesManagementView extends Vue {
   openPanel = false;
   chosenDataType = null;
 
+  localeApplicationName(application) {
+    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
+  }
+  localeDatatypeName(datatype) {
+    return datatype?.internationalizationName?.[this.$i18n.locale] ?? datatype.name;
+  }
+
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
@@ -98,11 +109,17 @@ export default class DataTypesManagementView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.localeApplicationName(this.application),
+      };
       if (!this.application?.id) {
         return;
       }
       if (this.application.dataTypes) {
-        this.dataTypes = Object.values(this.application.dataTypes);
+        this.dataTypes = Object.values(this.application.dataTypes).map((d) => {
+          return { ...d, localName: this.localeDatatypeName(d) };
+        });
       }
     } catch (error) {
       this.alertService.toastServerError();

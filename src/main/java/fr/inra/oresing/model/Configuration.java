@@ -16,6 +16,8 @@ import java.util.*;
 public class Configuration {
 
     private int version;
+    private String defaultLanguage;
+    private Internationalization internationalization;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
@@ -74,6 +76,8 @@ public class Configuration {
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
+        Internationalization internationalizationName;
+        Map<String, Internationalization> internationalizedColumns = new LinkedHashMap<>();
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
@@ -106,6 +110,7 @@ public class Configuration {
     @ToString
     public static class DataTypeDescription {
         FormatDescription format;
+        Internationalization internationalizationName;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();

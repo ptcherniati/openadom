@@ -1,8 +1,12 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
     <h1 class="title main-title">
-      {{ $t("titles.data-type-authorizations", { dataType: dataTypeId }) }}
+      {{
+        $t("titles.data-type-authorizations", {
+          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+        })
+      }}
     </h1>
     <div class="buttons">
       <b-button type="is-primary" @click="addAuthorization" icon-left="plus">
@@ -100,6 +104,13 @@ export default class DataTypeAuthorizationsView extends Vue {
     FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
+
+  localeDatatypeName(datatype) {
+    return (
+      this.application?.dataTypes?.[datatype]?.internationalizationName?.[this.$i18n.locale] ??
+      datatype.name
+    );
+  }
 
   created() {
     this.init();
