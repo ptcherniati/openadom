@@ -11,7 +11,9 @@
         :option="data"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
-        :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"
+        :onUploadCb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
+        :repository="data.repository"
+        :repositoryRedirect="(label) => showRepository(label)"
         :buttons="buttons"
       />
       <DataTypeDetailsPanel
@@ -129,7 +131,7 @@ export default class DataTypesManagementView extends Vue {
     }
   }
 
-  async downloadDataType(label) {
+  async downloadDataType(event, label) {
     this.dataService.getDataTypesCsv(this.applicationName, label);
   }
 
@@ -139,6 +141,10 @@ export default class DataTypesManagementView extends Vue {
     } else {
       this.alertService.toastServerError(error);
     }
+  }
+  showRepository(label) {
+    const dataType = this.dataTypes.find((dt) => dt.label === label);
+    this.$router.push(`/applications/${this.applicationName}/dataTypesRepository/${dataType.id}`);
   }
 }
 </script>

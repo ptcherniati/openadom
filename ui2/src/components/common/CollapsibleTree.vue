@@ -49,6 +49,15 @@
             </span>
           </b-upload>
         </b-field>
+        <b-field v-else>
+          <b-button
+            size="is-small"
+            class="ml-1"
+            label="Gérer les jeux de données"
+            @click="repositoryRedirect(option.label)"
+          >
+          </b-button>
+        </b-field>
         <div v-for="button in buttons" :key="button.id">
           <b-button
             :icon-left="button.iconName"
@@ -93,6 +102,8 @@ export default class CollapsibleTree extends Vue {
   @Prop() buttons;
   @Prop({ default: false }) withRadios;
   @Prop() radioName;
+  @Prop() repository;
+  @Prop() repositoryRedirect;
 
   displayChildren = false;
   refFile = null;
@@ -106,8 +117,8 @@ export default class CollapsibleTree extends Vue {
   stopPropagation(event) {
     event.stopPropagation();
   }
-  showChildren(){
-    this.displayChildren=true;
+  showChildren() {
+    this.displayChildren = true;
   }
 }
 </script>

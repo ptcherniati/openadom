@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import lombok.Value;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ public class ApplicationResult {
         String id;
         String label;
         Map<String, Variable> variables;
+        Map<String, String> repository;
 
         @Value
         public static class Variable {

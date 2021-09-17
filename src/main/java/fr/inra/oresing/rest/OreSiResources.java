@@ -126,7 +126,8 @@ public class OreSiResources {
                 });
                 return new ApplicationResult.DataType.Variable(variable, variable, components);
             });
-            return new ApplicationResult.DataType(dataType, dataType, variables);
+            Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
+            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m->!m.isEmpty()).orElse(null));
         });
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
@@ -321,7 +322,7 @@ public class OreSiResources {
     private FileOrUUID deserialiseFileOrUUIDQuery(String datatype, String params) {
         try {
             FileOrUUID fileOrUUID = params != null ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
-            if(fileOrUUID.binaryfiledataset.getDatatype() == null){
+            if (fileOrUUID.binaryfiledataset.getDatatype() == null) {
                 fileOrUUID.binaryfiledataset.setDatatype(datatype);
             }
             return fileOrUUID;
@@ -333,10 +334,10 @@ public class OreSiResources {
     private BinaryFileDataset deserialiseBinaryFileDatasetQuery(String datatype, String params) {
         try {
             BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
-            if(binaryFileDataset.getDatatype() == null){
+            if (binaryFileDataset.getDatatype() == null) {
                 binaryFileDataset.setDatatype(datatype);
             }
-            return  binaryFileDataset;
+            return binaryFileDataset;
         } catch (IOException e) {
             throw new BadBinaryFileDatasetQuery(e.getMessage());
         }
@@ -349,7 +350,7 @@ public class OreSiResources {
                                         @RequestParam(value = "params", required = false) String params) throws IOException {
         try {
             FileOrUUID binaryFiledataset = Strings.isNullOrEmpty(params) ? null : deserialiseFileOrUUIDQuery(dataType, params);
-            Preconditions.checkArgument(file!= null || (binaryFiledataset !=null && binaryFiledataset.fileid!=null), "le fichier ou params.fileid est requis");
+            Preconditions.checkArgument(file != null || (binaryFiledataset != null && binaryFiledataset.fileid != null), "le fichier ou params.fileid est requis");
             UUID fileId = service.addData(nameOrId, dataType, file, binaryFiledataset);
             String uri = UriUtils.encodePath(String.format("/applications/%s/file/%s", nameOrId, fileId), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of("fileId", fileId.toString()));
