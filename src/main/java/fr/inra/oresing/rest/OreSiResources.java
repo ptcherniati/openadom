@@ -127,7 +127,7 @@ public class OreSiResources {
                 return new ApplicationResult.DataType.Variable(variable, variable, components);
             });
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
-            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m->!m.isEmpty()).orElse(null));
+            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
