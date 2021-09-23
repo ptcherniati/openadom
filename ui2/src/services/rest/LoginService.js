@@ -25,6 +25,7 @@ export class LoginService extends Fetcher {
 
     this.authenticatedUser = response;
     localStorage.setItem(LOCAL_STORAGE_AUTHENTICATED_USER, JSON.stringify(this.authenticatedUser));
+    localStorage.setItem("lang", window.navigator.language.slice(0, 2));
 
     app.$router.push("/applications");
     return Promise.resolve(response);

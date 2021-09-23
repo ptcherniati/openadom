@@ -232,13 +232,9 @@
           }}</b-button>
         </div>
         <div class="column is-2">
-          <b-button
-              icon-left="check"
-              type="is-success"
-              expanded
-              outlined
-          >{{ $t("dataTypesManagement.validate") }}</b-button
-          >
+          <b-button icon-left="check" type="is-success" expanded outlined>{{
+            $t("dataTypesManagement.validate")
+          }}</b-button>
         </div>
       </div>
     </div>
@@ -279,6 +275,7 @@
           <tbody>
             <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
               <td
+                style="text-align: center; vertical-align: middle"
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
                 :component="component.component"
@@ -294,15 +291,16 @@
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
                 <span v-else>
-                  {{ row[component.variable][component.component] }}
-                </span>
-                <span v-if="getRefsLinkedToId(row, component)">
-                  <b-button
-                    icon-right="eye"
-                    size="is-small"
+                  <a
+                    class="button inTable"
+                    v-if="getRefsLinkedToId(row, component)"
                     @click="getReferenceValues(row, component)"
                   >
-                  </b-button>
+                    {{ row[component.variable][component.component] }}
+                  </a>
+                  <p v-if="!getRefsLinkedToId(row, component)">
+                    {{ row[component.variable][component.component] }}
+                  </p>
                 </span>
               </td>
             </tr>
@@ -724,6 +722,12 @@ $row-variable-height: 60px;
 
 .numberInput {
   width: 3em;
+}
+
+.button.inTable {
+  color: $primary;
+  background-color: transparent;
+  border: transparent;
 }
 
 .button.is-success.is-outlined.is-fullwidth {
