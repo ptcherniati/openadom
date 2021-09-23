@@ -99,6 +99,17 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
+    public void testMissingInternationalizedColumn() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizedColumns:\n" +
+                "      nom du projet_key:","internationalizedColumns:\n" +
+                "      nom du projet_unknown:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
+    }
+
+    @Test
     public void testUnknownReferenceForChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
         Assert.assertFalse(configurationParsingResult.isValid());

@@ -216,6 +216,14 @@ public class ConfigurationParsingResult {
             ));
         }
 
+        public Builder recordInvalidInternationalizedColumns(String reference, Set<String> unknownUsedAsKeyInternationalizedColumns, Set<String> knownColumns) {
+            return recordError("invalidInternationalizedColumns", ImmutableMap.of(
+                    "reference", reference,
+                    "unknownUsedAsInternationalizedColumns", unknownUsedAsKeyInternationalizedColumns,
+                    "knownColumns", knownColumns
+            ));
+        }
+
         public Builder missingColumnReferenceForCheckerInReference(String validationRuleDescriptionEntryKey, Set<String> availablesColumns, String name, List<String> missingColumns, String reference) {
             return recordError("missingColumnReferenceForCheckerInReference", ImmutableMap.of(
                     "reference", reference,

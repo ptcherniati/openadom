@@ -86,6 +86,7 @@ public class ApplicationConfigurationService {
 
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
             verifyReferenceKeyColumnsExists(configuration, builder, referenceEntry);
+            verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
             verifyValidationCheckersAreValids(configuration, builder, referenceEntry, references);
         }
 
@@ -259,6 +260,18 @@ public class ApplicationConfigurationService {
         ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
         if (!unknownUsedAsKeyElementColumns.isEmpty()) {
             builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+        }
+    }
+
+    private void verifyInternationalizedColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
+        String reference = referenceEntry.getKey();
+        Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+        Set<String> internationalizedColumns = referenceDescription.getInternationalizedColumns().keySet();
+        Set<String> columns = referenceDescription.getColumns().keySet();
+        ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
+        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
+        if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
+            builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
         }
     }
 

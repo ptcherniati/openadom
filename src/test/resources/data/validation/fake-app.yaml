@@ -14,6 +14,13 @@ references:
   projets:
     separator:
     keyColumns: [nom du projet_key]
+    internationalizationName:
+      fr: projet
+      en: Project
+    internationalizedColumns:
+      nom du projet_key:
+        fr: nom du projet_fr
+        en: nom du projet_en
     columns:
       nom du projet_key:
       nom du projet_fr:
