@@ -10,6 +10,9 @@ compositeReferences:
         reference: sites
       - parentKeyColumn: nom du site
         reference: plateformes
+  projets:
+    components:
+      - reference: projets
 references:
   themes:
     keyColumns: [nom_key]

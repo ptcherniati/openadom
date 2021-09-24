@@ -114,13 +114,27 @@ public class ConfigurationParsingResult {
             return recordError("missingTimeScopeVariableComponentKey", ImmutableMap.of("dataType", dataType));
         }
 
+        public Builder recordMissingAuthorizationScopeVariableComponentKey(String dataType) {
+            return recordError("missingAuthorizationScopeVariableComponentKey", ImmutableMap.of("dataType", dataType));
+        }
+
         public Builder recordTimeScopeVariableComponentKeyMissingVariable(String dataType, Set<String> variables) {
             return recordError("timeScopeVariableComponentKeyMissingVariable", ImmutableMap.of("dataType", dataType, "variables", variables));
+        }
+
+        public Builder recordAuthorizationScopeVariableComponentKeyMissingVariable(String dataType, String authorizationScopeName, Set<String> variables) {
+            return recordError("authorizationScopeVariableComponentKeyMissingVariable", ImmutableMap.of("dataType", dataType, "authorizationScopeName", authorizationScopeName, "variables", variables));
         }
 
         public Builder recordTimeScopeVariableComponentKeyUnknownVariable(VariableComponentKey timeScopeVariableComponentKey, Set<String> knownVariables) {
             return recordError("timeScopeVariableComponentKeyUnknownVariable", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "knownVariables", knownVariables));
         }
+
+        public Builder recordAuthorizationScopeVariableComponentKeyUnknownVariable(VariableComponentKey timeScopeVariableComponentKey, Set<String> knownVariables) {
+            return recordError("authorizationScopeVariableComponentKeyUnknownVariable", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "knownVariables", knownVariables));
+        }
+
+
 
         public Builder recordTimeVariableComponentKeyMissingComponent(String dataType, String variable, Set<String> knownComponents) {
             return recordError("timeVariableComponentKeyMissingComponent", ImmutableMap.of(
@@ -130,16 +144,47 @@ public class ConfigurationParsingResult {
             ));
         }
 
+
+
+        public Builder recordAuthorizationVariableComponentKeyMissingComponent(String dataType, String authorizationName, String variable, Set<String> knownComponents) {
+            return recordError("authorizationVariableComponentKeyMissingComponent", ImmutableMap.of(
+                    "dataType", dataType,
+                    "authorizationName", authorizationName,
+                    "variable", variable,
+                    "knownComponents", knownComponents
+            ));
+        }
+
         public Builder recordTimeVariableComponentKeyUnknownComponent(VariableComponentKey timeScopeVariableComponentKey, Set<String> knownComponents) {
             return recordError("timeVariableComponentKeyUnknownComponent", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "knownComponents", knownComponents));
+        }
+
+        public Builder recordAuthorizationVariableComponentKeyUnknownComponent(VariableComponentKey timeScopeVariableComponentKey, Set<String> knownComponents) {
+            return recordError("authorizationVariableComponentKeyUnknownComponent", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "knownComponents", knownComponents));
         }
 
         public Builder recordTimeScopeVariableComponentWrongChecker(VariableComponentKey timeScopeVariableComponentKey, String expectedChecker) {
             return recordError("timeScopeVariableComponentWrongChecker", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "expectedChecker", expectedChecker));
         }
 
+        public Builder recordAuthorizationScopeVariableComponentWrongChecker(VariableComponentKey timeScopeVariableComponentKey, String expectedChecker) {
+            return recordError("authorizationScopeVariableComponentWrongChecker", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "expectedChecker", expectedChecker));
+        }
+
         public Builder recordTimeScopeVariableComponentPatternUnknown(VariableComponentKey timeScopeVariableComponentKey, String pattern, Set<String> knownPatterns) {
             return recordError("timeScopeVariableComponentPatternUnknown", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "pattern", pattern, "knownPatterns", knownPatterns));
+        }
+
+        public Builder recordAuthorizationScopeVariableComponentReftypeUnknown(VariableComponentKey timeScopeVariableComponentKey, String refType, Set<String> knownPatterns) {
+            return recordError("authorizationScopeVariableComponentReftypeUnknown", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "refType", refType, "knownPatterns", knownPatterns));
+        }
+
+        public Builder recordAuthorizationScopeVariableComponentReftypeNull(VariableComponentKey timeScopeVariableComponentKey, Set<String> knownPatterns) {
+            return recordError("authorizationScopeVariableComponentReftypeNull", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "component", timeScopeVariableComponentKey.getComponent(), "knownPatterns", knownPatterns));
+        }
+
+        public Builder recordAuthorizationVariableComponentMustReferToCompositereference(String dataType, String authorizationName, String refType, Set<String> knownCompositesReferences) {
+            return recordError("authorizationScopeVariableComponentReftypeUnknown", ImmutableMap.of("dataType", dataType, "authorizationName", authorizationName, "refType", refType, "knownCompositesReferences", knownCompositesReferences));
         }
 
         public Builder recordUnrecognizedProperty(int lineNumber, int columnNumber, String unknownPropertyName, Collection<String> knownProperties) {
@@ -247,6 +292,12 @@ public class ConfigurationParsingResult {
             return recordError("missingParamColumnReferenceForCheckerInReference", ImmutableMap.of(
                     "reference", reference,
                     "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey
+            ));
+        }
+
+        public Builder missingAuthorizationsForDatatype(String dataType) {
+            return recordError("missingAuthorizationForDatatype", ImmutableMap.of(
+                    "datatype", dataType
             ));
         }
     }

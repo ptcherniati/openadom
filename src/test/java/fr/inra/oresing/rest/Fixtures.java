@@ -63,6 +63,10 @@ public class Fixtures {
         return Application.MONSORE.getName();
     }
 
+    public String getMonsoreApplicationConfigurationWithRepositoryResourceName() {
+        return "/data/monsore/monsore-with-repository.yaml";
+    }
+
     public String getMonsoreApplicationConfigurationResourceName() {
         return "/data/monsore/monsore.yaml";
     }

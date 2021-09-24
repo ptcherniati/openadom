@@ -516,7 +516,7 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
             Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription);
+            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, binaryFileDataset==null?null:binaryFileDataset.getRequiredauthorizations());
 
             readPreHeader(formatDescription, constantValues, linesIterator);
 
@@ -999,8 +999,18 @@ public class OreSiService {
         Iterators.advance(linesIterator, lineToSkipAfterHeader);
     }
 
-    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription) {
+    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription, Map<String, String> requiredAuthorizations) {
         ImmutableMap.Builder<VariableComponentKey, Expression<String>> defaultValueExpressionsBuilder = ImmutableMap.builder();
+
+        List<String> variableComponentsFromRepository = new LinkedList<>();
+        if(requiredAuthorizations!=null){
+            for(Map.Entry<String, String> entry:requiredAuthorizations.entrySet()){
+                VariableComponentKey variableComponentKey = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                String value = entry.getValue();
+                defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\""+value+"\""));
+                variableComponentsFromRepository.add(variableComponentKey.getId());
+            }
+        }
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
@@ -1008,6 +1018,9 @@ public class OreSiService {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentDescription componentDescription = componentEntry.getValue();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                if(variableComponentsFromRepository.contains(variableComponentKey.getId())){
+                    continue;
+                }
                 Expression<String> defaultValueExpression;
                 if (componentDescription == null) {
                     defaultValueExpression = CommonExpression.EMPTY_STRING;

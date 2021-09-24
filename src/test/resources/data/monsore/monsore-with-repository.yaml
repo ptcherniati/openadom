@@ -277,6 +277,8 @@ dataTypes:
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent
+    repository:
+      toto: test
     data:
       projet:
         components:
@@ -294,8 +296,8 @@ dataTypes:
                 refType: sites
           plateforme:
           chemin:
-            defaultValue: >
-             return datumByVariableAndComponent.get("site").get("bassin") +"__" +datumByVariableAndComponent.get("site").get("plateforme")
+#             defaultValue: >
+#              return datumByVariableAndComponent.get("site").get("bassin") +"__" +datumByVariableAndComponent.get("site").get("plateforme")
             checker:
               name: Reference
               params:

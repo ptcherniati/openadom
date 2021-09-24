@@ -326,7 +326,7 @@ public class OreSiResources {
 
     private FileOrUUID deserialiseFileOrUUIDQuery(String datatype, String params) {
         try {
-            FileOrUUID fileOrUUID = params != null ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
+            FileOrUUID fileOrUUID = params != null && params !="undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
             if (fileOrUUID.binaryfiledataset.getDatatype() == null) {
                 fileOrUUID.binaryfiledataset.setDatatype(datatype);
             }
@@ -354,7 +354,7 @@ public class OreSiResources {
                                         @RequestParam(value = "file", required = false) MultipartFile file,
                                         @RequestParam(value = "params", required = false) String params) throws IOException {
         try {
-            FileOrUUID binaryFiledataset = Strings.isNullOrEmpty(params) ? null : deserialiseFileOrUUIDQuery(dataType, params);
+            FileOrUUID binaryFiledataset = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseFileOrUUIDQuery(dataType, params);
             Preconditions.checkArgument(file != null || (binaryFiledataset != null && binaryFiledataset.fileid != null), "le fichier ou params.fileid est requis");
             UUID fileId = service.addData(nameOrId, dataType, file, binaryFiledataset);
             String uri = UriUtils.encodePath(String.format("/applications/%s/file/%s", nameOrId, fileId), Charset.defaultCharset());

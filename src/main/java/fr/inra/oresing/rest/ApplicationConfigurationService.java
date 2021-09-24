@@ -97,15 +97,25 @@ public class ApplicationConfigurationService {
             verifyDatatypeCheckerReferenceRefersToExistingReference(builder, references, dataType, dataTypeDescription);
             verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(builder, dataTypeDescription);
 
+            Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
-            VariableComponentKey timeScopeVariableComponentKey = dataTypeDescription.getAuthorization().getTimeScope();
-            verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
+            if (authorization == null) {
+                /**
+                 * to decomment if authorization section is required
+                 */
+                //builder.missingAuthorizationsForDatatype(dataType);
+            } else {
+                VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
+                verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
+
+                LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
+                verifyDatatypeAuthorizationScopeExistsAndIsValid(builder, dataType, configuration, variables, authorizationScopesVariableComponentKey);
+            }
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
             verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, variableOccurrencesInDataGroups);
 
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
-
             verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, variables);
         }
 
@@ -151,6 +161,62 @@ public class ApplicationConfigurationService {
             if (!unknownVariables.isEmpty()) {
                 builder.recordUnknownVariablesInDataGroup(dataGroup, unknownVariables, variables);
             }
+        }
+    }
+
+    private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey) {
+        if (authorizationScopesVariableComponentKey == null || authorizationScopesVariableComponentKey.isEmpty()) {
+            builder.recordMissingAuthorizationScopeVariableComponentKey(dataType);
+        } else {
+            Configuration.DataTypeDescription dataTypeDescription = configuration.getDataTypes().get(dataType);
+            authorizationScopesVariableComponentKey.entrySet().stream().forEach(authorizationScopeVariableComponentKeyEntry -> {
+                String authorizationScopeName = authorizationScopeVariableComponentKeyEntry.getKey();
+                VariableComponentKey authorizationScopeVariableComponentKey = authorizationScopeVariableComponentKeyEntry.getValue();
+                if (authorizationScopeVariableComponentKey.getVariable() == null) {
+                    builder.recordAuthorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
+                } else {
+                    String variable = authorizationScopeVariableComponentKey.getVariable();
+                    Configuration.ColumnDescription variableInDescription = dataTypeDescription.getData().get(variable);
+                    if (!dataTypeDescription.getData().containsKey(variable)) {
+                        builder.recordAuthorizationScopeVariableComponentKeyUnknownVariable(authorizationScopeVariableComponentKey, variables);
+                    } else {
+                        String component = authorizationScopeVariableComponentKey.getComponent();
+                        LinkedHashMap<String, Configuration.VariableComponentDescription> componentsInDescription = variableInDescription.getComponents();
+                        if (component == null) {
+                            builder.recordAuthorizationVariableComponentKeyMissingComponent(dataType, authorizationScopeName, variable, componentsInDescription.keySet());
+                        } else {
+                            if (!componentsInDescription.containsKey(component)) {
+                                builder.recordAuthorizationVariableComponentKeyUnknownComponent(authorizationScopeVariableComponentKey, componentsInDescription.keySet());
+                            } else {
+                                Configuration.CheckerDescription authorizationScopeVariableComponentChecker = dataTypeDescription.getData().get(variable).getComponents().get(authorizationScopeVariableComponentKey.getComponent()).getChecker();
+                                if (authorizationScopeVariableComponentChecker == null || !"Reference".equals(authorizationScopeVariableComponentChecker.getName())) {
+                                    builder.recordAuthorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
+                                }
+                                String refType = null;
+                                Map<String, String> params = authorizationScopeVariableComponentChecker.getParams();
+                                if (params == null) {
+                                    builder.recordAuthorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
+                                } else {
+                                    refType = params.getOrDefault(ReferenceLineChecker.PARAM_REFTYPE, null);
+                                    if (refType == null || !configuration.getReferences().containsKey(refType)) {
+                                        builder.recordAuthorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
+                                    } else {
+                                        Set<String> compositesferences = configuration.getCompositeReferences().values().stream()
+                                                .map(e -> e.getComponents())
+                                                .flatMap(List::stream)
+                                                .map(crd -> crd.getReference())
+                                                .collect(Collectors.toSet());
+                                        if (!compositesferences.contains(refType)) {
+                                            builder.recordAuthorizationVariableComponentMustReferToCompositereference(dataType, authorizationScopeName, refType, compositesferences);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            });
         }
     }
 
@@ -300,7 +366,7 @@ public class ApplicationConfigurationService {
                 if (Strings.isNullOrEmpty(columns))
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 else {
-                    List<String> columnsList  = Stream.of(columns.split(",")).collect(Collectors.toList());
+                    List<String> columnsList = Stream.of(columns.split(",")).collect(Collectors.toList());
                     Set<String> availablesColumns = referenceDescription.getColumns().keySet();
                     List<String> missingColumns = columnsList.stream()
                             .filter(c -> !availablesColumns.contains(c))
