@@ -145,11 +145,25 @@
         "from-date-to-date": "From date to date : ",
         "always": "Always",
         "to": "to",
+        "from": "from",
         "create": "Create authorization",
         "user": "User",
         "data-group": "Data group",
         "data-type": "Data type",
         "actions": "Actions",
         "revoke": "Revoke"
+    },
+    "ponctuation": {
+        "semicolon" : ";",
+        "comma" : ",",
+        "period": ".",
+        "colon" : ":",
+        "hyphen" : "-",
+        "plus" : "+",
+        "less" :"<",
+        "greater" : ">",
+        "arrow-right": "->",
+        "arrow-left": "<-",
+        "slash": "/"
     }
 }

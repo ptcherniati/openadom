@@ -121,7 +121,10 @@
                       </div>
                       <div class="card-content">
                         <div class="content">
-                          <p>{{ application.referenceType }}, {{ application.dataType }}</p>
+                          <p>
+                            {{ application.referenceType }} {{ $t("ponctuation.comma") }}
+                            {{ application.dataType }}
+                          </p>
                         </div>
                       </div>
                       <div class="card-footer">

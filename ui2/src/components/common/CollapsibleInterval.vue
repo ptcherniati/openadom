@@ -14,7 +14,7 @@
             <div class="row">
               <div class="columns">
                 <div class="column is-one-fifth">
-                  <label class="label">From</label>
+                  <label class="label">{{ $t("dataTypeAuthorizations.from") }}</label>
                 </div>
                 <div class="column is-four-fifth">
                   <b-input
@@ -32,7 +32,7 @@
             <div class="row">
               <div class="columns">
                 <div class="column is-one-fifth is-right">
-                  <label class="label">to</label>
+                  <label class="label">{{ $t("dataTypeAuthorizations.to") }}</label>
                 </div>
                 <div class="column is-four-fifth">
                   <b-input

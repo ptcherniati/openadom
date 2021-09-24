@@ -6,11 +6,6 @@
     <h1 class="title main-title">{{ dataTypeId }}</h1>
     <div class="columns">
       <div class="column is-2-desktop is-4-tablet">
-        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined>{{
-          $t("dataTypesManagement.réinitialiser")
-        }}</b-button>
-      </div>
-      <div class="column is-2-desktop is-4-tablet">
         <b-button
           icon-left="sort-amount-down"
           :label="$t('applications.trier')"
@@ -27,6 +22,41 @@
           @click="showFilter = !showFilter"
           outlined
         ></b-button>
+      </div>
+      <div class="column is-2-desktop is-4-tablet">
+        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined>{{
+          $t("dataTypesManagement.réinitialiser")
+        }}</b-button>
+      </div>
+      <div class="column is-6-desktop is-12-tablet">
+        <b-field grouped group-multiline>
+          <b-taglist>
+            <div
+              v-for="(variableComponent, index) in this.params.variableComponentFilters"
+              :key="index"
+            >
+              <b-tag size="is-medium" rounded>
+                {{ variableComponent.variableComponentKey.variable }}
+                {{ $t("ponctuation.colon") }}
+                {{ variableComponent.variableComponentKey.component }}
+                {{ $t("ponctuation.arrow-right") }}
+                {{ variableComponent.filter }}
+              </b-tag>
+            </div>
+            <div
+              v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+              :key="index"
+            >
+              <b-tag type="is-primary" size="is-medium" rounded>
+                {{ variableComponent.variableComponentKey.variable }}
+                {{ $t("ponctuation.colon") }}
+                {{ variableComponent.variableComponentKey.component }}
+                {{ $t("ponctuation.arrow-right") }}
+                {{ variableComponent.order }}
+              </b-tag>
+            </div>
+          </b-taglist>
+        </b-field>
       </div>
     </div>
     <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails" width="500">
@@ -73,7 +103,8 @@
                       class="columns"
                     >
                       <div class="column orderLabel">
-                        {{ variableComponent.variableComponentKey.variable }} :
+                        {{ variableComponent.variableComponentKey.variable }}
+                        {{ $t("ponctuation.colon") }}
                         {{ variableComponent.variableComponentKey.component }}
                       </div>
                       <div>
@@ -123,8 +154,10 @@
                       <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
                     </span>
                     <span class="tag is-primary orderLabel" style="font-size: 1rem">
-                      {{ variableComponent.variableComponentKey.variable }} :
-                      {{ variableComponent.variableComponentKey.component }} ->
+                      {{ variableComponent.variableComponentKey.variable }}
+                      {{ $t("ponctuation.colon") }}
+                      {{ variableComponent.variableComponentKey.component }}
+                      {{ $t("ponctuation.arrow-right") }}
                       {{ variableComponent.order }}
                     </span>
                     <a
@@ -144,9 +177,14 @@
             <div class="row">
               <div class="columns">
                 <div class="column">
-                  <b-button icon-left="redo" expanded type="is-danger" @click="reInit" outlined>{{
-                    $t("dataTypesManagement.réinitialiser")
-                  }}</b-button>
+                  <b-button
+                    icon-left="redo"
+                    expanded
+                    type="is-danger"
+                    @click="clearOrder"
+                    outlined
+                    >{{ $t("dataTypesManagement.réinitialiser") }}</b-button
+                  >
                 </div>
                 <div class="column">
                   <b-button
@@ -629,6 +667,7 @@ export default class DataTypeTableView extends Vue {
     this.initDatatype();
   }
   addSearch() {
+    this.params.variableComponentFilters = [];
     for (var i = 0; i < this.variableSearch.length; i++) {
       if (this.variableSearch[i]) {
         this.params.variableComponentFilters.push(this.variableSearch[i]);
@@ -640,6 +679,12 @@ export default class DataTypeTableView extends Vue {
     for (var i = 0; i < this.variableSearch.length; i++) {
       this.params.variableComponentFilters = [];
       this.variableSearch = [];
+    }
+    this.initDatatype();
+  }
+  clearOrder() {
+    for (var i = 0; i < this.params.variableComponentOrderBy.length; i++) {
+      this.params.variableComponentOrderBy = [];
     }
     this.initDatatype();
   }

@@ -147,11 +147,25 @@
         "from-date-to-date": "De date à date",
         "always": "Toujours",
         "to": "à",
+        "from": "de",
         "create": "Créer l'autorisation",
         "user": "Utilisateur",
         "data-group": "Groupe de données",
         "data-type": "Type de donnée",
         "actions": "Actions",
         "revoke": "Révoquer"
+    },
+    "ponctuation": {
+        "semicolon" : ";",
+        "comma" : ",",
+        "period": ".",
+        "colon" : ":",
+        "hyphen" : "-",
+        "plus" : "+",
+        "less" :"<",
+        "greater" : ">",
+        "arrow-right": "->",
+        "arrow-left": "<-",
+        "slash": "/"
     }
 }
