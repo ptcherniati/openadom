@@ -151,7 +151,7 @@
                 <div class="column">
                   <b-button
                     icon-left="check"
-                    type="is-success"
+                    type="is-dark"
                     expanded
                     @click="initDatatype"
                     outlined
@@ -205,7 +205,7 @@
                     icon-right-pack="fas"
                     placeholder="Search..."
                     type="search"
-                    @icon-click="addSearch(component)"
+                    @blur="addVariableSearch(component)"
                     size="is-small"
                   ></b-input>
                   <!--
@@ -227,19 +227,21 @@
       </div>
       <div class="columns">
         <div class="column is-offset-8 is-2">
-          <b-button icon-left="redo" expanded type="is-danger" outlined>{{
+          <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch">{{
             $t("dataTypesManagement.réinitialiser")
           }}</b-button>
         </div>
         <div class="column is-2">
-          <b-button icon-left="check" type="is-success" expanded outlined>{{
-            $t("dataTypesManagement.validate")
-          }}</b-button>
+          <p class="control">
+            <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch">{{
+              $t("dataTypesManagement.validate")
+            }}</b-button>
+          </p>
         </div>
       </div>
     </div>
     <div class="b-table">
-      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 750px">
+      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 690px">
         <table class="table is-striped">
           <caption v-if="variables.length == 0">
             {{
@@ -368,7 +370,7 @@ export default class DataTypeTableView extends Vue {
     applicationNameOrId: this.applicationName,
     dataType: this.dataTypeId,
     offset: 0,
-    limit: 15,
+    limit: 10,
     variableComponentSelects: [],
     variableComponentFilters: [],
     variableComponentOrderBy: [],
@@ -387,6 +389,7 @@ export default class DataTypeTableView extends Vue {
   activeTab = 0;
   isOpen = 0;
   RegExr = false;
+  variableSearch = [];
 
   async created() {
     await this.init();
@@ -589,7 +592,7 @@ export default class DataTypeTableView extends Vue {
     return icon ? icon : null;
   }
 
-  addSearch(variableComponent) {
+  addVariableSearch(variableComponent) {
     let { key, variable, component, type, format } = variableComponent;
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
@@ -621,7 +624,22 @@ export default class DataTypeTableView extends Vue {
       });
     }
     if (search) {
-      this.params.variableComponentFilters.push(search);
+      this.variableSearch.push(search);
+    }
+    this.initDatatype();
+  }
+  addSearch() {
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      if (this.variableSearch[i]) {
+        this.params.variableComponentFilters.push(this.variableSearch[i]);
+      }
+    }
+    this.initDatatype();
+  }
+  clearSearch() {
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      this.params.variableComponentFilters = [];
+      this.variableSearch = [];
     }
     this.initDatatype();
   }
@@ -730,13 +748,6 @@ $row-variable-height: 60px;
   border: transparent;
 }
 
-.button.is-success.is-outlined.is-fullwidth {
-  color: $primary-dark;
-  border-color: $primary-dark;
-}
-.button.is-success.is-outlined.is-fullwidth:hover {
-  border-color: $success;
-}
 .columns {
   margin: 0;
 }

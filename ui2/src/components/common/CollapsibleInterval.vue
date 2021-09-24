@@ -3,8 +3,9 @@
     <div>
       <b-button
         size="is-small"
-        type="is-success is-light"
+        type="is-dark is-light"
         icon-left="plus"
+        outlined
         @click="isCardModalActive = true"
       />
       <b-modal v-model="isCardModalActive" outlined scroll="keep">
