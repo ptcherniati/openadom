@@ -3,58 +3,98 @@
     <PageView class="with-submenu">
       <SubMenu :root="applicationName" :paths="subMenuPaths" />
       <h1 class="title main-title">{{ title }}</h1>
-      <div class="card">
-        <div class="card-header">
-          <span v-for="(authReference, key) in authReferences" :key="key">
-            <span>{{ key }}</span>
-            <b-select placeholder="Select a name" @input="selectAuthorization(key, $event)">
-              <option
-                v-for="option in authReference.referenceValues"
-                :key="option.naturalKey"
-                :value="option.naturalKey"
-              >
-                {{ option.naturalKey }}
-              </option>
-            </b-select>
-            <span></span>
-          </span>
+      <div class="columns">
+        <div class="column is-3" v-for="(authReference, key) in authReferences" :key="key">
+          <div class="columns">
+            <div class="column is-3" style="padding-top: 20px">
+              <p style="text-transform: capitalize">{{ key }}</p>
+            </div>
+            <div class="column">
+              <b-field>
+                <b-select placeholder="Select a name" @input="selectAuthorization(key, $event)" expanded>
+                  <option
+                      v-for="option in authReference.referenceValues"
+                      :key="option.naturalKey"
+                      :value="option.naturalKey"
+                  >
+                    {{ option.naturalKey }}
+                  </option>
+                </b-select>
+              </b-field>
+            </div>
+          </div>
         </div>
-        <div class="card-content" v-if="isAuthorisationsSelected()">
-          <form class="card">
-            <h1 class="card-header">
-              {{
-                Object.entries(this.selected.requiredauthorizations)
+        <div class="column">
+          <h1 class="card-header">
+            {{
+              Object.entries(this.selected.requiredauthorizations)
                   .map((e) => e[0] + " : " + e[1])
                   .join(", ")
-              }}
-            </h1>
-            <b-collapse :open="false">
-              <template #trigger>
-                <b-button icon-left="upload" label="Déposer une version sur ce dépot"></b-button>
+            }}
+          </h1>
+        </div>
+      </div>
+      <div class="columns">
+        <div class="column">
+          <form class="card">
+            <b-collapse class="card" animation="slide" aria-id="fileDeposit">
+              <template #trigger="props">
+                <div class="card-header" role="button" aria-controls="fileDeposit">
+                  <p class="card-header-title">Déposer une version sur ce dépot</p>
+                  <a class="card-header-icon">
+                    <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+                  </a>
+                </div>
               </template>
               <div class="card-content">
-                <b-upload v-model="file" class="file-label">
-                  <span class="file-cta">
-                    <b-icon class="file-icon" icon="upload"></b-icon>
-                    <span class="file-label">Choisir un fichier</span>
-                  </span>
-                  <span class="file-name" v-if="file">
-                    {{ file.name }}
-                  </span>
-                </b-upload>
-
-                <b-field>
-                  <input type="date" v-model="startDate" icon-left="calendar-today" />
-                </b-field>
-
-                <b-field>
-                  <input type="date" v-model="endDate" icon-left="calendar-today" />
-                </b-field>
-                <b-button @click="upload">Envoyer</b-button>
+                <div class="content">
+                  <div class="columns">
+                    <div class="column">
+                      <b-field label="Date de début">
+                        <b-datepicker
+                            placeholder="Type or select a date..."
+                            icon="calendar"
+                            editable
+                            v-model="startDate"
+                        >
+                        </b-datepicker>
+                      </b-field>
+                    </div>
+                    <div class="column">
+                      <b-field label="Date de fin">
+                        <b-datepicker
+                            placeholder="Type or select a date..."
+                            icon="calendar"
+                            editable
+                            v-model="endDate"
+                        >
+                        </b-datepicker>
+                      </b-field>
+                    </div>
+                  </div>
+                  <b-upload v-model="file" class="file-label">
+                    <span class="file-cta">
+                      <b-icon class="file-icon" icon="upload"></b-icon>
+                      <span class="file-label">Choisir un fichier</span>
+                    </span>
+                    <span class="file-name" v-if="file">
+                      {{ file.name }}
+                    </span>
+                  </b-upload>
+                </div>
               </div>
+              <footer class="card-footer">
+                <div class="column is-4">
+                  <b-button type="is-dark" @click="upload">Envoyer</b-button>
+                </div>
+              </footer>
             </b-collapse>
           </form>
-          <table class="datasetsPanel" v-if="datasets && Object.keys(datasets).length">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-content" v-if="isAuthorisationsSelected()">
+          <table class="table is-bordered is-striped is-fullwidth" v-if="datasets && Object.keys(datasets).length">
             <caption>
               Liste des jeux de données sur ce dépôt
             </caption>
@@ -64,9 +104,9 @@
               <th align>publication</th>
             </tr>
             <tr
-              @click="showDatasets(dataset)"
-              v-for="(dataset, periode) in datasets"
-              :key="dataset.id"
+                @click="showDatasets(dataset)"
+                v-for="(dataset, periode) in datasets"
+                :key="dataset.id"
             >
               <td align>{{ periode }}</td>
               <td align>{{ Object.keys(dataset.datasets).length }}</td>
@@ -74,12 +114,12 @@
             </tr>
           </table>
           <div>toto<span v-if="currentDataset && currentDataset.length">tutut</span>iti</div>
-          <table class="datasetsPanel" v-if="currentDataset && currentDataset.length">
+          <table class="table is-bordered is-striped is-fullwidth" v-if="currentDataset && currentDataset.length">
             <caption>
               Liste des versions pour la période
               {{
                 currentDataset[0].periode
-              }}>
+              }}
             </caption>
             <tr>
               <th align>ID</th>
@@ -92,7 +132,7 @@
               <th align>supprimer</th>
             </tr>
             <tr v-for="dataset in currentDataset" :key="dataset.id">
-              <td align>{{ dataset.id.slice(0,8) }}</td>
+              <td align>{{ dataset.id.slice(0, 8) }}</td>
               <td align>{{ dataset.size }}</td>
               <td align>{{ UTCToString(dataset.params.createdate) }}</td>
               <td align>{{ dataset.createuser }}</td>
@@ -101,20 +141,20 @@
               <td align>
                 <b-field>
                   <b-button
-                    type="is-primary is-light"
-                    size="is-large"
-                    :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
-                    @click="publish(dataset, !dataset.params.published)"
+                      type="is-primary is-light"
+                      size="is-large"
+                      :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                      @click="publish(dataset, !dataset.params.published)"
                   />
                 </b-field>
               </td>
               <td>
                 <b-field>
                   <b-button
-                    type="is-danger"
-                    size="is-medium"
-                    icon-right="trash-alt"
-                    @click="remove(dataset, dataset.params.published)"
+                      type="is-danger"
+                      size="is-medium"
+                      icon-right="trash-alt"
+                      @click="remove(dataset, dataset.params.published)"
                   />
                 </b-field>
               </td>
