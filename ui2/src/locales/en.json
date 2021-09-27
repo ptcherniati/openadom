@@ -126,9 +126,13 @@
         "data-types": "Data types",
         "consult-authorization": "Consult authorizations",
         "réinitialiser": "Reset",
+        "all": "all",
+        "filtre": "filter",
+        "trie": "sort",
         "ASC": "ASC",
         "DESC": "DESC",
-        "validate": "Validate"
+        "validate": "Validate",
+        "recap": "Display summary"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Add an authorization",

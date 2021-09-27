@@ -24,18 +24,24 @@
         ></b-button>
       </div>
       <div class="column is-2-desktop is-4-tablet">
-        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined>{{
-          $t("dataTypesManagement.réinitialiser")
-        }}</b-button>
+        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
+          >{{ $t("dataTypesManagement.réinitialiser") }}
+          {{ $t("dataTypesManagement.all") }}</b-button
+        >
       </div>
       <div class="column is-6-desktop is-12-tablet">
+        {{ $t("dataTypesManagement.recap") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
             <div
               v-for="(variableComponent, index) in this.params.variableComponentFilters"
               :key="index"
             >
-              <b-tag size="is-medium" rounded>
+              <b-tag
+                size="is-medium"
+                rounded
+                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+              >
                 {{ variableComponent.variableComponentKey.variable }}
                 {{ $t("ponctuation.colon") }}
                 {{ variableComponent.variableComponentKey.component }}
@@ -47,7 +53,12 @@
               v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
               :key="index"
             >
-              <b-tag type="is-primary" size="is-medium" rounded>
+              <b-tag
+                type="is-primary"
+                size="is-medium"
+                rounded
+                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+              >
                 {{ variableComponent.variableComponentKey.variable }}
                 {{ $t("ponctuation.colon") }}
                 {{ variableComponent.variableComponentKey.component }}
@@ -59,7 +70,7 @@
         </b-field>
       </div>
     </div>
-    <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails" width="500">
+    <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails">
       <div class="card">
         <header class="card-header is-align-content-center">
           <p class="card-header-title">{{ currentReferenceDetail.reference }}</p>
@@ -177,23 +188,15 @@
             <div class="row">
               <div class="columns">
                 <div class="column">
-                  <b-button
-                    icon-left="redo"
-                    expanded
-                    type="is-danger"
-                    @click="clearOrder"
-                    outlined
-                    >{{ $t("dataTypesManagement.réinitialiser") }}</b-button
+                  <b-button icon-left="redo" expanded type="is-danger" @click="clearOrder" outlined
+                    >{{ $t("dataTypesManagement.réinitialiser") }}
+                    {{ $t("dataTypesManagement.trie") }}</b-button
                   >
                 </div>
                 <div class="column">
-                  <b-button
-                    icon-left="check"
-                    type="is-dark"
-                    expanded
-                    @click="initDatatype"
-                    outlined
-                    >{{ $t("dataTypesManagement.validate") }}</b-button
+                  <b-button icon-left="check" type="is-dark" expanded @click="initDatatype" outlined
+                    >{{ $t("dataTypesManagement.validate") }}
+                    {{ $t("dataTypesManagement.trie") }}</b-button
                   >
                 </div>
               </div>
@@ -246,17 +249,6 @@
                     @blur="addVariableSearch(component)"
                     size="is-small"
                   ></b-input>
-                  <!--
-                    @keyup.native="RegExr = !RegExr"
-                    <b-button
-                      v-if="RegExr = true"
-                    v-model="params.variableComponentFilters.isRegExp"
-                    class="is-small"
-                    :data="params.variableComponentFilters.isRegExp"
-                    @click="params.variableComponentFilters.isRegExp = !params.variableComponentFilters.isRegExp"
-                    style="border-top: none; border-bottom: none; border-right: none"
-                    >.*</b-button
-                  >-->
                 </b-field>
               </div>
             </div>
@@ -265,15 +257,17 @@
       </div>
       <div class="columns">
         <div class="column is-offset-8 is-2">
-          <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch">{{
-            $t("dataTypesManagement.réinitialiser")
-          }}</b-button>
+          <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
+            >{{ $t("dataTypesManagement.réinitialiser") }}
+            {{ $t("dataTypesManagement.filtre") }}</b-button
+          >
         </div>
         <div class="column is-2">
           <p class="control">
-            <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch">{{
-              $t("dataTypesManagement.validate")
-            }}</b-button>
+            <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
+              >{{ $t("dataTypesManagement.validate") }}
+              {{ $t("dataTypesManagement.filtre") }}</b-button
+            >
           </p>
         </div>
       </div>
@@ -753,10 +747,6 @@ $row-variable-height: 60px;
       white-space: nowrap;
     }
   }
-}
-
-.referenceToast {
-  background-color: rgb(61, 107, 8);
 }
 
 .DataSetTableView-variable-row {

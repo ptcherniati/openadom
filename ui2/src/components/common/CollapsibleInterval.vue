@@ -49,9 +49,15 @@
             </div>
             <div class="row">
               <div class="columns">
-                <div class="column is-one-fifth>"></div>
-                <div class="column is-four-fifth">
-                  <b-button type="is-primary" size="is-large" icon-right="filter" @click="submit" />
+                <div class="column is-4"></div>
+                <div class="column is-4">
+                  <b-button
+                    icon-left="filter"
+                    type="is-dark"
+                    expanded
+                    @click="submit"
+                    outlined
+                  ></b-button>
                 </div>
               </div>
             </div>

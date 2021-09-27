@@ -128,9 +128,13 @@
         "data-types": "Type de données",
         "consult-authorization": "Consulter les autorisations",
         "réinitialiser": "Réinitialiser",
+        "all": "tous",
+        "filtre": "filtre",
+        "trie": "trie",
         "ASC": "ASC",
         "DESC": "DESC",
-        "validate": "Valider"
+        "validate": "Valider",
+        "recap": "Récapitulation de l'affichage"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",
