@@ -134,7 +134,9 @@
         "ASC": "ASC",
         "DESC": "DESC",
         "validate": "Valider",
-        "recap": "Récapitulation de l'affichage"
+        "recap": "Condition de l'affichage",
+        "title-modal-numeric": "Choix de l'interval de valeur",
+        "title-modal-date": "Choix de l'interval de date"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",

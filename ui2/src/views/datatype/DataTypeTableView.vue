@@ -29,7 +29,7 @@
           {{ $t("dataTypesManagement.all") }}</b-button
         >
       </div>
-      <div class="column is-6-desktop is-12-tablet">
+      <div class="column is-12-tablet" style="margin-top: 10px">
         {{ $t("dataTypesManagement.recap") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
@@ -236,7 +236,7 @@
                   <b-field v-if="'date' === component.type || 'numeric' === component.type">
                     <CollapsibleInterval
                       :variableComponent="component"
-                      @setting_interval="addSearch"
+                      @setting_interval="addVariableSearch"
                     ></CollapsibleInterval>
                   </b-field>
                   <b-input

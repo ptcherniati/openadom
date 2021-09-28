@@ -10,6 +10,14 @@
       />
       <b-modal v-model="isCardModalActive" outlined scroll="keep">
         <div class="card">
+          <header class="card-header is-align-content-center">
+            <p class="card-header-title" v-if="this.variableComponent.type == 'numeric'">
+              {{ $t("dataTypesManagement.title-modal-numeric") }}
+            </p>
+            <p class="card-header-title" v-if="this.variableComponent.type == 'date'">
+              {{ $t("dataTypesManagement.title-modal-date") }}
+            </p>
+          </header>
           <div class="rows">
             <div class="row">
               <div class="columns">

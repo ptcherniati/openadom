@@ -132,7 +132,9 @@
         "ASC": "ASC",
         "DESC": "DESC",
         "validate": "Validate",
-        "recap": "Display summary"
+        "recap": "Display summary",
+        "title-modal-numeric": "Choice of value range",
+        "title-modal-date": "Choice of date range"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Add an authorization",
