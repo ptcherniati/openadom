@@ -264,7 +264,7 @@
                   ></b-input>
                   <b-field v-if="isRegExp">
                     <b-button type="is-dark"
-                    size="is-small"> {{ $t("ponctuation.regEx") }}</b-button>
+                    size="is-small" @click="this.params.variableComponentFilters.isRegex = isRegExp"> {{ $t("ponctuation.regEx") }}</b-button>
                   </b-field>
                 </b-field>
               </div>
@@ -667,7 +667,7 @@ export default class DataTypeTableView extends Vue {
   }
 
   addVariableSearch(variableComponent) {
-    let { key, variable, component, type, format } = variableComponent;
+    let { key, variable, component, type, format, isRegExp } = variableComponent;
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
       (c) =>
@@ -683,6 +683,7 @@ export default class DataTypeTableView extends Vue {
         filter: value,
         type: type,
         format: format,
+        isRegExp: isRegExp,
       });
     }
     if (variableComponent.intervalValues) {
@@ -693,6 +694,7 @@ export default class DataTypeTableView extends Vue {
         }),
         type: type,
         format: format,
+        isRegExp: isRegExp,
         intervalValues: variableComponent.intervalValues,
         ...(search ? new IntervalValues(search) : {}),
       });
