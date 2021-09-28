@@ -141,6 +141,15 @@
         "data-types": "Type de données",
         "consult-authorization": "Consulter les autorisations"
     },
+    "dataTypesRepository":  {
+        "card-title-upload-file": "Déposer une version sur ce jeux de données",
+        "start-date": "Date de début",
+        "end-date": "Date de fin",
+        "choise-file": "Choisir un fichier",
+        "submit": "Envoyer",
+        "list-file-data": "Liste des jeux de données sur ce dépôt",
+        "list-file-data-period": "Liste des versions pour la période"
+    },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",
         "sub-menu-data-type-authorizations": "autorisations de {dataType}",

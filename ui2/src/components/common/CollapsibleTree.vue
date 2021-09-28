@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="CollapsibleTree-buttons">
-        <b-field class="file button is-small is-info" v-if="onUploadCb">
+        <div class="file button is-small is-info" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
             class="file-label"
@@ -48,16 +48,18 @@
               <b-icon class="file-icon" icon="upload"></b-icon>
             </span>
           </b-upload>
-        </b-field>
-        <b-field v-else>
+        </div>
+        <div v-else>
           <b-button
             size="is-small"
             class="ml-1"
             label="Gérer les jeux de données"
             @click="repositoryRedirect(option.label)"
+            type="is-dark"
+            outlined
           >
           </b-button>
-        </b-field>
+        </div>
         <div v-for="button in buttons" :key="button.id">
           <b-button
             :icon-left="button.iconName"

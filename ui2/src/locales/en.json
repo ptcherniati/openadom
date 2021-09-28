@@ -140,6 +140,15 @@
         "data-types":"Data types",
         "consult-authorization":"Consult authorizations"
     },
+    "dataTypesRepository":  {
+        "card-title-upload-file": "Drop a version on this dataset",
+        "start-date": "Start date",
+        "end-date": "End date",
+        "choise-file": "Choose a file",
+        "submit": "Submit",
+        "list-file-data": "List of datasets on this repository",
+        "list-file-data-period": "List of versions for the period"
+    },
     "dataTypeAuthorizations":{
         "add-auhtorization":"Add an authorization",
         "sub-menu-data-type-authorizations":"{dataType} authorizations",
