@@ -134,7 +134,8 @@
         "ASC": "ASC",
         "DESC": "DESC",
         "validate": "Valider",
-        "recap": "Condition de l'affichage",
+        "filtered": "Les filtres utilisés",
+        "sorted": "Les tries utilisés",
         "title-modal-numeric": "Choix de l'interval de valeur",
         "title-modal-date": "Choix de l'interval de date"
     },

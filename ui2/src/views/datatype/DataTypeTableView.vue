@@ -4,51 +4,11 @@
     <SubMenu :paths="subMenuPaths" :root="application.title" />
 
     <h1 class="title main-title">{{ dataTypeId }}</h1>
-    <div class="columns">
-      <div class="column is-2-desktop is-4-tablet">
-        <b-button
-          icon-left="sort-amount-down"
-          :label="$t('applications.trier')"
-          type="is-primary"
-          @click="showSort = !showSort"
-          outlined
-        ></b-button>
-      </div>
-      <div class="column is-2-desktop is-4-tablet">
-        <b-button
-          icon-left="filter"
-          :label="$t('applications.filter')"
-          type="is-primary"
-          @click="showFilter = !showFilter"
-          outlined
-        ></b-button>
-      </div>
-      <div class="column is-2-desktop is-4-tablet">
-        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
-          >{{ $t("dataTypesManagement.réinitialiser") }}
-          {{ $t("dataTypesManagement.all") }}</b-button
-        >
-      </div>
-      <div class="column is-12-tablet" style="margin-top: 10px">
-        {{ $t("dataTypesManagement.recap") }} {{ $t("ponctuation.colon") }}
+    <div class="columns" v-if="!showSort && !showFilter">
+      <div class="column is-5-desktop is-12-tablet">
+        {{ $t("dataTypesManagement.sorted") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
-            <div
-              v-for="(variableComponent, index) in this.params.variableComponentFilters"
-              :key="index"
-            >
-              <b-tag
-                size="is-medium"
-                rounded
-                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
-              >
-                {{ variableComponent.variableComponentKey.variable }}
-                {{ $t("ponctuation.colon") }}
-                {{ variableComponent.variableComponentKey.component }}
-                {{ $t("ponctuation.arrow-right") }}
-                {{ variableComponent.filter }}
-              </b-tag>
-            </div>
             <div
               v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
               :key="index"
@@ -68,6 +28,56 @@
             </div>
           </b-taglist>
         </b-field>
+      </div>
+      <div class="column is-5-desktop is-12-tablet">
+        {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+        <b-field grouped group-multiline>
+          <b-taglist>
+            <div
+              v-for="(variableComponent, index) in this.params.variableComponentFilters"
+              :key="index"
+            >
+              <b-tag
+                size="is-medium"
+                rounded
+                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+              >
+                {{ variableComponent.variableComponentKey.variable }}
+                {{ $t("ponctuation.colon") }}
+                {{ variableComponent.variableComponentKey.component }}
+                {{ $t("ponctuation.arrow-right") }}
+                {{ variableComponent.filter }}
+              </b-tag>
+            </div>
+          </b-taglist>
+        </b-field>
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column is-5-desktop is-4-tablet">
+        <b-button
+          icon-left="sort-amount-down"
+          :label="$t('applications.trier')"
+          type="is-primary"
+          @click="showSort = !showSort"
+          outlined
+        ></b-button>
+      </div>
+      <div class="column is-5-desktop is-4-tablet">
+        <b-button
+          icon-left="filter"
+          :label="$t('applications.filter')"
+          type="is-light"
+          @click="showFilter = !showFilter"
+          outlined
+          inverted
+        ></b-button>
+      </div>
+      <div class="column is-2-desktop is-4-tablet">
+        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
+          >{{ $t("dataTypesManagement.réinitialiser") }}
+          {{ $t("dataTypesManagement.all") }}</b-button
+        >
       </div>
     </div>
     <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails">
@@ -217,7 +227,9 @@
           <b-collapse class="card" animation="slide" :open="isOpen == index" @open="isOpen = index">
             <template #trigger="props">
               <div class="card-header" role="button">
-                <p class="card-header-title">{{ variable.id }}</p>
+                <p class="card-header-title" style="text-transform: capitalize">
+                  {{ variable.id }}
+                </p>
                 <a class="card-header-icon">
                   <b-icon :icon="props.open ? 'sort-down' : 'sort-up'"> </b-icon>
                 </a>
@@ -256,7 +268,30 @@
         </div>
       </div>
       <div class="columns">
-        <div class="column is-offset-8 is-2">
+        <div class="column is-8">
+          {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+          <b-field grouped group-multiline>
+            <b-taglist>
+              <div
+                v-for="(variableComponent, index) in this.params.variableComponentFilters"
+                :key="index"
+              >
+                <b-tag
+                  size="is-medium"
+                  rounded
+                  style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                >
+                  {{ variableComponent.variableComponentKey.variable }}
+                  {{ $t("ponctuation.colon") }}
+                  {{ variableComponent.variableComponentKey.component }}
+                  {{ $t("ponctuation.arrow-right") }}
+                  {{ variableComponent.filter }}
+                </b-tag>
+              </div>
+            </b-taglist>
+          </b-field>
+        </div>
+        <div class="column is-2">
           <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
             >{{ $t("dataTypesManagement.réinitialiser") }}
             {{ $t("dataTypesManagement.filtre") }}</b-button
@@ -276,14 +311,16 @@
       <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 690px">
         <table class="table is-striped">
           <caption v-if="variables.length == 0">
-            {{
-              $t("alert.dataTypeFiltreEmpty")
-            }}
-            <b-button icon-left="redo" type="is-primary" @click="reInit">{{
-              $t("dataTypesManagement.réinitialiser")
-            }}</b-button>
+            <div class="columns">
+              {{ $t("alert.dataTypeFiltreEmpty") }}
+            </div>
+            <div class="columns">
+              <b-button icon-left="redo" type="is-danger" @click="reInit">{{
+                $t("dataTypesManagement.réinitialiser")
+              }}</b-button>
+            </div>
           </caption>
-          <thead>
+          <thead style="text-transform: capitalize; text-align: center">
             <tr class="DataSetTableView-variable-row">
               <th
                 v-for="variable in variables"
@@ -668,6 +705,7 @@ export default class DataTypeTableView extends Vue {
       }
     }
     this.initDatatype();
+    this.showFilter = false;
   }
   clearSearch() {
     for (var i = 0; i < this.variableSearch.length; i++) {

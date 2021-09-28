@@ -132,7 +132,8 @@
         "ASC": "ASC",
         "DESC": "DESC",
         "validate": "Validate",
-        "recap": "Display summary",
+        "filtered": "Filters used",
+        "sorted": "The sorts used",
         "title-modal-numeric": "Choice of value range",
         "title-modal-date": "Choice of date range"
     },
