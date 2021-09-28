@@ -173,6 +173,7 @@
         "greater" : ">",
         "arrow-right": "->",
         "arrow-left": "<-",
-        "slash": "/"
+        "slash": "/",
+        "regEx": ".*"
     }
 }

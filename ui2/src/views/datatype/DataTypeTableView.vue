@@ -260,7 +260,12 @@
                     type="search"
                     @blur="addVariableSearch(component)"
                     size="is-small"
+                    @keyup.native="isRegExp=true"
                   ></b-input>
+                  <b-field v-if="isRegExp">
+                    <b-button type="is-dark"
+                    size="is-small"> {{ $t("ponctuation.regEx") }}</b-button>
+                  </b-field>
                 </b-field>
               </div>
             </div>
@@ -458,6 +463,7 @@ export default class DataTypeTableView extends Vue {
   activeTab = 0;
   isOpen = 0;
   variableSearch = [];
+  isRegExp=false;
 
   async created() {
     await this.init();
@@ -695,6 +701,7 @@ export default class DataTypeTableView extends Vue {
       this.variableSearch.push(search);
     }
     this.initDatatype();
+    this.isRegExp = false;
   }
   addSearch() {
     this.params.variableComponentFilters = [];
@@ -705,6 +712,7 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
     this.showFilter = false;
+    this.isRegExp = false;
   }
   clearSearch() {
     for (var i = 0; i < this.variableSearch.length; i++) {
