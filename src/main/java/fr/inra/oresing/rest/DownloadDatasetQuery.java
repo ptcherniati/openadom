@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
@@ -111,9 +112,9 @@ public class DownloadDatasetQuery {
                 .map(vck -> {
                     String format;
                     if ("numeric".equals(vck.type)) {
-                        format = "(nullif(datavalues->'%s'->>'%s', ''))::numeric  %s";
+                        format = "(nullif(datavalues#>>'{\"%s\",\"%s\"}', ''))::numeric";
                     } else {
-                        format = "datavalues->'%s'->'%s' %s";
+                        format = "datavalues #>'{\"%s\",\"%s\"}'";
                     }
 
                     return String.format(
@@ -144,45 +145,51 @@ public class DownloadDatasetQuery {
         List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(vck.filter)) {
             filters.add(String.format(
-                            "datavalues->'%s'->>'%s' %s",
+                            "datavalues #> '{\"%s\",\"%s\"}'  @@ ('$ like_regex \"'||%s||'\"')::jsonpath",
                             StringEscapeUtils.escapeSql(vck.getVariable()),
                             StringEscapeUtils.escapeSql(vck.getComponent()),
-                            String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", addArgumentAndReturnSubstitution(vck.getFilter()))
+                            /*String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", */addArgumentAndReturnSubstitution(vck.getFilter())//)
                     )
             );
 
         } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                DateLineChecker dateLineChecker = new DateLineChecker(vck.variableComponentKey, vck.format);
                 filters.add(
                         String.format(
-                                "substring(datavalues->'%s'->>'%s' from 6 for 19)::timestamp  BETWEEN %s::TIMESTAMP AND %s::TIMESTAMP",
+                                "datavalues #> '{\"%1$s\",\"%2$s\"}'@@ ('$ >= \"date:'||%3$s||'\" && $ <= \"date:'||%4$s||'Z\"')::jsonpath",
                                 StringEscapeUtils.escapeSql(vck.getVariable()),
                                 StringEscapeUtils.escapeSql(vck.getComponent()),
-                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "-infinity" : vck.intervalValues.from),
-                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "infinity" : vck.intervalValues.to)
+                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "0" : vck.intervalValues.from),
+                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "9" : vck.intervalValues.to)
                         )
                 );
             }
         } else if (vck.intervalValues != null && "numeric".equals(vck.type)) {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                //datavalues #> '{"t","value"}'@@ '$. double() >= 1 && $. double() <= 2'
+                List<String> filter = new LinkedList<>();
                 if (!Strings.isNullOrEmpty(vck.intervalValues.from)) {
-                    filters.add(String.format(
-                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric >= %s::numeric",
-                                    StringEscapeUtils.escapeSql(vck.getVariable()),
-                                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                    filter.add(String.format(
+                                    "$. double() >= '||%s||'",
                                     addArgumentAndReturnSubstitution(vck.intervalValues.from)
                             )
                     );
                 }
                 if (!Strings.isNullOrEmpty(vck.intervalValues.to)) {
-                    filters.add(String.format(
-                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric < %s::numeric",
-                                    StringEscapeUtils.escapeSql(vck.getVariable()),
-                                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                    filter.add(String.format(
+                                    "$. double() <= '||%s||'",
                                     addArgumentAndReturnSubstitution(vck.intervalValues.to)
                             )
                     );
                 }
+                filters.add(
+                        String.format("datavalues #> '{\"%s\",\"%s\"}'@@ ('%s')::jsonpath",
+                                StringEscapeUtils.escapeSql(vck.getVariable()),
+                                StringEscapeUtils.escapeSql(vck.getComponent()),
+                                filter.stream().collect(Collectors.joining(" && "))
+                        )
+                );
             }
         }
         return filters.stream()
