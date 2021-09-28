@@ -4,8 +4,8 @@
     <SubMenu :paths="subMenuPaths" :root="application.title" />
 
     <h1 class="title main-title">{{ dataTypeId }}</h1>
-    <div class="columns" v-if="!showSort && !showFilter">
-      <div class="column is-5-desktop is-12-tablet">
+    <div class="columns" v-if="(!showSort && !showFilter)">
+      <div v-if="(this.params.variableComponentOrderBy.length != 0 || this.params.variableComponentFilters.length != 0)" class="column is-5-desktop is-12-tablet">
         {{ $t("dataTypesManagement.sorted") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
@@ -29,7 +29,7 @@
           </b-taglist>
         </b-field>
       </div>
-      <div class="column is-5-desktop is-12-tablet">
+      <div v-if="(this.params.variableComponentOrderBy.length != 0 || this.params.variableComponentFilters.length != 0)" class="column is-5-desktop is-12-tablet">
         {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
@@ -457,7 +457,6 @@ export default class DataTypeTableView extends Vue {
   currentReferenceDetail = { active: false };
   activeTab = 0;
   isOpen = 0;
-  RegExr = false;
   variableSearch = [];
 
   async created() {

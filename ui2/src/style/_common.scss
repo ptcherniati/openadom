@@ -105,3 +105,9 @@ a.dropdown-item {
 .icon.is-right.is-small.is-clickable {
   color: $primary;
 }
+.select:not(.is-multiple):not(.is-loading)::after {
+  border-color: $primary;
+}
+.select select:focus select:active {
+  border-color: $dark;
+}
