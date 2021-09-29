@@ -6,6 +6,7 @@
         "references-data": "Données de {refName}",
         "application-creation": "Créer une application",
         "data-types-page": "Type de données de {applicationName}",
+        "data-types-repository": "Gestion des jeux de données de {applicationName}",
         "data-type-authorizations": "Autorisations de {dataType}",
         "data-type-new-authorization": "Nouvelle autorisation pour {dataType}"
     },
@@ -157,10 +158,21 @@
         "card-title-upload-file": "Déposer une version sur ce jeux de données",
         "start-date": "Date de début",
         "end-date": "Date de fin",
-        "choise-file": "Choisir un fichier",
+        "choose-file": "Choisir un fichier",
+        "placeholder-datepicker": "Taper ou sélectionner une date...",
+        "placeholder-select": "Sélectionner...",
         "submit": "Envoyer",
         "list-file-data": "Liste des jeux de données sur ce dépôt",
-        "list-file-data-period": "Liste des versions pour la période"
+        "list-file-data-period": "Liste des versions pour la période",
+        "table-file-data-id": "ID",
+        "table-file-data-size": "Taille",
+        "table-file-data-create": "Création",
+        "table-file-data-create-for": "Créer par :",
+        "table-file-data-publish": "Publier",
+        "table-file-data-publish-for": "Publier par :",
+        "table-file-data-publication": "Publication",
+        "table-file-data-delete": "Supprimer",
+        "table-file-data-period": "Période"
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",

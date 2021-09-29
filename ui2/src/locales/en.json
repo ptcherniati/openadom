@@ -6,6 +6,7 @@
         "references-data":"{refName} data",
         "application-creation":"Application creation",
         "data-types-page":"{applicationName} data types",
+        "data-types-repository": "Management of data sets {applicationName}",
         "data-type-authorizations":"{dataType} authorizations",
         "data-type-new-authorization":"New authorization for {dataType}"
     },
@@ -151,6 +152,26 @@
         "title-modal-numeric": "Choice of value range",
         "title-modal-date": "Choice of date range"
     },
+    "dataTypesRepository":  {
+        "card-title-upload-file": "Drop a version on this dataset",
+        "start-date": "Start date",
+        "end-date": "End date",
+        "choose-file": "Choose a file",
+        "placeholder-datepicker": "Type or select a date...",
+        "placeholder-select": "Select...",
+        "submit": "Submit",
+        "list-file-data": "List of datasets on this repository",
+        "list-file-data-period": "List of versions for the period",
+        "table-file-data-id": "ID",
+        "table-file-data-size": "Size",
+        "table-file-data-create": "Create",
+        "table-file-data-create-by": "Create by :",
+        "table-file-data-publish": "Publish",
+        "table-file-data-publish-by": "Publish by :",
+        "table-file-data-publication": "Publication",
+        "table-file-data-delete": "Delete",
+        "table-file-data-period": "Period"
+    },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Add an authorization",
         "sub-menu-data-type-authorizations": "{dataType} authorizations",
@@ -186,15 +207,7 @@
         "arrow-right": "->",
         "arrow-left": "<-",
         "slash": "/",
-        "regEx": ".*"
-    },
-    "dataTypesRepository":  {
-        "card-title-upload-file": "Drop a version on this dataset",
-        "start-date": "Start date",
-        "end-date": "End date",
-        "choise-file": "Choose a file",
-        "submit": "Submit",
-        "list-file-data": "List of datasets on this repository",
-        "list-file-data-period": "List of versions for the period"
-    },
+        "regEx": ".*",
+        "star": "*"
+    }
 }

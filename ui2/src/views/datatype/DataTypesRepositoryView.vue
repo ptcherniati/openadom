@@ -2,7 +2,9 @@
   <div>
     <PageView class="with-submenu">
       <SubMenu :root="applicationName" :paths="subMenuPaths" />
-      <h1 class="title main-title">{{ title }}</h1>
+      <h1 class="title main-title">
+        {{ $t("titles.data-types-repository", { applicationName }) }}
+      </h1>
       <div class="columns">
         <div class="column is-3" v-for="(authReference, key) in authReferences" :key="key">
           <div class="columns">
@@ -11,11 +13,15 @@
             </div>
             <div class="column">
               <b-field>
-                <b-select placeholder="Select a name" @input="selectAuthorization(key, $event)" expanded>
+                <b-select
+                  :placeholder="$t('dataTypesRepository.placeholder-select')"
+                  @input="selectAuthorization(key, $event)"
+                  expanded
+                >
                   <option
-                      v-for="option in authReference.referenceValues"
-                      :key="option.naturalKey"
-                      :value="option.naturalKey"
+                    v-for="option in authReference.referenceValues"
+                    :key="option.naturalKey"
+                    :value="option.naturalKey"
                   >
                     {{ option.naturalKey }}
                   </option>
@@ -28,8 +34,8 @@
           <h1 class="card-header">
             {{
               Object.entries(this.selected.requiredauthorizations)
-                  .map((e) => e[0] + " : " + e[1])
-                  .join(", ")
+                .map((e) => e[0] + " : " + e[1])
+                .join(", ")
             }}
           </h1>
         </div>
@@ -40,7 +46,9 @@
             <b-collapse class="card" animation="slide" aria-id="fileDeposit">
               <template #trigger="props">
                 <div class="card-header" role="button" aria-controls="fileDeposit">
-                  <p class="card-header-title">Déposer une version sur ce dépot</p>
+                  <p class="card-header-title">
+                    {{ $t("dataTypesRepository.card-title-upload-file") }}
+                  </p>
                   <a class="card-header-icon">
                     <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
                   </a>
@@ -50,23 +58,23 @@
                 <div class="content">
                   <div class="columns">
                     <div class="column">
-                      <b-field label="Date de début">
+                      <b-field :label="$t('dataTypesRepository.start-date')">
                         <b-datepicker
-                            placeholder="Type or select a date..."
-                            icon="calendar"
-                            editable
-                            v-model="startDate"
+                          :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
+                          icon="calendar"
+                          editable
+                          v-model="startDate"
                         >
                         </b-datepicker>
                       </b-field>
                     </div>
                     <div class="column">
-                      <b-field label="Date de fin">
+                      <b-field :label="$t('dataTypesRepository.end-date')">
                         <b-datepicker
-                            placeholder="Type or select a date..."
-                            icon="calendar"
-                            editable
-                            v-model="endDate"
+                          :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
+                          icon="calendar"
+                          editable
+                          v-model="endDate"
                         >
                         </b-datepicker>
                       </b-field>
@@ -75,7 +83,7 @@
                   <b-upload v-model="file" class="file-label">
                     <span class="file-cta">
                       <b-icon class="file-icon" icon="upload"></b-icon>
-                      <span class="file-label">Choisir un fichier</span>
+                      <span class="file-label">{{ $t("dataTypesRepository.choose-file") }}</span>
                     </span>
                     <span class="file-name" v-if="file">
                       {{ file.name }}
@@ -85,7 +93,9 @@
               </div>
               <footer class="card-footer">
                 <div class="column is-4">
-                  <b-button type="is-dark" @click="upload">Envoyer</b-button>
+                  <b-button type="is-dark" @click="upload">{{
+                    $t("dataTypesRepository.submit")
+                  }}</b-button>
                 </div>
               </footer>
             </b-collapse>
@@ -94,42 +104,51 @@
       </div>
       <div class="card">
         <div class="card-content" v-if="isAuthorisationsSelected()">
-          <table class="table is-bordered is-striped is-fullwidth" v-if="datasets && Object.keys(datasets).length">
+          <table
+            class="table is-bordered is-striped is-fullwidth"
+            v-if="datasets && Object.keys(datasets).length"
+          >
             <caption>
-              Liste des jeux de données sur ce dépôt
+              {{
+                $t("dataTypesRepository.list-file-data")
+              }}
             </caption>
             <tr>
-              <th align>Période</th>
-              <th align>*</th>
-              <th align>publication</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-period") }}</th>
+              <th align>{{ $t("ponctuation.star") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
             </tr>
             <tr
-                @click="showDatasets(dataset)"
-                v-for="(dataset, periode) in datasets"
-                :key="dataset.id"
+              @click="showDatasets(dataset)"
+              v-for="(dataset, periode) in datasets"
+              :key="dataset.id"
             >
               <td align>{{ periode }}</td>
               <td align>{{ Object.keys(dataset.datasets).length }}</td>
               <td align>{{ dataset.publication }}</td>
             </tr>
           </table>
-          <div>toto<span v-if="currentDataset && currentDataset.length">tutut</span>iti</div>
-          <table class="table is-bordered is-striped is-fullwidth" v-if="currentDataset && currentDataset.length">
+          <table
+            class="table is-bordered is-striped is-fullwidth"
+            v-if="currentDataset && currentDataset.length"
+          >
             <caption>
-              Liste des versions pour la période
+              {{
+                $t("dataTypesRepository.list-file-data-period")
+              }}
               {{
                 currentDataset[0].periode
               }}
             </caption>
             <tr>
-              <th align>ID</th>
-              <th align>Taille</th>
-              <th align>Crée le :</th>
-              <th align>par :</th>
-              <th align>Publié le :</th>
-              <th align>par :</th>
-              <th align>publication</th>
-              <th align>supprimer</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-id") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-size") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-create") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-create-by") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-publish") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-publish-by") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
+              <th align>{{ $t("dataTypesRepository.table-file-data-delete") }}</th>
             </tr>
             <tr v-for="dataset in currentDataset" :key="dataset.id">
               <td align>{{ dataset.id.slice(0, 8) }}</td>
@@ -141,20 +160,20 @@
               <td align>
                 <b-field>
                   <b-button
-                      type="is-primary is-light"
-                      size="is-large"
-                      :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
-                      @click="publish(dataset, !dataset.params.published)"
+                    type="is-primary is-light"
+                    size="is-large"
+                    :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                    @click="publish(dataset, !dataset.params.published)"
                   />
                 </b-field>
               </td>
               <td>
                 <b-field>
                   <b-button
-                      type="is-danger"
-                      size="is-medium"
-                      icon-right="trash-alt"
-                      @click="remove(dataset, dataset.params.published)"
+                    type="is-danger"
+                    size="is-medium"
+                    icon-right="trash-alt"
+                    @click="remove(dataset, dataset.params.published)"
                   />
                 </b-field>
               </td>
