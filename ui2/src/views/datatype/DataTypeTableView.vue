@@ -4,8 +4,14 @@
     <SubMenu :paths="subMenuPaths" :root="application.title" />
 
     <h1 class="title main-title">{{ dataTypeId }}</h1>
-    <div class="columns" v-if="(!showSort && !showFilter)">
-      <div v-if="(this.params.variableComponentOrderBy.length != 0 || this.params.variableComponentFilters.length != 0)" class="column is-5-desktop is-12-tablet">
+    <div class="columns" v-if="!showSort && !showFilter">
+      <div
+        v-if="
+          this.params.variableComponentOrderBy.length != 0 ||
+          this.params.variableComponentFilters.length != 0
+        "
+        class="column is-5-desktop is-12-tablet"
+      >
         {{ $t("dataTypesManagement.sorted") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
@@ -29,7 +35,13 @@
           </b-taglist>
         </b-field>
       </div>
-      <div v-if="(this.params.variableComponentOrderBy.length != 0 || this.params.variableComponentFilters.length != 0)" class="column is-5-desktop is-12-tablet">
+      <div
+        v-if="
+          this.params.variableComponentOrderBy.length != 0 ||
+          this.params.variableComponentFilters.length != 0
+        "
+        class="column is-5-desktop is-12-tablet"
+      >
         {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
         <b-field grouped group-multiline>
           <b-taglist>
@@ -254,17 +266,20 @@
                   <b-input
                     v-model="search[component.variable + '_' + component.component]"
                     icon-right="search"
-                    icon-right-clickable
-                    icon-right-pack="fas"
                     placeholder="Search..."
                     type="search"
                     @blur="addVariableSearch(component)"
                     size="is-small"
-                    @keyup.native="isRegExp=true"
                   ></b-input>
-                  <b-field v-if="isRegExp">
-                    <b-button type="is-dark"
-                    size="is-small" @click="this.params.variableComponentFilters.isRegex = isRegExp"> {{ $t("ponctuation.regEx") }}</b-button>
+                  <b-field>
+                    <b-button
+                      type="is-dark"
+                      size="is-small"
+                      @click="this.params.variableComponentFilters.isRegex = true"
+                      outlined
+                    >
+                      {{ $t("ponctuation.regEx") }}</b-button
+                    >
                   </b-field>
                 </b-field>
               </div>
@@ -463,7 +478,7 @@ export default class DataTypeTableView extends Vue {
   activeTab = 0;
   isOpen = 0;
   variableSearch = [];
-  isRegExp=false;
+  isRegExp = false;
 
   async created() {
     await this.init();
@@ -667,7 +682,8 @@ export default class DataTypeTableView extends Vue {
   }
 
   addVariableSearch(variableComponent) {
-    let { key, variable, component, type, format, isRegExp } = variableComponent;
+    let { key, variable, component, type, format } = variableComponent;
+    let isRegExp = this.params.variableComponentFilters.isRegex;
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
       (c) =>
@@ -703,7 +719,6 @@ export default class DataTypeTableView extends Vue {
       this.variableSearch.push(search);
     }
     this.initDatatype();
-    this.isRegExp = false;
   }
   addSearch() {
     this.params.variableComponentFilters = [];
@@ -714,7 +729,6 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
     this.showFilter = false;
-    this.isRegExp = false;
   }
   clearSearch() {
     for (var i = 0; i < this.variableSearch.length; i++) {
