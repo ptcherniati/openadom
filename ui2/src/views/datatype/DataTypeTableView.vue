@@ -7,8 +7,8 @@
     <div class="columns" v-if="!showSort && !showFilter">
       <div
         v-if="
-          this.params.variableComponentOrderBy.length != 0 ||
-          this.params.variableComponentFilters.length != 0
+          this.params.variableComponentOrderBy.length !== 0 ||
+          this.params.variableComponentFilters.length !== 0
         "
         class="column is-5-desktop is-12-tablet"
       >
@@ -37,8 +37,8 @@
       </div>
       <div
         v-if="
-          this.params.variableComponentOrderBy.length != 0 ||
-          this.params.variableComponentFilters.length != 0
+          this.params.variableComponentOrderBy.length !== 0 ||
+          this.params.variableComponentFilters.length !== 0
         "
         class="column is-5-desktop is-12-tablet"
       >
@@ -132,7 +132,7 @@
                     class="row variableComponent"
                   >
                     <div
-                      v-if="variableComponent.variableComponentKey.variable == variable.id"
+                      v-if="variableComponent.variableComponentKey.variable === variable.id"
                       class="columns"
                     >
                       <div class="column orderLabel">
@@ -330,7 +330,7 @@
     <div class="b-table">
       <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 690px">
         <table class="table is-striped">
-          <caption v-if="variables.length == 0">
+          <caption v-if="variables.length === 0">
             <div class="columns">
               {{ $t("alert.dataTypeFiltreEmpty") }}
             </div>
@@ -592,12 +592,12 @@ export default class DataTypeTableView extends Vue {
     return this.refsLinkedTo[row.rowId][component.variable][component.component];
   }
 
-  getTranslation(row, component){
-    var reference = component.checker.refType;
-    var translations = this.translations?.[reference];
+  getTranslation(row, component) {
+    let reference = component.checker.refType;
+    let translations = this.translations?.[reference];
     console.log(translations);
-    var translation = row[component.variable][component.component];
-    return translation ;
+    let translation = row[component.variable][component.component];
+    return translation;
   }
   async getReferenceValues(row, component) {
     const rowId = this.getRefsLinkedToId(row, component);

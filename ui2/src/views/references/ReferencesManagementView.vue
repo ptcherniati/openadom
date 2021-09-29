@@ -137,7 +137,7 @@ export default class ReferencesManagementView extends Vue {
 
   findReferenceByLabel(label) {
     var ref = Object.values(this.application.references).find((ref) => ref.label === label);
-    return { ...ref, 'localName':  ref?.internationalizationName?.[i18n.locale]};
+    return { ...ref, localName: ref?.internationalizationName?.[i18n.locale] };
   }
 }
 </script>

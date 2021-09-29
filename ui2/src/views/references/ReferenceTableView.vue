@@ -31,7 +31,7 @@
           <b-collapse v-else :open="false">
             <template #trigger>
               <b-button
-                :label="''+(tableValues.indexOf(props.row)+1)"
+                :label="'' + (tableValues.indexOf(props.row) + 1)"
                 type="is-small"
                 aria-controls="contentIdForA11y1"
               />

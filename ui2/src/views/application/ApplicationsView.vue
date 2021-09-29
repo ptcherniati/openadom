@@ -264,8 +264,7 @@ export default class ApplicationsView extends Vue {
     });
     this.selectedApplications = this.applications;
     if (this.checkboxDate == "true")
-      this.selectedApplications
-        .sort((a, b) => b.creationDate - a.creationDate);
+      this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
   }
 
   createApplication() {

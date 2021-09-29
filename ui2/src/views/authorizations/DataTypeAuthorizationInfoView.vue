@@ -4,7 +4,9 @@
 
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
-        $t("titles.data-type-new-authorization", { dataType: localeDatatypeName(dataTypeId) || dataTypeId })
+        $t("titles.data-type-new-authorization", {
+          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+        })
       }}</span>
     </h1>
 
