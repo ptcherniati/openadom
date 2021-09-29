@@ -1,9 +1,11 @@
 <template>
   <div>
     <PageView class="with-submenu">
-      <SubMenu :root="applicationName" :paths="subMenuPaths" />
+      <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
       <h1 class="title main-title">
-        {{ $t("titles.data-types-repository", { applicationName }) }}
+        {{
+          $t("titles.data-types-repository", { applicationName: localDatatypeName || dataTypeId })
+        }}
       </h1>
       <div class="columns">
         <div class="column is-3" v-for="(authReference, key) in authReferences" :key="key">
@@ -189,6 +191,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import { AlertService } from "@/services/AlertService";
 import { DataService } from "@/services/rest/DataService";
@@ -207,6 +210,7 @@ import { Dataset } from "@/model/file/Dataset";
 export default class DataTypesRepositoryView extends Vue {
   @Prop() applicationName;
   @Prop() dataTypeId;
+  @Prop() applicationConfiguration;
 
   referenceService = ReferenceService.INSTANCE;
   fileService = FileService.INSTANCE;
@@ -216,7 +220,7 @@ export default class DataTypesRepositoryView extends Vue {
   errorsService = ErrorsService.INSTANCE;
 
   subMenuPaths = [];
-  title = "";
+  application = new ApplicationResult();
   applications = [];
   configuration = {};
   authorizations = [];
@@ -247,17 +251,21 @@ export default class DataTypesRepositoryView extends Vue {
 
     this.init();
   }
-
+  localeApplicationName(application) {
+    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
+  }
   async init() {
-    this.title = `Gestion des jeux de données de ${this.dataTypeId}`;
-
     try {
       this.applications = await this.applicationService.getApplications();
-      if (!this.applications?.length) {
-        return;
-      }
+      this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.localeApplicationName(this.application),
+      };
+      this.localDatatypeName =
+        this.application.dataTypes[this.dataTypeId]?.internationalizationName?.[this.$i18n.locale];
       this.configuration = this.applications
-        .filter((a) => a.name == this.applicationName)
+        .filter((a) => a.name === this.applicationName)
         .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
       this.authorizations = this.configuration.authorization.authorizationScopes;
       let ret = {};
