@@ -5,8 +5,10 @@ create table BinaryFile (
     application EntityRef REFERENCES Application(id),
     name Text,
     size INT,
-    data bytea
+    data bytea,
+    params jsonb
 );
+CREATE INDEX binary_file_params_index ON BinaryFile USING gin (params);
 
 create table ReferenceValue (
     id EntityId PRIMARY KEY,

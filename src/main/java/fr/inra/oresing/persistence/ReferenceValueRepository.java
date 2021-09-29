@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ReferenceValue;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -92,12 +91,20 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return (List<ReferenceValue>) result;
     }
 
-    public List<String> findReferenceValue(String refType, String column) {
-        String sqlPattern = " SELECT refValues->>'%s' "
+    public List<List<String>> findReferenceValue(String refType, String column) {
+        AtomicInteger ai = new AtomicInteger(0);
+        String select = Stream.of(column.split(","))
+                .map(c -> String.format("refValues->>'%1$s' as \"%1$s"+ai.getAndIncrement()+"\"", c))
+                .collect(Collectors.joining(", "));
+        String sqlPattern = " SELECT %s "
                 + " FROM " + getTable().getSqlIdentifier() + " t"
                 + " WHERE application=:applicationId::uuid AND referenceType=:refType";
-        String query = String.format(sqlPattern, column);
-        List<String> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType), String.class);
+        String query = String.format(sqlPattern, select);
+        List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType))
+                .stream()
+                .map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList()))
+                .collect(Collectors.toList());
+        ;
         return result;
     }
 

@@ -5,6 +5,8 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faCircle,
+  faCheckCircle,
   faAngleLeft,
   faAngleRight,
   faFilter,
@@ -49,11 +51,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
+  faCircle,
   faEye,
   faEyeSlash,
   faPlus,
   faExclamationCircle,
   faCheck,
+  faCheckCircle,
   faSignOutAlt,
   faGlobe,
   faUpload,

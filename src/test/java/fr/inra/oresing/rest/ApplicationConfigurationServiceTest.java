@@ -93,18 +93,35 @@ public class ApplicationConfigurationServiceTest {
     public void testMissingReferenceForChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
         Assert.assertFalse(configurationParsingResult.isValid());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult missingReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "missingReferenceForChecker".equals(vcr.getMessage()));
+        ValidationCheckResult authorizationScopeVariableComponentReftypeNull = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentReftypeNull".equals(vcr.getMessage()));
+
+        Assert.assertEquals(true, missingReferenceForChecker!=null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeNull!=null);
+    }
+
+    @Test
+    public void testMissingInternationalizedColumn() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizedColumns:\n" +
+                "      nom du projet_key:","internationalizedColumns:\n" +
+                "      nom du projet_unknown:");
+        Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("missingReferenceForChecker", onlyError.getMessage());
+        Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
     }
 
     @Test
     public void testUnknownReferenceForChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
         Assert.assertFalse(configurationParsingResult.isValid());
-        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-        log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownReferenceForChecker", onlyError.getMessage());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult unknownReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "unknownReferenceForChecker".equals(vcr.getMessage()));
+        ValidationCheckResult authorizationScopeVariableComponentReftypeUnknown = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentReftypeUnknown".equals(vcr.getMessage()));
+
+        Assert.assertEquals(true, unknownReferenceForChecker!=null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeUnknown!=null);
     }
 
     @Test
@@ -309,9 +326,12 @@ public class ApplicationConfigurationServiceTest {
                 "          site:", "components:\n" +
                 "          sites:");
         Assert.assertFalse(configurationParsingResult.isValid());
-        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-        log.debug(onlyError.getMessage());
-        Assert.assertEquals("csvBoundToUnknownVariableComponent", onlyError.getMessage());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult authorizationVariableComponentKeyUnknownComponent = Iterables.find(validationCheckResults, vcr -> "authorizationVariableComponentKeyUnknownComponent".equals(vcr.getMessage()));
+        ValidationCheckResult csvBoundToUnknownVariableComponent = Iterables.find(validationCheckResults, vcr -> "csvBoundToUnknownVariableComponent".equals(vcr.getMessage()));
+
+        Assert.assertEquals(true, authorizationVariableComponentKeyUnknownComponent!=null);
+        Assert.assertEquals(true, csvBoundToUnknownVariableComponent!=null);
     }
 
     @Test

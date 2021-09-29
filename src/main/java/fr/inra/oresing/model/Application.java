@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import io.swagger.annotations.Api;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

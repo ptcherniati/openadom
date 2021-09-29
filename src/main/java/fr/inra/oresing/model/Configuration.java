@@ -9,36 +9,24 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @ToString
 public class Configuration {
 
+    private int version;
+    private String defaultLanguage;
+    private Internationalization internationalization;
+    private ApplicationDescription application;
+    private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
+    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
+    private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
+
     public Optional<CompositeReferenceDescription> getCompositeReferencesUsing(String reference) {
         return getCompositeReferences().values().stream()
                 .filter(compositeReferenceDescription -> compositeReferenceDescription.isDependentOfReference(reference))
                 .collect(MoreCollectors.toOptional());
-    }
-
-    private int version;
-    private ApplicationDescription application;
-
-    class DependencyNode {
-        String value;
-        boolean isLeaf = true;
-        Set<DependencyNode> dependsOn = new HashSet<>();
-
-        void addDependance(DependencyNode dependencyNode) {
-            dependencyNode.isLeaf = false;
-            this.dependsOn.add(dependencyNode);
-
-        }
-
-        public DependencyNode(String value) {
-            this.value = value;
-        }
     }
 
     public LinkedHashMap<String, ReferenceDescription> getReferences() {
@@ -65,30 +53,31 @@ public class Configuration {
         }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
         nodes.values().stream()
-                .filter(node->node.isLeaf)
-                .sorted((a,b)->-1)
+                .filter(node -> node.isLeaf)
+                .sorted((a, b) -> -1)
                 .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
     }
 
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
         if (!node.dependsOn.isEmpty()) {
-            node.dependsOn.forEach(dependencyNode-> addRecursively(dependencyNode, sortedReferences,references));
+            node.dependsOn.forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
         }
         sortedReferences.put(node.value, references.get(node.value));
 
 
     }
-
-    private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
-    private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
-    private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
+    public enum MigrationStrategy {
+        ADD_VARIABLE
+    }
 
     @Getter
     @Setter
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
+        Internationalization internationalizationName;
+        Map<String, Internationalization> internationalizedColumns = new LinkedHashMap<>();
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
@@ -121,10 +110,12 @@ public class Configuration {
     @ToString
     public static class DataTypeDescription {
         FormatDescription format;
+        Internationalization internationalizationName;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
+        LinkedHashMap<String, String> repository = null;
     }
 
     @Getter
@@ -249,7 +240,19 @@ public class Configuration {
         String defaultValue;
     }
 
-    public enum MigrationStrategy {
-        ADD_VARIABLE
+    class DependencyNode {
+        String value;
+        boolean isLeaf = true;
+        Set<DependencyNode> dependsOn = new HashSet<>();
+
+        public DependencyNode(String value) {
+            this.value = value;
+        }
+
+        void addDependance(DependencyNode dependencyNode) {
+            dependencyNode.isLeaf = false;
+            this.dependsOn.add(dependencyNode);
+
+        }
     }
 }

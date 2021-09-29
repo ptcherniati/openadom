@@ -77,7 +77,7 @@
                   <b-autocomplete
                     v-model="filterName"
                     :data="selectedApplications"
-                    field="name"
+                    field="localName"
                     placeholder="olac"
                     @click.native="recalculate"
                     @keyup.native="recalculate"
@@ -99,7 +99,7 @@
               >
                 <div class="card-header">
                   <div class="title card-header-title">
-                    <p field="name">{{ application.name }}</p>
+                    <p field="name">{{ application.localName }}</p>
                   </div>
                   <b-button
                     class="btnModal"
@@ -217,6 +217,10 @@ export default class ApplicationsView extends Vue {
   checkboxTrieZ_a = "false";
   checkboxDate = "true";
 
+  localeApplicationName(application) {
+    return application.configuration?.internationalization?.[this.$i18n.locale] ?? application.name;
+  }
+
   copyOfApplications(application) {
     return [...application];
   }
@@ -225,7 +229,7 @@ export default class ApplicationsView extends Vue {
 
     // filter by name
     this.selectedApplications = this.selectedApplications.filter(
-      (a) => a.name.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
+      (a) => a.localName.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
     );
 
     // order by date or name
@@ -255,9 +259,13 @@ export default class ApplicationsView extends Vue {
 
   async init() {
     this.applications = await this.applicationService.getApplications();
+    this.applications = this.applications.map((a) => {
+      return { ...a, localName: this.localeApplicationName(a) };
+    });
     this.selectedApplications = this.applications;
     if (this.checkboxDate == "true")
-      this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
+      this.selectedApplications
+        .sort((a, b) => b.creationDate - a.creationDate);
   }
 
   createApplication() {

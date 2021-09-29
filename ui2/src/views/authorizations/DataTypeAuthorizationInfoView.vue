@@ -1,10 +1,10 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
 
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
-        $t("titles.data-type-new-authorization", { dataType: dataTypeId })
+        $t("titles.data-type-new-authorization", { dataType: localeDatatypeName(dataTypeId) || dataTypeId })
       }}</span>
     </h1>
 
@@ -302,6 +302,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   period = this.periods.FROM_DATE;
   startDate = null;
   endDate = null;
+
+  localeDatatypeName(datatype) {
+    return (
+      this.application?.dataTypes?.[datatype]?.internationalizationName?.[this.$i18n.locale] ??
+      datatype.name
+    );
+  }
 
   created() {
     this.init();

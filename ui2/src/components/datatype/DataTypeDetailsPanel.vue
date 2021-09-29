@@ -2,7 +2,7 @@
   <SidePanel
     :open="open"
     :leftAlign="leftAlign"
-    :title="dataType && dataType.label"
+    :title="dataType && (dataType.localName || dataType.label)"
     :closeCb="closeCb"
   >
     <div class="Panel-buttons">

@@ -70,7 +70,7 @@ public class GroovyLineCheckerTest {
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));
             if (log.isDebugEnabled()) {
-                log.debug("Test : doit lever une erreur si le script lève une exception "+e.getMessage());
+                log.debug("le test lève une erreur quand la validation est incorrecte");
             }
         }
     }

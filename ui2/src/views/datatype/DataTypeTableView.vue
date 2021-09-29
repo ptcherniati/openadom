@@ -1,9 +1,9 @@
 /* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.title" />
+    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
 
-    <h1 class="title main-title">{{ dataTypeId }}</h1>
+    <h1 class="title main-title">{{ localDatatypeName || dataTypeId }}</h1>
     <div class="columns" v-if="!showSort && !showFilter">
       <div
         v-if="
@@ -510,9 +510,21 @@ export default class DataTypeTableView extends Vue {
     });
     this.initDatatype();
   }
+  localeApplicationName(application) {
+    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
+  }
+  localeDatatypeName(datatype) {
+    return datatype?.internationalizationName?.[this.$i18n.locale] ?? datatype.name;
+  }
 
   async init() {
     this.application = await this.applicationService.getApplication(this.applicationName);
+    this.application = {
+      ...this.application,
+      localName: this.localeApplicationName(this.application),
+    };
+    this.localDatatypeName =
+      this.application.dataTypes[this.dataTypeId]?.internationalizationName?.[this.$i18n.locale];
     await this.initDatatype();
   }
 
@@ -523,6 +535,8 @@ export default class DataTypeTableView extends Vue {
       this.dataTypeId,
       this.params
     );
+    this.translations = dataTypes.entitiesTranslations;
+    this.data;
     this.refsLinkedTo = dataTypes.rows.reduce((acc, d) => {
       acc[d.rowId] = d.refsLinkedTo;
       return acc;
@@ -578,6 +592,13 @@ export default class DataTypeTableView extends Vue {
     return this.refsLinkedTo[row.rowId][component.variable][component.component];
   }
 
+  getTranslation(row, component){
+    var reference = component.checker.refType;
+    var translations = this.translations?.[reference];
+    console.log(translations);
+    var translation = row[component.variable][component.component];
+    return translation ;
+  }
   async getReferenceValues(row, component) {
     const rowId = this.getRefsLinkedToId(row, component);
     const variable = component.checker.refType;

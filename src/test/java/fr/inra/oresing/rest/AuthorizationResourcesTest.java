@@ -23,9 +23,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import javax.servlet.http.Cookie;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -53,28 +51,28 @@ public class AuthorizationResourcesTest {
         CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                .param("login", "UnReader")
-                .param("password", "xxxxxxxx"))
+                        .param("login", "UnReader")
+                        .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
-                            .cookie(authCookie)
+                    .cookie(authCookie)
             ).andReturn().getResponse().getContentAsString();
             Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("acbb"));
         }
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
-                            .cookie(authReaderCookie)
+                    .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
             Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("acbb"));
         }
 
         {
             mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                    .cookie(authReaderCookie)
-                    .accept(MediaType.TEXT_PLAIN))
+                            .cookie(authReaderCookie)
+                            .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().is4xxClientError());
         }
 
@@ -108,8 +106,8 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                    .cookie(authReaderCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authReaderCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -138,8 +136,8 @@ public class AuthorizationResourcesTest {
         CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                .param("login", "UnReader")
-                .param("password", "xxxxxxxx"))
+                        .param("login", "UnReader")
+                        .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         String authorizationId;
@@ -161,8 +159,8 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -173,8 +171,8 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -185,8 +183,8 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
-                    .cookie(authReaderCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authReaderCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -205,8 +203,8 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -216,12 +214,13 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
-                    .cookie(authReaderCookie)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authReaderCookie)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            Assert.assertEquals("{\"variables\":[],\"rows\":[],\"totalRows\":-1,\"checkedFormatVariableComponents\":{\"DateLineChecker\":{\"date_time\":{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"time\",\"id\":\"date_time\"},\"column\":\"\",\"pattern\":\"HH:mm:ss\"},\"date_day\":{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\"},\"column\":\"\",\"pattern\":\"dd/MM/yyyy\"}},\"ReferenceLineChecker\":{\"outil_value\":{\"variableComponentKey\":{\"variable\":\"outil\",\"component\":\"value\",\"id\":\"outil_value\"},\"column\":\"\",\"refType\":\"outil\"},\"localization_site\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"site\",\"id\":\"localization_site\"},\"column\":\"\",\"refType\":\"site\"},\"localization_plateforme\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"plateforme\",\"id\":\"localization_plateforme\"},\"column\":\"\",\"refType\":\"plateforme\"},\"localization_projet\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"projet\",\"id\":\"localization_projet\"},\"column\":\"\",\"refType\":\"projet\"}},\"IntegerChecker\":{\"localization_profondeur\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"profondeur\",\"id\":\"localization_profondeur\"},\"column\":\"\"}},\"FloatChecker\":{\"temperature_value\":{\"variableComponentKey\":{\"variable\":\"temperature\",\"component\":\"value\",\"id\":\"temperature_value\"},\"column\":\"\"},\"pression_value\":{\"variableComponentKey\":{\"variable\":\"pression\",\"component\":\"value\",\"id\":\"pression_value\"},\"column\":\"\"},\"temperature_quality\":{\"variableComponentKey\":{\"variable\":\"temperature\",\"component\":\"quality\",\"id\":\"temperature_quality\"},\"column\":\"\"}}}}", json);
+            Assert.assertEquals("{\"variables\":[],\"rows\":[],\"totalRows\":-1,\"checkedFormatVariableComponents\":{\"DateLineChecker\":{\"date_time\":{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"time\",\"id\":\"date_time\"},\"column\":\"\",\"pattern\":\"HH:mm:ss\"},\"date_day\":{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\"},\"column\":\"\",\"pattern\":\"dd/MM/yyyy\"}},\"ReferenceLineChecker\":{\"outil_value\":{\"variableComponentKey\":{\"variable\":\"outil\",\"component\":\"value\",\"id\":\"outil_value\"},\"column\":\"\",\"refType\":\"outil\"},\"localization_site\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"site\",\"id\":\"localization_site\"},\"column\":\"\",\"refType\":\"site\"},\"localization_plateforme\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"plateforme\",\"id\":\"localization_plateforme\"},\"column\":\"\",\"refType\":\"plateforme\"},\"localization_projet\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"projet\",\"id\":\"localization_projet\"},\"column\":\"\",\"refType\":\"projet\"}},\"IntegerChecker\":{\"localization_profondeur\":{\"variableComponentKey\":{\"variable\":\"localization\",\"component\":\"profondeur\",\"id\":\"localization_profondeur\"},\"column\":\"\"}},\"FloatChecker\":{\"temperature_value\":{\"variableComponentKey\":{\"variable\":\"temperature\",\"component\":\"value\",\"id\":\"temperature_value\"},\"column\":\"\"},\"pression_value\":{\"variableComponentKey\":{\"variable\":\"pression\",\"component\":\"value\",\"id\":\"pression_value\"},\"column\":\"\"},\"temperature_quality\":{\"variableComponentKey\":{\"variable\":\"temperature\",\"component\":\"quality\",\"id\":\"temperature_quality\"},\"column\":\"\"}}},\"entitiesTranslations\":{\"outil\":{},\"site\":{},\"projet\":{},\"plateforme\":{}}}",
+                    json);
         }
     }
 }

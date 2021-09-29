@@ -25,7 +25,19 @@
           :sticky="column.key"
           v-slot="props"
         >
-          {{ props.row[column.id] }}
+          <span v-if="column.id != '#'">
+            {{ props.row[column.id] }}
+          </span>
+          <b-collapse v-else :open="false">
+            <template #trigger>
+              <b-button
+                :label="''+(tableValues.indexOf(props.row)+1)"
+                type="is-small"
+                aria-controls="contentIdForA11y1"
+              />
+            </template>
+            {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
+          </b-collapse>
         </b-table-column>
       </b-table>
     </div>
@@ -80,7 +92,7 @@ export default class ReferenceTableView extends Vue {
   }
 
   setInitialVariables() {
-    if (!this.application || !this.application.references) {
+    if (!this.application?.references) {
       return;
     }
 
@@ -102,16 +114,19 @@ export default class ReferenceTableView extends Vue {
     ];
 
     if (this.reference && this.reference.columns) {
-      this.columns = Object.values(this.reference.columns).sort((c1, c2) => {
-        if (c1.title < c2.title) {
-          return -1;
-        }
+      this.columns = [
+        { id: "#", title: "#id", key: false, linkedTo: null },
+        ...Object.values(this.reference.columns).sort((c1, c2) => {
+          if (c1.title < c2.title) {
+            return -1;
+          }
 
-        if (c1.title > c2.title) {
-          return 1;
-        }
-        return 0;
-      });
+          if (c1.title > c2.title) {
+            return 1;
+          }
+          return 0;
+        }),
+      ];
     }
 
     if (this.referenceValues) {

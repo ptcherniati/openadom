@@ -1,8 +1,12 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
     <h1 class="title main-title">
-      {{ $t("titles.data-types-page", { applicationName: application.title }) }}
+      {{
+        $t("titles.data-types-page", {
+          applicationName: application.localName || application.title,
+        })
+      }}
     </h1>
     <div>
       <CollapsibleTree
@@ -11,7 +15,9 @@
         :option="data"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
-        :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"
+        :onUploadCb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
+        :repository="data.repository"
+        :repositoryRedirect="(label) => showRepository(label)"
         :buttons="buttons"
       />
       <DataTypeDetailsPanel
@@ -81,6 +87,13 @@ export default class DataTypesManagementView extends Vue {
   openPanel = false;
   chosenDataType = null;
 
+  localeApplicationName(application) {
+    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
+  }
+  localeDatatypeName(datatype) {
+    return datatype?.internationalizationName?.[this.$i18n.locale] ?? datatype.name;
+  }
+
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
@@ -96,11 +109,17 @@ export default class DataTypesManagementView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      if (!this.application || !this.application.id) {
+      this.application = {
+        ...this.application,
+        localName: this.localeApplicationName(this.application),
+      };
+      if (!this.application?.id) {
         return;
       }
       if (this.application.dataTypes) {
-        this.dataTypes = Object.values(this.application.dataTypes);
+        this.dataTypes = Object.values(this.application.dataTypes).map((d) => {
+          return { ...d, localName: this.localeDatatypeName(d) };
+        });
       }
     } catch (error) {
       this.alertService.toastServerError();
@@ -129,7 +148,7 @@ export default class DataTypesManagementView extends Vue {
     }
   }
 
-  async downloadDataType(label) {
+  async downloadDataType(event, label) {
     this.dataService.getDataTypesCsv(this.applicationName, label);
   }
 
@@ -139,6 +158,10 @@ export default class DataTypesManagementView extends Vue {
     } else {
       this.alertService.toastServerError(error);
     }
+  }
+  showRepository(label) {
+    const dataType = this.dataTypes.find((dt) => dt.label === label);
+    this.$router.push(`/applications/${this.applicationName}/dataTypesRepository/${dataType.id}`);
   }
 }
 </script>
