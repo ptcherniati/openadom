@@ -10,7 +10,7 @@
       <div class="columns">
         <div class="column is-3" v-for="(authReference, key) in authReferences" :key="key">
           <div class="columns">
-            <div class="column is-3" style="padding-top: 20px">
+            <div class="column" style="padding-top: 20px">
               <p style="text-transform: capitalize">{{ key }}</p>
             </div>
             <div class="column">

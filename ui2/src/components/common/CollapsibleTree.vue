@@ -145,7 +145,7 @@ $row-height: 40px;
     display: inherit;
     border-right: solid 2px;
     border-radius: 0;
-    padding-right: 0 0.5em;
+    padding-right: 0.5em;
     background-color: rgba(255, 255, 255, 0.2);
 
     &:hover {

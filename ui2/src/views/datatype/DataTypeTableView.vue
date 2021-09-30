@@ -860,9 +860,15 @@ $row-variable-height: 60px;
 }
 
 .button.inTable {
-  color: $primary;
+  color: $dark;
   background-color: transparent;
   border: transparent;
+}
+.button.inTable:hover {
+  color: $dark;
+  background-color: transparent;
+  border: transparent;
+  text-decoration: underline;
 }
 
 .columns {
