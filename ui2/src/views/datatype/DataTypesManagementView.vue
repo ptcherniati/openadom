@@ -154,7 +154,11 @@ export default class DataTypesManagementView extends Vue {
 
   checkMessageErrors(error) {
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-      this.errorsMessages = this.errorsService.getCsvErrorsMessages(error.content);
+      if (error.content != null) {
+        this.errorsMessages = this.errorsService.getCsvErrorsMessages(error.content);
+      } else {
+        this.alertService.toastServerError(error);
+      }
     } else {
       this.alertService.toastServerError(error);
     }

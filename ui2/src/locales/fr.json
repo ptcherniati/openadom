@@ -32,6 +32,7 @@
     "alert": {
         "cancel": "Annuler",
         "server-error": "Une erreur serveur est survenue",
+        "server-error-appli-exist": "Ce nom d'application existe déjà",
         "user-unknown": "Identifiants inconnus",
         "application-creation-success": "L'application a été créée !",
         "application-validate-success": "Le fichier YAML est valide !",
