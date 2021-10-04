@@ -1,11 +1,18 @@
 version: 0
-defaultLanguage: fr
-internationalization:
-  fr: SOERE mon SOERE
-  en: SOERE my SOERE
 application:
+  defaultLanguage: fr
+  internationalization:
+    fr: SOERE mon SOERE
+    en: SOERE my SOERE
   name: MONSORE
   version: 1
+compositeReferences:
+  sites:
+    components:
+      - reference: sites
+  projet:
+    components:
+      - reference: projet
 references:
   especes:
     internationalizationName:
@@ -262,15 +269,6 @@ references:
       nom du type de données:
       nom de la variable:
       nom de l'unité:
-
-
-compositeReferences:
-  sites:
-    components:
-      - reference: sites
-  projet:
-    components:
-      - reference: projet
 
 dataTypes:
   pem:

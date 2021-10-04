@@ -16,8 +16,6 @@ import java.util.*;
 public class Configuration {
 
     private int version;
-    private String defaultLanguage;
-    private Internationalization internationalization;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
@@ -221,6 +219,8 @@ public class Configuration {
     public static class ApplicationDescription {
         String name;
         int version;
+        String defaultLanguage;
+        Internationalization internationalization;
     }
 
     @Getter

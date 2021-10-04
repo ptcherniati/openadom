@@ -47,6 +47,7 @@ public class ApplicationConfigurationServiceTest {
         ImmutableSet.of(
                 fixtures.getMonsoreApplicationConfigurationResourceName(),
                 fixtures.getAcbbApplicationConfigurationResourceName(),
+                fixtures.getOlaApplicationConfigurationResourceName(),
                 fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
                 fixtures.getValidationApplicationConfigurationResourceName(),
                 fixtures.getProApplicationConfigurationResourceName()
