@@ -2,7 +2,7 @@
 
 ## La création :
 
-Vous trouverez ci dessous un exemple de fichier Yaml fictif qui décrit les partie attendues dans celui ci pour qu'il 
+Vous trouverez ci-dessous un exemple de fichier Yaml fictif qui décrit les parties attendues dans celui-ci pour qu'il 
 soit valide. **Attention le format Yaml est sensible** il faut donc respecter l'indentation. 
 
 Il y a 5 parties (<span style="color: orange">sans indentation</span>) attendues dans le fichier : 
@@ -144,9 +144,7 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
       -> datatypesValues.get("nom du datatype").get("nom de la colonne")
     params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
 
-
 ### il est possible de définir des clefs composite entre différentes références
-
 
   Une clef composite permet de définir une hiérarchie entre différentes données de référence.
   Dans l'example ci-dessous il y a une relation oneToMany entre les deux données de référence nomDeLaReferences et 
@@ -161,7 +159,6 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
   "Ma clé qui-sert-de-référence" -> "ma_cle_quisertdereference"
   Elle ne doit alors comporter que des lettres minuscules de chiffres et des underscores tous les autres caractères 
   seront supprimés.
-
 
 ```mermaid
   classDiagram
@@ -463,6 +460,45 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
 * sans accent,
 * sans chiffre et 
 * sans caractères speciaux
+
+## Internationalisation du fichier yaml:
+Il est possible de faire un fichier international en ajoutant plusieurs parties en précisant la langue.
+
+### Internationalisation de l'application:
+Juste en dessous de la version du site nous rajoutons la langue et le nom international de l'application (?? pas logique que ce ne soit pas dans la partie application ??)
+
+``` yaml
+defaultLanguage: fr
+internationalization:
+  fr: Application_nom_fr
+  en: Application_nom_en
+```
+
+### Internationalisation des *references*:
+Nous pouvons faire en sorte que le nom de la référence et des colonnes s'affichent dans la langue de l'application.
+
+``` yaml
+references:
+  especes:
+    internationalizationName:
+      fr: Espèces
+      en: Species
+    internationalizedColumns:
+      esp_definition_fr:
+        fr: esp_definition_fr
+        en: esp_definition_en
+```
+
+### Internationalisation des *dataTypes*:
+Même chose que pour les references.
+
+``` yaml
+dataTypes:
+  nomDonnéeCSV:
+    internationalizationName:
+      fr: nomDonnéeCSV_fr
+      en: nameDataCSV_en
+```
 
 # Aide fichier .csv  
 	
