@@ -32,8 +32,8 @@
             </div>
           </div>
         </div>
-        <div class="column">
-          <h1 class="card-header">
+        <div class="column" style="padding-top: 20px">
+          <h1>
             {{
               Object.entries(this.selected.requiredauthorizations)
                 .map((e) => e[0] + " : " + e[1])

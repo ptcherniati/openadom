@@ -42,8 +42,8 @@ export class AlertService {
   }
 
   toastServerError(error) {
-    if(error.content != null){
-      if(error.content.message.indexOf("exist")){
+    if (error.content != null) {
+      if (error.content.message.indexOf("exist")) {
         this.toastError(i18n.t("alert.server-error-appli-exist"), error);
       }
     } else {
