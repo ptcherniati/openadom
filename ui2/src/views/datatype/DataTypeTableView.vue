@@ -3,7 +3,7 @@
   <PageView class="with-submenu">
     <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
 
-    <h1 class="title main-title">{{ localDatatypeName || dataTypeId }}</h1>
+    <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
     <div class="columns" v-if="!showSort && !showFilter">
       <div
         v-if="
@@ -434,6 +434,7 @@ import { VariableComponentKey } from "@/model/application/VariableComponentKey";
 import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 import draggable from "vuedraggable";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleInterval, draggable },
@@ -447,6 +448,7 @@ export default class DataTypeTableView extends Vue {
   dataService = DataService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
   alertService = AlertService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   arrow;
   application = new ApplicationResult();
   subMenuPaths = [];
@@ -510,21 +512,14 @@ export default class DataTypeTableView extends Vue {
     });
     this.initDatatype();
   }
-  localeApplicationName(application) {
-    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
-  }
-  localeDatatypeName(datatype) {
-    return datatype?.internationalizationName?.[this.$i18n.locale] ?? datatype.name;
-  }
 
   async init() {
     this.application = await this.applicationService.getApplication(this.applicationName);
     this.application = {
       ...this.application,
-      localName: this.localeApplicationName(this.application),
+      localName: this.internationalisationService.localeApplicationName(this.application),
+      localDatatypeName : this.internationalisationService.localeDatatypeName(this.application.dataTypes[this.dataTypeId])
     };
-    this.localDatatypeName =
-      this.application.dataTypes[this.dataTypeId]?.internationalizationName?.[this.$i18n.locale];
     await this.initDatatype();
   }
 

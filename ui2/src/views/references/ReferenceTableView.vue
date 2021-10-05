@@ -1,8 +1,8 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
     <h1 class="title main-title">
-      {{ $t("titles.references-data", { refName: reference.label }) }}
+      {{ $t("titles.references-data", { refName: application.localRefName ||reference.label }) }}
     </h1>
 
     <div v-if="reference && columns">
@@ -52,6 +52,7 @@ import { ApplicationService } from "@/services/rest/ApplicationService";
 import { ReferenceService } from "@/services/rest/ReferenceService";
 import { Prop, Vue, Component } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu },
@@ -62,6 +63,7 @@ export default class ReferenceTableView extends Vue {
 
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
 
   application = new ApplicationResult();
@@ -79,9 +81,14 @@ export default class ReferenceTableView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.localeApplicationName(this.application),
+        localRefName: this.internationalisationService.localeReferenceName(this.application.references[this.refId]),
+      };
       const references = await this.referenceService.getReferenceValues(
         this.applicationName,
-        this.refId
+        this.refId,
       );
       if (references) {
         this.referenceValues = references.referenceValues;

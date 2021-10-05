@@ -31,6 +31,7 @@ import { convertReferencesToTrees } from "@/utils/ConversionUtils";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import ReferencesDetailsPanel from "@/components/references/ReferencesDetailsPanel.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 import { ReferenceService } from "@/services/rest/ReferenceService";
 
 import PageView from "../common/PageView.vue";
@@ -48,6 +49,7 @@ export default class ReferencesManagementView extends Vue {
 
   applicationService = ApplicationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
 
   references = [];
@@ -67,10 +69,6 @@ export default class ReferencesManagementView extends Vue {
     ),
   ];
 
-  localeReferenceName(reference) {
-    return reference.configuration?.internationalization?.[this.$i18n.locale] ?? reference.name;
-  }
-
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
@@ -82,16 +80,12 @@ export default class ReferencesManagementView extends Vue {
     this.init();
   }
 
-  localeApplicationName(application) {
-    return application?.internationalization?.[this.$i18n.locale] ?? application?.name;
-  }
-
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.localeApplicationName(this.application),
+        localName: this.internationalisationService.localeApplicationName(this.application),
       };
       if (!this.application?.id) {
         return;

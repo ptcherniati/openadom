@@ -203,6 +203,7 @@ import { BinaryFileDataset } from "@/model/file/BinaryFileDataset";
 import { BinaryFile } from "@/model/file/BinaryFile";
 import { FileOrUUID } from "@/model/file/FileOrUUID";
 import { Dataset } from "@/model/file/Dataset";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { CollapsibleTree, PageView, SubMenu },
@@ -218,6 +219,7 @@ export default class DataTypesRepositoryView extends Vue {
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
 
   subMenuPaths = [];
   application = new ApplicationResult();
@@ -251,16 +253,14 @@ export default class DataTypesRepositoryView extends Vue {
 
     this.init();
   }
-  localeApplicationName(application) {
-    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
-  }
+
   async init() {
     try {
       this.applications = await this.applicationService.getApplications();
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.localeApplicationName(this.application),
+        localName: this.internationalisationService.localeApplicationName(this.application),
       };
       this.localDatatypeName =
         this.application.dataTypes[this.dataTypeId]?.internationalizationName?.[this.$i18n.locale];

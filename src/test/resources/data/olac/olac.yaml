@@ -159,6 +159,8 @@ dataTypes:
     internationalizationName:
       fr: Condition de prélèvement
       en: Collection condition
+    repository:
+      toto: test
     data:
       date:
         components:
