@@ -5,9 +5,13 @@ export class InternationalisationService extends Fetcher {
 
   localeApplicationName(application) {
     if (application.configuration != null){
-      return (
-          application.configuration.application.internationalization[localStorage.getItem(LOCAL_STORAGE_LANG)]
-      );
+      if(application.configuration.application.internationalization != null) {
+        return (
+            application.configuration.application.internationalization[localStorage.getItem(LOCAL_STORAGE_LANG)]
+        )
+      }else {
+      return application.name
+      }
     } else if (application.internationalization != null) {
       return application.internationalization[localStorage.getItem(LOCAL_STORAGE_LANG)]
     } else {
