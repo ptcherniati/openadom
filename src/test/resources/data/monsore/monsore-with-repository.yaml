@@ -1,9 +1,9 @@
 version: 0
-defaultLanguage: fr
-internationalization:
-  fr: SOERE mon SOERE
-  en: SOERE my SOERE
 application:
+  defaultLanguage: fr
+  internationalization:
+    fr: SOERE mon SOERE
+    en: SOERE my SOERE
   name: MONSORE
   version: 1
 references:
@@ -422,6 +422,9 @@ dataTypes:
         component: value
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - projet
@@ -429,10 +432,16 @@ dataTypes:
             - date
             - espece
         qualitatif:
+          internationalizationName:
+            fr: Données qualitatives
+            en: Qualitative data
           label: "Données qualitatives"
           data:
             - Couleur des individus
         quantitatif:
+          internationalizationName:
+            fr: Données quantitatives
+            en: Quantitative data
           label: "Données quantitatives"
           data:
             - Nombre d'individus

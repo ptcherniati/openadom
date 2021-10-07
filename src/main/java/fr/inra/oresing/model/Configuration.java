@@ -209,6 +209,7 @@ public class Configuration {
     @Setter
     @ToString
     public static class DataGroupDescription {
+        Internationalization internationalizationName;
         String label;
         Set<String> data = new LinkedHashSet<>();
     }
