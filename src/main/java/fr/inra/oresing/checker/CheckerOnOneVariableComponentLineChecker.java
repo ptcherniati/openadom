@@ -7,12 +7,11 @@ import java.util.Map;
 
 public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
 
-    VariableComponentKey getVariableComponentKey();
-    String getColumn();
+    CheckerTarget getTarget();
 
     @Override
     default ValidationCheckResult check(Map<VariableComponentKey, String> values) {
-        VariableComponentKey variableComponentKey = getVariableComponentKey();
+        VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
         String value = values.get(variableComponentKey);
         ValidationCheckResult check = check(value);
         return check;
@@ -20,7 +19,7 @@ public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
 
     @Override
     default ValidationCheckResult checkReference(Map<String, String> values) {
-        String value = values.get(getColumn());
+        String value = values.get(getTarget().getTarget());
         return check(value);
     }
 

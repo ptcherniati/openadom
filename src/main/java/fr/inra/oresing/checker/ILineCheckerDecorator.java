@@ -7,13 +7,8 @@ import java.util.Map;
 
 public interface ILineCheckerDecorator extends CheckerOnOneVariableComponentLineChecker{
     @Override
-    default VariableComponentKey getVariableComponentKey() {
-        return getChecker().getVariableComponentKey();
-    }
-
-    @Override
-    default String getColumn() {
-        return getChecker().getColumn();
+    default CheckerTarget getTarget() {
+        return getChecker().getTarget();
     }
 
     @Override
@@ -22,4 +17,12 @@ public interface ILineCheckerDecorator extends CheckerOnOneVariableComponentLine
     }
 
     CheckerOnOneVariableComponentLineChecker getChecker();
+
+    @Override
+    default boolean instanceOf(Class clazz) {
+        if(clazz.isInstance(ILineCheckerDecorator.class)){
+            return true;
+        }
+        return this.getChecker().instanceOf(clazz);
+    }
 }

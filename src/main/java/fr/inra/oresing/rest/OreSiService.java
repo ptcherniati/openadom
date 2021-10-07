@@ -600,10 +600,9 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         String timeScopeColumnPattern = lineCheckers.stream()
-                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator ? ((ILineCheckerDecorator) lineChecker).getChecker() : lineChecker)
-                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                .filter(lineChecker -> lineChecker.instanceOf(DateLineChecker.class))
                 .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getVariableComponentKey().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
                 .collect(MoreCollectors.onlyElement())
                 .getPattern();
 
@@ -640,7 +639,7 @@ public class OreSiService {
                 ValidationCheckResult validationCheckResult = lineChecker.check(values);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = ((DateValidationCheckResult) validationCheckResult).getVariableComponentKey();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
@@ -1056,10 +1055,10 @@ public class OreSiService {
                         e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
                 )));
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
-        List<String> dateLineCheckerVaraibleComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
-                .filter(ch -> (ch instanceof DateLineChecker) || ((ch instanceof ILineCheckerDecorator) && (((ILineCheckerDecorator) ch).getChecker() instanceof DateLineChecker)))
+        List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
+                .filter(ch -> (ch.instanceOf(DateLineChecker.class)))
                 .map(ch -> (ch instanceof ILineCheckerDecorator) ? (DateLineChecker) (((ILineCheckerDecorator) ch).getChecker()) : ((DateLineChecker) ch))
-                .map(ch -> ((DateLineChecker) ch).getVariableComponentKey().getId())
+                .map(ch -> ((VariableComponentKey)ch.getTarget().getTarget()).getId())
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
@@ -1082,7 +1081,7 @@ public class OreSiService {
                             .map(variableComponentSelect -> {
                                 Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
                                 String value = components.getOrDefault(variableComponentSelect.getComponent(), "");
-                                if (dateLineCheckerVaraibleComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())) {
+                                if (dateLineCheckerVariableComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())) {
                                     value = DateLineChecker.sortableDateToFormattedDate(value);
                                 }
                                 return value;
@@ -1128,13 +1127,13 @@ public class OreSiService {
                                         c -> {
                                             VariableComponentKey vc;
                                             if (c instanceof DateLineChecker) {
-                                                vc = ((DateLineChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((DateLineChecker) c).getTarget().getTarget();
                                             } else if (c instanceof IntegerChecker) {
-                                                vc = ((IntegerChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((IntegerChecker) c).getTarget().getTarget();
                                             } else if (c instanceof FloatChecker) {
-                                                vc = ((FloatChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((FloatChecker) c).getTarget().getTarget();
                                             } else {
-                                                vc = ((ReferenceLineChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((ReferenceLineChecker) c).getTarget().getTarget();
                                             }
                                             return vc.getId();
                                         },
