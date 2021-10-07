@@ -21,7 +21,7 @@ public class RequiredChecker implements ILineCheckerDecorator{
             if(!required){
                 return DefaultValidationCheckResult.success();
             }
-            return DefaultValidationCheckResult.error("requiredValue", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey()));
+            return DefaultValidationCheckResult.error(getTarget().getInternationalizedKey("requiredValue"), ImmutableMap.of("target", getTarget().getTarget()));
         }
         return checker.check(value);
     }

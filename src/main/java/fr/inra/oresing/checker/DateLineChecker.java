@@ -1,8 +1,6 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.time.format.DateTimeFormatter;
@@ -14,14 +12,12 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
 
     public static final String PARAM_PATTERN = "pattern";
     public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
-    public static final String PARAM_COLUMN = "column";
-    public static final String PARAM_VARIABLE_COMPONENT_KEY = "variableComponentKey";
     public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
-
-    private final VariableComponentKey variableComponentKey;
-
-    private final String column;
+    private CheckerTarget target;
+    public CheckerTarget getTarget(){
+        return this.target;
+    }
 
     private final DateTimeFormatter dateTimeFormatter;
 
@@ -30,23 +26,10 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
     }
 
-    public DateLineChecker(VariableComponentKey variableComponentKey, String pattern) {
-        this.variableComponentKey = variableComponentKey;
+    public DateLineChecker(CheckerTarget target, String pattern) {
+        this.target = target;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
-        this.column="";
-    }
-
-    public DateLineChecker(String column, String pattern) {
-        this.column = column;
-        this.variableComponentKey=null;
-        this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
-        this.pattern = pattern;
-    }
-
-    @Override
-    public VariableComponentKey getVariableComponentKey() {
-        return variableComponentKey;
     }
 
     public String getPattern() {
@@ -62,18 +45,17 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
             Map<String, Object> params = ImmutableMap.of(
                     PARAM_PATTERN, pattern,
                     PARAM_DATE_TIME_FORMATTER, dateTimeFormatter,
-                    variableComponentKey==null? PARAM_COLUMN : PARAM_VARIABLE_COMPONENT_KEY, variableComponentKey==null?column:variableComponentKey,
+                    target.getType().name(), target.getTarget(),
                     PARAM_DATE, date
             );
             validationCheckResult = DateValidationCheckResult.success(params);
         } catch (DateTimeParseException e) {
-            validationCheckResult = DateValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", pattern, "value", value));
+            validationCheckResult = DateValidationCheckResult.error(
+                    getTarget().getInternationalizedKey("invalidDate"), ImmutableMap.of(
+                            "target", target.getTarget(),
+                            "pattern", pattern,
+                            "value", value));
         }
         return validationCheckResult;
-    }
-
-    @Override
-    public String getColumn() {
-        return column;
     }
 }
