@@ -462,20 +462,24 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
 * sans caractères speciaux
 
 ## Internationalisation du fichier yaml:
-Il est possible de faire un fichier international en ajoutant plusieurs parties en précisant la langue.
+Il est possible de faire un fichier international en ajoutant plusieurs parties Internationalisation en précisant la langue.
 
 ### Internationalisation de l'application:
-Juste en dessous de la version du site nous rajoutons la langue et le nom international de l'application (?? pas logique que ce ne soit pas dans la partie application ??)
+Dans la partie application ajouter *defaultLanguage* pour préciser la langue par default de l'application.
+Ainsi que *internationalization* qui contient les abbreviations des langues de traduction (ex: *fr* ou *en*)
+Ce qui premettra de traduire le nom de l'application.
 
 ``` yaml
-defaultLanguage: fr
-internationalization:
-  fr: Application_nom_fr
-  en: Application_nom_en
+  defaultLanguage: fr
+  internationalization:
+    fr: Application_nom_fr
+    en: Application_nom_en
 ```
 
 ### Internationalisation des *references*:
-Nous pouvons faire en sorte que le nom de la référence et des colonnes s'affichent dans la langue de l'application.
+Nous pouvons faire en sorte que le nom de la référence s'affiche dans la langue de l'application en y ajoutant 
+*internationalizationName* ainsi que les langues dans lequel on veux traduire le nom de la référence.
+*internationalizedColumns* ....
 
 ``` yaml
 references:
@@ -490,14 +494,26 @@ references:
 ```
 
 ### Internationalisation des *dataTypes*:
-Même chose que pour les references.
+Nous pouvons aussi faire en sorte que *nomDonnéeCSV* soit traduit. Même chose pour les noms des *dataGroup*.
 
 ``` yaml
 dataTypes:
   nomDonnéeCSV:
     internationalizationName:
-      fr: nomDonnéeCSV_fr
-      en: nameDataCSV_en
+      fr: Nom Donnée CSV
+      en: Name Data CSV
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - date
+            - projet
+            - site
+            - commentaire
 ```
 
 # Aide fichier .csv  
