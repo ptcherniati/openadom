@@ -1,29 +1,21 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
+import java.util.Map;
+
 public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
+    private CheckerTarget target;
+    private Map<String, String> params;
 
-
-    private final VariableComponentKey variableComponentKey;
-
-    private final String column;
-
-    public FloatChecker(VariableComponentKey variableComponentKey) {
-        this.variableComponentKey = variableComponentKey;
-        this.column="";
-    }
-    public FloatChecker(String column) {
-        this.column = column;
-        this.variableComponentKey = null;
+    public CheckerTarget getTarget(){
+        return this.target;
     }
 
-    @Override
-    public VariableComponentKey getVariableComponentKey() {
-        return variableComponentKey;
+    public FloatChecker(CheckerTarget target, Map<String, String> params) {
+        this.params = params;this.target = target;
     }
 
     @Override
@@ -33,13 +25,16 @@ public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
             Float.parseFloat(value);
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidFloat", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error(
+                    getTarget().getInternationalizedKey("invalidFloat"), ImmutableMap.of(
+                            "target", target.getTarget(),
+                            "value", value));
         }
         return validationCheckResult;
     }
 
     @Override
-    public String getColumn() {
-        return column;
+    public Map<String, String> getParams() {
+        return params;
     }
 }

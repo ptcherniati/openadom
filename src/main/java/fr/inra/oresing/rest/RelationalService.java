@@ -250,7 +250,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();  // especes
-                VariableComponentKey variableComponentKey = referenceChecker.getVariableComponentKey();
+                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceChecker.getTarget().getTarget();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String foreignKeyColumnName = getTechnicalIdColumnName(variableComponentKey);

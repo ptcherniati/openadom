@@ -45,7 +45,6 @@ public class GroovyLineChecker implements LineChecker {
         this.params = params;
     }
 
-    @Override
     public ValidationCheckResult check(Map<VariableComponentKey, String> datum) {
         Map<String, Map<String, String>> datumAsMap = new LinkedHashMap<>();
         for (Map.Entry<VariableComponentKey, String> entry2 : datum.entrySet()) {
@@ -109,7 +108,9 @@ public class GroovyLineChecker implements LineChecker {
         if (evaluation) {
             return DefaultValidationCheckResult.success();
         } else {
-            return DefaultValidationCheckResult.error("checkerExpressionReturnedFalse", ImmutableMap.of("expression", expression));
+            return DefaultValidationCheckResult.error(
+                    "checkerExpressionReturnedFalse",
+                    ImmutableMap.of("expression", expression));
         }
     }
 }
