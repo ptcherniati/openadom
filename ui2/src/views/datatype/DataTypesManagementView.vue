@@ -56,6 +56,7 @@ import { AlertService } from "@/services/AlertService";
 import { DataService } from "@/services/rest/DataService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 
 @Component({
@@ -65,6 +66,7 @@ export default class DataTypesManagementView extends Vue {
   @Prop() applicationName;
 
   applicationService = ApplicationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
@@ -87,13 +89,6 @@ export default class DataTypesManagementView extends Vue {
   openPanel = false;
   chosenDataType = null;
 
-  localeApplicationName(application) {
-    return application?.internationalization?.[this.$i18n.locale] ?? application.name;
-  }
-  localeDatatypeName(datatype) {
-    return datatype?.internationalizationName?.[this.$i18n.locale] ?? datatype.name;
-  }
-
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
@@ -111,14 +106,14 @@ export default class DataTypesManagementView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.localeApplicationName(this.application),
+        localName: this.internationalisationService.localeApplicationName(this.application),
       };
       if (!this.application?.id) {
         return;
       }
       if (this.application.dataTypes) {
         this.dataTypes = Object.values(this.application.dataTypes).map((d) => {
-          return { ...d, localName: this.localeDatatypeName(d) };
+          return { ...d, localName: this.internationalisationService.localeDatatypeName(d) };
         });
       }
     } catch (error) {

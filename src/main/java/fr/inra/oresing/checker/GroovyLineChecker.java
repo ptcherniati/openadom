@@ -109,7 +109,9 @@ public class GroovyLineChecker implements LineChecker {
         if (evaluation) {
             return DefaultValidationCheckResult.success();
         } else {
-            return DefaultValidationCheckResult.error("checkerExpressionReturnedFalse", ImmutableMap.of("expression", expression));
+            return DefaultValidationCheckResult.error(
+                    "checkerExpressionReturnedFalse",
+                    ImmutableMap.of("expression", expression));
         }
     }
 }

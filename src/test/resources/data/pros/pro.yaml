@@ -102,47 +102,47 @@ references:
       Type de traitement:
       Année de début de validité:
       Année de fin de validité:
-  Type de lieu:
+  Type_lieu:
     keyColumns: [ Libelle du type de lieu_fr ]
     columns:
       Libelle du type de lieu_fr:
       Libelle du type de lieu_en:
-  Système de projection:
+  Système_projection:
     keyColumns: [ Nom du systeme de projection ]
     columns:
       Nom du systeme de projection:
       Definition_fr:
       Definition_En:
-  Type de dispositif:
+  Type_dispositif:
     keyColumns: [ Libelle du type de dispositif_fr ]
     columns:
       Libelle du type de dispositif_fr:
       Libelle du type de dispositif_en:
-  Echelle de prélèvement:
+  Echelle_prélèvement:
     keyColumns: [ Nom de l'échèlle de prélèvement_fr ]
     columns:
       Nom de l'échèlle de prélèvement_fr:
       Nom de l'échèlle de prélèvement_en:
-  Type de culture:
+  Type_culture:
     keyColumns: [ Libellé du type culture_fr ]
     columns:
       Libellé du type culture_fr:
       Libellé du type culture_en:
-  Type de document:
+  Type_document:
     keyColumns: [ Libellé du type de document ]
     columns:
       Libellé du type de document:
-  Système de conduite d'un dispositif:
+  Système conduite dispositif:
     keyColumns: [ Libellé du système de conduite de l'éssai_fr ]
     columns:
       Libellé du système de conduite de l'éssai_fr:
       Libellé du système de conduite de l'éssai_en:
-  Liste de raisonnement:
+  Liste raisonnement:
     keyColumns: [ Libellé de la liste de raisonnement_fr ]
     columns:
       Libellé de la liste de raisonnement_fr:
       Libellé de la liste de raisonnement_en:
-  Valeur de raisonnement:
+  Valeur raisonnement:
     keyColumns: [ Libellé de la liste de raisonnement_fr, Libellé du raisonnement_fr ]
     columns:
       Libellé de la liste de raisonnement_fr:
@@ -153,7 +153,7 @@ references:
     columns:
       Libellé de la thématique étudiée_fr:
       Libellé de la thématique étudiée_en:
-  Code du bloc:
+  Code_bloc:
     keyColumns: [ Code du bloc ]
     columns:
       Code du bloc:
@@ -161,23 +161,23 @@ references:
     keyColumns: [ Code de la parcelle élémentaire ]
     columns:
       Code de la parcelle élémentaire:
-  Statut de la placette:
+  Statut_placette:
     keyColumns: [ Libellé du statut de la placette_fr ]
     columns:
       Libellé du statut de la placette_fr:
       Libellé du statut de la placette_en:
-  Réseau d'essai ou Observatoire:
+  Réseau essai ou Observatoire:
     keyColumns: [ Nom de l'observatoire ]
     columns:
       Nom de l'observatoire:
       Définition_fr:
       Définition_en:
-  Type de traitement:
+  Type_traitement:
     keyColumns: [ Libellé du type de traitement_fr ]
     columns:
       Libellé du type de traitement_fr:
       Libellé du type de traitement_en:
-  Type de facteur:
+  Type_facteur:
     keyColumns: [ Libellé du type de facteur_fr ]
     columns:
       Libellé du type de facteur_fr:
@@ -190,17 +190,17 @@ references:
       Libellé du facteur_en:
       Peut être une information générale de conduite des traitements (oui/non):
       Sera associé à une nomenclature de PRO (non/oui):
-  Rôle de la personne ressource:
+  Role de la personne ressource:
     keyColumns: [ Libellé du rôle de la personne ressource_fr ]
     columns:
       Libellé du rôle de la personne ressource_fr:
       Libellé du rôle de la personne ressource_en:
-  Type de structure:
+  Type_structure:
     keyColumns: [ Libellé du type de structure_fr ]
     columns:
       Libellé du type de structure_fr:
       Libellé du type de structure_en:
-  Rôle de la structure:
+  Role_structure:
     keyColumns: [ Libellé du rôle de la structure_fr ]
     columns:
       Libellé du rôle de la structure_fr:
@@ -266,7 +266,7 @@ references:
       Système de projection:
       Latitude:
       Longitude:
-  Application des traitementsNom du lieu sur les parcelles élémentaires:
+  Application traitements Nom lieu sur parcelles:
     keyColumns: [ Code du dispositif (Nom du lieu),Code de la parcelle élémentaire,Code du traitement ]
     columns:
       Code du dispositif (Nom du lieu):
@@ -313,7 +313,7 @@ references:
     keyColumns: [ acbb ]
     columns:
       acbb:
-  Affiliation à un réseau d'essais:
+  Affiliation à un réseau d essais:
     keyColumns: [ Code du dispositif (Nom du lieu),Nom du réseau d'essai ]
     columns:
       Code du dispositif (Nom du lieu):

@@ -7,13 +7,8 @@ import java.util.Map;
 
 public interface ILineCheckerDecorator extends CheckerOnOneVariableComponentLineChecker{
     @Override
-    default VariableComponentKey getVariableComponentKey() {
-        return getChecker().getVariableComponentKey();
-    }
-
-    @Override
-    default String getColumn() {
-        return getChecker().getColumn();
+    default CheckerTarget getTarget() {
+        return getChecker().getTarget();
     }
 
     @Override
