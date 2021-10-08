@@ -12,6 +12,7 @@ compositeReferences:
         parentKeyColumn: Nom du bloc_code du bloc
       - reference: placettes
         parentKeyColumn: Nom de la parcelle élèmentaire
+      - reference: Type de lieu
 references:
   dispositifs:
     keyColumns: [code (nom court) du dispositif, nom du lieu]
@@ -73,6 +74,238 @@ references:
       Type de traitement:
       Année de début de validité:
       Année de fin de validité:
+  Type de lieu:
+    keyColumns: [ Libelle du type de lieu_fr ]
+    columns:
+      Libelle du type de lieu_fr:
+      Libelle du type de lieu_en:
+  Système de projection:
+    keyColumns: [ Nom du systeme de projection ]
+    columns:
+      Nom du systeme de projection:
+      Definition_fr:
+      Definition_En:
+  Type de dispositif:
+    keyColumns: [ Libelle du type de dispositif_fr ]
+    columns:
+      Libelle du type de dispositif_fr:
+      Libelle du type de dispositif_en:
+  Echelle de prélèvement:
+    keyColumns: [ Nom de l'échèlle de prélèvement_fr ]
+    columns:
+      Nom de l'échèlle de prélèvement_fr:
+      Nom de l'échèlle de prélèvement_en:
+  Type de culture:
+    keyColumns: [ Libellé du type culture_fr ]
+    columns:
+      Libellé du type culture_fr:
+      Libellé du type culture_en:
+  Type de document:
+    keyColumns: [ Libellé du type de document ]
+    columns:
+      Libellé du type de document:
+  Système de conduite d'un dispositif:
+    keyColumns: [ Libellé du système de conduite de l'éssai_fr ]
+    columns:
+      Libellé du système de conduite de l'éssai_fr:
+      Libellé du système de conduite de l'éssai_en:
+  Liste de raisonnement:
+    keyColumns: [ Libellé de la liste de raisonnement_fr ]
+    columns:
+      Libellé de la liste de raisonnement_fr:
+      Libellé de la liste de raisonnement_en:
+  Valeur de raisonnement:
+    keyColumns: [ Libellé de la liste de raisonnement_fr, Libellé du raisonnement_fr ]
+    columns:
+      Libellé de la liste de raisonnement_fr:
+      Libellé du raisonnement_fr:
+      Libellé du raisonnement_en:
+  Thématique étudiée:
+    keyColumns: [ Libellé de la thématique étudiée_fr ]
+    columns:
+      Libellé de la thématique étudiée_fr:
+      Libellé de la thématique étudiée_en:
+  Code du bloc:
+    keyColumns: [ Code du bloc ]
+    columns:
+      Code du bloc:
+  Code de la parcelle élémentaire:
+    keyColumns: [ Code de la parcelle élémentaire ]
+    columns:
+      Code de la parcelle élémentaire:
+  Statut de la placette:
+    keyColumns: [ Libellé du statut de la placette_fr ]
+    columns:
+      Libellé du statut de la placette_fr:
+      Libellé du statut de la placette_en:
+  Réseau d'essai ou Observatoire:
+    keyColumns: [ Nom de l'observatoire ]
+    columns:
+      Nom de l'observatoire:
+      Définition_fr:
+      Définition_en:
+  Type de traitement:
+    keyColumns: [ Libellé du type de traitement_fr ]
+    columns:
+      Libellé du type de traitement_fr:
+      Libellé du type de traitement_en:
+  Type de facteur:
+    keyColumns: [ Libellé du type de facteur_fr ]
+    columns:
+      Libellé du type de facteur_fr:
+      Libellé du type de facteur_en:
+  Facteur:
+    keyColumns: [ Libellé du type de facteur,Libellé du facteur_fr ]
+    columns:
+      Libellé du type de facteur:
+      Libellé du facteur_fr:
+      Libellé du facteur_en:
+      Peut être une information générale de conduite des traitements (oui/non):
+      Sera associé à une nomenclature de PRO (non/oui):
+  Rôle de la personne ressource:
+    keyColumns: [ Libellé du rôle de la personne ressource_fr ]
+    columns:
+      Libellé du rôle de la personne ressource_fr:
+      Libellé du rôle de la personne ressource_en:
+  Type de structure:
+    keyColumns: [ Libellé du type de structure_fr ]
+    columns:
+      Libellé du type de structure_fr:
+      Libellé du type de structure_en:
+  Rôle de la structure:
+    keyColumns: [ Libellé du rôle de la structure_fr ]
+    columns:
+      Libellé du rôle de la structure_fr:
+      Libellé du rôle de la structure_en:
+  Pays:
+    keyColumns: [ Nom du pays_fr ]
+    columns:
+      Nom du pays_fr:
+      Nom du pays_en:
+  Region:
+    keyColumns: [ Nom du pays,Nom de la région ]
+    columns:
+      Nom du pays:
+      Nom de la région:
+  Département:
+    keyColumns: [ Nom de la région,Nom du département ]
+    columns:
+      Nom de la région:
+      Nom du département:
+      Numéro du département:
+  Commune:
+    keyColumns: [ Nom du département,Code postal,Nom de la commune ]
+    columns:
+      Nom du département:
+      Code postal:
+      Nom de la commune:
+  Station expérimentale:
+    keyColumns: [ Nom de la station expérimentale ]
+    columns:
+      Nom de la station expérimentale:
+  Structure:
+    keyColumns: [ Nom de la structure,Equipe et/ou service ]
+    columns:
+      Libellé du type de structure:
+      Nom de la structure:
+      Equipe et/ou service:
+      No, nom de la rue, ...:
+      Code postal:
+      Commune:
+      No Tél:
+      Site web ou reseaux sociaux:
+      Est signataire de la convention ou protocole d'accord (oui/non):
+      Numéro, nom du document, date de signature:
+  Personne ressource:
+    keyColumns:
+    columns:
+  Modalité du facteur:
+    keyColumns: [ Libellé du type de facteur,Libellé du facteur,Valeur de la modalité ]
+    columns:
+      Libellé du type de facteur:
+      Libellé du facteur:
+      Valeur de la modalité:
+      Commentaire:
+  Lieu implantation:
+    keyColumns: [ Nom du lieu ]
+    columns:
+      Nom du lieu:
+      Libellé du type de lieu:
+      Nom de la commune (Code postal):
+      Numéro de cadastre:
+      Nom de la station expérimentale:
+      Système de projection:
+      Latitude:
+      Longitude:
+  Application des traitementsNom du lieu sur les parcelles élémentaires:
+    keyColumns: [ Code du dispositif (Nom du lieu),Code de la parcelle élémentaire,Code du traitement ]
+    columns:
+      Code du dispositif (Nom du lieu):
+      Code de la parcelle élémentaire:
+      Code du traitement:
+      Numéro de répétition:
+      Libellé du Facteur:
+      Valeur de la Modalité:
+      Année de début d'application du traitement:
+      Année de fin d'application du traitement:
+  Protocole général:
+    keyColumns: [ Nom protocole général ]
+    columns:
+      Nom protocole général:
+      Année de début d'application du protocole général:
+      Année de fin d'application du protocole général:
+      Utilisation du guide méthodologique Réseau PRO après 2015 (oui/non):
+  Raisonnements par protocole:
+    keyColumns: [ Nom du protocole,Libellé de la liste de raisonnement,Valeur du raisonnement ]
+    columns:
+      Nom du protocole:
+      Libellé de la liste de raisonnement:
+      Valeur du raisonnement:
+      Commentaire:
+  Objectif des thématiques étudiées par protocoles:
+    keyColumns: [ Nom du protocole,Libellé de la thématique étudiée,Objectif de la thématique_fr ]
+    columns:
+      Nom du protocole:
+      Libellé de la thématique étudiée:
+      Objectif de la thématique_fr:
+      Objectif de la thématique_en:
+  Protocoles des dispositifs:
+    keyColumns: [ Code du dispositif (Nom du lieu),Nom du protocole ]
+    columns:
+      Code du dispositif (Nom du lieu):
+      Nom du protocole:
+  Association des statuts de placettes aux placettes:
+    keyColumns: [ Code de la parcelle élémentaire - Code du dispositif (Nom du lieu),Code de la placette,Libellé du statut de la placette ]
+    columns:
+      Code de la parcelle élémentaire - Code du dispositif (Nom du lieu):
+      Code de la placette:
+      Libellé du statut de la placette:
+  Rôle des personnes ressources par dispositif:
+    keyColumns: [ ]
+    columns:
+  Affiliation à un réseau d'essais:
+    keyColumns: [ Code du dispositif (Nom du lieu),Nom du réseau d'essai ]
+    columns:
+      Code du dispositif (Nom du lieu):
+      Nom du réseau d'essai:
+  Structures des stations expérimentales:
+    keyColumns: [ Nom de la structure,Précision (pôle et/ou unité et/ou équipe),Nom de la station expérimentale ]
+    columns:
+      Nom de la structure:
+      Précision (pôle et/ou unité et/ou équipe):
+      Nom de la station expérimentale:
+  Structures des observatoires:
+    keyColumns: [ Nom de la structure,Précision (pôle et/ou unité et/ou équipe),Observatoire ]
+    columns:
+      Nom de la structure:
+      Précision (pôle et/ou unité et/ou équipe):
+      Observatoire:
+  Structures des lieux:
+    keyColumns: [ Nom de la structure,Précision (pôle et/ou unité et/ou équipe),Nom du lieu ]
+    columns:
+      Nom de la structure:
+      Précision (pôle et/ou unité et/ou équipe):
+      Nom du lieu:
 dataTypes:
   donnees_prelevement_pro:
     authorization:
