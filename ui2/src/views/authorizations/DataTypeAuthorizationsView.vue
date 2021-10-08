@@ -4,7 +4,7 @@
     <h1 class="title main-title">
       {{
         $t("titles.data-type-authorizations", {
-          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+          dataType: application.dataTypeName || dataTypeId,
         })
       }}
     </h1>
@@ -83,6 +83,8 @@ import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AuthorizationService } from "@/services/rest/AuthorizationService";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu },
@@ -92,11 +94,12 @@ export default class DataTypeAuthorizationsView extends Vue {
   @Prop() applicationName;
 
   authorizationService = AuthorizationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
 
   authorizations = [];
-  application = {};
+  application = new ApplicationResult();
   scopes = [];
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -137,6 +140,11 @@ export default class DataTypeAuthorizationsView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.localeApplicationName(this.application),
+        dataTypeName: this.internationalisationService.localeDatatypeName(this.application.dataTypes[this.dataTypeId]),
+      };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,
         this.dataTypeId

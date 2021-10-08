@@ -5,7 +5,7 @@
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
         $t("titles.data-type-new-authorization", {
-          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+          dataType: application.dataTypeName || dataTypeId,
         })
       }}</span>
     </h1>
@@ -271,6 +271,8 @@ import { UserPreferencesService } from "@/services/UserPreferencesService";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
@@ -283,6 +285,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   authorizationService = AuthorizationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
 
   periods = {
@@ -293,7 +296,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   authorizations = [];
-  application = {};
+  application = new ApplicationResult();
   users = [];
   dataGroups = [];
   authorizationScopes = [];
@@ -347,6 +350,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.localeApplicationName(this.application),
+        dataTypeName: this.internationalisationService.localeDatatypeName(this.application.dataTypes[this.dataTypeId]),
+      };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
         this.dataTypeId
