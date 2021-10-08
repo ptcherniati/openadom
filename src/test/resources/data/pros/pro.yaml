@@ -217,8 +217,9 @@ references:
       Est signataire de la convention ou protocole d'accord (oui/non):
       Numéro, nom du document, date de signature:
   Personne ressource:
-    keyColumns:
+    keyColumns: [ acbb ]
     columns:
+      acbb:
   Modalité du facteur:
     keyColumns: [ Libellé du type de facteur,Libellé du facteur,Valeur de la modalité ]
     columns:
@@ -281,8 +282,9 @@ references:
       Code de la placette:
       Libellé du statut de la placette:
   Rôle des personnes ressources par dispositif:
-    keyColumns: [ ]
+    keyColumns: [ acbb ]
     columns:
+      acbb:
   Affiliation à un réseau d'essais:
     keyColumns: [ Code du dispositif (Nom du lieu),Nom du réseau d'essai ]
     columns:
