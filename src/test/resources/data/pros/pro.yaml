@@ -1,5 +1,9 @@
 version: 0 
 application:
+  defaultLanguage: fr
+  internationalization:
+    fr: SOERE Pros
+    en: Pros SOERE
   name: Pros
   version: 1
 compositeReferences:
@@ -12,9 +16,21 @@ compositeReferences:
         parentKeyColumn: Nom du bloc_code du bloc
       - reference: placettes
         parentKeyColumn: Nom de la parcelle élèmentaire
+  traitements:
+    components:
+      - reference: traitements
+  lieu:
+    components:
       - reference: Type de lieu
 references:
   dispositifs:
+    internationalizationName:
+      fr: Dispositif
+      en: Dispositif
+    internationalizedColumns:
+      raison chgt conduite_fr:
+        fr: raison chgt conduite_fr
+        en: raison chgt conduite_en
     keyColumns: [code (nom court) du dispositif, nom du lieu]
     columns:
       nom du dispositif:
@@ -35,12 +51,18 @@ references:
       latitude:
       longitude:
   blocs:
+    internationalizationName:
+      fr: Blocs
+      en: Blocs
     keyColumns: [Code du dispositif_Nom du lieu, Code du bloc]
     columns:
       Code du dispositif_Nom du lieu:
       Nom du bloc:
       Code du bloc:
   parcelles_elementaires:
+    internationalizationName:
+      fr: Parcelles
+      en: Parcelles
     keyColumns: [Code du dispositif_Nom du lieu, Nom du bloc_code du bloc, Nom de la parcelle élémentaire]
     columns:
       Code du dispositif_Nom du lieu:
@@ -51,6 +73,9 @@ references:
       Latitude:
       Longitude:
   placettes:
+    internationalizationName:
+      fr: Placette
+      en: Placette
     keyColumns: [Code du dispositif_Nom du lieu, Nom du bloc, Nom de la parcelle élèmentaire, nom de la placette]
     columns:
       Code du dispositif_Nom du lieu:
@@ -65,6 +90,9 @@ references:
       Longitude:
       Commentaire:
   traitements:
+    internationalizationName:
+      fr: Traitement
+      en: Traitement
     keyColumns: [Code du dispositif_Nom du lieu, Code du traitement]
     columns:
       Code du dispositif_Nom du lieu:
@@ -310,9 +338,15 @@ references:
       Nom du lieu:
 dataTypes:
   donnees_prelevement_pro:
+    internationalizationName:
+      fr: Données de prélèvement
+      en: Collection data
     authorization:
       dataGroups:
         all:
+          internationalizationName:
+            fr: Toutes les données
+            en: All data
           label: "Toutes les données"
           data:
             - localization
@@ -414,9 +448,15 @@ dataTypes:
             variable: prelevement
             component: code prelevement
   physico_chimie_sols:
+    internationalizationName:
+      fr: Physico chimie du sols
+      en: Soil physical chemistry
     authorization:
       dataGroups:
         all:
+          internationalizationName:
+            fr: Toutes les données
+            en: All data
           label: "Toutes les données"
           data:
             - localization
