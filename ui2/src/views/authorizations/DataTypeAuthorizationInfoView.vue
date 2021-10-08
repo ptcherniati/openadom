@@ -158,6 +158,34 @@
         >
       </b-field>
 
+      <b-field label="Enter some tags">
+        <b-taginput
+          v-model="userToAuthorize"
+          :data="users"
+          autocomplete
+          ref="taginput"
+          placeholder="Add a tag"
+          @typing="getFilteredTags"
+        >
+          <template slot-scope="props">
+            <strong>{{ props.option.label }}</strong>
+          </template>
+          <template #empty> There are no items </template>
+          <template #selected="props">
+            <b-tag
+              v-for="(label, index) in props.option"
+              :key="index"
+              rounded
+              ellipsis
+              closable
+              @close="$refs.taginput.removeTag(index, $event)"
+            >
+              {{ props.option.label }}
+            </b-tag>
+          </template>
+        </b-taginput>
+      </b-field>
+
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
@@ -271,6 +299,8 @@ import { UserPreferencesService } from "@/services/UserPreferencesService";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
@@ -281,6 +311,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() authorizationId;
 
   authorizationService = AuthorizationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
@@ -293,8 +324,9 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   authorizations = [];
-  application = {};
+  application = new ApplicationResult();
   users = [];
+  filteredTags = this.users;
   dataGroups = [];
   authorizationScopes = [];
   userToAuthorize = null;
@@ -311,7 +343,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       datatype.name
     );
   }
-
+  getFilteredTags(text) {
+    this.filteredTags = this.users.filter((option) => {
+      return option.label.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
+    });
+  }
   created() {
     this.init();
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
@@ -347,6 +383,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.localeApplicationName(this.application),
+      };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
         this.dataTypeId
