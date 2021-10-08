@@ -353,7 +353,9 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.localeApplicationName(this.application),
-        dataTypeName: this.internationalisationService.localeDatatypeName(this.application.dataTypes[this.dataTypeId]),
+        dataTypeName: this.internationalisationService.localeDatatypeName(
+          this.application.dataTypes[this.dataTypeId]
+        ),
       };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
