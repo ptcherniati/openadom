@@ -5,7 +5,7 @@
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
         $t("titles.data-type-new-authorization", {
-          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+          dataType: application.dataTypeId || dataTypeId,
         })
       }}</span>
     </h1>
@@ -158,35 +158,57 @@
         >
       </b-field>
 
-      <b-field label="Enter some tags">
-        <b-taginput
-          v-model="userToAuthorize"
-          :data="users"
-          autocomplete
-          ref="taginput"
-          placeholder="Add a tag"
-          @typing="getFilteredTags"
-        >
-          <template slot-scope="props">
-            <strong>{{ props.option.label }}</strong>
-          </template>
-          <template #empty> There are no items </template>
-          <template #selected="props">
-            <b-tag
-              v-for="(label, index) in props.option"
-              :key="index"
-              rounded
-              ellipsis
-              closable
-              @close="$refs.taginput.removeTag(index, $event)"
-            >
-              {{ props.option.label }}
-            </b-tag>
-          </template>
-        </b-taginput>
-      </b-field>
-
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
+        <b-field
+          :label="$t('dataTypeAuthorizations.users')"
+          :type="{
+            'is-danger': errors && errors.length > 0,
+            'is-success': valid,
+          }"
+          :message="errors[0]"
+        >
+          <b-taginput
+            type="is-dark"
+            v-model="userToAuthorize"
+            :data="users"
+            :value="users.id"
+            autocomplete
+            field="label"
+            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+          >
+          </b-taginput>
+        </b-field>
+      </ValidationProvider>
+
+      <ValidationProvider
+        rules="required"
+        name="dataGroups"
+        v-slot="{ errors, valid }"
+        vid="dataGroups"
+      >
+        <b-field
+          :label="$t('dataTypeAuthorizations.data-groups')"
+          :type="{
+            'is-danger': errors && errors.length > 0,
+            'is-success': valid,
+          }"
+          :message="errors[0]"
+        >
+          <b-taginput
+            type="is-primary"
+            v-model="dataGroupToAuthorize"
+            :data="dataGroups"
+            :value="dataGroups.id"
+            autocomplete
+            :open-on-focus="true"
+            field="label"
+            :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
+          >
+          </b-taginput>
+        </b-field>
+      </ValidationProvider>
+
+<!--      <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
           class="mb-4"
@@ -197,6 +219,7 @@
           :message="errors[0]"
         >
           <b-select
+              multiple
             :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
             v-model="userToAuthorize"
             expanded
@@ -206,6 +229,7 @@
             </option>
           </b-select>
         </b-field>
+        <b-tag style="max-height: 400px"><b>Tags:</b>{{ userToAuthorize }}</b-tag>
       </ValidationProvider>
 
       <ValidationProvider
@@ -233,7 +257,7 @@
             </option>
           </b-select>
         </b-field>
-      </ValidationProvider>
+      </ValidationProvider>-->
 
       <ValidationProvider rules="required" name="scopes" v-slot="{ errors, valid }" vid="scopes">
         <b-field
@@ -326,7 +350,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   authorizations = [];
   application = new ApplicationResult();
   users = [];
-  filteredTags = this.users;
   dataGroups = [];
   authorizationScopes = [];
   userToAuthorize = null;
@@ -337,17 +360,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   startDate = null;
   endDate = null;
 
-  localeDatatypeName(datatype) {
-    return (
-      this.application?.dataTypes?.[datatype]?.internationalizationName?.[this.$i18n.locale] ??
-      datatype.name
-    );
-  }
-  getFilteredTags(text) {
-    this.filteredTags = this.users.filter((option) => {
-      return option.label.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
-    });
-  }
   created() {
     this.init();
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
@@ -386,6 +398,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.localeApplicationName(this.application),
+        dataTypeId: this.internationalisationService.localeDatatypeNameApplication(
+          this.application,
+          this.dataTypeId
+        ),
       };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
