@@ -378,6 +378,7 @@ public class Fixtures {
         referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
         referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
         referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
+        referentielFiles.put("type_lieu", "/data/pros/type_lieu.csv");
         return referentielFiles;
     }
 
