@@ -21,7 +21,7 @@ compositeReferences:
       - reference: traitements
   lieu:
     components:
-      - reference: Type de lieu
+      - reference: type_lieu
 references:
   dispositifs:
     internationalizationName:
@@ -102,9 +102,10 @@ references:
       Type de traitement:
       Année de début de validité:
       Année de fin de validité:
-  Type_lieu:
-    keyColumns: [ Libelle du type de lieu_fr ]
+  type_lieu:
+    keyColumns: [Libelle du type de lieu_key]
     columns:
+      Libelle du type de lieu_key:
       Libelle du type de lieu_fr:
       Libelle du type de lieu_en:
   Système_projection:
