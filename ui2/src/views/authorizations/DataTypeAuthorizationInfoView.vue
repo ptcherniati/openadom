@@ -208,7 +208,7 @@
         </b-field>
       </ValidationProvider>
 
-<!--      <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
+      <!--      <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
           class="mb-4"

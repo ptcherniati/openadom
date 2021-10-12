@@ -8,19 +8,26 @@
         }}
       </h1>
       <div class="columns">
-        <div class="column" v-for="(authReference, key) in authReferences" :key="key">
+        <div class="column is-3" v-for="(authReference, key) in authReferences" :key="key">
           <div class="columns">
             <div class="column" style="padding-top: 20px">
               <p style="text-transform: capitalize">{{ key }}</p>
             </div>
             <div class="column">
               <b-field>
-                <b-checkbox
-                  v-for="option in authReference.referenceValues"
-                  :key="option.naturalKey"
+                <b-select
+                  :placeholder="$t('dataTypesRepository.placeholder-select')"
+                  @input="selectAuthorization(key, $event)"
+                  expanded
                 >
-                  {{ option.naturalKey }} {{ option.values.zet_nom_key }}</b-checkbox
-                >
+                  <option
+                    v-for="option in authReference.referenceValues"
+                    :key="option.naturalKey"
+                    :value="option.naturalKey"
+                  >
+                    {{ option.naturalKey }}
+                  </option>
+                </b-select>
               </b-field>
             </div>
           </div>
