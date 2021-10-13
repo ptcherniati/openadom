@@ -4,7 +4,7 @@
     <h1 class="title main-title">
       {{
         $t("titles.data-type-authorizations", {
-          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+          dataType: application.localDataType || dataTypeId,
         })
       }}
     </h1>
@@ -108,13 +108,6 @@ export default class DataTypeAuthorizationsView extends Vue {
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
 
-  localeDatatypeName(datatype) {
-    return (
-      this.application?.dataTypes?.[datatype]?.internationalizationName?.[this.$i18n.locale] ??
-      datatype.name
-    );
-  }
-
   created() {
     this.init();
     this.subMenuPaths = [
@@ -143,6 +136,7 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.localeApplicationName(this.application),
+        localDataType: this.internationalisationService.localeDatatypeNameApplication(this.application, this.dataTypeId),
       };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,
