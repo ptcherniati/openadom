@@ -31,47 +31,47 @@
         {
           "id": "nivelle",
           "label": "nivelle",
-          "children": []
-        },
-        {
-          "id": "nivelle__p1",
-          "label": "nivelle__p1",
-          "children": []
+          "children": [
+            {
+              "id": "nivelle__p1",
+              "label": "nivelle__p1",
+              "children": []
+            }
+          ]
         },
         {
           "id": "oir",
           "label": "oir",
-          "children": []
-        },
-        {
-          "id": "oir__p1",
-          "label": "oir__p1",
-          "children": []
-        },
-        {
-          "id": "oir__p1__a",
-          "label": "oir__p1__a",
-          "children": []
-        },
-        {
-          "id": "oir__p1__b",
-          "label": "oir__p1__b",
-          "children": []
-        },
-        {
-          "id": "oir__p2",
-          "label": "oir__p2",
-          "children": []
+          "children": [
+            {
+              "id": "oir__p1",
+              "label": "oir__p1",
+              "children": [
+                {
+                  "id": "oir__p1__a",
+                  "label": "oir__p1__a"
+                },
+                {
+                  "id": "oir__p1__b",
+                  "label": "oir__p1__b"
+                }
+              ]
+            },
+            {
+              "id": "oir__p2",
+              "label": "oir__p2"
+            }
+          ]
         },
         {
           "id": "scarff",
           "label": "scarff",
-          "children": []
-        },
-        {
-          "id": "scarff__p1",
-          "label": "scarff__p1",
-          "children": []
+          "children": [
+            {
+              "id": "scarff__p1",
+              "label": "scarff__p1"
+            }
+          ]
         }
       ]
     },

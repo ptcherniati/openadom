@@ -160,23 +160,23 @@
 
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
-          :label="$t('dataTypeAuthorizations.users')"
-          :type="{
+            :label="$t('dataTypeAuthorizations.users')"
+            class="mb-4"
+            :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          :message="errors[0]"
+            :message="errors[0]"
         >
-          <b-taginput
-            type="is-dark"
-            v-model="userToAuthorize"
-            :data="users"
-            :value="users.id"
-            autocomplete
-            field="label"
-            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+          <b-select
+              :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+              v-model="userToAuthorize"
+              expanded
           >
-          </b-taginput>
+            <option v-for="user in users" :value="user.id" :key="user.id">
+              {{ user.label }}
+            </option>
+          </b-select>
         </b-field>
       </ValidationProvider>
 
@@ -207,57 +207,6 @@
           </b-taginput>
         </b-field>
       </ValidationProvider>
-
-      <!--      <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
-        <b-field
-          :label="$t('dataTypeAuthorizations.users')"
-          class="mb-4"
-          :type="{
-            'is-danger': errors && errors.length > 0,
-            'is-success': valid,
-          }"
-          :message="errors[0]"
-        >
-          <b-select
-              multiple
-            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-            v-model="userToAuthorize"
-            expanded
-          >
-            <option v-for="user in users" :value="user.id" :key="user.id">
-              {{ user.label }}
-            </option>
-          </b-select>
-        </b-field>
-        <b-tag style="max-height: 400px"><b>Tags:</b>{{ userToAuthorize }}</b-tag>
-      </ValidationProvider>
-
-      <ValidationProvider
-        rules="required"
-        name="dataGroups"
-        v-slot="{ errors, valid }"
-        vid="dataGroups"
-      >
-        <b-field
-          :label="$t('dataTypeAuthorizations.data-groups')"
-          class="mb-4"
-          :type="{
-            'is-danger': errors && errors.length > 0,
-            'is-success': valid,
-          }"
-          :message="errors[0]"
-        >
-          <b-select
-            :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-            v-model="dataGroupToAuthorize"
-            expanded
-          >
-            <option v-for="dataGroup in dataGroups" :value="dataGroup.id" :key="dataGroup.id">
-              {{ dataGroup.label }}
-            </option>
-          </b-select>
-        </b-field>
-      </ValidationProvider>-->
 
       <ValidationProvider rules="required" name="scopes" v-slot="{ errors, valid }" vid="scopes">
         <b-field

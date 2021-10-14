@@ -49,10 +49,10 @@ Cypress.Commands.add('login', (userRole, applications) => {
 
         cy.intercept(
             'POST',
-            'http://localhost:8081/api/v1/login', user.response)
+            'http://localhost:8081/api/v1/login', user.response).as('postUserResponse')
         cy.intercept(
             'GET',
-            'http://localhost:8081/api/v1/applications', applicationsResponse)
+            'http://localhost:8081/api/v1/applications', applicationsResponse).as('getApplicationResponse')
         cy.get('.buttons button').contains(" Se connecter ").click()
     })
 })

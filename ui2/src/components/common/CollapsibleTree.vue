@@ -15,7 +15,7 @@
             class="clickable mr-3"
           />
 
-          <b-radio
+          <b-checkbox
             v-if="withRadios"
             v-model="innerOptionChecked"
             :name="radioName"
@@ -23,7 +23,7 @@
             :native-value="option.id"
           >
             {{ option.localName || option.label }}
-          </b-radio>
+          </b-checkbox>
           <div
             v-else
             :class="onClickLabelCb ? 'link' : ''"
