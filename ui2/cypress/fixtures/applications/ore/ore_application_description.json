@@ -1,0 +1,4373 @@
+[
+  {
+    "id": "c1296281-aa5a-4925-aabd-452ad0193933",
+    "creationDate": 1633598505921,
+    "updateDate": 1633598505921,
+    "name": "olac",
+    "referenceType": [
+      "valeurs_qualitatives",
+      "plateformes",
+      "typePlateformes",
+      "sites",
+      "typeSites",
+      "projets",
+      "themes"
+    ],
+    "dataType": [
+      "condition_prelevements",
+      "physico-chimie",
+      "sonde_truncated",
+      "phytoplancton_aggregated",
+      "phytoplancton__truncated",
+      "zooplancton__truncated",
+      "zooplancton_biovolumes"
+    ],
+    "configuration": {
+      "version": 0,
+      "application": {
+        "name": "ola",
+        "version": 1,
+        "defaultLanguage": "fr",
+        "internationalization": {
+          "en": "Lake observatory",
+          "fr": "Observatoire des lacs"
+        }
+      },
+      "references": {
+        "valeurs_qualitatives": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Qualitative values",
+            "fr": "Valeurs qualitatives"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "valeur_key": {
+              "en": "valeur_en",
+              "fr": "valeur_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key",
+            "valeur_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "valeur_en": null,
+            "valeur_fr": null,
+            "valeur_key": null
+          },
+          "validations": {}
+        },
+        "typePlateformes": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Plateform types",
+            "fr": "Types de plateforme"
+          },
+          "internationalizedColumns": {
+            "nom du type de plateforme_key": {
+              "en": "nom du type de plateforme_en",
+              "fr": "nom du type de plateforme_fr"
+            },
+            "description du type de plateforme_fr": {
+              "en": "description du type de plateforme_en",
+              "fr": "description du type de plateforme_fr"
+            }
+          },
+          "keyColumns": [
+            "nom du type de plateforme_key"
+          ],
+          "columns": {
+            "code sandre": null,
+            "code sandre du contexte": null,
+            "nom du type de plateforme_en": null,
+            "nom du type de plateforme_fr": null,
+            "nom du type de plateforme_key": null,
+            "description du type de plateforme_en": null,
+            "description du type de plateforme_fr": null
+          },
+          "validations": {}
+        },
+        "plateformes": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Plateforms",
+            "fr": "Plateformes"
+          },
+          "internationalizedColumns": {
+            "nom de la plateforme_key": {
+              "en": "nom de la plateforme_en",
+              "fr": "nom de la plateforme_fr"
+            }
+          },
+          "keyColumns": [
+            "nom de la plateforme_key",
+            "nom du type de plateforme_key"
+          ],
+          "columns": {
+            "altitude": null,
+            "latitude": null,
+            "longitude": null,
+            "code sandre": null,
+            "nom du site": null,
+            "code sandre du contexte": null,
+            "nom de la plateforme_en": null,
+            "nom de la plateforme_fr": null,
+            "nom de la plateforme_key": null,
+            "nom du type de plateforme_key": null
+          },
+          "validations": {}
+        },
+        "typeSites": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Sites types",
+            "fr": "Types de sites"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "code sandre": null,
+            "description_en": null,
+            "description_fr": null,
+            "code sandre du contexte": null
+          },
+          "validations": {}
+        },
+        "projets": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Project",
+            "fr": "Projet"
+          },
+          "internationalizedColumns": {
+            "nom du projet_key": {
+              "en": "nom du projet_en",
+              "fr": "nom du projet_fr"
+            },
+            "description du projet_fr": {
+              "en": "description du projet_en",
+              "fr": "description du projet_fr"
+            }
+          },
+          "keyColumns": [
+            "nom du projet_key"
+          ],
+          "columns": {
+            "nom du projet_en": null,
+            "nom du projet_fr": null,
+            "nom du projet_key": null,
+            "description du projet_en": null,
+            "description du projet_fr": null
+          },
+          "validations": {}
+        },
+        "themes": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Themes",
+            "fr": "Thèmes"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "description_en": null,
+            "description_fr": null
+          },
+          "validations": {}
+        },
+        "sites": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Site",
+            "fr": "Site"
+          },
+          "internationalizedColumns": {
+            "nom du site_key": {
+              "en": "nom du site_en",
+              "fr": "nom du site_fr"
+            },
+            "description du site_fr": {
+              "en": "description du site_en",
+              "fr": "description du site_fr"
+            }
+          },
+          "keyColumns": [
+            "nom du site_key"
+          ],
+          "columns": {
+            "nom du site_en": null,
+            "nom du site_fr": null,
+            "nom du site_key": null,
+            "nom du type de site": null,
+            "description du site_en": null,
+            "description du site_fr": null,
+            "code sandre du Plan d'eau": null,
+            "code sandre de la Masse d'eau plan d'eau": null
+          },
+          "validations": {}
+        }
+      },
+      "compositeReferences": {
+        "projets": {
+          "components": [
+            {
+              "reference": "projets",
+              "parentKeyColumn": null,
+              "recursive": null
+            }
+          ]
+        },
+        "localizations": {
+          "components": [
+            {
+              "reference": "typeSites",
+              "parentKeyColumn": null,
+              "recursive": null
+            },
+            {
+              "reference": "sites",
+              "parentKeyColumn": "nom du type de site",
+              "recursive": null
+            },
+            {
+              "reference": "plateformes",
+              "parentKeyColumn": "nom du site",
+              "recursive": null
+            }
+          ]
+        }
+      },
+      "dataTypes": {
+        "physico-chimie": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projet",
+                  "component": "nom du projet",
+                  "id": "projet_nom du projet"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateforme",
+                  "component": "nom de la plateforme",
+                  "id": "plateforme_nom de la plateforme"
+                }
+              },
+              {
+                "header": "date de prelevement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day"
+                }
+              },
+              {
+                "header": "outil de prelevement",
+                "boundTo": {
+                  "variable": "outil",
+                  "component": "prélèvement",
+                  "id": "outil_prélèvement"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outil",
+                  "component": "mesure",
+                  "id": "outil_mesure"
+                }
+              },
+              {
+                "header": "profondeur minimum (m)",
+                "boundTo": {
+                  "variable": "profondeur",
+                  "component": "minimum",
+                  "id": "profondeur_minimum"
+                }
+              },
+              {
+                "header": "profondeur maximum (m)",
+                "boundTo": {
+                  "variable": "profondeur",
+                  "component": "maximum",
+                  "id": "profondeur_maximum"
+                }
+              },
+              {
+                "header": "profondeur reelle observee  (m)",
+                "boundTo": {
+                  "variable": "profondeur",
+                  "component": "réelle observée",
+                  "id": "profondeur_réelle observée"
+                }
+              },
+              {
+                "header": "Temperature (°c)",
+                "boundTo": {
+                  "variable": "température",
+                  "component": "valeur",
+                  "id": "température_valeur"
+                }
+              },
+              {
+                "header": "Azote total (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "azote total",
+                  "id": "variables_azote total"
+                }
+              },
+              {
+                "header": "Azote organique particulaire (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "azote organique",
+                  "id": "variables_azote organique"
+                }
+              },
+              {
+                "header": "Azote Nitrates (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "azote nitrates",
+                  "id": "variables_azote nitrates"
+                }
+              },
+              {
+                "header": "Nitrates [mg(NO3)/l]",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nitrates",
+                  "id": "variables_nitrates"
+                }
+              },
+              {
+                "header": "Azote Ammonium (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "azote ammonium",
+                  "id": "variables_azote ammonium"
+                }
+              },
+              {
+                "header": "Ammonium [mg(NH4)/l]",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "ammonium",
+                  "id": "variables_ammonium"
+                }
+              },
+              {
+                "header": "Azote Nitrites (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "azote nitrites",
+                  "id": "variables_azote nitrites"
+                }
+              },
+              {
+                "header": "Nitrites [mg(NO2)/l]",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nitrites",
+                  "id": "variables_nitrites"
+                }
+              },
+              {
+                "header": "pH (nounit)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "pH",
+                  "id": "variables_pH"
+                }
+              },
+              {
+                "header": "Silice reactive (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "silice réactive",
+                  "id": "variables_silice réactive"
+                }
+              },
+              {
+                "header": "Titre alcalimetrique (meq/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "titre alcalimetrique",
+                  "id": "variables_titre alcalimetrique"
+                }
+              },
+              {
+                "header": "Conductivite (μs/cm)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "coductivité",
+                  "id": "variables_coductivité"
+                }
+              },
+              {
+                "header": "Titre alcalimetrique complet (meq/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "titre alcalimetrique complet",
+                  "id": "variables_titre alcalimetrique complet"
+                }
+              },
+              {
+                "header": "Demande biologique en oxygène en 5 jours (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "demande biologique en oxygène en 5 jours",
+                  "id": "variables_demande biologique en oxygène en 5 jours"
+                }
+              },
+              {
+                "header": "Balance ionique (%)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "balance ionique",
+                  "id": "variables_balance ionique"
+                }
+              },
+              {
+                "header": "Carbone organique total (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "carbone organique total",
+                  "id": "variables_carbone organique total"
+                }
+              },
+              {
+                "header": "Carbone organique dissous (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "carbone organique dissous",
+                  "id": "variables_carbone organique dissous"
+                }
+              },
+              {
+                "header": "Carbone organique particulaire (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "carbone organique particulaire",
+                  "id": "variables_carbone organique particulaire"
+                }
+              },
+              {
+                "header": "Calcium (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "calcium",
+                  "id": "variables_calcium"
+                }
+              },
+              {
+                "header": "Magnesium (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "magnésium",
+                  "id": "variables_magnésium"
+                }
+              },
+              {
+                "header": "Sodium (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "sodium",
+                  "id": "variables_sodium"
+                }
+              },
+              {
+                "header": "Potassium (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "potassium",
+                  "id": "variables_potassium"
+                }
+              },
+              {
+                "header": "Chlorures (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "chlorures",
+                  "id": "variables_chlorures"
+                }
+              },
+              {
+                "header": "Bicarbonate (meq/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "bicarbonate",
+                  "id": "variables_bicarbonate"
+                }
+              },
+              {
+                "header": "Sulfates (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "sulfates",
+                  "id": "variables_sulfates"
+                }
+              },
+              {
+                "header": "Oxygene Dissous (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "oxygène dissous",
+                  "id": "variables_oxygène dissous"
+                }
+              },
+              {
+                "header": "Matieres en suspension (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "matiéres en suspension",
+                  "id": "variables_matiéres en suspension"
+                }
+              },
+              {
+                "header": "Phosphore Total (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "phosphore total",
+                  "id": "variables_phosphore total"
+                }
+              },
+              {
+                "header": "Phosphore Particulaire (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "phosphore particulaire",
+                  "id": "variables_phosphore particulaire"
+                }
+              },
+              {
+                "header": "Phosphore Orthophosphates (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "phosphore orthophosphates",
+                  "id": "variables_phosphore orthophosphates"
+                }
+              },
+              {
+                "header": "Orthophosphates [mg(PO4)/l]",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "orthophosphates",
+                  "id": "variables_orthophosphates"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": {
+            "en": "Chemical Physics",
+            "fr": "Physico Chimie"
+          },
+          "data": {
+            "date": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "site": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "outil": {
+              "components": {
+                "mesure": null,
+                "prélèvement": null
+              }
+            },
+            "projet": {
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "variables": {
+              "components": {
+                "pH": null,
+                "sodium": null,
+                "calcium": null,
+                "ammonium": null,
+                "nitrates": null,
+                "nitrites": null,
+                "sulfates": null,
+                "chlorures": null,
+                "potassium": null,
+                "magnésium": null,
+                "azote total": null,
+                "bicarbonate": null,
+                "coductivité": null,
+                "azote ammonium": null,
+                "azote nitrates": null,
+                "azote nitrites": null,
+                "azote organique": null,
+                "balance ionique": null,
+                "orthophosphates": null,
+                "phosphore total": null,
+                "oxygène dissous": null,
+                "silice réactive": null,
+                "titre alcalimetrique": null,
+                "phosphore particulaire": null,
+                "carbone organique total": null,
+                "matiéres en suspension": null,
+                "carbone organique dissous": null,
+                "phosphore orthophosphates": null,
+                "titre alcalimetrique complet": null,
+                "carbone organique particulaire": null,
+                "demande biologique en oxygène en 5 jours": null
+              }
+            },
+            "plateforme": {
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "profondeur": {
+              "components": {
+                "maximum": null,
+                "minimum": null,
+                "réelle observée": null
+              }
+            },
+            "température": {
+              "components": {
+                "valeur": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "day",
+              "id": "date_day"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "site",
+                "component": "nom du site",
+                "id": "site_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projet",
+                "component": "nom du projet",
+                "id": "projet_nom du projet"
+              },
+              "localization_plateforme": {
+                "variable": "plateforme",
+                "component": "nom de la plateforme",
+                "id": "plateforme_nom de la plateforme"
+              }
+            },
+            "dataGroups": {
+              "variable": {
+                "internationalizationName": {
+                  "en": "Data",
+                  "fr": "Données"
+                },
+                "label": "Données",
+                "data": [
+                  "variables"
+                ]
+              },
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "label": "Contexte",
+                "data": [
+                  "outil",
+                  "profondeur",
+                  "température"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "date",
+                  "site",
+                  "projet",
+                  "plateforme"
+                ]
+              }
+            }
+          },
+          "repository": null
+        },
+        "sonde_truncated": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projets",
+                  "component": "nom du projet",
+                  "id": "projets_nom du projet"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "sites",
+                  "component": "nom du site",
+                  "id": "sites_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateformes",
+                  "component": "nom de la plateforme",
+                  "id": "plateformes_nom de la plateforme"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "mesure",
+                  "id": "outils_mesure"
+                }
+              },
+              {
+                "header": "commentaire sonde",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "commentaire_sonde",
+                  "id": "outils_commentaire_sonde"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "dates",
+                  "component": "day",
+                  "id": "dates_day"
+                }
+              },
+              {
+                "header": "heure de prélèvement",
+                "boundTo": {
+                  "variable": "dates",
+                  "component": "time",
+                  "id": "dates_time"
+                }
+              },
+              {
+                "header": "profondeur réelle observée (m)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "profondeur réelle observée",
+                  "id": "variables_profondeur réelle observée"
+                }
+              },
+              {
+                "header": "chl a (mg/m3)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "chl a",
+                  "id": "variables_chl a"
+                }
+              },
+              {
+                "header": "chl a corrigée labo (mg/m3)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "chl a corrigée labo",
+                  "id": "variables_chl a corrigée labo"
+                }
+              },
+              {
+                "header": "cond25c corrigee labo (ms/cm)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "cond25c corrigee labo",
+                  "id": "variables_cond25c corrigee labo"
+                }
+              },
+              {
+                "header": "cond25degres (ms/cm)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "cond25degres",
+                  "id": "variables_cond25degres"
+                }
+              },
+              {
+                "header": "oxygene mg (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "oxygene mg",
+                  "id": "variables_oxygene mg"
+                }
+              },
+              {
+                "header": "oxygene mg corrige winkler (mg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "oxygene mg corrige winkler",
+                  "id": "variables_oxygene mg corrige winkler"
+                }
+              },
+              {
+                "header": "oxygene saturation (%)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "oxygene saturation",
+                  "id": "variables_oxygene saturation"
+                }
+              },
+              {
+                "header": "oxygene saturation corrige winkler (%)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "oxygene saturation corrige winkler",
+                  "id": "variables_oxygene saturation corrige winkler"
+                }
+              },
+              {
+                "header": "pah (μg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "pah",
+                  "id": "variables_pah"
+                }
+              },
+              {
+                "header": "par a (μe)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "par a",
+                  "id": "variables_par a"
+                }
+              },
+              {
+                "header": "par w (μe)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "par w",
+                  "id": "variables_par w"
+                }
+              },
+              {
+                "header": "pc (μg/l)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "pc",
+                  "id": "variables_pc"
+                }
+              },
+              {
+                "header": "ph brut (nounit)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "ph brut",
+                  "id": "variables_ph brut"
+                }
+              },
+              {
+                "header": "ph corrigé labo (nounit)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "ph corrigé labo",
+                  "id": "variables_ph corrigé labo"
+                }
+              },
+              {
+                "header": "ph tc (nounit)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "ph tc",
+                  "id": "variables_ph tc"
+                }
+              },
+              {
+                "header": "température (°c)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "température",
+                  "id": "variables_température"
+                }
+              },
+              {
+                "header": "turbidite (ftu)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "turbidite",
+                  "id": "variables_turbidite"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": {
+            "en": "Probe data",
+            "fr": "Données des sondes"
+          },
+          "data": {
+            "dates": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "HH:mm"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "sites": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "outils": {
+              "components": {
+                "mesure": null,
+                "commentaire_sonde": null
+              }
+            },
+            "projets": {
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "variables": {
+              "components": {
+                "pc": null,
+                "pah": null,
+                "chl a": null,
+                "par a": null,
+                "par w": null,
+                "ph tc": null,
+                "ph brut": null,
+                "turbidite": null,
+                "oxygene mg": null,
+                "cond25degres": null,
+                "température": null,
+                "ph corrigé labo": null,
+                "oxygene saturation": null,
+                "chl a corrigée labo": null,
+                "cond25c corrigee labo": null,
+                "oxygene mg corrige winkler": null,
+                "profondeur réelle observée": null,
+                "oxygene saturation corrige winkler": null
+              }
+            },
+            "plateformes": {
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "dates",
+              "component": "day",
+              "id": "dates_day"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "sites",
+                "component": "nom du site",
+                "id": "sites_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projets",
+                "component": "nom du projet",
+                "id": "projets_nom du projet"
+              },
+              "localization_plateforme": {
+                "variable": "plateformes",
+                "component": "nom de la plateforme",
+                "id": "plateformes_nom de la plateforme"
+              }
+            },
+            "dataGroups": {
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "label": "Contexte",
+                "data": [
+                  "outils",
+                  "variables"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "projets",
+                  "dates",
+                  "sites",
+                  "plateformes"
+                ]
+              }
+            }
+          },
+          "repository": null
+        },
+        "condition_prelevements": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projet",
+                  "component": "value",
+                  "id": "projet_value"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom de la plateforme",
+                  "id": "site_nom de la plateforme"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day"
+                }
+              },
+              {
+                "header": "heure de prélèvement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "time",
+                  "id": "date_time"
+                }
+              },
+              {
+                "header": "commentaire",
+                "boundTo": {
+                  "variable": "commentaire",
+                  "component": "value",
+                  "id": "commentaire_value"
+                }
+              },
+              {
+                "header": "aspect de l'eau",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "aspect de l'eau",
+                  "id": "valeurs qualitatives_aspect de l'eau"
+                }
+              },
+              {
+                "header": "couleur de l'eau",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "couleur de l'eau",
+                  "id": "valeurs qualitatives_couleur de l'eau"
+                }
+              },
+              {
+                "header": "direction du vent",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "direction du vent",
+                  "id": "valeurs qualitatives_direction du vent"
+                }
+              },
+              {
+                "header": "ensoleillement",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "ensoleillement",
+                  "id": "valeurs qualitatives_ensoleillement"
+                }
+              },
+              {
+                "header": "etat de surface",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "etat de surface",
+                  "id": "valeurs qualitatives_etat de surface"
+                }
+              },
+              {
+                "header": "nebulosite",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "nebulosite",
+                  "id": "valeurs qualitatives_nebulosite"
+                }
+              },
+              {
+                "header": "pression atmospherique (mbar)",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "pression atmospherique",
+                  "id": "valeurs quantitatives_pression atmospherique"
+                }
+              },
+              {
+                "header": "temperature de l'air (°c)",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "temperature de l'air",
+                  "id": "valeurs quantitatives_temperature de l'air"
+                }
+              },
+              {
+                "header": "temps",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "temps",
+                  "id": "valeurs qualitatives_temps"
+                }
+              },
+              {
+                "header": "transparence par disque inra (m)",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "transparence par disque inra",
+                  "id": "valeurs quantitatives_transparence par disque inra"
+                }
+              },
+              {
+                "header": "transparence par secchi 20 cm (m)",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "transparence par secchi",
+                  "id": "valeurs quantitatives_transparence par secchi"
+                }
+              },
+              {
+                "header": "vitesse du vent",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "vitesse du vent",
+                  "id": "valeurs qualitatives_vitesse du vent"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": {
+            "en": "Collection condition",
+            "fr": "Condition de prélèvement"
+          },
+          "data": {
+            "date": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "HH:mm"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "datetime": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy HH:mm:ss"
+                    }
+                  },
+                  "defaultValue": "return datumByVariableAndComponent.get(\"date\").get(\"day\") +\" \" +datumByVariableAndComponent.get(\"date\").get(\"time\")+ \":00\"\n"
+                }
+              }
+            },
+            "site": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "projet": {
+              "components": {
+                "value": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "commentaire": {
+              "components": {
+                "value": null
+              }
+            },
+            "valeurs qualitatives": {
+              "components": {
+                "temps": null,
+                "nebulosite": null,
+                "ensoleillement": null,
+                "aspect de l'eau": null,
+                "etat de surface": null,
+                "vitesse du vent": null,
+                "couleur de l'eau": null,
+                "direction du vent": null
+              }
+            },
+            "valeurs quantitatives": {
+              "components": {
+                "temperature de l'air": null,
+                "pression atmospherique": null,
+                "transparence par secchi": null,
+                "transparence par disque inra": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "datetime",
+              "id": "date_datetime"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "site",
+                "component": "nom du site",
+                "id": "site_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projet",
+                "component": "value",
+                "id": "projet_value"
+              }
+            },
+            "dataGroups": {
+              "qualitatif": {
+                "internationalizationName": {
+                  "en": "Qualitative data",
+                  "fr": "Données qualitatives"
+                },
+                "label": "Données qualitatives",
+                "data": [
+                  "valeurs qualitatives"
+                ]
+              },
+              "quantitatif": {
+                "internationalizationName": {
+                  "en": "Quantitative data",
+                  "fr": "Données quantitatives"
+                },
+                "label": "Données quantitatives",
+                "data": [
+                  "valeurs quantitatives"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "date",
+                  "site",
+                  "projet",
+                  "commentaire"
+                ]
+              }
+            }
+          },
+          "repository": {
+            "toto": "test"
+          }
+        },
+        "zooplancton__truncated": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projets",
+                  "component": "nom du projet",
+                  "id": "projets_nom du projet"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "sites",
+                  "component": "nom du site",
+                  "id": "sites_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateformes",
+                  "component": "nom de la plateforme",
+                  "id": "plateformes_nom de la plateforme"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "dates",
+                  "component": "day",
+                  "id": "dates_day"
+                }
+              },
+              {
+                "header": "outil de prélèvement",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "prélèvement",
+                  "id": "outils_prélèvement"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "mesure",
+                  "id": "outils_mesure"
+                }
+              },
+              {
+                "header": "profondeur minimum (m)",
+                "boundTo": {
+                  "variable": "profondeurs",
+                  "component": "min",
+                  "id": "profondeurs_min"
+                }
+              },
+              {
+                "header": "profondeur maximum (m)",
+                "boundTo": {
+                  "variable": "profondeurs",
+                  "component": "max",
+                  "id": "profondeurs_max"
+                }
+              },
+              {
+                "header": "nom du déterminateur",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nom du déterminateur",
+                  "id": "variables_nom du déterminateur"
+                }
+              },
+              {
+                "header": "biovolume sédimenté",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "biovolume sédimenté",
+                  "id": "variables_biovolume sédimenté"
+                }
+              },
+              {
+                "header": "nom du taxon déterminé",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nom du taxon déterminé",
+                  "id": "variables_nom du taxon déterminé"
+                }
+              },
+              {
+                "header": "stade de développement",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "stade de développement",
+                  "id": "variables_stade de développement"
+                }
+              },
+              {
+                "header": "variable",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "variable",
+                  "id": "variables_variable"
+                }
+              },
+              {
+                "header": "valeur",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "valeur",
+                  "id": "variables_valeur"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": null,
+          "data": {
+            "dates": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "sites": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "outils": {
+              "components": {
+                "mesure": null,
+                "prélèvement": null
+              }
+            },
+            "projets": {
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "variables": {
+              "components": {
+                "valeur": null,
+                "variable": null,
+                "biovolume sédimenté": null,
+                "nom du déterminateur": null,
+                "stade de développement": null,
+                "nom du taxon déterminé": null
+              }
+            },
+            "plateformes": {
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "profondeurs": {
+              "components": {
+                "max": null,
+                "min": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "dates",
+              "component": "day",
+              "id": "dates_day"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "sites",
+                "component": "nom du site",
+                "id": "sites_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projets",
+                "component": "nom du projet",
+                "id": "projets_nom du projet"
+              },
+              "localization_plateforme": {
+                "variable": "plateformes",
+                "component": "nom de la plateforme",
+                "id": "plateformes_nom de la plateforme"
+              }
+            },
+            "dataGroups": {
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "label": "Contexte",
+                "data": [
+                  "outils",
+                  "variables",
+                  "profondeurs"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "projets",
+                  "dates",
+                  "sites",
+                  "plateformes"
+                ]
+              }
+            }
+          },
+          "repository": null
+        },
+        "zooplancton_biovolumes": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projets",
+                  "component": "nom du projet",
+                  "id": "projets_nom du projet"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "sites",
+                  "component": "nom du site",
+                  "id": "sites_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateformes",
+                  "component": "nom de la plateforme",
+                  "id": "plateformes_nom de la plateforme"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "dates",
+                  "component": "day",
+                  "id": "dates_day"
+                }
+              },
+              {
+                "header": "outil de prélèvement",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "prélèvement",
+                  "id": "outils_prélèvement"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "mesure",
+                  "id": "outils_mesure"
+                }
+              },
+              {
+                "header": "profondeur minimum(m)",
+                "boundTo": {
+                  "variable": "profondeurs",
+                  "component": "min",
+                  "id": "profondeurs_min"
+                }
+              },
+              {
+                "header": "profondeur maximum(m)",
+                "boundTo": {
+                  "variable": "profondeurs",
+                  "component": "max",
+                  "id": "profondeurs_max"
+                }
+              },
+              {
+                "header": "nom du déterminateur",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nom du déterminateur",
+                  "id": "variables_nom du déterminateur"
+                }
+              },
+              {
+                "header": "volume sédimenté",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "volume sédimenté",
+                  "id": "variables_volume sédimenté"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": null,
+          "data": {
+            "dates": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "sites": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "outils": {
+              "components": {
+                "mesure": null,
+                "prélèvement": null
+              }
+            },
+            "projets": {
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "variables": {
+              "components": {
+                "volume sédimenté": null,
+                "nom du déterminateur": null
+              }
+            },
+            "plateformes": {
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "profondeurs": {
+              "components": {
+                "max": null,
+                "min": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "dates",
+              "component": "day",
+              "id": "dates_day"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "sites",
+                "component": "nom du site",
+                "id": "sites_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projets",
+                "component": "nom du projet",
+                "id": "projets_nom du projet"
+              },
+              "localization_plateforme": {
+                "variable": "plateformes",
+                "component": "nom de la plateforme",
+                "id": "plateformes_nom de la plateforme"
+              }
+            },
+            "dataGroups": {
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "label": "Contexte",
+                "data": [
+                  "outils",
+                  "variables",
+                  "profondeurs"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "projets",
+                  "dates",
+                  "sites",
+                  "plateformes"
+                ]
+              }
+            }
+          },
+          "repository": null
+        },
+        "phytoplancton__truncated": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projets",
+                  "component": "nom du projet",
+                  "id": "projets_nom du projet"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "sites",
+                  "component": "nom du site",
+                  "id": "sites_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateformes",
+                  "component": "nom de la plateforme",
+                  "id": "plateformes_nom de la plateforme"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "dates",
+                  "component": "day",
+                  "id": "dates_day"
+                }
+              },
+              {
+                "header": "outil de prélèvement",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "prélèvement",
+                  "id": "outils_prélèvement"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "mesure",
+                  "id": "outils_mesure"
+                }
+              },
+              {
+                "header": "profondeur min (m)",
+                "boundTo": {
+                  "variable": "profondeurs",
+                  "component": "min",
+                  "id": "profondeurs_min"
+                }
+              },
+              {
+                "header": "profondeur max (m)",
+                "boundTo": {
+                  "variable": "profondeurs",
+                  "component": "max",
+                  "id": "profondeurs_max"
+                }
+              },
+              {
+                "header": "nom du déterminateur",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nom du déterminateur",
+                  "id": "variables_nom du déterminateur"
+                }
+              },
+              {
+                "header": "volume sédimenté",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "volume sédimenté",
+                  "id": "variables_volume sédimenté"
+                }
+              },
+              {
+                "header": "surface de comptage",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "surface de comptage",
+                  "id": "variables_surface de comptage"
+                }
+              },
+              {
+                "header": "nom du taxon déterminé",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nom du taxon déterminé",
+                  "id": "variables_nom du taxon déterminé"
+                }
+              },
+              {
+                "header": "biovolume de l'espéce dans l'échantillon (um3/ml)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "biovolume de l'espéce dans l'échantillon",
+                  "id": "variables_biovolume de l'espéce dans l'échantillon"
+                }
+              },
+              {
+                "header": "nombre d'objets comptés (nounit)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nombre d'objets comptés",
+                  "id": "variables_nombre d'objets comptés"
+                }
+              },
+              {
+                "header": "nombre d'objets par ml (ind/ml)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nombre d'objets par ml",
+                  "id": "variables_nombre d'objets par ml"
+                }
+              },
+              {
+                "header": "nombre de cellules par ml (ind/ml)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nombre de cellules par ml",
+                  "id": "variables_nombre de cellules par ml"
+                }
+              },
+              {
+                "header": "nombre de champs comptés (nounit)",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "nombre de champs comptés",
+                  "id": "variables_nombre de champs comptés"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": null,
+          "data": {
+            "dates": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "sites": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "outils": {
+              "components": {
+                "mesure": null,
+                "prélèvement": null
+              }
+            },
+            "projets": {
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "variables": {
+              "components": {
+                "volume sédimenté": null,
+                "surface de comptage": null,
+                "nom du déterminateur": null,
+                "nombre d'objets par ml": null,
+                "nom du taxon déterminé": null,
+                "nombre d'objets comptés": null,
+                "nombre de cellules par ml": null,
+                "nombre de champs comptés": null,
+                "biovolume de l'espéce dans l'échantillon": null
+              }
+            },
+            "plateformes": {
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "profondeurs": {
+              "components": {
+                "max": null,
+                "min": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "dates",
+              "component": "day",
+              "id": "dates_day"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "sites",
+                "component": "nom du site",
+                "id": "sites_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projets",
+                "component": "nom du projet",
+                "id": "projets_nom du projet"
+              },
+              "localization_plateforme": {
+                "variable": "plateformes",
+                "component": "nom de la plateforme",
+                "id": "plateformes_nom de la plateforme"
+              }
+            },
+            "dataGroups": {
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "label": "Contexte",
+                "data": [
+                  "outils",
+                  "variables",
+                  "profondeurs"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "projets",
+                  "dates",
+                  "sites",
+                  "plateformes"
+                ]
+              }
+            }
+          },
+          "repository": null
+        },
+        "phytoplancton_aggregated": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projets",
+                  "component": "nom du projet",
+                  "id": "projets_nom du projet"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "sites",
+                  "component": "nom du site",
+                  "id": "sites_nom du site"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateformes",
+                  "component": "nom de la plateforme",
+                  "id": "plateformes_nom de la plateforme"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "dates",
+                  "component": "day",
+                  "id": "dates_day"
+                }
+              },
+              {
+                "header": "outil de prélèvement",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "prélèvement",
+                  "id": "outils_prélèvement"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outils",
+                  "component": "mesure",
+                  "id": "outils_mesure"
+                }
+              },
+              {
+                "header": "biovolume algal total de l'échantillon",
+                "boundTo": {
+                  "variable": "variables",
+                  "component": "biovolume_algal",
+                  "id": "variables_biovolume_algal"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": null,
+          "data": {
+            "dates": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "sites": {
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "outils": {
+              "components": {
+                "mesure": null,
+                "prélèvement": null
+              }
+            },
+            "projets": {
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projets"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "variables": {
+              "components": {
+                "biovolume_algal": null
+              }
+            },
+            "plateformes": {
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "plateformes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "dates",
+              "component": "day",
+              "id": "dates_day"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "variable": "sites",
+                "component": "nom du site",
+                "id": "sites_nom du site"
+              },
+              "localization_projet": {
+                "variable": "projets",
+                "component": "nom du projet",
+                "id": "projets_nom du projet"
+              },
+              "localization_plateforme": {
+                "variable": "plateformes",
+                "component": "nom de la plateforme",
+                "id": "plateformes_nom de la plateforme"
+              }
+            },
+            "dataGroups": {
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "label": "Contexte",
+                "data": [
+                  "outils",
+                  "variables"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "projets",
+                  "dates",
+                  "sites",
+                  "plateformes"
+                ]
+              }
+            }
+          },
+          "repository": null
+        }
+      }
+    },
+    "configFile": "2254f1eb-d057-4990-9a5a-856bc109ccfb"
+  },
+  {
+    "id": "862d502b-8a29-4ff0-bb30-e779a08cfe40",
+    "creationDate": 1633621563077,
+    "updateDate": 1633621563077,
+    "name": "monsore",
+    "referenceType": [
+      "variables",
+      "unites",
+      "variables_et_unites_par_types_de_donnees",
+      "valeurs_qualitatives",
+      "themes",
+      "projet",
+      "type_de_sites",
+      "sites",
+      "types_de_donnees_par_themes_de_sites_et_projet",
+      "type de fichiers",
+      "especes"
+    ],
+    "dataType": [
+      "pem"
+    ],
+    "configuration": {
+      "version": 0,
+      "application": {
+        "name": "MONSORE",
+        "version": 1,
+        "defaultLanguage": "fr",
+        "internationalization": {
+          "en": "SOERE my SOERE",
+          "fr": "SOERE mon SOERE"
+        }
+      },
+      "references": {
+        "type_de_sites": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Sites types",
+            "fr": "Types de sites"
+          },
+          "internationalizedColumns": {
+            "tze_nom_key": {
+              "en": "tze_nom_en",
+              "fr": "tze_nom_fr"
+            },
+            "tze_definition_fr": {
+              "en": "tze_definition_en",
+              "fr": "tze_definition_fr"
+            }
+          },
+          "keyColumns": [
+            "tze_nom_key"
+          ],
+          "columns": {
+            "tze_nom_en": null,
+            "tze_nom_fr": null,
+            "tze_nom_key": null,
+            "tze_definition_en": null,
+            "tze_definition_fr": null
+          },
+          "validations": {}
+        },
+        "sites": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Site",
+            "fr": "Site"
+          },
+          "internationalizedColumns": {
+            "zet_nom_key": {
+              "en": "zet_nom_en",
+              "fr": "zet_nom_fr"
+            },
+            "zet_description_fr": {
+              "en": "zet_description__en",
+              "fr": "zet_description_fr"
+            }
+          },
+          "keyColumns": [
+            "zet_chemin_parent",
+            "zet_nom_key"
+          ],
+          "columns": {
+            "zet_nom_en": null,
+            "zet_nom_fr": null,
+            "zet_nom_key": null,
+            "tze_type_nom": null,
+            "zet_chemin_parent": null,
+            "zet_description_en": null,
+            "zet_description_fr": null
+          },
+          "validations": {
+            "typeSitesRef": {
+              "description": "référence au type de site",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "columns": "tze_type_nom",
+                  "refType": "type_de_sites"
+                }
+              }
+            }
+          }
+        },
+        "projet": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Project",
+            "fr": "Projet"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "definition_fr": {
+              "en": "definition_en",
+              "fr": "definition_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "definition_en": null,
+            "definition_fr": null,
+            "colonne_homonyme_entre_referentiels": null
+          },
+          "validations": {}
+        },
+        "themes": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Thematic",
+            "fr": "Thème"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "description_en": null,
+            "description_fr": null
+          },
+          "validations": {}
+        },
+        "types_de_donnees_par_themes_de_sites_et_projet": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Data types by site and project",
+            "fr": "Types de deoonés par site et projet"
+          },
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "nom du projet",
+            "nom du site",
+            "nom du thème",
+            "nom du type de données"
+          ],
+          "columns": {
+            "nom du site": null,
+            "nom du projet": null,
+            "nom du thème": null,
+            "nom du type de données": null
+          },
+          "validations": {
+            "sitesRef": {
+              "description": "référence au site",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "columns": "nom du site",
+                  "refType": "sites"
+                }
+              }
+            },
+            "projetRef": {
+              "description": "référence au projet",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "columns": "nom du projet",
+                  "refType": "projet"
+                }
+              }
+            },
+            "themesRef": {
+              "description": "référence au theme",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "columns": "nom du thème",
+                  "refType": "themes"
+                }
+              }
+            },
+            "checkDatatype": {
+              "description": "test",
+              "checker": {
+                "name": "GroovyExpression",
+                "params": {
+                  "expression": "String datatype = Arrays.stream(datum.get(\"nom du type de données\").split(\"_\")).collect{it.substring(0, 1)}.join(); return application.getDataType().contains(datatype);\n"
+                }
+              }
+            }
+          }
+        },
+        "variables": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Variables",
+            "fr": "Variables"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "definition_fr": {
+              "en": "definition_en",
+              "fr": "definition_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "definition_en": null,
+            "definition_fr": null,
+            "isQualitative": null
+          },
+          "validations": {}
+        },
+        "unites": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Units",
+            "fr": "Unités"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "code_key": {
+              "en": "code_en",
+              "fr": "code_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "code_en": null,
+            "code_fr": null,
+            "nom_key": null,
+            "code_key": null
+          },
+          "validations": {}
+        },
+        "variables_et_unites_par_types_de_donnees": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Variables and units by data type",
+            "fr": "Variables et unités par type de données"
+          },
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "nom du type de données",
+            "nom de la variable"
+          ],
+          "columns": {
+            "nom de l'unité": null,
+            "nom de la variable": null,
+            "nom du type de données": null
+          },
+          "validations": {
+            "uniteRef": {
+              "description": "référence à l'unité'",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "columns": "nom de l'unité",
+                  "refType": "unites"
+                }
+              }
+            },
+            "variableRef": {
+              "description": "référence à la variable",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "columns": "nom de la variable",
+                  "refType": "variables"
+                }
+              }
+            },
+            "checkDatatype": {
+              "description": "test",
+              "checker": {
+                "name": "GroovyExpression",
+                "params": {
+                  "expression": "String datatype = Arrays.stream(datum.get(\"nom du type de données\").split(\"_\")).collect{it.substring(0, 1)}.join(); return application.getDataType().contains(datatype);\n"
+                }
+              }
+            }
+          }
+        },
+        "valeurs_qualitatives": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Qualitative values",
+            "fr": "Valeurs qualitatives"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "valeur_key": {
+              "en": "valeur_en",
+              "fr": "valeur_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key",
+            "valeur_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "valeur_en": null,
+            "valeur_fr": null,
+            "valeur_key": null
+          },
+          "validations": {}
+        },
+        "type de fichiers": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Files types",
+            "fr": "Types de fichiers"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "description_en": null,
+            "description_fr": null
+          },
+          "validations": {}
+        },
+        "especes": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Species",
+            "fr": "Espèces"
+          },
+          "internationalizedColumns": {
+            "esp_definition_fr": {
+              "en": "esp_definition_en",
+              "fr": "esp_definition_fr"
+            }
+          },
+          "keyColumns": [
+            "esp_nom"
+          ],
+          "columns": {
+            "esp_nom": null,
+            "esp_definition_en": null,
+            "esp_definition_fr": null,
+            "colonne_homonyme_entre_referentiels": null
+          },
+          "validations": {}
+        }
+      },
+      "compositeReferences": {
+        "sites": {
+          "components": [
+            {
+              "reference": "sites",
+              "parentKeyColumn": null,
+              "recursive": null
+            }
+          ]
+        },
+        "projet": {
+          "components": [
+            {
+              "reference": "projet",
+              "parentKeyColumn": null,
+              "recursive": null
+            }
+          ]
+        }
+      },
+      "dataTypes": {
+        "pem": {
+          "format": {
+            "headerLine": 4,
+            "firstRowLine": 5,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "projet",
+                "boundTo": {
+                  "variable": "projet",
+                  "component": "value",
+                  "id": "projet_value"
+                }
+              },
+              {
+                "header": "site",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "bassin",
+                  "id": "site_bassin"
+                }
+              },
+              {
+                "header": "plateforme",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "plateforme",
+                  "id": "site_plateforme"
+                }
+              },
+              {
+                "header": "date",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "value",
+                  "id": "date_value"
+                }
+              },
+              {
+                "header": "espece",
+                "boundTo": {
+                  "variable": "espece",
+                  "component": "value",
+                  "id": "espece_value"
+                }
+              },
+              {
+                "header": "Couleur des individus",
+                "boundTo": {
+                  "variable": "Couleur des individus",
+                  "component": "value",
+                  "id": "Couleur des individus_value"
+                }
+              },
+              {
+                "header": "Nombre d'individus",
+                "boundTo": {
+                  "variable": "Nombre d'individus",
+                  "component": "value",
+                  "id": "Nombre d'individus_value"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": {
+            "en": "Trap in ascent",
+            "fr": "Piégeage en Montée"
+          },
+          "data": {
+            "date": {
+              "components": {
+                "value": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy",
+                      "required": null
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "site": {
+              "components": {
+                "bassin": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "chemin": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "sites"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "plateforme": null
+              }
+            },
+            "espece": {
+              "components": {
+                "value": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "especes"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "projet": {
+              "components": {
+                "value": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "projet"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            },
+            "Nombre d'individus": {
+              "components": {
+                "unit": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "unites",
+                      "required": null
+                    }
+                  },
+                  "defaultValue": "return \"sans_unite\""
+                },
+                "value": {
+                  "checker": {
+                    "name": "Integer",
+                    "params": {
+                      "required": null
+                    }
+                  },
+                  "defaultValue": "return 0"
+                }
+              }
+            },
+            "Couleur des individus": {
+              "components": {
+                "unit": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "unites",
+                      "required": null
+                    }
+                  },
+                  "defaultValue": "return \"sans_unite\""
+                },
+                "value": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "valeurs_qualitatives"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              }
+            }
+          },
+          "validations": {
+            "unitOfColor": {
+              "description": "vérifie l'unité de la couleur des individus",
+              "checker": {
+                "name": "GroovyExpression",
+                "params": {
+                  "datatype": "piegeage_en_montee",
+                  "variable": "Couleur des individus",
+                  "component": "unit",
+                  "expression": "return referencesValues.get(\"variables_et_unites_par_types_de_donnees\") .findAll{it.get(\"nom du type de données\").equals(params.get(\"datatype\"))} .find{it.get(\"nom de la variable\").equals(params.get(\"codeVariable\"))} .get(\"nom de l'unité\").equals(datum.get(params.get(\"variable\")).get(params.get(\"component\")));\n",
+                  "references": "variables_et_unites_par_types_de_donnees",
+                  "codeVariable": "couleur_des_individus"
+                }
+              }
+            },
+            "unitOfIndividus": {
+              "description": "vérifie l'unité du nombre d'individus",
+              "checker": {
+                "name": "GroovyExpression",
+                "params": {
+                  "datatype": "piegeage_en_montee",
+                  "variable": "Nombre d'individus",
+                  "component": "unit",
+                  "expression": "return referencesValues.get(\"variables_et_unites_par_types_de_donnees\") .findAll{it.get(\"nom du type de données\").equals(params.get(\"datatype\"))} .find{it.get(\"nom de la variable\").equals(params.get(\"codeVariable\"))} .get(\"nom de l'unité\").equals(datum.get(params.get(\"variable\")).get(params.get(\"component\")));\n",
+                  "references": "variables_et_unites_par_types_de_donnees",
+                  "codeVariable": "nombre_d_individus"
+                }
+              }
+            }
+          },
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "value",
+              "id": "date_value"
+            },
+            "authorizationScopes": {
+              "projet": {
+                "variable": "projet",
+                "component": "value",
+                "id": "projet_value"
+              },
+              "localization": {
+                "variable": "site",
+                "component": "chemin",
+                "id": "site_chemin"
+              }
+            },
+            "dataGroups": {
+              "qualitatif": {
+                "internationalizationName": {
+                  "en": "Qualitative data",
+                  "fr": "Données qualitatives"
+                },
+                "label": "Données qualitatives",
+                "data": [
+                  "Couleur des individus"
+                ]
+              },
+              "quantitatif": {
+                "internationalizationName": {
+                  "en": "Quantitative data",
+                  "fr": "Données quantitatives"
+                },
+                "label": "Données quantitatives",
+                "data": [
+                  "Nombre d'individus"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "label": "Référentiel",
+                "data": [
+                  "date",
+                  "site",
+                  "projet",
+                  "espece"
+                ]
+              }
+            }
+          },
+          "repository": {
+            "toto": "test"
+          }
+        }
+      }
+    },
+    "configFile": "c5c7fb8d-72a0-4719-b7af-14fc9453e840"
+  },
+  {
+    "id": "266a1e6e-d4d2-4cc4-aa58-e5bb3b49bbbf",
+    "creationDate": 1634036276878,
+    "updateDate": 1634036276878,
+    "name": "pros",
+    "referenceType": [
+      "Structures des lieux",
+      "Structures des observatoires",
+      "Structures des stations expérimentales",
+      "Affiliation à un réseau d essais",
+      "Rôle des personnes ressources par dispositif",
+      "Association des statuts de placettes aux placettes",
+      "Protocoles des dispositifs",
+      "Objectif des thématiques étudiées par protocoles",
+      "Raisonnements par protocole",
+      "Protocole général",
+      "Application traitements Nom lieu sur parcelles",
+      "Lieu implantation",
+      "Modalité du facteur",
+      "Personne ressource",
+      "Structure",
+      "Station expérimentale",
+      "Commune",
+      "Département",
+      "Region",
+      "Pays",
+      "Role_structure",
+      "Type_structure",
+      "Role de la personne ressource",
+      "Facteur",
+      "Type_facteur",
+      "Type_traitement",
+      "Réseau essai ou Observatoire",
+      "Statut_placette",
+      "Code de la parcelle élémentaire",
+      "Code_bloc",
+      "Thématique étudiée",
+      "Valeur raisonnement",
+      "Liste raisonnement",
+      "Système conduite dispositif",
+      "Type_document",
+      "Type_culture",
+      "Echelle_prélèvement",
+      "Type_dispositif",
+      "Système_projection",
+      "Type_lieu",
+      "traitements",
+      "placettes",
+      "parcelles_elementaires",
+      "blocs",
+      "dispositifs"
+    ],
+    "dataType": [
+      "donnees_prelevement_pro",
+      "physico_chimie_sols"
+    ],
+    "configuration": {
+      "version": 0,
+      "application": {
+        "name": "Pros",
+        "version": 1,
+        "defaultLanguage": "fr",
+        "internationalization": {
+          "en": "Pros SOERE",
+          "fr": "SOERE Pros"
+        }
+      },
+      "references": {
+        "Objectif des thématiques étudiées par protocoles": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du protocole",
+            "Libellé de la thématique étudiée",
+            "Objectif de la thématique_fr"
+          ],
+          "columns": {
+            "Nom du protocole": null,
+            "Objectif de la thématique_en": null,
+            "Objectif de la thématique_fr": null,
+            "Libellé de la thématique étudiée": null
+          },
+          "validations": {}
+        },
+        "Association des statuts de placettes aux placettes": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code de la parcelle élémentaire - Code du dispositif (Nom du lieu)",
+            "Code de la placette",
+            "Libellé du statut de la placette"
+          ],
+          "columns": {
+            "Code de la placette": null,
+            "Libellé du statut de la placette": null,
+            "Code de la parcelle élémentaire - Code du dispositif (Nom du lieu)": null
+          },
+          "validations": {}
+        },
+        "Application traitements Nom lieu sur parcelles": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif (Nom du lieu)",
+            "Code de la parcelle élémentaire",
+            "Code du traitement"
+          ],
+          "columns": {
+            "Code du traitement": null,
+            "Libellé du Facteur": null,
+            "Valeur de la Modalité": null,
+            "Numéro de répétition": null,
+            "Code du dispositif (Nom du lieu)": null,
+            "Code de la parcelle élémentaire": null,
+            "Année de fin d'application du traitement": null,
+            "Année de début d'application du traitement": null
+          },
+          "validations": {}
+        },
+        "Rôle des personnes ressources par dispositif": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "acbb"
+          ],
+          "columns": {
+            "acbb": null
+          },
+          "validations": {}
+        },
+        "Structures des stations expérimentales": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de la structure",
+            "Précision (pôle et/ou unité et/ou équipe)",
+            "Nom de la station expérimentale"
+          ],
+          "columns": {
+            "Nom de la structure": null,
+            "Nom de la station expérimentale": null,
+            "Précision (pôle et/ou unité et/ou équipe)": null
+          },
+          "validations": {}
+        },
+        "Affiliation à un réseau d essais": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif (Nom du lieu)",
+            "Nom du réseau d'essai"
+          ],
+          "columns": {
+            "Nom du réseau d'essai": null,
+            "Code du dispositif (Nom du lieu)": null
+          },
+          "validations": {}
+        },
+        "Code de la parcelle élémentaire": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code de la parcelle élémentaire"
+          ],
+          "columns": {
+            "Code de la parcelle élémentaire": null
+          },
+          "validations": {}
+        },
+        "Réseau essai ou Observatoire": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de l'observatoire"
+          ],
+          "columns": {
+            "Définition_en": null,
+            "Définition_fr": null,
+            "Nom de l'observatoire": null
+          },
+          "validations": {}
+        },
+        "Role de la personne ressource": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du rôle de la personne ressource_fr"
+          ],
+          "columns": {
+            "Libellé du rôle de la personne ressource_en": null,
+            "Libellé du rôle de la personne ressource_fr": null
+          },
+          "validations": {}
+        },
+        "Système conduite dispositif": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du système de conduite de l'éssai_fr"
+          ],
+          "columns": {
+            "Libellé du système de conduite de l'éssai_en": null,
+            "Libellé du système de conduite de l'éssai_fr": null
+          },
+          "validations": {}
+        },
+        "Structures des observatoires": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de la structure",
+            "Précision (pôle et/ou unité et/ou équipe)",
+            "Observatoire"
+          ],
+          "columns": {
+            "Observatoire": null,
+            "Nom de la structure": null,
+            "Précision (pôle et/ou unité et/ou équipe)": null
+          },
+          "validations": {}
+        },
+        "Raisonnements par protocole": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du protocole",
+            "Libellé de la liste de raisonnement",
+            "Valeur du raisonnement"
+          ],
+          "columns": {
+            "Commentaire": null,
+            "Nom du protocole": null,
+            "Valeur du raisonnement": null,
+            "Libellé de la liste de raisonnement": null
+          },
+          "validations": {}
+        },
+        "Protocoles des dispositifs": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif (Nom du lieu)",
+            "Nom du protocole"
+          ],
+          "columns": {
+            "Nom du protocole": null,
+            "Code du dispositif (Nom du lieu)": null
+          },
+          "validations": {}
+        },
+        "parcelles_elementaires": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Parcelles",
+            "fr": "Parcelles"
+          },
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif_Nom du lieu",
+            "Nom du bloc_code du bloc",
+            "Nom de la parcelle élémentaire"
+          ],
+          "columns": {
+            "Latitude": null,
+            "Longitude": null,
+            "Système de projection": null,
+            "Nom du bloc_code du bloc": null,
+            "Code du dispositif_Nom du lieu": null,
+            "Nom de la parcelle élémentaire": null,
+            "Code de la parcelle élémentaire": null
+          },
+          "validations": {}
+        },
+        "Station expérimentale": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de la station expérimentale"
+          ],
+          "columns": {
+            "Nom de la station expérimentale": null
+          },
+          "validations": {}
+        },
+        "Thématique étudiée": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé de la thématique étudiée_fr"
+          ],
+          "columns": {
+            "Libellé de la thématique étudiée_en": null,
+            "Libellé de la thématique étudiée_fr": null
+          },
+          "validations": {}
+        },
+        "Echelle_prélèvement": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de l'échèlle de prélèvement_fr"
+          ],
+          "columns": {
+            "Nom de l'échèlle de prélèvement_en": null,
+            "Nom de l'échèlle de prélèvement_fr": null
+          },
+          "validations": {}
+        },
+        "Structures des lieux": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de la structure",
+            "Précision (pôle et/ou unité et/ou équipe)",
+            "Nom du lieu"
+          ],
+          "columns": {
+            "Nom du lieu": null,
+            "Nom de la structure": null,
+            "Précision (pôle et/ou unité et/ou équipe)": null
+          },
+          "validations": {}
+        },
+        "Modalité du facteur": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type de facteur",
+            "Libellé du facteur",
+            "Valeur de la modalité"
+          ],
+          "columns": {
+            "Commentaire": null,
+            "Libellé du facteur": null,
+            "Valeur de la modalité": null,
+            "Libellé du type de facteur": null
+          },
+          "validations": {}
+        },
+        "Valeur raisonnement": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé de la liste de raisonnement_fr",
+            "Libellé du raisonnement_fr"
+          ],
+          "columns": {
+            "Libellé du raisonnement_en": null,
+            "Libellé du raisonnement_fr": null,
+            "Libellé de la liste de raisonnement_fr": null
+          },
+          "validations": {}
+        },
+        "Système_projection": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du systeme de projection"
+          ],
+          "columns": {
+            "Definition_En": null,
+            "Definition_fr": null,
+            "Nom du systeme de projection": null
+          },
+          "validations": {}
+        },
+        "Protocole général": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom protocole général"
+          ],
+          "columns": {
+            "Nom protocole général": null,
+            "Année de fin d'application du protocole général": null,
+            "Année de début d'application du protocole général": null,
+            "Utilisation du guide méthodologique Réseau PRO après 2015 (oui/non)": null
+          },
+          "validations": {}
+        },
+        "Personne ressource": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "acbb"
+          ],
+          "columns": {
+            "acbb": null
+          },
+          "validations": {}
+        },
+        "Liste raisonnement": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé de la liste de raisonnement_fr"
+          ],
+          "columns": {
+            "Libellé de la liste de raisonnement_en": null,
+            "Libellé de la liste de raisonnement_fr": null
+          },
+          "validations": {}
+        },
+        "Lieu implantation": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du lieu"
+          ],
+          "columns": {
+            "Latitude": null,
+            "Longitude": null,
+            "Nom du lieu": null,
+            "Numéro de cadastre": null,
+            "Système de projection": null,
+            "Libellé du type de lieu": null,
+            "Nom de la commune (Code postal)": null,
+            "Nom de la station expérimentale": null
+          },
+          "validations": {}
+        },
+        "Type_traitement": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type de traitement_fr"
+          ],
+          "columns": {
+            "Libellé du type de traitement_en": null,
+            "Libellé du type de traitement_fr": null
+          },
+          "validations": {}
+        },
+        "Type_dispositif": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libelle du type de dispositif_fr"
+          ],
+          "columns": {
+            "Libelle du type de dispositif_en": null,
+            "Libelle du type de dispositif_fr": null
+          },
+          "validations": {}
+        },
+        "Statut_placette": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du statut de la placette_fr"
+          ],
+          "columns": {
+            "Libellé du statut de la placette_en": null,
+            "Libellé du statut de la placette_fr": null
+          },
+          "validations": {}
+        },
+        "Type_structure": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type de structure_fr"
+          ],
+          "columns": {
+            "Libellé du type de structure_en": null,
+            "Libellé du type de structure_fr": null
+          },
+          "validations": {}
+        },
+        "Role_structure": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du rôle de la structure_fr"
+          ],
+          "columns": {
+            "Libellé du rôle de la structure_en": null,
+            "Libellé du rôle de la structure_fr": null
+          },
+          "validations": {}
+        },
+        "Type_document": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type de document"
+          ],
+          "columns": {
+            "Libellé du type de document": null
+          },
+          "validations": {}
+        },
+        "Type_facteur": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type de facteur_fr"
+          ],
+          "columns": {
+            "Libellé du type de facteur_en": null,
+            "Libellé du type de facteur_fr": null
+          },
+          "validations": {}
+        },
+        "Type_culture": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type culture_fr"
+          ],
+          "columns": {
+            "Libellé du type culture_en": null,
+            "Libellé du type culture_fr": null
+          },
+          "validations": {}
+        },
+        "Département": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de la région",
+            "Nom du département"
+          ],
+          "columns": {
+            "Nom de la région": null,
+            "Nom du département": null,
+            "Numéro du département": null
+          },
+          "validations": {}
+        },
+        "traitements": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Traitement",
+            "fr": "Traitement"
+          },
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif_Nom du lieu",
+            "Code du traitement"
+          ],
+          "columns": {
+            "Nom du traitement": null,
+            "Code du traitement": null,
+            "Type de traitement": null,
+            "Année de fin de validité": null,
+            "Année de début de validité": null,
+            "Code du dispositif_Nom du lieu": null,
+            "Nombre de répétitions prévues": null
+          },
+          "validations": {}
+        },
+        "dispositifs": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Dispositif",
+            "fr": "Dispositif"
+          },
+          "internationalizedColumns": {
+            "raison chgt conduite_fr": {
+              "en": "raison chgt conduite_en",
+              "fr": "raison chgt conduite_fr"
+            }
+          },
+          "keyColumns": [
+            "code (nom court) du dispositif",
+            "nom du lieu"
+          ],
+          "columns": {
+            "latitude": null,
+            "longitude": null,
+            "nom du lieu": null,
+            "nom du dispositif": null,
+            "système de projection": null,
+            "raison chgt conduite_en": null,
+            "raison chgt conduite_fr": null,
+            "année de fin du dispositif": null,
+            "année de début du dispositif": null,
+            "code (nom court) du dispositif": null,
+            "libellé du type de dispositif": null,
+            "année d'arrêt des épandages de pro": null,
+            "systeme de conduite après changement": null,
+            "surface expérimentale totale (m², hors bordures)": null,
+            "année de changement de système de conduite du dispositif": null,
+            "système de conduite du dispositif lors de sa mise en place": null,
+            "changement de système de conduite de dispositif en cours d'expérimentation (oui/non)": null
+          },
+          "validations": {}
+        },
+        "placettes": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Placette",
+            "fr": "Placette"
+          },
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif_Nom du lieu",
+            "Nom du bloc",
+            "Nom de la parcelle élèmentaire",
+            "nom de la placette"
+          ],
+          "columns": {
+            "Latitude": null,
+            "Longitude": null,
+            "Commentaire": null,
+            "Nom du bloc": null,
+            "Année de fin": null,
+            "Année de début": null,
+            "nom de la placette": null,
+            "Code de la placette": null,
+            "Système de projection": null,
+            "Code du dispositif_Nom du lieu": null,
+            "Nom de la parcelle élèmentaire": null
+          },
+          "validations": {}
+        },
+        "Type_lieu": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libelle du type de lieu_fr"
+          ],
+          "columns": {
+            "Libelle du type de lieu_en": null,
+            "Libelle du type de lieu_fr": null
+          },
+          "validations": {}
+        },
+        "Structure": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom de la structure",
+            "Equipe et/ou service"
+          ],
+          "columns": {
+            "Commune": null,
+            "No Tél": null,
+            "Code postal": null,
+            "Nom de la structure": null,
+            "Equipe et/ou service": null,
+            "No, nom de la rue, ...": null,
+            "Site web ou reseaux sociaux": null,
+            "Libellé du type de structure": null,
+            "Numéro, nom du document, date de signature": null,
+            "Est signataire de la convention ou protocole d'accord (oui/non)": null
+          },
+          "validations": {}
+        },
+        "Code_bloc": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du bloc"
+          ],
+          "columns": {
+            "Code du bloc": null
+          },
+          "validations": {}
+        },
+        "Facteur": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Libellé du type de facteur",
+            "Libellé du facteur_fr"
+          ],
+          "columns": {
+            "Libellé du facteur_en": null,
+            "Libellé du facteur_fr": null,
+            "Libellé du type de facteur": null,
+            "Sera associé à une nomenclature de PRO (non/oui)": null,
+            "Peut être une information générale de conduite des traitements (oui/non)": null
+          },
+          "validations": {}
+        },
+        "Commune": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du département",
+            "Code postal",
+            "Nom de la commune"
+          ],
+          "columns": {
+            "Code postal": null,
+            "Nom de la commune": null,
+            "Nom du département": null
+          },
+          "validations": {}
+        },
+        "Region": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du pays",
+            "Nom de la région"
+          ],
+          "columns": {
+            "Nom du pays": null,
+            "Nom de la région": null
+          },
+          "validations": {}
+        },
+        "blocs": {
+          "separator": ";",
+          "internationalizationName": {
+            "en": "Blocs",
+            "fr": "Blocs"
+          },
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Code du dispositif_Nom du lieu",
+            "Code du bloc"
+          ],
+          "columns": {
+            "Nom du bloc": null,
+            "Code du bloc": null,
+            "Code du dispositif_Nom du lieu": null
+          },
+          "validations": {}
+        },
+        "Pays": {
+          "separator": ";",
+          "internationalizationName": null,
+          "internationalizedColumns": {},
+          "keyColumns": [
+            "Nom du pays_fr"
+          ],
+          "columns": {
+            "Nom du pays_en": null,
+            "Nom du pays_fr": null
+          },
+          "validations": {}
+        }
+      },
+      "compositeReferences": {
+        "lieu": {
+          "components": [
+            {
+              "reference": "Type de lieu",
+              "parentKeyColumn": null,
+              "recursive": null
+            }
+          ]
+        },
+        "traitements": {
+          "components": [
+            {
+              "reference": "traitements",
+              "parentKeyColumn": null,
+              "recursive": null
+            }
+          ]
+        },
+        "localizations": {
+          "components": [
+            {
+              "reference": "dispositifs",
+              "parentKeyColumn": null,
+              "recursive": null
+            },
+            {
+              "reference": "blocs",
+              "parentKeyColumn": "Code du dispositif_Nom du lieu",
+              "recursive": null
+            },
+            {
+              "reference": "parcelles_elementaires",
+              "parentKeyColumn": "Nom du bloc_code du bloc",
+              "recursive": null
+            },
+            {
+              "reference": "placettes",
+              "parentKeyColumn": "Nom de la parcelle élèmentaire",
+              "recursive": null
+            }
+          ]
+        }
+      },
+      "dataTypes": {
+        "physico_chimie_sols": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "Date prélèvement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day"
+                }
+              },
+              {
+                "header": "Code Echantillon",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "Code Echantillon",
+                  "id": "localization_Code Echantillon"
+                }
+              },
+              {
+                "header": "Code Traitement",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "traitement",
+                  "id": "context_traitement"
+                }
+              },
+              {
+                "header": "Code Bloc",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "Nom Bloc",
+                  "id": "localization_Nom Bloc"
+                }
+              },
+              {
+                "header": "Nom Parcelle",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "Nom Parcelle",
+                  "id": "localization_Nom Parcelle"
+                }
+              },
+              {
+                "header": "Nom Placette",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "Nom Placette",
+                  "id": "localization_Nom Placette"
+                }
+              },
+              {
+                "header": "Numéro répétition analyse",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Numéro répétition analyse",
+                  "id": "context_Numéro répétition analyse"
+                }
+              },
+              {
+                "header": "Limite superieure (cm)",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Limite superieure (cm)",
+                  "id": "context_Limite superieure (cm)"
+                }
+              },
+              {
+                "header": "Limite inferieure (cm)",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Limite inferieure (cm)",
+                  "id": "context_Limite inferieure (cm)"
+                }
+              },
+              {
+                "header": "Nom Laboratoire Analyse",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Nom Laboratoire Analyse",
+                  "id": "context_Nom Laboratoire Analyse"
+                }
+              },
+              {
+                "header": "Valeur",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Valeur",
+                  "id": "context_Valeur"
+                }
+              },
+              {
+                "header": "Statut Valeur",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Statut Valeur",
+                  "id": "context_Statut Valeur"
+                }
+              },
+              {
+                "header": "Code Variable",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Code Variable",
+                  "id": "context_Code Variable"
+                }
+              },
+              {
+                "header": "Code Methode",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Code Methode",
+                  "id": "context_Code Methode"
+                }
+              },
+              {
+                "header": "Code Unité",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Code Unité",
+                  "id": "context_Code Unité"
+                }
+              },
+              {
+                "header": "Code Expression Humidité",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "Code Expression Humidité",
+                  "id": "context_Code Expression Humidité"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": {
+            "en": "Soil physical chemistry",
+            "fr": "Physico chimie du sols"
+          },
+          "data": {
+            "date": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "context": {
+              "components": {
+                "Valeur": null,
+                "traitement": null,
+                "Code Unité": null,
+                "Code Methode": null,
+                "Code Variable": null,
+                "Statut Valeur": null,
+                "Limite inferieure (cm)": null,
+                "Limite superieure (cm)": null,
+                "Nom Laboratoire Analyse": null,
+                "Code Expression Humidité": null,
+                "Numéro répétition analyse": null
+              }
+            },
+            "localization": {
+              "components": {
+                "Nom Bloc": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "blocs"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "Nom Parcelle": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "parcelles_elementaires"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "Nom Placette": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "placettes"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "Code Echantillon": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "day",
+              "id": "date_day"
+            },
+            "authorizationScopes": {
+              "localization_bloc": {
+                "variable": "localization",
+                "component": "Nom Bloc",
+                "id": "localization_Nom Bloc"
+              }
+            },
+            "dataGroups": {
+              "all": {
+                "internationalizationName": {
+                  "en": "All data",
+                  "fr": "Toutes les données"
+                },
+                "label": "Toutes les données",
+                "data": [
+                  "localization",
+                  "date",
+                  "context"
+                ]
+              }
+            }
+          },
+          "repository": null
+        },
+        "donnees_prelevement_pro": {
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "Date de prelevement (jj/mm/aaaa)",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day"
+                }
+              },
+              {
+                "header": "Code Dispositif",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "code dispositif",
+                  "id": "localization_code dispositif"
+                }
+              },
+              {
+                "header": "Code Produit",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "produit",
+                  "id": "context_produit"
+                }
+              },
+              {
+                "header": "Code Traitement",
+                "boundTo": {
+                  "variable": "context",
+                  "component": "traitement",
+                  "id": "context_traitement"
+                }
+              },
+              {
+                "header": "Nom Bloc",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "nom bloc",
+                  "id": "localization_nom bloc"
+                }
+              },
+              {
+                "header": "Nom Parcelle Elementaire",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "nom parcelle elementaire",
+                  "id": "localization_nom parcelle elementaire"
+                }
+              },
+              {
+                "header": "Nom Placette",
+                "boundTo": {
+                  "variable": "localization",
+                  "component": "nom placette",
+                  "id": "localization_nom placette"
+                }
+              },
+              {
+                "header": "Numero repetition",
+                "boundTo": {
+                  "variable": "prelevement",
+                  "component": "repetition",
+                  "id": "prelevement_repetition"
+                }
+              },
+              {
+                "header": "Endroit prelevement",
+                "boundTo": {
+                  "variable": "prelevement",
+                  "component": "endroit prelevement",
+                  "id": "prelevement_endroit prelevement"
+                }
+              },
+              {
+                "header": "Outil Prelevement",
+                "boundTo": {
+                  "variable": "prelevement",
+                  "component": "outil prelevement",
+                  "id": "prelevement_outil prelevement"
+                }
+              },
+              {
+                "header": "commentaire_fr",
+                "boundTo": {
+                  "variable": "prelevement",
+                  "component": "commentaire fr",
+                  "id": "prelevement_commentaire fr"
+                }
+              },
+              {
+                "header": "commentaire_en",
+                "boundTo": {
+                  "variable": "prelevement",
+                  "component": "commentaire en",
+                  "id": "prelevement_commentaire en"
+                }
+              },
+              {
+                "header": "code prelevement",
+                "boundTo": {
+                  "variable": "prelevement",
+                  "component": "code prelevement",
+                  "id": "prelevement_code prelevement"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "internationalizationName": {
+            "en": "Collection data",
+            "fr": "Données de prélèvement"
+          },
+          "data": {
+            "date": {
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              }
+            },
+            "context": {
+              "components": {
+                "produit": null,
+                "traitement": null
+              }
+            },
+            "prelevement": {
+              "components": {
+                "repetition": null,
+                "commentaire en": null,
+                "commentaire fr": null,
+                "code prelevement": null,
+                "outil prelevement": null,
+                "endroit prelevement": null
+              }
+            },
+            "localization": {
+              "components": {
+                "nom bloc": null,
+                "nom placette": null,
+                "code dispositif": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "refType": "dispositifs"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "nom parcelle elementaire": null
+              }
+            }
+          },
+          "validations": {},
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "day",
+              "id": "date_day"
+            },
+            "authorizationScopes": {
+              "localization": {
+                "variable": "localization",
+                "component": "code dispositif",
+                "id": "localization_code dispositif"
+              }
+            },
+            "dataGroups": {
+              "all": {
+                "internationalizationName": {
+                  "en": "All data",
+                  "fr": "Toutes les données"
+                },
+                "label": "Toutes les données",
+                "data": [
+                  "localization",
+                  "date",
+                  "context",
+                  "prelevement"
+                ]
+              }
+            }
+          },
+          "repository": null
+        }
+      }
+    },
+    "configFile": "0f7c9d63-0ccf-40ad-ac7a-366cf3fb3c62"
+  }
+]

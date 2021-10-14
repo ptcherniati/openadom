@@ -6,7 +6,7 @@ describe('test create application', () => {
     });
 
     it('Test creation site', () => {
-        cy.login("admin", ['applications/acbb/acbb_application_description.json'])
+        cy.login("admin", ['applications/ore/ore_application_description.json'])
 
         cy.get('.card-header-title.createApplication').first().contains(' Créer l\'application ').click()
         const testYaml = 'applications/fake/fakeYaml_testCreateAplication.json'
@@ -14,7 +14,7 @@ describe('test create application', () => {
         const nameApplication = 'site'
 
         cy.visit(Cypress.env('applications_url'))
-        cy.get('.card-header-title.createApplication').first().contains(" Créer l'application ").click()
+        cy.get('.card-header-title.createApplication').first().contains(" Créer l\'application ").click()
 
         cy.visit(Cypress.env('applicationCreation_url'))
         cy.get('input[type = text]').first().type(nameApplication)

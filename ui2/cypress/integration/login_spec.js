@@ -15,7 +15,7 @@ describe('test login', () => {
                 'Accept-Language': 'de',
             },
         });
-        cy.login("admin", ['applications/acbb/acbb_application_description.json'])
+        cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.url().should('include', '/application')
         cy.get('.card-header-title.createApplication').first().contains(" Créer l'application ")
 

@@ -4,6 +4,8 @@
         "home_url": "/",
         "login_url": "/login",
         "applications_url": "/applications",
-        "applicationCreation_url": "/applicationCreation"
+        "applicationCreation_url": "/applicationCreation",
+        "application_new_authorization_url": "/applications/monsore/dataTypes/pem/authorizations/new",
+        "application_dataType_monsore_url": "/applications/monsore/dataTypes"
     }
 }

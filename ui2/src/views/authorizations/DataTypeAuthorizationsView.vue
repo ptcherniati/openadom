@@ -136,7 +136,10 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.localeApplicationName(this.application),
-        localDataType: this.internationalisationService.localeDatatypeNameApplication(this.application, this.dataTypeId),
+        localDataType: this.internationalisationService.localeDatatypeNameApplication(
+          this.application,
+          this.dataTypeId
+        ),
       };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,
