@@ -34,8 +34,7 @@
           "children": [
             {
               "id": "nivelle__p1",
-              "label": "nivelle__p1",
-              "children": []
+              "label": "nivelle__p1"
             }
           ]
         },
@@ -82,13 +81,11 @@
         {
           "id": "projet_atlantique",
           "label": "projet_atlantique",
-          "entitiesTranslations": ["getAffichage_FR"],
-          "children": []
+          "entitiesTranslations": ["getAffichage_FR"]
         },
         {
           "id": "projet_manche",
-          "label": "projet_manche",
-          "children": []
+          "label": "projet_manche"
         }
       ]
     }

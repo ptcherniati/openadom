@@ -18,76 +18,6 @@
         <b-radio
           name="dataTypeAuthorization-period"
           v-model="period"
-          :native-value="periods.FROM_DATE"
-          class="DataTypeAuthorizationInfoView-radio-field mb-2"
-        >
-          <span class="DataTypeAuthorizationInfoView-radio-label">
-            {{ periods.FROM_DATE }}
-          </span>
-          <ValidationProvider
-            :rules="period === periods.FROM_DATE ? 'required' : ''"
-            name="period_fromDate"
-            v-slot="{ errors, valid }"
-            vid="period_fromDate"
-          >
-            <b-field
-              :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid && period === periods.FROM_DATE,
-              }"
-              :message="errors[0]"
-            >
-              <b-datepicker
-                v-model="startDate"
-                show-week-number
-                :locale="chosenLocale"
-                icon="calendar-day"
-                trap-focus
-                :disabled="period !== periods.FROM_DATE"
-              >
-              </b-datepicker>
-            </b-field>
-          </ValidationProvider>
-        </b-radio>
-
-        <b-radio
-          name="dataTypeAuthorization-period"
-          v-model="period"
-          :native-value="periods.TO_DATE"
-          class="DataTypeAuthorizationInfoView-radio-field mb-2"
-        >
-          <span class="DataTypeAuthorizationInfoView-radio-label">
-            {{ periods.TO_DATE }}
-          </span>
-          <ValidationProvider
-            :rules="period === periods.TO_DATE ? 'required' : ''"
-            name="period_toDate"
-            v-slot="{ errors, valid }"
-            vid="period_toDate"
-          >
-            <b-field
-              :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid && period === periods.TO_DATE,
-              }"
-              :message="errors[0]"
-            >
-              <b-datepicker
-                v-model="endDate"
-                show-week-number
-                :locale="chosenLocale"
-                icon="calendar-day"
-                trap-focus
-                :disabled="period !== periods.TO_DATE"
-              >
-              </b-datepicker>
-            </b-field>
-          </ValidationProvider>
-        </b-radio>
-
-        <b-radio
-          name="dataTypeAuthorization-period"
-          v-model="period"
           :native-value="periods.FROM_DATE_TO_DATE"
           class="DataTypeAuthorizationInfoView-radio-field mb-2"
         >
@@ -145,17 +75,6 @@
             </b-field>
           </ValidationProvider>
         </b-radio>
-
-        <b-radio
-          class="DataTypeAuthorizationInfoView-radio-field"
-          name="dataTypeAuthorization-period"
-          v-model="period"
-          :native-value="periods.ALWAYS"
-        >
-          <span class="DataTypeAuthorizationInfoView-radio-label">
-            {{ periods.ALWAYS }}</span
-          ></b-radio
-        >
       </b-field>
 
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
@@ -305,7 +224,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   dataGroupToAuthorize = null;
   openCollapse = null;
   scopesToAuthorize = {};
-  period = this.periods.FROM_DATE;
+  period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
   endDate = null;
 
@@ -438,5 +357,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
 .DataTypeAuthorizationInfoView-radio-label {
   width: 200px;
+}
+
+.collapse-content .card-content .content .CollapsibleTree-header .CollapsibleTree-buttons {
+  visibility: hidden;
+  display: none;
 }
 </style>
