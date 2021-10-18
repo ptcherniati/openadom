@@ -82,6 +82,7 @@
         {
           "id": "projet_atlantique",
           "label": "projet_atlantique",
+          "entitiesTranslations": ["getAffichage_FR"],
           "children": []
         },
         {

@@ -160,18 +160,18 @@
 
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
-            :label="$t('dataTypeAuthorizations.users')"
-            class="mb-4"
-            :type="{
+          :label="$t('dataTypeAuthorizations.users')"
+          class="mb-4"
+          :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-            :message="errors[0]"
+          :message="errors[0]"
         >
           <b-select
-              :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-              v-model="userToAuthorize"
-              expanded
+            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+            v-model="userToAuthorize"
+            expanded
           >
             <option v-for="user in users" :value="user.id" :key="user.id">
               {{ user.label }}

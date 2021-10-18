@@ -24,5 +24,7 @@ describe('test authorization application', () => {
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
         cy.get(':nth-child(2) > .collapse-trigger > .card-header > .card-header-title').first().click()
         cy.get(':nth-child(1) > .CollapsibleTree-header.clickable > :nth-child(1) > .CollapsibleTree-header-infos > .b-checkbox > .check').click()
+        cy.get(':nth-child(1) > .CollapsibleTree-header.clickable > :nth-child(1) > .CollapsibleTree-header-infos > .clickable').click()
+        cy.get('.content > :nth-child(1) > :nth-child(2) > .CollapsibleTree-header > :nth-child(1) > .CollapsibleTree-header-infos > .b-checkbox > .check').click()
     })
 })
