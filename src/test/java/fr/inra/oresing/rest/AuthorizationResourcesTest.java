@@ -161,18 +161,6 @@ public class AuthorizationResourcesTest {
             Assert.assertTrue(json.contains("[2016,1,1]"));
         }
 
-//        {
-//            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/")
-//                            .cookie(authCookie)
-//                            .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isOk())
-//                    .andReturn().getResponse().getContentAsString();
-//
-//            log.debug(json);
-//
-//            Assert.assertTrue(json.contains("[2016,1,1]"));
-//        }
-
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
                             .cookie(authReaderCookie)

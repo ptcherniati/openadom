@@ -257,9 +257,6 @@ export default class ApplicationsView extends Vue {
 
   async init() {
     this.applications = await this.applicationService.getApplications();
-    this.applications = this.applications.map((a) => {
-      return { ...a, localName: this.internationalisationService.localeApplicationName(a) };
-    });
     this.selectedApplications = this.applications;
     if (this.checkboxDate === "true")
       this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);

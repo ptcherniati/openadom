@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -27,7 +26,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -120,7 +118,7 @@ public class OreSiResources {
         Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
             Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
             Set<String> children = childrenPerReferences.get(reference);
-            return new ApplicationResult.Reference(reference, reference, referenceDescription.getInternationalizationName(), referenceDescription.getInternationalizedColumns(), children, columns);
+            return new ApplicationResult.Reference(reference, reference,  children, columns);
         });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
@@ -130,9 +128,9 @@ public class OreSiResources {
                 return new ApplicationResult.DataType.Variable(variable, variable, components);
             });
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
-            return new ApplicationResult.DataType(dataType, dataType, dataTypeDescription.getInternationalizationName(), variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
+            return new ApplicationResult.DataType(dataType, dataType,  variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getConfiguration().getApplication().getInternationalization(), references, dataTypes);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
     }
 

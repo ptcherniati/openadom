@@ -137,7 +137,7 @@ references:
 
   types_de_donnees_par_themes_de_sites_et_projet:
     internationalizationName:
-      fr: Types de deoonés par site et projet
+      fr: Types de données par site et projet
       en: Data types by site and project
     validations:
       projetRef:

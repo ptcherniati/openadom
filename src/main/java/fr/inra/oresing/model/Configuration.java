@@ -2,6 +2,8 @@ package fr.inra.oresing.model;
 
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +16,8 @@ import java.util.*;
 @Setter
 @ToString
 public class Configuration {
-
+    private String defaultLanguage;
+    private InternationalizationMap internationalization;
     private int version;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
@@ -76,8 +79,6 @@ public class Configuration {
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
-        Internationalization internationalizationName;
-        Map<String, Internationalization> internationalizedColumns = new LinkedHashMap<>();
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
@@ -110,7 +111,6 @@ public class Configuration {
     @ToString
     public static class DataTypeDescription {
         FormatDescription format;
-        Internationalization internationalizationName;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();

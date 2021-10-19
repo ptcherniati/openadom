@@ -3,20 +3,8 @@ import {Fetcher, LOCAL_STORAGE_LANG} from "./Fetcher";
 export class InternationalisationService extends Fetcher {
   static INSTANCE = new InternationalisationService();
 
-  localeApplicationName(application) {
-    if (application.configuration != null){
-      if(application.configuration.application.internationalization != null) {
-        return (
-            application.configuration.application.internationalization[localStorage.getItem(LOCAL_STORAGE_LANG)]
-        )
-      }else {
-      return application.name
-      }
-    } else if (application.internationalization != null) {
-      return application.internationalization[localStorage.getItem(LOCAL_STORAGE_LANG)]
-    } else {
-      return application.name
-    }
+  localeApplicationName(applicationInternationalization, defautName) {
+    return (applicationInternationalization?.[localStorage.getItem(LOCAL_STORAGE_LANG)]) ?? defautName ;
   }
   localeDatatypeName(datatype) {
     if (datatype.internationalizationName != null) {

@@ -8,14 +8,9 @@ import java.util.UUID;
 public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker {
 
     public static final String PARAM_REFTYPE = "refType";
-
-    public void setReferenceValues(ImmutableMap<String, UUID> referenceValues) {
-        this.referenceValues = referenceValues;
-    }
-
-    public ImmutableMap<String, UUID> referenceValues;
     private final String reference;
-    public  Map<String, String> params;
+    public ImmutableMap<String, UUID> referenceValues;
+    private Map<String, String> params;
     private CheckerTarget target;
     public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, Map<String, String> params) {
         this.params = params;
@@ -26,6 +21,10 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
 
     public ImmutableMap<String, UUID> getReferenceValues() {
         return referenceValues;
+    }
+
+    public void setReferenceValues(ImmutableMap<String, UUID> referenceValues) {
+        this.referenceValues = referenceValues;
     }
 
     public CheckerTarget getTarget() {
