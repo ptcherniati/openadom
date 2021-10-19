@@ -1,0 +1,9 @@
+Libelle type intervention_key;Libelle type intervention_fr;Libelle type intervention_en;Description;Source;Commentaire_fr;Commentaire_en
+apport_pro_et_amendement;Apport_PRO et amendement;Apport_PRO et amendement;;;;
+apport_engrais_phytosanitaires_autres;Apport_engrais_phytosanitaires_autres;Apport_engrais_phytosanitaires_autres;[Les produits destinés à améliorer les propriétés du sol sont des amendements];UNIFA;;
+irrigation;Irrigation;Irrigation;;;;
+plantation;Plantation;Plantation;;;;
+recolte;Recolte;Recolte;;;;
+semis;Semis;Semis;;;;
+travail_du_sol;Travail du sol;Travail du sol;;;;
+z_intervention_autre;Z_Intervention_Autre;Z_Intervention_Autre;;;;

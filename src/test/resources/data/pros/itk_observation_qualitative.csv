@@ -1,0 +1,70 @@
+Libelle observation qualitative_key;Libelle observation qualitative_fr;Libelle observation qualitative_en;Type observation qualitative
+chenopode;Chenopode;Chenopode;Adventices
+coquelicot;Coquelicot;Coquelicot;Adventices
+folle_avoine;Folle avoine;Folle avoine;Adventices
+gaillet;Gaillet;Gaillet;Adventices
+myosotis;Myosotis;Myosotis;Adventices
+renoncule_des_champs;Renoncule des champs;Renoncule des champs;Adventices
+renouee;Renouee;Renouee;Adventices
+repousse_de_betteraves;Repousse de betteraves;Repousse de betteraves;Adventices
+repousse_de_cereales;Repousse de cereales;Repousse de cereales;Adventices
+repousse_de_pomme_de_terre;Repousse de pomme de terre;Repousse de pomme de terre;Adventices
+rumex;Rumex;Rumex;Adventices
+liseron;Liseron;Liseron;Adventices
+morelle;Morelle;Morelle;Adventices
+amarante;Amarante;Amarante;Adventices
+setaire_digitaire;Setaire_Digitaire;Setaire_Digitaire;Adventices
+senecon;Senecon;Senecon;Adventices
+vulpin;Vulpin;Vulpin;Adventices
+z_adventices_autre;Z_Adventices_Autre;Z_Adventices_Autre;Adventices
+corbeaux;Corbeaux;Corbeaux;Gibier
+sanglier;Sanglier;Sanglier;Gibier
+z_gibier_autre;Z_Gibier_Autre;Z_Gibier_Autre;Gibier
+azote;Azote;Azote;Carence
+phosphore;Phosphore;Phosphore;Carence
+potassium;Potassium;Potassium;Carence
+magnesium;Magnesium;Magnesium;Carence
+calcium;Calcium;Calcium;Carence
+fer;Fer;Fer;Carence
+bore;Bore;Bore;Carence
+manganese;Manganese;Manganese;Carence
+z_carence_autre;Z_Carence_Autre;Z_Carence_Autre;Carence
+aluminium;Aluminium;Aluminium;Phyto-toxicite_element trace mineral
+cuivre;Cuivre;Cuivre;Phyto-toxicite_element trace mineral
+z_phytotoxicite_trace_mineral_Autre;Z_Phytotoxicite_trace mineral_Autre;Z_Phytotoxicite_trace mineral_Autre;Phyto-toxicite_element trace mineral
+z_phytotoxicite_compose_organique_Autre;Z_Phytotoxicite_compose organique_Autre;Z_Phytotoxicite_compose organique_Autre;Phyto-toxicite_compose organique
+grele;Grele;Grele;Intemperies
+foudre;Foudre;Foudre;Intemperies
+gel;Gel;Gel;Intemperies
+hydromorphie_saisonniere;Hydromorphie saisonniere;Hydromorphie saisonniere;Intemperies
+innondation;Innondation;Innondation;Intemperies
+secheresse;Secheresse;Secheresse;Intemperies
+z_Intemperies_Autre;Z_Intemperies_Autre;Z_Intemperies_Autre;Intemperies
+black-rot;Black-rot;Black-rot;Maladie cryptogamique
+mildiou;Mildiou;Mildiou;Maladie cryptogamique
+oidium;Oidium;Oidium;Maladie cryptogamique
+pietin-echaudage;Pietin-echaudage;Pietin-echaudage;Maladie cryptogamique
+pietin-verse;Pietin-verse;Pietin-verse;Maladie cryptogamique
+rouille_noire;Rouille noire;Rouille noire;Maladie cryptogamique
+septoriose;Septoriose;Septoriose;Maladie cryptogamique
+tavelure;Tavelure;Tavelure;Maladie cryptogamique
+eutypiose;Eutypiose;Eutypiose;Maladie cryptogamique
+esca/bda;Esca/BDA;Esca/BDA;Maladie cryptogamique
+z_maladie_cryptogamique_autre;Z_Maladie cryptogamique_Autre;Z_Maladie cryptogamique_Autre;Maladie cryptogamique
+anguillule;Anguillule;Anguillule;Ravageur parasite
+cecydomie;Cecydomie;Cecydomie;Ravageur parasite
+cicadelle;Cicadelle;Cicadelle;Ravageur parasite
+chrysomele;Chrysomele;Chrysomele;Ravageur parasite
+doryphore;Doryphore;Doryphore;Ravageur parasite
+lema;Lema;Lema;Ravageur parasite
+mouche_grise;Mouche grise;Mouche grise;Ravageur parasite
+nematode;Nematode;Nematode;Ravageur parasite
+puceron;Puceron;Puceron;Ravageur parasite
+tordeuses_de_la_grappe;Tordeuses de la grappe;Tordeuses de la grappe;Ravageur parasite
+acariens;Acariens;Acariens;Ravageur parasite
+pyrale;Pyrale;Pyrale;Ravageur parasite
+z_ravageur_parasite_autre;Z_Ravageur parasite_Autre;Z_Ravageur parasite_Autre;Ravageur parasite
+court-noue;Court-noue;Court-noue;Virose
+enroulement;Enroulement;Enroulement;Virose
+z_virose_autre;Z_Virose_Autre;Z_Virose_Autre;Virose
+flavescence_doree;Flavescence doree;Flavescence doree;Phytoplasme

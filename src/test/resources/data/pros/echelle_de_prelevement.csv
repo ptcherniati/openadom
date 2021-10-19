@@ -1,7 +1,7 @@
-Nom de l'échelle de prélèvement_fr;Nom de l'échelle de prélèvement_en
-Bloc;Block
-Dispositif;Field experiment
-Hors dispositif;Outside of the device
-Parcelle elementaire;Elementary plot
-Placette;Plot
-Traitement;Treatment
+Nom echelle de prelevement_key;Nom echelle de prelevement_fr;Nom echelle de prelevement_en
+bloc;Bloc;Block
+dispositif;Dispositif;Field experiment
+hors_dispositif;Hors dispositif;Outside of the device
+parcelle_elementaire;Parcelle elementaire;Elementary plot
+placette;Placette;Plot
+traitement;Traitement;Treatment
