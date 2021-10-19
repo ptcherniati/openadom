@@ -313,6 +313,10 @@ public class OreSiService {
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+        Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                .findFirst();
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
         String parentHierarchicalKeyColumn;
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
@@ -361,10 +365,6 @@ public class OreSiService {
 
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             Stream<CSVRecord> recordStream = Streams.stream(csvParser);
-            Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
-                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
-                    .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
-                    .findFirst();
             if (isRecursive) {
                 recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
             }
@@ -403,13 +403,11 @@ public class OreSiService {
                         OreSiService.checkNaturalKeySyntax(naturalKey);
                         String recursiveNaturalKey = naturalKey;
                         if (isRecursive) {
-                            lineCheckers.stream()
-                                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
-                                    .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                            selfLineChecker
                                     .map(referenceLineChecker -> ((ReferenceLineChecker) referenceLineChecker).getReferenceValues())
                                     .map(values -> values.get(naturalKey))
                                     .filter(key -> key != null)
-                                    .forEach(key -> e.setId(key));
+                                    .ifPresent(key -> e.setId(key));
                             String parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
                             while (!Strings.isNullOrEmpty(parentKey)) {
                                 recursiveNaturalKey = parentKey + LTREE_SEPARATOR + recursiveNaturalKey;
@@ -429,7 +427,20 @@ public class OreSiService {
                         e.setRefValues(refValues);
                         return e;
                     })
-                    .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()));
+                    .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))
+                    .map(e-> {
+                        if(hierarchicalKeys.contains(e.getHierarchicalKey())){
+                            /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
+                            dans le fichier. Seule la première ligne est enregistrée
+                             */
+//                            ValidationCheckResult validationCheckResult = new ValidationCheckResult()
+//                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
+                        }else{
+                            hierarchicalKeys.add(e.getHierarchicalKey());
+                        }
+                        return e;
+                    })
+                    .filter(e->e!=null);
             referenceValueRepository.storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
@@ -437,7 +448,7 @@ public class OreSiService {
         return fileId;
     }
 
-    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<String, String> parentReferenceMap) {
+    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<String, String> referenceMap) {
         Integer parentRecursiveIndex = recursiveComponentDescription
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
@@ -446,9 +457,8 @@ public class OreSiService {
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             return recordStream;
         }
-        HashMap<String, UUID> parentUUIDs = selfLineChecker
+        HashMap<String, UUID> referenceUUIDs = selfLineChecker
                 .map(lc -> lc.getReferenceValues())
-                //.map(refValues-> addParentReference(ref, parentReferenceMap, refValues))
                 .map(HashMap::new)
                 .orElseGet(HashMap::new);
         List<CSVRecord> collect = recordStream
@@ -466,23 +476,20 @@ public class OreSiService {
                         } catch (IllegalArgumentException e) {
                             return;
                         }
-                        parentReferenceMap.put(naturalKey, s);
-                        if (!parentUUIDs.containsKey(s)) {
-                            parentUUIDs.put(s, UUID.randomUUID());
+                        referenceMap.put(naturalKey, s);
+                        if (!referenceUUIDs.containsKey(s)) {
+                            referenceUUIDs.put(s, UUID.randomUUID());
+                        }
+                        if (!referenceUUIDs.containsKey(naturalKey)) {
+                            referenceUUIDs.put(naturalKey, UUID.randomUUID());
                         }
                     }
                     return;
                 })
                 .collect(Collectors.toList());
         selfLineChecker
-                .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(parentUUIDs)));
+                .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
         return collect.stream();
-    }
-
-    private ImmutableMap<String, UUID> addParentReference(Configuration.ReferenceDescription ref, Map<List<String>, String> parentReferenceMap, ImmutableMap<String, UUID> refValues) {
-        List<String> keyColumns = ref.getKeyColumns();
-        //parentReferenceMap.put("toto", "");
-        return refValues;
     }
 
     private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponent(LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences, String refType) {
