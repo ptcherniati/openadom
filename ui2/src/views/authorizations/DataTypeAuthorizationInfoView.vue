@@ -16,6 +16,14 @@
         class="DataTypeAuthorizationInfoView-periods-container mb-4"
       >
         <b-radio
+          class="DataTypeAuthorizationInfoView-radio-field"
+          name="dataTypeAuthorization-period"
+          v-model="period"
+          :native-value="periods.ALWAYS"
+        >
+          <span class="DataTypeAuthorizationInfoView-radio-label"> {{ periods.ALWAYS }}</span>
+        </b-radio>
+        <b-radio
           name="dataTypeAuthorization-period"
           v-model="period"
           :native-value="periods.FROM_DATE_TO_DATE"
