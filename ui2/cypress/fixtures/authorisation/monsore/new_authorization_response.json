@@ -1,0 +1,57 @@
+[
+  {
+    "id":
+    "f156814d-8fb7-4924-a4f7-5bbd8b859599",
+    "user":"5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+    "application":"862d502b-8a29-4ff0-bb30-e779a08cfe40",
+    "dataType":"pem",
+    "dataGroup":[
+      {
+        "id": "qualitatif",
+        "label": "Données qualitatives"
+      },
+      {
+        "id": "quantitatif",
+        "label": "Données quantitatives"
+      },
+      {
+        "id": "referentiel",
+        "label": "Référentiel"
+      }
+    ],
+    "authorizedScopes":
+    [
+      {
+        "id": "localization",
+        "label": "localization",
+        "options": [
+          {
+            "id": "nivelle",
+            "label": "nivelle",
+            "children": [
+              {
+                "id": "nivelle__p1",
+                "label": "nivelle__p1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "projet",
+        "label": "projet",
+        "options": [
+          {
+            "id": "projet_atlantique",
+            "label": "projet_atlantique",
+            "entitiesTranslations": [
+              "getAffichage_FR"
+            ]
+          }
+        ]
+      }
+    ],
+    "fromDay":null,
+    "toDay":null
+  }
+]

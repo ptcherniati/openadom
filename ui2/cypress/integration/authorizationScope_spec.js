@@ -18,7 +18,7 @@ describe('test authorization application', () => {
             'http://localhost:8081/api/v1/applications/monsore/dataType/pem/grantable',
             response).as('getAuthorization')
         cy.fixture('applications/ore/monsore/dataType_response.json').then(resolveDataTypes)
-        cy.fixture('applications/ore/monsore/authorization.json').then(resolveAuthorization)
+        cy.fixture('authorization/monsore/new_authorization_request.json').then(resolveAuthorization)
         cy.visit(Cypress.env('application_new_authorization_url'))
         cy.wait(['@getAuthorization','@getDataTypes'])
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
