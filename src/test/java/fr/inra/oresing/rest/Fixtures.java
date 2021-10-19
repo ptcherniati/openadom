@@ -379,6 +379,14 @@ public class Fixtures {
         referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
         referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
         referentielFiles.put("type_lieu", "/data/pros/type_lieu.csv");
+        referentielFiles.put("Pays", "/data/pros/pays.csv");
+        referentielFiles.put("Region", "/data/pros/region.csv");
+        referentielFiles.put("Commune", "/data/pros/commune.csv");
+        referentielFiles.put("Departement", "/data/pros/departement.csv");
+        referentielFiles.put("Echelle_prélèvement", "/data/pros/echelle_de_prelevement.csv");
+        referentielFiles.put("Facteur", "/data/pros/facteur.csv");
+        referentielFiles.put("Liste raisonnement", "/data/pros/liste_de_raisonnement.csv");
+        referentielFiles.put("Réseau essai ou Observatoire", "/data/pros/reseau_d_essai_ou_observatoire.csv");
         return referentielFiles;
     }
 

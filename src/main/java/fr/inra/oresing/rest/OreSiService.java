@@ -401,7 +401,10 @@ public class OreSiService {
     }
 
     private void checkNaturalKeySyntax(String keyComponent) {
-        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+        if (!keyComponent.isEmpty())
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+        else
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"),"Impossible de trouver une clé naturelle valide car la colonne n'existe pas.");
     }
 
     private void checkHierarchicalKeySyntax(String compositeKey) {

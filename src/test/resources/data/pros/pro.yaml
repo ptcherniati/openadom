@@ -120,10 +120,10 @@ references:
       Libelle du type de dispositif_fr:
       Libelle du type de dispositif_en:
   Echelle_prélèvement:
-    keyColumns: [ Nom de l'échèlle de prélèvement_fr ]
+    keyColumns: [ Nom de l'échelle de prélèvement_fr ]
     columns:
-      Nom de l'échèlle de prélèvement_fr:
-      Nom de l'échèlle de prélèvement_en:
+      Nom de l'échelle de prélèvement_fr:
+      Nom de l'échelle de prélèvement_en:
   Type_culture:
     keyColumns: [ Libellé du type culture_fr ]
     columns:
@@ -216,7 +216,7 @@ references:
     columns:
       Nom du pays:
       Nom de la région:
-  Département:
+  Departement:
     keyColumns: [ Nom de la région,Nom du département ]
     columns:
       Nom de la région:
