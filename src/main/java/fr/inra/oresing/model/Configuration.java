@@ -51,7 +51,7 @@ public class Configuration {
         }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
         nodes.values().stream()
-                .filter(node -> node.isLeaf)
+                .filter(node -> node.isLeaf || node.dependsOn.contains(node))
                 .sorted((a, b) -> -1)
                 .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
@@ -59,7 +59,9 @@ public class Configuration {
 
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
         if (!node.dependsOn.isEmpty()) {
-            node.dependsOn.forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
+            node.dependsOn
+                    .stream().filter(n ->!n.dependsOn.contains(node))
+                    .forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
         }
         sortedReferences.put(node.value, references.get(node.value));
 
@@ -100,7 +102,7 @@ public class Configuration {
     public static class CompositeReferenceComponentDescription {
         String reference;
         String parentKeyColumn;
-        String recursive;
+        String parentRecursiveKey;
     }
 
     @Getter

@@ -157,8 +157,22 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
   La clef crée sera en minuscule, ne comportera pas d'accents; les espaces sont remplacés par des underscores; les 
   traits d'union sont supprimés.
   "Ma clé qui-sert-de-référence" -> "ma_cle_quisertdereference"
+
   Elle ne doit alors comporter que des lettres minuscules de chiffres et des underscores tous les autres caractères 
   seront supprimés.
+
+Pour créer une clef à partir d'une chaîne, on peut utiliser un checker et enrenseignant la section codify de params.
+rajouter le params required si cette clef est obligatoire
+```yaml
+
+  checker:
+    name: RegularExpression
+    params:
+      pattern: .*
+      required: true
+      codify: true
+      columns: nom du taxon déterminé
+```
 
 ```mermaid
   classDiagram
@@ -177,6 +191,16 @@ compositeReferences:
 <span style="color: orange">*compositeReferences* n'est pas indenté. *localizations* est indenté de 1. *components* est 
 indenté de 2. *- reference* et *- parentKeyColumn* sont indentés de 3. Le *reference* qui est sous parentKeyColumn est 
 indenté de 4.</span>
+
+Il est possible de définir une composite référence récursive dans le cas de données de références dui font référence à elle même. En ce cas on utilisera la clef `parentRecursiveKey` pour faire référence à la colonne parent du même fichier. 
+``` yaml
+
+compositeReferences:
+  taxon:
+    components:
+      - parentRecursiveKey: nom du taxon superieur
+        reference: taxon
+```
 
 ### on met les infos des *dataTypes* 
  Pour enregistrer un type de données, il faut déclarer 

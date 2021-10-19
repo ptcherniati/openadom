@@ -92,6 +92,27 @@ public class OreSiService {
     @Autowired
     private RelationalService relationalService;
 
+    public static String escapeKeyComponent(String key) {
+        String toEscape = StringUtils.stripAccents(key.toLowerCase());
+        String escaped = StringUtils.remove(
+                RegExUtils.replaceAll(
+                        StringUtils.replace(toEscape, " ", "_"),
+                        "[^a-z0-9_]",
+                        ""
+                ), "-"
+        );
+        checkNaturalKeySyntax(escaped);
+        return escaped;
+    }
+
+    public static void checkNaturalKeySyntax(String keyComponent) {
+        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+    }
+
+    private void checkHierarchicalKeySyntax(String compositeKey) {
+        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(OreSiService::checkNaturalKeySyntax);
+    }
+
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
@@ -243,6 +264,19 @@ public class OreSiService {
         return uuid;
     }
 
+    /*private void validateStoredReference(Application app, String reference) {
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, reference);
+        Consumer<ImmutableMap<String, String>> validateRow = line -> {
+            lineCheckers.forEach(lineChecker -> {
+                ValidationCheckResult validationCheckResult = lineChecker.checkReference(line);
+                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
+            });
+        };
+        repo.getRepository(app).referenceValue().findAllByReferenceType(reference).stream()
+                .map(this::valuesToIndexedPerReferenceMap)
+                .forEach(validateRow);
+    }*/
+
     private void validateStoredData(DownloadDatasetQuery downloadDatasetQuery) {
         Application application = downloadDatasetQuery.getApplication();
         String dataType = downloadDatasetQuery.getDataType();
@@ -257,19 +291,6 @@ public class OreSiService {
                 .map(this::valuesToIndexedPerReferenceMap)
                 .forEach(validateRow);
     }
-
-    /*private void validateStoredReference(Application app, String reference) {
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, reference);
-        Consumer<ImmutableMap<String, String>> validateRow = line -> {
-            lineCheckers.forEach(lineChecker -> {
-                ValidationCheckResult validationCheckResult = lineChecker.checkReference(line);
-                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
-            });
-        };
-        repo.getRepository(app).referenceValue().findAllByReferenceType(reference).stream()
-                .map(this::valuesToIndexedPerReferenceMap)
-                .forEach(validateRow);
-    }*/
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
@@ -294,8 +315,11 @@ public class OreSiService {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
         String parentHierarchicalKeyColumn;
+        Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
+        boolean isRecursive = recursiveComponentDescription.isPresent();
         BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
         Map<String, String> buildedHierarchicalKeys = new HashMap<>();
+        Map<String, String> parentreferenceMap = new HashMap<>();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -335,11 +359,20 @@ public class OreSiService {
                 return recordAsMap;
             };
 
-            Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
-            Stream<ReferenceValue> referenceValuesStream = Streams.stream(csvParser)
+            Stream<CSVRecord> recordStream = Streams.stream(csvParser);
+            Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
+                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                    .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                    .findFirst();
+            if (isRecursive) {
+                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
+            }
+            List<String> hierarchicalKeys = new LinkedList<>();
+            Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
+                        Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
                         lineCheckers.forEach(lineChecker -> {
                             ValidationCheckResult validationCheckResult = lineChecker.checkReference(refValues);
                             if (validationCheckResult.isSuccess()) {
@@ -367,8 +400,24 @@ public class OreSiService {
                                     .map(key -> escapeKeyComponent(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
-                        checkNaturalKeySyntax(naturalKey);
-                        String hierarchicalKey = getHierarchicalKeyFn.apply(naturalKey, refValues);
+                        OreSiService.checkNaturalKeySyntax(naturalKey);
+                        String recursiveNaturalKey = naturalKey;
+                        if (isRecursive) {
+                            lineCheckers.stream()
+                                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                                    .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                                    .map(referenceLineChecker -> ((ReferenceLineChecker) referenceLineChecker).getReferenceValues())
+                                    .map(values -> values.get(naturalKey))
+                                    .filter(key -> key != null)
+                                    .forEach(key -> e.setId(key));
+                            String parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
+                            while (!Strings.isNullOrEmpty(parentKey)) {
+                                recursiveNaturalKey = parentKey + LTREE_SEPARATOR + recursiveNaturalKey;
+                                parentKey = parentreferenceMap.getOrDefault(parentKey, null);
+                            }
+                        }
+                        String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
+
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
@@ -379,7 +428,8 @@ public class OreSiService {
                         e.setApplication(app.getId());
                         e.setRefValues(refValues);
                         return e;
-                    });
+                    })
+                    .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()));
             referenceValueRepository.storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
@@ -387,25 +437,59 @@ public class OreSiService {
         return fileId;
     }
 
-    public static String escapeKeyComponent(String key) {
-        String toEscape = StringUtils.stripAccents(key.toLowerCase());
-        String escaped = StringUtils.remove(
-                RegExUtils.replaceAll(
-                        StringUtils.replace(toEscape, " ", "_"),
-                        "[^a-z0-9_]",
-                        ""
-                ), "-"
-        );
-        checkNaturalKeySyntax(escaped);
-        return escaped;
+    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<String, String> parentReferenceMap) {
+        Integer parentRecursiveIndex = recursiveComponentDescription
+                .map(rcd -> rcd.getParentRecursiveKey())
+                .map(rck -> columns.indexOf(rck))
+                .orElse(null);
+        ;
+        if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
+            return recordStream;
+        }
+        HashMap<String, UUID> parentUUIDs = selfLineChecker
+                .map(lc -> lc.getReferenceValues())
+                //.map(refValues-> addParentReference(ref, parentReferenceMap, refValues))
+                .map(HashMap::new)
+                .orElseGet(HashMap::new);
+        List<CSVRecord> collect = recordStream
+                .peek(csvrecord -> {
+                    String s = csvrecord.get(parentRecursiveIndex);
+                    if (!Strings.isNullOrEmpty(s)) {
+                        String naturalKey;
+                        try {
+                            s = OreSiService.escapeKeyComponent(s);
+                            naturalKey = ref.getKeyColumns()
+                                    .stream()
+                                    .map(kc -> columns.indexOf(kc))
+                                    .map(k -> OreSiService.escapeKeyComponent(csvrecord.get(k)))
+                                    .collect(Collectors.joining("__"));
+                        } catch (IllegalArgumentException e) {
+                            return;
+                        }
+                        parentReferenceMap.put(naturalKey, s);
+                        if (!parentUUIDs.containsKey(s)) {
+                            parentUUIDs.put(s, UUID.randomUUID());
+                        }
+                    }
+                    return;
+                })
+                .collect(Collectors.toList());
+        selfLineChecker
+                .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(parentUUIDs)));
+        return collect.stream();
     }
 
-    public static void checkNaturalKeySyntax(String keyComponent) {
-        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+    private ImmutableMap<String, UUID> addParentReference(Configuration.ReferenceDescription ref, Map<List<String>, String> parentReferenceMap, ImmutableMap<String, UUID> refValues) {
+        List<String> keyColumns = ref.getKeyColumns();
+        //parentReferenceMap.put("toto", "");
+        return refValues;
     }
 
-    private void checkHierarchicalKeySyntax(String compositeKey) {
-        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(OreSiService::checkNaturalKeySyntax);
+    private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponent(LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences, String refType) {
+        return compositeReferences.values().stream()
+                .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> refType.equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
+                .filter(e -> e != null)
+                .findFirst();
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
@@ -601,7 +685,7 @@ public class OreSiService {
 
         String timeScopeColumnPattern = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
-                .map(lineChecker ->(DateLineChecker)lineChecker)
+                .map(lineChecker -> (DateLineChecker) lineChecker)
                 .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
                 .collect(MoreCollectors.onlyElement())
                 .getPattern();
@@ -1057,8 +1141,8 @@ public class OreSiService {
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
         List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
                 .filter(ch -> ch instanceof DateLineChecker)
-                .map(ch -> (DateLineChecker)ch)
-                .map(ch -> ((VariableComponentKey)ch.getTarget().getTarget()).getId())
+                .map(ch -> (DateLineChecker) ch)
+                .map(ch -> ((VariableComponentKey) ch.getTarget().getTarget()).getId())
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;

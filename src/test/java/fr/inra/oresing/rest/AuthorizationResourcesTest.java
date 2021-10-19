@@ -23,7 +23,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import javax.servlet.http.Cookie;
 
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -109,22 +111,12 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows[*].values.parcelle.chemin").value( hasItemInArray(equalTo("theix.theix__22")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( not(hasItemInArray(equalTo("theix.theix__7"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value( hasItemInArray(endsWith("26/05/2010")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value( not(hasItemInArray(endsWith("31/08/2010"))), String[].class))
+
                     .andReturn().getResponse().getContentAsString();
-
-            // contrôle sur la fenêtre temporelle
-            Assert.assertFalse(json.contains("31/08/2010"));
-            Assert.assertTrue(json.contains("26/05/2010"));
-
-            // contrôle sur le groupe de données
-//            Assert.assertFalse(json.contains("Couleur des individus"));
-//            Assert.assertFalse(json.contains("Nombre d'individus"));
-//            Assert.assertTrue(json.contains("date"));
-//            Assert.assertTrue(json.contains("projet"));
-//            Assert.assertTrue(json.contains("espece"));
-
-            // contrôle sur la localization
-            Assert.assertFalse(json.contains("theix.theix__7"));
-            Assert.assertTrue(json.contains("theix.theix__22"));
         }
     }
 
@@ -169,36 +161,33 @@ public class AuthorizationResourcesTest {
             Assert.assertTrue(json.contains("[2016,1,1]"));
         }
 
-        {
-            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/")
-                            .cookie(authCookie)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
-
-            log.debug(json);
-
-            Assert.assertTrue(json.contains("[2016,1,1]"));
-        }
+//        {
+//            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/")
+//                            .cookie(authCookie)
+//                            .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isOk())
+//                    .andReturn().getResponse().getContentAsString();
+//
+//            log.debug(json);
+//
+//            Assert.assertTrue(json.contains("[2016,1,1]"));
+//        }
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( hasItemInArray(equalTo("bimont.bim13")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( not(hasItemInArray(equalTo("bimont.bim14"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value( hasItemInArray(equalTo("sou")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value( not(hasItemInArray(equalTo("rnt"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.date.day").value( hasItemInArray(equalTo("date:2016-06-14T00:00:00:14/06/2016")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.date.day").value( not(hasItemInArray(equalTo("date:2017-01-30T00:00:00:30/01/2017"))), String[].class))
+                    .andExpect(jsonPath("$.totalRows", equalTo(7456)))
                     .andReturn().getResponse().getContentAsString();
 
-            // contrôle sur la fenêtre temporelle
-            Assert.assertFalse(json.contains("30/01/2017"));
-            Assert.assertTrue(json.contains("14/06/2016"));
 
-            // contrôle sur la localisation
-            Assert.assertFalse(json.contains("bimont.bim14"));
-            Assert.assertTrue(json.contains("bimont.bim13"));
-
-            // contrôle sur le projet
-            Assert.assertFalse(json.contains("rnt"));
-            Assert.assertTrue(json.contains("sou"));
         }
 
         {
@@ -217,10 +206,8 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalRows", equalTo(-1)))
                     .andReturn().getResponse().getContentAsString();
-
-            Assert.assertEquals("{\"variables\":[],\"rows\":[],\"totalRows\":-1,\"checkedFormatVariableComponents\":{\"DateLineChecker\":{\"date_time\":{\"target\":{\"target\":{\"variable\":\"date\",\"component\":\"time\",\"id\":\"date_time\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{\"pattern\":\"HH:mm:ss\"},\"pattern\":\"HH:mm:ss\"},\"date_day\":{\"target\":{\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{\"pattern\":\"dd/MM/yyyy\"},\"pattern\":\"dd/MM/yyyy\"}},\"ReferenceLineChecker\":{\"outil_value\":{\"target\":{\"target\":{\"variable\":\"outil\",\"component\":\"value\",\"id\":\"outil_value\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{\"refType\":\"outil\"},\"refType\":\"outil\"},\"localization_site\":{\"target\":{\"target\":{\"variable\":\"localization\",\"component\":\"site\",\"id\":\"localization_site\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{\"refType\":\"site\"},\"refType\":\"site\"},\"localization_plateforme\":{\"target\":{\"target\":{\"variable\":\"localization\",\"component\":\"plateforme\",\"id\":\"localization_plateforme\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{\"refType\":\"plateforme\"},\"refType\":\"plateforme\"},\"localization_projet\":{\"target\":{\"target\":{\"variable\":\"localization\",\"component\":\"projet\",\"id\":\"localization_projet\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{\"refType\":\"projet\"},\"refType\":\"projet\"}},\"IntegerChecker\":{\"localization_profondeur\":{\"target\":{\"target\":{\"variable\":\"localization\",\"component\":\"profondeur\",\"id\":\"localization_profondeur\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{}}},\"FloatChecker\":{\"temperature_value\":{\"target\":{\"target\":{\"variable\":\"temperature\",\"component\":\"value\",\"id\":\"temperature_value\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{}},\"pression_value\":{\"target\":{\"target\":{\"variable\":\"pression\",\"component\":\"value\",\"id\":\"pression_value\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{}},\"temperature_quality\":{\"target\":{\"target\":{\"variable\":\"temperature\",\"component\":\"quality\",\"id\":\"temperature_quality\"},\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"params\":{}}}},\"entitiesTranslations\":{\"outil\":{},\"site\":{},\"projet\":{},\"plateforme\":{}}}",
-                    json);
         }
     }
 }
