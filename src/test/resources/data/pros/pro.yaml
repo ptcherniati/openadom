@@ -300,7 +300,7 @@ references:
       Année de fin d'application du protocole général:
       Utilisation du guide méthodologique Réseau PRO après 2015 (oui/non):
   raisonnements_par_protocole:
-    keyColumns: [ Nom du protocole,Libellé de la liste de raisonnement,Valeur du raisonnement ]
+    keyColumns: [ Nom du protocole,Libelle de la liste de raisonnement,Valeur du raisonnement ]
     columns:
       Nom du protocole:
       Libelle de la liste de raisonnement:
@@ -351,6 +351,93 @@ references:
       Nom de la structure:
       Precision (pole et/ou unito et/ou oquipe):
       Nom du lieu:
+  itk_famille:
+    keyColumns: [nom famille_key]
+    columns:
+      nom famille_key:
+      nom famille:
+  itk_espece:
+    keyColumns: [Nom Espece Plante_fr,Nom famille ]
+    columns:
+      Nom Espece Plante_fr:
+      Nom Espece Plante_en:
+      Nom famille:
+      Descriptif:
+      source:
+      Commentaire_fr:
+      Commentaire_en:
+  itk_type_observation_qualitative:
+    keyColumns: [ Libelle type observation qualitative_key ]
+    columns:
+      Libelle type observation qualitative_key:
+      Libelle type observation qualitative_fr:
+      Libelle type observation qualitative_en:
+  itk_type_intervention:
+    keyColumns: [ Libelle type intervention_key ]
+    columns:
+      Libelle type intervention_key:
+      Libelle type intervention_fr:
+      Libelle type intervention_en:
+      Description:
+      Source:
+      Commentaire_fr:
+      Commentaire_en:
+  itk_intervention:
+    keyColumns: [Libelle intervention_fr, Type intervention ]
+    columns:
+      Libelle intervention_fr:
+      Libelle intervention_en:
+      Type intervention:
+      Description:
+  itk_autres_listes:
+    keyColumns: [ Autres listes_fr, Valeur_fr ]
+    columns:
+      Autres listes_fr:
+      Autres listes_en:
+      Valeur_fr:
+      Valeur_en:
+      Commentaire_fr:
+      Commentaire_en:
+  itk_Liste_intrants:
+    keyColumns: [ Nom commercial produit, Nom element ou matiere active ]
+    columns:
+      Nom commercial produit:
+      Nom element ou matiere active:
+      Concentration element ou matiere active:
+      Unite:
+  itk_observation_qualitative:
+    keyColumns: [ Libelle observation qualitative_fr,Libelle type observation qualitative ]
+    columns:
+      Libelle observation qualitative_fr:
+      Libelle observation qualitative_en:
+      Libelle type observation qualitative:
+  itk_cultures:
+    keyColumns: [ Codes Culture, Nom Culture,Type Culture,Espece1]
+    columns:
+      Codes Culture:
+      Nom Culture:
+      Type Culture:
+      Espece1:
+      Espece2:
+      Espece3:
+      Espece4:
+      Espece5:
+      Espece6:
+      Periode Semis:
+      Periode Recolte:
+      Duree de Vegetation(mois):
+      Commentaire_fr:
+      Commentaire_en:
+  itk_materiel:
+    keyColumns: [ Nom du materiel_fr,Nom du type intervention ]
+    columns:
+      Nom du materiel_fr:
+      Nom du materiel_en:
+      Nom du type intervention:
+      Description:
+      Source:
+      Commentaire_fr:
+      Commentaire_en:
 dataTypes:
   donnees_prelevement_pro:
     internationalizationName:
