@@ -735,7 +735,7 @@ public class OreSiService {
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                        VariableComponentKey variableComponentKey = referenceValidationCheckResult.getVariableComponentKey();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
                         UUID referenceId = referenceValidationCheckResult.getReferenceId();
                         refsLinkedTo.put(variableComponentKey, referenceId);
                     }
