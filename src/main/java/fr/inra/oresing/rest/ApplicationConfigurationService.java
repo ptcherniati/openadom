@@ -20,6 +20,7 @@ import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,7 +38,7 @@ import java.util.stream.Stream;
 @Component
 @Slf4j
 public class ApplicationConfigurationService {
-    public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns");
+    public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
 
     Map<String, Map> getInternationalizedSections(Map<String, Object> toParse, List<IllegalArgumentException> exceptions) {
         Map<String, Map> parsedMap = new LinkedHashMap<>();
@@ -69,7 +70,11 @@ public class ApplicationConfigurationService {
                 try {
                     internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), Internationalization.class));
                 } catch (IllegalArgumentException e2) {
-                    exceptions.add(e2);
+                    try{
+                        internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), InternationalizationDisplay.class));
+                    }catch (IllegalArgumentException e3) {
+                        exceptions.add(e2);
+                    }
                 }
             }
             return internationalizationMap;
@@ -146,6 +151,7 @@ public class ApplicationConfigurationService {
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
             verifyReferenceKeyColumnsExists(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
+            verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
             verifyValidationCheckersAreValids(configuration, builder, referenceEntry, references);
         }
 
@@ -388,6 +394,46 @@ public class ApplicationConfigurationService {
         }
     }
 
+    private void verifyInternationalizedColumnsExistsForPattern(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
+        String reference = referenceEntry.getKey();
+        Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+        Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getReferences())
+                .map(r -> r.getOrDefault(reference, null))
+                .map(im -> im.getInternationalizationDisplay())
+                .map(ic -> ic.getPattern())
+                .map(patterns -> patterns.values()
+                        .stream()
+                        .map(pattern -> InternationalizationDisplay.getPatternColumns(pattern))
+                        .flatMap(List::stream)
+                        .collect(Collectors.toSet())
+                )
+                .orElseGet(Set::of);
+        Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getReferences())
+                .map(r -> r.getOrDefault(reference, null))
+                .map(im -> im.getInternationalizedColumns())
+                .map(ic -> {
+                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                    ic.values().stream()
+                            .forEach(v -> columns.addAll(v.values()));
+                    return columns;
+                })
+                .orElse(new HashSet<>());
+        Set<String> columns = Optional.ofNullable(referenceDescription)
+                .map(r -> r.getColumns())
+                .map(c -> new LinkedHashSet(c.keySet()))
+                .orElseGet(LinkedHashSet::new);
+        columns.addAll(internationalizedColumns);
+
+
+        ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
+        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
+        if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
+            builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+        }
+    }
+
     private void verifyInternationalizedColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
@@ -395,17 +441,18 @@ public class ApplicationConfigurationService {
                 .map(i -> i.getReferences())
                 .map(r -> r.getOrDefault(reference, null))
                 .map(im -> im.getInternationalizedColumns())
-                .map(ic -> ic.keySet())
+                .map(ic -> {
+                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                    ic.values().stream()
+                            .forEach(v -> columns.addAll(v.values()));
+                    return columns;
+                })
                 .orElse(new HashSet<>());
-        Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(configuration.getInternationalization())
-                .map(i -> i.getReferences())
-                .map(r -> r.getOrDefault(reference, null))
-                .map(im -> im.getInternationalizationDisplay())
-                .map(icd->icd.getPattern())
-                .map(ic -> ic.keySet())
+        Set<String> columns = Optional.ofNullable(referenceDescription)
+                .map(r -> r.getColumns())
+                .map(c -> c.keySet())
                 .orElse(new HashSet<>());
 
-        Set<String> columns = referenceDescription.getColumns().keySet();
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
         ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
@@ -472,7 +519,7 @@ public class ApplicationConfigurationService {
                 .build();
     }
 
-    private ConfigurationParsingResult onMappingExceptions(List<IllegalArgumentException> exceptions ) {
+    private ConfigurationParsingResult onMappingExceptions(List<IllegalArgumentException> exceptions) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
         exceptions.stream()
                 .forEach(exception -> {
@@ -490,8 +537,8 @@ public class ApplicationConfigurationService {
                         String value = e.getValue().toString();
                         String targetTypeName = e.getTargetType().getName();
                         builder.recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName);
-                    }else{
-                       builder.unknownIllegalException(exception.getCause().getLocalizedMessage());
+                    } else {
+                        builder.unknownIllegalException(exception.getCause().getLocalizedMessage());
                     }
                 });
         return builder.build();
@@ -516,7 +563,6 @@ public class ApplicationConfigurationService {
                 .recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName)
                 .build();
     }
-
     @Getter
     @Setter
     @ToString

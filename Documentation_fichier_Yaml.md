@@ -517,6 +517,22 @@ references:
         en: esp_definition_en
 ```
 
+- Définition d'un affichage d'un référentiel'
+
+Il est possible de créer un affichage internationalisé d'un référentiel (dans les menus, les types de données).
+Pour cela on va rajouter une section internationalizationDisplay.
+
+``` Yaml
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
+
+```
+On définit un pattern pour chaque langue en mettant entre accolades les nom des colonnes. C'est nom de colonnes seront remplacés par la valeur de la colonne ou bien, si la colonne est internationalisée, par la valeur de la colonne internationalisée correspondant à cette colonne.
+
+Par défaut, c'est le code du référentiel qui est affiché.
+
 ### Internationalisation des *dataTypes*:
 Nous pouvons aussi faire en sorte que *nomDonnéeCSV* soit traduit. Même chose pour les noms des *dataGroup*.
 
@@ -539,6 +555,17 @@ dataTypes:
             - site
             - commentaire
 ```
+
+On peut surcharger l'affichage d'une colonne faisant référence à un référentiel en rajoutant une section internationalizationDisplay dans le dataType.
+```Yaml
+  pem:
+    internationalizationDisplay:
+      especes:
+          pattern:
+            fr: 'espèce :{esp_nom}'
+            en: 'espèce :{esp_nom}'
+```
+
 
 # Aide fichier .csv  
 	

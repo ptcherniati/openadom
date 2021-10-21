@@ -12,6 +12,9 @@ import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
+import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
@@ -369,6 +372,16 @@ public class OreSiService {
                 recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
             }
             List<String> hierarchicalKeys = new LinkedList<>();
+            Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
+                    .map(configuration -> conf.getInternationalization())
+                    .map(inter -> inter.getReferences())
+                    .map(references -> references.getOrDefault(refType, null));
+            Map<String, Internationalization> displayColumns = internationalizationReferenceMap
+                    .map(internationalisationSection -> internationalisationSection.getInternationalizedColumns())
+                    .orElseGet(HashMap::new);
+            Optional<Map<String, String>> displayPattern = internationalizationReferenceMap
+                    .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
+                    .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
                     .map(refValues -> {
@@ -415,7 +428,7 @@ public class OreSiService {
                             }
                         }
                         String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
-
+                        refValues.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, refValues));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
@@ -428,19 +441,19 @@ public class OreSiService {
                         return e;
                     })
                     .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))
-                    .map(e-> {
-                        if(hierarchicalKeys.contains(e.getHierarchicalKey())){
+                    .map(e -> {
+                        if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
                             /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
                             dans le fichier. Seule la première ligne est enregistrée
                              */
 //                            ValidationCheckResult validationCheckResult = new ValidationCheckResult()
 //                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
-                        }else{
+                        } else {
                             hierarchicalKeys.add(e.getHierarchicalKey());
                         }
                         return e;
                     })
-                    .filter(e->e!=null);
+                    .filter(e -> e != null);
             referenceValueRepository.storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
@@ -1132,7 +1145,7 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
         Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
@@ -1206,8 +1219,8 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
-        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
                 .stream()
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
                 .collect(

@@ -10,13 +10,15 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
     public static final String PARAM_REFTYPE = "refType";
     private final String reference;
     public ImmutableMap<String, UUID> referenceValues;
+    public ImmutableMap<String, String> display;
     private Map<String, String> params;
     private CheckerTarget target;
-    public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, Map<String, String> params) {
+    public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, ImmutableMap<String, String> display, Map<String, String> params) {
         this.params = params;
         this.target = target;
         this.reference = reference;
         this.referenceValues = referenceValues;
+        this.display = display;
     }
 
     public ImmutableMap<String, UUID> getReferenceValues() {
