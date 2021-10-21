@@ -5,6 +5,7 @@ import lombok.Value;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Value
 public class ApplicationResult {
@@ -28,6 +29,13 @@ public class ApplicationResult {
             String title;
             boolean key;
             String linkedTo;
+        }
+
+        @Value
+        public static class ReferenceUUIDAndDisplay {
+            String display;
+            UUID uuid;
+            Map<String, String> values;
         }
     }
 

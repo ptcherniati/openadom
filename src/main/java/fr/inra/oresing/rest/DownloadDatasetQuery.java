@@ -26,6 +26,7 @@ public class DownloadDatasetQuery {
     Application application;
     String applicationNameOrId;
     String dataType;
+    String locale;
     Long offset;
     Long limit;
     @Nullable

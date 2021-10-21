@@ -7,16 +7,15 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.rest.ApplicationResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,7 +33,7 @@ public class CheckerFactory {
     public ImmutableMap<VariableComponentKey, ReferenceLineChecker> getReferenceLineCheckers(Application app, String dataType) {
         return getLineCheckers(app, dataType).stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
-                .map(lineChecker -> (ReferenceLineChecker)lineChecker)
+                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
                 .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget().getTarget(), Function.identity()));
     }
 
@@ -51,6 +50,10 @@ public class CheckerFactory {
     }
 
     public ImmutableSet<LineChecker> getLineCheckers(Application app, String dataType) {
+        return getLineCheckers(app, dataType, null);
+    }
+
+    public ImmutableSet<LineChecker> getLineCheckers(Application app, String dataType, String locale) {
         Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
@@ -71,8 +74,22 @@ public class CheckerFactory {
                     if ("Reference".equals(checkerDescription.getName())) {
                         String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
                         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-                        ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams());
+                        ImmutableMap<String, UUID> referenceValues;
+                        ImmutableMap<String, String> display = null;
+                        if (locale == null) {
+                            referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
+                        } else {
+                            ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceIdAndDisplayPerKeys = referenceValueRepository.getReferenceIdAndDisplayPerKeys(refType, locale);
+                            referenceValues = ImmutableMap.copyOf(
+                                    referenceIdAndDisplayPerKeys.entrySet().stream()
+                                            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
+                            );
+                            display = ImmutableMap.copyOf(
+                                    referenceIdAndDisplayPerKeys.entrySet().stream()
+                                            .collect(Collectors.toMap(e -> e.getKey(), e -> getOrBuildDisplay(app, refType, dataType, locale, e)))
+                            );
+                        }
+                        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, display, checkerDescription.getParams());
                     } else if ("Date".equals(checkerDescription.getName())) {
                         String pattern = checkerDescription.getParams().get(DateLineChecker.PARAM_PATTERN);
                         variableComponentChecker = new DateLineChecker(checkerTarget, pattern, checkerDescription.getParams());
@@ -97,6 +114,26 @@ public class CheckerFactory {
             log.trace("pour " + app.getName() + ", " + dataType + ", on validera avec " + lineCheckers);
         }
         return lineCheckers;
+    }
+
+    private String getOrBuildDisplay(Application app, String refType, String dataType, String locale, Map.Entry<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> e) {
+        Optional<String> patternOpt = Optional.ofNullable(app)
+                .map(a -> app.getConfiguration())
+                .map(configuration -> configuration.getInternationalization())
+                .map(internationalizationMap -> internationalizationMap.getDataTypes())
+                .map(internationalizationDataTypeMap -> internationalizationDataTypeMap.get(dataType))
+                .map(internationalizationDataTypeMap -> internationalizationDataTypeMap.getInternationalizationDisplay())
+                .map(internationalizationDisplayMap -> internationalizationDisplayMap.get(refType))
+                .map(internationalizationDisplay1 -> internationalizationDisplay1.getPattern())
+                .map(patternMap -> patternMap.get(locale));
+        if(patternOpt.isPresent()){
+           String  pattern = patternOpt.get();
+            for (String column : InternationalizationDisplay.getPatternColumns(pattern)) {
+                pattern = pattern.replaceAll("\\{"+column+"\\}",e.getValue().getValues().get(column));
+            }
+            return pattern;
+        }
+        return e.getValue().getDisplay() == null ? e.getKey() : e.getValue().getDisplay();
     }
 
     private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder, String param) {
@@ -143,7 +180,7 @@ public class CheckerFactory {
                 String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, params));
+                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, null, params));
                 break;
             default:
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
@@ -157,10 +194,10 @@ public class CheckerFactory {
             return Stream.of(columnsString.split(","))
                     .map(column -> CheckerTarget.getInstance(column))
                     .collect(Collectors.toList());
-        }else if (!Strings.isNullOrEmpty(variableComponentKeyParam) || !variableComponentKeyParam.matches("_")){
+        } else if (!Strings.isNullOrEmpty(variableComponentKeyParam) || !variableComponentKeyParam.matches("_")) {
             String[] split = variableComponentKeyParam.split("_");
             Stream.of(new VariableComponentKey(split[0], split[1]))
-                    .map(variableComponentKey->CheckerTarget.getInstance(variableComponentKey))
+                    .map(variableComponentKey -> CheckerTarget.getInstance(variableComponentKey))
                     .collect(Collectors.toList());
 
         }

@@ -245,9 +245,10 @@ public class OreSiResources {
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
-        Locale locale = LocaleContextHolder.getLocale();
+
         LinkedHashSet<String> orderedVariables = buildOrderedVariables(nameOrId, dataType);
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
+        String locale = downloadDatasetQuery!=null && downloadDatasetQuery.getLocale()!=null?downloadDatasetQuery.getLocale():LocaleContextHolder.getLocale().getLanguage();
         List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
@@ -267,9 +268,9 @@ public class OreSiResources {
                 })
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
-        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
-        Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale.getLanguage(), dataType, checkedFormatVariableComponents);
-        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
+        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType, locale);
+        Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale, dataType, checkedFormatVariableComponents);
+         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
     }
 
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {
@@ -310,7 +311,8 @@ public class OreSiResources {
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
-        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType);
+        String locale = downloadDatasetQuery!=null && downloadDatasetQuery.getLocale()!=null?downloadDatasetQuery.getLocale():LocaleContextHolder.getLocale().getLanguage();
+        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType, locale);
         return ResponseEntity.ok(result);
     }
 
