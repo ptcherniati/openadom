@@ -400,6 +400,7 @@ public class OreSiService {
                                     .map(key -> escapeKeyComponent(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
+                        //voir pour quand naturalKey est vide
                         OreSiService.checkNaturalKeySyntax(naturalKey);
                         String recursiveNaturalKey = naturalKey;
                         if (isRecursive) {

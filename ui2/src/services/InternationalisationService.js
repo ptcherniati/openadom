@@ -3,6 +3,22 @@ import {Fetcher, LOCAL_STORAGE_LANG} from "./Fetcher";
 export class InternationalisationService extends Fetcher {
   static INSTANCE = new InternationalisationService();
 
+  mergeInternationalization(application){
+    var internationalization;
+
+    if(application?.configuration?.internationalization)
+      internationalization = application?.configuration?.internationalization;
+    else if (application?.internationalization)
+      internationalization = application?.internationalization;
+
+    if (!internationalization){
+      application.localName = application.name;
+      return application;
+    }
+    application.localName = this.localeApplicationName(internationalization?.application?.internationalization, application.name);
+    return application;
+  }
+
   localeApplicationName(applicationInternationalization, defautName) {
     return (applicationInternationalization?.[localStorage.getItem(LOCAL_STORAGE_LANG)]) ?? defautName ;
   }
@@ -13,13 +29,19 @@ export class InternationalisationService extends Fetcher {
       return datatype.name;
     }
   }
-  localeReferenceName(reference) {
-    console.log(localStorage.getItem(LOCAL_STORAGE_LANG))
-    if(reference.internationalizationName != null)
-      return reference.internationalizationName[localStorage.getItem(LOCAL_STORAGE_LANG)];
-    else
-      return reference.label;
+  localeReferenceName(references, applications) {
+    if(applications.internationalization) {
+      let applicationReferences = applications.internationalization.references;
+      for (let applicationReference in applicationReferences) {
+        if(references.label) {
+          if(references.label === applicationReference) {
+            return (applicationReferences[applicationReference].internationalizationName?.[localStorage.getItem(LOCAL_STORAGE_LANG)]) ?? references.label;
+          }
+          return references.label;
+        }
+        // mettre un return object;
+      }
+    }
+    return references;
   }
-
-
 }

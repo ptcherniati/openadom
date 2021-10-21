@@ -13,26 +13,17 @@ export class ApplicationService extends Fetcher {
       file: applicationConfig.file,
     });
   }
-  mergeInternationalization(application){
-    var internationalization = application?.configuration?.internationalization;
-    if (!internationalization){
-      application.localName = application.name;
-      return application;
-    }
-    application.localName = InternationalisationService.INSTANCE.localeApplicationName(internationalization?.application?.internationalization, application.name);
-    return application;
-  }
 
   async getApplications() {
     var applications = await   this.get("applications/");
     return  applications.map((a) => {
-      return this.mergeInternationalization(a) ;
+      return InternationalisationService.INSTANCE.mergeInternationalization(a) ;
     });
   }
 
   async getApplication(name) {
     var application = await  this.get("applications/" + name);
-    return this.mergeInternationalization(application);
+    return InternationalisationService.INSTANCE.mergeInternationalization(application);
   }
 
   async validateConfiguration(applicationConfig) {
