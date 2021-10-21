@@ -32,16 +32,27 @@ export class InternationalisationService extends Fetcher {
   localeReferenceName(references, applications) {
     if(applications.internationalization) {
       let applicationReferences = applications.internationalization.references;
-      for (let applicationReference in applicationReferences) {
-        if(references.label) {
-          if(references.label === applicationReference) {
+      if(references.label) {
+        for (let applicationReference in applicationReferences) {
+          if( applicationReference === references.label ) {
             return (applicationReferences[applicationReference].internationalizationName?.[localStorage.getItem(LOCAL_STORAGE_LANG)]) ?? references.label;
           }
-          return references.label;
         }
-        // mettre un return object;
+        return references.label;
       }
     }
     return references;
+  }
+  treeReferenceName(refs) {
+    if(refs.internationalization) {
+      let applicationReferences = refs.internationalization.references;
+      for (let applicationReference in applicationReferences) {
+        refs.references[applicationReference] = {
+          ...refs.references[applicationReference],
+          refNameLocal: applicationReferences[applicationReference].internationalizationName?.[localStorage.getItem(LOCAL_STORAGE_LANG)]
+        };
+      }
+    }
+    return  refs.references;
   }
 }

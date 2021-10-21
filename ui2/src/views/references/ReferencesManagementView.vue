@@ -90,7 +90,7 @@ export default class ReferencesManagementView extends Vue {
         return;
       }
       this.references = convertReferencesToTrees(
-        Object.values(this.internationalisationService.localeReferenceName(this.application.references,this.application))
+        Object.values(this.internationalisationService.treeReferenceName(this.application))
       );
     } catch (error) {
       this.alertService.toastServerError();
