@@ -4,7 +4,7 @@
       <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
       <h1 class="title main-title">
         {{
-          $t("titles.data-types-repository", { applicationName: localDatatypeName || dataTypeId })
+          $t("titles.data-types-repository", { applicationName: application.localDatatypeName || dataTypeId })
         }}
       </h1>
       <div class="columns">
@@ -261,17 +261,8 @@ export default class DataTypesRepositoryView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application).localName,
+        localDatatypeName : this.internationalisationService.localeDataTypeIdName(this.application ,this.application.dataTypes[this.dataTypeId])
       };
-      if (this.application.internationalization) {
-        this.localDatatypeName = Object.values(this.application.internationalization.dataTypes).map((d) => {
-          return { ...d, localName: this.internationalisationService.localeDatatypeName(d) };
-        });
-      }
-      else if (this.application.dataTypes) {
-        this.localDatatypeName = Object.values(this.application.dataTypes).map((d) => {
-          return { ...d, localName: this.internationalisationService.localeDatatypeName(d) };
-        });
-      }
       this.configuration = this.applications
         .filter((a) => a.name === this.applicationName)
         .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
