@@ -64,6 +64,11 @@ public class ConfigurationParsingResult {
             return recordError("unsupportedVersion", ImmutableMap.of("actualVersion", actualVersion, "expectedVersion", expectedVersion));
         }
 
+        public Builder unknownIllegalException(String cause)  {
+            return recordError("unknownIllegalException", ImmutableMap.of(
+                    "cause", cause));
+        }
+
         public Builder missingReferenceForCheckerInReference(String validationKey, String reference, Set<String> references)  {
             return recordError("missingReferenceForCheckerInReference", ImmutableMap.of(
                     "validationKey", validationKey,

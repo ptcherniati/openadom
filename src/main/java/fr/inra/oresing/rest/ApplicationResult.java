@@ -1,18 +1,16 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.model.Internationalization;
 import lombok.Value;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Value
 public class ApplicationResult {
     String id;
     String name;
     String title;
-    private Internationalization internationalization;
     Map<String, Reference> references;
     Map<String, DataType> dataTypes;
 
@@ -20,8 +18,6 @@ public class ApplicationResult {
     public static class Reference {
         String id;
         String label;
-        Map<String, String> internationalizationName;
-        Map<String, Internationalization> internationalizedColumns;
         Set<String> children;
         Map<String, Column> columns;
 
@@ -32,13 +28,19 @@ public class ApplicationResult {
             boolean key;
             String linkedTo;
         }
+
+        @Value
+        public static class ReferenceUUIDAndDisplay {
+            String display;
+            UUID uuid;
+            Map<String, String> values;
+        }
     }
 
     @Value
     public static class DataType {
         String id;
         String label;
-        Map<String, String> internationalizationName;
         Map<String, Variable> variables;
         Map<String, String> repository;
 

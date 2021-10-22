@@ -2,6 +2,8 @@ package fr.inra.oresing.model;
 
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +16,8 @@ import java.util.*;
 @Setter
 @ToString
 public class Configuration {
-
+    private String defaultLanguage;
+    private InternationalizationMap internationalization;
     private int version;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
@@ -51,7 +54,7 @@ public class Configuration {
         }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
         nodes.values().stream()
-                .filter(node -> node.isLeaf)
+                .filter(node -> node.isLeaf || node.dependsOn.contains(node))
                 .sorted((a, b) -> -1)
                 .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
@@ -59,7 +62,9 @@ public class Configuration {
 
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
         if (!node.dependsOn.isEmpty()) {
-            node.dependsOn.forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
+            node.dependsOn
+                    .stream().filter(n ->!n.dependsOn.contains(node))
+                    .forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
         }
         sortedReferences.put(node.value, references.get(node.value));
 
@@ -74,8 +79,6 @@ public class Configuration {
     @ToString
     public static class ReferenceDescription {
         private char separator = ';';
-        Internationalization internationalizationName;
-        Map<String, Internationalization> internationalizedColumns = new LinkedHashMap<>();
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
@@ -100,7 +103,7 @@ public class Configuration {
     public static class CompositeReferenceComponentDescription {
         String reference;
         String parentKeyColumn;
-        String recursive;
+        String parentRecursiveKey;
     }
 
     @Getter
@@ -108,7 +111,6 @@ public class Configuration {
     @ToString
     public static class DataTypeDescription {
         FormatDescription format;
-        Internationalization internationalizationName;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();

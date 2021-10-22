@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -106,6 +107,11 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                 .collect(Collectors.toList());
         ;
         return result;
+    }
+
+    public ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
+        return findAllByReferenceType(referenceType).stream()
+                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey,result->new ApplicationResult.Reference.ReferenceUUIDAndDisplay(result.getRefValues().get("__display_"+locale), result.getId(), result.getRefValues())));
     }
 
     public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {

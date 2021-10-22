@@ -22,6 +22,10 @@ references:
       esp_definition_fr:
         fr: esp_definition_fr
         en: esp_definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{esp_nom}'
+        en: '{esp_nom}'
     keyColumns: [esp_nom]
     columns:
       esp_nom:
@@ -40,6 +44,10 @@ references:
       definition_fr:
         fr: definition_fr
         en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     keyColumns: [nom_key]
     columns:
       nom_key:
@@ -68,7 +76,11 @@ references:
         en: zet_nom_en
       zet_description_fr:
         fr: zet_description_fr
-        en: zet_description__en
+        en: zet_description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{zet_nom_key}'
+        en: '{zet_nom_key}'
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -90,6 +102,10 @@ references:
       description_fr:
         fr: description_fr
         en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -109,6 +125,10 @@ references:
       description_fr:
         fr: description_fr
         en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -128,6 +148,10 @@ references:
       tze_definition_fr:
         fr: tze_definition_fr
         en: tze_definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{tze_nom_key}'
+        en: '{tze_nom_key}'
     columns:
       tze_nom_key:
       tze_nom_fr:
@@ -137,8 +161,12 @@ references:
 
   types_de_donnees_par_themes_de_sites_et_projet:
     internationalizationName:
-      fr: Types de deoonés par site et projet
+      fr: Types de données par site et projet
       en: Data types by site and project
+    internationalizationDisplay:
+      pattern:
+        fr: 'nom du projet: {nom du projet}, nom du site : {nom du site}, nom du thème : {nom du thème}, nom du type de données : {nom du type de données} '
+        en: '{tze_nom_key}'
     validations:
       projetRef:
         description: "référence au projet"
@@ -189,6 +217,10 @@ references:
       nom_key:
         fr: nom_fr
         en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
     columns:
       code_key:
       code_fr:
@@ -209,6 +241,10 @@ references:
       valeur_key:
         fr: valeur_fr
         en: valeur_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{valeur_key}'
+        en: '{valeur_key}'
     columns:
       nom_key:
       nom_fr:
@@ -229,6 +265,10 @@ references:
       definition_fr:
         fr: definition_fr
         en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -265,6 +305,10 @@ references:
     internationalizationName:
       fr: Variables et unités par type de données
       en: Variables and units by data type
+    internationalizationDisplay:
+      pattern:
+        fr: "nom du type de données : {nom du type de données}, nom de la variable : {nom de la variable}, : nom de l'unité {nom de l'unité}"
+        en: "datatype name : {nom du type de données}, variable name : {nom de la variable}, : unit name {nom de l'unité}"
     columns:
       nom du type de données:
       nom de la variable:
@@ -275,6 +319,11 @@ dataTypes:
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent
+    internationalizationDisplay:
+      especes:
+          pattern:
+            fr: 'espèce :{esp_nom}'
+            en: 'espèce :{esp_nom}'
     data:
       projet:
         components:

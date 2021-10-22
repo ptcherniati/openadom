@@ -1,5 +1,8 @@
 package fr.inra.oresing.checker;
 
+import fr.inra.oresing.ValidationLevel;
+import fr.inra.oresing.checker.decorators.CheckerDecorator;
+import fr.inra.oresing.checker.decorators.DecoratorException;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
@@ -7,21 +10,42 @@ import java.util.Map;
 
 public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
 
-    VariableComponentKey getVariableComponentKey();
-    String getColumn();
+    CheckerTarget getTarget();
 
-    @Override
     default ValidationCheckResult check(Map<VariableComponentKey, String> values) {
-        VariableComponentKey variableComponentKey = getVariableComponentKey();
+        VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
         String value = values.get(variableComponentKey);
-        ValidationCheckResult check = check(value);
-        return check;
+        try {
+            ValidationCheckResult check = CheckerDecorator.check(value, getParams(), getTarget());
+            if(ValidationLevel.WARN.equals(check.getLevel())){
+                value = check.getMessage();
+            }else{
+                return check;
+            }
+        } catch (DecoratorException e) {
+            return e.getValidationCheckResult();
+        }
+        return check(value);
     }
 
     @Override
     default ValidationCheckResult checkReference(Map<String, String> values) {
-        String value = values.get(getColumn());
+        String value = values.get(getTarget().getTarget());
+        try {
+            ValidationCheckResult check = CheckerDecorator.check(value, getParams(), getTarget());
+            if(ValidationLevel.WARN.equals(check.getLevel())){
+                value = check.getMessage();
+            }else{
+                return check;
+            }
+        } catch (DecoratorException e) {
+            return e.getValidationCheckResult();
+        }
         return check(value);
+    }
+
+    default Map<String, String> getParams(){
+        return Map.of();
     }
 
     ValidationCheckResult check(String value);

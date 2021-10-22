@@ -6,19 +6,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Range;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.OreSiAuthorization;
-import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.AuthorizationRepository;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.SqlPolicy;
-import fr.inra.oresing.persistence.SqlSchema;
-import fr.inra.oresing.persistence.SqlService;
-import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.model.*;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +18,7 @@ import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -176,14 +161,14 @@ public class AuthorizationService {
             toDay = null;
         }
         return new GetAuthorizationResult(
-            oreSiAuthorization.getId(),
-            oreSiAuthorization.getOreSiUser(),
-            oreSiAuthorization.getApplication(),
-            oreSiAuthorization.getDataType(),
-            oreSiAuthorization.getDataGroup(),
-            oreSiAuthorization.getAuthorizedScopes(),
-            fromDay,
-            toDay
+                oreSiAuthorization.getId(),
+                oreSiAuthorization.getOreSiUser(),
+                oreSiAuthorization.getApplication(),
+                oreSiAuthorization.getDataType(),
+                oreSiAuthorization.getDataGroup(),
+                oreSiAuthorization.getAuthorizedScopes(),
+                fromDay,
+                toDay
         );
     }
 

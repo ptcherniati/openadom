@@ -157,8 +157,22 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
   La clef crée sera en minuscule, ne comportera pas d'accents; les espaces sont remplacés par des underscores; les 
   traits d'union sont supprimés.
   "Ma clé qui-sert-de-référence" -> "ma_cle_quisertdereference"
+
   Elle ne doit alors comporter que des lettres minuscules de chiffres et des underscores tous les autres caractères 
   seront supprimés.
+
+Pour créer une clef à partir d'une chaîne, on peut utiliser un checker et enrenseignant la section codify de params.
+rajouter le params required si cette clef est obligatoire
+```yaml
+
+  checker:
+    name: RegularExpression
+    params:
+      pattern: .*
+      required: true
+      codify: true
+      columns: nom du taxon déterminé
+```
 
 ```mermaid
   classDiagram
@@ -177,6 +191,16 @@ compositeReferences:
 <span style="color: orange">*compositeReferences* n'est pas indenté. *localizations* est indenté de 1. *components* est 
 indenté de 2. *- reference* et *- parentKeyColumn* sont indentés de 3. Le *reference* qui est sous parentKeyColumn est 
 indenté de 4.</span>
+
+Il est possible de définir une composite référence récursive dans le cas de données de références dui font référence à elle même. En ce cas on utilisera la clef `parentRecursiveKey` pour faire référence à la colonne parent du même fichier. 
+``` yaml
+
+compositeReferences:
+  taxon:
+    components:
+      - parentRecursiveKey: nom du taxon superieur
+        reference: taxon
+```
 
 ### on met les infos des *dataTypes* 
  Pour enregistrer un type de données, il faut déclarer 
@@ -493,6 +517,22 @@ references:
         en: esp_definition_en
 ```
 
+- Définition d'un affichage d'un référentiel'
+
+Il est possible de créer un affichage internationalisé d'un référentiel (dans les menus, les types de données).
+Pour cela on va rajouter une section internationalizationDisplay.
+
+``` Yaml
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
+
+```
+On définit un pattern pour chaque langue en mettant entre accolades les nom des colonnes. C'est nom de colonnes seront remplacés par la valeur de la colonne ou bien, si la colonne est internationalisée, par la valeur de la colonne internationalisée correspondant à cette colonne.
+
+Par défaut, c'est le code du référentiel qui est affiché.
+
 ### Internationalisation des *dataTypes*:
 Nous pouvons aussi faire en sorte que *nomDonnéeCSV* soit traduit. Même chose pour les noms des *dataGroup*.
 
@@ -515,6 +555,17 @@ dataTypes:
             - site
             - commentaire
 ```
+
+On peut surcharger l'affichage d'une colonne faisant référence à un référentiel en rajoutant une section internationalizationDisplay dans le dataType.
+```Yaml
+  pem:
+    internationalizationDisplay:
+      especes:
+          pattern:
+            fr: 'espèce :{esp_nom}'
+            en: 'espèce :{esp_nom}'
+```
+
 
 # Aide fichier .csv  
 	
