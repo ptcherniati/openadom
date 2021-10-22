@@ -4,7 +4,9 @@ export class InternationalisationService extends Fetcher {
   static INSTANCE = new InternationalisationService();
 
   localeApplicationName(applicationInternationalization, defautName) {
-    return (applicationInternationalization?.[localStorage.getItem(LOCAL_STORAGE_LANG)]) ?? defautName ;
+    return (
+      applicationInternationalization?.[localStorage.getItem(LOCAL_STORAGE_LANG)] ?? defautName
+    );
   }
   localeDatatypeName(datatype) {
     if (datatype.internationalizationName != null) {
@@ -28,6 +30,4 @@ export class InternationalisationService extends Fetcher {
       return reference.internationalizationName[localStorage.getItem(LOCAL_STORAGE_LANG)];
     else return reference.label;
   }
-
-
 }

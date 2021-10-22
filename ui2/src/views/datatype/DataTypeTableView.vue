@@ -387,7 +387,7 @@
                     v-if="getRefsLinkedToId(row, component)"
                     @click="getReferenceValues(row, component)"
                   >
-                    {{ getDisplay(row,component.variable,component.component)}}
+                    {{ getDisplay(row, component.variable, component.component) }}
                   </a>
                   <p v-if="!getRefsLinkedToId(row, component)">
                     {{ row[component.variable][component.component] }}
@@ -480,7 +480,7 @@ export default class DataTypeTableView extends Vue {
   activeTab = 0;
   isOpen = 0;
   variableSearch = [];
-  referenceLineCheckers=[];
+  referenceLineCheckers = [];
   isRegExp = false;
 
   async created() {
@@ -763,13 +763,13 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
   }
-  getDisplay(row, variable,component){
-    var  key = variable+"_"+component;
+  getDisplay(row, variable, component) {
+    var key = variable + "_" + component;
     var value = row[variable][component];
-    if (this.referenceLineCheckers[key]){
-      if (this.referenceLineCheckers[key].display){
-        var display = this.referenceLineCheckers[key].display[value]
-        return display?display:value;
+    if (this.referenceLineCheckers[key]) {
+      if (this.referenceLineCheckers[key].display) {
+        var display = this.referenceLineCheckers[key].display[value];
+        return display ? display : value;
       }
     }
     return value;
