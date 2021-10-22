@@ -85,7 +85,6 @@ import { InternationalisationService } from "@/services/InternationalisationServ
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
-import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu },
@@ -136,8 +135,12 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.mergeInternationalization(this.application).localName,
-        localDatatypeName : this.internationalisationService.localeDataTypeIdName(this.application ,this.application.dataTypes[this.dataTypeId])
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
+        ),
       };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,

@@ -83,8 +83,12 @@ export default class ReferenceTableView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.mergeInternationalization(this.application).localName,
-        localRefName: this.internationalisationService.localeReferenceName(this.application.references[this.refId], this.application),
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localRefName: this.internationalisationService.localeReferenceName(
+          this.application.references[this.refId],
+          this.application
+        ),
       };
       const references = await this.referenceService.getReferenceValues(
         this.applicationName,

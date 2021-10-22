@@ -84,7 +84,8 @@ export default class ReferencesManagementView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.mergeInternationalization(this.application).localName,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
       };
       if (!this.application?.id) {
         return;

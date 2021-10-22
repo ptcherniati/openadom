@@ -106,12 +106,15 @@ export default class DataTypesManagementView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.mergeInternationalization(this.application).localName,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
       };
       if (!this.application?.id) {
         return;
       }
-      this.dataTypes = Object.values(this.internationalisationService.localeDatatypeName(this.application))
+      this.dataTypes = Object.values(
+        this.internationalisationService.localeDatatypeName(this.application)
+      );
     } catch (error) {
       this.alertService.toastServerError();
     }

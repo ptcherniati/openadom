@@ -285,7 +285,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
-  internationalisationService = InternationalisationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
 
   periods = {
@@ -296,7 +295,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   authorizations = [];
-  application = new ApplicationResult();
   users = [];
   dataGroups = [];
   authorizationScopes = [];
@@ -345,8 +343,12 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.mergeInternationalization(this.application).localName,
-        localDatatypeName : this.internationalisationService.localeDataTypeIdName(this.application ,this.application.dataTypes[this.dataTypeId])
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
+        ),
       };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
