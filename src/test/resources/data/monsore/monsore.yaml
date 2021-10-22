@@ -9,7 +9,10 @@ application:
 compositeReferences:
   sites:
     components:
-      - reference: sites
+      - reference: type_de_sites
+      - parentKeyColumn: tze_type_nom
+        parentRecursiveKey: zet_chemin_parent
+        reference: sites
   projet:
     components:
       - reference: projet
@@ -66,6 +69,13 @@ references:
           params:
             refType: type_de_sites
             columns: tze_type_nom
+      siteParentRef:
+        description: "référence à la colonne parent"
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            columns: zet_chemin_parent
     keyColumns: [zet_chemin_parent,zet_nom_key]
     internationalizationName:
       fr: Site
@@ -335,14 +345,25 @@ dataTypes:
       site:
         components:
           bassin:
+            params:
+              references: sites
+              replace: true
+            defaultValue: >
+              return references.get("sites")
+              .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
+              .getHierarchicalKey();
             checker:
               name: Reference
               params:
                 refType: sites
           plateforme:
           chemin:
+            params:
+              references: sites
             defaultValue: >
-             return datumByVariableAndComponent.get("site").get("bassin") +"__" +datumByVariableAndComponent.get("site").get("plateforme")
+              return references.get("sites")
+              .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin")) && it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
+              .getHierarchicalKey();
             checker:
               name: Reference
               params:
