@@ -1,11 +1,11 @@
-Libellé du type de document
-Compte rendu / rapport experimentation
-Fichier compilation donnees SOERE PRO
-Fichier saisie Reseau PRO
-Guide Methodologique Reseau PRO
-Image
-Inventaire essais Reseau PRO
-Plan dispositif
-Protocole conduite dispositif
-Rapport stage
-Document qualité
+Libelle du type de document_key;Libelle du type de document
+compte_rendu_rapport_experimentation;Compte rendu / rapport experimentation
+fichier_compilation_donnees_soere_pro;Fichier compilation donnees SOERE PRO
+fichier_saisie_reseau_pro;Fichier saisie Reseau PRO
+guide_methodologique_reseau_pro;Guide Methodologique Reseau PRO
+image;Image
+inventaire_essais_reseau_pro;Inventaire essais Reseau PRO
+plan_dispositif;Plan dispositif
+protocole_conduite_dispositif;Protocole conduite dispositif
+rapport_stage;Rapport stage
+document_qualitÃ©;Document qualitÃ©

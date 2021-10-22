@@ -1,0 +1,85 @@
+Nom du materiel_fr;Nom du materiel_en;Nom du type intervention;Description;Source;Commentaire_fr;Commentaire_en
+Distributeur engrais;nc;Apport_engrais_phytosanitaires_autres;Le distributeur d engrais est un materiel permettant d epandre une quantite determinee d engrais solides.;Fiches AgroParisTech 2005;;
+Epandeur centrifuge;nc;Apport_engrais_phytosanitaires_autres;;;;
+Manuel;nc;Apport_engrais_phytosanitaires_autres;ex. arrosoir;;;
+Pulverisateur;nc;Apport_engrais_phytosanitaires_autres;Le pulverisateur est un outil servant a epandre une certaine dose de produit phytosanitaire ou d engrais liquide sous forme de fines gouttel;Fiches AgroParisTech 2005;;
+Z_Apport_engrais_phytosanitaires_Autre;nc;Apport_engrais_phytosanitaires_autres;;;;
+Epandeur herissons horizontaux;nc;Apport_PRO et amendement;L epandeur a herissons horizontaux est un materiel utilise pour epandre des produits organiques solides. Avantages : rapidite, fort tonnage;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;;
+Epandeur herissons horizontaux et table epandage;nc;Apport_PRO et amendement;L epandeur a herissons horizontaux equipe d une table d epandage est un materiel utilise pour epandre des produits organiques solides. Epand;Les bonnes pratiques d epandage du fumier, 2007;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre
+Epandeur herissons verticaux;nc;Apport_PRO et amendement;L epandeur a herissons verticaux est un materiel utilise pour épandre des produits organiques solides. Epandeur a deux herissons verticaux b;Les bonnes pratiques d epandage du fumier, 2007;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre
+Epandeur herissons verticaux et poussoir et guillo;nc;Apport_PRO et amendement;L epandeur a herissons verticaux equipe d un poussoir et d une guillotine est un materiel pour epandre les produits organiques solides. Avan;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;;
+Epandeur herissons verticaux et table epandage;nc;Apport_PRO et amendement;L epandeur a herissons verticaux equipe d une table d epandage est un materiel utilise pour epandre les produits organiques solides. Avantag;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;;
+Manuel;nc;Apport_PRO et amendement;ex. fourche;;;
+Rampes a pandillard sans tonne;nc;Apport_PRO et amendement;[Pour produits organiques liquides. L'épandage sans tonne permet des epandages en sortie hiver sur culture sans abimer la culture];[Les pe;Les bonnes pratiques d epandage du lisier, 2007;Guide des bonnes pratiques environnementales d elevage 2010.
+Tonne a liser a injecteur a rainures ouvertes;nc;Apport_PRO et amendement;La tonne a lisier injecteur a rainures ouvertes (ou sillon ouvert) est un materiel utilise pour epandre les produits organiques liquides et;Guide des bonnes pratiques environnementales d elevage 2010;BREF 2017;BREF 2017
+Tonne a lisier a enfouisseur a rainures fermees;nc;Apport_PRO et amendement;La tonne a lisier enfouisseur a rainures fermees (ou sillon ferme) est un materiel utilise pour epandre les produits organiques liquides et;Guide des bonnes pratiques environnementales d elevage 2010;BREF 2017;BREF 2017
+Tonne a lisier a enfouisseur ou injecteur;nc;Apport_PRO et amendement;[La tonne a lisier enfouisseur est un materiel utilise pour epandre les produits organiques liquides et les enfouir en meme temps. Avantage;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;Gu;Gu
+Tonne a lisier a pandillard (ou rampe a pandillard;nc;Apport_PRO et amendement;[La tonne a lisier a pandillard est un materiel utilise pour epandre les produits organiques liquides. Avantage : regularite apport, grande;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;Gu;Gu
+Tonne a lisier buse pallette;nc;Apport_PRO et amendement;[La tonne a lisier a palette est un materiel utilise pour epandre les produits organiques liquides. Avantage : simple, rapidite, differents;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;Gu;Gu
+Tonne a lisier rampe a buses pallette;nc;Apport_PRO et amendement;La tonne a lisier rampe a buses pallette est un materiel utilise pour epandre les produits organiques liquides;[Les rampes d epandages dep;Guide des bonnes pratiques environnementales d elevage 2010.;Guide des bonnes pratiques environnementales d elevage 2010.
+Z_Apport_PRO et amendement_Autre;nc;Apport_PRO et amendement;;;;
+Canon;nc;Irrigation;Un canon est un materiel employe en irrigation;;;
+Goutte a goutte;nc;Irrigation;Materiel utilise en irrigation;;;
+Microaspertion;nc;Irrigation;Materiel utilise en irrigation;;;
+Rampe irrigation;nc;Irrigation;Materiel utilise en irrigation;;;
+Sprinkler;nc;Irrigation;Materiel utilise en irrigation;;;
+Z_Irrigation_Autre;nc;Irrigation;;;;
+Arracheuse;nc;Recolte;L arracheuse est un outil recoltant les tubercules.;Fiches AgroParisTech 2005;ex. Betterave, pomme de terre;ex. Betterave, pomme de terre
+Arracheuse effeuilleuse decolleteuse;nc;Recolte;L arracheuse effeuilleuse decolleteuse est un outil recoltant les betteraves, qui permet de faire l effeuillage, le decolletage et l arrache;Fiches AgroParisTech 2005;;
+Broyeur;nc;Recolte;;;;
+Ensileuse;nc;Recolte;L ensileuse aussi appele recolteuse-hacheuse-chargeuse, est utilisee pour la recolte du fourrage vert (ex. graminees, legumineuses, mais) ou;Fiches AgroParisTech 2005;;
+Faucheuse;nc;Recolte;la faucheuse est un outil qui realise la premiere etape de la recolte des fourrages : la coupe. Elle coupe le fourrage a la base de la tige;Fiches AgroParisTech 2005;;
+Faucheuse conditionneuse;nc;Recolte;La faucheuse conditionneuse est un outil qui realise en un seul passage, le fauchage (ou coupe) et le conditionnement (conditionner les tige;Fiches AgroParisTech 2005;;
+Faucheuse conditionneuse andaineuse;nc;Recolte;La faucheuse conditionneuse andaineuse est un outil qui realise en un seul passage, le fauchage (ou coupe), le conditionnement et l andainag;Fiches AgroParisTech 2005;;
+Machine a vendanger;nc;Recolte;;;;
+Manuel;nc;Recolte;Ex. secateur;;;
+Moisonneuse-Batteuse;nc;Recolte;La moissonneuse batteuse sert a recolter les cereales et les oleoproteagineux. Elle effectue simultanement et automatiquement la coupe des i;Fiches AgroParisTech 2005;;
+Tonne a lisier;Tonne a lisier;Apport_PRO et amendement;L epandeur ou la tonne a lisier est un materiel utilise pour epandre du lisier (et autres produits liquides), aussi appele tonne a lisier. M xxx;Fiches AgroParisTech 2005;;
+Planteuse;nc;Recolte;La planteuse de pommes de terre est un outil permettant la mise en terre de plants de differents calibres, a distance et profondeur regulier;Fiches AgroParisTech 2005;Ex. pomme de terre;Ex. pomme de terre
+Ramasseuse presse;nc;Recolte;La ramasseuse presse est un outil permettant le ramassage et le pressage consiste a rammaser le fourrage andaine et le comprimer sous forme;Fiches AgroParisTech 2005;;
+Z_Recolte_Autre;nc;Recolte;Ex. faneuse, endaineuse, enrhubaneuse, repiqueuse;;;
+Semoir;nc;Semis;;;;
+Semoir a disques;nc;Semis;;;;
+Semoir a la volee;nc;Semis;;;;
+Semoir classique en ligne;nc;Semis;Le semoir classique en ligne, aussi appele semoir multigraines ou semoir a cereales, est un outil permettant le semis regulier en lignes equ;Fiches AgroParisTech 2005;;
+Semoir monograine;nc;Semis;Le semoir monograine, ou semoir de precision, permet de disposer les graines une a une en ligne a un espacement regulier prealablement defin;Fiches AgroParisTech 2005;;
+Semoir semis-direct;nc;Semis;Le semoir 'direct' utilise en semis direct est equipe de disques ou de dents capables de positionner la graine au contact du sol en decoupan;References Agriculture et Environnement ADEME, 2015;dicoagroecologie.fr 2017;Guide pratique Techniques cultirales sans labour en Bretagn
+Z_Semis_Autre;nc;Semis;;;;
+Beche;nc;Travail du sol;La beche est utilisee principalement pour les operations de dechaumage. Permet de travailler rapidement en assurant un bon melange de la ter;Fiches AgroParisTech 2005;;
+Bineuse;nc;Travail du sol;La bineuse est utilisee pour un travail tres superficiel d entretien du sol et de binage dans des cultures disposees en ligne (ex. betterave;Fiches AgroParisTech 2005;;
+Charrue;nc;Travail du sol;La charrue est utilisee pour realiser le labour. Outil employe pour realiser un travail du sol profond avec melange et retournement des couc;Guide pratique Techniques culturales sans labour En Bretagne 2008;;
+Charrue a disques;nc;Travail du sol;La charrue a disques est utilisee en sols superficiels et caillouteux en conditions de travail generalement seches. Generalement utilisee en;Fiches AgroParisTech 2005;;
+Charrue a versoir/socs;nc;Travail du sol;La charrue a versoir est aussi appelee charrue a socs ([Piece travaillante de la charrue, qui decoupe horizontalement la bande de terre et e;Livre les machines agricoles, 2015;Fiches AgroParisTech 2005;Fiches AgroParisTech 2005
+Charrue butteuse;nc;Travail du sol;La charrue butteuse est aussi appelee billonneuse, rigoleuse, fossoyeuse;avec un corps butteur (comme pour les charrues vigneronnes).;Fiches AgroParisTech 2005;Fiches AgroParisTech 2005
+Charrue de viticulture;nc;Travail du sol;La charrue de viticulture est aussi appelee charrue vigneronne ou charrue decavaillonneuse;Fiches AgroParisTech 2005;;
+Charrue dechaumeuse;nc;Travail du sol;La charrue dechaumeuse permet de realiser un labour tres peu profond (10-15 cm) pour une operation de dechaumage ou pour un pseudo-labour (o;Fiches AgroParisTech 2005;;
+Charrue defonceuse;nc;Travail du sol;La charrue defonceuse, aussi appelee defonceuse, realise un travail tres profond (40-80 cm) pour preparer l implantation d une culture peren;Fiches AgroParisTech 2005;Larousse.fr;Larousse.fr
+Chisel;nc;Travail du sol;Le chisel est un outil possedant des lames droites ou obliques equipees de socs ([Piece travaillante de la charrue, qui decoupe horizontalem;Guide pratique Techniques culturales sans labour En Bretagne 2008;;
+Cover-crop;nc;Travail du sol;Le cover-crop est un outil possedant des lames droites ou obliques equipees de socs ([Piece travaillante de la charrue, qui decoupe horizont;Guide pratique Techniques culturales sans labour En Bretagne 2008;;
+Cultivateur;nc;Travail du sol;Le cultivateur est une famille d outils a dents qui fendillent la terre sur leur passage. Les mottes projetees lateralement s entrechoquent,;Livre les machines agricoles 2015;;
+Cultivateur leger;nc;Travail du sol;Le cultivateur leger est aussi appele canadien ou vibroculteur. Il est utilise pour preparer le lit de semence.;Fiches AgroParisTech 2005;;
+Cultivateur lourd;nc;Travail du sol;Le cultivateur lourd est aussi appele canadien ou chisel. Il est utilise pour dechaumer voire decompacter. Outil utilise pour realiser un tr;Fiches AgroParisTech 2005;Guide pratique Techniques culturales sans labour En Bretagne 2008;Guide pratique Techniques culturales sans labour En Bretagne 2008
+Cultivateur rotatif;nc;Travail du sol;Le cultivateur rotatif est un outil tres utilise en maraichage, puis en grandes cultures depuis les annees 1970. Realise un travail d emiett;Fiches AgroParisTech 2005;;
+Cultivateur rotatif avec axe horizontal;nc;Travail du sol;Le cultivateur rotatif avec axe horizontal est aussi appele rotalabour. Cet outil sert a realiser un TCSL - travail simplifie. C est un outi;Guide pratique Techniques culturales sans labour En Bretagne 2008;;
+Dechaumeur a dents;nc;Travail du sol;Le dechaumeur a dents est utilise pour dechaumer.;lafranceagricole.fr;;
+Dechaumeur a disques;nc;Travail du sol;Le dechaumeur a disques est utilise pour ameublir le sol et detruire les mauvaises herbes. Aussi appele dechaumeuse a disques ou pulverisate;Fiches AgroParisTech 2005;;
+Dechaumeur dit neo dechaumeur;nc;Travail du sol;;;;
+Decompacteur;nc;Travail du sol;Le decompacteur permet de realiser un decompactage, c est a dire un travail du sol profond (25-40 cm) sans retournement. Utile quand necessi;Fiches AgroParisTech 2005;;
+Decompacteur rotatif;nc;Travail du sol;Le decompacteur rotatif est un outil de travail profond, le decompactage profond, anime par la prise de force du tracteur, dont les dents to;Fiches AgroParisTech 2005;;
+Herse;nc;Travail du sol;La herse est un outil utilise pour les operation de preparation du lit de semence. La herce permet d ameublir superficiellement le sol, de n;Fiches AgroParisTech 2005;;
+Herse alternative;nc;Travail du sol;La herse alternative, ou herse a barres oscillantes, est un outil de reprise surperficielle de labour et preparation du lit de semence, peu;Fiches AgroParisTech 2005;;
+Herse etrille;nc;Travail du sol;La herse etrille est une herse equipe de panneaux articules et independants sur lesquels sont fixes de longues dents souples montees sur res;Les fiches techniques du reseau GAB/FRAB Cultures et desherbage fiche n2 herse etrille;;
+Herse rotative;nc;Travail du sol;La herse rotative est un outil de preparation du lit de semence, peu encombrant qui peut etre associe a d autres outils. Permet de realiser;Fiches AgroParisTech 2005;;
+Houe rotative;nc;Travail du sol;La houe rotative est un outil simple d'utilisation qui nécessite peu de réglages. La houe est à privilégier en sols battants pour sa fonctio;Arvalis.fr;;
+Machine a becher;nc;Travail du sol;La machine a becher, aussi appelee charrue a beches rotatives ou roto-beche, est un outil mecanique tracte qui effectue un travail du sol pr;Fiches AgroParisTech 2005;;
+Motoculteur;nc;Travail du sol;Le motoculteur est [Engin automoteur a un seul essieu pour realiser diverses façons culturales, utilise en jardinage, en culture maraichere;Larousse.fr;;
+Planche niveleuse;nc;Travail du sol;;;;
+Preleveur_geonor;nc;Travail du sol;;;;
+Pulverisateur a disques;nc;Travail du sol;Le pulverisateur a disques est un outil equipe de dents qui sert a ameublir le sol et a detruire les mauvaises herves, pour preparer le lit;Livre les machines agricoles 2015;cecema.ma;cecema.ma
+Rouleaux;nc;Travail du sol;rouleaux qui servent a preparer le lit de semence, a niveler le sol;;;
+Rouleaux crosskill;nc;Travail du sol;;;;
+Sous-soleuse;nc;Travail du sol;La sous-soleuse, aussi appelee decompacteur lourd, est un instrument de sous-solage et assouchement;profondeur de travail allant a 75-110;Livre les machines agricoles 2015;Fiches AgroParisTech 2005
+Strip-tiller;nc;Travail du sol;Le strip-tiller est un outil pour realiser du travail du sol simplifie en agriculture de conservation, visant a preparer une ligne de semis;Reference Agriculture & Environnement ADEME 2015;Agroequipement, Perspectives agricoles 2013;Agroequipement, Perspectives agricoles 2013
+Vibroculteur;nc;Travail du sol;Reprise de labour;;;
+Z_Travail du sol_Autre;nc;Travail du sol;ex. rouleaux qui servent a preparer le lit de semence, a niveler le sol;;;
+Epandeur_produits granule ou poudre;Epandeur_produits granule ou poudre;Apport_engrais_phytosanitaires_autres;L epandeur a chaux est un materiel utilise pour epandre les produits organiques sous forme de granules ou de poudre. Adapte a produit pulver xxx;Guide Les produits organiques utilisables en agriculture en LR, Tome 1, Chapitre 7 Epandre les produits organiques avec le bon materiel;;
