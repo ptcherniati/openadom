@@ -64,6 +64,11 @@ public class ConfigurationParsingResult {
             return recordError("unsupportedVersion", ImmutableMap.of("actualVersion", actualVersion, "expectedVersion", expectedVersion));
         }
 
+        public Builder unknownIllegalException(String cause)  {
+            return recordError("unknownIllegalException", ImmutableMap.of(
+                    "cause", cause));
+        }
+
         public Builder missingReferenceForCheckerInReference(String validationKey, String reference, Set<String> references)  {
             return recordError("missingReferenceForCheckerInReference", ImmutableMap.of(
                     "validationKey", validationKey,
@@ -134,8 +139,6 @@ public class ConfigurationParsingResult {
             return recordError("authorizationScopeVariableComponentKeyUnknownVariable", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "knownVariables", knownVariables));
         }
 
-
-
         public Builder recordTimeVariableComponentKeyMissingComponent(String dataType, String variable, Set<String> knownComponents) {
             return recordError("timeVariableComponentKeyMissingComponent", ImmutableMap.of(
                     "dataType", dataType,
@@ -143,8 +146,6 @@ public class ConfigurationParsingResult {
                     "knownComponents", knownComponents
             ));
         }
-
-
 
         public Builder recordAuthorizationVariableComponentKeyMissingComponent(String dataType, String authorizationName, String variable, Set<String> knownComponents) {
             return recordError("authorizationVariableComponentKeyMissingComponent", ImmutableMap.of(

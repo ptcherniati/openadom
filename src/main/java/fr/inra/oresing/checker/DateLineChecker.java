@@ -15,6 +15,8 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
     private CheckerTarget target;
+    private Map<String, String> params;
+
     public CheckerTarget getTarget(){
         return this.target;
     }
@@ -26,7 +28,8 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
     }
 
-    public DateLineChecker(CheckerTarget target, String pattern) {
+    public DateLineChecker(CheckerTarget target, String pattern, Map<String, String> params) {
+        this.params = params;
         this.target = target;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
@@ -57,5 +60,10 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
                             "value", value));
         }
         return validationCheckResult;
+    }
+
+    @Override
+    public Map<String, String> getParams() {
+        return params;
     }
 }

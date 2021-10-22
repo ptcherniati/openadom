@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -18,6 +19,9 @@ import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
+import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -34,6 +38,48 @@ import java.util.stream.Stream;
 @Component
 @Slf4j
 public class ApplicationConfigurationService {
+    public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
+
+    Map<String, Map> getInternationalizedSections(Map<String, Object> toParse, List<IllegalArgumentException> exceptions) {
+        Map<String, Map> parsedMap = new LinkedHashMap<>();
+        Iterator<Map.Entry<String, Object>> iterator = toParse.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Object> entry = iterator.next();
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (INTERNATIONALIZED_FIELDS.contains(key)) {
+                value = formatSection((Map<String, Object>) value, exceptions);
+                parsedMap.put(key, (Map) value);
+                iterator.remove();
+            } else if (value instanceof Map) {
+                Map<String, Map> internationalizedSections = getInternationalizedSections((Map<String, Object>) value, exceptions);
+                if (!internationalizedSections.isEmpty()) {
+                    parsedMap.put(key, internationalizedSections);
+                }
+            }
+        }
+        return parsedMap;
+    }
+
+    private Object formatSection(Map<String, Object> value, List<IllegalArgumentException> exceptions) {
+        try {
+            return new ObjectMapper().convertValue(value, Internationalization.class);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> internationalizationMap = new HashMap<>();
+            for (Map.Entry<String, Object> entry : value.entrySet()) {
+                try {
+                    internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), Internationalization.class));
+                } catch (IllegalArgumentException e2) {
+                    try{
+                        internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), InternationalizationDisplay.class));
+                    }catch (IllegalArgumentException e3) {
+                        exceptions.add(e2);
+                    }
+                }
+            }
+            return internationalizationMap;
+        }
+    }
 
     ConfigurationParsingResult parseConfigurationBytes(byte[] bytes) {
         if (bytes.length == 0) {
@@ -41,7 +87,7 @@ public class ApplicationConfigurationService {
                     .recordEmptyFile()
                     .build();
         }
-
+        Map<String, Map> internationalizedSections = new HashMap<>();
         try {
             YAMLMapper mapper = new YAMLMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -66,7 +112,26 @@ public class ApplicationConfigurationService {
         Configuration configuration;
         try {
             YAMLMapper mapper = new YAMLMapper();
-            configuration = mapper.readValue(bytes, Configuration.class);
+            Map<String, Object> mappedObject = (Map<String, Object>) mapper.readValue(bytes, Object.class);
+            List<IllegalArgumentException> exceptions = List.of();
+            internationalizedSections = getInternationalizedSections(mappedObject, exceptions);
+            if (!exceptions.isEmpty()) {
+                return onMappingExceptions(exceptions);
+            }
+            try {
+                configuration = mapper.convertValue(mappedObject, Configuration.class);
+                configuration.setInternationalization(mapper.convertValue(internationalizedSections, InternationalizationMap.class));
+            } catch (IllegalArgumentException e) {
+                if (e.getCause() instanceof UnrecognizedPropertyException) {
+                    throw (UnrecognizedPropertyException) e.getCause();
+                } else if (e.getCause() instanceof InvalidFormatException) {
+                    throw (InvalidFormatException) e.getCause();
+                } else if (e.getCause() instanceof JsonProcessingException) {
+                    throw (JsonProcessingException) e.getCause();
+                } else {
+                    throw e;
+                }
+            }
         } catch (UnrecognizedPropertyException e) {
             return onUnrecognizedPropertyException(e);
         } catch (InvalidFormatException e) {
@@ -76,7 +141,6 @@ public class ApplicationConfigurationService {
         } catch (IOException e) {
             throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
         }
-
         return getConfigurationParsingResultForSyntacticallyValidYaml(configuration);
     }
 
@@ -87,6 +151,7 @@ public class ApplicationConfigurationService {
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
             verifyReferenceKeyColumnsExists(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
+            verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
             verifyValidationCheckersAreValids(configuration, builder, referenceEntry, references);
         }
 
@@ -329,11 +394,65 @@ public class ApplicationConfigurationService {
         }
     }
 
+    private void verifyInternationalizedColumnsExistsForPattern(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
+        String reference = referenceEntry.getKey();
+        Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+        Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getReferences())
+                .map(r -> r.getOrDefault(reference, null))
+                .map(im -> im.getInternationalizationDisplay())
+                .map(ic -> ic.getPattern())
+                .map(patterns -> patterns.values()
+                        .stream()
+                        .map(pattern -> InternationalizationDisplay.getPatternColumns(pattern))
+                        .flatMap(List::stream)
+                        .collect(Collectors.toSet())
+                )
+                .orElseGet(Set::of);
+        Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getReferences())
+                .map(r -> r.getOrDefault(reference, null))
+                .map(im -> im.getInternationalizedColumns())
+                .map(ic -> {
+                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                    ic.values().stream()
+                            .forEach(v -> columns.addAll(v.values()));
+                    return columns;
+                })
+                .orElse(new HashSet<>());
+        Set<String> columns = Optional.ofNullable(referenceDescription)
+                .map(r -> r.getColumns())
+                .map(c -> new LinkedHashSet(c.keySet()))
+                .orElseGet(LinkedHashSet::new);
+        columns.addAll(internationalizedColumns);
+
+
+        ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
+        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
+        if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
+            builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+        }
+    }
+
     private void verifyInternationalizedColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
-        Set<String> internationalizedColumns = referenceDescription.getInternationalizedColumns().keySet();
-        Set<String> columns = referenceDescription.getColumns().keySet();
+        Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getReferences())
+                .map(r -> r.getOrDefault(reference, null))
+                .map(im -> im.getInternationalizedColumns())
+                .map(ic -> {
+                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                    ic.values().stream()
+                            .forEach(v -> columns.addAll(v.values()));
+                    return columns;
+                })
+                .orElse(new HashSet<>());
+        Set<String> columns = Optional.ofNullable(referenceDescription)
+                .map(r -> r.getColumns())
+                .map(c -> c.keySet())
+                .orElse(new HashSet<>());
+
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
         ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
@@ -400,6 +519,31 @@ public class ApplicationConfigurationService {
                 .build();
     }
 
+    private ConfigurationParsingResult onMappingExceptions(List<IllegalArgumentException> exceptions) {
+        ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
+        exceptions.stream()
+                .forEach(exception -> {
+                    if (exception.getCause() instanceof UnrecognizedPropertyException) {
+                        UnrecognizedPropertyException e = (UnrecognizedPropertyException) exception.getCause();
+                        int lineNumber = e.getLocation().getLineNr();
+                        int columnNumber = e.getLocation().getColumnNr();
+                        String unknownPropertyName = e.getPropertyName();
+                        Collection<String> knownProperties = (Collection) e.getKnownPropertyIds();
+                        builder.recordUnrecognizedProperty(lineNumber, columnNumber, unknownPropertyName, knownProperties);
+                    } else if (exception.getCause() instanceof InvalidFormatException) {
+                        InvalidFormatException e = (InvalidFormatException) exception.getCause();
+                        int lineNumber = e.getLocation().getLineNr();
+                        int columnNumber = e.getLocation().getColumnNr();
+                        String value = e.getValue().toString();
+                        String targetTypeName = e.getTargetType().getName();
+                        builder.recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName);
+                    } else {
+                        builder.unknownIllegalException(exception.getCause().getLocalizedMessage());
+                    }
+                });
+        return builder.build();
+    }
+
     private ConfigurationParsingResult onUnrecognizedPropertyException(UnrecognizedPropertyException e) {
         int lineNumber = e.getLocation().getLineNr();
         int columnNumber = e.getLocation().getColumnNr();
@@ -419,7 +563,6 @@ public class ApplicationConfigurationService {
                 .recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName)
                 .build();
     }
-
     @Getter
     @Setter
     @ToString

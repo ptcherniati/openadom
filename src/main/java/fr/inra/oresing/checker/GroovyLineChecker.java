@@ -45,7 +45,6 @@ public class GroovyLineChecker implements LineChecker {
         this.params = params;
     }
 
-    @Override
     public ValidationCheckResult check(Map<VariableComponentKey, String> datum) {
         Map<String, Map<String, String>> datumAsMap = new LinkedHashMap<>();
         for (Map.Entry<VariableComponentKey, String> entry2 : datum.entrySet()) {

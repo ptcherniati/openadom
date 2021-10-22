@@ -123,7 +123,7 @@
         "patternNotMatched": "For the identified component: <code> {target} </code> the value <code> {value} </code> does not respect the expected format: <code> {pattern} </code>. ",
         "patternNotMatchedWithColumn": "For column: <code> {target} </code> the value <code> {value} </code> does not respect the expected format: <code> {pattern} </code>." ,
         "invalidDate": "For the identified component: <code> {target} </code> the date <code> {value} </code> does not respect the expected format: <code> {pattern} </code>. ",
-        "invalidDate": "For column: <code> {column} </code> the date <code> {value} </code> does not respect the expected format: <code> {pattern} </code>." ,
+        "invalidDateWithColumn": "For column: <code> {column} </code> the date <code> {value} </code> does not respect the expected format: <code> {pattern} </code>." ,
         "invalidInteger": "For the identified component: <code> {target} </code> the value <code> {value} </code> must be an integer.",
         "invalidIntegerWithColumn": "For column: <code> {target} </code> the value <code> {value} </code> must be an integer.",
         "invalidFloat": "For the identified component: <code> {target} </code> the value <code> {value} </code> must be a decimal number.",

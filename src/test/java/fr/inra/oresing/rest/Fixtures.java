@@ -136,6 +136,20 @@ public class Fixtures {
                 "   }", projet, site);
     }
 
+    public String getRecursivityApplicationConfigurationResourceName() {
+        return "/data/recursivite/recusivite.yaml";
+    }
+    public Map<String, String> getRecursiviteReferentielOrderFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_reduit-test.csv");
+        return referentielFiles;
+    }
+    public Map<String, String> getRecursiviteReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_test.csv");
+        return referentielFiles;
+    }
+
     public String getAcbbApplicationName() {
         return Application.ACBB.getName();
     }

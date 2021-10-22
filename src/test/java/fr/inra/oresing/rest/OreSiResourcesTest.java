@@ -227,11 +227,11 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows", Matchers.hasSize(306)))
                     //.andExpect(jsonPath("$.rows.value").value(list))
                     .andExpect(jsonPath("$.totalRows", Is.is(306)))
+                    .andExpect(jsonPath("$.rows[*].values.date.value", Matchers.hasSize(306)))
+                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(306)))
+                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(306)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(actualJson);
-            Assert.assertEquals(306, StringUtils.countMatches(actualJson, "/1984"));
-            Assert.assertEquals(306 * 2+1, StringUtils.countMatches(actualJson, "sans_unite"));//2 columns no_unit + 1 translation
-
         }
         /**
          *  restitution de data json ajout de filtres et de tri
@@ -484,7 +484,7 @@ public class OreSiResourcesTest {
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .param("params", fixtures.getPemRepositoryParamsWithId(projet, site, oirFilesUUID, true))
                             .cookie(authCookie))
-                   // .andExpect(status().is2xxSuccessful())
+                    // .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
 
@@ -586,6 +586,58 @@ public class OreSiResourcesTest {
             testFilesAndDataOnServer(projet, site, total, expected, numberOfVersions, fileUUID, published);
             //log.debug(response);
             return fileUUID;
+        }
+    }
+
+    @Test
+    public void testRecursivity() throws Exception {
+        String appId;
+
+        URL resource = getClass().getResource(fixtures.getRecursivityApplicationConfigurationResourceName());
+        try (InputStream in = resource.openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+
+            appId = JsonPath.parse(response).read("$.id");
+        }
+
+        String response = null;
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                String refFileId = JsonPath.parse(response).read("$.id");
+            }
+        }
+        for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                String refFileId = JsonPath.parse(response).read("$.id");
+            }
         }
     }
 

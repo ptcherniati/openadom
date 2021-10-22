@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -15,11 +16,14 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
 
     private final Predicate<String> predicate;
     private CheckerTarget target;
+    private Map<String, String> params;
+
     public CheckerTarget getTarget(){
         return this.target;
     }
 
-    public RegularExpressionChecker(CheckerTarget target, String patternString){
+    public RegularExpressionChecker(CheckerTarget target, String patternString, Map<String, String> params) {
+        this.params = params;
         this.target = target;
         this.patternString = patternString;
         predicate = Pattern.compile(patternString).asMatchPredicate();
@@ -38,5 +42,10 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
                             "value", value));
         }
         return validationCheckResult;
+    }
+
+    @Override
+    public Map<String, String> getParams() {
+        return params;
     }
 }
