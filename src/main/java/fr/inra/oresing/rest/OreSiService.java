@@ -95,8 +95,7 @@ public class OreSiService {
     @Autowired
     private RelationalService relationalService;
 
-   
-    private String escapeKeyComponent(String key) {
+    public static String escapeKeyComponent(String key) {
         String toEscape = StringUtils.stripAccents(key.toLowerCase());
         String escaped = StringUtils.remove(
                 RegExUtils.replaceAll(
@@ -109,13 +108,10 @@ public class OreSiService {
         return escaped;
     }
 
-
-
-    private void checkNaturalKeySyntax(String keyComponent) {
-        if (!keyComponent.isEmpty())
-            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
-        else
-            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"),"Impossible de trouver une clé naturelle valide car la colonne n'existe pas.");
+    public static void checkNaturalKeySyntax(String keyComponent) {
+        if(keyComponent.isEmpty())
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturel ne peut être vide. vérifier le nom des colonnes.");
+        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
 
     private void checkHierarchicalKeySyntax(String compositeKey) {
@@ -419,7 +415,6 @@ public class OreSiService {
                                     .map(key -> escapeKeyComponent(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
-                        //voir pour quand naturalKey est vide
                         OreSiService.checkNaturalKeySyntax(naturalKey);
                         String recursiveNaturalKey = naturalKey;
                         if (isRecursive) {
