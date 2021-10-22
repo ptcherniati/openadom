@@ -392,6 +392,13 @@ public class Fixtures {
         referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
         referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
         referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
+        referentielFiles.put("type_lieu", "/data/pros/type_lieu.csv");
+        referentielFiles.put("type_culture", "/data/pros/type_de_culture.csv");
+        referentielFiles.put("type_document", "/data/pros/type_de_document.csv");
+        referentielFiles.put("type_dispositif", "/data/pros/type_de_dispositif.csv");
+        referentielFiles.put("type_facteur", "/data/pros/type_de_facteur.csv");
+        referentielFiles.put("type_traitement", "/data/pros/type_de_traitement.csv");
+        referentielFiles.put("echelle_prelevement", "/data/pros/echelle_de_prelevement.csv");
         return referentielFiles;
     }
 

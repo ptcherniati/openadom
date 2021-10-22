@@ -5,7 +5,7 @@
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
         $t("titles.data-type-new-authorization", {
-          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+          dataType: application.localDatatypeName || dataTypeId,
         })
       }}</span>
     </h1>
@@ -271,6 +271,7 @@ import { UserPreferencesService } from "@/services/UserPreferencesService";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
@@ -281,6 +282,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() authorizationId;
 
   authorizationService = AuthorizationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
@@ -293,7 +295,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   authorizations = [];
-  application = {};
   users = [];
   dataGroups = [];
   authorizationScopes = [];
@@ -304,13 +305,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   period = this.periods.FROM_DATE;
   startDate = null;
   endDate = null;
-
-  localeDatatypeName(datatype) {
-    return (
-      this.application?.dataTypes?.[datatype]?.internationalizationName?.[this.$i18n.locale] ??
-      datatype.name
-    );
-  }
 
   created() {
     this.init();
@@ -347,6 +341,15 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
+        ),
+      };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
         this.dataTypeId

@@ -139,8 +139,6 @@ public class ConfigurationParsingResult {
             return recordError("authorizationScopeVariableComponentKeyUnknownVariable", ImmutableMap.of("variable", timeScopeVariableComponentKey.getVariable(), "knownVariables", knownVariables));
         }
 
-
-
         public Builder recordTimeVariableComponentKeyMissingComponent(String dataType, String variable, Set<String> knownComponents) {
             return recordError("timeVariableComponentKeyMissingComponent", ImmutableMap.of(
                     "dataType", dataType,
@@ -148,8 +146,6 @@ public class ConfigurationParsingResult {
                     "knownComponents", knownComponents
             ));
         }
-
-
 
         public Builder recordAuthorizationVariableComponentKeyMissingComponent(String dataType, String authorizationName, String variable, Set<String> knownComponents) {
             return recordError("authorizationVariableComponentKeyMissingComponent", ImmutableMap.of(

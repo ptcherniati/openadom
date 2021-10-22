@@ -1,0 +1,211 @@
+Code Culture;Nom Culture;Type Culture;Espece1;Espece2;Espece3;Espece4;Espece5;Espece6;Periode Semis;Periode Recolte;Duree de Vegetation(mois);Commentaire_fr;Commentaire_en
+Abricotier;Abricotier;Arboriculture fruitiere;Abricotier;;;;;;;;9999;nc;nc
+Ail;Ail;Cultures legumieres;Ail;;;;;;;;9999;nc;nc
+Alpiste_canaries;Alpiste_canaries;Grandes cultures;Alpiste_canaries;;;;;;;;9999;nc;nc
+Artichaut;Artichaut;Cultures legumieres;Artichaut;;;;;;;;9999;nc;nc
+Asperges;Asperges;Cultures legumieres;Asperges;;;;;;;;9999;nc;nc
+Association_avoine_vesce;Association_avoine_vesce;Grandes cultures;Avoine;Vesce;;;;;;;9999;nc;nc
+Association_ble dur_feverole;Association_ble dur_feverole;Grandes cultures;Ble dur;Feverole;;;;;;;9999;nc;nc
+Association_ble dur_pois fourrager;Association_ble dur_pois fourrager;Grandes cultures;Ble dur;Pois fourrager;;;;;;;9999;nc;nc
+Association_ble tendre_feverole;Association_ble tendre_feverole;Grandes cultures;Ble tendre;Feverole;;;;;;;9999;nc;nc
+Association_ble tendre_pois fourrager;Association_ble tendre_pois fourrager;Grandes cultures;Ble tendre;Pois fourrager;;;;;;;9999;nc;nc
+Association_cereale_legumineuse;Association_cereale_legumineuse;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Association_cereale_proteagineux;Association_cereale_proteagineux;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Association_cereales;Association_cereales;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Association_cereales ete;Association_cereales ete;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Association_epeautre_lentillon;Association_epeautre_lentillon;Grandes cultures;Epeautre;Lentillon;;;;;;;9999;nc;nc
+Association_graminee_legumineuse;Association_graminee_legumineuse;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Association_graminee_proteagineux;Association_graminee_proteagineux;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Association_meteil;Association_meteil;Grandes cultures;Ble tendre;Seigle;;;;;;;9999;nc;nc
+Association_orge_pois fourrager;Association_orge_pois fourrager;Grandes cultures;Orge;Pois fourrager;;;;;;;9999;nc;nc
+Association_triticale_feverole;Association_triticale_feverole;Grandes cultures;Triticale;Feverole;;;;;;;9999;nc;nc
+Association_triticale_orge_feverole;Association_triticale_orge_feverole;Grandes cultures;Triticale;Orge;Feverole;;;;;;9999;nc;nc
+Association_triticale_pois chiche;Association_triticale_pois chiche;Grandes cultures;Triticale;Pois chiche;;;;;;;9999;nc;nc
+Association_triticale_pois fourrager;Association_triticale_pois fourrager;Grandes cultures;Triticale;Pois fourrager;;;;;;;9999;nc;nc
+Aubergine;Aubergine;Cultures legumieres;Aubergine;;;;;;;;9999;nc;nc
+Avoine;Avoine;Grandes cultures;Avoine;;;;;;;;9999;nc;nc
+Avoine hiver;Avoine hiver;Grandes cultures;Avoine;;;;;;;;9999;nc;nc
+Avoine printemps;Avoine printemps;Grandes cultures;Avoine;;;;;;;;9999;nc;nc
+Avoine rude;Avoine rude;Grandes cultures;Avoine;;;;;;;;9999;nc;nc
+Betterave;Betterave;Grandes cultures;Betterave;;;;;;;;9999;nc;nc
+Betterave fourragere;Betterave fourragere;Grandes cultures;Betterave;;;;;;;;9999;nc;nc
+Betterave sucriere;Betterave sucriere;Grandes cultures;Betterave;;;;;;;;9999;nc;nc
+Bettes;Bettes;Cultures legumieres;Bettes;;;;;;;;9999;nc;nc
+Ble dur;Ble dur;Grandes cultures;Ble dur;;;;;;;;9999;nc;nc
+Ble dur hiver;Ble dur hiver;Grandes cultures;Ble dur;;;;;;;;9999;nc;nc
+Ble tendre;Ble tendre;Grandes cultures;Ble tendre;;;;;;;;9999;nc;nc
+Ble tendre hiver;Ble tendre hiver;Grandes cultures;Ble tendre;;;;;;;;9999;nc;nc
+Ble tendre printemps;Ble tendre printemps;Grandes cultures;Ble tendre;;;;;;;;9999;nc;nc
+Brocolis;Brocolis;Cultures legumieres;Brocolis;;;;;;;;9999;nc;nc
+Brome cathartique;Brome cathartique;Prairie permanente;Brome;;;;;;;;9999;nc;nc
+Brome sitchensis;Brome sitchensis;Prairie permanente;Brome;;;;;;;;9999;nc;nc
+Cameline;Cameline;Grandes cultures;Cameline;;;;;;;;9999;nc;nc
+Canne sucre;Canne sucre;Grandes cultures;Canne a sucre;;;;;;;;9999;nc;nc
+Carotte;Carotte;Cultures legumieres;Carotte;;;;;;;;9999;nc;nc
+Carotte automne;Carotte automne;Cultures legumieres;Carotte;;;;;;;;9999;nc;nc
+Carotte grosse;Carotte grosse;Cultures legumieres;Carotte;;;;;;;;9999;nc;nc
+Carotte nantaise;Carotte nantaise;Cultures legumieres;Carotte;;;;;;;;9999;nc;nc
+Carotte petite;Carotte petite;Cultures legumieres;Carotte;;;;;;;;9999;nc;nc
+Carotte printemps;Carotte printemps;Cultures legumieres;Carotte;;;;;;;;9999;nc;nc
+Celeri;Celeri;Cultures legumieres;Celeri;;;;;;;;9999;nc;nc
+Celeri rave;Celeri rave;Cultures legumieres;Celeri;;;;;;;;9999;nc;nc
+Cerfeuil;Cerfeuil;Cultures legumieres;Cerfeuil;;;;;;;;9999;nc;nc
+Cerisier;Cerisier;Arboriculture fruitiere;Bananier;;;;;;;;9999;nc;nc
+Chanvre;Chanvre;Grandes cultures;Chanvre;;;;;;;;9999;nc;nc
+Chanvre grain;Chanvre grain;Grandes cultures;Chanvre;;;;;;;;9999;nc;nc
+Chanvre paille;Chanvre paille;Grandes cultures;Chanvre;;;;;;;;9999;nc;nc
+Chaumes;Chaumes;Z_Autre;Z_Non connu;;;;;;;;9999;nc;nc
+Chicoree;Chicoree;Cultures legumieres;Chicoree;;;;;;;;9999;nc;nc
+Choux;Choux;Cultures legumieres;Choux;;;;;;;;9999;nc;nc
+Choux de Bruxelle;Choux de Bruxelle;Cultures legumieres;Choux de Bruxelle;;;;;;;;9999;nc;nc
+Choux fleur;Choux fleur;Cultures legumieres;Choux fleur;;;;;;;;9999;nc;nc
+Choux fleur automne;Choux fleur automne;Cultures legumieres;Choux fleur;;;;;;;;9999;nc;nc
+Choux fleur printemps;Choux fleur printemps;Cultures legumieres;Choux fleur;;;;;;;;9999;nc;nc
+Choux pomme;Choux pomme;Cultures legumieres;Choux pomme;;;;;;;;9999;nc;nc
+Ciboulette;Ciboulette;Cultures legumieres;Ciboulette;;;;;;;;9999;nc;nc
+Clementinier;Clementinier;Arboriculture fruitiere;Cerisier;;;;;;;;9999;nc;nc
+Cognassier;Cognassier;Arboriculture fruitiere;Clementinier;;;;;;;;9999;nc;nc
+Colza;Colza;Grandes cultures;Colza;;;;;;;;9999;nc;nc
+Colza fourrager;Colza fourrager;Grandes cultures;Colza_fourrager;;;;;;;;9999;nc;nc
+Colza hiver;Colza hiver;Grandes cultures;Colza;;;;;;;;9999;nc;nc
+Colza printemps;Colza printemps;Grandes cultures;Colza;;;;;;;;9999;nc;nc
+Concombre;Concombre;Cultures legumieres;Concombre;;;;;;;;9999;nc;nc
+Courgette;Courgette;Cultures legumieres;Courgette;;;;;;;;9999;nc;nc
+Cresson;Cresson;Cultures legumieres;Cresson;;;;;;;;9999;nc;nc
+Dactyle;Dactyle;Prairie permanente;Dactyle;;;;;;;;9999;nc;nc
+Echalote;Echalote;Cultures legumieres;Echalote;;;;;;;;9999;nc;nc
+Epeautre;Epeautre;Grandes cultures;Epeautre;;;;;;;;9999;nc;nc
+Epinard;Epinard;Cultures legumieres;Epinard;;;;;;;;9999;nc;nc
+Escourgeon;Escourgeon;Grandes cultures;Escourgeon;;;;;;;;9999;nc;nc
+Eucalyptus;Eucalyptus;Cultures energetiques;Eucalyptus;;;;;;;;9999;nc;nc
+Fenugrec;Fenugrec;Grandes cultures;Fenugrec;;;;;;;;9999;nc;nc
+Festulolium;Festulolium;Prairie permanente;Festulolium;;;;;;;;9999;nc;nc
+Fetuque;Fetuque;Grandes cultures;Fetuque;;;;;;;;9999;nc;nc
+Fetuque des pres;Fetuque des pres;Prairie permanente;Fetuque;;;;;;;;9999;nc;nc
+Fetuque elevee;Fetuque elevee;Prairie permanente;Fetuque;;;;;;;;9999;nc;nc
+Fetuque ovine;Fetuque ovine;Prairie permanente;Fetuque;;;;;;;;9999;nc;nc
+Fetuque rouge;Fetuque rouge;Prairie permanente;Fetuque;;;;;;;;9999;nc;nc
+Feve;Feve;Grandes cultures;Feve;;;;;;;;9999;nc;nc
+Feverole;Feverole;Grandes cultures;Feverole;;;;;;;;9999;nc;nc
+Feverole hiver;Feverole hiver;Grandes cultures;Feverole;;;;;;;;9999;nc;nc
+Feverole printemps;Feverole printemps;Grandes cultures;Feverole;;;;;;;;9999;nc;nc
+Flageolet;Flageolet;Cultures legumieres;Flageolet;;;;;;;;9999;nc;nc
+Fleole des pres;Fleole des pres;Prairie permanente;Fleole des pres;;;;;;;;9999;nc;nc
+Fraise;Fraise;Cultures legumieres;Fraise;;;;;;;;9999;nc;nc
+Gesse cultivee;Gesse cultivee;Grandes cultures;Gesse cultivee;;;;;;;;9999;nc;nc
+Graminee fourragere;Graminee fourragere;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Graminee semence;Graminee semence;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Haricot extra fin;Haricot extra fin;Cultures legumieres;Haricot vert;;;;;;;;9999;nc;nc
+Haricot flageolet;Haricot flageolet;Cultures legumieres;Haricot flageolet;;;;;;;;9999;nc;nc
+Haricot mangetout;Haricot mangetout;Cultures legumieres;Haricot mangetout;;;;;;;;9999;nc;nc
+Haricot vert;Haricot vert;Cultures legumieres;Haricot vert;;;;;;;;9999;nc;nc
+Houblon;Houblon;Grandes cultures;Houblon;;;;;;;;9999;nc;nc
+Lentille;Lentille;Grandes cultures;Lentille;;;;;;;;9999;nc;nc
+Lentille noiratre;Lentille noiratre;Grandes cultures;Lentille;;;;;;;;9999;nc;nc
+Lentillon;Lentillon;Grandes cultures;Lentillon;;;;;;;;9999;nc;nc
+Lin;Lin;Grandes cultures;Lin;;;;;;;;9999;nc;nc
+Lin fibre;Lin fibre;Grandes cultures;Lin;;;;;;;;9999;nc;nc
+Lin fibre printemps;Lin fibre printemps;Grandes cultures;Lin;;;;;;;;9999;nc;nc
+Lin graine printemps;Lin graine printemps;Grandes cultures;Lin;;;;;;;;9999;nc;nc
+Lin hiver;Lin hiver;Grandes cultures;Lin;;;;;;;;9999;nc;nc
+Lotier;Lotier;Prairie;Lotier;;;;;;;;9999;nc;nc
+Lotier cornicule;Lotier cornicule;Prairie permanente;Lotier;;;;;;;;9999;nc;nc
+Lupin;Lupin;Grandes cultures;Lupin;;;;;;;;9999;nc;nc
+Lupin doux;Lupin doux;Grandes cultures;Lupin;;;;;;;;9999;nc;nc
+Luzerne;Luzerne;Grandes cultures;Luzerne;;;;;;;;9999;nc;nc
+Luzerne lupuline;Luzerne lupuline;Prairie permanente;Luzerne;;;;;;;;9999;nc;nc
+Mais;Mais;Grandes cultures;Mais;;;;;;;;9999;nc;nc
+Mais doux;Mais doux;Cultures legumieres;Mais doux;;;;;;;;9999;nc;nc
+Mais fourrage;Mais fourrage;Grandes cultures;Mais;;;;;;;;9999;nc;nc
+Mais grain;Mais grain;Grandes cultures;Mais;;;;;;;;9999;nc;nc
+Mais semence;Mais semence;Grandes cultures;Mais;;;;;;;;9999;nc;nc
+Mandarinier;Mandarinier;Arboriculture fruitiere;Cognassier;;;;;;;;9999;nc;nc
+Melon;Melon;Cultures legumieres;Melon;;;;;;;;9999;nc;nc
+Melon plein champ;Melon plein champ;Cultures legumieres;Melon;;;;;;;;9999;nc;nc
+Melon sous abri;Melon sous abri;Cultures legumieres;Melon;;;;;;;;9999;nc;nc
+Mirabellier;Mirabellier;Arboriculture fruitiere;Mandarinier;;;;;;;;9999;nc;nc
+Miscanthus;Miscanthus;Cultures energetiques;Miscanthus;;;;;;;;9999;nc;nc
+Moha;Moha;Grandes cultures;Moha;;;;;;;;9999;nc;nc
+Moutarde;Moutarde;Grandes cultures;Moutarde;;;;;;;;9999;nc;nc
+Moutarde Abyssinie;Moutarde Abyssinie;Grandes cultures;Moutarde;;;;;;;;9999;nc;nc
+Moutarde blanche;Moutarde blanche;Grandes cultures;Moutarde;;;;;;;;9999;nc;nc
+Moutarde brune;Moutarde brune;Grandes cultures;Moutarde;;;;;;;;9999;nc;nc
+Moutarde jaune;Moutarde jaune;Grandes cultures;Moutarde;;;;;;;;9999;nc;nc
+Multi especes;Multi especes;Prairie permanente;Z_Non connu;;;;;;;;9999;nc;nc
+Navet;Navet;Cultures legumieres;Navet;;;;;;;;9999;nc;nc
+Navette fourragere;Navette fourragere;Grandes cultures;Navette_fourragere;;;;;;;;9999;nc;nc
+Nectarinier;Nectarinier;Arboriculture fruitiere;Mirabellier;;;;;;;;9999;nc;nc
+Niger;Niger;Grandes cultures;Niger;;;;;;;;9999;nc;nc
+Oignon;Oignon;Cultures legumieres;Oignon;;;;;;;;9999;nc;nc
+Oranger;Oranger;Arboriculture fruitiere;Nectarinier;;;;;;;;9999;nc;nc
+Orge;Orge;Grandes cultures;Orge;;;;;;;;9999;nc;nc
+Orge hiver;Orge hiver;Grandes cultures;Orge;;;;;;;;9999;nc;nc
+Orge printemps;Orge printemps;Grandes cultures;Orge;;;;;;;;9999;nc;nc
+Paturin des pres;Paturin des pres;Prairie permanente;Paturin des pres;;;;;;;;9999;nc;nc
+Pecher;Pecher;Arboriculture fruitiere;Oranger;;;;;;;;9999;nc;nc
+Persil;Persil;Cultures legumieres;Persil;;;;;;;;9999;nc;nc
+Petit pois;Petit pois;Cultures legumieres;Petit pois;;;;;;;;9999;nc;nc
+Peuplier;Peuplier;Cultures energetiques;Peuplier;;;;;;;;9999;nc;nc
+Phacelie;Phacelie;Grandes cultures;Phacelie;;;;;;;;9999;nc;nc
+Poireau;Poireau;Cultures legumieres;Poireau;;;;;;;;9999;nc;nc
+Poirier;Poirier;Arboriculture fruitiere;Pecher;;;;;;;;9999;nc;nc
+Pois chiche;Pois chiche;Grandes cultures;Pois chiche;;;;;;;;9999;nc;nc
+Pois conserve;Pois conserve;Grandes cultures;Z_Non connu;;;;;;;;9999;nc;nc
+Pois fourrager;Pois fourrager;Grandes cultures;Pois fourrager;;;;;;;;9999;nc;nc
+Pois fourrager hiver;Pois fourrager hiver;Grandes cultures;Pois fourrager;;;;;;;;9999;nc;nc
+Pois fourrager printemps;Pois fourrager printemps;Grandes cultures;Pois fourrager;;;;;;;;9999;nc;nc
+Poivron;Poivron;Cultures legumieres;Poivron;;;;;;;;9999;nc;nc
+Pomelo;Pomelo;Arboriculture fruitiere;Poirier;;;;;;;;9999;nc;nc
+Pomme de terre;Pomme de terre;Grandes cultures;Pomme de terre;;;;;;;;9999;nc;nc
+Pomme de terre conservation transformation;Pomme de terre conservation transformation;Grandes cultures;Pomme de terre;;;;;;;;9999;nc;nc
+Pomme de terre consommation;Pomme de terre consommation;Cultures legumieres;Pomme de terre;;;;;;;;9999;nc;nc
+Pomme de terre feculerie;Pomme de terre feculerie;Grandes cultures;Pomme de terre;;;;;;;;9999;nc;nc
+Pomme de terre plant;Pomme de terre plant;Grandes cultures;Pomme de terre;;;;;;;;9999;nc;nc
+Pomme de terre plant primeur;Pomme de terre plant primeur;Cultures legumieres;Pomme de terre;;;;;;;;9999;nc;nc
+Pomme de terre primeur nouvelle;Pomme de terre primeur nouvelle;Grandes cultures;Pomme de terre;;;;;;;;9999;nc;nc
+Pommier;Pommier;Arboriculture fruitiere;Pommier;;;;;;;;9999;nc;nc
+Prunier;Prunier;Arboriculture fruitiere;Prunier;;;;;;;;9999;nc;nc
+RGA;RGA;Grandes cultures;Ray-Grass;;;;;;;;9999;nc;nc
+RGH;RGH;Grandes cultures;Ray-Grass;;;;;;;;9999;nc;nc
+RGI;RGI;Grandes cultures;Ray-Grass;;;;;;;;9999;nc;nc
+Radis;Radis;Grandes cultures;Radis;;;;;;;;9999;nc;nc
+Radis chinois;Radis chinois;Grandes cultures;Radis;;;;;;;;9999;nc;nc
+Radis fourrager;Radis fourrager;Grandes cultures;Radis;;;;;;;;9999;nc;nc
+Ray-Grass;Ray-Grass;Grandes cultures;Ray-Grass;;;;;;;;9999;nc;nc
+Residus precedent;Residus precedent;Z_Autre;Z_Non connu;;;;;;;;9999;nc;nc
+Ricin;Ricin;Grandes cultures;Ricin;;;;;;;;9999;nc;nc
+Riz;Riz;Grandes cultures;Riz;;;;;;;;9999;nc;nc
+Robinier faux acacia;Robinier faux acacia;Cultures energetiques;Robinier faux acacia;;;;;;;;9999;nc;nc
+Sainfoin;Sainfoin;Prairie permanente;Sainfoin;;;;;;;;9999;nc;nc
+Salade autre;Salade autre;Cultures legumieres;Salade autre;;;;;;;;9999;nc;nc
+Salade chicoree;Salade chicoree;Cultures legumieres;Salade chicoree;;;;;;;;9999;nc;nc
+Salade laitue;Salade laitue;Cultures legumieres;Salade laitue;;;;;;;;9999;nc;nc
+Salade laitue plein champ;Salade laitue plein champ;Cultures legumieres;Salade laitue;;;;;;;;9999;nc;nc
+Salade laitue sous abri;Salade laitue sous abri;Cultures legumieres;Salade laitue;;;;;;;;9999;nc;nc
+Salade mache;Salade mache;Cultures legumieres;Salade mache;;;;;;;;9999;nc;nc
+Sarrasin;Sarrasin;Grandes cultures;Sarrasin;;;;;;;;9999;nc;nc
+Saule;Saule;Cultures energetiques;Saule;;;;;;;;9999;nc;nc
+Seigle;Seigle;Grandes cultures;Seigle;;;;;;;;9999;nc;nc
+Sequoia;Sequoia;Cultures energetiques;Sequoia;;;;;;;;9999;nc;nc
+Soja;Soja;Grandes cultures;Soja;;;;;;;;9999;nc;nc
+Sol nu;Sol nu;Sol nu;Z_Non connu;;;;;;;;9999;nc;nc
+Sorgho;Sorgho;Grandes cultures;Sorgho;;;;;;;;9999;nc;nc
+Sorgho fourrager;Sorgho fourrager;Grandes cultures;Sorgho;;;;;;;;9999;nc;nc
+Sorgho grain;Sorgho grain;Grandes cultures;Sorgho;;;;;;;;9999;nc;nc
+Switchgrass;Switchgrass;Cultures energetiques;Switchgrass;;;;;;;;9999;nc;nc
+Tabac;Tabac;Grandes cultures;Tabac;;;;;;;;9999;nc;nc
+Tomate;Tomate;Cultures legumieres;Tomate;;;;;;;;9999;nc;nc
+Tournesol;Tournesol;Grandes cultures;Tournesol;;;;;;;;9999;nc;nc
+Trefle;Trefle;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Trefle Alexandrie;Trefle Alexandrie;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Trefle blanc;Trefle blanc;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Trefle de Perse;Trefle de Perse;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Trefle hybride;Trefle hybride;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Trefle incarnat;Trefle incarnat;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Trefle souterrain;Trefle souterrain;Prairie permanente;Trefle;;;;;;;;9999;nc;nc
+Trefle violet;Trefle violet;Grandes cultures;Trefle;;;;;;;;9999;nc;nc
+Triticale;Triticale;Grandes cultures;Triticale;;;;;;;;9999;nc;nc
+Vesce;Vesce;Grandes cultures;Vesce;;;;;;;;9999;nc;nc
+Vesce hiver;Vesce hiver;Grandes cultures;Vesce;;;;;;;;9999;nc;nc
+Vesce printemps;Vesce printemps;Grandes cultures;Vesce;;;;;;;;9999;nc;nc
+Vigne;Vigne;Viticulture;Vigne;;;;;;;;9999;nc;nc

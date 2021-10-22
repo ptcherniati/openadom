@@ -24,6 +24,7 @@ const ERRORS = {
   csvBoundToUnknownVariable: (params) => i18n.t("errors.csvBoundToUnknownVariable", params),
   csvBoundToUnknownVariableComponent: (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
   invalidKeyColumns: (params) => i18n.t("errors.invalidKeyColumns", params),
+  invalidInternationalizedColumns: (params) => i18n.t("errors.invalidInternationalizedColumns", params),
   unexpectedHeaderColumn : (params) => i18n.t("errors.unexpectedHeaderColumn", params),
   headerColumnPatternNotMatching :(params) => i18n.t("errors.headerColumnPatternNotMatching", params),
   unexpectedTokenCount : (params) => i18n.t("errors.unexpectedTokenCount", params),

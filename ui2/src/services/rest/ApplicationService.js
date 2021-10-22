@@ -1,5 +1,5 @@
 import { Fetcher } from "../Fetcher";
-import {InternationalisationService} from "@/services/InternationalisationService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 export class ApplicationService extends Fetcher {
   static INSTANCE = new ApplicationService();
@@ -9,30 +9,21 @@ export class ApplicationService extends Fetcher {
   }
 
   async createApplication(applicationConfig) {
-    return  this.post("applications/" + applicationConfig.name, {
+    return this.post("applications/" + applicationConfig.name, {
       file: applicationConfig.file,
     });
   }
-  mergeInternationalization(application){
-    var internationalization = application?.configuration?.internationalization;
-    if (!internationalization){
-      application.localName = application.name;
-      return application;
-    }
-    application.localName = InternationalisationService.INSTANCE.localeApplicationName(internationalization?.application?.internationalization, application.name);
-    return application;
-  }
 
   async getApplications() {
-    var applications = await   this.get("applications/");
-    return  applications.map((a) => {
-      return this.mergeInternationalization(a) ;
+    var applications = await this.get("applications/");
+    return applications.map((a) => {
+      return InternationalisationService.INSTANCE.mergeInternationalization(a);
     });
   }
 
   async getApplication(name) {
-    var application = await  this.get("applications/" + name);
-    return this.mergeInternationalization(application);
+    var application = await this.get("applications/" + name);
+    return InternationalisationService.INSTANCE.mergeInternationalization(application);
   }
 
   async validateConfiguration(applicationConfig) {

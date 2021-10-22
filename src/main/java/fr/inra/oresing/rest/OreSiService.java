@@ -109,6 +109,8 @@ public class OreSiService {
     }
 
     public static void checkNaturalKeySyntax(String keyComponent) {
+        if(keyComponent.isEmpty())
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturel ne peut être vide. vérifier le nom des colonnes.");
         Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
 

@@ -39,7 +39,6 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { Button } from "@/model/Button";
-import { i18n } from "@/main";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -85,14 +84,14 @@ export default class ReferencesManagementView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.localeApplicationName(this.application),
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
       };
       if (!this.application?.id) {
         return;
       }
       this.references = convertReferencesToTrees(
-        Object.values(this.application.references),
-        this.$i18n.locale
+        Object.values(this.internationalisationService.treeReferenceName(this.application))
       );
     } catch (error) {
       this.alertService.toastServerError();
@@ -131,7 +130,7 @@ export default class ReferencesManagementView extends Vue {
 
   findReferenceByLabel(label) {
     var ref = Object.values(this.application.references).find((ref) => ref.label === label);
-    return { ...ref, localName: ref?.internationalizationName?.[i18n.locale] };
+    return ref;
   }
 }
 </script>

@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Value;
 
 import java.util.Map;
@@ -11,6 +12,7 @@ public class ApplicationResult {
     String id;
     String name;
     String title;
+    InternationalizationMap internationalization;
     Map<String, Reference> references;
     Map<String, DataType> dataTypes;
 

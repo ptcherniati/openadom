@@ -161,6 +161,20 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
+    public void testRecordInvalidKeyColumns() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("columns:\n" +
+                "      nom du projet_key:","columns:\n" +
+                "      nom du Projet_key:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        long count = configurationParsingResult.getValidationCheckResults()
+                .stream()
+                .map(ValidationCheckResult::getMessage)
+                .filter(mes -> mes.equals("invalidInternationalizedColumns") || mes.equals("invalidKeyColumns"))
+                .count();
+        Assert.assertEquals(2, count);
+    }
+
+    @Test
     public void testMissingTimeScopeVariableComponentKey() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
                 "      timeScope:\n" +

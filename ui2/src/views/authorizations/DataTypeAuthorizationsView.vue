@@ -4,7 +4,7 @@
     <h1 class="title main-title">
       {{
         $t("titles.data-type-authorizations", {
-          dataType: localeDatatypeName(dataTypeId) || dataTypeId,
+          dataType: application.localDatatypeName || dataTypeId,
         })
       }}
     </h1>
@@ -81,8 +81,10 @@ import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AuthorizationService } from "@/services/rest/AuthorizationService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { ApplicationResult } from "@/model/ApplicationResult";
 
 @Component({
   components: { PageView, SubMenu },
@@ -92,11 +94,12 @@ export default class DataTypeAuthorizationsView extends Vue {
   @Prop() applicationName;
 
   authorizationService = AuthorizationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
 
   authorizations = [];
-  application = {};
+  application = new ApplicationResult();
   scopes = [];
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -104,13 +107,6 @@ export default class DataTypeAuthorizationsView extends Vue {
     FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
-
-  localeDatatypeName(datatype) {
-    return (
-      this.application?.dataTypes?.[datatype]?.internationalizationName?.[this.$i18n.locale] ??
-      datatype.name
-    );
-  }
 
   created() {
     this.init();
@@ -137,11 +133,19 @@ export default class DataTypeAuthorizationsView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
+        ),
+      };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,
         this.dataTypeId
       );
-      console.log(this.authorizations);
       if (this.authorizations && this.authorizations.length !== 0) {
         this.scopes = Object.keys(this.authorizations[0].authorizedScopes);
       }
