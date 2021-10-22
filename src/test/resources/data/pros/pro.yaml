@@ -63,13 +63,13 @@ references:
     internationalizationName:
       fr: Parcelles
       en: Parcelles
-    keyColumns: [Code du dispositif_Nom du lieu, Nom du bloc_code du bloc, Nom de la parcelle élémentaire]
+    keyColumns: [Code du dispositif_Nom du lieu, Nom du bloc_code du bloc, Nom de la parcelle elementaire]
     columns:
       Code du dispositif_Nom du lieu:
       Nom du bloc_code du bloc:
-      Nom de la parcelle élémentaire:
-      Code de la parcelle élémentaire:
-      Système de projection:
+      Nom de la parcelle elementaire:
+      Code de la parcelle elementaire:
+      Systeme de projection:
       Latitude:
       Longitude:
   placettes:
