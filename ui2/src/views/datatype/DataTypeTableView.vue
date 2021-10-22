@@ -518,8 +518,8 @@ export default class DataTypeTableView extends Vue {
     this.application = await this.applicationService.getApplication(this.applicationName);
     this.application = {
       ...this.application,
-      localName: this.internationalisationService.localeApplicationName(this.application),
-      localDatatypeName : this.internationalisationService.localeDatatypeName(this.application.dataTypes[this.dataTypeId])
+      localName: this.internationalisationService.mergeInternationalization(this.application).localName,
+      localDatatypeName : this.internationalisationService.localeDataTypeIdName(this.application ,this.application.dataTypes[this.dataTypeId])
     };
     await this.initDatatype();
   }

@@ -22,13 +22,35 @@ export class InternationalisationService extends Fetcher {
   localeApplicationName(applicationInternationalization, defautName) {
     return (applicationInternationalization?.[localStorage.getItem(LOCAL_STORAGE_LANG)]) ?? defautName ;
   }
-  localeDatatypeName(datatype) {
-    if (datatype.internationalizationName != null) {
-      return datatype.internationalizationName[localStorage.getItem(LOCAL_STORAGE_LANG)];
+
+  localeDataTypeIdName(application, datatype) {
+    if (application.internationalization.dataTypes[datatype.id].internationalizationName != null) {
+      return application.internationalization.dataTypes[datatype.id].internationalizationName[localStorage.getItem(LOCAL_STORAGE_LANG)];
     }else {
       return datatype.name;
     }
   }
+  localeDatatypeName(application) {
+    if (application.internationalization != null) {
+      let applicationDataTypes = application.internationalization.dataTypes;
+      for(let applicationDataType in applicationDataTypes) {
+        application.dataTypes[applicationDataType] = {
+          ...application.dataTypes[applicationDataType],
+          localName: applicationDataTypes[applicationDataType].internationalizationName?.[localStorage.getItem(LOCAL_STORAGE_LANG)],
+        }
+      }
+    } else {
+      let applicationDataTypes = application.dataTypes;
+      for(let applicationDataType in applicationDataTypes) {
+        application.dataTypes[applicationDataType] = {
+          ...application.dataTypes[applicationDataType],
+          localName: application.dataTypes[applicationDataType].name,
+        }
+      }
+    }
+    return application.dataTypes;
+  }
+
   localeReferenceName(references, applications) {
     if(applications.internationalization) {
       let applicationReferences = applications.internationalization.references;
@@ -49,7 +71,15 @@ export class InternationalisationService extends Fetcher {
       for (let applicationReference in applicationReferences) {
         refs.references[applicationReference] = {
           ...refs.references[applicationReference],
-          refNameLocal: applicationReferences[applicationReference].internationalizationName?.[localStorage.getItem(LOCAL_STORAGE_LANG)]
+          refNameLocal: applicationReferences[applicationReference].internationalizationName?.[localStorage.getItem(LOCAL_STORAGE_LANG)],
+        };
+      }
+    } else {
+      let applicationReferences = refs.references;
+      for (let applicationReference in applicationReferences) {
+        refs.references[applicationReference] = {
+          ...refs.references[applicationReference],
+          refNameLocal: refs.references[applicationReference].name,
         };
       }
     }

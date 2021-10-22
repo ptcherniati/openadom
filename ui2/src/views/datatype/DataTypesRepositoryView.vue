@@ -260,10 +260,18 @@ export default class DataTypesRepositoryView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.localeApplicationName(this.application),
+        localName: this.internationalisationService.mergeInternationalization(this.application).localName,
       };
-      this.localDatatypeName =
-        this.application.dataTypes[this.dataTypeId]?.internationalizationName?.[this.$i18n.locale];
+      if (this.application.internationalization) {
+        this.localDatatypeName = Object.values(this.application.internationalization.dataTypes).map((d) => {
+          return { ...d, localName: this.internationalisationService.localeDatatypeName(d) };
+        });
+      }
+      else if (this.application.dataTypes) {
+        this.localDatatypeName = Object.values(this.application.dataTypes).map((d) => {
+          return { ...d, localName: this.internationalisationService.localeDatatypeName(d) };
+        });
+      }
       this.configuration = this.applications
         .filter((a) => a.name === this.applicationName)
         .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];

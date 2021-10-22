@@ -61,7 +61,7 @@ references:
         en: zet_nom_en
       zet_description_fr:
         fr: zet_description_fr
-        en: zet_description__en
+        en: zet_description_en
     columns:
       tze_type_nom:
       zet_nom_key:
