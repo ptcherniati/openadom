@@ -197,6 +197,7 @@ public class Configuration {
         CheckerDescription checker;
         @Nullable
         String defaultValue;
+        Map<String, String> params;
     }
 
     @Getter

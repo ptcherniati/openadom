@@ -5,7 +5,7 @@
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
         $t("titles.data-type-new-authorization", {
-          dataType: application.dataTypeId || dataTypeId,
+          dataType: application.localDatatypeName || dataTypeId,
         })
       }}</span>
     </h1>
@@ -199,7 +199,6 @@ import { UserPreferencesService } from "@/services/UserPreferencesService";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import { ApplicationResult } from "@/model/ApplicationResult";
 import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
@@ -224,7 +223,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   authorizations = [];
-  application = new ApplicationResult();
   users = [];
   dataGroups = [];
   authorizationScopes = [];
@@ -273,10 +271,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.localeApplicationName(this.application),
-        dataTypeId: this.internationalisationService.localeDatatypeNameApplication(
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
           this.application,
-          this.dataTypeId
+          this.application.dataTypes[this.dataTypeId]
         ),
       };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(

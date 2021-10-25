@@ -95,45 +95,45 @@ public class Fixtures {
         return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, site);
     }
 
-    public String getPemRepositoryParamsWithId(String projet, String site, String fileId, boolean toPublish) {
+    public String getPemRepositoryParamsWithId(String projet, String plateforme, String site, String fileId, boolean toPublish) {
         return String.format("{\n" +
-                "   \"fileid\":\"%s\",\n" +
+                "   \"fileid\":\"%1$s\",\n" +
                 "   \"binaryfiledataset\":{\n" +
                 "      \"requiredauthorizations\":{\n" +
-                "         \"projet\":\"projet_%s\",\n" +
-                "         \"localization\":\"%s__p1\"\n" +
+                "         \"projet\":\"projet_%2$s\",\n" +
+                "         \"localization\":\"%3$s.%4$s.%4$s__p1\"\n" +
                 "      },\n" +
                 "      \"from\":\"1984-01-01 00:00:00\",\n" +
                 "      \"to\":\"1984-01-05 00:00:00\"\n" +
                 "   },\n" +
-                "   \"topublish\":%s\n" +
-                "}", fileId, projet, site, toPublish);
+                "   \"topublish\":%5$s\n" +
+                "}", fileId, projet, plateforme, site, toPublish);
     }
 
-    public String getPemRepositoryParams(String projet, String site, boolean toPublish) {
+    public String getPemRepositoryParams(String projet, String plateforme, String site, boolean toPublish) {
         return String.format("{\n" +
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
                 "      \"requiredauthorizations\":{\n" +
-                "         \"projet\":\"projet_%s\",\n" +
-                "         \"localization\":\"%s__p1\"\n" +
+                "         \"projet\":\"projet_%1$s\",\n" +
+                "         \"localization\":\"%2$s.%3$s.%3$s__p1\"\n" +
                 "      },\n" +
                 "      \"from\":\"1984-01-01 00:00:00\",\n" +
                 "      \"to\":\"1984-01-05 00:00:00\"\n" +
                 "   },\n" +
-                "   \"topublish\":%s\n" +
-                "}", projet, site, toPublish);
+                "   \"topublish\":%4$s\n" +
+                "}", projet, plateforme, site, toPublish);
     }
 
-    public String getPemRepositoryId(String projet, String site) {
+    public String getPemRepositoryId(String plateforme, String projet, String site) {
         return String.format("{\n" +
                 "      \"requiredauthorizations\":{\n" +
-                "         \"projet\":\"projet_%s\",\n" +
-                "         \"localization\":\"%s__p1\"\n" +
+                "         \"projet\":\"projet_%2$s\",\n" +
+                "         \"localization\":\"%1$s.%3$s.%3$s__p1\"\n" +
                 "      },\n" +
                 "      \"from\":\"1984-01-01 00:00:00\",\n" +
                 "      \"to\":\"1984-01-05 00:00:00\"\n" +
-                "   }", projet, site);
+                "   }", plateforme, projet, site);
     }
 
     public String getRecursivityApplicationConfigurationResourceName() {
@@ -392,6 +392,13 @@ public class Fixtures {
         referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
         referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
         referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
+        referentielFiles.put("type_lieu", "/data/pros/type_lieu.csv");
+        referentielFiles.put("type_culture", "/data/pros/type_de_culture.csv");
+        referentielFiles.put("type_document", "/data/pros/type_de_document.csv");
+        referentielFiles.put("type_dispositif", "/data/pros/type_de_dispositif.csv");
+        referentielFiles.put("type_facteur", "/data/pros/type_de_facteur.csv");
+        referentielFiles.put("type_traitement", "/data/pros/type_de_traitement.csv");
+        referentielFiles.put("echelle_prelevement", "/data/pros/echelle_de_prelevement.csv");
         return referentielFiles;
     }
 

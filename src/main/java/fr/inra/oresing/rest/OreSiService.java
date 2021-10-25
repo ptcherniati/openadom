@@ -109,6 +109,8 @@ public class OreSiService {
     }
 
     public static void checkNaturalKeySyntax(String keyComponent) {
+        if(keyComponent.isEmpty())
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturel ne peut être vide. vérifier le nom des colonnes.");
         Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
 
@@ -442,6 +444,7 @@ public class OreSiService {
                     })
                     .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))
                     .map(e -> {
+                        System.out.println(e);
                         if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
                             /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
                             dans le fichier. Seule la première ligne est enregistrée
@@ -631,7 +634,7 @@ public class OreSiService {
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions))
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions, app.getConfiguration().getDataTypes().get(dataType).getData(), app, repo.getRepository(app)))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
             repo.getRepository(app).data().storeAll(dataStream);
@@ -849,7 +852,7 @@ public class OreSiService {
         if (binaryFileDataset == null) {
             return;
         }
-        binaryFileDataset.getRequiredauthorizations().entrySet().stream()
+        binaryFileDataset.getRequiredauthorizations().entrySet()
                 .forEach(entry -> {
                     if (!requiredAuthorizations.get(entry.getKey()).equals(entry.getValue())) {
                         errors.add(
@@ -874,18 +877,36 @@ public class OreSiService {
      * <p>
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions) {
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions, LinkedHashMap<String, Configuration.ColumnDescription> data, Application application, OreSiRepository.RepositoryForApplication repository) {
         return rowWithData -> {
             Map<String, Map<String, String>> datumByVariableAndComponent = new HashMap<>();
+            Map<String, Map<String, Map<String, String>>> paramsByVariableAndComponent = new HashMap<>();
             for (Map.Entry<VariableComponentKey, String> entry : rowWithData.getDatum().entrySet()) {
                 datumByVariableAndComponent
                         .computeIfAbsent(entry.getKey().getVariable(), k -> new HashMap<String, String>())
                         .put(entry.getKey().getComponent(), entry.getValue());
             }
-            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum(), "datumByVariableAndComponent", datumByVariableAndComponent);
-            Map<VariableComponentKey, String> defaultValues = Maps.transformValues(defaultValueExpressions, expression -> expression.evaluate(evaluationContext));
-            Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
-            rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
+            Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap();
+            Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap(rowWithData.datum);
+            defaultValueExpressions.entrySet().stream()
+                    .forEach(variableComponentKeyExpressionEntry -> {
+                        Map<String, String> params = Optional.ofNullable(data)
+                                .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKeyExpressionEntry.getKey().getVariable()))
+                                .map(columnDescription -> columnDescription.getComponents())
+                                .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKeyExpressionEntry.getKey().getComponent()))
+                                .map(variableComponentDescription -> variableComponentDescription.getParams())
+                                .orElseGet(HashMap::new);
+                        ImmutableMap<String, Object> evaluationContext = GroovyLineChecker.buildContext(rowWithData.getDatum(), application, params, repository);
+                        String evaluate = variableComponentKeyExpressionEntry.getValue().evaluate(evaluationContext);
+                        if (StringUtils.isNotBlank(evaluate)) {
+                            if(params!=null && Boolean.parseBoolean(params.get("replace"))) {
+                                rowWithValues.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
+                            }else{
+                                rowWithDefaults.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
+                            }
+                        }
+                    });
+            rowWithDefaults.putAll(rowWithValues);
             return new RowWithData(rowWithData.getLineNumber(), ImmutableMap.copyOf(rowWithDefaults));
         };
     }

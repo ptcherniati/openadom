@@ -1,8 +1,8 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
+    <SubMenu :root="application.localName" :paths="subMenuPaths" />
     <h1 class="title main-title">
-      {{ $t("titles.references-data", { refName: application.localRefName || reference.label }) }}
+      {{ $t("titles.references-data", { refName: application.localRefName }) }}
     </h1>
 
     <div v-if="reference && columns">
@@ -83,9 +83,11 @@ export default class ReferenceTableView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.localeApplicationName(this.application),
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
         localRefName: this.internationalisationService.localeReferenceName(
-          this.application.references[this.refId]
+          this.application.references[this.refId],
+          this.application
         ),
       };
       const references = await this.referenceService.getReferenceValues(

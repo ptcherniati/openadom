@@ -567,20 +567,25 @@ On peut surcharger l'affichage d'une colonne faisant référence à un référen
 ```
 
 
-# Aide fichier .csv  
+# Aide fichier .csv 
+
+## lors de l'ouverture du fichier csv via libre office:
+
+<span style="color: red">* sélectionner le séparateur en ";"</span> 
 	
-## lors de la création du fichier csv : 
+## lors de la création du fichier csv de Référence et de donnée : 
 	
 * cocher lors de l'enregistrement du fichier 
   * Éditer les paramètre du filtre
   * Sélectionner le point virgule
-* dans les données qui se trouve dans les colonnes contenant des clés naturels ne pas mettre
+* dans les données qui se trouvent dans les colonnes contenant des clés naturelles on attend :
     * pas d'accents
     * pas de majuscules
     * pas de caratères spéciaux () , - : 
-    * autorisé _ et .
-* le nom des colonnes doivent être le plus court possible
+    * autorisé les _ et les .
+* le nom des colonnes doive être le plus court possible
+* le fichier doit être en UTF8 pour que les colonnes soient lisible (les caractères spéciaux ne passe pas sinon. ex : é, è, ç)
 
-## lors de l'ouverture du fichier csv via libre office:  
-	
-* sélectionner le séparateur en ";"
+## lors de l'importation de fichier csv dans l'application:
+
+* ouvrer la console avec F12 dans votre navigateur pour voir l'erreur de téléversement (erreur serveur) plus en détail.

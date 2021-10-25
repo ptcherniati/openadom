@@ -4,7 +4,7 @@
     <h1 class="title main-title">
       {{
         $t("titles.data-type-authorizations", {
-          dataType: application.localDataType || dataTypeId,
+          dataType: application.localDatatypeName || dataTypeId,
         })
       }}
     </h1>
@@ -81,10 +81,10 @@ import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AuthorizationService } from "@/services/rest/AuthorizationService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
-import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu },
@@ -135,17 +135,17 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
-        localName: this.internationalisationService.localeApplicationName(this.application),
-        localDataType: this.internationalisationService.localeDatatypeNameApplication(
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
           this.application,
-          this.dataTypeId
+          this.application.dataTypes[this.dataTypeId]
         ),
       };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,
         this.dataTypeId
       );
-      console.log(this.authorizations);
       if (this.authorizations && this.authorizations.length !== 0) {
         this.scopes = Object.keys(this.authorizations[0].authorizedScopes);
       }
