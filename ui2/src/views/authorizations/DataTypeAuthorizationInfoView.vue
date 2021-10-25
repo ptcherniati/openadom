@@ -11,6 +11,7 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
+
       <b-field
         :label="$t('dataTypeAuthorizations.period')"
         class="DataTypeAuthorizationInfoView-periods-container mb-4"
@@ -165,6 +166,18 @@
             </template>
             <div class="card-content">
               <div class="content">
+
+                <!-- TO DO voir pour réaliser un tableau avec un arbre (ou un collapse detail) premier essais pas concluant
+                <b-table
+                :data="scope.options"
+                ref="table"
+                paginated
+                per-page="5"
+                detailed
+                detail-key="children"
+                >
+
+                </b-table> -->
                 <CollapsibleTree
                   v-for="option in scope.options"
                   :key="option.id"
@@ -289,6 +302,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
+      console.log(this.authorizationScopes);
       // this.authorizationScopes[0].options[0].children[0].children.push({
       //   children: [],
       //   id: "toto",

@@ -29,46 +29,59 @@
       "label": "localization",
       "options": [
         {
-          "id": "nivelle",
-          "label": "nivelle",
+          "id": "bassin_versant",
+          "label": "bassin_versant",
           "children": [
             {
-              "id": "nivelle__p1",
-              "label": "nivelle__p1"
-            }
-          ]
-        },
-        {
-          "id": "oir",
-          "label": "oir",
-          "children": [
-            {
-              "id": "oir__p1",
-              "label": "oir__p1",
-              "children": [
-                {
-                  "id": "oir__p1__a",
-                  "label": "oir__p1__a"
-                },
-                {
-                  "id": "oir__p1__b",
-                  "label": "oir__p1__b"
-                }
-              ]
+              "id": "bassin_versant.nivelle",
+              "label": "bassin_versant.nivelle",
+              "children": []
             },
             {
-              "id": "oir__p2",
-              "label": "oir__p2"
+              "id": "bassin_versant.oir",
+              "label": "bassin_versant.oir",
+              "children": []
+            },
+            {
+              "id": "bassin_versant.scarff",
+              "label": "bassin_versant.scarff",
+              "children": []
             }
           ]
         },
         {
-          "id": "scarff",
-          "label": "scarff",
+          "id": "plateforme",
+          "label": "plateforme",
           "children": [
             {
-              "id": "scarff__p1",
-              "label": "scarff__p1"
+              "id": "plateforme.nivelle.nivelle__p1",
+              "label": "plateforme.nivelle.nivelle__p1",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1",
+              "label": "plateforme.oir.oir__p1",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1.oir__p1__a",
+              "label": "plateforme.oir.oir__p1.oir__p1__a",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1.oir__p1__b",
+              "label": "plateforme.oir.oir__p1.oir__p1__b",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p2",
+              "label": "plateforme.oir.oir__p2",
+              "children": []
+            },
+            {
+              "id": "plateforme.scarff.scarff__p1",
+              "label": "plateforme.scarff.scarff__p1",
+              "children": []
             }
           ]
         }
@@ -81,11 +94,12 @@
         {
           "id": "projet_atlantique",
           "label": "projet_atlantique",
-          "entitiesTranslations": ["getAffichage_FR"]
+          "children": []
         },
         {
           "id": "projet_manche",
-          "label": "projet_manche"
+          "label": "projet_manche",
+          "children": []
         }
       ]
     }
