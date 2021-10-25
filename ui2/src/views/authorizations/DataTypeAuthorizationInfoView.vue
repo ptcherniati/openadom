@@ -200,6 +200,7 @@ import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
@@ -226,6 +227,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   users = [];
   dataGroups = [];
   authorizationScopes = [];
+  application = new ApplicationResult();
   userToAuthorize = null;
   dataGroupToAuthorize = null;
   openCollapse = null;
@@ -272,10 +274,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-          this.application,
-          this.application.dataTypes[this.dataTypeId]
+            this.application,
+            this.application.dataTypes[this.dataTypeId]
         ),
       };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(

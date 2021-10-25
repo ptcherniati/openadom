@@ -30,11 +30,12 @@ export class InternationalisationService extends Fetcher {
 
   localeDataTypeIdName(application, datatype) {
     if (application.internationalization.dataTypes[datatype.id].internationalizationName != null) {
+      console.log(application.internationalization.dataTypes[datatype.id].internationalizationName[localStorage.getItem(LOCAL_STORAGE_LANG)]);
       return application.internationalization.dataTypes[datatype.id].internationalizationName[
         localStorage.getItem(LOCAL_STORAGE_LANG)
       ];
     } else {
-      return datatype.name;
+      return datatype.label;
     }
   }
   localeDatatypeName(application) {
