@@ -27,24 +27,49 @@
     {
       "id": "localization",
       "label": "localization",
+      "admin": "false",
+      "depot": "false",
+      "publication": "false",
+      "extraction": "false",
+      "date": null,
       "options": [
         {
           "id": "bassin_versant",
           "label": "bassin_versant",
+          "admin": "false",
+          "depot": "false",
+          "publication": "false",
+          "extraction": "false",
+          "date": null,
           "children": [
             {
               "id": "bassin_versant.nivelle",
               "label": "bassin_versant.nivelle",
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
               "children": []
             },
             {
               "id": "bassin_versant.oir",
               "label": "bassin_versant.oir",
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
               "children": []
             },
             {
               "id": "bassin_versant.scarff",
               "label": "bassin_versant.scarff",
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
               "children": []
             }
           ]
@@ -52,35 +77,71 @@
         {
           "id": "plateforme",
           "label": "plateforme",
+          "admin": "false",
+          "depot": "false",
+          "publication": "false",
+          "extraction": "false",
+          "date": null,
           "children": [
             {
               "id": "plateforme.nivelle.nivelle__p1",
               "label": "plateforme.nivelle.nivelle__p1",
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
               "children": []
             },
             {
               "id": "plateforme.oir.oir__p1",
               "label": "plateforme.oir.oir__p1",
-              "children": []
-            },
-            {
-              "id": "plateforme.oir.oir__p1.oir__p1__a",
-              "label": "plateforme.oir.oir__p1.oir__p1__a",
-              "children": []
-            },
-            {
-              "id": "plateforme.oir.oir__p1.oir__p1__b",
-              "label": "plateforme.oir.oir__p1.oir__p1__b",
-              "children": []
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
+              "children": [
+                {
+                  "id": "plateforme.oir.oir__p1.oir__p1__a",
+                  "label": "plateforme.oir.oir__p1.oir__p1__a",
+                  "admin": "false",
+                  "depot": "false",
+                  "publication": "false",
+                  "extraction": "false",
+                  "date": null,
+                  "children": []
+                },
+                {
+                  "id": "plateforme.oir.oir__p1.oir__p1__b",
+                  "label": "plateforme.oir.oir__p1.oir__p1__b",
+                  "admin": "false",
+                  "depot": "false",
+                  "publication": "false",
+                  "extraction": "false",
+                  "date": null,
+                  "children": []
+                }
+              ]
             },
             {
               "id": "plateforme.oir.oir__p2",
               "label": "plateforme.oir.oir__p2",
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
               "children": []
             },
             {
               "id": "plateforme.scarff.scarff__p1",
               "label": "plateforme.scarff.scarff__p1",
+              "admin": "false",
+              "depot": "false",
+              "publication": "false",
+              "extraction": "false",
+              "date": null,
               "children": []
             }
           ]
@@ -90,15 +151,30 @@
     {
       "id": "projet",
       "label": "projet",
+      "admin": "false",
+      "depot": "false",
+      "publication": "false",
+      "extraction": "false",
+      "date": null,
       "options": [
         {
           "id": "projet_atlantique",
           "label": "projet_atlantique",
+          "admin": "false",
+          "depot": "false",
+          "publication": "false",
+          "extraction": "false",
+          "date": null,
           "children": []
         },
         {
           "id": "projet_manche",
           "label": "projet_manche",
+          "admin": "false",
+          "depot": "false",
+          "publication": "false",
+          "extraction": "false",
+          "date": null,
           "children": []
         }
       ]

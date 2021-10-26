@@ -11,7 +11,6 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-
       <b-field
         :label="$t('dataTypeAuthorizations.period')"
         class="DataTypeAuthorizationInfoView-periods-container mb-4"
@@ -160,32 +159,113 @@
                   {{ scope.label }}
                 </p>
                 <a class="card-header-icon">
-                  <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+                  <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"></b-icon>
                 </a>
               </div>
             </template>
             <div class="card-content">
               <div class="content">
-
-                <!-- TO DO voir pour réaliser un tableau avec un arbre (ou un collapse detail) premier essais pas concluant
+                <!-- TO DO voir pour réaliser un tableau avec un arbre (ou un collapse detail) premier essais pas concluant-->
                 <b-table
-                :data="scope.options"
-                ref="table"
-                paginated
-                per-page="5"
-                detailed
-                detail-key="children"
+                  :data="scope.options"
+                  class="table is-striped"
+                  ref="table"
+                  detailed
+                  hoverable
+                  custom-detail-row
+                  detail-key="id"
+                  @details-open="(row) => $buefy.toast.open(`Expanded ${row.children}`)"
+                  :show-detail-icon="true"
                 >
-
-                </b-table> -->
-                <CollapsibleTree
+                  <b-table-column
+                    field="label"
+                    :visible="columnsVisible['label'].display"
+                    :label="columnsVisible['label'].title"
+                    v-slot="props"
+                  >
+                    {{ props.row.label }}
+                  </b-table-column>
+                  <b-table-column
+                    field="admin"
+                    :visible="columnsVisible['admin'].display"
+                    :label="columnsVisible['admin'].title"
+                    centered
+                  >
+                    <b-checkbox v-model="checkbox">
+                    </b-checkbox>
+                  </b-table-column>
+                  <b-table-column
+                    field="depot"
+                    :visible="columnsVisible['depot'].display"
+                    :label="columnsVisible['depot'].title"
+                    centered
+                  >
+                    <b-checkbox v-model="checkbox">
+                    </b-checkbox>
+                  </b-table-column>
+                  <b-table-column
+                    field="publication"
+                    :visible="columnsVisible['publication'].display"
+                    :label="columnsVisible['publication'].title"
+                    centered
+                  >
+                    <b-checkbox v-model="checkbox">
+                    </b-checkbox>
+                  </b-table-column>
+                  <b-table-column
+                    field="extraction"
+                    :visible="columnsVisible['extraction'].display"
+                    :label="columnsVisible['extraction'].title"
+                    centered
+                  >
+                    <b-checkbox v-model="checkbox">
+                    </b-checkbox>
+                  </b-table-column>
+                  <b-table-column
+                    field="date"
+                    :visible="columnsVisible['date'].display"
+                    :label="columnsVisible['date'].title"
+                    centered
+                    v-slot="props"
+                  >
+                    {{ props.row.date }}
+                  </b-table-column>
+                  <template slot="detail" slot-scope="props">
+                    <tr v-for="item in props.row.children" :key="item.id">
+                      <td v-if="true"></td>
+                      <td v-show="columnsVisible['label'].display">
+                        &nbsp;&nbsp;&nbsp;&nbsp;{{ item.label }}
+                      </td>
+                      <td v-show="columnsVisible['admin'].display" class="has-text-centered">
+                        <b-checkbox v-model="checkbox">
+                        </b-checkbox>
+                      </td>
+                      <td v-show="columnsVisible['depot'].display" class="has-text-centered">
+                        <b-checkbox v-model="checkbox">
+                        </b-checkbox>
+                      </td>
+                      <td v-show="columnsVisible['publication'].display" class="has-text-centered">
+                        <b-checkbox v-model="checkbox">
+                        </b-checkbox>
+                      </td>
+                      <td v-show="columnsVisible['extraction'].display" class="has-text-centered">
+                        <b-checkbox v-model="checkbox">
+                        </b-checkbox>
+                      </td>
+                      <td v-show="columnsVisible['date'].display" class="has-text-centered">
+                        {{ item.date }}
+                      </td>
+                    </tr>
+                  </template>
+                </b-table>
+<!--                <CollapsibleTree
                   v-for="option in scope.options"
                   :key="option.id"
                   :option="option"
                   :withRadios="true"
                   :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
                   @optionChecked="(value) => (scopesToAuthorize[scope.id] = value)"
-                />
+                />-->
               </div>
             </div>
           </b-collapse>
@@ -236,6 +316,14 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
 
+  columnsVisible = {
+    label: { title: "Label", display: true },
+    admin: { title: "Admin", display: true },
+    depot: { title: "Dépôt", display: true },
+    publication: { title: "Publication", display: true },
+    extraction: { title: "Extraction", display: true },
+    date: { title: "Périodes", display: true },
+  };
   authorizations = [];
   users = [];
   dataGroups = [];
@@ -281,16 +369,20 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     ];
   }
 
+  showDetail(parent) {
+    return !parent.children.isEmpty();
+  }
+
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-            .localName,
+          .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-            this.application,
-            this.application.dataTypes[this.dataTypeId]
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
         ),
       };
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
