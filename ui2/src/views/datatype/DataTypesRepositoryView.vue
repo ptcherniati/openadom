@@ -14,14 +14,14 @@
           <div class="columns">
             <div class="column">
               <b-field>
-                  <b-menu >
-                    <div class="column" style="padding-top: 20px">
-                      <p style="text-transform: capitalize">{{ authKey }}</p>
-                    </div>
-                    <b-menu-list v-for="(option, itemKey) in authReference" :key="itemKey" >
-                      {{option.localName}}
-                    </b-menu-list>
-                  </b-menu>
+                <b-menu>
+                  <div class="column" style="padding-top: 20px">
+                    <p style="text-transform: capitalize">{{ authKey }}</p>
+                  </div>
+                  <b-menu-list v-for="(option, itemKey) in authReference" :key="itemKey">
+                    <b-field @click="deployMenu(option)">{{ option.localName }}</b-field>
+                  </b-menu-list>
+                </b-menu>
                 <!--b-select
                     :placeholder="$t('dataTypesRepository.placeholder-select')"
                     @input="selectAuthorization(key, $event)"
@@ -300,6 +300,25 @@ export default class DataTypesRepositoryView extends Vue {
         let ref = await this.getOrLoadReferences(reference);
         ret[auth] = ref;
       }
+      let refs = Object.values(ret)
+          .reduce(
+              (acc, k) => [...acc, ...k.referenceValues
+                  .reduce(
+                      (a, b) => [...a, ...b.hierarchicalReference.split('.')]
+                      , acc)]
+              , [])
+          .reduce(
+              (a, b) => {
+                if (a.indexOf(b) < 0) {
+                  a.push(b)
+                }
+                ;
+                return a
+              }
+              , []);
+      for (const refsKey in refs) {
+        await this.getOrLoadReferences(refs[refsKey]);
+      }
       for (const [key, value] of Object.entries(ret)) {
         let partition = await this.partitionReferencesValues(value.referenceValues);
         ret[key] = partition
@@ -466,15 +485,15 @@ export default class DataTypesRepositoryView extends Vue {
 
   async partitionReferencesValues(referencesValues, currentPath) {
     let returnValues = {};
-    referencesValues.forEach(async (referenceValue) => {
+    for (const referenceValue of referencesValues) {
       var previousKeySplit = currentPath ? currentPath.split('.') : [];
       var keys = referenceValue.hierarchicalKey.split('.');
       var references = referenceValue.hierarchicalReference.split('.');
       if (previousKeySplit.length == keys.length) {
-        return;
+        continue;
       }
       for (let i = 0; i < previousKeySplit.length; i++) {
-        previousKeySplit.shift();
+        keys.shift();
         references.shift();
       }
       var key = keys.shift();
@@ -491,12 +510,37 @@ export default class DataTypesRepositoryView extends Vue {
         reference,
         referenceValues: [],
         localName,
+        isLeaf: false,
         currentPath: (currentPath ? currentPath + '.' : '') + key
       };
       authPartition.referenceValues.push(referenceValue);
       returnValues[key] = authPartition;
-    });
+    }
+    for (const returnValuesKey in returnValues) {
+      var auth = returnValues[returnValuesKey];
+      if (auth.referenceValues.length <= 1) {
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: true,
+          referenceValues: auth.referenceValues?.[0]
+
+        }
+      } else {
+        var r = await this.partitionReferencesValues(auth.referenceValues, auth.currentPath);
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: false,
+          referenceValues: r
+
+        }
+        console.log(returnValues)
+      }
+    }
     return returnValues;
+  }
+
+  deployMenu(option) {
+    console.log(this.partitionReferencesValues(option.referenceValues, option.currentPath))
   }
 }
 </script>
