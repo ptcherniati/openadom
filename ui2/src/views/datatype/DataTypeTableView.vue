@@ -212,13 +212,13 @@
                 <div class="column">
                   <b-button icon-left="redo" expanded type="is-danger" @click="clearOrder" outlined
                     >{{ $t("dataTypesManagement.réinitialiser") }}
-                    {{ $t("dataTypesManagement.trie") }}</b-button
+                    {{ $t("dataTypesManagement.tri") }}</b-button
                   >
                 </div>
                 <div class="column">
                   <b-button icon-left="check" type="is-dark" expanded @click="initDatatype" outlined
                     >{{ $t("dataTypesManagement.validate") }}
-                    {{ $t("dataTypesManagement.trie") }}</b-button
+                    {{ $t("dataTypesManagement.tri") }}</b-button
                   >
                 </div>
               </div>

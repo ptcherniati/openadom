@@ -11,79 +11,6 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-      <b-field
-        :label="$t('dataTypeAuthorizations.period')"
-        class="DataTypeAuthorizationInfoView-periods-container mb-4"
-      >
-        <b-radio
-          class="DataTypeAuthorizationInfoView-radio-field"
-          name="dataTypeAuthorization-period"
-          v-model="period"
-          :native-value="periods.ALWAYS"
-        >
-          <span class="DataTypeAuthorizationInfoView-radio-label"> {{ periods.ALWAYS }}</span>
-        </b-radio>
-        <b-radio
-          name="dataTypeAuthorization-period"
-          v-model="period"
-          :native-value="periods.FROM_DATE_TO_DATE"
-          class="DataTypeAuthorizationInfoView-radio-field mb-2"
-        >
-          <span class="DataTypeAuthorizationInfoView-radio-label">
-            {{ periods.FROM_DATE_TO_DATE }}
-          </span>
-          <ValidationProvider
-            :rules="period === periods.FROM_DATE_TO_DATE ? 'required' : ''"
-            name="period_fromDateToDate_1"
-            v-slot="{ errors, valid }"
-            vid="period_fromDateToDate_1"
-          >
-            <b-field
-              class="mr-4"
-              :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid && period === periods.FROM_DATE_TO_DATE,
-              }"
-              :message="errors[0]"
-            >
-              <b-datepicker
-                v-model="startDate"
-                show-week-number
-                :locale="chosenLocale"
-                icon="calendar-day"
-                trap-focus
-                :disabled="period !== periods.FROM_DATE_TO_DATE"
-              >
-              </b-datepicker>
-            </b-field>
-          </ValidationProvider>
-          <span class="mr-4">{{ $t("dataTypeAuthorizations.to") }}</span>
-          <ValidationProvider
-            :rules="period === periods.FROM_DATE_TO_DATE ? 'required' : ''"
-            name="period_fromDateToDate_2"
-            v-slot="{ errors, valid }"
-            vid="period_fromDateToDate_2"
-          >
-            <b-field
-              :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid && period === periods.FROM_DATE_TO_DATE,
-              }"
-              :message="errors[0]"
-            >
-              <b-datepicker
-                v-model="endDate"
-                show-week-number
-                :locale="chosenLocale"
-                icon="calendar-day"
-                trap-focus
-                :disabled="period !== periods.FROM_DATE_TO_DATE"
-              >
-              </b-datepicker>
-            </b-field>
-          </ValidationProvider>
-        </b-radio>
-      </b-field>
 
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
@@ -196,44 +123,56 @@
                     :visible="columnsVisible['admin'].display"
                     :label="columnsVisible['admin'].title"
                     centered
+                    v-slot="props"
                   >
-                    <b-checkbox v-model="checkbox"> </b-checkbox>
+                    <b-checkbox size="is-medium" v-model="props.row.admin" > </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="depot"
                     :visible="columnsVisible['depot'].display"
                     :label="columnsVisible['depot'].title"
                     centered
+                    v-slot="props"
                   >
-                    <b-checkbox v-model="checkbox"> </b-checkbox>
+                    <b-checkbox size="is-medium" v-model="props.row.depot"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="publication"
                     :visible="columnsVisible['publication'].display"
                     :label="columnsVisible['publication'].title"
                     centered
+                    v-slot="props"
                   >
-                    <b-checkbox v-model="checkbox"> </b-checkbox>
+                    <b-checkbox size="is-medium" v-model="props.row.publication"></b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="extraction"
                     :visible="columnsVisible['extraction'].display"
                     :label="columnsVisible['extraction'].title"
                     centered
+                    v-slot="props"
                   >
-                    <b-checkbox v-model="checkbox"> </b-checkbox>
+                    <b-checkbox size="is-medium" v-model="props.row.extraction"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="date"
                     :visible="columnsVisible['date'].display"
                     :label="columnsVisible['date'].title"
                     centered
-                    v-slot="props"
                   >
-                    {{ props.row.date }}
+                    <b-radio
+                      class="DataTypeAuthorizationInfoView-radio-field"
+                      name="dataTypeAuthorization-period"
+                      v-model="period"
+                      :native-value="periods.ALWAYS"
+                    >
+                      <span class="DataTypeAuthorizationInfoView-radio-label">
+                        {{ periods.ALWAYS }}</span
+                      >
+                    </b-radio>
                   </b-table-column>
                   <template slot="detail" slot-scope="props" v-if="props.row.children.length > 0">
-                    <tr v-for="item in props.row.children" :key="item.id" >
+                    <tr v-for="item in props.row.children" :key="item.id">
                       <td v-show="columnsVisible['label'].display">
                         <template v-if="item.children.length === 0">
                           &nbsp;&nbsp;&nbsp;&nbsp;{{ item.label }}
@@ -245,16 +184,16 @@
                         </template>
                       </td>
                       <td v-show="columnsVisible['admin'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox"> </b-checkbox>
+                        <b-checkbox v-model="item.admin"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['depot'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox"> </b-checkbox>
+                        <b-checkbox v-model="item.depot"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['publication'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox"> </b-checkbox>
+                        <b-checkbox v-model="item.publication"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['extraction'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox"> </b-checkbox>
+                        <b-checkbox v-model="item.extraction"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['date'].display" class="has-text-centered">
                         {{ item.date }}
@@ -262,14 +201,6 @@
                     </tr>
                   </template>
                 </b-table>
-                <!--                <CollapsibleTree
-                  v-for="option in scope.options"
-                  :key="option.id"
-                  :option="option"
-                  :withRadios="true"
-                  :radioName="`dataTypeAuthorizations_${applicationName}_${dataTypeId}`"
-                  @optionChecked="(value) => (scopesToAuthorize[scope.id] = value)"
-                />-->
               </div>
             </div>
           </b-collapse>
@@ -375,12 +306,12 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   }
 
   showDetail(parent) {
-    for(const child in parent) {
-      if(parent[child].children.length !== 0) {
-        parent[child]={...parent[child], showDetailIcon : true}
+    for (const child in parent) {
+      if (parent[child].children.length !== 0) {
+        parent[child] = { ...parent[child], showDetailIcon: true };
         console.log(parent[child]);
       }
-      parent[child]={...parent[child], showDetailIcon : false}
+      parent[child] = { ...parent[child], showDetailIcon: false };
       console.log(parent[child]);
     }
   }

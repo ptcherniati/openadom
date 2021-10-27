@@ -35,9 +35,7 @@ describe('test authorization application', () => {
         cy.visit(Cypress.env('monsore_new_authorization_url'))
         cy.wait(['@getAuthorization','@getDataTypes'])
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
-        cy.get(':nth-child(2) > :nth-child(1) > :nth-child(1) > .check').click()
-        // voire pour selectionner le premier.
-        cy.get(':nth-child(2) > .field > .control > .select > select').first()
+
         cy.get('.buttons > .button').click()
         //cy.fixture('authorisation/monsore/new_authorization_response.json').then(responseAuthorization)
     })
