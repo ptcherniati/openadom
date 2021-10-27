@@ -12,6 +12,7 @@ public class GetReferenceResult {
     @Value
     public static class ReferenceValue {
         String hierarchicalKey;
+        String hierarchicalReference;
         String naturalKey;
         Map<String, String> values;
     }

@@ -41,6 +41,10 @@ public class ApplicationConfigurationServiceTest {
 
     @Autowired
     private ApplicationConfigurationService service;
+    @Test
+    public void parseConfigurationProFile() {
+        parseConfigurationFromResource(fixtures.getProApplicationConfigurationResourceName());
+    }
 
     @Test
     public void parseConfigurationFile() {
@@ -52,19 +56,23 @@ public class ApplicationConfigurationServiceTest {
                 fixtures.getValidationApplicationConfigurationResourceName(),
                 fixtures.getProApplicationConfigurationResourceName()
         ).forEach(resource -> {
-            try (InputStream in = getClass().getResourceAsStream(resource)) {
-                byte[] bytes = in.readAllBytes();
-                ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
-                log.debug("résultat de la validation de " + resource + " = " + configurationParsingResult);
-                Assert.assertTrue(resource + " doit être reconnu comme un fichier valide",configurationParsingResult.isValid());
-            } catch (IOException e) {
-                throw new OreSiTechnicalException("ne peut pas lire le fichier de test " + resource, e);
-            }
+            parseConfigurationFromResource(resource);
         });
 
         Assert.assertFalse(service.parseConfigurationBytes("vers: 0".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("version: 1".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("::".getBytes(StandardCharsets.UTF_8)).isValid());
+    }
+
+    private void parseConfigurationFromResource(String resource) {
+        try (InputStream in = getClass().getResourceAsStream(resource)) {
+            byte[] bytes = in.readAllBytes();
+            ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
+            log.debug("résultat de la validation de " + resource + " = " + configurationParsingResult);
+            Assert.assertTrue(resource + " doit être reconnu comme un fichier valide",configurationParsingResult.isValid());
+        } catch (IOException e) {
+            throw new OreSiTechnicalException("ne peut pas lire le fichier de test " + resource, e);
+        }
     }
 
     private ConfigurationParsingResult parseYaml(String toReplace, String by) {

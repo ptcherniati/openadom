@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageView class="with-submenu">
-      <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
+      <SubMenu :root="application.localName || application.title" :paths="subMenuPaths"/>
       <h1 class="title main-title">
         {{
           $t("titles.data-types-repository", {
@@ -10,36 +10,41 @@
         }}
       </h1>
       <div class="columns">
-        <div class="column is-3" v-for="(authReference, key) in authReferences" :key="key">
+        <div class="column is-3" v-for="(authReference, authKey) in authReferences" :key="authKey">
           <div class="columns">
-            <div class="column" style="padding-top: 20px">
-              <p style="text-transform: capitalize">{{ key }}</p>
-            </div>
             <div class="column">
               <b-field>
-                <b-select
-                  :placeholder="$t('dataTypesRepository.placeholder-select')"
-                  @input="selectAuthorization(key, $event)"
-                  expanded
+                  <b-menu >
+                    <div class="column" style="padding-top: 20px">
+                      <p style="text-transform: capitalize">{{ authKey }}</p>
+                    </div>
+                    <b-menu-list v-for="(option, itemKey) in authReference" :key="itemKey" >
+                      {{option.localName}}
+                    </b-menu-list>
+                  </b-menu>
+                <!--b-select
+                    :placeholder="$t('dataTypesRepository.placeholder-select')"
+                    @input="selectAuthorization(key, $event)"
+                    expanded
                 >
                   <option
-                    v-for="option in authReference.referenceValues"
-                    :key="option.naturalKey"
-                    :value="option.naturalKey"
+                      v-for="option in authReference"
+                      :key="option.key"
+                      :value="option.naturalKey"
                   >
-                    {{ option.naturalKey }}
+                    {{ option.localName }}
                   </option>
-                </b-select>
+                </b-select-->
               </b-field>
             </div>
           </div>
         </div>
         <div class="column" style="padding-top: 20px">
-          <h1>
+          <h1 v-if="this.selected && this.selected.requiredauthorization">
             {{
               Object.entries(this.selected.requiredauthorizations)
-                .map((e) => e[0] + " : " + e[1])
-                .join(", ")
+                  .map((e) => e[0] + " : " + e[1])
+                  .join(", ")
             }}
           </h1>
         </div>
@@ -54,7 +59,7 @@
                     {{ $t("dataTypesRepository.card-title-upload-file") }}
                   </p>
                   <a class="card-header-icon">
-                    <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+                    <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"></b-icon>
                   </a>
                 </div>
               </template>
@@ -64,10 +69,10 @@
                     <div class="column">
                       <b-field :label="$t('dataTypesRepository.start-date')">
                         <b-datepicker
-                          :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
-                          icon="calendar"
-                          editable
-                          v-model="startDate"
+                            :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
+                            icon="calendar"
+                            editable
+                            v-model="startDate"
                         >
                         </b-datepicker>
                       </b-field>
@@ -75,10 +80,10 @@
                     <div class="column">
                       <b-field :label="$t('dataTypesRepository.end-date')">
                         <b-datepicker
-                          :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
-                          icon="calendar"
-                          editable
-                          v-model="endDate"
+                            :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
+                            icon="calendar"
+                            editable
+                            v-model="endDate"
                         >
                         </b-datepicker>
                       </b-field>
@@ -98,8 +103,9 @@
               <footer class="card-footer">
                 <div class="column is-4">
                   <b-button type="is-dark" @click="upload">{{
-                    $t("dataTypesRepository.submit")
-                  }}</b-button>
+                      $t("dataTypesRepository.submit")
+                    }}
+                  </b-button>
                 </div>
               </footer>
             </b-collapse>
@@ -109,8 +115,8 @@
       <div class="card">
         <div class="card-content" v-if="isAuthorisationsSelected()">
           <table
-            class="table is-bordered is-striped is-fullwidth"
-            v-if="datasets && Object.keys(datasets).length"
+              class="table is-bordered is-striped is-fullwidth"
+              v-if="datasets && Object.keys(datasets).length"
           >
             <caption>
               {{
@@ -123,9 +129,9 @@
               <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
             </tr>
             <tr
-              @click="showDatasets(dataset)"
-              v-for="(dataset, periode) in datasets"
-              :key="dataset.id"
+                @click="showDatasets(dataset)"
+                v-for="(dataset, periode) in datasets"
+                :key="dataset.id"
             >
               <td align>{{ periode }}</td>
               <td align>{{ Object.keys(dataset.datasets).length }}</td>
@@ -133,8 +139,8 @@
             </tr>
           </table>
           <table
-            class="table is-bordered is-striped is-fullwidth"
-            v-if="currentDataset && currentDataset.length"
+              class="table is-bordered is-striped is-fullwidth"
+              v-if="currentDataset && currentDataset.length"
           >
             <caption>
               {{
@@ -164,20 +170,20 @@
               <td align>
                 <b-field>
                   <b-button
-                    type="is-primary is-light"
-                    size="is-large"
-                    :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
-                    @click="publish(dataset, !dataset.params.published)"
+                      type="is-primary is-light"
+                      size="is-large"
+                      :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                      @click="publish(dataset, !dataset.params.published)"
                   />
                 </b-field>
               </td>
               <td>
                 <b-field>
                   <b-button
-                    type="is-danger"
-                    size="is-medium"
-                    icon-right="trash-alt"
-                    @click="remove(dataset, dataset.params.published)"
+                      type="is-danger"
+                      size="is-medium"
+                      icon-right="trash-alt"
+                      @click="remove(dataset, dataset.params.published)"
                   />
                 </b-field>
               </td>
@@ -190,25 +196,26 @@
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { ApplicationResult } from "@/model/ApplicationResult";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {ApplicationResult} from "@/model/ApplicationResult";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import { AlertService } from "@/services/AlertService";
-import { DataService } from "@/services/rest/DataService";
-import { FileService } from "@/services/rest/FileService";
-import { ReferenceService } from "@/services/rest/ReferenceService";
-import { ErrorsService } from "@/services/ErrorsService";
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
-import { BinaryFileDataset } from "@/model/file/BinaryFileDataset";
-import { BinaryFile } from "@/model/file/BinaryFile";
-import { FileOrUUID } from "@/model/file/FileOrUUID";
-import { Dataset } from "@/model/file/Dataset";
-import { InternationalisationService } from "@/services/InternationalisationService";
+import {AlertService} from "@/services/AlertService";
+import {DataService} from "@/services/rest/DataService";
+import {FileService} from "@/services/rest/FileService";
+import {ReferenceService} from "@/services/rest/ReferenceService";
+import {ErrorsService} from "@/services/ErrorsService";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {BinaryFileDataset} from "@/model/file/BinaryFileDataset";
+import {BinaryFile} from "@/model/file/BinaryFile";
+import {FileOrUUID} from "@/model/file/FileOrUUID";
+import {Dataset} from "@/model/file/Dataset";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
 
 @Component({
-  components: { CollapsibleTree, PageView, SubMenu },
+  components: {CollapsibleTree, PageView, SubMenu},
 })
 export default class DataTypesRepositoryView extends Vue {
   @Prop() applicationName;
@@ -216,6 +223,7 @@ export default class DataTypesRepositoryView extends Vue {
   @Prop() applicationConfiguration;
 
   referenceService = ReferenceService.INSTANCE;
+  references = {};
   fileService = FileService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   alertService = AlertService.INSTANCE;
@@ -235,21 +243,24 @@ export default class DataTypesRepositoryView extends Vue {
   startDate = null;
   endDate = null;
   currentDataset = null;
+
   mounted() {
     this.$on("authorizationChanged", this.updateDatasets);
     this.$on("uploaded", this.updateDatasets);
     this.$on("published", this.updateDatasets);
     this.$on("deleted", this.updateDatasets);
     this.$on("listFilesUploaded", this.getDatasetMap);
+    this.$on("parseAuth", this.parseAuth);
   }
 
   created() {
     const prevPath = `/applications/${this.applicationName}/dataTypes`;
     this.subMenuPaths = [
       new SubMenuPath(
-        this.dataTypeId.toLowerCase(),
-        () => {},
-        () => this.$router.push(prevPath)
+          this.dataTypeId.toLowerCase(),
+          () => {
+          },
+          () => this.$router.push(prevPath)
       ),
     ];
 
@@ -263,52 +274,71 @@ export default class DataTypesRepositoryView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-          this.application,
-          this.application.dataTypes[this.dataTypeId]
+            this.application,
+            this.application.dataTypes[this.dataTypeId]
         ),
       };
       this.configuration = this.applications
-        .filter((a) => a.name === this.applicationName)
-        .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
+          .filter((a) => a.name === this.applicationName)
+          .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
       this.authorizations = this.configuration.authorization.authorizationScopes;
-      let ret = {};
-      for (let auth in this.authorizations) {
-        let vc = this.authorizations[auth];
-        var reference =
-          this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
-        let ref = await this.referenceService.getReferenceValues(this.applicationName, reference);
-        ret[auth] = ref;
-      }
-      this.authReferences = ret;
       this.selected = new BinaryFileDataset({
         datatype: this.dataTypeId,
-        requiredauthorizations: Object.keys(this.authReferences).reduce((acc, auth) => {
+        requiredauthorizations: Object.keys(this.authorizations).reduce((acc, auth) => {
           acc[auth] = null;
           return acc;
         }, {}),
         from: "",
         to: "",
       });
+      let ret = {};
+      for (let auth in this.authorizations) {
+        let vc = this.authorizations[auth];
+        var reference = this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
+        let ref = await this.getOrLoadReferences(reference);
+        ret[auth] = ref;
+      }
+      for (const [key, value] of Object.entries(ret)) {
+        let partition = await this.partitionReferencesValues(value.referenceValues);
+        ret[key] = partition
+      }
+      this.authReferences = ret;
+      //this.$emit("parseAuth", ret);
     } catch (error) {
       this.alertService.toastServerError();
     }
   }
+
+  async getOrLoadReferences(reference) {
+    if (this.references[reference]) {
+      return this.references[reference];
+    }
+    let ref = await this.referenceService.getReferenceValues(this.applicationName, reference);
+    this.references[reference] = ref;
+    // eslint-disable-next-line no-self-assign
+    this.references = this.references;
+    return ref;
+  }
+
   UTCToString(utcString) {
     return utcString && utcString.replace(/(\d{4})-(\d{2})-(\d{2}).*/, "$3/$2/$1");
   }
+
   periodeToString(dataset) {
     return this.periodeToStringForBinaryFileDataset(dataset.params.binaryFiledataset);
   }
+
   periodeToStringForBinaryFileDataset(binaryFiledataset) {
     return (
-      "du " +
-      this.dateToString(binaryFiledataset.from) +
-      " au " +
-      this.dateToString(binaryFiledataset.to)
+        "du " +
+        this.dateToString(binaryFiledataset.from) +
+        " au " +
+        this.dateToString(binaryFiledataset.to)
     );
   }
+
   async showDatasets(dataset) {
     if (!dataset) {
       this.currentDataset = null;
@@ -316,44 +346,47 @@ export default class DataTypesRepositoryView extends Vue {
     var datasets = dataset?.datasets?.sort((d1, d2) => d1.params.createDate < d2.params.createDate);
     this.currentDataset = datasets;
   }
+
   async upload() {
     if (this.file && this.startDate && this.endDate) {
       var fileOrId = new FileOrUUID(
-        null,
-        new BinaryFileDataset(
-          this.dataTypeId,
-          this.selected.requiredauthorizations,
-          /(.{10})T(.{8}).*/
-            .exec(new Date(this.startDate).toISOString())
-            .filter((a, i) => i != 0)
-            .join(" "),
-          /(.{10})T(.{8}).*/
-            .exec(new Date(this.endDate).toISOString())
-            .filter((a, i) => i != 0)
-            .join(" ")
-        ),
-        false
+          null,
+          new BinaryFileDataset(
+              this.dataTypeId,
+              this.selected.requiredauthorizations,
+              /(.{10})T(.{8}).*/
+                  .exec(new Date(this.startDate).toISOString())
+                  .filter((a, i) => i != 0)
+                  .join(" "),
+              /(.{10})T(.{8}).*/
+                  .exec(new Date(this.endDate).toISOString())
+                  .filter((a, i) => i != 0)
+                  .join(" ")
+          ),
+          false
       );
       var uuid = await this.dataService.addData(
-        this.applicationName,
-        this.dataTypeId,
-        this.file,
-        fileOrId
+          this.applicationName,
+          this.dataTypeId,
+          this.file,
+          fileOrId
       );
       this.$emit("uploaded", uuid);
     }
   }
+
   async publish(dataset, pusblished) {
     dataset.params.published = pusblished;
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     var uuid = await this.dataService.addData(
-      this.applicationName,
-      this.dataTypeId,
-      null,
-      fileOrId
+        this.applicationName,
+        this.dataTypeId,
+        null,
+        fileOrId
     );
     this.$emit("published", uuid.fileId);
   }
+
   selectAuthorization(key, value) {
     this.selected.requiredauthorizations[key] = value;
     this.datasets = this.currentDataset = null;
@@ -361,6 +394,7 @@ export default class DataTypesRepositoryView extends Vue {
       this.$emit("authorizationChanged");
     }
   }
+
   dateToString(dateString) {
     var today = new Date(dateString);
     var dd = String(today.getDate()).padStart(2, "0");
@@ -370,17 +404,19 @@ export default class DataTypesRepositoryView extends Vue {
     today = dd + "/" + mm + "/" + yyyy;
     return today;
   }
+
   isAuthorisationsSelected() {
     return (
-      this.selected && Object.values(this.selected.requiredauthorizations).every((v) => v?.length)
+        this.selected && Object.values(this.selected.requiredauthorizations).every((v) => v?.length)
     );
   }
+
   async updateDatasets(uuid) {
     if (this.isAuthorisationsSelected()) {
       let datasetsList = await this.fileService.getFiles(
-        this.applicationName,
-        this.dataTypeId,
-        this.selected
+          this.applicationName,
+          this.dataTypeId,
+          this.selected
       );
       if (!datasetsList || !datasetsList.length) {
         this.datasets = {};
@@ -393,6 +429,7 @@ export default class DataTypesRepositoryView extends Vue {
       });
     }
   }
+
   getDatasetMap(fileList) {
     var datasetMap = {};
     for (var index in fileList.binaryFileList) {
@@ -404,25 +441,62 @@ export default class DataTypesRepositoryView extends Vue {
     this.datasets = datasetMap;
     if (fileList.uuid) {
       var periode =
-        fileList.uuid &&
-        this.datasets &&
-        Object.values(this.datasets).find((e) => e.findByUUID(fileList.uuid))?.periode;
+          fileList.uuid &&
+          this.datasets &&
+          Object.values(this.datasets).find((e) => e.findByUUID(fileList.uuid))?.periode;
       this.currentDataset = this.datasets[periode].datasets;
     }
     return this.datasets;
   }
+
   remove(dataset, isPublished) {
     this.$buefy.dialog.confirm({
       message:
-        (isPublished
-          ? "<b>La version contient des données publiées.</b><br /> La supprimer entraînera la suppression de ces données.<br /><br />?"
-          : "") + "Etes vous sûr de vouloir supprimer cette version?",
+          (isPublished
+              ? "<b>La version contient des données publiées.</b><br /> La supprimer entraînera la suppression de ces données.<br /><br />?"
+              : "") + "Etes vous sûr de vouloir supprimer cette version?",
       onConfirm: () => this.deleteFile(dataset.id),
     });
   }
+
   async deleteFile(uuid) {
     var deleted = await this.fileService.remove(this.applicationName, uuid);
     this.$emit("deleted", deleted);
+  }
+
+  async partitionReferencesValues(referencesValues, currentPath) {
+    let returnValues = {};
+    referencesValues.forEach(async (referenceValue) => {
+      var previousKeySplit = currentPath ? currentPath.split('.') : [];
+      var keys = referenceValue.hierarchicalKey.split('.');
+      var references = referenceValue.hierarchicalReference.split('.');
+      if (previousKeySplit.length == keys.length) {
+        return;
+      }
+      for (let i = 0; i < previousKeySplit.length; i++) {
+        previousKeySplit.shift();
+        references.shift();
+      }
+      var key = keys.shift();
+      var reference = references.shift();
+      let refValues = await this.getOrLoadReferences(reference);
+      this.internationalisationService.getUserPrefLocale()
+      let lang = localStorage.getItem(LOCAL_STORAGE_LANG);
+      let localName = refValues.referenceValues.find(r => r.naturalKey == key)
+      if (localName?.values?.['__display_' + lang]) {
+        localName = localName?.values?.['__display_' + lang];
+      }
+      let authPartition = returnValues[key] || {
+        key,
+        reference,
+        referenceValues: [],
+        localName,
+        currentPath: (currentPath ? currentPath + '.' : '') + key
+      };
+      authPartition.referenceValues.push(referenceValue);
+      returnValues[key] = authPartition;
+    });
+    return returnValues;
   }
 }
 </script>
@@ -434,9 +508,11 @@ export default class DataTypesRepositoryView extends Vue {
     overflow-wrap: break-word;
   }
 }
+
 table.datasetsPanel {
   width: 50%;
 }
+
 table.datasetsPanel,
 table.datasetsPanel th,
 table.datasetsPanel td {

@@ -6,6 +6,16 @@ application:
     en: SOERE my SOERE
   name: MONSORE
   version: 1
+compositeReferences:
+  sites:
+    components:
+      - reference: type_de_sites
+      - parentKeyColumn: tze_type_nom
+        parentRecursiveKey: zet_chemin_parent
+        reference: sites
+  projet:
+    components:
+      - reference: projet
 references:
   especes:
     internationalizationName:
@@ -15,6 +25,10 @@ references:
       esp_definition_fr:
         fr: esp_definition_fr
         en: esp_definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{esp_nom}'
+        en: '{esp_nom}'
     keyColumns: [esp_nom]
     columns:
       esp_nom:
@@ -33,6 +47,10 @@ references:
       definition_fr:
         fr: definition_fr
         en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     keyColumns: [nom_key]
     columns:
       nom_key:
@@ -51,6 +69,13 @@ references:
           params:
             refType: type_de_sites
             columns: tze_type_nom
+      siteParentRef:
+        description: "référence à la colonne parent"
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            columns: zet_chemin_parent
     keyColumns: [zet_chemin_parent,zet_nom_key]
     internationalizationName:
       fr: Site
@@ -62,6 +87,10 @@ references:
       zet_description_fr:
         fr: zet_description_fr
         en: zet_description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{zet_nom_key}'
+        en: '{zet_nom_key}'
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -83,6 +112,10 @@ references:
       description_fr:
         fr: description_fr
         en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -102,6 +135,10 @@ references:
       description_fr:
         fr: description_fr
         en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -121,6 +158,10 @@ references:
       tze_definition_fr:
         fr: tze_definition_fr
         en: tze_definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{tze_nom_key}'
+        en: '{tze_nom_key}'
     columns:
       tze_nom_key:
       tze_nom_fr:
@@ -130,8 +171,12 @@ references:
 
   types_de_donnees_par_themes_de_sites_et_projet:
     internationalizationName:
-      fr: Types de deoonés par site et projet
+      fr: Types de données par site et projet
       en: Data types by site and project
+    internationalizationDisplay:
+      pattern:
+        fr: 'nom du projet: {nom du projet}, nom du site : {nom du site}, nom du thème : {nom du thème}, nom du type de données : {nom du type de données} '
+        en: '{tze_nom_key}'
     validations:
       projetRef:
         description: "référence au projet"
@@ -182,6 +227,10 @@ references:
       nom_key:
         fr: nom_fr
         en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
     columns:
       code_key:
       code_fr:
@@ -202,6 +251,10 @@ references:
       valeur_key:
         fr: valeur_fr
         en: valeur_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{valeur_key}'
+        en: '{valeur_key}'
     columns:
       nom_key:
       nom_fr:
@@ -222,6 +275,10 @@ references:
       definition_fr:
         fr: definition_fr
         en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -258,25 +315,25 @@ references:
     internationalizationName:
       fr: Variables et unités par type de données
       en: Variables and units by data type
+    internationalizationDisplay:
+      pattern:
+        fr: "nom du type de données : {nom du type de données}, nom de la variable : {nom de la variable}, : nom de l'unité {nom de l'unité}"
+        en: "datatype name : {nom du type de données}, variable name : {nom de la variable}, : unit name {nom de l'unité}"
     columns:
       nom du type de données:
       nom de la variable:
       nom de l'unité:
-
-
-compositeReferences:
-  sites:
-    components:
-      - reference: sites
-  projet:
-    components:
-      - reference: projet
 
 dataTypes:
   pem:
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent
+    internationalizationDisplay:
+      especes:
+          pattern:
+            fr: 'espèce :{esp_nom}'
+            en: 'espèce :{esp_nom}'
     repository:
       toto: test
     data:
@@ -290,14 +347,25 @@ dataTypes:
       site:
         components:
           bassin:
+            params:
+              references: sites
+              replace: true
+            defaultValue: >
+              return references.get("sites")
+              .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
+              .getHierarchicalKey();
             checker:
               name: Reference
               params:
                 refType: sites
           plateforme:
           chemin:
-#             defaultValue: >
-#              return datumByVariableAndComponent.get("site").get("bassin") +"__" +datumByVariableAndComponent.get("site").get("plateforme")
+            params:
+              references: sites
+            defaultValue: >
+              return references.get("sites")
+              .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin")) && it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
+              .getHierarchicalKey();
             checker:
               name: Reference
               params:
@@ -422,9 +490,6 @@ dataTypes:
         component: value
       dataGroups:
         referentiel:
-          internationalizationName:
-            fr: Référentiel
-            en: Referential
           label: "Référentiel"
           data:
             - projet
@@ -432,16 +497,10 @@ dataTypes:
             - date
             - espece
         qualitatif:
-          internationalizationName:
-            fr: Données qualitatives
-            en: Qualitative data
           label: "Données qualitatives"
           data:
             - Couleur des individus
         quantitatif:
-          internationalizationName:
-            fr: Données quantitatives
-            en: Quantitative data
           label: "Données quantitatives"
           data:
             - Nombre d'individus

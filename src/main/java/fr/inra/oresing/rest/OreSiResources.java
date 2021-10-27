@@ -198,6 +198,7 @@ public class OreSiResources {
                 .map(referenceValue ->
                         new GetReferenceResult.ReferenceValue(
                                 referenceValue.getHierarchicalKey(),
+                                referenceValue.getHierarchicalReference(),
                                 referenceValue.getNaturalKey(),
                                 referenceValue.getRefValues()
                         )
