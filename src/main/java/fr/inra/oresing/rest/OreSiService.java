@@ -109,7 +109,7 @@ public class OreSiService {
     }
 
     public static void checkNaturalKeySyntax(String keyComponent) {
-        if(keyComponent.isEmpty())
+        if (keyComponent.isEmpty())
             Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturel ne peut être vide. vérifier le nom des colonnes.");
         Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
@@ -323,10 +323,11 @@ public class OreSiService {
                 .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
                 .findFirst();
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
-        String parentHierarchicalKeyColumn;
+        String parentHierarchicalKeyColumn, parentHierarchicalParentReference;
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
         BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
+        Function<String, String> getHierarchicalReferenceFn;
         Map<String, String> buildedHierarchicalKeys = new HashMap<>();
         Map<String, String> parentreferenceMap = new HashMap<>();
         if (toUpdateCompositeReference.isPresent()) {
@@ -334,18 +335,22 @@ public class OreSiService {
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
             if (root) {
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
+                getHierarchicalReferenceFn = (reference) -> reference;
             } else {
-                parentHierarchicalKeyColumn = compositeReferenceDescription.getComponents().stream()
+                Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
                         .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
-                        .collect(MoreCollectors.onlyElement())
-                        .getParentKeyColumn();
+                        .collect(MoreCollectors.onlyElement());
+                parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
+                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription)-1).getReference().replaceAll("\\.","");
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
                     String parentHierarchicalKey = referenceValues.get(parentHierarchicalKeyColumn);
                     return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
                 };
+                getHierarchicalReferenceFn = (reference) -> parentHierarchicalParentReference + LTREE_SEPARATOR + reference;
             }
         } else {
             getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
+            getHierarchicalReferenceFn = (reference) -> reference;
         }
 
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
@@ -430,12 +435,17 @@ public class OreSiService {
                             }
                         }
                         String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
+                        String hierarchicalReference =
+                                getHierarchicalReferenceFn.apply(isRecursive ?
+                                        Stream.ofNullable(recursiveNaturalKey.split("\\.")).map(s -> refType.replaceAll("\\.","")).collect(Collectors.joining(".")) :
+                                        refType);
                         refValues.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, refValues));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
+                        e.setHierarchicalReference(hierarchicalReference);
                         e.setRefsLinkedTo(refsLinkedTo);
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
@@ -899,9 +909,9 @@ public class OreSiService {
                         ImmutableMap<String, Object> evaluationContext = GroovyLineChecker.buildContext(rowWithData.getDatum(), application, params, repository);
                         String evaluate = variableComponentKeyExpressionEntry.getValue().evaluate(evaluationContext);
                         if (StringUtils.isNotBlank(evaluate)) {
-                            if(params!=null && Boolean.parseBoolean(params.get("replace"))) {
+                            if (params != null && Boolean.parseBoolean(params.get("replace"))) {
                                 rowWithValues.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
-                            }else{
+                            } else {
                                 rowWithDefaults.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
                             }
                         }

@@ -33,8 +33,13 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile) SELECT id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" DO UPDATE SET updateDate=current_timestamp, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "\n" +
+                "(id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile) \n" +
+                "SELECT id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile \n" +
+                "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", \n" +
+                ":json::json) \n"
+                + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" \n" +
+                "DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, hierarchicalReference=EXCLUDED.hierarchicalReference, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
 
