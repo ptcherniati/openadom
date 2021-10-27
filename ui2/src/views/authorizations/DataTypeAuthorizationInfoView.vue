@@ -174,8 +174,7 @@
                   hoverable
                   custom-detail-row
                   detail-key="id"
-                  @details-open="(row) => $buefy.toast.open(`Expanded ${row.children}`)"
-                  :show-detail-icon="true"
+                  :show-detail-icon="false"
                 >
                   <b-table-column
                     field="label"
@@ -183,7 +182,14 @@
                     :label="columnsVisible['label'].title"
                     v-slot="props"
                   >
-                    {{ props.row.label }}
+                    <template v-if="props.row.children.length === 0">
+                      {{ props.row.label }}
+                    </template>
+                    <template v-else>
+                      <a @click="props.toggleDetails(props.row)">
+                        {{ props.row.label }}
+                      </a>
+                    </template>
                   </b-table-column>
                   <b-table-column
                     field="admin"
@@ -191,8 +197,7 @@
                     :label="columnsVisible['admin'].title"
                     centered
                   >
-                    <b-checkbox v-model="checkbox">
-                    </b-checkbox>
+                    <b-checkbox v-model="checkbox"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="depot"
@@ -200,8 +205,7 @@
                     :label="columnsVisible['depot'].title"
                     centered
                   >
-                    <b-checkbox v-model="checkbox">
-                    </b-checkbox>
+                    <b-checkbox v-model="checkbox"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="publication"
@@ -209,8 +213,7 @@
                     :label="columnsVisible['publication'].title"
                     centered
                   >
-                    <b-checkbox v-model="checkbox">
-                    </b-checkbox>
+                    <b-checkbox v-model="checkbox"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="extraction"
@@ -218,8 +221,7 @@
                     :label="columnsVisible['extraction'].title"
                     centered
                   >
-                    <b-checkbox v-model="checkbox">
-                    </b-checkbox>
+                    <b-checkbox v-model="checkbox"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="date"
@@ -230,27 +232,29 @@
                   >
                     {{ props.row.date }}
                   </b-table-column>
-                  <template slot="detail" slot-scope="props">
-                    <tr v-for="item in props.row.children" :key="item.id">
-                      <td v-if="true"></td>
+                  <template slot="detail" slot-scope="props" v-if="props.row.children.length > 0">
+                    <tr v-for="item in props.row.children" :key="item.id" >
                       <td v-show="columnsVisible['label'].display">
-                        &nbsp;&nbsp;&nbsp;&nbsp;{{ item.label }}
+                        <template v-if="item.children.length === 0">
+                          &nbsp;&nbsp;&nbsp;&nbsp;{{ item.label }}
+                        </template>
+                        <template v-else>
+                          <a @click="item.toggleDetails(item)">
+                            &nbsp;&nbsp;&nbsp;&nbsp;{{ item.label }}
+                          </a>
+                        </template>
                       </td>
                       <td v-show="columnsVisible['admin'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox">
-                        </b-checkbox>
+                        <b-checkbox v-model="checkbox"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['depot'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox">
-                        </b-checkbox>
+                        <b-checkbox v-model="checkbox"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['publication'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox">
-                        </b-checkbox>
+                        <b-checkbox v-model="checkbox"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['extraction'].display" class="has-text-centered">
-                        <b-checkbox v-model="checkbox">
-                        </b-checkbox>
+                        <b-checkbox v-model="checkbox"> </b-checkbox>
                       </td>
                       <td v-show="columnsVisible['date'].display" class="has-text-centered">
                         {{ item.date }}
@@ -258,7 +262,7 @@
                     </tr>
                   </template>
                 </b-table>
-<!--                <CollapsibleTree
+                <!--                <CollapsibleTree
                   v-for="option in scope.options"
                   :key="option.id"
                   :option="option"
@@ -324,6 +328,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     extraction: { title: "Extraction", display: true },
     date: { title: "Périodes", display: true },
   };
+  checkbox = false;
   authorizations = [];
   users = [];
   dataGroups = [];
@@ -370,7 +375,14 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   }
 
   showDetail(parent) {
-    return !parent.children.isEmpty();
+    for(const child in parent) {
+      if(parent[child].children.length !== 0) {
+        parent[child]={...parent[child], showDetailIcon : true}
+        console.log(parent[child]);
+      }
+      parent[child]={...parent[child], showDetailIcon : false}
+      console.log(parent[child]);
+    }
   }
 
   async init() {
@@ -394,7 +406,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
-      console.log(this.authorizationScopes);
       // this.authorizationScopes[0].options[0].children[0].children.push({
       //   children: [],
       //   id: "toto",
