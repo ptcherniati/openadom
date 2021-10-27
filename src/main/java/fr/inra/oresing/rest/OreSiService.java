@@ -341,7 +341,7 @@ public class OreSiService {
                         .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
                         .collect(MoreCollectors.onlyElement());
                 parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
-                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription)-1).getReference().replaceAll("\\.","");
+                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription)-1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
                     String parentHierarchicalKey = referenceValues.get(parentHierarchicalKeyColumn);
                     return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
@@ -435,10 +435,14 @@ public class OreSiService {
                             }
                         }
                         String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
+                        String selfHierarchicalReference = refType;
+                        if(isRecursive){
+                            for (int i = 1; i < recursiveNaturalKey.split("\\.").length; i++) {
+                                selfHierarchicalReference+=".".concat(refType);
+                            }
+                        }
                         String hierarchicalReference =
-                                getHierarchicalReferenceFn.apply(isRecursive ?
-                                        Stream.ofNullable(recursiveNaturalKey.split("\\.")).map(s -> refType.replaceAll("\\.","")).collect(Collectors.joining(".")) :
-                                        refType);
+                                getHierarchicalReferenceFn.apply(selfHierarchicalReference);
                         refValues.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, refValues));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
