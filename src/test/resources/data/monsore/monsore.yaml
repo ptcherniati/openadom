@@ -176,7 +176,7 @@ references:
     internationalizationDisplay:
       pattern:
         fr: 'nom du projet: {nom du projet}, nom du site : {nom du site}, nom du thème : {nom du thème}, nom du type de données : {nom du type de données} '
-        en: '{tze_nom_key}'
+        en: 'project name: {nom du projet}, site name : {nom du site}, thematic : {nom du thème}, datatype : {nom du type de données} '
     validations:
       projetRef:
         description: "référence au projet"

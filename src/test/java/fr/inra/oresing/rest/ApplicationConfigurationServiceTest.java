@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
@@ -423,5 +424,38 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("invalidKeyColumns", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingColumnInInternationalizationDisplayPattern() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("'{nom du site_fr}'", "'{nom du site}'");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
+    }
+
+    @Test
+    public void testUnknownReferenceInInternationalizationDisplayPatternInDatatype() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplay:\n" +
+                "      sites:", "internationalizationDisplay:\n" +
+                "      plateforme:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceInDatatypeReferenceDisplay", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingColumnInInternationalizationDisplayPatternInDatatype() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("'{nom du site_fr}'", "'{nom du site}'");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
     }
 }

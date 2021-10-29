@@ -270,6 +270,15 @@ public class ConfigurationParsingResult {
             ));
         }
 
+        public Builder recordInvalidInternationalizedColumnsForDataType(String dataType, String reference, Set<String> unknownUsedAsKeyInternationalizedColumns, Set<String> knownColumns) {
+            return recordError("invalidInternationalizedColumnsForDataType", ImmutableMap.of(
+                    "dataType", dataType,
+                    "reference", reference,
+                    "unknownUsedAsInternationalizedColumns", unknownUsedAsKeyInternationalizedColumns,
+                    "knownColumns", knownColumns
+            ));
+        }
+
         public Builder missingColumnReferenceForCheckerInReference(String validationRuleDescriptionEntryKey, Set<String> availablesColumns, String name, List<String> missingColumns, String reference) {
             return recordError("missingColumnReferenceForCheckerInReference", ImmutableMap.of(
                     "reference", reference,
@@ -344,6 +353,14 @@ public class ConfigurationParsingResult {
                     "compositeReference", compositeReferenceName,
                     "reference", reference,
                     "parentRecursiveKey", parentRecursiveKey)
+            );
+        }
+
+        public Builder recordUnknownReferenceInDatatypeReferenceDisplay(String dataType, String reference, Set<String> references) {
+            return recordError("unknownReferenceInDatatypeReferenceDisplay", ImmutableMap.of(
+                    "dataType", dataType,
+                    "reference", reference,
+                    "references", references)
             );
         }
     }

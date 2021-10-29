@@ -166,6 +166,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeCheckersExists(builder, dataTypeDescription, dataType);
             verifyDatatypeCheckerReferenceRefersToExistingReference(builder, references, dataType, dataTypeDescription);
             verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(builder, dataTypeDescription);
+            verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType, dataTypeDescription);
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
@@ -490,9 +491,61 @@ public class ApplicationConfigurationService {
 
 
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
-        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
+        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
             builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+        }
+    }
+
+    private void verifyInternationalizedColumnsExistsForPatternInDatatype(Configuration configuration, ConfigurationParsingResult.Builder builder, String dataType, Configuration.DataTypeDescription dataTypeDescription) {
+        Map<String, InternationalizationDisplay> internationalizationDisplayMap = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getDataTypes())
+                .map(r -> r.getOrDefault(dataType, null))
+                .map(im -> im.getInternationalizationDisplay())
+                .orElseGet(Map::of);
+        for (Map.Entry<String, InternationalizationDisplay> internationalizationDisplayEntry : internationalizationDisplayMap.entrySet()) {
+            Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(internationalizationDisplayEntry.getValue())
+                    .map(ic -> ic.getPattern())
+                    .map(patterns -> patterns.values()
+                            .stream()
+                            .map(pattern -> InternationalizationDisplay.getPatternColumns(pattern))
+                            .flatMap(List::stream)
+                            .collect(Collectors.toSet())
+                    )
+                    .orElseGet(Set::of);
+            String reference = internationalizationDisplayEntry.getKey();
+            Map<String, Configuration.ReferenceDescription> references = Optional.ofNullable(configuration.getReferences())
+                    .orElse(new LinkedHashMap<>());
+            if(!references.containsKey(reference)){
+                builder.recordUnknownReferenceInDatatypeReferenceDisplay(dataType, reference, references.keySet());
+                return;
+            }
+
+
+            Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
+                    .map(i -> i.getReferences())
+                    .map(r -> r.getOrDefault(reference, null))
+                    .map(im -> im.getInternationalizedColumns())
+                    .map(ic -> {
+                        Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                        ic.values().stream()
+                                .forEach(v -> columns.addAll(v.values()));
+                        return columns;
+                    })
+                    .orElse(new HashSet<>());
+            Configuration.ReferenceDescription referenceDescription = configuration.getReferences().getOrDefault(reference, null);
+            Set<String> columns = Optional.ofNullable(referenceDescription)
+                    .map(r -> r.getColumns())
+                    .map(c -> new LinkedHashSet(c.keySet()))
+                    .orElseGet(LinkedHashSet::new);
+            columns.addAll(internationalizedColumns);
+
+
+            ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
+            ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
+            if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
+                builder.recordInvalidInternationalizedColumnsForDataType(dataType, reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+            }
         }
     }
 
