@@ -143,6 +143,65 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
+    public void testUnknownReferenceInCompositereference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: typeDeSites");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceInCompositereference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingReferenceInCompositereference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: ");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceInCompositereference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testRequiredReferenceInCompositeReferenceForParentKeyColumn() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("requiredReferenceInCompositeReferenceForParentKeyColumn", onlyError.getMessage());
+    }
+
+    @Test
+    public void testRequiredParentKeyColumnInCompositeReferenceForReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("parentKeyColumn: \"nom du type de site\"\n" +
+                "        ", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("requiredParentKeyColumnInCompositeReferenceForReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingParentColumnForReferenceInCompositeReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- parentKeyColumn: \"nom du site\"", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        boolean hasError = configurationParsingResult.getValidationCheckResults()
+                .stream()
+                .anyMatch((validationCheckResult -> "missingParentColumnForReferenceInCompositeReference".equals(validationCheckResult.getMessage())));
+        Assert.assertEquals(true, hasError);
+    }
+
+    @Test
+    public void testMissingParentRecursiveKeyColumnForReferenceInCompositeReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("parentKeyColumn: \"nom du site\"\n" +
+                "        ", "parentKeyColumn: \"nom du site\"\n" +
+                "        parentRecursiveKey: \"nom du parent\"\n" +
+                "        ");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingParentRecursiveKeyColumnForReferenceInCompositeReference", onlyError.getMessage());
+    }
+
+    @Test
     public void testUndeclaredDataGroupForVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
                 "            - localization", "data:\n" +

@@ -301,5 +301,50 @@ public class ConfigurationParsingResult {
                     "datatype", dataType
             ));
         }
+
+        public Builder recordUnknownReferenceInCompositeReference(String compositeReferenceName, ImmutableSet<String> unknownReferences, Set<String> existingReferences) {
+            return recordError("unknownReferenceInCompositereference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "unknownReferences", unknownReferences,
+                    "references", existingReferences)
+            );
+        }
+
+        public Builder recordMissingReferenceInCompositereference(String compositeReferenceName) {
+            return recordError("missingReferenceInCompositereference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName)
+            );
+        }
+
+        public Builder recordRequiredReferenceInCompositeReferenceForParentKeyColumn(String compositeReferenceName, String parentKeyColumn) {
+            return recordError("requiredReferenceInCompositeReferenceForParentKeyColumn", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "parentKeyColumn", parentKeyColumn)
+            );
+        }
+
+        public Builder recordRequiredParentKeyColumnInCompositeReferenceForReference(String compositeReferenceName, String reference, String referenceTo) {
+            return recordError("requiredParentKeyColumnInCompositeReferenceForReference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "reference", reference,
+                    "referenceTo", referenceTo)
+            );
+        }
+
+        public Builder recordMissingParentColumnForReferenceInCompositeReferenceFor(String compositeReferenceName, String reference, String parentKeyColumn) {
+            return recordError("missingParentColumnForReferenceInCompositeReference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "reference", reference,
+                    "parentKeyColumn", parentKeyColumn)
+            );
+        }
+
+        public Builder recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(String compositeReferenceName, String reference, String parentRecursiveKey) {
+            return recordError("missingParentRecursiveKeyColumnForReferenceInCompositeReference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "reference", reference,
+                    "parentRecursiveKey", parentRecursiveKey)
+            );
+        }
     }
 }
