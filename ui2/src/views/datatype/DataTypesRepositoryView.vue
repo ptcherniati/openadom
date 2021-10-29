@@ -236,6 +236,7 @@ export default class DataTypesRepositoryView extends Vue {
   errorsService = ErrorsService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   getAuthorizationScopePath = this.internationalisationService.getAuthorizationScopePath;
+  getDataTypeDisplay = this.internationalisationService.getDataTypeDisplay;
   subMenuPaths = [];
   application = new ApplicationResult();
   applications = [];

@@ -3,8 +3,57 @@ import {Fetcher, LOCAL_STORAGE_LANG} from "./Fetcher";
 export class InternationalisationService extends Fetcher {
     static INSTANCE = new InternationalisationService();
 
-    getAuthorizationScopePath(authorizationScopes) {
-        return `dataTypes.${this.dataTypeId}.authorization.authorizationScopes.${authorizationScopes}.internationalizationName`;
+    getApplicationPath() {
+        return `application.internationalization`;
+    }
+    getDataTypeDisplay(reference, localThis) {
+        localThis = localThis || this;
+        return `dataTypes.${localThis.dataTypeId}.internationalizationDisplay.${reference}.pattern`;
+    }
+    getDataTypeName(localThis) {
+        localThis = localThis || this;
+        return `dataTypes.${localThis.dataTypeId}.internationalizationName`;
+    }
+    // getDataTypeColumns(column) {
+    //     return `dataTypes.${this.dataTypeId}.internationalizationColumns.${column}.pattern`;
+    // }
+    getReferenceDisplay(localThis) {
+        localThis = localThis || this;
+        return `references.${localThis.refId}.internationalizationDisplay.pattern`;
+    }
+    getReferenceName(localThis) {
+        localThis = localThis || this;
+        return `references.${localThis.refId}.internationalizationName`;
+    }
+    getReferenceeColumns(column, localThis) {
+        localThis = localThis || this;
+        return `references.${localThis.refId}.internationalizationColumns.${column}`;
+    }
+    getAuthorizationScopePath(authorizationScopes, localThis) {
+        localThis = localThis || this;
+        return `dataTypes.${localThis.dataTypeId}.authorization.authorizationScopes.${authorizationScopes}.internationalizationName`;
+    }
+    getDataGroupsPath(dataGroups, localThis) {
+        localThis = localThis || this;
+        return `dataTypes.${localThis.dataTypeId}.authorization.dataGroups.${dataGroups}.internationalizationName`;
+    }
+
+    getLocaleforPath(application, path, defaultValue) {
+        if (!path || !path.length) {
+            return defaultValue;
+        }
+        var navigateConfiguration = application.internationalization;
+        let pathArray = path.split(".");
+        var pathItem = pathArray.shift();
+        while (pathItem) {
+            navigateConfiguration = navigateConfiguration[pathItem];
+            if (!navigateConfiguration) {
+                return defaultValue;
+            }
+             pathItem = pathArray.shift();
+        }
+        return navigateConfiguration[localStorage.getItem(LOCAL_STORAGE_LANG)] || defaultValue;
+
     }
 
     mergeInternationalization(application) {
@@ -40,24 +89,6 @@ export class InternationalisationService extends Fetcher {
         } else {
             return datatype.name;
         }
-    }
-
-    getLocaleforPath(application, path, defaultValue) {
-        if (!path || !path.length) {
-            return defaultValue;
-        }
-        var navigateConfiguration = application.internationalization;
-        let pathArray = path.split(".");
-        var pathItem = pathArray.shift();
-        while (pathItem) {
-            navigateConfiguration = navigateConfiguration[pathItem];
-            if (!navigateConfiguration) {
-                return defaultValue;
-            }
-             pathItem = pathArray.shift();
-        }
-        return navigateConfiguration[localStorage.getItem(LOCAL_STORAGE_LANG)] || defaultValue;
-
     }
 
     localeDatatypeName(application) {
