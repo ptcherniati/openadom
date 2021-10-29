@@ -480,9 +480,15 @@ dataTypes:
     authorization:
       authorizationScopes:
         projet:
+          internationalizationName:
+            fr: Projet
+            en: Project
           variable: projet
           component: value
         localization:
+          internationalizationName:
+            fr: Localisation
+            en: Localization
           variable: site
           component: chemin
       timeScope:
@@ -490,6 +496,9 @@ dataTypes:
         component: value
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiels
+            en: Repositories
           label: "Référentiel"
           data:
             - projet
@@ -497,10 +506,16 @@ dataTypes:
             - date
             - espece
         qualitatif:
+          internationalizationName:
+            fr: Qualitatif
+            en: Qualitative
           label: "Données qualitatives"
           data:
             - Couleur des individus
         quantitatif:
+          internationalizationName:
+            fr: Quantitatif
+            en: Quantitative
           label: "Données quantitatives"
           data:
             - Nombre d'individus

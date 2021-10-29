@@ -18,8 +18,9 @@
                   <template #trigger="{ active }">
                     <b-button
                         :icon-right="active ? 'chevron-up' : 'chevron-down'"
-                        :label="authKey"
-                        type="is-primary"/>
+                        type="is-primary">
+                      {{ internationalisationService.getLocaleforPath(application, getAuthorizationScopePath(authKey), authKey) }}
+                    </b-button>
                   </template>
                   <DropDownMenu v-for="(option, optionKey) in authReference"
                                 :key="optionKey"
@@ -35,7 +36,8 @@
           <h1>
             {{
               this.requiredauthorizationsObject ? Object.entries(this.requiredauthorizationsObject)
-                  .map((e) => e[0] + " : " + e[1])
+                  .filter(e=>e[1])
+                  .map((e) => internationalisationService.getLocaleforPath(application, getAuthorizationScopePath(e[0]), e[0]) + " : " + e[1])
                   .join(", ") : ''
             }}
           </h1>
@@ -233,7 +235,7 @@ export default class DataTypesRepositoryView extends Vue {
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
-
+  getAuthorizationScopePath = this.internationalisationService.getAuthorizationScopePath;
   subMenuPaths = [];
   application = new ApplicationResult();
   applications = [];
@@ -522,11 +524,11 @@ export default class DataTypesRepositoryView extends Vue {
       if (localName?.values?.['__display_' + lang]) {
         localName = localName?.values?.['__display_' + lang];
       }
-      if (!localName){
+      if (!localName) {
         localName = key;
       }
       var completeLocalName = (typeof currentCompleteLocalName === 'undefined') ? "" : currentCompleteLocalName;
-      completeLocalName = completeLocalName + (completeLocalName==""?"":",")+localName;
+      completeLocalName = completeLocalName + (completeLocalName == "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
         reference,
@@ -550,7 +552,7 @@ export default class DataTypesRepositoryView extends Vue {
 
         }
       } else {
-        var r = await this.partitionReferencesValues(auth.referenceValues, auth.currentPath,auth.completeLocalName);
+        var r = await this.partitionReferencesValues(auth.referenceValues, auth.currentPath, auth.completeLocalName);
         returnValues[returnValuesKey] = {
           ...auth,
           isLeaf: false,

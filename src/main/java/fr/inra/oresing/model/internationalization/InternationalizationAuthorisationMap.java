@@ -9,4 +9,5 @@ import java.util.Map;
 @Setter
 public class InternationalizationAuthorisationMap {
     Map<String, InternationalizationAuthorisationName> dataGroups;
+    Map<String, InternationalizationAuthorisationName> authorizationScopes;
 }
