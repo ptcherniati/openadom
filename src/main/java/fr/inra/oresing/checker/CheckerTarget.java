@@ -29,7 +29,7 @@ abstract public class CheckerTarget<T>{
         this.target = target;
     }
 
-    public static enum CheckerTargetType{
+    public enum CheckerTargetType{
         PARAM_VARIABLE_COMPONENT_KEY("variableComponentKey"),PARAM_COLUMN("column");
 
         private final String type;

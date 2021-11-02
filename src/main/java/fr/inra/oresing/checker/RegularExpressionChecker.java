@@ -15,8 +15,8 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
     private final String patternString;
 
     private final Predicate<String> predicate;
-    private CheckerTarget target;
-    private Map<String, String> params;
+    private final CheckerTarget target;
+    private final Map<String, String> params;
 
     public CheckerTarget getTarget(){
         return this.target;

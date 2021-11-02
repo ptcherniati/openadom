@@ -7,8 +7,8 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 import java.util.Map;
 
 public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker {
-    private CheckerTarget target;
-    private Map<String, String> params;
+    private final CheckerTarget target;
+    private final Map<String, String> params;
 
     public CheckerTarget getTarget(){
         return this.target;

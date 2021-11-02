@@ -25,8 +25,8 @@ public class GroovyLineChecker implements LineChecker {
     public static final String PARAM_DATATYPES = "datatypes";
 
     private final BooleanGroovyExpression expression;
-    private Application application;
-    private OreSiRepository.RepositoryForApplication repository;
+    private final Application application;
+    private final OreSiRepository.RepositoryForApplication repository;
     private Map<String, String> params = new HashMap<>();
 
     private GroovyLineChecker(BooleanGroovyExpression expression, Application app, OreSiRepository.RepositoryForApplication repository, Map<String, String> params) {

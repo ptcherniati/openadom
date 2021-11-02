@@ -14,8 +14,8 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
     public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
-    private CheckerTarget target;
-    private Map<String, String> params;
+    private final CheckerTarget target;
+    private final Map<String, String> params;
 
     public CheckerTarget getTarget(){
         return this.target;

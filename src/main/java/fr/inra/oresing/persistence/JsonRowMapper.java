@@ -28,7 +28,7 @@ public class JsonRowMapper<T> implements RowMapper<T> {
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
      */
-    private ObjectMapper jsonMapper;
+    private final ObjectMapper jsonMapper;
 
     public JsonRowMapper() {
         jsonMapper = new ObjectMapper();

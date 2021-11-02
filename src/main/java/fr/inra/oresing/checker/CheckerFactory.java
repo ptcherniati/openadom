@@ -209,7 +209,7 @@ public class CheckerFactory {
 
         private final String param;
 
-        private Type(String requiredAttributeForCheckerOnOneVariableComponentLineChecker) {
+        Type(String requiredAttributeForCheckerOnOneVariableComponentLineChecker) {
             this.param = requiredAttributeForCheckerOnOneVariableComponentLineChecker;
         }
 

@@ -11,8 +11,8 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
     private final String reference;
     public ImmutableMap<String, UUID> referenceValues;
     public ImmutableMap<String, String> display;
-    private Map<String, String> params;
-    private CheckerTarget target;
+    private final Map<String, String> params;
+    private final CheckerTarget target;
     public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, ImmutableMap<String, String> display, Map<String, String> params) {
         this.params = params;
         this.target = target;
