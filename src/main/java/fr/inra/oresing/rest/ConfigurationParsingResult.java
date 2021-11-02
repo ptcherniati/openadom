@@ -270,6 +270,15 @@ public class ConfigurationParsingResult {
             ));
         }
 
+        public Builder recordInvalidInternationalizedColumnsForDataType(String dataType, String reference, Set<String> unknownUsedAsKeyInternationalizedColumns, Set<String> knownColumns) {
+            return recordError("invalidInternationalizedColumnsForDataType", ImmutableMap.of(
+                    "dataType", dataType,
+                    "reference", reference,
+                    "unknownUsedAsInternationalizedColumns", unknownUsedAsKeyInternationalizedColumns,
+                    "knownColumns", knownColumns
+            ));
+        }
+
         public Builder missingColumnReferenceForCheckerInReference(String validationRuleDescriptionEntryKey, Set<String> availablesColumns, String name, List<String> missingColumns, String reference) {
             return recordError("missingColumnReferenceForCheckerInReference", ImmutableMap.of(
                     "reference", reference,
@@ -300,6 +309,59 @@ public class ConfigurationParsingResult {
             return recordError("missingAuthorizationForDatatype", ImmutableMap.of(
                     "datatype", dataType
             ));
+        }
+
+        public Builder recordUnknownReferenceInCompositeReference(String compositeReferenceName, ImmutableSet<String> unknownReferences, Set<String> existingReferences) {
+            return recordError("unknownReferenceInCompositereference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "unknownReferences", unknownReferences,
+                    "references", existingReferences)
+            );
+        }
+
+        public Builder recordMissingReferenceInCompositereference(String compositeReferenceName) {
+            return recordError("missingReferenceInCompositereference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName)
+            );
+        }
+
+        public Builder recordRequiredReferenceInCompositeReferenceForParentKeyColumn(String compositeReferenceName, String parentKeyColumn) {
+            return recordError("requiredReferenceInCompositeReferenceForParentKeyColumn", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "parentKeyColumn", parentKeyColumn)
+            );
+        }
+
+        public Builder recordRequiredParentKeyColumnInCompositeReferenceForReference(String compositeReferenceName, String reference, String referenceTo) {
+            return recordError("requiredParentKeyColumnInCompositeReferenceForReference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "reference", reference,
+                    "referenceTo", referenceTo)
+            );
+        }
+
+        public Builder recordMissingParentColumnForReferenceInCompositeReferenceFor(String compositeReferenceName, String reference, String parentKeyColumn) {
+            return recordError("missingParentColumnForReferenceInCompositeReference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "reference", reference,
+                    "parentKeyColumn", parentKeyColumn)
+            );
+        }
+
+        public Builder recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(String compositeReferenceName, String reference, String parentRecursiveKey) {
+            return recordError("missingParentRecursiveKeyColumnForReferenceInCompositeReference", ImmutableMap.of(
+                    "compositeReference", compositeReferenceName,
+                    "reference", reference,
+                    "parentRecursiveKey", parentRecursiveKey)
+            );
+        }
+
+        public Builder recordUnknownReferenceInDatatypeReferenceDisplay(String dataType, String reference, Set<String> references) {
+            return recordError("unknownReferenceInDatatypeReferenceDisplay", ImmutableMap.of(
+                    "dataType", dataType,
+                    "reference", reference,
+                    "references", references)
+            );
         }
     }
 }

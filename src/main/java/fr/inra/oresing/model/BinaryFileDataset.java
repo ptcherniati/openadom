@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,8 +27,8 @@ public class BinaryFileDataset {
                 .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue()))
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",
-                authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_FORMATTER_DDMMYYYY.parse(from)),
-                authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_FORMATTER_DDMMYYYY.parse(to))
+                authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(from)),
+                authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(to))
         );
     }
 }

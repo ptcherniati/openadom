@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
@@ -140,6 +141,65 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unsupportedVersion", onlyError.getMessage());
+    }
+
+    @Test
+    public void testUnknownReferenceInCompositereference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: typeDeSites");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceInCompositereference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingReferenceInCompositereference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: ");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceInCompositereference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testRequiredReferenceInCompositeReferenceForParentKeyColumn() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("requiredReferenceInCompositeReferenceForParentKeyColumn", onlyError.getMessage());
+    }
+
+    @Test
+    public void testRequiredParentKeyColumnInCompositeReferenceForReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("parentKeyColumn: \"nom du type de site\"\n" +
+                "        ", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("requiredParentKeyColumnInCompositeReferenceForReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingParentColumnForReferenceInCompositeReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("- parentKeyColumn: \"nom du site\"", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        boolean hasError = configurationParsingResult.getValidationCheckResults()
+                .stream()
+                .anyMatch((validationCheckResult -> "missingParentColumnForReferenceInCompositeReference".equals(validationCheckResult.getMessage())));
+        Assert.assertEquals(true, hasError);
+    }
+
+    @Test
+    public void testMissingParentRecursiveKeyColumnForReferenceInCompositeReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("parentKeyColumn: \"nom du site\"\n" +
+                "        ", "parentKeyColumn: \"nom du site\"\n" +
+                "        parentRecursiveKey: \"nom du parent\"\n" +
+                "        ");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingParentRecursiveKeyColumnForReferenceInCompositeReference", onlyError.getMessage());
     }
 
     @Test
@@ -364,5 +424,38 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("invalidKeyColumns", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingColumnInInternationalizationDisplayPattern() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("'{nom du site_fr}'", "'{nom du site}'");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
+    }
+
+    @Test
+    public void testUnknownReferenceInInternationalizationDisplayPatternInDatatype() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplay:\n" +
+                "      sites:", "internationalizationDisplay:\n" +
+                "      plateforme:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceInDatatypeReferenceDisplay", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingColumnInInternationalizationDisplayPatternInDatatype() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("'{nom du site_fr}'", "'{nom du site}'");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
     }
 }

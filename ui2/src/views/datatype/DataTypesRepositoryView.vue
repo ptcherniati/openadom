@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageView class="with-submenu">
-      <SubMenu :root="application.localName || application.title" :paths="subMenuPaths"/>
+      <SubMenu :paths="subMenuPaths" :root="application.localName || application.title"/>
       <h1 class="title main-title">
         {{
           $t("titles.data-types-repository", {
@@ -10,41 +10,35 @@
         }}
       </h1>
       <div class="columns">
-        <div class="column is-3" v-for="(authReference, authKey) in authReferences" :key="authKey">
+        <div v-for="(authReference, authKey) in authReferences" :key="authKey" class="column is-3">
           <div class="columns">
             <div class="column">
               <b-field>
-                  <b-menu >
-                    <div class="column" style="padding-top: 20px">
-                      <p style="text-transform: capitalize">{{ authKey }}</p>
-                    </div>
-                    <b-menu-list v-for="(option, itemKey) in authReference" :key="itemKey" >
-                      {{option.localName}}
-                    </b-menu-list>
-                  </b-menu>
-                <!--b-select
-                    :placeholder="$t('dataTypesRepository.placeholder-select')"
-                    @input="selectAuthorization(key, $event)"
-                    expanded
-                >
-                  <option
-                      v-for="option in authReference"
-                      :key="option.key"
-                      :value="option.naturalKey"
-                  >
-                    {{ option.localName }}
-                  </option>
-                </b-select-->
+                <b-dropdown :ref="authKey">
+                  <template #trigger="{ active }">
+                    <b-button
+                        :icon-right="active ? 'chevron-up' : 'chevron-down'"
+                        type="is-primary">
+                      {{ internationalisationService.getLocaleforPath(application, getAuthorizationScopePath(authKey), authKey) }}
+                    </b-button>
+                  </template>
+                  <DropDownMenu v-for="(option, optionKey) in authReference"
+                                :key="optionKey"
+                                :option="option"
+                                v-on:select-menu-item="selectAuthorization(authKey, $event)"
+                  />
+                </b-dropdown>
               </b-field>
             </div>
           </div>
         </div>
         <div class="column" style="padding-top: 20px">
-          <h1 v-if="this.selected && this.selected.requiredauthorization">
+          <h1>
             {{
-              Object.entries(this.selected.requiredauthorizations)
-                  .map((e) => e[0] + " : " + e[1])
-                  .join(", ")
+              this.requiredauthorizationsObject ? Object.entries(this.requiredauthorizationsObject)
+                  .filter(e=>e[1])
+                  .map((e) => internationalisationService.getLocaleforPath(application, getAuthorizationScopePath(e[0]), e[0]) + " : " + e[1])
+                  .join(", ") : ''
             }}
           </h1>
         </div>
@@ -52,9 +46,9 @@
       <div class="columns">
         <div class="column">
           <form class="card">
-            <b-collapse class="card" animation="slide" aria-id="fileDeposit">
+            <b-collapse animation="slide" aria-id="fileDeposit" class="card">
               <template #trigger="props">
-                <div class="card-header" role="button" aria-controls="fileDeposit">
+                <div aria-controls="fileDeposit" class="card-header" role="button">
                   <p class="card-header-title">
                     {{ $t("dataTypesRepository.card-title-upload-file") }}
                   </p>
@@ -67,12 +61,20 @@
                 <div class="content">
                   <div class="columns">
                     <div class="column">
+                      <!--b-field>
+                        <input v-model="startDate" icon-left="calendar-today" type="date"/>
+                      </b-field>
+
+                      <b-field>
+                        <input v-model="endDate" icon-left="calendar-today" type="date"/>
+                      </b-field-->
                       <b-field :label="$t('dataTypesRepository.start-date')">
                         <b-datepicker
-                            :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
-                            icon="calendar"
-                            editable
                             v-model="startDate"
+                            :date-parser="parseDate"
+                            :placeholder="$t('dataTypesRepository.placeholder-datepicker')+' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'"
+                            editable
+                            icon="calendar"
                         >
                         </b-datepicker>
                       </b-field>
@@ -80,10 +82,11 @@
                     <div class="column">
                       <b-field :label="$t('dataTypesRepository.end-date')">
                         <b-datepicker
-                            :placeholder="$t('dataTypesRepository.placeholder-datepicker')"
-                            icon="calendar"
-                            editable
                             v-model="endDate"
+                            :date-parser="parseDate"
+                            :placeholder="$t('dataTypesRepository.placeholder-datepicker')+' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'"
+                            editable
+                            icon="calendar"
                         >
                         </b-datepicker>
                       </b-field>
@@ -94,7 +97,7 @@
                       <b-icon class="file-icon" icon="upload"></b-icon>
                       <span class="file-label">{{ $t("dataTypesRepository.choose-file") }}</span>
                     </span>
-                    <span class="file-name" v-if="file">
+                    <span v-if="file" class="file-name">
                       {{ file.name }}
                     </span>
                   </b-upload>
@@ -113,10 +116,10 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-content" v-if="isAuthorisationsSelected()">
+        <div v-if="isAuthorisationsSelected()" class="card-content">
           <table
-              class="table is-bordered is-striped is-fullwidth"
               v-if="datasets && Object.keys(datasets).length"
+              class="table is-bordered is-striped is-fullwidth"
           >
             <caption>
               {{
@@ -129,9 +132,9 @@
               <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
             </tr>
             <tr
-                @click="showDatasets(dataset)"
                 v-for="(dataset, periode) in datasets"
                 :key="dataset.id"
+                @click="showDatasets(dataset)"
             >
               <td align>{{ periode }}</td>
               <td align>{{ Object.keys(dataset.datasets).length }}</td>
@@ -139,8 +142,8 @@
             </tr>
           </table>
           <table
-              class="table is-bordered is-striped is-fullwidth"
               v-if="currentDataset && currentDataset.length"
+              class="table is-bordered is-striped is-fullwidth"
           >
             <caption>
               {{
@@ -170,9 +173,9 @@
               <td align>
                 <b-field>
                   <b-button
-                      type="is-primary is-light"
-                      size="is-large"
                       :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                      size="is-large"
+                      type="is-primary is-light"
                       @click="publish(dataset, !dataset.params.published)"
                   />
                 </b-field>
@@ -180,9 +183,9 @@
               <td>
                 <b-field>
                   <b-button
-                      type="is-danger"
-                      size="is-medium"
                       icon-right="trash-alt"
+                      size="is-medium"
+                      type="is-danger"
                       @click="remove(dataset, dataset.params.published)"
                   />
                 </b-field>
@@ -193,6 +196,7 @@
       </div>
     </PageView>
   </div>
+
 </template>
 
 <script>
@@ -213,9 +217,10 @@ import {FileOrUUID} from "@/model/file/FileOrUUID";
 import {Dataset} from "@/model/file/Dataset";
 import {InternationalisationService} from "@/services/InternationalisationService";
 import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
+import DropDownMenu from "@/components/common/DropDownMenu";
 
 @Component({
-  components: {CollapsibleTree, PageView, SubMenu},
+  components: {DropDownMenu, CollapsibleTree, PageView, SubMenu},
 })
 export default class DataTypesRepositoryView extends Vue {
   @Prop() applicationName;
@@ -230,7 +235,8 @@ export default class DataTypesRepositoryView extends Vue {
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
-
+  getAuthorizationScopePath = this.internationalisationService.getAuthorizationScopePath;
+  getDataTypeDisplay = this.internationalisationService.getDataTypeDisplay;
   subMenuPaths = [];
   application = new ApplicationResult();
   applications = [];
@@ -238,6 +244,7 @@ export default class DataTypesRepositoryView extends Vue {
   authorizations = [];
   authReferences = {};
   selected = null;
+  requiredauthorizationsObject = null;
   datasets = {};
   file = null;
   startDate = null;
@@ -293,12 +300,35 @@ export default class DataTypesRepositoryView extends Vue {
         from: "",
         to: "",
       });
+      this.requiredauthorizationsObject = Object.keys(this.authorizations).reduce((acc, auth) => {
+        acc[auth] = null;
+        return acc;
+      }, {});
       let ret = {};
       for (let auth in this.authorizations) {
         let vc = this.authorizations[auth];
         var reference = this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
         let ref = await this.getOrLoadReferences(reference);
         ret[auth] = ref;
+      }
+      let refs = Object.values(ret)
+          .reduce(
+              (acc, k) => [...acc, ...k.referenceValues
+                  .reduce(
+                      (a, b) => [...a, ...b.hierarchicalReference.split('.')]
+                      , acc)]
+              , [])
+          .reduce(
+              (a, b) => {
+                if (a.indexOf(b) < 0) {
+                  a.push(b)
+                }
+                ;
+                return a
+              }
+              , []);
+      for (const refsKey in refs) {
+        await this.getOrLoadReferences(refs[refsKey]);
       }
       for (const [key, value] of Object.entries(ret)) {
         let partition = await this.partitionReferencesValues(value.referenceValues);
@@ -324,6 +354,11 @@ export default class DataTypesRepositoryView extends Vue {
 
   UTCToString(utcString) {
     return utcString && utcString.replace(/(\d{4})-(\d{2})-(\d{2}).*/, "$3/$2/$1");
+  }
+
+  parseDate(date) {
+    date = date && date.replace(/(\d{2})\/(\d{2})\/(\d{4})(( \d{2})?(:\d{2})?(:\d{2})?)/, "$3-$2-$1$4");
+    return new Date(date)
   }
 
   periodeToString(dataset) {
@@ -387,9 +422,12 @@ export default class DataTypesRepositoryView extends Vue {
     this.$emit("published", uuid.fileId);
   }
 
-  selectAuthorization(key, value) {
-    this.selected.requiredauthorizations[key] = value;
+  selectAuthorization(key, event) {
+    this.selected.requiredauthorizations[key] = event.referenceValues.hierarchicalKey;
+    this.requiredauthorizationsObject[key] = event.completeLocalName;
     this.datasets = this.currentDataset = null;
+    console.log(this.$refs?.[key])
+    this.$refs?.[key]?.[0].toggle()
     if (this.isAuthorisationsSelected()) {
       this.$emit("authorizationChanged");
     }
@@ -444,7 +482,7 @@ export default class DataTypesRepositoryView extends Vue {
           fileList.uuid &&
           this.datasets &&
           Object.values(this.datasets).find((e) => e.findByUUID(fileList.uuid))?.periode;
-      this.currentDataset = this.datasets[periode].datasets;
+      this.currentDataset = this.datasets?.[periode]?.datasets;
     }
     return this.datasets;
   }
@@ -464,20 +502,21 @@ export default class DataTypesRepositoryView extends Vue {
     this.$emit("deleted", deleted);
   }
 
-  async partitionReferencesValues(referencesValues, currentPath) {
+  async partitionReferencesValues(referencesValues, currentPath, currentCompleteLocalName) {
     let returnValues = {};
-    referencesValues.forEach(async (referenceValue) => {
+    for (const referenceValue of referencesValues) {
       var previousKeySplit = currentPath ? currentPath.split('.') : [];
       var keys = referenceValue.hierarchicalKey.split('.');
       var references = referenceValue.hierarchicalReference.split('.');
       if (previousKeySplit.length == keys.length) {
-        return;
+        continue;
       }
       for (let i = 0; i < previousKeySplit.length; i++) {
-        previousKeySplit.shift();
+        keys.shift();
         references.shift();
       }
       var key = keys.shift();
+      let newCurrentPath = (currentPath ? currentPath + '.' : '') + key;
       var reference = references.shift();
       let refValues = await this.getOrLoadReferences(reference);
       this.internationalisationService.getUserPrefLocale()
@@ -486,17 +525,48 @@ export default class DataTypesRepositoryView extends Vue {
       if (localName?.values?.['__display_' + lang]) {
         localName = localName?.values?.['__display_' + lang];
       }
+      if (!localName) {
+        localName = key;
+      }
+      var completeLocalName = (typeof currentCompleteLocalName === 'undefined') ? "" : currentCompleteLocalName;
+      completeLocalName = completeLocalName + (completeLocalName == "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
         reference,
         referenceValues: [],
         localName,
-        currentPath: (currentPath ? currentPath + '.' : '') + key
+        isLeaf: false,
+        currentPath: newCurrentPath,
+        completeLocalName
       };
       authPartition.referenceValues.push(referenceValue);
       returnValues[key] = authPartition;
-    });
+    }
+    for (const returnValuesKey in returnValues) {
+      var auth = returnValues[returnValuesKey];
+      let referenceValueLeaf = auth.referenceValues?.[0];
+      if (auth.referenceValues.length <= 1 && referenceValueLeaf.hierarchicalKey == auth.currentPath) {
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: true,
+          referenceValues: referenceValueLeaf
+
+        }
+      } else {
+        var r = await this.partitionReferencesValues(auth.referenceValues, auth.currentPath, auth.completeLocalName);
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: false,
+          referenceValues: r
+
+        }
+      }
+    }
     return returnValues;
+  }
+
+  deployMenu(option) {
+    console.log(this.partitionReferencesValues(option.referenceValues, option.currentPath))
   }
 }
 </script>

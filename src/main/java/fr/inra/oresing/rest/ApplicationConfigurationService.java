@@ -70,9 +70,9 @@ public class ApplicationConfigurationService {
                 try {
                     internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), Internationalization.class));
                 } catch (IllegalArgumentException e2) {
-                    try{
+                    try {
                         internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), InternationalizationDisplay.class));
-                    }catch (IllegalArgumentException e3) {
+                    } catch (IllegalArgumentException e3) {
                         exceptions.add(e2);
                     }
                 }
@@ -147,6 +147,11 @@ public class ApplicationConfigurationService {
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
         Set<String> references = configuration.getReferences().keySet();
+        for (Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry : configuration.getCompositeReferences().entrySet()) {
+            verifyCompositeReferenceReferenceExists(configuration, builder, compositeReferenceEntry);
+            verifyCompositeReferenceParentColumnExists(configuration, builder, compositeReferenceEntry);
+            verifyCompositeReferenceParentRecursiveColumnExists(configuration, builder, compositeReferenceEntry);
+        }
 
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
             verifyReferenceKeyColumnsExists(configuration, builder, referenceEntry);
@@ -161,6 +166,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeCheckersExists(builder, dataTypeDescription, dataType);
             verifyDatatypeCheckerReferenceRefersToExistingReference(builder, references, dataType, dataTypeDescription);
             verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(builder, dataTypeDescription);
+            verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType, dataTypeDescription);
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
@@ -185,6 +191,63 @@ public class ApplicationConfigurationService {
         }
 
         return builder.build(configuration);
+    }
+
+    private void verifyCompositeReferenceReferenceExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {
+        String compositeReferenceName = compositeReferenceEntry.getKey();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = compositeReferenceEntry.getValue();
+        Set<String> expectingReferences = compositeReferenceDescription.getComponents()
+                .stream()
+                .map(crd -> crd.getReference())
+                .filter(ref -> {
+                    if (ref == null) {
+                        builder.recordMissingReferenceInCompositereference(compositeReferenceName);
+                    }
+                    return ref != null;
+                })
+                .collect(Collectors.toSet());
+        Set<String> existingReferences = configuration.getReferences().keySet();
+        ImmutableSet<String> unknownReferences = Sets.difference(expectingReferences, existingReferences).immutableCopy();
+        if (!unknownReferences.isEmpty()) {
+            builder.recordUnknownReferenceInCompositeReference(compositeReferenceName, unknownReferences, existingReferences);
+        }
+    }
+
+    private void verifyCompositeReferenceParentColumnExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {
+        String compositeReferenceName = compositeReferenceEntry.getKey();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = compositeReferenceEntry.getValue();
+        String previousReference = null;
+        for (Configuration.CompositeReferenceComponentDescription component : compositeReferenceDescription.getComponents()) {
+            if (component.getReference() == null) {
+                break;
+            }
+            String parentKeyColumn = component.getParentKeyColumn();
+            if (previousReference == null && parentKeyColumn != null) {
+                builder.recordRequiredReferenceInCompositeReferenceForParentKeyColumn(compositeReferenceName, parentKeyColumn);
+            }else if (previousReference!=null){
+                String reference = component.getReference();
+                if(parentKeyColumn==null){
+                    builder.recordRequiredParentKeyColumnInCompositeReferenceForReference(compositeReferenceName, reference, previousReference);
+                }else if (!configuration.getReferences().get(reference).getColumns().containsKey(parentKeyColumn)){
+                    builder.recordMissingParentColumnForReferenceInCompositeReferenceFor(compositeReferenceName, reference, parentKeyColumn);
+                }
+            }
+            previousReference = component.getReference();
+        }
+    }
+
+    private void verifyCompositeReferenceParentRecursiveColumnExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {String compositeReferenceName = compositeReferenceEntry.getKey();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = compositeReferenceEntry.getValue();
+        for (Configuration.CompositeReferenceComponentDescription component : compositeReferenceDescription.getComponents()) {
+            String reference = component.getReference();
+            if (reference == null || !configuration.getReferences().containsKey(reference)) {
+                continue;
+            }
+            String parentRecursiveKey = component.getParentRecursiveKey();
+            if(parentRecursiveKey!=null && !configuration.getReferences().get(reference).getColumns().containsKey(parentRecursiveKey)){
+                    builder.recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentRecursiveKey);
+            }
+        }
     }
 
     private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables) {
@@ -266,13 +329,13 @@ public class ApplicationConfigurationService {
                                     if (refType == null || !configuration.getReferences().containsKey(refType)) {
                                         builder.recordAuthorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
                                     } else {
-                                        Set<String> compositesferences = configuration.getCompositeReferences().values().stream()
+                                        Set<String> compositesReferences = configuration.getCompositeReferences().values().stream()
                                                 .map(e -> e.getComponents())
                                                 .flatMap(List::stream)
                                                 .map(crd -> crd.getReference())
                                                 .collect(Collectors.toSet());
-                                        if (!compositesferences.contains(refType)) {
-                                            builder.recordAuthorizationVariableComponentMustReferToCompositereference(dataType, authorizationScopeName, refType, compositesferences);
+                                        if (!compositesReferences.contains(refType)) {
+                                            builder.recordAuthorizationVariableComponentMustReferToCompositereference(dataType, authorizationScopeName, refType, compositesReferences);
                                         }
                                     }
                                 }
@@ -428,9 +491,61 @@ public class ApplicationConfigurationService {
 
 
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
-        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
+        ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
             builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+        }
+    }
+
+    private void verifyInternationalizedColumnsExistsForPatternInDatatype(Configuration configuration, ConfigurationParsingResult.Builder builder, String dataType, Configuration.DataTypeDescription dataTypeDescription) {
+        Map<String, InternationalizationDisplay> internationalizationDisplayMap = Optional.ofNullable(configuration.getInternationalization())
+                .map(i -> i.getDataTypes())
+                .map(r -> r.getOrDefault(dataType, null))
+                .map(im -> im.getInternationalizationDisplay())
+                .orElseGet(Map::of);
+        for (Map.Entry<String, InternationalizationDisplay> internationalizationDisplayEntry : internationalizationDisplayMap.entrySet()) {
+            Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(internationalizationDisplayEntry.getValue())
+                    .map(ic -> ic.getPattern())
+                    .map(patterns -> patterns.values()
+                            .stream()
+                            .map(pattern -> InternationalizationDisplay.getPatternColumns(pattern))
+                            .flatMap(List::stream)
+                            .collect(Collectors.toSet())
+                    )
+                    .orElseGet(Set::of);
+            String reference = internationalizationDisplayEntry.getKey();
+            Map<String, Configuration.ReferenceDescription> references = Optional.ofNullable(configuration.getReferences())
+                    .orElse(new LinkedHashMap<>());
+            if(!references.containsKey(reference)){
+                builder.recordUnknownReferenceInDatatypeReferenceDisplay(dataType, reference, references.keySet());
+                return;
+            }
+
+
+            Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
+                    .map(i -> i.getReferences())
+                    .map(r -> r.getOrDefault(reference, null))
+                    .map(im -> im.getInternationalizedColumns())
+                    .map(ic -> {
+                        Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                        ic.values().stream()
+                                .forEach(v -> columns.addAll(v.values()));
+                        return columns;
+                    })
+                    .orElse(new HashSet<>());
+            Configuration.ReferenceDescription referenceDescription = configuration.getReferences().getOrDefault(reference, null);
+            Set<String> columns = Optional.ofNullable(referenceDescription)
+                    .map(r -> r.getColumns())
+                    .map(c -> new LinkedHashSet(c.keySet()))
+                    .orElseGet(LinkedHashSet::new);
+            columns.addAll(internationalizedColumns);
+
+
+            ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
+            ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
+            if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
+                builder.recordInvalidInternationalizedColumnsForDataType(dataType, reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+            }
         }
     }
 
@@ -563,6 +678,7 @@ public class ApplicationConfigurationService {
                 .recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName)
                 .build();
     }
+
     @Getter
     @Setter
     @ToString
