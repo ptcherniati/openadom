@@ -110,7 +110,6 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                 .stream()
                 .map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList()))
                 .collect(Collectors.toList());
-        ;
         return result;
     }
 

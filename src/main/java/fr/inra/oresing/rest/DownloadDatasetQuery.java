@@ -143,7 +143,7 @@ public class DownloadDatasetQuery {
     }
 
     private String getFormat(VariableComponentFilters vck) {
-        boolean isRegExp = vck.isRegExp == null ? false : vck.isRegExp;
+        boolean isRegExp = vck.isRegExp != null && vck.isRegExp;
         List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(vck.filter)) {
             filters.add(String.format(

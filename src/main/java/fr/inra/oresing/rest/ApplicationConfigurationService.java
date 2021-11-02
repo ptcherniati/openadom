@@ -224,11 +224,11 @@ public class ApplicationConfigurationService {
             String parentKeyColumn = component.getParentKeyColumn();
             if (previousReference == null && parentKeyColumn != null) {
                 builder.recordRequiredReferenceInCompositeReferenceForParentKeyColumn(compositeReferenceName, parentKeyColumn);
-            }else if (previousReference!=null){
+            } else if (previousReference != null) {
                 String reference = component.getReference();
-                if(parentKeyColumn==null){
+                if (parentKeyColumn == null) {
                     builder.recordRequiredParentKeyColumnInCompositeReferenceForReference(compositeReferenceName, reference, previousReference);
-                }else if (!configuration.getReferences().get(reference).getColumns().containsKey(parentKeyColumn)){
+                } else if (!configuration.getReferences().get(reference).getColumns().containsKey(parentKeyColumn)) {
                     builder.recordMissingParentColumnForReferenceInCompositeReferenceFor(compositeReferenceName, reference, parentKeyColumn);
                 }
             }
@@ -236,7 +236,8 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyCompositeReferenceParentRecursiveColumnExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {String compositeReferenceName = compositeReferenceEntry.getKey();
+    private void verifyCompositeReferenceParentRecursiveColumnExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {
+        String compositeReferenceName = compositeReferenceEntry.getKey();
         Configuration.CompositeReferenceDescription compositeReferenceDescription = compositeReferenceEntry.getValue();
         for (Configuration.CompositeReferenceComponentDescription component : compositeReferenceDescription.getComponents()) {
             String reference = component.getReference();
@@ -244,8 +245,8 @@ public class ApplicationConfigurationService {
                 continue;
             }
             String parentRecursiveKey = component.getParentRecursiveKey();
-            if(parentRecursiveKey!=null && !configuration.getReferences().get(reference).getColumns().containsKey(parentRecursiveKey)){
-                    builder.recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentRecursiveKey);
+            if (parentRecursiveKey != null && !configuration.getReferences().get(reference).getColumns().containsKey(parentRecursiveKey)) {
+                builder.recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentRecursiveKey);
             }
         }
     }
@@ -368,10 +369,14 @@ public class ApplicationConfigurationService {
                             if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
                                 builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
                             }
-                            String pattern = timeScopeVariableComponentChecker.getParams().get(DateLineChecker.PARAM_PATTERN);
-                            if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
-                                builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
-                            }
+                            Optional.ofNullable(timeScopeVariableComponentChecker)
+                                    .map(checkerDescription -> checkerDescription.getParams())
+                                    .map(params -> params.getOrDefault(DateLineChecker.PARAM_PATTERN, null))
+                                    .ifPresent(pattern -> {
+                                        if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
+                                            builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
+                                        }
+                                    });
                         }
                     }
                 }
@@ -516,7 +521,7 @@ public class ApplicationConfigurationService {
             String reference = internationalizationDisplayEntry.getKey();
             Map<String, Configuration.ReferenceDescription> references = Optional.ofNullable(configuration.getReferences())
                     .orElse(new LinkedHashMap<>());
-            if(!references.containsKey(reference)){
+            if (!references.containsKey(reference)) {
                 builder.recordUnknownReferenceInDatatypeReferenceDisplay(dataType, reference, references.keySet());
                 return;
             }

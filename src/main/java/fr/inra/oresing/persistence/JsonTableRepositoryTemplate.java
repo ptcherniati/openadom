@@ -55,7 +55,6 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
                 }
             });
             String json = getJsonRowMapper().toJson(entities);
-            System.out.println(json);
             List<UUID> result = namedParameterJdbcTemplate.queryForList(
                     query, new MapSqlParameterSource("json", json), UUID.class);
         });

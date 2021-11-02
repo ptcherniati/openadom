@@ -61,51 +61,7 @@ public class CheckerFactory {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
-                String component = componentEntry.getKey();
-                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                if (variableDescription.getComponents().get(component) == null) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("pas de règle de validation pour " + variableComponentKey);
-                    }
-                } else {
-                    Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
-                    CheckerOnOneVariableComponentLineChecker variableComponentChecker;
-                    CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey);
-                    if ("Reference".equals(checkerDescription.getName())) {
-                        String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
-                        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-                        ImmutableMap<String, UUID> referenceValues;
-                        ImmutableMap<String, String> display = null;
-                        if (locale == null) {
-                            referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                        } else {
-                            ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceIdAndDisplayPerKeys = referenceValueRepository.getReferenceIdAndDisplayPerKeys(refType, locale);
-                            referenceValues = ImmutableMap.copyOf(
-                                    referenceIdAndDisplayPerKeys.entrySet().stream()
-                                            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
-                            );
-                            display = ImmutableMap.copyOf(
-                                    referenceIdAndDisplayPerKeys.entrySet().stream()
-                                            .collect(Collectors.toMap(e -> e.getKey(), e -> getOrBuildDisplay(app, refType, dataType, locale, e)))
-                            );
-                        }
-                        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, display, checkerDescription.getParams());
-                    } else if ("Date".equals(checkerDescription.getName())) {
-                        String pattern = checkerDescription.getParams().get(DateLineChecker.PARAM_PATTERN);
-                        variableComponentChecker = new DateLineChecker(checkerTarget, pattern, checkerDescription.getParams());
-                    } else if ("Integer".equals(checkerDescription.getName())) {
-                        variableComponentChecker = new IntegerChecker(checkerTarget, checkerDescription.getParams());
-                    } else if ("Float".equals(checkerDescription.getName())) {
-                        variableComponentChecker = new FloatChecker(checkerTarget, checkerDescription.getParams());
-                    } else if ("RegularExpression".equals(checkerDescription.getName())) {
-                        String pattern = checkerDescription.getParams().get(RegularExpressionChecker.PARAM_PATTERN);
-                        variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, checkerDescription.getParams());
-                    } else {
-                        throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
-                    }
-                    Preconditions.checkState(variableComponentChecker.getTarget().getTarget().equals(variableComponentKey));
-                    checkersBuilder.add(variableComponentChecker);
-                }
+                parseVariableComponentdescription(app, dataType, locale, checkersBuilder, variable, variableDescription, componentEntry);
             }
         }
         addCheckersFromLineValidationDescriptions(app, dataTypeDescription.getValidations(), checkersBuilder, Type.DATATYPE.getParam()); //Configuration.DataTypeDescription dataTypeDescription,
@@ -114,6 +70,60 @@ public class CheckerFactory {
             log.trace("pour " + app.getName() + ", " + dataType + ", on validera avec " + lineCheckers);
         }
         return lineCheckers;
+    }
+
+    private void parseVariableComponentdescription(Application app, String dataType, String locale, ImmutableSet.Builder<LineChecker> checkersBuilder, String variable, Configuration.ColumnDescription variableDescription, Map.Entry<String, Configuration.VariableComponentDescription> componentEntry) {
+        String component = componentEntry.getKey();
+        VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+        if (variableDescription.getComponents().get(component) == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("pas de règle de validation pour " + variableComponentKey);
+            }
+        } else {
+            Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
+            CheckerOnOneVariableComponentLineChecker variableComponentChecker;
+            CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey);
+            if ("Reference".equals(checkerDescription.getName())) {
+                variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, checkerTarget);
+            } else if ("Date".equals(checkerDescription.getName())) {
+                String pattern = checkerDescription.getParams().get(DateLineChecker.PARAM_PATTERN);
+                variableComponentChecker = new DateLineChecker(checkerTarget, pattern, checkerDescription.getParams());
+            } else if ("Integer".equals(checkerDescription.getName())) {
+                variableComponentChecker = new IntegerChecker(checkerTarget, checkerDescription.getParams());
+            } else if ("Float".equals(checkerDescription.getName())) {
+                variableComponentChecker = new FloatChecker(checkerTarget, checkerDescription.getParams());
+            } else if ("RegularExpression".equals(checkerDescription.getName())) {
+                String pattern = checkerDescription.getParams().get(RegularExpressionChecker.PARAM_PATTERN);
+                variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, checkerDescription.getParams());
+            } else {
+                throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
+            }
+            Preconditions.checkState(variableComponentChecker.getTarget().getTarget().equals(variableComponentKey));
+            checkersBuilder.add(variableComponentChecker);
+        }
+    }
+
+    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, String locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget) {
+        CheckerOnOneVariableComponentLineChecker variableComponentChecker;
+        String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
+        ImmutableMap<String, UUID> referenceValues;
+        ImmutableMap<String, String> display = null;
+        if (locale == null) {
+            referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
+        } else {
+            ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceIdAndDisplayPerKeys = referenceValueRepository.getReferenceIdAndDisplayPerKeys(refType, locale);
+            referenceValues = ImmutableMap.copyOf(
+                    referenceIdAndDisplayPerKeys.entrySet().stream()
+                            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
+            );
+            display = ImmutableMap.copyOf(
+                    referenceIdAndDisplayPerKeys.entrySet().stream()
+                            .collect(Collectors.toMap(e -> e.getKey(), e -> getOrBuildDisplay(app, refType, dataType, locale, e)))
+            );
+        }
+        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, display, checkerDescription.getParams());
+        return variableComponentChecker;
     }
 
     private String getOrBuildDisplay(Application app, String refType, String dataType, String locale, Map.Entry<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> e) {
@@ -205,11 +215,11 @@ public class CheckerFactory {
     }
 
     enum Type {
-        REFERENCE("columns"), DATATYPE("variableComponentKey");
+        REFERENCE(COLUMNS), DATATYPE(VARIABLE_COMPONENT_KEY);
 
         private final String param;
 
-        private Type(String requiredAttributeForCheckerOnOneVariableComponentLineChecker) {
+        Type(String requiredAttributeForCheckerOnOneVariableComponentLineChecker) {
             this.param = requiredAttributeForCheckerOnOneVariableComponentLineChecker;
         }
 

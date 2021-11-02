@@ -424,7 +424,7 @@ public class OreSiService {
                         String recursiveNaturalKey = naturalKey;
                         if (isRecursive) {
                             selfLineChecker
-                                    .map(referenceLineChecker -> ((ReferenceLineChecker) referenceLineChecker).getReferenceValues())
+                                    .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
                                     .map(values -> values.get(naturalKey))
                                     .filter(key -> key != null)
                                     .ifPresent(key -> e.setId(key));
@@ -458,7 +458,6 @@ public class OreSiService {
                     })
                     .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))
                     .map(e -> {
-                        System.out.println(e);
                         if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
                             /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
                             dans le fichier. Seule la première ligne est enregistrée
@@ -483,7 +482,6 @@ public class OreSiService {
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
                 .orElse(null);
-        ;
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             return recordStream;
         }
@@ -1396,7 +1394,7 @@ public class OreSiService {
                                     e -> e.getKey(),
                                     e -> e.getValue().getInternationalizedColumns().entrySet()
                                             .stream()
-                                            .collect(Collectors.toMap(i -> i.getKey(), i -> (String) i.getValue().get(locale)))
+                                            .collect(Collectors.toMap(i -> i.getKey(), i -> i.getValue().get(locale)))
                             ));
                     List<String> neddedReferenceTranslation = checkedFormatVariableComponents.entrySet().stream()
                             .filter(e -> "ReferenceLineChecker".equals(e.getKey()))

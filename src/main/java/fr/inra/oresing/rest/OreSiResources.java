@@ -280,7 +280,7 @@ public class OreSiResources {
         orderedVariableComponents.add(authorization.getTimeScope().getVariable());
         authorization.getAuthorizationScopes().values()
                 .stream()
-                .filter(vc -> !orderedVariableComponents.contains(vc))
+                .filter(vc -> !orderedVariableComponents.contains(vc.getVariable()))
                 .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
         authorization.getDataGroups()
                 .values()
@@ -328,8 +328,13 @@ public class OreSiResources {
     private FileOrUUID deserialiseFileOrUUIDQuery(String datatype, String params) {
         try {
             FileOrUUID fileOrUUID = params != null && params !="undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
-            if (fileOrUUID.binaryfiledataset.getDatatype() == null) {
-                fileOrUUID.binaryfiledataset.setDatatype(datatype);
+            Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(fileOrUUID)
+                    .map(fileOrUUID1 -> fileOrUUID.binaryfiledataset);
+            if (
+                    binaryFileDatasetOpt
+                            .map(binaryFileDataset -> binaryFileDataset.getDatatype()).isPresent()) {
+                binaryFileDatasetOpt
+                        .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(datatype));
             }
             return fileOrUUID;
         } catch (IOException e) {
@@ -340,8 +345,9 @@ public class OreSiResources {
     private BinaryFileDataset deserialiseBinaryFileDatasetQuery(String datatype, String params) {
         try {
             BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
-            if (binaryFileDataset.getDatatype() == null) {
-                binaryFileDataset.setDatatype(datatype);
+            Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(binaryFileDataset);
+           if (binaryFileDatasetOpt.map(binaryFileDataset1 -> binaryFileDataset1.getDatatype()).isEmpty()) {
+                binaryFileDatasetOpt.ifPresent(binaryFileDataset1 -> binaryFileDataset1.setDatatype(datatype));
             }
             return binaryFileDataset;
         } catch (IOException e) {

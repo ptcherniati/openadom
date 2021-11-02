@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -96,7 +97,7 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
 
         {
@@ -144,7 +145,7 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
 
             authorizationId = JsonPath.parse(response).read("$.authorizationId");
         }
@@ -156,7 +157,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(json);
+            log.debug(StringUtils.abbreviate(json, 50));
 
             Assert.assertTrue(json.contains("[2016,1,1]"));
         }
@@ -185,7 +186,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(json);
+            log.debug(StringUtils.abbreviate(json, 50));
 
         }
 

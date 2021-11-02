@@ -93,10 +93,10 @@ public class OreSiResourcesTest {
         String appId;
 
         URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
-        try (InputStream in = resource.openStream()) {
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
-            // on a pas le droit de creer de nouvelle application
+            // on n'a pas le droit de creer de nouvelle application
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                             .file(configuration)
                             .cookie(authCookie))
@@ -140,7 +140,7 @@ public class OreSiResourcesTest {
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                JsonPath.parse(response).read("$.id");
             }
         }
 
@@ -156,7 +156,7 @@ public class OreSiResourcesTest {
 
         // ajout de data
         resource = getClass().getResource(fixtures.getPemDataResourceName());
-        try (InputStream refStream = resource.openStream()) {
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
 
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
@@ -165,11 +165,11 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
 
         try (InputStream pem = getClass().getResourceAsStream(fixtures.getPemDataResourceName())) {
-            String data = IOUtils.toString(pem, StandardCharsets.UTF_8);
+            String data = IOUtils.toString(Objects.requireNonNull(pem), StandardCharsets.UTF_8);
             String wrongData = data.replace("plateforme", "entete_inconnu");
             byte[] bytes = wrongData.getBytes(StandardCharsets.UTF_8);
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", bytes);
@@ -178,18 +178,18 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().isBadRequest())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         } catch (IOException e) {
             throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
         }
 
-        // list des type de data
+        // list des types de data
         response = mockMvc.perform(get("/api/v1/applications/monsore/data")
                         .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        log.debug(response);
+        log.debug(StringUtils.abbreviate(response, 50));
 
 //        // creation d'un user qui aura le droit de lire les données
 //        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
@@ -206,9 +206,9 @@ public class OreSiResourcesTest {
 
         // restitution de data json
         {
-            String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
+            String expectedJson = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             JSONArray jsonArray = new JSONArray(expectedJson);
-            List list = new ArrayList<String>();
+            List<String> list = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); i++) {
                 list.add(jsonArray.getString(i));
             }
@@ -231,22 +231,22 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(306)))
                     .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(306)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(actualJson);
+            log.debug(StringUtils.abbreviate(actualJson, 50));
         }
         /**
          *  restitution de data json ajout de filtres et de tri
          * filtre :
-         *  date.value between  '01/01/1984' and '01/01/1984'
+         *  date.value between '01/01/1984' and '01/01/1984'
          *  Nombre d\\'individus'.value between 20 and 29 (==25)
          *  Couleur des individus.value == 'couleur_des_individus__vert'
          *
-         *  tri:
+         *  tri :
          *      par site.plateforme -> a < p1 < p2
          *
          */
         {
             String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
-            String expectedJson = Resources.toString(getClass().getResource("/data/monsore/compare/export.json"), Charsets.UTF_8);
+            Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                             .cookie(authCookie)
                             .param("downloadDatasetQuery", filter)
@@ -258,32 +258,32 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(9)))
                     .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(actualJson);
+            log.debug(StringUtils.abbreviate(actualJson, 50));
 
         }
 
         // restitution de data csv
         {
-            String expectedCsv = Resources.toString(getClass().getResource("/data/monsore/compare/export.csv"), Charsets.UTF_8);
+            String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.csv")), Charsets.UTF_8);
             String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                             .cookie(authCookie)
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     //     .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(actualCsv);
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
             List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r+\n"))
                     .collect(Collectors.toList());
             List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r+\n"))
                     .collect(Collectors.toList());
             Assert.assertEquals(expectedCsvToList.size(), actualCsvToList.size());
-            actualCsvToList.forEach(l -> expectedCsvToList.remove(l));
-            Assert.assertEquals(true, expectedCsvToList.isEmpty());
+            actualCsvToList.forEach(expectedCsvToList::remove);
+            Assert.assertTrue(expectedCsvToList.isEmpty());
             Assert.assertEquals(306, StringUtils.countMatches(actualCsv, "/1984"));
         }
 
         try (InputStream in = getClass().getResourceAsStream(fixtures.getPemDataResourceName())) {
-            String csv = IOUtils.toString(in, StandardCharsets.UTF_8);
+            String csv = IOUtils.toString(Objects.requireNonNull(in), StandardCharsets.UTF_8);
             String invalidCsv = csv.replace("projet_manche", "projet_manch");
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
@@ -291,7 +291,7 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
             Assert.assertTrue(response.contains("projet_manch"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("141"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
@@ -373,40 +373,13 @@ public class OreSiResourcesTest {
 //        }
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
-//        resource = getClass().getResource("/data/monsore-bad.yaml");
-//        try (InputStream in = resource.openStream()) {
-//            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
-//
-//            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/configuration")
-//                    .file(configuration)
-//                    .cookie(authCookie))
-//                    .andExpect(status().isCreated())
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-//
-//
-//        // ajout de data (echoue)
-//        resource = getClass().getResource("/data/data-pem.csv");
-//        try (InputStream refStream = resource.openStream()) {
-//            MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-//
-//            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-//                    .file(refFile)
-//                    .cookie(authCookie))
-//                    .andExpect(status().is4xxClientError())
-//                    .andReturn().getResponse().getContentAsString();
-//
-//            log.debug(response);
-//        }
     }
 
     @Test
     public void addApplicationMonsoreWithRepository() throws Exception {
-        String appId;
-
         URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
         String oirFilesUUID;
-        try (InputStream in = resource.openStream()) {
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
             //définition de l'application
             authenticationService.addUserRightCreateApplication(userId);
@@ -418,7 +391,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
 
-            appId = JsonPath.parse(response).read("$.id");
+            JsonPath.parse(response).read("$.id");
         }
 
         String response = null;
@@ -434,7 +407,7 @@ public class OreSiResourcesTest {
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                JsonPath.parse(response).read("$.id");
             }
         }
         // ajout de data
@@ -444,7 +417,7 @@ public class OreSiResourcesTest {
         resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
 
         // on dépose 3 fois le même fichier sans le publier
-        try (InputStream refStream = resource.openStream()) {
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
@@ -456,7 +429,7 @@ public class OreSiResourcesTest {
                         .andExpect(status().is2xxSuccessful())
                         .andReturn().getResponse().getContentAsString();
             }
-            //log.debug(response);
+            log.debug(response);
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                             .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
@@ -477,7 +450,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.totalRows").value(-1))
                     .andReturn().getResponse().getContentAsString();
-            //log.debug(response);
+            log.debug(response);
 
 
             // on publie le dernier fichier déposé
@@ -487,7 +460,7 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     // .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
 
             // on récupère la liste des versions déposées
 
@@ -501,7 +474,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(1)))
                     .andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID))
                     .andReturn().getResponse().getContentAsString();
-            //log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
 
             // on récupère le data en base
 
@@ -512,23 +485,23 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(34)))
                     .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'plateforme.oir.oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(34)))
                     .andReturn().getResponse().getContentAsString();
-      //      log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
         //on publie 4 fichiers
 
-        publishOrDepublish("manche", "plateforme", "scarff", 102, 68, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme",  "scarff", 136, 34, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme",  "nivelle", 170, 34, true, 1, true);
-        publishOrDepublish("manche", "plateforme",  "nivelle", 204, 34, true, 1, true);
+        publishOrDepublish("manche", "plateforme", "scarff", 68, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme",  "scarff", 34, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme",  "nivelle", 34, true, 1, true);
+        publishOrDepublish("manche", "plateforme",  "nivelle", 34, true, 1, true);
         //on publie une autre version
-        String fileUUID = publishOrDepublish("manche", "plateforme",  "nivelle", 204, 34, true, 2, true);
+        String fileUUID = publishOrDepublish("manche", "plateforme",  "nivelle", 34, true, 2, true);
         // on supprime l'application publiée
         response = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/applications/monsore/file/" + fileUUID)
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        //log.debug(response);
-        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 170, 0, 1, fileUUID, false);
+        log.debug(StringUtils.abbreviate(response, 50));
+        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 1, fileUUID, false);
 
 
         // on depublie le fichier oir déposé
@@ -538,7 +511,7 @@ public class OreSiResourcesTest {
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        //log.debug(response);
+        log.debug(StringUtils.abbreviate(response, 50));
 
         // on récupère la liste des versions déposées
 
@@ -551,7 +524,7 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
                 .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
-        //log.debug(response);
+        log.debug(StringUtils.abbreviate(response, 50));
 
         // on récupère le data en base
 
@@ -562,15 +535,15 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(136)))
                 .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
-//            log.debug(response);
+        log.debug(StringUtils.abbreviate(response, 50));
         // on supprime le fic
     }
 
-    private String publishOrDepublish(String projet, String plateforme, String site, int total, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
+    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
         URL resource;
         String response;
         resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
-        try (InputStream refStream = resource.openStream()) {
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
 
             //dépôt et publication d'un fichier projet site__p1
             MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
@@ -584,18 +557,17 @@ public class OreSiResourcesTest {
             String fileUUID = JsonPath.parse(response).read("$.fileId");
 
             //liste des fichiers projet/site
-            testFilesAndDataOnServer(plateforme, projet, site, total, expected, numberOfVersions, fileUUID, published);
-            //log.debug(response);
+            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
+            log.debug(StringUtils.abbreviate(response, 50));
             return fileUUID;
         }
     }
 
     @Test
     public void testRecursivity() throws Exception {
-        String appId;
 
         URL resource = getClass().getResource(fixtures.getRecursivityApplicationConfigurationResourceName());
-        try (InputStream in = resource.openStream()) {
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
             //définition de l'application
             authenticationService.addUserRightCreateApplication(userId);
@@ -607,10 +579,10 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
 
-            appId = JsonPath.parse(response).read("$.id");
+            JsonPath.parse(response).read("$.id");
         }
 
-        String response = null;
+        String response;
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
@@ -623,7 +595,7 @@ public class OreSiResourcesTest {
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                JsonPath.parse(response).read("$.id");
             }
         }
         for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielFiles().entrySet()) {
@@ -637,19 +609,18 @@ public class OreSiResourcesTest {
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                JsonPath.parse(response).read("$.id");
             }
         }
     }
 
-    private void testFilesAndDataOnServer(String plateforme, String projet, String site, int total, int expected, int numberOfVersions, String fileUUID, boolean published) throws Exception {
+    private void testFilesAndDataOnServer(String plateforme, String projet, String site, int expected, int numberOfVersions, String fileUUID, boolean published) throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                         .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$", Matchers.hasSize(numberOfVersions)));
-        String response;
 
         if (published) {
             resultActions = resultActions.
@@ -659,7 +630,7 @@ public class OreSiResourcesTest {
             resultActions = resultActions.
                     andExpect(jsonPath("$[*][?(@.params.published == true )]").isEmpty());
         }
-        response = resultActions
+        resultActions
                 .andReturn().getResponse().getContentAsString();
     }
 
@@ -667,8 +638,8 @@ public class OreSiResourcesTest {
     public void addApplicationAcbb() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
 
-        String appId;
         URL resource = getClass().getResource(fixtures.getAcbbApplicationConfigurationResourceName());
+        assert resource != null;
         try (InputStream in = resource.openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
 
@@ -679,7 +650,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
 
-            appId = JsonPath.parse(response).read("$.id");
+            JsonPath.parse(response).read("$.id");
         }
 
         // Ajout de referentiel
@@ -694,7 +665,7 @@ public class OreSiResourcesTest {
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                JsonPath.parse(response).read("$.id");
             }
         }
 
@@ -720,7 +691,7 @@ public class OreSiResourcesTest {
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
 
-                String refFileId = JsonPath.parse(response).read("$.id");
+                JsonPath.parse(response).read("$.id");
             }
         }
 
@@ -752,7 +723,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
 
         // restitution de data json
@@ -765,7 +736,7 @@ public class OreSiResourcesTest {
 //                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(actualJson, 500));
+            log.debug(StringUtils.abbreviate(actualJson, 50));
             Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
             Assert.assertTrue(actualJson.contains("laqueuille.laqueuille__1"));
         }
@@ -779,7 +750,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isOk())
 //                    .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualCsv, 500));
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
             Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
             Assert.assertTrue(actualCsv.contains("Parcelle"));
             Assert.assertTrue(actualCsv.contains("laqueuille;1"));
@@ -795,7 +766,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
 
         {
@@ -805,7 +776,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(actualJson, 500));
+            log.debug(StringUtils.abbreviate(actualJson, 50));
             Assert.assertEquals(252, StringUtils.countMatches(actualJson, "prairie permanente"));
         }
 
@@ -815,7 +786,7 @@ public class OreSiResourcesTest {
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualCsv, 500));
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
             Assert.assertEquals(252, StringUtils.countMatches(actualCsv, "prairie permanente"));
         }
 
@@ -828,7 +799,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
 
         {
@@ -838,7 +809,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(actualJson, 500));
+            log.debug(StringUtils.abbreviate(actualJson, 50));
             Assert.assertEquals(2912, StringUtils.countMatches(actualJson, "\"SWC\":"));
         }
 
@@ -848,7 +819,7 @@ public class OreSiResourcesTest {
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualCsv, 500));
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
             Assert.assertEquals(1456, StringUtils.countMatches(actualCsv, "/2010"));
         }
     }
@@ -1055,7 +1026,7 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            log.debug(StringUtils.abbreviate(response, 50));
         }
     }
 }

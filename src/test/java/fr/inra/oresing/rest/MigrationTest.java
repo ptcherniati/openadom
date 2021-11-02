@@ -68,7 +68,7 @@ public class MigrationTest {
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(actualCsv);
+            //log.debug(actualCsv);
             Assert.assertTrue(actualCsv.contains("quantité"));
             Assert.assertEquals(1, StringUtils.countMatches(actualCsv, "bleu"));
             Assert.assertEquals(1, StringUtils.countMatches(actualCsv, "1234"));

@@ -34,23 +34,7 @@ public class Configuration {
         Map<String, Set<String>> dependsOf = new HashMap<>();
         Map<String, DependencyNode> nodes = new LinkedHashMap<>();
         for (Map.Entry<String, ReferenceDescription> reference : references.entrySet()) {
-            DependencyNode dependencyNode = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
-            LinkedHashMap<String, LineValidationRuleDescription> validations = reference.getValue().getValidations();
-            if (!CollectionUtils.isEmpty(validations)) {
-                for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
-                    CheckerDescription checker = validation.getValue().getChecker();
-                    if (checker != null) {
-                        String refType = Optional.ofNullable(checker)
-                                .map(c -> c.getParams())
-                                .map(param -> param.get(ReferenceLineChecker.PARAM_REFTYPE))
-                                .orElse(null);
-                        if ("Reference".equals(checker.getName()) && refType != null) {
-                            DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
-                            dependencyNode.addDependance(node);
-                        }
-                    }
-                }
-            }
+            addDependencyNodesForReference(nodes, reference);
         }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
         nodes.values().stream()
@@ -58,6 +42,26 @@ public class Configuration {
                 .sorted((a, b) -> -1)
                 .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
+    }
+
+    private void addDependencyNodesForReference(Map<String, DependencyNode> nodes, Map.Entry<String, ReferenceDescription> reference) {
+        DependencyNode dependencyNode = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
+        LinkedHashMap<String, LineValidationRuleDescription> validations = reference.getValue().getValidations();
+        if (!CollectionUtils.isEmpty(validations)) {
+            for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
+                CheckerDescription checker = validation.getValue().getChecker();
+                if (checker != null) {
+                    String refType = Optional.ofNullable(checker)
+                            .map(c -> c.getParams())
+                            .map(param -> param.get(ReferenceLineChecker.PARAM_REFTYPE))
+                            .orElse(null);
+                    if ("Reference".equals(checker.getName()) && refType != null) {
+                        DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
+                        dependencyNode.addDependance(node);
+                    }
+                }
+            }
+        }
     }
 
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {

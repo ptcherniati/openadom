@@ -323,7 +323,7 @@ export default class DataTypesRepositoryView extends Vue {
                 if (a.indexOf(b) < 0) {
                   a.push(b)
                 }
-                ;
+
                 return a
               }
               , []);
