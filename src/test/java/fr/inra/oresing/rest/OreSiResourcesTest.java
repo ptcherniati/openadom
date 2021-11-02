@@ -271,7 +271,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isOk())
                     //     .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualCsv, 00));
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
             List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r+\n"))
                     .collect(Collectors.toList());
             List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r+\n"))
@@ -489,19 +489,19 @@ public class OreSiResourcesTest {
         }
         //on publie 4 fichiers
 
-        publishOrDepublish("manche", "plateforme", "scarff",  68, true,  true);
-        publishOrDepublish("atlantique", "plateforme",  "scarff",  34, true,  true);
-        publishOrDepublish("atlantique", "plateforme",  "nivelle",  34, true,  true);
-        publishOrDepublish("manche", "plateforme",  "nivelle",  34, true ,true);
+        publishOrDepublish("manche", "plateforme", "scarff", 68, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme",  "scarff", 34, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme",  "nivelle", 34, true, 1, true);
+        publishOrDepublish("manche", "plateforme",  "nivelle", 34, true, 1, true);
         //on publie une autre version
-        String fileUUID = publishOrDepublish("manche", "plateforme",  "nivelle",  34, true,  true);
+        String fileUUID = publishOrDepublish("manche", "plateforme",  "nivelle", 34, true, 2, true);
         // on supprime l'application publiée
         response = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/applications/monsore/file/" + fileUUID)
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
-        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 1, fileUUID, false);
+        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 1, fileUUID, false);
 
 
         // on depublie le fichier oir déposé
@@ -539,7 +539,7 @@ public class OreSiResourcesTest {
         // on supprime le fic
     }
 
-    private String publishOrDepublish(String projet, String plateforme, String site, int total, boolean toPublish, boolean published) throws Exception {
+    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
         URL resource;
         String response;
         resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
@@ -557,7 +557,7 @@ public class OreSiResourcesTest {
             String fileUUID = JsonPath.parse(response).read("$.fileId");
 
             //liste des fichiers projet/site
-            testFilesAndDataOnServer(plateforme, projet, site, total, fileUUID, published);
+            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
             log.debug(StringUtils.abbreviate(response, 50));
             return fileUUID;
         }
@@ -614,7 +614,7 @@ public class OreSiResourcesTest {
         }
     }
 
-    private void testFilesAndDataOnServer(String plateforme, String projet, String site, int numberOfVersions, String fileUUID, boolean published) throws Exception {
+    private void testFilesAndDataOnServer(String plateforme, String projet, String site, int expected, int numberOfVersions, String fileUUID, boolean published) throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                         .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
                         .cookie(authCookie))

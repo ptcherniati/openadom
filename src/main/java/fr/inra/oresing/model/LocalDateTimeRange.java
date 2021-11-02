@@ -115,52 +115,64 @@ public class LocalDateTimeRange {
         String upperBoundString = split[1];
         Range<LocalDateTime> range;
         if (lowerBoundString.equals("(")) {
-            if (upperBoundString.equals(")")) {
-                range = Range.all();
-            } else {
-                LocalDateTime upperBound = parseBound(upperBoundString);
-                if (upperBoundString.endsWith("]")) {
-                    range = Range.atMost(upperBound);
-                } else if (upperBoundString.endsWith(")")) {
-                    range = Range.lessThan(upperBound);
-                } else {
-                    throw new IllegalStateException(upperBoundString);
-                }
-            }
+            range = parseLowerBound(upperBoundString);
         } else {
-            LocalDateTime lowerBound = parseBound(lowerBoundString);
-            if (upperBoundString.equals(")")) {
-                if (lowerBoundString.startsWith("[")) {
-                    range = Range.atLeast(lowerBound);
-                } else if (lowerBoundString.startsWith("(")) {
-                    range = Range.greaterThan(lowerBound);
-                } else {
-                    throw new IllegalStateException(upperBoundString);
-                }
-            } else {
-                LocalDateTime upperBound = parseBound(upperBoundString);
-                if (lowerBoundString.startsWith("[")) {
-                    if (upperBoundString.endsWith("]")) {
-                        range = Range.closed(lowerBound, upperBound);
-                    } else if (upperBoundString.endsWith(")")) {
-                        range = Range.closedOpen(lowerBound, upperBound);
-                    } else {
-                        throw new IllegalStateException(upperBoundString);
-                    }
-                } else if (lowerBoundString.startsWith("(")) {
-                    if (upperBoundString.endsWith("]")) {
-                        range = Range.openClosed(lowerBound, upperBound);
-                    } else if (upperBoundString.endsWith(")")) {
-                        range = Range.open(lowerBound, upperBound);
-                    } else {
-                        throw new IllegalStateException(upperBoundString);
-                    }
-                } else {
-                    throw new IllegalStateException(lowerBoundString);
-                }
-            }
+            range = parseUpperBound(lowerBoundString, upperBoundString);
         }
         return new LocalDateTimeRange(range);
+    }
+
+    private static Range<LocalDateTime> parseUpperBound(String lowerBoundString, String upperBoundString) {
+        Range<LocalDateTime> range;
+        LocalDateTime lowerBound = parseBound(lowerBoundString);
+        if (upperBoundString.equals(")")) {
+            if (lowerBoundString.startsWith("[")) {
+                range = Range.atLeast(lowerBound);
+            } else if (lowerBoundString.startsWith("(")) {
+                range = Range.greaterThan(lowerBound);
+            } else {
+                throw new IllegalStateException(upperBoundString);
+            }
+        } else {
+            LocalDateTime upperBound = parseBound(upperBoundString);
+            if (lowerBoundString.startsWith("[")) {
+                if (upperBoundString.endsWith("]")) {
+                    range = Range.closed(lowerBound, upperBound);
+                } else if (upperBoundString.endsWith(")")) {
+                    range = Range.closedOpen(lowerBound, upperBound);
+                } else {
+                    throw new IllegalStateException(upperBoundString);
+                }
+            } else if (lowerBoundString.startsWith("(")) {
+                if (upperBoundString.endsWith("]")) {
+                    range = Range.openClosed(lowerBound, upperBound);
+                } else if (upperBoundString.endsWith(")")) {
+                    range = Range.open(lowerBound, upperBound);
+                } else {
+                    throw new IllegalStateException(upperBoundString);
+                }
+            } else {
+                throw new IllegalStateException(lowerBoundString);
+            }
+        }
+        return range;
+    }
+
+    private static Range<LocalDateTime> parseLowerBound(String upperBoundString) {
+        Range<LocalDateTime> range;
+        if (upperBoundString.equals(")")) {
+            range = Range.all();
+        } else {
+            LocalDateTime upperBound = parseBound(upperBoundString);
+            if (upperBoundString.endsWith("]")) {
+                range = Range.atMost(upperBound);
+            } else if (upperBoundString.endsWith(")")) {
+                range = Range.lessThan(upperBound);
+            } else {
+                throw new IllegalStateException(upperBoundString);
+            }
+        }
+        return range;
     }
 
     public static ImmutableSet<String> getKnownPatterns() {
@@ -224,4 +236,3 @@ public class LocalDateTimeRange {
         LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter);
     }
 }
-

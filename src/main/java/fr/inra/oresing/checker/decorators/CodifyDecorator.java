@@ -12,9 +12,6 @@ import java.util.Optional;
 public class CodifyDecorator implements ICheckerDecorator {
     public static final String PARAMS_CODIFY = "codify";
 
-    public CodifyDecorator() {
-    }
-
     public ValidationCheckResult check(String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
 
         boolean codify = params.containsKey(PARAMS_CODIFY) &&

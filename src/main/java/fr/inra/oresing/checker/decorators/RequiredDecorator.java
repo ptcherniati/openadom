@@ -12,9 +12,6 @@ import java.util.Optional;
 public class RequiredDecorator implements ICheckerDecorator {
     public static final String PARAMS_REQUIRED = "required";
 
-    public RequiredDecorator() {
-    }
-
     public ValidationCheckResult check(String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
         boolean required = params.containsKey(PARAMS_REQUIRED) &&
                 Optional.ofNullable(params.get(PARAMS_REQUIRED))
