@@ -458,7 +458,6 @@ public class OreSiService {
                     })
                     .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))
                     .map(e -> {
-                        System.out.println(e);
                         if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
                             /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
                             dans le fichier. Seule la première ligne est enregistrée

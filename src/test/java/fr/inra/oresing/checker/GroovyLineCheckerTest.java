@@ -7,16 +7,11 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.ValidationCheckResult;
-import jdk.jshell.JShell;
-import jdk.jshell.SnippetEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -101,18 +96,6 @@ public class GroovyLineCheckerTest {
             Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getMessage().contains("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais 261.15."));
-        }
-    }
-
-    @Test
-    @Ignore("juste un essai")
-    public void testJShell() {
-        try (JShell jShell = JShell.create()) {
-            String uneVariable = "truc";
-            List<SnippetEvent> events = jShell.eval("uneVariable");
-            for (SnippetEvent event : events) {
-                //System.out.println(event.value());
-            }
         }
     }
 }
