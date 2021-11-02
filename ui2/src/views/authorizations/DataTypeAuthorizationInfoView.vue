@@ -11,7 +11,6 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-
       <ValidationProvider rules="required" name="users" v-slot="{ errors, valid }" vid="users">
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
@@ -125,7 +124,7 @@
                     centered
                     v-slot="props"
                   >
-                    <b-checkbox size="is-medium" v-model="props.row.admin" > </b-checkbox>
+                    <b-checkbox size="is-medium" v-model="props.row.admin"> </b-checkbox>
                   </b-table-column>
                   <b-table-column
                     field="depot"

@@ -115,3 +115,7 @@ a.dropdown-item {
   border-color: $primary;
   box-shadow: 0 0 0 0.125em rgba(0, 163, 166,0.25);
 }
+
+a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, button.dropdown-item.is-active {
+  background-color: $dark;
+}
