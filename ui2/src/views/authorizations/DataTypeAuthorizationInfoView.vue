@@ -60,8 +60,18 @@
           </b-taginput>
         </b-field>
       </ValidationProvider>
-
-      <ValidationProvider rules="required" name="scopes" v-slot="{ errors, valid }" vid="scopes">
+      <AuthorizationTable class="rows"
+          :option="authReferences[0]" :remaining-option="authReferences.slice && authReferences.slice(1,authReferences.length)">
+      <div class="columns">
+        <b-field class="column" field="label" label="Label"></b-field>
+        <b-field class="column" field="admin" label="Admin"></b-field>
+        <b-field class="column" field="depot" label="Dépôt"></b-field>
+        <b-field class="column" field="publication" label="Publication"></b-field>
+        <b-field class="column" field="extraction" label="Extraction"></b-field>
+        <b-field class="column" field="periodes" label="Périodes"></b-field>
+      </div>
+      </AuthorizationTable>
+      <!--ValidationProvider-- rules="required" name="scopes" v-slot="{ errors, valid }" vid="scopes">
         <b-field
           :label="$t('dataTypeAuthorizations.authorization-scopes')"
           class="mb-4"
@@ -89,9 +99,9 @@
                 </a>
               </div>
             </template>
+
             <div class="card-content">
               <div class="content">
-                <!-- TO DO voir pour réaliser un tableau avec un arbre (ou un collapse detail) premier essais pas concluant-->
                 <b-table
                   :data="scope.options"
                   class="table is-striped"
@@ -204,7 +214,7 @@
             </div>
           </b-collapse>
         </b-field>
-      </ValidationProvider>
+      </ValidationProvider-->
 
       <div class="buttons">
         <b-button type="is-primary" @click="handleSubmit(createAuthorization)" icon-left="plus">
@@ -228,15 +238,20 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import { ApplicationResult } from "@/model/ApplicationResult";
+import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
+import {ReferenceService} from "@/services/rest/ReferenceService";
+import AuthorizationTable from "@/components/common/AuthorizationTable";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
+  components: {AuthorizationTable, PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider },
 })
 export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() dataTypeId;
   @Prop() applicationName;
   @Prop() authorizationId;
 
+  referenceService = ReferenceService.INSTANCE;
+  references = {};
   authorizationService = AuthorizationService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
@@ -271,6 +286,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
   endDate = null;
+  application = new ApplicationResult();
+  applications = [];
+  configuration = {};
+  authorizations = [];
+  authReferences = {};
 
   created() {
     this.init();
@@ -317,7 +337,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   async init() {
     try {
+      this.applications = await this.applicationService.getApplications();
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.configuration = this.applications
+        .filter((a) => a.name === this.applicationName)
+        .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -327,6 +351,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           this.application.dataTypes[this.dataTypeId]
         ),
       };
+      this.authorizations = this.configuration.authorization.authorizationScopes;
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
         this.dataTypeId
@@ -341,9 +366,122 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       //   id: "toto",
       //   label: "toto",
       // });
+      let ret = {};
+      for (let auth in grantableInfos.authorizationScopes) {
+        let vc = this.authorizations[grantableInfos.authorizationScopes[auth]?.label];
+        var reference =
+            this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
+        let ref = await this.getOrLoadReferences(reference);
+        ret[auth] = ref;
+      }
+      let refs = Object.values(ret)
+          .reduce(
+              (acc, k) => [
+                ...acc,
+                ...k.referenceValues.reduce(
+                    (a, b) => [...a, ...b.hierarchicalReference.split(".")],
+                    acc
+                ),
+              ],
+              []
+          )
+          .reduce((a, b) => {
+            if (a.indexOf(b) < 0) {
+              a.push(b);
+            }
+            return a;
+          }, []);
+      for (const refsKey in refs) {
+        await this.getOrLoadReferences(refs[refsKey]);
+      }
+      var remainingAuthorizations = []
+      for (const key in ret) {
+        let partition = await this.partitionReferencesValues(ret[key]?.referenceValues);
+        remainingAuthorizations[key] = partition;
+      }
+      this.authReferences = remainingAuthorizations;
     } catch (error) {
       this.alertService.toastServerError(error);
     }
+  }
+  async partitionReferencesValues(referencesValues, currentPath, currentCompleteLocalName) {
+    let returnValues = {};
+    for (const referenceValue of referencesValues) {
+      var previousKeySplit = currentPath ? currentPath.split(".") : [];
+      var keys = referenceValue.hierarchicalKey.split(".");
+      var references = referenceValue.hierarchicalReference.split(".");
+      if (previousKeySplit.length == keys.length) {
+        continue;
+      }
+      for (let i = 0; i < previousKeySplit.length; i++) {
+        keys.shift();
+        references.shift();
+      }
+      var key = keys.shift();
+      let newCurrentPath = (currentPath ? currentPath + "." : "") + key;
+      var reference = references.shift();
+      let refValues = await this.getOrLoadReferences(reference);
+      this.internationalisationService.getUserPrefLocale();
+      let lang = localStorage.getItem(LOCAL_STORAGE_LANG);
+      let localName = refValues.referenceValues.find((r) => r.naturalKey == key);
+      if (localName?.values?.["__display_" + lang]) {
+        localName = localName?.values?.["__display_" + lang];
+      }
+      if (!localName) {
+        localName = key;
+      }
+      var completeLocalName =
+        typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
+      completeLocalName = completeLocalName + (completeLocalName == "" ? "" : ",") + localName;
+      let authPartition = returnValues[key] || {
+        key,
+        reference,
+        referenceValues: [],
+        localName,
+        isLeaf: false,
+        currentPath: newCurrentPath,
+        completeLocalName,
+      };
+      authPartition.referenceValues.push(referenceValue);
+      returnValues[key] = authPartition;
+    }
+    for (const returnValuesKey in returnValues) {
+      var auth = returnValues[returnValuesKey];
+      let referenceValueLeaf = auth.referenceValues?.[0];
+      if (
+        auth.referenceValues.length <= 1 &&
+        referenceValueLeaf.hierarchicalKey == auth.currentPath
+      ) {
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: true,
+          referenceValues: referenceValueLeaf,
+        };
+      } else {
+        var r = await this.partitionReferencesValues(
+          auth.referenceValues,
+          auth.currentPath,
+          auth.completeLocalName
+        );
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: false,
+          referenceValues: r,
+        };
+      }
+    }
+    return returnValues;
+  }
+
+  async getOrLoadReferences(reference) {
+    if (this.references[reference]) {
+      return this.references[reference];
+    }
+    let ref = await this.referenceService.getReferenceValues(this.applicationName, reference);
+    this.references[reference] = ref;
+    // eslint-disable-next-line no-self-assign
+    this.references = this.references;
+    return ref;
   }
 
   @Watch("period")
