@@ -47,10 +47,28 @@ export default class DropDownMenu extends Vue {
   margin-right: 10px;
   padding: 5px;
   button {
-    opacity: 0.75;
+    background-color: rgba(0,100,100, 0.85);
   }
-  .dropdown-menu .dropdown-content .dropDownMenu button{
-    opacity: 0.5;
+  .dropdown-menu .dropdown-content .dropDownMenu  {
+    button{
+      background-color: rgba(0,100,100, 0.70);
+    }
+    .dropdown-menu .dropdown-content .dropDownMenu  {
+      button{
+        background-color: rgba(0,100,100, 0.55);
+        .dropdown-menu .dropdown-content .dropDownMenu  {
+          button{
+            background-color: rgba(0,100,100, 0.40);
+            .dropdown-menu .dropdown-content .dropDownMenu  {
+              button{
+                background-color: rgba(0,100,100, 0.25);
+                color: black;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 </style>

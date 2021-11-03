@@ -117,5 +117,12 @@ a.dropdown-item {
 }
 
 a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, button.dropdown-item.is-active {
-  background-color: $dark;
+  background-color: rgb(0,100,100);
+}
+
+.column.card .card-content .table td{
+  vertical-align: middle;
+}
+.button.is-danger.is-light {
+  color: $danger;
 }

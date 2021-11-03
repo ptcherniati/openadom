@@ -111,7 +111,7 @@
                       </b-field>
                     </div>
                     <div class="column">
-                      <b-upload v-model="file" class="file-label">
+                      <b-upload v-model="file" class="file-label" style="margin-top: 30px">
                         <span class="file-cta">
                           <b-icon class="file-icon" icon="upload"></b-icon>
                           <span class="file-label">{{ $t("dataTypesRepository.choose-file") }}</span>
@@ -121,6 +121,9 @@
                         </span>
                       </b-upload>
                     </div>
+                  </div>
+                  <div class="columns">
+                    <!-- TO DO ajouter un champs commentaire -->
                   </div>
                 </div>
               </div>
@@ -136,83 +139,86 @@
           </form>
         </div>
       </div>
-      <div class="card">
-        <div v-if="isAuthorisationsSelected()" class="card-content">
-          <table
-            v-if="datasets && Object.keys(datasets).length"
-            class="table is-bordered is-striped is-fullwidth"
-          >
-            <caption>
-              {{
-                $t("dataTypesRepository.list-file-data")
-              }}
-            </caption>
-            <tr>
-              <th align>{{ $t("dataTypesRepository.table-file-data-period") }}</th>
-              <th align>{{ $t("ponctuation.star") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
-            </tr>
-            <tr
-              v-for="(dataset, periode) in datasets"
-              :key="dataset.id"
-              @click="showDatasets(dataset)"
+      <div  v-if="isAuthorisationsSelected()" class="columns">
+        <div class="card column">
+          <div class="card-content">
+            <table
+                v-if="datasets && Object.keys(datasets).length"
+                class="table is-striped is-fullwidth" style="text-align: center; vertical-align: center"
             >
-              <td align>{{ periode }}</td>
-              <td align>{{ Object.keys(dataset.datasets).length }}</td>
-              <td align>{{ dataset.publication }}</td>
-            </tr>
-          </table>
-          <table
-            v-if="currentDataset && currentDataset.length"
-            class="table is-bordered is-striped is-fullwidth"
-          >
-            <caption>
-              {{
-                $t("dataTypesRepository.list-file-data-period")
-              }}
-              {{
-                currentDataset[0].periode
-              }}
-            </caption>
-            <tr>
-              <th align>{{ $t("dataTypesRepository.table-file-data-id") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-size") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-create") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-create-by") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-publish") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-publish-by") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
-              <th align>{{ $t("dataTypesRepository.table-file-data-delete") }}</th>
-            </tr>
-            <tr v-for="dataset in currentDataset" :key="dataset.id">
-              <td align>{{ dataset.id.slice(0, 8) }}</td>
-              <td align>{{ dataset.size }}</td>
-              <td align>{{ UTCToString(dataset.params.createdate) }}</td>
-              <td align>{{ dataset.createuser }}</td>
-              <td align>{{ UTCToString(dataset.params.publisheddate) }}</td>
-              <td align>{{ dataset.publisheduser }}</td>
-              <td align>
-                <b-field>
-                  <b-button
-                    :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
-                    size="is-large"
-                    type="is-primary is-light"
-                    @click="publish(dataset, !dataset.params.published)"
-                  />
-                </b-field>
-              </td>
-              <td>
-                <b-field>
-                  <b-button
-                    icon-right="trash-alt"
-                    size="is-medium"
-                    type="is-danger"
-                    @click="remove(dataset, dataset.params.published)"
-                  />
-                </b-field>
-              </td>
-            </tr>
-          </table>
+              <caption>
+                {{
+                  $t("dataTypesRepository.list-file-data")
+                }}
+              </caption>
+              <tr>
+                <th align>{{ $t("dataTypesRepository.table-file-data-period") }}</th>
+                <th align>{{ $t("ponctuation.star") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
+              </tr>
+              <tr
+                  v-for="(dataset, periode) in datasets"
+                  :key="dataset.id"
+                  @click="showDatasets(dataset)"
+                  style="cursor: pointer"
+              >
+                <td align>{{ periode }}</td>
+                <td align>{{ Object.keys(dataset.datasets).length }}</td>
+                <td align>{{ dataset.publication }}</td>
+              </tr>
+            </table>
+            <table
+                v-if="currentDataset && currentDataset.length"
+                class="table is-striped is-fullwidth" style="text-align: center; vertical-align: center"
+            >
+              <caption>
+                {{
+                  $t("dataTypesRepository.list-file-data-period")
+                }}
+                {{
+                  currentDataset[0].periode
+                }}
+              </caption>
+              <tr>
+                <th align>{{ $t("dataTypesRepository.table-file-data-id") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-size") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-create") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-create-by") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-publish") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-publish-by") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
+                <th align>{{ $t("dataTypesRepository.table-file-data-delete") }}</th>
+              </tr>
+              <tr v-for="dataset in currentDataset" :key="dataset.id">
+                <td align>{{ dataset.id.slice(0, 8) }}</td>
+                <td align>{{ dataset.size }}</td>
+                <td align>{{ UTCToString(dataset.params.createdate) }}</td>
+                <td align>{{ dataset.createuser }}</td>
+                <td align>{{ UTCToString(dataset.params.publisheddate) }}</td>
+                <td align>{{ dataset.publisheduser }}</td>
+                <td align>
+                  <b-field>
+                    <b-button
+                        :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                        size="is-medium"
+                        type="is-primary is-light"
+                        @click="publish(dataset, !dataset.params.published)"
+                    />
+                  </b-field>
+                </td>
+                <td>
+                  <b-field>
+                    <b-button
+                        icon-right="trash-alt"
+                        size="is-medium"
+                        type="is-danger is-light"
+                        @click="remove(dataset, dataset.params.published)"
+                    />
+                  </b-field>
+                </td>
+              </tr>
+            </table>
+          </div>
         </div>
       </div>
     </PageView>
@@ -614,7 +620,6 @@ table.datasetsPanel {
 table.datasetsPanel,
 table.datasetsPanel th,
 table.datasetsPanel td {
-  border: 1px solid rgb(94, 65, 219);
   border-collapse: collapse;
   text-align: center;
 }
