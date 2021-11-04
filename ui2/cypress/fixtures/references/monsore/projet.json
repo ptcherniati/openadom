@@ -1,0 +1,32 @@
+{
+  "referenceValues": [
+    {
+      "hierarchicalKey": "projet_atlantique",
+      "hierarchicalReference": "projet",
+      "naturalKey": "projet_atlantique",
+      "values": {
+        "nom_en": "Atlantic project",
+        "nom_fr": "Projet Atlantique",
+        "nom_key": "projet_atlantique",
+        "__display_en": "Atlantic project",
+        "__display_fr": "Projet Atlantique",
+        "definition_en": "Atlantic project",
+        "definition_fr": "Projet Atlantique"
+      }
+    },
+    {
+      "hierarchicalKey": "projet_manche",
+      "hierarchicalReference": "projet",
+      "naturalKey": "projet_manche",
+      "values": {
+        "nom_en": "Channel project",
+        "nom_fr": "Projet manche",
+        "nom_key": "projet_manche",
+        "__display_en": "Channel project",
+        "__display_fr": "Projet manche",
+        "definition_en": "Channel project",
+        "definition_fr": "Projet manche"
+      }
+    }
+  ]
+}
