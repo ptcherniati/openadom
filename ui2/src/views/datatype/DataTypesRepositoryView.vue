@@ -114,7 +114,9 @@
                       <b-upload v-model="file" class="file-label" style="margin-top: 30px">
                         <span class="file-cta">
                           <b-icon class="file-icon" icon="upload"></b-icon>
-                          <span class="file-label">{{ $t("dataTypesRepository.choose-file") }}</span>
+                          <span class="file-label">{{
+                            $t("dataTypesRepository.choose-file")
+                          }}</span>
                         </span>
                         <span v-if="file" class="file-name">
                           {{ file.name }}
@@ -129,9 +131,9 @@
               </div>
               <footer class="card-footer">
                 <div class="column is-10"></div>
-                <div class="column is-2" style="float: right;">
-                  <b-button type="is-dark" @click="upload" style="float: right;"
-                    expanded>{{ $t("dataTypesRepository.submit") }}
+                <div class="column is-2" style="float: right">
+                  <b-button type="is-dark" @click="upload" style="float: right" expanded
+                    >{{ $t("dataTypesRepository.submit") }}
                   </b-button>
                 </div>
               </footer>
@@ -139,12 +141,13 @@
           </form>
         </div>
       </div>
-      <div  v-if="isAuthorisationsSelected()" class="columns">
+      <div v-if="isAuthorisationsSelected()" class="columns">
         <div class="card column">
           <div class="card-content">
             <table
-                v-if="datasets && Object.keys(datasets).length"
-                class="table is-striped is-fullwidth" style="text-align: center; vertical-align: center"
+              v-if="datasets && Object.keys(datasets).length"
+              class="table is-striped is-fullwidth"
+              style="text-align: center; vertical-align: center"
             >
               <caption>
                 {{
@@ -157,10 +160,10 @@
                 <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
               </tr>
               <tr
-                  v-for="(dataset, periode) in datasets"
-                  :key="dataset.id"
-                  @click="showDatasets(dataset)"
-                  style="cursor: pointer"
+                v-for="(dataset, periode) in datasets"
+                :key="dataset.id"
+                @click="showDatasets(dataset)"
+                style="cursor: pointer"
               >
                 <td align>{{ periode }}</td>
                 <td align>{{ Object.keys(dataset.datasets).length }}</td>
@@ -168,8 +171,9 @@
               </tr>
             </table>
             <table
-                v-if="currentDataset && currentDataset.length"
-                class="table is-striped is-fullwidth" style="text-align: center; vertical-align: center"
+              v-if="currentDataset && currentDataset.length"
+              class="table is-striped is-fullwidth"
+              style="text-align: center; vertical-align: center"
             >
               <caption>
                 {{
@@ -199,20 +203,20 @@
                 <td align>
                   <b-field>
                     <b-button
-                        :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
-                        size="is-medium"
-                        type="is-primary is-light"
-                        @click="publish(dataset, !dataset.params.published)"
+                      :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                      size="is-medium"
+                      type="is-primary is-light"
+                      @click="publish(dataset, !dataset.params.published)"
                     />
                   </b-field>
                 </td>
                 <td>
                   <b-field>
                     <b-button
-                        icon-right="trash-alt"
-                        size="is-medium"
-                        type="is-danger is-light"
-                        @click="remove(dataset, dataset.params.published)"
+                      icon-right="trash-alt"
+                      size="is-medium"
+                      type="is-danger is-light"
+                      @click="remove(dataset, dataset.params.published)"
                     />
                   </b-field>
                 </td>

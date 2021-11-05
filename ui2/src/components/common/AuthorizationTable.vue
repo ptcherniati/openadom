@@ -5,25 +5,40 @@
       <div v-for="(scope, index) of authReference" :key="index">
         <div class="columns">
           <div v-for="(column, indexColumn) of columnsVisible" :key="indexColumn" class="column">
-            <b-button v-if="column.display && indexColumn=='label' && (!scope.isLeaf || remainingOption.length)" :class="(!scope.isLeaf || remainingOption.length)?'leaf':'folder'"
-                     :field="indexColumn" :label="localName(scope)"
-                      @click="indexColumn=='label' && toggle(index)"/>
-            <b-field v-else-if="column.display && indexColumn=='label' && !(!scope.isLeaf || remainingOption.length)" :class="(!scope.isLeaf || remainingOption.length)?'leaf':'folder'"
-                     :field="indexColumn" :label="localName(scope)" />
-            <b-field v-else-if="column.display && indexColumn!='date'" :field="indexColumn">
-              <b-checkbox @input="selectCheckbox($event, indexColumn, scope)"/>
+            <a
+              v-if="
+                column.display &&
+                indexColumn == 'label' &&
+                (!scope.isLeaf || remainingOption.length)
+              "
+              :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
+              :field="indexColumn"
+              @click="indexColumn == 'label' && toggle(index)"
+            >{{ localName(scope) }}</a>
+            <p
+              v-else-if="
+                column.display &&
+                indexColumn == 'label' &&
+                !(!scope.isLeaf || remainingOption.length)
+              "
+              :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
+              :field="indexColumn"
+            > {{ localName(scope) }}</p>
+            <b-field v-else-if="column.display && indexColumn != 'date'" :field="indexColumn">
+              <b-checkbox @input="selectCheckbox($event, indexColumn, scope)" />
             </b-field>
-            <b-field v-else-if="column.display && indexColumn=='date'" :field="indexColumn">
-              <b-radio/>
+            <b-field v-else-if="column.display && indexColumn == 'date'" :field="indexColumn">
+              <b-radio />
             </b-field>
           </div>
         </div>
         <ul v-show="(!scope.isLeaf || remainingOption.length) && open[index]" class="rows">
           <AuthorizationTable
-              :authReference="getNextAuthreference(scope)"
-              :columnsVisible="columnsVisible"
-              :remaining-option="getRemainingOption(scope)"
-              v-on:selected-checkbox="emitSelectedCheckbox($event,  scope)"/>
+            :authReference="getNextAuthreference(scope)"
+            :columnsVisible="columnsVisible"
+            :remaining-option="getRemainingOption(scope)"
+            v-on:selected-checkbox="emitSelectedCheckbox($event, scope)"
+          />
         </ul>
       </div>
     </li>
@@ -31,22 +46,21 @@
 </template>
 
 <script>
-import {Component, Prop, Vue} from "vue-property-decorator";
-import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
-  components: {FontAwesomeIcon},
+  components: { FontAwesomeIcon },
 })
 export default class AuthorizationTable extends Vue {
   @Prop() authReference;
   @Prop() remainingOption;
   @Prop() columnsVisible;
   initialized = false;
-  open = {}
+  open = {};
   emits = ["selected-checkbox"];
 
-  mounted() {
-  }
+  mounted() {}
 
   init() {
     if (this.initialized) {
@@ -55,20 +69,24 @@ export default class AuthorizationTable extends Vue {
     if (this?.authReference && !this?.authReference?.hierarchicalKey) {
       for (const index in this.authReference) {
         if (!this.authReference[index].isLeaf || this.remainingOption.length)
-        this.open[index] = false;
+          this.open[index] = false;
       }
     }
     this.initialized = !this.initialized;
   }
-  localName(scope){
-    return scope.localName || (this.authReference.authorizationScope && this.authReference.authorizationScope.localName) || 'pas trouve'
+  localName(scope) {
+    return (
+      scope.localName ||
+      (this.authReference.authorizationScope && this.authReference.authorizationScope.localName) ||
+      "pas trouve"
+    );
   }
 
   toggle(index) {
     this.init();
-    var open = {}
+    var open = {};
     open[index] = !this.open[index];
-    this.open = {...this.open, ...open}
+    this.open = { ...this.open, ...open };
   }
 
   select(option) {
@@ -77,43 +95,42 @@ export default class AuthorizationTable extends Vue {
 
   getNextAuthreference(scope) {
     if (!scope.isLeaf) {
-      return scope.referenceValues
+      return scope.referenceValues;
     } else {
-      return this.remainingOption.length?this.remainingOption[0] :scope.referenceValues ;
+      return this.remainingOption.length ? this.remainingOption[0] : scope.referenceValues;
     }
   }
 
   getRemainingOption(scope) {
     if (scope.isLeaf) {
-      return this.remainingOption.slice(1, this.remainingOption.length)
+      return this.remainingOption.slice(1, this.remainingOption.length);
     } else {
       return this.remainingOption;
     }
   }
 
   selectCheckbox(event, indexColumn, scope) {
-    var authorizationScope = {}
+    var authorizationScope = {};
+    console.log(scope);
     let id = scope.authorizationScope;
     authorizationScope[id] = scope.key;
     {
-      this.$emit('selected-checkbox',
-          {
-            checked: event,
-            type: indexColumn,
-            authorizationScope: authorizationScope
-          }
-      )
+      this.$emit("selected-checkbox", {
+        checked: event,
+        type: indexColumn,
+        authorizationScope: authorizationScope,
+      });
     }
   }
 
-  emitSelectedCheckbox(event,scope) {
+  emitSelectedCheckbox(event, scope) {
     let id = scope.authorizationScope;
-    if (event.authorizationScope[id]==null){
-      event.authorizationScope[id]=scope.key
-    }else{
-      event.authorizationScope[id] =scope.key+'.'+event.authorizationScope[id]
+    if (event.authorizationScope[id] == null) {
+      event.authorizationScope[id] = scope.key;
+    } else {
+      event.authorizationScope[id] = scope.key + "." + event.authorizationScope[id];
     }
-        this.$emit('selected-checkbox', event);
+    this.$emit("selected-checkbox", event);
   }
 }
 </script>
@@ -121,8 +138,7 @@ export default class AuthorizationTable extends Vue {
 <style lang="scss" scoped>
 .authorizationTable {
   margin-left: 10px;
-  margin-right: 10px;
-  padding: 5px;
+  padding: 0 0 0 5px;
 
   button {
     opacity: 0.75;
@@ -131,5 +147,8 @@ export default class AuthorizationTable extends Vue {
   .dropdown-menu .dropdown-content .dropDownMenu button {
     opacity: 0.5;
   }
+}
+::marker{
+  color: transparent;
 }
 </style>
