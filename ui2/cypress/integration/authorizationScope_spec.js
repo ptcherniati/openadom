@@ -42,7 +42,9 @@ describe('test authorization application', () => {
         cy.fixture('authorisation/monsore/show_authorization_table.json').then(responseAuthorization)
 
         cy.visit(Cypress.env('monsore_table_authorization_url'))
+        cy.get('select').select('5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9')
         cy.wait('@getShowAuthorizations')
+        cy.wait(1)
 
         cy.fixture('authorisation/monsore/new_authorization_request.json').then(resolveAuthorization)
         cy.fixture('references/monsore/sites.json').then(responseSites)
@@ -53,7 +55,7 @@ describe('test authorization application', () => {
         cy.wait(['@getAuthorization','@getDataTypes'])
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
 
-        cy.get('.buttons > .button').click()
+        //cy.get('.buttons > .button').click()
         //cy.fixture('authorisation/monsore/new_authorization_response.json').then(responseAuthorization)
     })
 })

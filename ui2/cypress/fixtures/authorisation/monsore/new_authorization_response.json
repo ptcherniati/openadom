@@ -1,57 +1,62 @@
 [
   {
-    "id":
-    "f156814d-8fb7-4924-a4f7-5bbd8b859599",
-    "user":"5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
-    "application":"862d502b-8a29-4ff0-bb30-e779a08cfe40",
-    "dataType":"pem",
-    "dataGroup":[
-      {
-        "id": "qualitatif",
-        "label": "Données qualitatives"
-      },
-      {
-        "id": "quantitatif",
-        "label": "Données quantitatives"
-      },
-      {
-        "id": "referentiel",
-        "label": "Référentiel"
-      }
+    "id": "189196a1-a1e7-4bb2-9b8e-d4c6aab5b976",
+    "user": "8b48a812-7da7-462a-8012-3e93b696d14b",
+    "application": "a44d5fa8-fd5b-4643-8d5b-11b5208e810f",
+    "dataType": "pem",
+    "dataGroup": "referentiel",
+    "authorizedScopes": {
+      "projet": "projet_manche",
+      "localization": "plateforme.nivelle.nivelle__p1"
+    },
+    "fromDay": null,
+    "toDay": null
+  },
+  {
+    "id": "025e62d1-0e49-4012-a264-3ee1cbb3a77d",
+    "user": "8b48a812-7da7-462a-8012-3e93b696d14b",
+    "application": "a44d5fa8-fd5b-4643-8d5b-11b5208e810f",
+    "dataType": "pem",
+    "dataGroup": "qualitatif",
+    "authorizedScopes": {
+      "projet": "projet_atlantique",
+      "localization": "bassin_versant.nivelle"
+    },
+    "fromDay": null,
+    "toDay": null
+  },
+  {
+    "id": "2bec5462-bbc3-4620-b545-09a16ef5fca7",
+    "user": "8b48a812-7da7-462a-8012-3e93b696d14b",
+    "application": "a44d5fa8-fd5b-4643-8d5b-11b5208e810f",
+    "dataType": "pem",
+    "dataGroup": "quantitatif",
+    "authorizedScopes": {
+      "projet": "projet_atlantique",
+      "localization": "bassin_versant.oir"
+    },
+    "fromDay": [
+      2014,
+      1,
+      1
     ],
-    "authorizedScopes":
-    [
-      {
-        "id": "localization",
-        "label": "localization",
-        "options": [
-          {
-            "id": "nivelle",
-            "label": "nivelle",
-            "children": [
-              {
-                "id": "nivelle__p1",
-                "label": "nivelle__p1"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "projet",
-        "label": "projet",
-        "options": [
-          {
-            "id": "projet_atlantique",
-            "label": "projet_atlantique",
-            "entitiesTranslations": [
-              "getAffichage_FR"
-            ]
-          }
-        ]
-      }
-    ],
-    "fromDay":null,
-    "toDay":null
+    "toDay": [
+      2014,
+      1,
+      2
+    ]
+  },
+  {
+    "id": "a301211d-9cc9-4191-8649-8b57bccf6abf",
+    "user": "8b48a812-7da7-462a-8012-3e93b696d14b",
+    "application": "a44d5fa8-fd5b-4643-8d5b-11b5208e810f",
+    "dataType": "pem",
+    "dataGroup": "quantitatif",
+    "authorizedScopes": {
+      "projet": "projet_atlantique",
+      "localization": "bassin_versant"
+    },
+    "fromDay": null,
+    "toDay": null
   }
 ]
