@@ -14,7 +14,8 @@
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
               :field="indexColumn"
               @click="indexColumn == 'label' && toggle(index)"
-            >{{ localName(scope) }}</a>
+              >{{ localName(scope) }}</a
+            >
             <p
               v-else-if="
                 column.display &&
@@ -23,7 +24,9 @@
               "
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
               :field="indexColumn"
-            > {{ localName(scope) }}</p>
+            >
+              {{ localName(scope) }}
+            </p>
             <b-field v-else-if="column.display && indexColumn != 'date'" :field="indexColumn">
               <b-checkbox @input="selectCheckbox($event, indexColumn, scope)" />
             </b-field>
@@ -59,6 +62,10 @@ export default class AuthorizationTable extends Vue {
   initialized = false;
   open = {};
   emits = ["selected-checkbox"];
+  admin = {};
+  depot = {};
+  publication = {};
+  extraction = {};
 
   mounted() {}
 
@@ -111,9 +118,45 @@ export default class AuthorizationTable extends Vue {
 
   selectCheckbox(event, indexColumn, scope) {
     var authorizationScope = {};
-    console.log(scope);
     let id = scope.authorizationScope;
     authorizationScope[id] = scope.key;
+    if (indexColumn === "admin") {
+      this.admin= {
+        admin: {
+          checked: event,
+          type: indexColumn,
+          authorizationScope: authorizationScope,
+        }
+      };
+    }
+    if (indexColumn === "depot") {
+      this.depot= {
+        depot: {
+          checked: event,
+          type: indexColumn,
+          authorizationScope: authorizationScope,
+        }
+      };
+    }
+    if (indexColumn === "publication") {
+      this.publication= {
+        publication: {
+          checked: event,
+          type: indexColumn,
+          authorizationScope: authorizationScope,
+        }
+      };
+    }
+    if (indexColumn === "extraction") {
+      this.extraction= {
+        extraction: {
+          checked: event,
+          type: indexColumn,
+          authorizationScope: authorizationScope,
+        }
+      };
+    }
+    scope = {...scope, ...this.depot, ...this.admin, ...this.publication, ...this.extraction,}
     {
       this.$emit("selected-checkbox", {
         checked: event,
@@ -121,6 +164,8 @@ export default class AuthorizationTable extends Vue {
         authorizationScope: authorizationScope,
       });
     }
+    console.log(scope);
+    console.log(scope.admin);
   }
 
   emitSelectedCheckbox(event, scope) {
@@ -131,6 +176,7 @@ export default class AuthorizationTable extends Vue {
       event.authorizationScope[id] = scope.key + "." + event.authorizationScope[id];
     }
     this.$emit("selected-checkbox", event);
+    console.log(this.$emit("selected-checkbox", event));
   }
 }
 </script>
@@ -148,7 +194,7 @@ export default class AuthorizationTable extends Vue {
     opacity: 0.5;
   }
 }
-::marker{
+::marker {
   color: transparent;
 }
 </style>

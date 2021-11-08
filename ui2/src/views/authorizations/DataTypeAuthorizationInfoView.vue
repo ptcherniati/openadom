@@ -411,6 +411,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     }
   }
   emitSelectedCheckbox(event) {
+
     console.log(event);
   }
 }
