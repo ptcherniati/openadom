@@ -1,5 +1,5 @@
 export class Authorization {
-datagroups=[] ;
+dataGroups=[] ;
 from=null;
 to=null;
 
@@ -12,7 +12,7 @@ to=null;
                   : null)
       );
     } else {
-      this.datagroups = datagroupsOrAuthorization;
+      this.datagroups = [...(datagroupsOrAuthorization ||[])];
       this.from = from;
       this.to = to;
     }

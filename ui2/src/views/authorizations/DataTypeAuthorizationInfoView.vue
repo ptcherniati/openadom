@@ -32,36 +32,10 @@
           </b-select>
         </b-field>
       </ValidationProvider>
-
-      <ValidationProvider
-          v-slot="{ errors, valid }"
-          name="dataGroups"
-          rules="required"
-          vid="dataGroups"
-      >
-        <b-field
-            :label="$t('dataTypeAuthorizations.data-groups')"
-            :message="errors[0]"
-            :type="{
-            'is-danger': errors && errors.length > 0,
-            'is-success': valid,
-          }"
-        >
-          <b-taginput
-              v-model="dataGroupToAuthorize"
-              :data="dataGroups"
-              :open-on-focus="true"
-              :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-              :value="dataGroups.id"
-              autocomplete
-              field="label"
-              type="is-primary"
-          >
-          </b-taginput>
-        </b-field>
-      </ValidationProvider>
       <AuthorizationTable
+          v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
           :authReference="authReferences[0]"
+          :dataGroups="dataGroups"
           :authorizations-tree="authorizationsTree"
           :columnsVisible="columnsVisible"
           :remaining-option="authReferences.slice && authReferences.slice(1,authReferences.length)"
@@ -101,6 +75,7 @@ import {ApplicationResult} from "@/model/ApplicationResult";
 import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
 import {ReferenceService} from "@/services/rest/ReferenceService";
 import AuthorizationTable from "@/components/common/AuthorizationTable";
+import {Authorization} from "@/model/authorization/Authorization";
 
 @Component({
   components: {AuthorizationTable, PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider},
@@ -128,6 +103,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   columnsVisible = {
     label: {title: "Label", display: true},
+    //dataGroups: {title: this.$t('dataTypeAuthorizations.data-groups'), display: true},
     admin: {title: "Admin", display: true},
     depot: {title: "Dépôt", display: true},
     publication: {title: "Publication", display: true},
@@ -272,14 +248,15 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       "publication": {
         "projet_atlantique": {
           "bassin_versant": {
-            "nivelle": {
-              "datagroups": null,
-              "from": null,
-              "to": null
-            }, "oir": {"datagroups": null, "from": null, "to": null}
-          }, "plateforme": {"nivelle": {"datagroups": null, "from": null, "to": null}}
+            "nivelle": new Authorization(),
+            "oir": new Authorization()
+          },
+          "plateforme":new Authorization()
         }
-      }
+      },
+      "depot": {
+        "projet_manche": new Authorization()
+        }
     };
   }
 
