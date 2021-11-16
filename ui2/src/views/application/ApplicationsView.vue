@@ -3,7 +3,7 @@
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
 
     <div class="columns columnPrincipale">
-      <div class="column is-3-desktop is-12-tablet">
+      <div class="column is-3-widescreen is-12-desktop">
         <section>
           <div v-if="canCreateApplication" class="card is-clickable">
             <div
@@ -89,10 +89,10 @@
           </div>
         </section>
       </div>
-      <div class="column is-9-desktop is-12-tablet">
+      <div class="column is-9-widescreen is-12-desktop">
         <div class="columns">
-          <div v-for="(application, index) in selectedApplications" v-bind:key="application.name">
-            <div class="column is-3-desktop is-6-tablet is-12-mobile">
+          <div v-for="(application, index) in selectedApplications" v-bind:key="application.name" style="margin-left: 30px">
+            <div class="column is-3-widescreen is-6-desktop is-12-tablet">
               <div
                 v-if="index >= (current - 1) * perPage && index < current * perPage"
                 class="applicationCard card"
@@ -294,7 +294,7 @@ export default class ApplicationsView extends Vue {
   margin: 0px;
 
   &.columnPrincipale {
-    margin-left: 100px;
+    margin-left: 50px;
     margin-top: 50px;
   }
 }

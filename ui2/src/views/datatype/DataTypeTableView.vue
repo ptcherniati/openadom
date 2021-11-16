@@ -111,7 +111,7 @@
       <h2>{{ $t("applications.trier") }}</h2>
       <div class="content">
         <div class="columns is-multiline">
-          <div class="column is-9-desktop is-12-tablet">
+          <div class="column is-9-widescreen is-12-desktop">
             <b-tabs
               v-model="activeTab"
               :multiline="true"
@@ -166,7 +166,7 @@
               </template>
             </b-tabs>
           </div>
-          <div class="column is-3-desktop is-12-tablet">
+          <div class="column is-3-widescreen is-12-desktop">
             <draggable class="rows">
               <div
                 v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
@@ -231,7 +231,7 @@
       <h2>{{ $t("applications.filter") }}</h2>
       <div class="columns is-multiline">
         <div
-          class="column is-2-desktop is-6-tablet is-12-mobile"
+          class="column is-2-widescreen is-6-desktop is-12-tablet"
           v-for="(variable, index) in variables"
           :key="variable.id"
           :variable="variable.id"
@@ -288,7 +288,7 @@
         </div>
       </div>
       <div class="columns">
-        <div class="column is-8">
+        <div class="column is-8-widescreen is-6-desktop">
           {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
           <b-field grouped group-multiline>
             <b-taglist>
@@ -311,13 +311,13 @@
             </b-taglist>
           </b-field>
         </div>
-        <div class="column is-2">
+        <div class="column is-2-widescreen is-3-desktop">
           <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
             >{{ $t("dataTypesManagement.réinitialiser") }}
             {{ $t("dataTypesManagement.filtre") }}</b-button
           >
         </div>
-        <div class="column is-2">
+        <div class="column is-2-widescreen is-3-desktop">
           <p class="control">
             <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
               >{{ $t("dataTypesManagement.validate") }}
