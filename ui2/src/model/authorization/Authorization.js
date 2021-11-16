@@ -12,7 +12,7 @@ to=null;
                   : null)
       );
     } else {
-      this.datagroups = [...(datagroupsOrAuthorization ||[])];
+      this.dataGroups = [...(datagroupsOrAuthorization ||[])];
       this.from = from;
       this.to = to;
     }
