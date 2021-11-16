@@ -41,6 +41,7 @@
                     class="column"
                     field="label"
                     type="is-primary"
+                    @remove.capture="()=>selectCheckbox($event,index, indexColumn, scope)"
                     @input.capture="selectCheckbox($event,index, indexColumn, scope)">
                 </b-taginput>
                 <div v-if="states && states[indexColumn] && states[indexColumn][index]==1&&
@@ -189,7 +190,7 @@ export default class AuthorizationTable extends Vue {
       for (var reference in this.authReference) {
         var state = 0;
         if (!this.localAuthorizationsTree) {
-          state = 1
+          state = 0
         } else if (this.localAuthorizationsTree?.[index] instanceof Authorization) {
           state = 1
         } else if (this.localAuthorizationsTree?.[index]?.[reference]) {
