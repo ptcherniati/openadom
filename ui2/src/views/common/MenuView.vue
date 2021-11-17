@@ -6,13 +6,13 @@
           <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
           <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
         </b-navbar-item>
-        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
         <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
           {{ $t("menu.applications") }}
         </b-navbar-item>
       </template>
 
       <template #end>
+        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
         <b-navbar-item tag="div">
           <b-field>
             <b-select

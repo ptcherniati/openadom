@@ -1,30 +1,30 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title"/>
+    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
 
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
-          $t("titles.data-type-new-authorization", {
-            dataType: application.localDatatypeName || dataTypeId,
-          })
-        }}</span>
+        $t("titles.data-type-new-authorization", {
+          dataType: application.localDatatypeName || dataTypeId,
+        })
+      }}</span>
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
       <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users">
         <b-field
-            :label="$t('dataTypeAuthorizations.users')"
-            :message="errors[0]"
-            :type="{
+          :label="$t('dataTypeAuthorizations.users')"
+          :message="errors[0]"
+          :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-            class="mb-4"
+          class="mb-4"
         >
           <b-select
-              v-model="userToAuthorize"
-              :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-              expanded
+            v-model="userToAuthorize"
+            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+            expanded
           >
             <option v-for="user in users" :key="user.id" :value="user.id">
               {{ user.label }}
@@ -33,25 +33,31 @@
         </b-field>
       </ValidationProvider>
       <AuthorizationTable
-          v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
-          :authReference="authReferences[0]"
-          :dataGroups="dataGroups"
-          :authorizations-tree="authorizationsTree"
-          :columnsVisible="columnsVisible"
-          :remaining-option="authReferences.slice && authReferences.slice(1,authReferences.length)"
-          class="rows"
-          @add-authorization="emitUpdateAuthorization($event)"
-          @delete-authorization="emitUpdateAuthorization($event)">
-        <div class="row">
+        v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
+        :authReference="authReferences[0]"
+        :dataGroups="dataGroups"
+        :authorizations-tree="authorizationsTree"
+        :columnsVisible="columnsVisible"
+        :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
+        class="rows"
+        @add-authorization="emitUpdateAuthorization($event)"
+        @delete-authorization="emitUpdateAuthorization($event)"
+      >
+        <div class="row label">
           <div class="columns">
-            <b-field v-for="(column, indexColumn) of columnsVisible" :key="indexColumn" :field="indexColumn"
-                     :label="column.title" class="column"></b-field>
+            <b-field
+              v-for="(column, indexColumn) of columnsVisible"
+              :key="indexColumn"
+              :field="indexColumn"
+              :label="column.title"
+              class="column"
+            ></b-field>
           </div>
         </div>
       </AuthorizationTable>
 
       <div class="buttons">
-        <b-button icon-left="plus" type="is-primary" @click="handleSubmit(createAuthorization)">
+        <b-button icon-left="plus" type="is-primary" @click="handleSubmit(createAuthorization)" style="margin-bottom: 10px">
           {{ $t("dataTypeAuthorizations.create") }}
         </b-button>
       </div>
@@ -61,24 +67,31 @@
 
 <script>
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import {DataTypeAuthorization} from "@/model/DataTypeAuthorization";
-import {AlertService} from "@/services/AlertService";
-import {ApplicationService} from "@/services/rest/ApplicationService";
-import {AuthorizationService} from "@/services/rest/AuthorizationService";
-import {UserPreferencesService} from "@/services/UserPreferencesService";
-import {ValidationObserver, ValidationProvider} from "vee-validate";
-import {Component, Prop, Vue, Watch} from "vue-property-decorator";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { DataTypeAuthorization } from "@/model/DataTypeAuthorization";
+import { AlertService } from "@/services/AlertService";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { AuthorizationService } from "@/services/rest/AuthorizationService";
+import { UserPreferencesService } from "@/services/UserPreferencesService";
+import { ValidationObserver, ValidationProvider } from "vee-validate";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import {InternationalisationService} from "@/services/InternationalisationService";
-import {ApplicationResult} from "@/model/ApplicationResult";
-import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
-import {ReferenceService} from "@/services/rest/ReferenceService";
+import { InternationalisationService } from "@/services/InternationalisationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
+import { ReferenceService } from "@/services/rest/ReferenceService";
 import AuthorizationTable from "@/components/common/AuthorizationTable";
-import {Authorization} from "@/model/authorization/Authorization";
+import { Authorization } from "@/model/authorization/Authorization";
 
 @Component({
-  components: {AuthorizationTable, PageView, SubMenu, CollapsibleTree, ValidationObserver, ValidationProvider},
+  components: {
+    AuthorizationTable,
+    PageView,
+    SubMenu,
+    CollapsibleTree,
+    ValidationObserver,
+    ValidationProvider,
+  },
 })
 export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() dataTypeId;
@@ -92,7 +105,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
-  authorizationsTree = {}
+  authorizationsTree = {};
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -102,12 +115,12 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   columnsVisible = {
-    label: {title: "Label", display: true},
+    label: { title: "Label", display: true },
     //dataGroups: {title: this.$t('dataTypeAuthorizations.data-groups'), display: true},
-    admin: {title: "Admin", display: true},
-    depot: {title: "Dépôt", display: true},
-    publication: {title: "Publication", display: true},
-    extraction: {title: "Extraction", display: true},
+    admin: { title: "Admin", display: true },
+    depot: { title: "Dépôt", display: true },
+    publication: { title: "Publication", display: true },
+    extraction: { title: "Extraction", display: true },
   };
   checkbox = false;
   authorizations = [];
@@ -128,49 +141,46 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   authorizations = [];
   authReferences = {};
 
-
   created() {
     this.init();
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
     this.subMenuPaths = [
       new SubMenuPath(
-          this.$t("dataTypesManagement.data-types").toLowerCase(),
-          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
-          () => this.$router.push("/applications")
+        this.$t("dataTypesManagement.data-types").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+        () => this.$router.push("/applications")
       ),
       new SubMenuPath(
-          this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
-            dataType: this.dataTypeId,
-          }),
-          () => {
-            this.$router.push(
-                `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
-            );
-          },
-          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+        this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
+          dataType: this.dataTypeId,
+        }),
+        () => {
+          this.$router.push(
+            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+          );
+        },
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
       new SubMenuPath(
-          this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
-          () => {
-          },
-          () => {
-            this.$router.push(
-                `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
-            );
-          }
+        this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
+        () => {},
+        () => {
+          this.$router.push(
+            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+          );
+        }
       ),
     ];
   }
 
-  mounted(){
-  }
+  mounted() {}
 
   showDetail(parent) {
     for (const child in parent) {
       if (parent[child].children.length !== 0) {
-        parent[child] = {...parent[child], showDetailIcon: true};
+        parent[child] = { ...parent[child], showDetailIcon: true };
       }
-      parent[child] = {...parent[child], showDetailIcon: false};
+      parent[child] = { ...parent[child], showDetailIcon: false };
     }
   }
 
@@ -179,21 +189,21 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.applications = await this.applicationService.getApplications();
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.configuration = this.applications
-          .filter((a) => a.name === this.applicationName)
-          .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
+        .filter((a) => a.name === this.applicationName)
+        .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-            .localName,
+          .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-            this.application,
-            this.application.dataTypes[this.dataTypeId]
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
         ),
       };
       this.authorizations = this.configuration.authorization.authorizationScopes;
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
-          this.applicationName,
-          this.dataTypeId
+        this.applicationName,
+        this.dataTypeId
       );
       ({
         authorizationScopes: this.authorizationScopes,
@@ -210,33 +220,36 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         let authorizationScope = grantableInfos.authorizationScopes[auth];
         let vc = this.authorizations[authorizationScope?.label];
         var reference =
-            this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
+          this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
         let ref = await this.getOrLoadReferences(reference);
-        ret[auth] = {references: ref, authorizationScope: authorizationScope.label};
+        ret[auth] = { references: ref, authorizationScope: authorizationScope.label };
       }
       let refs = Object.values(ret)
-          .reduce(
-              (acc, k) => [
-                ...acc,
-                ...k.references.referenceValues.reduce(
-                    (a, b) => [...a, ...b.hierarchicalReference.split(".")],
-                    acc
-                ),
-              ],
-              []
-          )
-          .reduce((a, b) => {
-            if (a.indexOf(b) < 0) {
-              a.push(b);
-            }
-            return a;
-          }, []);
+        .reduce(
+          (acc, k) => [
+            ...acc,
+            ...k.references.referenceValues.reduce(
+              (a, b) => [...a, ...b.hierarchicalReference.split(".")],
+              acc
+            ),
+          ],
+          []
+        )
+        .reduce((a, b) => {
+          if (a.indexOf(b) < 0) {
+            a.push(b);
+          }
+          return a;
+        }, []);
       for (const refsKey in refs) {
         await this.getOrLoadReferences(refs[refsKey]);
       }
-      var remainingAuthorizations = []
+      var remainingAuthorizations = [];
       for (const key in ret) {
-        let partition = await this.partitionReferencesValues(ret[key]?.references?.referenceValues, ret[key]?.authorizationScope);
+        let partition = await this.partitionReferencesValues(
+          ret[key]?.references?.referenceValues,
+          ret[key]?.authorizationScope
+        );
         remainingAuthorizations[key] = partition;
       }
       this.authReferences = remainingAuthorizations.reverse();
@@ -245,22 +258,27 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     }
 
     this.authorizationsTree = {
-      "publication": {
-        "projet_atlantique": {
-          "bassin_versant": {
-            "nivelle": new Authorization(),
-            "oir": new Authorization()
+      publication: {
+        projet_atlantique: {
+          bassin_versant: {
+            nivelle: new Authorization(),
+            oir: new Authorization(),
           },
-          "plateforme":new Authorization()
-        }
+          plateforme: new Authorization(),
+        },
       },
-      "depot": {
-        "projet_manche": new Authorization()
-        }
+      depot: {
+        projet_manche: new Authorization(),
+      },
     };
   }
 
-  async partitionReferencesValues(referencesValues, authorizationScope, currentPath, currentCompleteLocalName) {
+  async partitionReferencesValues(
+    referencesValues,
+    authorizationScope,
+    currentPath,
+    currentCompleteLocalName
+  ) {
     let returnValues = {};
     for (const referenceValue of referencesValues) {
       var previousKeySplit = currentPath ? currentPath.split(".") : [];
@@ -287,7 +305,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         localName = key;
       }
       var completeLocalName =
-          typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
+        typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
       completeLocalName = completeLocalName + (completeLocalName == "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
@@ -306,21 +324,21 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       var auth = returnValues[returnValuesKey];
       let referenceValueLeaf = auth.referenceValues?.[0];
       if (
-          auth.referenceValues.length <= 1 &&
-          referenceValueLeaf.hierarchicalKey == auth.currentPath
+        auth.referenceValues.length <= 1 &&
+        referenceValueLeaf.hierarchicalKey == auth.currentPath
       ) {
         returnValues[returnValuesKey] = {
           ...auth,
           authorizationScope,
           isLeaf: true,
-          referenceValues: {...referenceValueLeaf, authorizationScope},
+          referenceValues: { ...referenceValueLeaf, authorizationScope },
         };
       } else {
         var r = await this.partitionReferencesValues(
-            auth.referenceValues,
-            authorizationScope,
-            auth.currentPath,
-            auth.completeLocalName
+          auth.referenceValues,
+          authorizationScope,
+          auth.currentPath,
+          auth.completeLocalName
         );
         returnValues[returnValuesKey] = {
           ...auth,
@@ -373,22 +391,17 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
     try {
       await this.authorizationService.createAuthorization(
-          this.applicationName,
-          this.dataTypeId,
-          dataTypeAuthorization
+        this.applicationName,
+        this.dataTypeId,
+        dataTypeAuthorization
       );
       this.alertService.toastSuccess(this.$t("alert.create-authorization"));
       this.$router.push(
-          `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+        `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
       );
     } catch (error) {
       this.alertService.toastServerError(error);
     }
-  }
-
-  emitUpdateAuthorization(event) {
-    this.authorizationsTree = event.authorizationsTree;
-
   }
 }
 </script>
@@ -430,6 +443,18 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
 .folder label {
   font-weight: bolder;
-  color: #007F7F;
+  color: #007f7f;
+}
+.rows .card-content .row.label .columns .column {
+  padding: 0 0 0 10px;
+  border-bottom: 2px solid;
+  border-color: $dark;
+  margin-bottom: 12px;
+}
+ul li.card-content {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+a {
+  color: $dark;
 }
 </style>

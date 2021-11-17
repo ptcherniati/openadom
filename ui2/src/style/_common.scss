@@ -4,6 +4,10 @@ body {
   height: 100%;
 }
 
+.navbar-menu.is-active{
+  background-color: $primary;
+}
+
 .title {
   color: $primary;
   margin-top: $title-margin-top;
