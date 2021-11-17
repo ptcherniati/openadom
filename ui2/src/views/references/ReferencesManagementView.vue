@@ -21,6 +21,21 @@
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
       />
+<!--      <b-pagination
+        v-model="currentPage"
+        :per-page="params.limit"
+        :total="references.length"
+        aria-current-label="Current page"
+        aria-next-label="Next page"
+        aria-page-label="Page"
+        aria-previous-label="Previous page"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+        style="padding-bottom: 20px"
+      >
+      </b-pagination>-->
     </div>
   </PageView>
 </template>
@@ -52,6 +67,7 @@ export default class ReferencesManagementView extends Vue {
   alertService = AlertService.INSTANCE;
 
   references = [];
+  currentPage = 1;
   openPanel = false;
   chosenRef = null;
   application = new ApplicationResult();
