@@ -12,9 +12,8 @@
         :isFocusable="true"
         :isHoverable="true"
         :sticky-header="true"
-        :paginated="true"
-        :per-page="15"
         height="100%"
+        style="padding-bottom: 20px"
       >
         <b-table-column
           v-for="column in columns"
@@ -40,6 +39,22 @@
           </b-collapse>
         </b-table-column>
       </b-table>
+      <b-pagination
+        v-if="perPage <= tableValues.length"
+        v-model="currentPage"
+        :per-page="perPage"
+        :total="tableValues.length"
+        aria-current-label="Current page"
+        aria-next-label="Next page"
+        aria-page-label="Page"
+        aria-previous-label="Previous page"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+        style="padding-bottom: 20px"
+      >
+      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -72,6 +87,8 @@ export default class ReferenceTableView extends Vue {
   columns = [];
   referenceValues = [];
   tableValues = [];
+  currentPage = 1;
+  perPage = 15;
 
   async created() {
     await this.init();

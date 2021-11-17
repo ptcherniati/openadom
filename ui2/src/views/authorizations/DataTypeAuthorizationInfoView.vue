@@ -57,7 +57,12 @@
       </AuthorizationTable>
 
       <div class="buttons">
-        <b-button icon-left="plus" type="is-primary" @click="handleSubmit(createAuthorization)" style="margin-bottom: 10px">
+        <b-button
+          icon-left="plus"
+          type="is-primary"
+          @click="handleSubmit(createAuthorization)"
+          style="margin-bottom: 10px"
+        >
           {{ $t("dataTypeAuthorizations.create") }}
         </b-button>
       </div>

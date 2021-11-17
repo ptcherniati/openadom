@@ -11,15 +11,15 @@
     <div class="rows">
       <div class="row">
         <div class="columns">
-          <div class="card column is-10">
-            <p class="card-header-title">{{ $t("dataTypeAuthorizations.users") }}</p>
+          <div class="column is-10">
+            <p>{{ $t("dataTypeAuthorizations.users") }}</p>
             <b-select v-model="selectedUser" placeholder="Select a name">
               <option v-for="(option, key) in authorizationByUser" :key="key" :value="option">
                 {{ key }}
               </option>
             </b-select>
           </div>
-          <div class="card column is-2">
+          <div class="column is-2">
             <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
               {{ $t("dataTypeAuthorizations.add-auhtorization") }}
             </b-button>
@@ -32,12 +32,11 @@
         :data="selectedUser"
         :isFocusable="true"
         :isHoverable="true"
-        :paginated="true"
-        :per-page="15"
         :sticky-header="true"
         :striped="true"
         class="row"
         height="100%"
+        style="padding-bottom: 20px"
       >
         <!--b-table-column
             v-slot="props"
@@ -88,6 +87,22 @@
           </b-button>
         </b-table-column>
       </b-table>
+      <b-pagination
+        v-if="selectedUser && perPage <= selectedUser.length"
+        v-model="currentPage"
+        :per-page="perPage"
+        :total="selectedUser.length"
+        aria-current-label="Current page"
+        aria-next-label="Next page"
+        aria-page-label="Page"
+        aria-previous-label="Previous page"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+        style="padding-bottom: 20px"
+      >
+      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -118,6 +133,8 @@ export default class DataTypeAuthorizationsView extends Vue {
   authorizationByUser = {};
   application = new ApplicationResult();
   scopes = [];
+  currentPage = 1;
+  perPage = 15;
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),

@@ -182,6 +182,11 @@
           :range-after="2"
           :range-before="2"
           :rounded="true"
+          aria-current-label="Current page"
+          aria-next-label="Next page"
+          aria-page-label="Page"
+          aria-previous-label="Previous page"
+          order="is-centered"
           :total="applications.length"
         >
         </b-pagination>
