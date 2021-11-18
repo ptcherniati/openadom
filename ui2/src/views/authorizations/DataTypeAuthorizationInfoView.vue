@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.sub-menu')"
+    />
 
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
@@ -59,7 +64,7 @@
       <div class="buttons">
         <b-button
           icon-left="plus"
-          type="is-primary"
+          type="is-dark"
           @click="handleSubmit(createAuthorization)"
           style="margin-bottom: 10px"
         >
@@ -448,7 +453,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
 .folder label {
   font-weight: bolder;
-  color: #007f7f;
+  color: $dark;
 }
 .rows .card-content .row.label .columns .column {
   padding: 0 0 0 10px;

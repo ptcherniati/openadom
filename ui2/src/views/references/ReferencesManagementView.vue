@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.localName" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.sub-menu')"
+    />
     <h1 class="title main-title">
       {{ $t("titles.references-page", { applicationName: application.localName }) }}
     </h1>
@@ -21,7 +26,7 @@
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
       />
-<!--      <b-pagination
+      <!--      <b-pagination
         v-model="currentPage"
         :per-page="params.limit"
         :total="references.length"
@@ -77,7 +82,7 @@ export default class ReferencesManagementView extends Vue {
       this.$t("referencesManagement.consult"),
       "eye",
       (label) => this.consultReference(label),
-      "is-primary"
+      "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
       this.downloadReference(label)

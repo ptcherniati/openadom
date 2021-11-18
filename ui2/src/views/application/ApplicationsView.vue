@@ -11,6 +11,7 @@
               role="button"
               style="margin-bottom: 50px"
               @click="createApplication"
+              tabindex="0"
             >
               <a class="card-header-icon createApplication">
                 <b-icon icon="plus"></b-icon>

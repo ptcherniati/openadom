@@ -1,10 +1,18 @@
 <template>
-  <div class="menu-view-container">
-    <b-navbar class="menu-view" v-if="open">
+  <div class="menu-view-container" role="navigation">
+    <b-navbar class="menu-view" v-if="open" role="menubar" :aria-label="$t('menu.nav-bar')">
       <template #start>
         <b-navbar-item href="https://www.inrae.fr/">
-          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
-          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
+          <img
+            class="logo_blanc"
+            src="@/assets/logo-inrae_blanc.svg"
+            alt="Accès page de l’institut national de recherche pour l’agriculture, l’alimentation et l’environnement"
+          />
+          <img
+            class="logo_vert"
+            src="@/assets/Logo-INRAE.svg"
+            alt="Accès page de l’institut national de recherche pour l’agriculture, l’alimentation et l’environnement"
+          />
         </b-navbar-item>
         <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
           {{ $t("menu.applications") }}
@@ -12,7 +20,11 @@
       </template>
 
       <template #end>
-        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
+        <img
+          class="logo_rep"
+          src="@/assets/Rep-FR-logo.svg"
+          alt="Logo de la République Francçaise"
+        />
         <b-navbar-item tag="div">
           <b-field>
             <b-select
@@ -37,7 +49,12 @@
               </a>
             </template>
 
-            <b-dropdown-item @click="logout()" aria-role="menuitem">
+            <b-dropdown-item
+              @click="logout()"
+              @keypress.enter="logout()"
+              tabindex="0"
+              aria-role="menuitem"
+            >
               <b-icon icon="sign-out-alt" />
               {{ $t("menu.logout") }}
             </b-dropdown-item>

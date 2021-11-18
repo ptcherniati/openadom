@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.localName" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.sub-menu')"
+    />
     <h1 class="title main-title">
       {{ $t("titles.references-data", { refName: application.localRefName }) }}
     </h1>

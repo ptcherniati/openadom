@@ -1,7 +1,12 @@
 /* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.sub-menu')"
+    />
 
     <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
     <div class="columns" v-if="!showSort && !showFilter">
@@ -20,7 +25,7 @@
               :key="index"
             >
               <b-tag
-                type="is-primary"
+                type="is-dark"
                 size="is-medium"
                 rounded
                 style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
@@ -70,7 +75,7 @@
         <b-button
           icon-left="sort-amount-down"
           :label="$t('applications.trier')"
-          type="is-primary"
+          type="is-dark"
           @click="showSort = !showSort"
           outlined
         ></b-button>
@@ -107,7 +112,12 @@
         </div>
       </div>
     </b-modal>
-    <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
+    <div
+      v-if="showSort"
+      class="notification"
+      role="search"
+      style="background-color: rgba(0, 163, 166, 0.1)"
+    >
       <h2>{{ $t("applications.trier") }}</h2>
       <div class="content">
         <div class="columns is-multiline">
@@ -183,10 +193,10 @@
                   "
                 >
                   <div class="tags has-addons">
-                    <span class="tag is-primary grape" style="font-size: 1rem">
+                    <span class="tag is-dark grape" style="font-size: 1rem">
                       <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
                     </span>
-                    <span class="tag is-primary orderLabel" style="font-size: 1rem">
+                    <span class="tag is-dark orderLabel" style="font-size: 1rem">
                       {{ variableComponent.variableComponentKey.variable }}
                       {{ $t("ponctuation.colon") }}
                       {{ variableComponent.variableComponentKey.component }}
@@ -194,7 +204,7 @@
                       {{ variableComponent.order }}
                     </span>
                     <a
-                      class="tag is-delete is-primary"
+                      class="tag is-delete is-dark"
                       style="font-size: 1rem; color: white"
                       @click="
                         deleteTag(
@@ -227,7 +237,7 @@
         </div>
       </div>
     </div>
-    <div v-if="showFilter" class="notification">
+    <div v-if="showFilter" class="notification" role="search">
       <h2>{{ $t("applications.filter") }}</h2>
       <div class="columns is-multiline">
         <div
@@ -400,8 +410,10 @@
       </div>
       <b-pagination
         v-model="currentPage"
+        role="navigation"
         :per-page="params.limit"
         :total="totalRows"
+        aria-label="pagination"
         aria-current-label="Current page"
         aria-next-label="Next page"
         aria-page-label="Page"
@@ -863,7 +875,7 @@ $row-variable-height: 60px;
 
 .ASC .asc,
 .DESC .desc {
-  background-color: $primary;
+  background-color: $dark;
   color: white;
 }
 
@@ -882,7 +894,6 @@ $row-variable-height: 60px;
   border: transparent;
   text-decoration: underline;
 }
-
 .columns {
   margin: 0;
 }

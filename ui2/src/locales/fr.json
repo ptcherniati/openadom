@@ -58,7 +58,9 @@
         "references": "Référentiels",
         "french": "Français",
         "english": "English",
-        "language": "Langue"
+        "language": "Langue",
+        "sub-menu": "chemin d'acces",
+        "nav-bar": "Menu principal"
     },
     "applications": {
         "chose-config": "Choisir une configuration",
@@ -167,7 +169,8 @@
         "filtered": "Les filtres utilisés",
         "sorted": "Les tris utilisés",
         "title-modal-numeric": "Choix de l'interval de valeur",
-        "title-modal-date": "Choix de l'interval de date"
+        "title-modal-date": "Choix de l'interval de date",
+        "manage-datasets": "Gérer les jeux de données"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version sur ce jeux de données",

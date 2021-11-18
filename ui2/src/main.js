@@ -51,6 +51,7 @@ import {
   faSortAmountDown,
   faSortUp,
   faSortDown,
+  faArchive,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -100,7 +101,8 @@ library.add(
   faStream,
   faSortAmountDown,
   faSortDown,
-  faSortUp
+  faSortUp,
+  faArchive
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.sub-menu')"
+    />
     <h1 class="title main-title">
       {{
         $t("titles.data-type-authorizations", {
@@ -20,7 +25,7 @@
             </b-select>
           </div>
           <div class="column is-2">
-            <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
+            <b-button icon-left="plus" type="is-dark is-right" @click="addAuthorization">
               {{ $t("dataTypeAuthorizations.add-auhtorization") }}
             </b-button>
           </div>

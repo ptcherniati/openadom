@@ -47,6 +47,10 @@ export default class SidePanel extends Vue {
   padding: $container-padding-vert 2.5rem;
   transition: transform 250ms;
 
+  .title {
+    color: $dark;
+  }
+
   &.right-align {
     right: 0;
     transform: translateX(100%);

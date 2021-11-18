@@ -1,7 +1,12 @@
 <template>
   <div>
     <PageView class="with-submenu">
-      <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+      <SubMenu
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
+        :aria-label="$t('menu.sub-menu')"
+      />
       <h1 class="title main-title">
         {{
           $t("titles.data-types-repository", {

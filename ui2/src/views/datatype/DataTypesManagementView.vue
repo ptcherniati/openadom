@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.localName || application.title" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName || application.title"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.sub-menu')"
+    />
     <h1 class="title main-title">
       {{
         $t("titles.data-types-page", {
@@ -78,7 +83,7 @@ export default class DataTypesManagementView extends Vue {
       this.$t("referencesManagement.consult"),
       "eye",
       (label) => this.consultDataType(label),
-      "is-primary"
+      "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
       this.downloadDataType(label)
