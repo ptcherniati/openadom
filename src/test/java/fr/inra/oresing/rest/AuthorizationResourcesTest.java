@@ -1,7 +1,10 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.model.AuthorizationTree;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import javax.servlet.http.Cookie;
+
+import java.io.IOException;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,27 +54,72 @@ public class AuthorizationResourcesTest {
     private Fixtures fixtures;
 
     @Test
+    public void getAuthorizationTreeTest() throws IOException {
+        String authorisationTreeJson = "{{\n" +
+                "    \"publication\": {\n" +
+                "        \"projet_atlantique\": {\n" +
+                "            \"bassin_versant\": {\n" +
+                "                \"nivelle\": {\n" +
+                "                    \"dataGroups\": []\n" +
+                "                },\n" +
+                "                \"oir\": {\n" +
+                "                    \"dataGroups\": []\n" +
+                "                }\n" +
+                "            },\n" +
+                "            \"plateforme\": {\n" +
+                "                \"dataGroups\": []\n" +
+                "            }\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"depot\": {\n" +
+                "        \"projet_manche\": {\n" +
+                "            \"dataGroups\": []\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"extraction\": {\n" +
+                "        \"projet_atlantique\": {\n" +
+                "            \"bassin_versant\": {\n" +
+                "                \"dataGroups\": [\n" +
+                "                    {\n" +
+                "                        \"id\": \"qualitatif\",\n" +
+                "                        \"label\": \"Données qualitatives\"\n" +
+                "                    }\n" +
+                "                ],\n" +
+                "                \"from\": \"2021-11-07T23:00:00.000Z\",\n" +
+                "                \"to\": \"2021-11-07T23:00:00.000Z\"\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        YAMLMapper mapper = new YAMLMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        Object authorisationTree = mapper.readValue(authorisationTreeJson, AuthorizationTree.class);
+        System.out.println(authorisationTree);
+    }
+
+    @Test
     public void testAddAuthorization() throws Exception {
         Cookie authCookie = fixtures.addApplicationAcbb();
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader" , "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "UnReader")
-                        .param("password", "xxxxxxxx"))
+                        .param("login" , "UnReader")
+                        .param("password" , "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("acbb"));
+            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste" , response.contains("acbb"));
         }
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("acbb"));
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés" , response.contains("acbb"));
         }
 
         {
@@ -104,7 +154,7 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("acbb"));
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste" , response.contains("acbb"));
         }
 
         {
@@ -112,10 +162,10 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows[*].values.parcelle.chemin").value( hasItemInArray(equalTo("theix.theix__22")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( not(hasItemInArray(equalTo("theix.theix__7"))), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value( hasItemInArray(endsWith("26/05/2010")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value( not(hasItemInArray(endsWith("31/08/2010"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.parcelle.chemin").value(hasItemInArray(equalTo("theix.theix__22")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(not(hasItemInArray(equalTo("theix.theix__7"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value(hasItemInArray(endsWith("26/05/2010")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value(not(hasItemInArray(endsWith("31/08/2010"))), String[].class))
 
                     .andReturn().getResponse().getContentAsString();
         }
@@ -126,11 +176,11 @@ public class AuthorizationResourcesTest {
 
         Cookie authCookie = fixtures.addApplicationHauteFrequence();
 
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader" , "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "UnReader")
-                        .param("password", "xxxxxxxx"))
+                        .param("login" , "UnReader")
+                        .param("password" , "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         String authorizationId;
@@ -167,13 +217,13 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( hasItemInArray(equalTo("bimont.bim13")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( not(hasItemInArray(equalTo("bimont.bim14"))), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value( hasItemInArray(equalTo("sou")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value( not(hasItemInArray(equalTo("rnt"))), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.date.day").value( hasItemInArray(equalTo("date:2016-06-14T00:00:00:14/06/2016")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.date.day").value( not(hasItemInArray(equalTo("date:2017-01-30T00:00:00:30/01/2017"))), String[].class))
-                    .andExpect(jsonPath("$.totalRows", equalTo(7456)))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(hasItemInArray(equalTo("bimont.bim13")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(not(hasItemInArray(equalTo("bimont.bim14"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value(hasItemInArray(equalTo("sou")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value(not(hasItemInArray(equalTo("rnt"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.date.day").value(hasItemInArray(equalTo("date:2016-06-14T00:00:00:14/06/2016")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.date.day").value(not(hasItemInArray(equalTo("date:2017-01-30T00:00:00:30/01/2017"))), String[].class))
+                    .andExpect(jsonPath("$.totalRows" , equalTo(7456)))
                     .andReturn().getResponse().getContentAsString();
 
 
@@ -195,7 +245,7 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalRows", equalTo(-1)))
+                    .andExpect(jsonPath("$.totalRows" , equalTo(-1)))
                     .andReturn().getResponse().getContentAsString();
         }
     }

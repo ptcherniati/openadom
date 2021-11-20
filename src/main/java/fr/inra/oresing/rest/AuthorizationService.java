@@ -162,7 +162,7 @@ public class AuthorizationService {
         }
         return new GetAuthorizationResult(
                 oreSiAuthorization.getId(),
-                oreSiAuthorization.getOreSiUser(),
+                null, //oreSiAuthorization.getOreSiUser(),
                 oreSiAuthorization.getApplication(),
                 oreSiAuthorization.getDataType(),
                 oreSiAuthorization.getDataGroup(),

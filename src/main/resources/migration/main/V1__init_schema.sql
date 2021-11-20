@@ -112,6 +112,17 @@ BEGIN
 END;
 $$  LANGUAGE plpgsql;
 
+--check if all elements of oreSiUser array are users
+CREATE OR REPLACE FUNCTION checks_users(users uuid[])
+    RETURNS BOOLEAN AS $$
+DECLARE
+    checked BOOLEAN;
+BEGIN
+    select users <@ array_agg(id)::uuid[] into checked from OreSiUser OSU group by users;
+    return checked;
+END;
+$$  LANGUAGE plpgsql;
+
 -- check les foreign key pour le colonne references de la table data
 
 CREATE OR REPLACE FUNCTION refs_check_for_reference(aSchema text, application UUID, refValues jsonb)
