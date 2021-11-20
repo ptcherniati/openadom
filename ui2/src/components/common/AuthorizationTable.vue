@@ -44,7 +44,7 @@
                     @remove.capture="()=>selectCheckbox($event,index, indexColumn, scope)"
                     @input.capture="selectCheckbox($event,index, indexColumn, scope)">
                 </b-taginput>
-                <div v-if="states && states[indexColumn] && states[indexColumn][index]==1&&
+                <div v-if="states && states[indexColumn] && states[indexColumn][index]==1 &&
                     localAuthorizationsTree && localAuthorizationsTree[indexColumn] && localAuthorizationsTree[indexColumn][index]"
                      class="column">
                   <b-datepicker
@@ -56,7 +56,8 @@
                           "
                       editable
                       icon="calendar"
-                      @input="selectCheckbox($event,index, indexColumn, scope, 'from')"
+                      @remove.capture="()=>selectCheckbox($event,index, indexColumn, scope)"
+                      @input.capture="selectCheckbox($event,index, indexColumn, scope, 'from')"
                   >
                   </b-datepicker>
                 </div>
@@ -115,31 +116,12 @@ export default class AuthorizationTable extends Vue {
   @Prop() authorizationsTree;
   @Prop() dataGroups;
   name = 'AuthorizationTable'
-  localAuthorizationsTree = this.authorizationsTree || {}
   authorizationByScope = {}
   states = {}
   statesIcons = {}
   open = {}
   emits = ["add-authorization", "delete-authorization"];
   upHere = false;
-
-  addDataGroup(tag, index, indexColumn, scope) {
-    console.log(tag, index, indexColumn, scope);
-    var tree = this.localAuthorizationsTree;
-    tree[indexColumn][index].dataGroups = [...(tree[indexColumn][index].dataGroups || [])]
-    tree[indexColumn][index].dataGroups.includes(tag) || tree[indexColumn][index].dataGroups.push(tag)
-    this.localAuthorizationsTree = {...tree}
-    /*this.$emit('add-authorization',
-        {
-          state: 1,
-          child: index,
-          type: indexColumn,
-          authorizationsTree: this.localAuthorizationsTree,
-          authorizationScope: tree[indexColumn][index]
-        }
-    )*/
-    return false;
-  }
 
   created() {
     this.updateAuthorizationTree();
@@ -173,6 +155,9 @@ export default class AuthorizationTable extends Vue {
           }
         }
       }
+      authorizationByScope[reference] = authorizationByScope[reference] || {}
+      authorizationByScope[reference][this.EXTRACTION] = authorizationByScope[reference][this.EXTRACTION] || (this.authorizationsTree?.[this.EXTRACTION]?.[reference] && new Authorization(this.authorizationsTree[this.EXTRACTION][reference]))
+
     }
     this.authorizationByScope = {...authorizationByScope};
   }
@@ -304,48 +289,55 @@ export default class AuthorizationTable extends Vue {
 
   emitDeleteAuthorization(event, index) {
     let localAuthorizationsTree = this.localAuthorizationsTree || {};
-    localAuthorizationsTree[event.type] = localAuthorizationsTree?.[event.type] || {}
-    localAuthorizationsTree[event.type][index] = localAuthorizationsTree?.[event.type][index] || {}
-    delete localAuthorizationsTree[event.type][index][event.child]
+    localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree?.[event.indexColumn] || {}
+    localAuthorizationsTree[event.indexColumn][index] = localAuthorizationsTree?.[event.indexColumn][index] || {}
+    delete localAuthorizationsTree[event.indexColumn][index][event.child]
     this.localAuthorizationsTree = {...localAuthorizationsTree};
-    this.updateState(event.type, index, event.state)
+    this.updateState(event.indexColumn, index, event.state)
     this.$emit('delete-authorization',
         {
-          type: event.type,
+          indexColumn: event.indexColumn,
           child: index,
-          state: event.state,
+          state: this.buildState(event.indexColumn).state,
           authorizationsTree: this.localAuthorizationsTree,
-          authorizationScope: localAuthorizationsTree[event.type][index]
+          authorizationScope: localAuthorizationsTree?.[event.type]?.[index]
         }
     )
   }
 
   emitAddAuthorization(event, index) {
     let localAuthorizationsTree = this.localAuthorizationsTree || {};
-    localAuthorizationsTree[event.type] = localAuthorizationsTree?.[event.type] || {}
-    localAuthorizationsTree[event.type][index] = localAuthorizationsTree?.[event.type][index] || {}
-    if (localAuthorizationsTree[event.type][index] instanceof Authorization) {
-      this.changeChildrenAuthorization(event.authorizationScope, index);
+    var isEqual = event.isEqual
+    if (isEqual.state == 1) {
+      localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.indexColumn] || {}
+      localAuthorizationsTree[event.indexColumn][index] = localAuthorizationsTree[event.indexColumn][index] || {}
+      localAuthorizationsTree[event.indexColumn][index] = isEqual.auth
+    } else if (isEqual.state == -1) {
+      localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.type] || {}
+      localAuthorizationsTree[event.indexColumn][index] = localAuthorizationsTree[event.indexColumn][index] || {}
+      localAuthorizationsTree[event.indexColumn][index] = event.authorizationsTree[event.indexColumn]
     } else {
-      localAuthorizationsTree[event.type][index][event.child] = new Authorization(event.authorizationScope)
+      delete localAuthorizationsTree?.[event.indexColumn]?.[index]
+      if (localAuthorizationsTree?.[event.indexColumn] && Object.keys(localAuthorizationsTree[event.indexColumn]).length) {
+        delete localAuthorizationsTree[event.indexColumn]
+      }
     }
     this.localAuthorizationsTree = {...localAuthorizationsTree};
-    this.updateState(event.type, index, event.state)
-    if (this.EXTRACTION == event.type) {
-      this.testAllChildrenEquals(index)
-    }
+    this.updateState(event.indexColumn, index, event.state)
     this.$emit('add-authorization',
         {
-          type: event.type,
+          isEqual,
+          state: this.buildState(event.indexColumn).state,
           child: index,
-          state: event.state,
+          indexColumn: event.indexColumn,
           authorizationsTree: this.localAuthorizationsTree,
-          authorizationScope: localAuthorizationsTree[event.type][index]
+          authorizationScope: localAuthorizationsTree?.[event.indexColumn]?.[index]
         }
     )
   }
 
   changeChildrenAuthorization(authorization, exceptIndex) {
+    var returnAuthorizationTree = {};
     this.getChildAuthorizationTable()
         .filter(child => {
           return !(exceptIndex && child.path.endsWith(exceptIndex));
@@ -359,11 +351,13 @@ export default class AuthorizationTable extends Vue {
               authorizationTree[child.EXTRACTION] = authorizationTree[child.EXTRACTION] || {}
               authorizationTree[child.EXTRACTION][index] = new Authorization(authorization)
             }
+            returnAuthorizationTree[index] = authorizationTree[child.EXTRACTION][index]
           }
           child.localAuthorizationsTree = authorizationTree;
           child.changeChildrenAuthorization(authorization, child.EXTRACTION, exceptIndex);
           child.initAuthorizationByScope();
         })
+    return returnAuthorizationTree;
   }
 
   selectCheckbox(event, index, indexColumn, scope, fromOrTo) {
@@ -375,7 +369,7 @@ export default class AuthorizationTable extends Vue {
       var states, state
       if (actualState == 1) { //je supprime l'authorization et eventuellement son contenant
         delete localAuthorizationsTree?.[indexColumn]?.[index]
-        if (!Object.keys(localAuthorizationsTree?.[indexColumn]).length) {
+        if (localAuthorizationsTree?.[indexColumn] && !Object.keys(localAuthorizationsTree[indexColumn]).length) {
           delete localAuthorizationsTree?.[indexColumn]
           delete this.authorizationByScope?.[index]?.[indexColumn]
         }
@@ -421,53 +415,53 @@ export default class AuthorizationTable extends Vue {
     } else {
       state = 0
     }
+    this.localAuthorizationsTree = localAuthorizationsTree
+    var isEqual = this.buildState(indexColumn)
     this.$emit(eventType,
         {
-          state: state,
+          isEqual,
+          state,
           child: index,
-          type: indexColumn,
-          authorizationsTree: this.localAuthorizationsTree,
+          indexColumn,
+          authorizationsTree: this.authorizationsTree,
           authorizationScope: localAuthorizationsTree?.[indexColumn]?.[index]
         }
     )
-    this.localAuthorizationsTree = localAuthorizationsTree
-    this.authorizationsTree = localAuthorizationsTree
     this.initAuthorizationByScope()
   }
 
-  testAllChildrenEquals(index) {
-    var isEqual = {equal: true}
-    var childSize = Object.keys(this.getRemainingOption(index)?.[0] || {}).length
+  buildState(indexColumn) {
+    var isEqual = {
+      equal: true,
+      state: 0
+    }
     var localAuthorizationsTree = this.localAuthorizationsTree || {}
-    this.getChildAuthorizationTable()
-        .filter(child => child.path.endsWith(index))
-        .forEach(child => {
-          if (Object.keys(child.localAuthorizationsTree?.[child.EXTRACTION] || {}).length != childSize) {
-            isEqual.equal = false
-            delete isEqual.auth
-          } else {
-            for (const i in child.localAuthorizationsTree?.[child.EXTRACTION]) {
-              var auth = child.localAuthorizationsTree[child.EXTRACTION][i]
-              if (isEqual.equal) {
-                if (isEqual.auth) {
-                  isEqual.equal = auth &&
-                      JSON.stringify(isEqual.auth.dataGroups) == JSON.stringify(auth.dataGroups) &&
-                      isEqual.auth.from?.toString() == auth.from?.toString() &&
-                      isEqual.auth.to?.toString() == auth.to?.toString()
+    if (!localAuthorizationsTree[indexColumn] || Object.keys(localAuthorizationsTree[indexColumn]).length == 0) {
+      isEqual.equal = true;
+      isEqual.state = 0;
+      isEqual.auth == null;
+      return isEqual;
+    }
+    for (const reference in this.authReference) {
+      var auth = localAuthorizationsTree[indexColumn][reference];
+      if (isEqual.equal) {
+        if (isEqual.auth) {
+          isEqual.equal = auth &&
+              JSON.stringify(isEqual.auth.dataGroups) == JSON.stringify(auth.dataGroups) &&
+              isEqual.auth.from?.toString() == auth.from?.toString() &&
+              isEqual.auth.to?.toString() == auth.to?.toString()
 
-                } else {
-                  isEqual.auth = auth;
-                }
-              }
-            }
-          }
-        })
-    if (isEqual.equal && isEqual.auth) {
-      localAuthorizationsTree[this.EXTRACTION][index] = new Authorization(isEqual.auth)
-      this.changeChildrenAuthorization(localAuthorizationsTree[this.EXTRACTION][index])
+        } else {
+          isEqual.auth = auth;
+        }
+      }
+    }
+    if (isEqual.equal && isEqual.auth) { //tous les noeuds sont semblables
+      isEqual.state = 1
+    } else if (isEqual.auth) {
+      isEqual.state = -1
     }
     this.localAuthorizationsTree = localAuthorizationsTree
-    console.log(isEqual)
     return isEqual
   }
 }

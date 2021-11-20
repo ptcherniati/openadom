@@ -54,6 +54,8 @@ describe('test authorization application', () => {
         cy.visit(Cypress.env('monsore_new_authorization_url'))
         cy.wait(['@getAuthorization','@getDataTypes'])
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
+        cy.get('.columns').contains('Projet Atlantique').click()
+       // cy.get('.columns').eq(3).find('[field=extraction]').find( '.columns').find(' span.icon.column').click()
 
         //cy.get('.buttons > .button').click()
         //cy.fixture('authorisation/monsore/new_authorization_response.json').then(responseAuthorization)

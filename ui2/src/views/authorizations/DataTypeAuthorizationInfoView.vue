@@ -388,7 +388,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   emitUpdateAuthorization(event) {
     this.authorizationsTree = event.authorizationsTree;
-
+    console.log(this.authorizationsTree)
   }
 }
 </script>
