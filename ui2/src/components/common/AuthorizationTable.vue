@@ -210,7 +210,6 @@ export default class AuthorizationTable extends Vue {
 
   created() {
     this.updateAuthorizationTree();
-    this.$on("input", this.log);
   }
 
   updateAuthorizationTree() {
@@ -395,7 +394,6 @@ export default class AuthorizationTable extends Vue {
     localAuthorizationsTree[event.type][index] = localAuthorizationsTree?.[event.type][index] || {};
     if (localAuthorizationsTree[event.type][index] instanceof Authorization) {
       this.changeChildrenAuthorization(event.authorizationScope, index);
-      //delete localAuthorizationsTree[event.type][index][event.child];
     } else {
       localAuthorizationsTree[event.type][index][event.child] =
         localAuthorizationsTree?.[event.type][index][event.child] ||
@@ -462,6 +460,7 @@ export default class AuthorizationTable extends Vue {
         authorizationScope[id] = scope.key;
         state = 1;
       }
+
     } else if (event instanceof Array) {
       state = event.length ? 1 : 0;
       eventType = event.length ? "add-authorization" : "delete-authorization";
@@ -474,6 +473,17 @@ export default class AuthorizationTable extends Vue {
       localAuthorizationsTree[indexColumn][index][fromOrTo] = event;
     }
     if (this.EXTRACTION == indexColumn) {
+      if (event instanceof Array) { //c'est un datagroup
+        state = event.length ? 1 : 0
+        eventType = event.length ? 'add-authorization' : 'delete-authorization'
+        localAuthorizationsTree[indexColumn][index].dataGroups = event
+
+        // si indeterminate alors je ne supprime les enfants que
+      } else if (event instanceof Date) {//c'est une date
+        state = event ? 1 : 0
+        eventType = event ? 'add-authorization' : 'delete-authorization'
+        localAuthorizationsTree[indexColumn][index][fromOrTo] = event
+      }
       //si je veux restreindre les enfants je dois le faire après avoir défini le parent
       this.changeChildrenAuthorization(localAuthorizationsTree?.[indexColumn]?.[index]); //si je selectionne alors c'est cette authorization qui s'applique aux enfants (ils n'ont plus leur propre authorization
     }
