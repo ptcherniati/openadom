@@ -19,7 +19,9 @@
         "pwd-placeholder": "Ex: xxxx",
         "pwd-forgotten": "Mot de passe oublié ?",
         "register": "Créer un compte",
-        "confirm-pwd": "Confirmer le mot de passe"
+        "confirm-pwd": "Confirmer le mot de passe",
+        "aria-btn-login": "Bouton valider le formulaire de connexion",
+        "aria-btn-signup": "Bouton création d'un compte"
     },
     "validation": {
         "obligatoire": "Obligatoire",
@@ -59,8 +61,12 @@
         "french": "Français",
         "english": "English",
         "language": "Langue",
-        "sub-menu": "chemin d'acces",
-        "nav-bar": "Menu principal"
+        "aria-sub-menu": "Chemin d'acces",
+        "aria-nav-bar": "Menu principal",
+        "aria-pagination": "Pagination",
+        "aria-curent-page": "Page actuelle",
+        "aria-next-page": "Page suivante",
+        "aria-previous-page": "Page précédente"
     },
     "applications": {
         "chose-config": "Choisir une configuration",

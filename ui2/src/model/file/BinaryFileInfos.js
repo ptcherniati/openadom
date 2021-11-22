@@ -6,6 +6,7 @@ export class BinaryFileInfos {
   publisheddate;
   createuser;
   createdate;
+  comment;
   constructor(binaryFileInfos) {
     if (typeof binaryFileInfos == "object") {
       Object.keys(this).forEach(

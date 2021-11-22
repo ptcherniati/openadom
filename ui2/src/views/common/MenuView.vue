@@ -1,6 +1,6 @@
 <template>
   <div class="menu-view-container" role="navigation">
-    <b-navbar class="menu-view" v-if="open" role="menubar" :aria-label="$t('menu.nav-bar')">
+    <b-navbar class="menu-view" v-if="open" role="menubar" :aria-label="$t('menu.aria-nav-bar')">
       <template #start>
         <b-navbar-item href="https://www.inrae.fr/">
           <img

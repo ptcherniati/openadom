@@ -4,7 +4,7 @@
       :root="application.localName || application.title"
       :paths="subMenuPaths"
       role="navigation"
-      :aria-label="$t('menu.sub-menu')"
+      :aria-label="$t('menu.aria-sub-menu')"
     />
     <h1 class="title main-title">
       {{

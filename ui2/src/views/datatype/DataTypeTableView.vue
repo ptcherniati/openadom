@@ -5,7 +5,7 @@
       :paths="subMenuPaths"
       :root="application.localName || application.title"
       role="navigation"
-      :aria-label="$t('menu.sub-menu')"
+      :aria-label="$t('menu.aria-sub-menu')"
     />
 
     <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
@@ -410,20 +410,18 @@
       </div>
       <b-pagination
         v-model="currentPage"
-        role="navigation"
         :per-page="params.limit"
         :total="totalRows"
-        aria-label="pagination"
-        aria-current-label="Current page"
-        aria-next-label="Next page"
-        aria-page-label="Page"
-        aria-previous-label="Previous page"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
         order="is-centered"
         range-after="3"
         range-before="3"
         :rounded="true"
         @change="changePage"
-        style="padding-bottom: 20px"
       >
       </b-pagination>
     </div>

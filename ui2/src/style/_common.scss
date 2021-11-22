@@ -70,14 +70,13 @@ a {
 }
 
 // Buefy/Bulma UI overrides
-
-.tabs.is-boxed li.is-active a {
-  color: $dark;
-  text-decoration: none;
-  font-weight: bold;
-}
 .notification a:not(.button):not(.dropdown-item){
   text-decoration: none;
+}
+.b-tabs .tabs.is-boxed li:not(.is-active) a:focus {
+  background-color: $primary;
+  color: white;
+  font-weight: bold;
 }
 
 .tabs.is-boxed.is-right {
@@ -91,7 +90,28 @@ a {
 .b-tabs .tab-content {
   padding: 0.5rem;
 }
-
+.tabs.is-boxed{
+  li.is-active  {
+    a {
+      color: $dark;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:focus {
+      background-color: $primary;
+      color: white;
+      font-weight: bold;
+    }
+  }
+  a:hover{
+    background-color: $primary;
+    color: white;
+    font-weight: bold;
+  }
+}
+.dropdown-content{
+  box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.5), 0 0px 0 1px rgba(10, 10, 10, 0.1);
+}
 .pagination-link.is-current {
   background-color: $dark;
   border-color: $dark;
@@ -104,6 +124,9 @@ a {
 .pagination-link.is-current {
   background-color: $dark;
   border-color: $dark;
+}
+.pagination {
+  padding-bottom: 20px;
 }
 
 a.dropdown-item {

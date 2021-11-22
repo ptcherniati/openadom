@@ -5,7 +5,7 @@
         :paths="subMenuPaths"
         :root="application.localName || application.title"
         role="navigation"
-        :aria-label="$t('menu.sub-menu')"
+        :aria-label="$t('menu.aria-sub-menu')"
       />
       <h1 class="title main-title">
         {{
@@ -130,7 +130,9 @@
                     </div>
                   </div>
                   <div class="columns">
-                    <!-- TO DO ajouter un champs commentaire -->
+                    <b-field class="column" label="Commentaire" expanded>
+                      <b-input v-model="comment" maxlength="200" type="textarea"></b-input>
+                    </b-field>
                   </div>
                 </div>
               </div>
@@ -151,7 +153,7 @@
           <div class="card-content">
             <table
               v-if="datasets && Object.keys(datasets).length"
-              class="table is-striped is-fullwidth"
+              class="table is-striped is-fullwidth numberData"
               style="text-align: center; vertical-align: center"
             >
               <caption>
@@ -168,6 +170,8 @@
                 v-for="(dataset, periode) in datasets"
                 :key="dataset.id"
                 @click="showDatasets(dataset)"
+                @keypress.enter="showDatasets(dataset)"
+                tabindex="0"
                 style="cursor: pointer"
               >
                 <td align>{{ periode }}</td>
@@ -199,7 +203,14 @@
                 <th align>{{ $t("dataTypesRepository.table-file-data-delete") }}</th>
               </tr>
               <tr v-for="dataset in currentDataset" :key="dataset.id">
-                <td align>{{ dataset.id.slice(0, 8) }}</td>
+                <td align>
+                  <b-tooltip type="is-dark" multilined>
+                    <a>{{ dataset.id.slice(0, 8) }}</a>
+                    <template v-slot:content>
+                      <p>{{ UTCToString(dataset.params.binaryFiledataset.comment) }}</p>
+                    </template>
+                  </b-tooltip>
+                </td>
                 <td align>{{ dataset.size }}</td>
                 <td align>{{ UTCToString(dataset.params.createdate) }}</td>
                 <td align>{{ dataset.createuser }}</td>
@@ -284,6 +295,7 @@ export default class DataTypesRepositoryView extends Vue {
   file = null;
   startDate = null;
   endDate = null;
+  comment = "";
   currentDataset = null;
 
   mounted() {
@@ -333,6 +345,7 @@ export default class DataTypesRepositoryView extends Vue {
         }, {}),
         from: "",
         to: "",
+        comment: "",
       });
       this.requiredauthorizationsObject = Object.keys(this.authorizations).reduce((acc, auth) => {
         acc[auth] = null;
@@ -433,7 +446,8 @@ export default class DataTypesRepositoryView extends Vue {
           /(.{10})T(.{8}).*/
             .exec(new Date(this.endDate).toISOString())
             .filter((a, i) => i != 0)
-            .join(" ")
+            .join(" "),
+          this.comment
         ),
         false
       );
@@ -443,6 +457,7 @@ export default class DataTypesRepositoryView extends Vue {
         this.file,
         fileOrId
       );
+      console.log(fileOrId);
       this.$emit("uploaded", uuid);
     }
   }
@@ -621,7 +636,10 @@ export default class DataTypesRepositoryView extends Vue {
     overflow-wrap: break-word;
   }
 }
-
+.dropdown-content{
+  margin-left: 20px;
+  margin-right: -20px;
+}
 table.datasetsPanel {
   width: 50%;
 }
@@ -631,5 +649,16 @@ table.datasetsPanel th,
 table.datasetsPanel td {
   border-collapse: collapse;
   text-align: center;
+}
+.numberData tr:hover td {
+  background-color: $primary;
+  color: white;
+}
+
+caption {
+  color: $dark;
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 15px;
 }
 </style>
