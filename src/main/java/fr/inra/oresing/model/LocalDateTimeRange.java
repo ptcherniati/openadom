@@ -1,19 +1,12 @@
 package fr.inra.oresing.model;
 
-import com.google.common.collect.BoundType;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
+import com.google.common.collect.*;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.MonthDay;
-import java.time.Year;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * A vocation a représenter une donnée en base stockée sous forme de tsrange.
@@ -24,6 +17,13 @@ import java.time.format.DateTimeFormatter;
 public class LocalDateTimeRange {
 
     Range<LocalDateTime> range;
+    public LocalDateTimeRange(List<LocalDateTime> dates) {
+        this.range = LocalDateTimeRange.between(dates.get(0), dates.get(1)).getRange();
+    }
+
+    public LocalDateTimeRange(Range<LocalDateTime> range) {
+        this.range = range;
+    }
 
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

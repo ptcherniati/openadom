@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.model.AuthorizationTree;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import javax.servlet.http.Cookie;
-
 import java.io.IOException;
 
 import static org.hamcrest.Matchers.*;
@@ -55,46 +53,11 @@ public class AuthorizationResourcesTest {
 
     @Test
     public void getAuthorizationTreeTest() throws IOException {
-        String authorisationTreeJson = "{{\n" +
-                "    \"publication\": {\n" +
-                "        \"projet_atlantique\": {\n" +
-                "            \"bassin_versant\": {\n" +
-                "                \"nivelle\": {\n" +
-                "                    \"dataGroups\": []\n" +
-                "                },\n" +
-                "                \"oir\": {\n" +
-                "                    \"dataGroups\": []\n" +
-                "                }\n" +
-                "            },\n" +
-                "            \"plateforme\": {\n" +
-                "                \"dataGroups\": []\n" +
-                "            }\n" +
-                "        }\n" +
-                "    },\n" +
-                "    \"depot\": {\n" +
-                "        \"projet_manche\": {\n" +
-                "            \"dataGroups\": []\n" +
-                "        }\n" +
-                "    },\n" +
-                "    \"extraction\": {\n" +
-                "        \"projet_atlantique\": {\n" +
-                "            \"bassin_versant\": {\n" +
-                "                \"dataGroups\": [\n" +
-                "                    {\n" +
-                "                        \"id\": \"qualitatif\",\n" +
-                "                        \"label\": \"Données qualitatives\"\n" +
-                "                    }\n" +
-                "                ],\n" +
-                "                \"from\": \"2021-11-07T23:00:00.000Z\",\n" +
-                "                \"to\": \"2021-11-07T23:00:00.000Z\"\n" +
-                "            }\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+        String authorisationTreeJson = "";
 
         YAMLMapper mapper = new YAMLMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        Object authorisationTree = mapper.readValue(authorisationTreeJson, AuthorizationTree.class);
+        Object authorisationTree = mapper.readValue(authorisationTreeJson, CreateAuthorizationRequest.class);
         System.out.println(authorisationTree);
     }
 

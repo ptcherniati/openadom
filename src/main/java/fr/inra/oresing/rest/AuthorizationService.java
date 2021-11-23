@@ -50,23 +50,23 @@ public class AuthorizationService {
         Application application = repository.application().findApplication(authorization.getApplicationNameOrId());
 
         String dataType = authorization.getDataType();
-        String dataGroup = authorization.getDataGroup();
+        //String dataGroup = authorization.getDataGroup();
 
         Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
 
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
 
-        Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(dataGroup));
+       // Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(dataGroup));
 
-        Preconditions.checkArgument(authorization.getAuthorizedScopes().keySet().equals(authorizationDescription.getAuthorizationScopes().keySet()));
+        //Preconditions.checkArgument(authorization.getAuthorizedScopes().keySet().equals(authorizationDescription.getAuthorizationScopes().keySet()));
 
         OreSiAuthorization entity = new OreSiAuthorization();
         entity.setOreSiUser(authorization.getUserId());
         entity.setApplication(application.getId());
         entity.setDataType(dataType);
-        entity.setDataGroup(dataGroup);
-        entity.setAuthorizedScopes(authorization.getAuthorizedScopes());
-        entity.setTimeScope(authorization.getTimeScope());
+        //entity.setDataGroup(dataGroup);
+        //entity.setAuthorizedScopes(authorization.getAuthorizedScopes());
+        //entity.setTimeScope(authorization.getTimeScope());
 
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         authorizationRepository.store(entity);

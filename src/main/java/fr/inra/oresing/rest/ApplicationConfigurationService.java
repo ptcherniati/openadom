@@ -147,6 +147,7 @@ public class ApplicationConfigurationService {
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
         Set<String> references = configuration.getReferences().keySet();
+        ImmutableSet.Builder<String> requiredAuthorizationsAttributesBuilder = ImmutableSet.builder();
         for (Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry : configuration.getCompositeReferences().entrySet()) {
             verifyCompositeReferenceReferenceExists(configuration, builder, compositeReferenceEntry);
             verifyCompositeReferenceParentColumnExists(configuration, builder, compositeReferenceEntry);
@@ -181,6 +182,7 @@ public class ApplicationConfigurationService {
 
                 LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
                 verifyDatatypeAuthorizationScopeExistsAndIsValid(builder, dataType, configuration, variables, authorizationScopesVariableComponentKey);
+                requiredAuthorizationsAttributesBuilder.addAll(authorizationScopesVariableComponentKey.keySet());
             }
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
@@ -189,6 +191,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
             verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, variables);
         }
+        configuration.setRequiredAuthorizationsAttributes(requiredAuthorizationsAttributesBuilder.build());
 
         return builder.build(configuration);
     }

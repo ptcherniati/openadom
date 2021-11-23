@@ -40,6 +40,8 @@
           :columnsVisible="columnsVisible"
           :remaining-option="authReferences.slice && authReferences.slice(1,authReferences.length)"
           class="rows"
+          :required-authorizations="{}"
+          :authorization-scopes ="authorizationScopes"
           @add-authorization="emitUpdateAuthorization($event)"
           @delete-authorization="emitUpdateAuthorization($event)">
         <div class="row">
@@ -93,6 +95,16 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
   authorizationsTree = {}
+  checkbox = false;
+  authorizations = [];
+  users = [];
+  dataGroups = [];
+  authorizationScopes = [];
+  application = new ApplicationResult();
+  userToAuthorize = null;
+  dataGroupToAuthorize = null;
+  openCollapse = null;
+  scopesToAuthorize = {};
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -109,24 +121,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     publication: {title: "Publication", display: true},
     extraction: {title: "Extraction", display: true},
   };
-  checkbox = false;
-  authorizations = [];
-  users = [];
-  dataGroups = [];
-  authorizationScopes = [];
-  application = new ApplicationResult();
-  userToAuthorize = null;
-  dataGroupToAuthorize = null;
-  openCollapse = null;
-  scopesToAuthorize = {};
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
   endDate = null;
-  application = new ApplicationResult();
   applications = [];
   configuration = {};
-  authorizations = [];
   authReferences = {};
+  authorizationsToSave = {};
 
 
   created() {
@@ -200,6 +201,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
+      grantableInfos.authorizationScopes.reverse()
       // this.authorizationScopes[0].options[0].children[0].children.push({
       //   children: [],
       //   id: "toto",
@@ -239,7 +241,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         let partition = await this.partitionReferencesValues(ret[key]?.references?.referenceValues, ret[key]?.authorizationScope);
         remainingAuthorizations[key] = partition;
       }
-      this.authReferences = remainingAuthorizations.reverse();
+      this.authReferences = remainingAuthorizations;
     } catch (error) {
       this.alertService.toastServerError(error);
     }
@@ -354,22 +356,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     dataTypeAuthorization.userId = this.userToAuthorize;
     dataTypeAuthorization.applicationNameOrId = this.applicationName;
     dataTypeAuthorization.dataType = this.dataTypeId;
-    dataTypeAuthorization.dataGroup = this.dataGroupToAuthorize;
-    dataTypeAuthorization.authorizedScopes = this.scopesToAuthorize;
-    let fromDay = null;
-    if (this.startDate) {
-      fromDay = [
-        this.startDate.getFullYear(),
-        this.startDate.getMonth() + 1,
-        this.startDate.getDate(),
-      ];
-    }
-    dataTypeAuthorization.fromDay = fromDay;
-    let toDay = null;
-    if (this.endDate) {
-      toDay = [this.endDate.getFullYear(), this.endDate.getMonth() + 1, this.endDate.getDate()];
-    }
-    dataTypeAuthorization.toDay = toDay;
+    dataTypeAuthorization.authorizations = this.authorizationsToSave;
 
     try {
       await this.authorizationService.createAuthorization(
@@ -388,8 +375,26 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   emitUpdateAuthorization(event) {
     this.authorizationsTree = event.authorizationsTree;
-    console.log(this.authorizationsTree)
+    var authorizationsToSave = {};
+    for (const type in event.authorizationsTree) {
+      authorizationsToSave[type] = this.extractAuthorizations(event.authorizationsTree[type]);
+    }
+    this.authorizationsToSave = {...authorizationsToSave}
+    console.log(JSON.stringify(this.authorizationsToSave))
   }
+
+  extractAuthorizations( authorizationTree){
+    var authorizationArray = []
+    if (!authorizationTree || Object.keys(authorizationTree).length==0){
+      return authorizationArray;
+    }
+    for (const key in authorizationTree) {
+      var treeOrAuthorization = authorizationTree[key]
+      authorizationArray =[...authorizationArray ,  ...((treeOrAuthorization instanceof Authorization)?[treeOrAuthorization.parse()]:this.extractAuthorizations(treeOrAuthorization))]
+    }
+    return authorizationArray
+  }
+
 }
 </script>
 

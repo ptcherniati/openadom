@@ -17,6 +17,7 @@ import java.util.*;
 @ToString
 public class Configuration {
     private String defaultLanguage;
+    private Set<String> requiredAuthorizationsAttributes;
     private InternationalizationMap internationalization;
     private int version;
     private ApplicationDescription application;

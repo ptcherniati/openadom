@@ -73,7 +73,7 @@
                           "
                       editable
                       icon="calendar"
-                      @input="selectCheckbox($event,index, indexColumn, scope, 'from')"
+                      @input="selectCheckbox($event,index, indexColumn, scope, 'to')"
                   >
                   </b-datepicker>
                 </div>
@@ -85,11 +85,13 @@
           <AuthorizationTable
               v-if="authorizationByScope && authReference"
               :authReference="getNextAuthreference(scope)"
+              :authorization-scopes="remainingScopes[index]"
               :authorizations-tree="authorizationByScope && authorizationByScope[index]"
               :columnsVisible="columnsVisible"
               :dataGroups="dataGroups"
               :path="getPath(index)"
               :remaining-option="getRemainingOption(scope)"
+              :required-authorizations="requiredAuthorizationByindex[index]"
               @add-authorization="emitAddAuthorization($event,  index)"
               @delete-authorization="emitDeleteAuthorization($event,  index)"/>
         </ul>
@@ -115,6 +117,8 @@ export default class AuthorizationTable extends Vue {
   @Prop({default: ''}) path;
   @Prop() authorizationsTree;
   @Prop() dataGroups;
+  @Prop() requiredAuthorizations;
+  @Prop() authorizationScopes;
   name = 'AuthorizationTable'
   authorizationByScope = {}
   states = {}
@@ -122,9 +126,33 @@ export default class AuthorizationTable extends Vue {
   open = {}
   emits = ["add-authorization", "delete-authorization"];
   upHere = false;
+  requiredAuthorizationByindex = {};
+  remainingScopes = {};
 
   created() {
     this.updateAuthorizationTree();
+  }
+
+  getRequiredAuthorization() {
+    var requiredAuthorizationByIndex = {};
+    var remainingScopes = this.remainingScopes || {}
+    for (const index in this.authReference) {
+      remainingScopes[index] = this.getNextScope(this.authReference?.[index])
+      var requiredAuthorization = {...(this.requiredAuthorizations || {})}
+      let scope = this.getScope();
+      if (scope) {
+        var requiredAuthorizationForIndex = (requiredAuthorization)[scope] || "";
+        requiredAuthorizationForIndex = requiredAuthorizationForIndex + (requiredAuthorizationForIndex == "" ? "" : ".") + index
+        requiredAuthorization[this.authorizationScopes[0].id] = requiredAuthorizationForIndex
+      }
+      requiredAuthorizationByIndex[index] = requiredAuthorization
+    }
+    this.remainingScopes = remainingScopes;
+    this.requiredAuthorizationByindex = requiredAuthorizationByIndex
+  }
+
+  getScope() {
+    return this.authorizationScopes?.[0]?.id;
   }
 
   updateAuthorizationTree() {
@@ -136,8 +164,8 @@ export default class AuthorizationTable extends Vue {
         .forEach(child => child.updateAuthorizationTree())
   }
 
-  initAuthorizationByScope() {
-    this.localAuthorizationsTree = this.authorizationsTree;
+  initAuthorizationByScope(authorizationsTree) {
+    this.localAuthorizationsTree = authorizationsTree || this.authorizationsTree;
     let authorizationByScope = this.authorizationByScope;
     for (const reference in this.authReference) {
       for (const type in this.authorizationsTree) {
@@ -147,19 +175,20 @@ export default class AuthorizationTable extends Vue {
             let nextReference = this.getNextAuthreference(this.authReference[reference]);
             var auth = {}
             for (const ref in nextReference) {
-              auth[ref] = new Authorization(this.authorizationsTree[type][reference])
+              auth[ref] = new Authorization(this.authorizationsTree[type][reference], this.requiredAuthorizationByindex[reference])
             }
             authorizationByScope[reference][type] = auth
           } else {
-            authorizationByScope[reference][type] = new Authorization(this.authorizationsTree?.[type]?.[reference]);
+            authorizationByScope[reference][type] = new Authorization(this.authorizationsTree?.[type]?.[reference], this.requiredAuthorizationByindex[reference]);
           }
         }
       }
       authorizationByScope[reference] = authorizationByScope[reference] || {}
-      authorizationByScope[reference][this.EXTRACTION] = authorizationByScope[reference][this.EXTRACTION] || (this.authorizationsTree?.[this.EXTRACTION]?.[reference] && new Authorization(this.authorizationsTree[this.EXTRACTION][reference]))
+      authorizationByScope[reference][this.EXTRACTION] = authorizationByScope[reference][this.EXTRACTION] || (this.authorizationsTree?.[this.EXTRACTION]?.[reference] && new Authorization(this.authorizationsTree[this.EXTRACTION][reference], this.requiredAuthorizationByindex[reference]))
 
     }
     this.authorizationByScope = {...authorizationByScope};
+    this.getRequiredAuthorization()
   }
 
   initStates() {
@@ -205,7 +234,7 @@ export default class AuthorizationTable extends Vue {
     return 'minus-square'
   }
 
-  updateState(type, reference, value) {
+  updateState(type, reference, value, updateChildren) {
     this.states[type] || this.initStates()
     var states = this.states
     var statesIcons = this.statesIcons
@@ -217,15 +246,17 @@ export default class AuthorizationTable extends Vue {
     if (this.remainingOption.length == 0 && this.authReference[reference].isLeaf) {
       return
     }
-    this.getChildAuthorizationTable()
-        .forEach(child => {
-          child.states[type] || child.initStates()
-          if (child.states[type]) {
-            for (const childType in child.states[type]) {
-              child.updateState(type, childType, value)
+    if (updateChildren) {
+      this.getChildAuthorizationTable()
+          .forEach(child => {
+            child.states[type] || child.initStates()
+            if (child.states[type]) {
+              for (const childType in child.states[type]) {
+                child.updateState(type, childType, value, updateChildren)
+              }
             }
-          }
-        })
+          })
+    }
   }
 
   getChildAuthorizationTable() {
@@ -278,6 +309,14 @@ export default class AuthorizationTable extends Vue {
     }
   }
 
+  getNextScope(scope) {
+    if (!scope.isLeaf) {
+      return this.authorizationScopes
+    } else {
+      return (this.authorizationScopes || []).slice(1, (this.authorizationScopes || []).length);
+    }
+  }
+
   getRemainingOption(scope) {
     if (scope.isLeaf) {
       return this.remainingOption.slice(1, this.remainingOption.length)
@@ -293,12 +332,12 @@ export default class AuthorizationTable extends Vue {
     localAuthorizationsTree[event.indexColumn][index] = localAuthorizationsTree?.[event.indexColumn][index] || {}
     delete localAuthorizationsTree[event.indexColumn][index][event.child]
     this.localAuthorizationsTree = {...localAuthorizationsTree};
-    this.updateState(event.indexColumn, index, event.state)
+    this.updateState(event.indexColumn, index, event.state, false)
     this.$emit('delete-authorization',
         {
           indexColumn: event.indexColumn,
           child: index,
-          state: this.buildState(event.indexColumn).state,
+          state: this.buildState(event.indexColumn, index).state,
           authorizationsTree: this.localAuthorizationsTree,
           authorizationScope: localAuthorizationsTree?.[event.type]?.[index]
         }
@@ -306,14 +345,18 @@ export default class AuthorizationTable extends Vue {
   }
 
   emitAddAuthorization(event, index) {
-    let localAuthorizationsTree = this.localAuthorizationsTree || {};
+    let localAuthorizationsTree = this.localAuthorizationsTree;
     var isEqual = event.isEqual
     if (isEqual.state == 1) {
+      localAuthorizationsTree = localAuthorizationsTree || {}
       localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.indexColumn] || {}
       localAuthorizationsTree[event.indexColumn][index] = localAuthorizationsTree[event.indexColumn][index] || {}
+      isEqual.auth.requiredAuthorization = this.requiredAuthorizationByindex[index]
       localAuthorizationsTree[event.indexColumn][index] = isEqual.auth
+      isEqual = this.buildState(event.indexColumn, index)
     } else if (isEqual.state == -1) {
-      localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.type] || {}
+      localAuthorizationsTree = localAuthorizationsTree || {}
+      localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.indexColumn] || {}
       localAuthorizationsTree[event.indexColumn][index] = localAuthorizationsTree[event.indexColumn][index] || {}
       localAuthorizationsTree[event.indexColumn][index] = event.authorizationsTree[event.indexColumn]
     } else {
@@ -322,47 +365,47 @@ export default class AuthorizationTable extends Vue {
         delete localAuthorizationsTree[event.indexColumn]
       }
     }
-    this.localAuthorizationsTree = {...localAuthorizationsTree};
-    this.updateState(event.indexColumn, index, event.state)
+    this.localAuthorizationsTree = localAuthorizationsTree ? {...(localAuthorizationsTree || {})} : localAuthorizationsTree;
+    this.updateState(event.indexColumn, index, event.state, false, this.localAuthorizationsTree)
+    this.authorizationByScope = this.localAuthorizationsTree[event.indexColumn]
     this.$emit('add-authorization',
         {
           isEqual,
-          state: this.buildState(event.indexColumn).state,
+          state: this.buildState(event.indexColumn, index).state,
           child: index,
           indexColumn: event.indexColumn,
           authorizationsTree: this.localAuthorizationsTree,
-          authorizationScope: localAuthorizationsTree?.[event.indexColumn]?.[index]
+          authorizationScope: {...(localAuthorizationsTree?.[event.indexColumn]?.[index])}
         }
     )
   }
 
-  changeChildrenAuthorization(authorization, exceptIndex) {
+  changeChildrenAuthorization(authorization ,onlyIndex) {
     var returnAuthorizationTree = {};
     this.getChildAuthorizationTable()
         .filter(child => {
-          return !(exceptIndex && child.path.endsWith(exceptIndex));
+          return (child.path.endsWith(onlyIndex));
         })
         .forEach(child => {
-          var authorizationTree = child.localAuthorizationsTree || {};
+          var authorizationTree = child.localAuthorizationsTree ? {...(child.localAuthorizationsTree || {})} : child.localAuthorizationsTree;
           for (const index in authorizationTree[child.EXTRACTION] || {}) {
             if (!authorization && authorizationTree?.[child.EXTRACTION]?.[index]) {
               delete authorizationTree?.[child.EXTRACTION]?.[index]
             } else {
               authorizationTree[child.EXTRACTION] = authorizationTree[child.EXTRACTION] || {}
-              authorizationTree[child.EXTRACTION][index] = new Authorization(authorization)
+              authorizationTree[child.EXTRACTION][index] = new Authorization(authorization, this.requiredAuthorizationByindex[index])
             }
             returnAuthorizationTree[index] = authorizationTree[child.EXTRACTION][index]
           }
           child.localAuthorizationsTree = authorizationTree;
-          child.changeChildrenAuthorization(authorization, child.EXTRACTION, exceptIndex);
-          child.initAuthorizationByScope();
+          child.changeChildrenAuthorization(authorization,  onlyIndex);
         })
-    return returnAuthorizationTree;
+    return returnAuthorizationTree ? {...(returnAuthorizationTree || {})} : returnAuthorizationTree;
   }
 
   selectCheckbox(event, index, indexColumn, scope, fromOrTo) {
     var eventType = 'add-authorization'
-    let localAuthorizationsTree = this.localAuthorizationsTree || {};
+    let localAuthorizationsTree = this.localAuthorizationsTree ? {...(this.localAuthorizationsTree || {})} : this.localAuthorizationsTree;
     var actualState = this.states && this.states[indexColumn] && this.states[indexColumn][index] || 0
     if (event instanceof PointerEvent) { //cliock sur checkbox
       this.states[indexColumn] || this.initStates()
@@ -377,7 +420,7 @@ export default class AuthorizationTable extends Vue {
         state = 0;
       } else { //création ou modification
         localAuthorizationsTree[indexColumn] = localAuthorizationsTree?.[indexColumn] || {}
-        localAuthorizationsTree[indexColumn][index] = new Authorization([], null, null);
+        localAuthorizationsTree[indexColumn][index] = new Authorization([], this.requiredAuthorizationByindex[index], null, null);
         var authorizationScope = {}
         let id = scope.authorizationScope;
         authorizationScope[id] = scope.key;
@@ -398,9 +441,13 @@ export default class AuthorizationTable extends Vue {
         localAuthorizationsTree[indexColumn][index][fromOrTo] = event
       }
       //si je veux restreindre les enfants je dois le faire après avoir défini le parent
-      this.changeChildrenAuthorization(localAuthorizationsTree?.[indexColumn]?.[index]);//si je selectionne alors c'est cette authorization qui s'applique aux enfants (ils n'ont plus leur propre authorization
+      this.changeChildrenAuthorization(localAuthorizationsTree?.[indexColumn]?.[index], index);//si je selectionne alors c'est cette authorization qui s'applique aux enfants (ils n'ont plus leur propre authorization
     }
-    this.updateState(indexColumn, index, state)
+    this.localAuthorizationsTree = localAuthorizationsTree ? {...(localAuthorizationsTree || {})} : localAuthorizationsTree;
+    this.updateState(indexColumn, index, state, false)
+    this.authorizationByScope = this.localAuthorizationsTree[indexColumn]
+
+
     states = this.states[indexColumn];
     if (states) {
       state = {}
@@ -415,33 +462,32 @@ export default class AuthorizationTable extends Vue {
     } else {
       state = 0
     }
-    this.localAuthorizationsTree = localAuthorizationsTree
-    var isEqual = this.buildState(indexColumn)
+    var isEqual = this.buildState(indexColumn, index)
     this.$emit(eventType,
         {
           isEqual,
           state,
           child: index,
           indexColumn,
-          authorizationsTree: this.authorizationsTree,
+          authorizationsTree: localAuthorizationsTree ? {...(localAuthorizationsTree || {})} : localAuthorizationsTree,
           authorizationScope: localAuthorizationsTree?.[indexColumn]?.[index]
         }
     )
-    this.initAuthorizationByScope()
   }
 
-  buildState(indexColumn) {
+  buildState(indexColumn, index) {
     var isEqual = {
       equal: true,
       state: 0
     }
-    var localAuthorizationsTree = this.localAuthorizationsTree || {}
+    var localAuthorizationsTree = {...this.localAuthorizationsTree}
     if (!localAuthorizationsTree[indexColumn] || Object.keys(localAuthorizationsTree[indexColumn]).length == 0) {
       isEqual.equal = true;
       isEqual.state = 0;
       isEqual.auth == null;
       return isEqual;
     }
+    isEqual.auth = localAuthorizationsTree[indexColumn][index];
     for (const reference in this.authReference) {
       var auth = localAuthorizationsTree[indexColumn][reference];
       if (isEqual.equal) {
@@ -451,8 +497,6 @@ export default class AuthorizationTable extends Vue {
               isEqual.auth.from?.toString() == auth.from?.toString() &&
               isEqual.auth.to?.toString() == auth.to?.toString()
 
-        } else {
-          isEqual.auth = auth;
         }
       }
     }
@@ -461,7 +505,7 @@ export default class AuthorizationTable extends Vue {
     } else if (isEqual.auth) {
       isEqual.state = -1
     }
-    this.localAuthorizationsTree = localAuthorizationsTree
+    this.localAuthorizationsTree = localAuthorizationsTree ? {...(localAuthorizationsTree || {})} : localAuthorizationsTree
     return isEqual
   }
 }

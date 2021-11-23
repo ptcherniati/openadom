@@ -135,18 +135,23 @@ public class OreSiService {
     }
 
     public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
-
         Application app = new Application();
         app.setName(name);
+        UUID result = changeApplicationConfiguration(app, configurationFile, this::initApplication);
+        relationalService.createViews(app.getName());
 
+        return result;
+    }
+    public Application initApplication(Application app){
         authenticationService.resetRole();
-
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
         org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
         flywayConfiguration.setDataSource(dataSource);
         flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
         flywayConfiguration.setLocations(new Location("classpath:migration/application"));
         flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
+        flywayConfiguration.getPlaceholders().put("requiredauthorizations", sqlSchemaForApplication.getRequiredauthorizationsAttributes());
+        flywayConfiguration.getPlaceholders().put("requiredauthorizationscomparing", sqlSchemaForApplication.getRequiredauthorizationsAttributesComparing());
         Flyway flyway = new Flyway(flywayConfiguration);
         flyway.migrate();
 
@@ -162,7 +167,7 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
                 adminOnApplicationRole,
-                "name = '" + name + "'"
+                "name = '" + app.getName() + "'"
         ));
 
         db.createPolicy(new SqlPolicy(
@@ -171,7 +176,7 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 readerOnApplicationRole,
-                "name = '" + name + "'"
+                "name = '" + app.getName() + "'"
         ));
 
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
@@ -185,12 +190,8 @@ public class OreSiService {
         db.addUserInRole(creator, adminOnApplicationRole);
 
         authenticationService.setRoleForClient();
-        UUID result = repo.application().store(app);
-        changeApplicationConfiguration(app, configurationFile);
-
-        relationalService.createViews(app.getName());
-
-        return result;
+        repo.application().store(app);
+        return app;
     }
 
     public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
@@ -199,7 +200,8 @@ public class OreSiService {
         Application app = getApplication(nameOrId);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
-        UUID uuid = changeApplicationConfiguration(app, configurationFile);
+        Application application = getApplication(nameOrId);
+        UUID uuid = changeApplicationConfiguration(app, configurationFile, Function.identity());
         Configuration newConfiguration = app.getConfiguration();
         int oldVersion = oldConfiguration.getApplication().getVersion();
         int newVersion = newConfiguration.getApplication().getVersion();
@@ -297,17 +299,18 @@ public class OreSiService {
                 .forEach(validateRow);
     }
 
-    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
+        app = initApplication.apply(app);
         UUID confId = storeFile(app, configurationFile);
         app.setConfigFile(confId);
-        repo.application().store(app);
-        return confId;
+        UUID appId = repo.application().store(app);
+        return appId;
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
@@ -817,12 +820,10 @@ public class OreSiService {
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
                 e.setRowId(rowId);
-                e.setDataGroup(dataGroup);
+                //e.setAuthorization(new Authorization(dataGroup, requiredAuthorizations, timeScope));
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
                 e.setDataValues(toStore);
-                e.setTimeScope(timeScope);
-                e.setRequiredAuthorizations(requiredAuthorizations);
                 return e;
             });
 
