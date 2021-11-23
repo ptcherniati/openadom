@@ -182,6 +182,7 @@
         "card-title-upload-file": "Drop a version on this dataset",
         "start-date": "Start date",
         "end-date": "End date",
+        "comment": "Comment",
         "choose-file": "Choose a file",
         "placeholder-datepicker": "Type or select a date...",
         "placeholder-select": "Select...",

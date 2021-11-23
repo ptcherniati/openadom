@@ -182,6 +182,7 @@
         "card-title-upload-file": "Déposer une version sur ce jeux de données",
         "start-date": "Date de début",
         "end-date": "Date de fin",
+        "comment": "Commentaire",
         "choose-file": "Choisir un fichier",
         "placeholder-datepicker": "Taper ou sélectionner une date...",
         "placeholder-select": "Sélectionner...",

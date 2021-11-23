@@ -74,9 +74,9 @@
             <b-collapse animation="slide" aria-id="fileDeposit" class="card">
               <template #trigger="props">
                 <div aria-controls="fileDeposit" class="card-header" role="button">
-                  <p class="card-header-title">
+                  <h2 class="card-header-title">
                     {{ $t("dataTypesRepository.card-title-upload-file") }}
-                  </p>
+                  </h2>
                   <a class="card-header-icon">
                     <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"></b-icon>
                   </a>
@@ -130,7 +130,7 @@
                     </div>
                   </div>
                   <div class="columns">
-                    <b-field class="column" label="Commentaire" expanded>
+                    <b-field class="column" :label="$t('dataTypesRepository.comment')" expanded>
                       <b-input v-model="comment" maxlength="200" type="textarea"></b-input>
                     </b-field>
                   </div>
@@ -204,11 +204,17 @@
               </tr>
               <tr v-for="dataset in currentDataset" :key="dataset.id">
                 <td align>
-                  <b-tooltip type="is-dark" multilined>
-                    <a>{{ dataset.id.slice(0, 8) }}</a>
+                  <b-tooltip type="is-dark" :id="dataset.id" multilined role="tooltip">
                     <template v-slot:content>
+                      <h3>{{ $t("dataTypesRepository.comment") }} {{ $t("ponctuation.colon") }}</h3>
                       <p>{{ UTCToString(dataset.params.binaryFiledataset.comment) }}</p>
                     </template>
+                    <a
+                      :aria-describedby="dataset.id"
+                      tabindex="0"
+                      @keypress.enter="changeCss(dataset.id)"
+                      >{{ dataset.id.slice(0, 8) }}</a
+                    >
                   </b-tooltip>
                 </td>
                 <td align>{{ dataset.size }}</td>
@@ -305,6 +311,12 @@ export default class DataTypesRepositoryView extends Vue {
     this.$on("deleted", this.updateDatasets);
     this.$on("listFilesUploaded", this.getDatasetMap);
     this.$on("parseAuth", this.parseAuth);
+  }
+
+  changeCss(id) {
+    if (document.getElementById(id).querySelector(".tooltip-content").style.display === "block")
+      document.getElementById(id).querySelector(".tooltip-content").style.display = "none";
+    else document.getElementById(id).querySelector(".tooltip-content").style.display = "block";
   }
 
   created() {
@@ -636,7 +648,7 @@ export default class DataTypesRepositoryView extends Vue {
     overflow-wrap: break-word;
   }
 }
-.dropdown-content{
+.dropdown-content {
   margin-left: 20px;
   margin-right: -20px;
 }
@@ -660,5 +672,12 @@ caption {
   font-weight: bold;
   font-size: 20px;
   margin-bottom: 15px;
+}
+
+.b-tooltip {
+  .tooltip-trigger a {
+  }
+  .tooltip-content {
+  }
 }
 </style>
