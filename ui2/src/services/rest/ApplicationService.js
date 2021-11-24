@@ -8,9 +8,10 @@ export class ApplicationService extends Fetcher {
     super();
   }
 
-  async createApplication(applicationConfig) {
+  async createApplication(applicationConfig, comment) {
     return this.post("applications/" + applicationConfig.name, {
       file: applicationConfig.file,
+      comment: comment,
     });
   }
 

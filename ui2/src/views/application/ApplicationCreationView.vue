@@ -55,6 +55,11 @@
               </b-upload>
             </b-field>
           </ValidationProvider>
+          <div class="columns">
+            <b-field class="column" :label="$t('dataTypesRepository.comment')" expanded>
+              <b-input v-model="comment" maxlength="200" type="textarea"></b-input>
+            </b-field>
+          </div>
           <div class="buttons">
             <b-button type="is-light" @click="handleSubmit(testApplication)" icon-left="vial">
               {{ $t("applications.test") }}
@@ -102,11 +107,12 @@ export default class ApplicationCreationView extends Vue {
 
   applicationConfig = new ApplicationConfig();
   errorsMessages = [];
+  comment = "";
 
   async createApplication() {
     this.errorsMessages = [];
     try {
-      await this.applicationService.createApplication(this.applicationConfig);
+      await this.applicationService.createApplication(this.applicationConfig, this.comment);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
       this.$router.push("/applications");
     } catch (error) {
@@ -118,7 +124,7 @@ export default class ApplicationCreationView extends Vue {
     this.errorsMessages = [];
     try {
       let response = await this.applicationService.validateConfiguration(this.applicationConfig);
-      if (response.valid == true) {
+      if (response.valid === true) {
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
         this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);

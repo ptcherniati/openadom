@@ -114,7 +114,7 @@
                     @click="showModal(application.name)"
                   />
                   <b-modal
-                    v-show="isSelectedName == application.name"
+                    v-show="isSelectedName === application.name"
                     :id="application.name"
                     v-model="isCardModalActive"
                   >
@@ -127,8 +127,10 @@
                       <div class="card-content">
                         <div class="content">
                           <p>
-                            {{ application.referenceType }} {{ $t("ponctuation.comma") }}
                             {{ application.dataType }}
+                          </p>
+                          <p>
+                            {{ application.comment }}
                           </p>
                         </div>
                       </div>
