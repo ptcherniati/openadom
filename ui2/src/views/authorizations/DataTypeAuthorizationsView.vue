@@ -186,7 +186,7 @@ export default class DataTypeAuthorizationsView extends Vue {
         return acc;
       }, {})
       if (this.authorizations && this.authorizations.length !== 0) {
-        this.scopes = Object.keys(this.authorizations[0].authorizedScopes);
+        this.scopes = Object.keys(this.authorizations[0].authorizations);
       }
     } catch (error) {
       this.alertService.toastServerError(error);

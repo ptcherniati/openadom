@@ -1,5 +1,5 @@
 export class DataTypeAuthorization {
-  userId;
+  usersId;
   applicationNameOrId;
   dataType;
   authorizations;

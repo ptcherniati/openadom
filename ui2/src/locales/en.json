@@ -193,6 +193,7 @@
         "sub-menu-data-type-authorizations": "{dataType} authorizations",
         "sub-menu-new-authorization": "new authorization",
         "users": "Users",
+        "name": "Name",
         "users-placeholder": "Chose users to authorize",
         "data-groups": "Data groups",
         "data-groups-placeholder": "Chose data groups to authorize",

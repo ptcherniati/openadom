@@ -13,6 +13,8 @@ import java.util.UUID;
 public class CreateAuthorizationRequest {
     UUID uuid;
 
+    String name;
+
     Set<UUID> usersId;
 
     String applicationNameOrId;

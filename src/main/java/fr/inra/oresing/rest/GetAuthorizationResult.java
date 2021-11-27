@@ -11,6 +11,7 @@ import java.util.UUID;
 @Value
 public class GetAuthorizationResult {
     UUID id;
+    String name;
     Set<UUID> users;
     UUID application;
     String dataType;

@@ -14,6 +14,7 @@ import java.util.UUID;
 @Setter
 @ToString(callSuper = true)
 public class OreSiAuthorization extends OreSiEntity {
+    private String name;
     private Set<UUID> oreSiUsers;
     private UUID application;
     private String dataType;

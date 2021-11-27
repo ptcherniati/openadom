@@ -92,6 +92,7 @@ ALTER TABLE Data
 CREATE TABLE OreSiAuthorization
 (
     id             EntityId PRIMARY KEY,
+    name           Text,
     creationDate   DateOrNow,
     updateDate     DateOrNow,
     oreSiUsers     EntityRef[] CHECK ( checks_users(oreSiUsers::uuid[]) ),

@@ -92,6 +92,7 @@ public class AuthorizationResourcesTest {
                     "   \"usersId\":[\""+readerUserId+"\"],\n" +
                     "   \"applicationNameOrId\":\"acbb\",\n" +
                     "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur acbb\",\n" +
                     "   \"dataType\":\"biomasse_production_teneur\",\n" +
                     "   \"authorizations\":{\n" +
                     "   \"extraction\":[\n" +
@@ -170,6 +171,7 @@ public class AuthorizationResourcesTest {
                     "   \"usersId\":[\""+readerUserId+"\"],\n" +
                     "   \"applicationNameOrId\":\"hautefrequence\",\n" +
                     "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur haute fréquence\",\n" +
                     "   \"dataType\":\"hautefrequence\",\n" +
                     "   \"authorizations\":{\n" +
                     "   \"extraction\":[\n" +

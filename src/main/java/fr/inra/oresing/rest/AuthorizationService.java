@@ -91,6 +91,7 @@ public class AuthorizationService {
                         );
                     });
                 });
+        entity.setName(authorizations.getName());
         entity.setOreSiUsers(authorizations.getUsersId());
         entity.setApplication(application.getId());
         entity.setDataType(dataType);
@@ -181,6 +182,7 @@ public class AuthorizationService {
     private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization) {
         return new GetAuthorizationResult(
                 oreSiAuthorization.getId(),
+                oreSiAuthorization.getName(),
                 oreSiAuthorization.getOreSiUsers(),
                 oreSiAuthorization.getApplication(),
                 oreSiAuthorization.getDataType(),
