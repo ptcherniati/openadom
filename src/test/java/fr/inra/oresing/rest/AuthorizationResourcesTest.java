@@ -1,7 +1,5 @@
 package fr.inra.oresing.rest;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.persistence.AuthenticationService;
@@ -25,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import javax.servlet.http.Cookie;
-import java.io.IOException;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,16 +47,6 @@ public class AuthorizationResourcesTest {
 
     @Autowired
     private Fixtures fixtures;
-
-    @Test
-    public void getAuthorizationTreeTest() throws IOException {
-        String authorisationTreeJson = "";
-
-        YAMLMapper mapper = new YAMLMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        Object authorisationTree = mapper.readValue(authorisationTreeJson, CreateAuthorizationRequest.class);
-        System.out.println(authorisationTree);
-    }
 
     @Test
     public void testAddAuthorization() throws Exception {
@@ -101,7 +88,36 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
+            String json = "{\n" +
+                    "   \"usersId\":[\""+readerUserId+"\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredauthorizations\":{\n" +
+                    "            \"localization\":\"theix.theix__22\"\n" +
+                    "         },\n" +
+                    "         \"dataGroup\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2010,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2010,\n" +
+                    "               6,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +165,38 @@ public class AuthorizationResourcesTest {
         String authorizationId;
 
         {
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"bimont.bim13\",\"projet\":\"sou\"},\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
+
+            String json = "{\n" +
+                    "   \"usersId\":[\""+readerUserId+"\"],\n" +
+                    "   \"applicationNameOrId\":\"hautefrequence\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"dataType\":\"hautefrequence\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredauthorizations\":{\n" +
+                    "            \"localization\":\"bimont.bim13\",\n" +
+                    "            \"projet\":\"sou\"\n" +
+                    "         },\n" +
+                    "         \"dataGroup\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2016,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2017,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)

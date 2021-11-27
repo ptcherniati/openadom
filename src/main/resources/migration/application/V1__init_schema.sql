@@ -45,22 +45,24 @@ CREATE TYPE ${applicationSchema}."authorization" AS
     timescope              tsrange
 );
 
-CREATE OR REPLACE FUNCTION ${applicationSchema}.isAuthorized("authorization" ${applicationSchema}."authorization", "authorizedArray" ${applicationSchema}."authorization"[])
-RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION ${applicationSchema}.isAuthorized("authorization" ${applicationSchema}."authorization",
+                                                             "authorizedArray" ${applicationSchema}."authorization"[])
+    RETURNS BOOLEAN AS
+$$
 DECLARE
     result TEXT;
 BEGIN
     select exists(select 1
-	into result
-from unnest("authorizedArray") authorized
-where ${requiredauthorizationscomparing}
-(authorized).datagroup @> COALESCE(("authorization").datagroup, array[]::text[])
-and (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange));
-return result;
+                  into result
+                  from unnest("authorizedArray") authorized
+                  where ${requiredauthorizationscomparing}
+                  (authorized).datagroup @> COALESCE(("authorization").datagroup, array []::text[])
+                      and (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange));
+    return result;
 END;
 $$ language 'plpgsql';
 
-CREATE OPERATOR public.? (
+CREATE OPERATOR public.@> (
     LEFTARG = ${applicationSchema}."authorization",
     RIGHTARG = ${applicationSchema}."authorization"[],
     FUNCTION = ${applicationSchema}.isAuthorized
@@ -73,9 +75,9 @@ create table Data
     updateDate      DateOrNow,
     application     EntityRef REFERENCES Application (id),
     dataType        TEXT CHECK (name_check(application, 'dataType', dataType)),
-    rowId           TEXT                               NOT NULL,
-    datagroup       TEXT                               GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED  NOT NULL,
-    "authorization" ${applicationSchema}.authorization NOT NULL check (("authorization").datagroup[1] is not null),
+    rowId           TEXT                                                             NOT NULL,
+    datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED NOT NULL,
+    "authorization" ${applicationSchema}.authorization                               NOT NULL check (("authorization").datagroup[1] is not null),
     refsLinkedTo    jsonb check (refs_check_for_datatype('${applicationSchema}', application, refsLinkedTo,
                                                          datatype)),
     dataValues      jsonb,
@@ -89,14 +91,13 @@ ALTER TABLE Data
 
 CREATE TABLE OreSiAuthorization
 (
-    id                 EntityId PRIMARY KEY,
-    creationDate       DateOrNow,
-    updateDate         DateOrNow,
-    oreSiUser          EntityRef[] CHECK ( checks_users(oreSiUser::uuid[]) ),
-    application        EntityRef REFERENCES Application (id),
-    dataType           TEXT CHECK (name_check(application, 'dataType', dataType)),
-    type               text,
-    authorizationsTree jsonb
+    id             EntityId PRIMARY KEY,
+    creationDate   DateOrNow,
+    updateDate     DateOrNow,
+    oreSiUsers     EntityRef[] CHECK ( checks_users(oreSiUsers::uuid[]) ),
+    application    EntityRef REFERENCES Application (id),
+    dataType       TEXT CHECK (name_check(application, 'dataType', dataType)),
+    authorizations jsonb
 );
 
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;

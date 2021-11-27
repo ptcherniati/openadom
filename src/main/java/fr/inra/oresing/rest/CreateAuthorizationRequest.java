@@ -1,22 +1,25 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.persistence.OperationType;
 import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Value
 public class CreateAuthorizationRequest {
+    UUID uuid;
 
-    UUID userId;
+    Set<UUID> usersId;
 
     String applicationNameOrId;
 
     String dataType;
 
-    Map<String, List<Authorization>> authorizations;
+    Map<OperationType, List<Authorization>> authorizations;
 
     /*public LocalDateTimeRange getTimeScope() {
         LocalDateTimeRange timeScope;

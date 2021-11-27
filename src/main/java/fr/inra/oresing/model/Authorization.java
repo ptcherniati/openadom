@@ -5,23 +5,31 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @ToString(callSuper = true)
 public class Authorization {
+    LocalDateTimeRange timeScope;
     private List<String> dataGroup;
     private Map<String, String> requiredauthorizations;
-    LocalDateTimeRange timeScope;
 
-    public void setIntervalDates(Map<String, LocalDate> dates) {
-        LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
+    public Authorization(List<String> dataGroup, Map<String, String> requiredauthorizations, LocalDateTimeRange timeScope) {
+        this.dataGroup = dataGroup;
+        this.requiredauthorizations = requiredauthorizations;
         this.timeScope = timeScope;
     }
 
     public Authorization() {
+    }
+
+    public void setIntervalDates(Map<String, LocalDate> dates) {
+        LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
+        this.timeScope = timeScope;
     }
 
     public LocalDateTimeRange getTimeScope(LocalDate fromDay, LocalDate toDay) {
@@ -40,5 +48,24 @@ public class Authorization {
             }
         }
         return timeScope;
+    }
+
+   public String toSQL(List<String> attributes) {
+        List<String> sql = new LinkedList<>();
+        if (!(requiredauthorizations == null || requiredauthorizations.isEmpty())) {
+            sql.add(attributes.stream()
+                    .map(attribute -> getRequiredauthorizations().getOrDefault(attribute, ""))
+                    .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredauthorizations"))
+            );
+        }
+        if(!(dataGroup == null || dataGroup.isEmpty())){
+            sql.add(dataGroup.stream()
+                    .map(dg -> String.format(String.format("'%s'", dg)))
+                    .collect(Collectors.joining(",", "array[", "]"))
+            );
+        }
+        sql.add(String.format("'%s'", timeScope.toSqlExpression()));
+        return sql.stream()
+                .collect(Collectors.joining(",", "(",")::%1$s.authorization"));
     }
 }

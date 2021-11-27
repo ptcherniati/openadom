@@ -9,25 +9,29 @@ import java.util.UUID;
 public class OreSiRightOnApplicationRole implements OreSiRoleManagedByApplication, OreSiRoleToBeGranted, OreSiRoleWeCanGrantOtherRolesTo {
 
     UUID applicationId;
-
     String profile;
+    UUID authorizationId;
 
     public static OreSiRightOnApplicationRole adminOn(Application application) {
         return adminOn(application.getId());
     }
 
     public static OreSiRightOnApplicationRole adminOn(UUID applicationId) {
-        return new OreSiRightOnApplicationRole(applicationId, "admin");
+        return new OreSiRightOnApplicationRole(applicationId, "admin", null);
     }
 
     public static OreSiRightOnApplicationRole readerOn(Application application) {
-        return new OreSiRightOnApplicationRole(application.getId(), "reader");
+        return new OreSiRightOnApplicationRole(application.getId(), "reader", null);
+    }
+
+    public static OreSiRightOnApplicationRole managementRole(Application application, UUID uuid) {
+        return new OreSiRightOnApplicationRole(application.getId(), String.format("management_%s", uuid.toString()), uuid);
     }
 
     @Override
     public String getAsSqlRole() {
         String rightAsSqlRole = getApplicationId().toString() + "_" + profile;
-        return rightAsSqlRole;
+        return rightAsSqlRole.substring(0,Math.min(rightAsSqlRole.length(), 63));
     }
 
 }

@@ -820,7 +820,7 @@ public class OreSiService {
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
                 e.setRowId(rowId);
-                //e.setAuthorization(new Authorization(dataGroup, requiredAuthorizations, timeScope));
+                e.setAuthorization(new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope));
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
                 e.setDataValues(toStore);

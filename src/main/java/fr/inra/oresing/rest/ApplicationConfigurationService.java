@@ -191,7 +191,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
             verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, variables);
         }
-        configuration.setRequiredAuthorizationsAttributes(requiredAuthorizationsAttributesBuilder.build());
+        configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
 
         return builder.build(configuration);
     }

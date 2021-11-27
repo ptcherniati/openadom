@@ -98,6 +98,14 @@ public class AuthenticationService {
         db.createRole(userRole);
         return new CreateUserResult(result.getId());
     }
+    public CreateUserResult createRole(UUID id) {
+        //Preconditions.checkArgument(userRepository.findByLogin(id.toString()).isEmpty(), "Il existe déjà un rôle dont l’identifiant est " + id.toString());
+        OreSiUser result = new OreSiUser();
+        result.setLogin(id.toString());
+        OreSiUserRole userRole = getUserRole(result);
+        db.createRole(userRole);
+        return new CreateUserResult(result.getId());
+    }
 
     public void addUserRightCreateApplication(UUID userId) {
         OreSiUserRole roleToModify = getUserRole(userId);
