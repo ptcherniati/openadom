@@ -11,19 +11,6 @@
     <div class="rows">
       <div class="row">
         <div class="columns">
-          <div class="card column is-10">
-            <p class="card-header-title">
-              Utilisateur
-            </p>
-            <b-select v-model="selectedUser" placeholder="Select a name">
-              <option
-                  v-for="(option, key) in authorizationByUser"
-                  :key="key"
-                  :value="option">
-                {{ key }}
-              </option>
-            </b-select>
-          </div>
           <div class="card column is-2">
             <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
               {{ $t("dataTypeAuthorizations.add-auhtorization") }}
@@ -33,8 +20,8 @@
       </div>
 
       <b-table
-          v-if="selectedUser"
-          :data="selectedUser"
+          v-if="authorizations"
+          :data="authorizations"
           :isFocusable="true"
           :isHoverable="true"
           :paginated="true"
@@ -56,31 +43,30 @@
 
         <b-table-column
             v-slot="props"
-            :label="$t('dataTypeAuthorizations.data-group')"
+            :label="$t('dataTypeAuthorizations.name')"
             b-table-column
-            field="dataGroup"
+            field="name"
             sortable
         >
-          {{ props.row.dataGroup }}
+          {{ props.row.name }}
         </b-table-column>
         <b-table-column
             v-slot="props"
-            :label="$t('dataTypeAuthorizations.period')"
+            :label="$t('dataTypeAuthorizations.roles')"
             b-table-column
-            field="dataGroup"
+            field="authorizations"
             sortable
         >
-          {{ getPeriod(props.row) }}
+          {{Object.keys( props.row.authorizations || {} ) }}
         </b-table-column>
         <b-table-column
-            v-for="scope in scopes"
-            :key="scope"
             v-slot="props"
-            :label="scope"
+            :label="$t('dataTypeAuthorizations.users')"
             b-table-column
+            field="users"
             sortable
         >
-          {{ props.row.authorizedScopes[scope] }}
+          {{ props.row.users.map(use=>use.login) }}
         </b-table-column>
         <b-table-column v-slot="props" :label="$t('dataTypeAuthorizations.actions')" b-table-column>
           <b-button
@@ -112,7 +98,7 @@ import {ApplicationResult} from "@/model/ApplicationResult";
 })
 export default class DataTypeAuthorizationsView extends Vue {
   @Prop() dataTypeId;
-  @Prop() applicationName;
+  @Prop() applicationName;toList
 
   authorizationService = AuthorizationService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
@@ -178,18 +164,18 @@ export default class DataTypeAuthorizationsView extends Vue {
           this.applicationName,
           this.dataTypeId
       );
+      if (this.authorizations && this.authorizations.length !== 0) {
+        this.scopes = Object.keys(this.authorizations[0].authorizations);
+      }
+    } catch (error) {
+      this.alertService.toastServerError
       this.authorizationByUser = this.authorizations.reduce((acc, auth) => {
         var user = auth.user;
         var userAuth = acc[user] || [];
         userAuth.push(auth);
         acc[user] = userAuth;
         return acc;
-      }, {})
-      if (this.authorizations && this.authorizations.length !== 0) {
-        this.scopes = Object.keys(this.authorizations[0].authorizations);
-      }
-    } catch (error) {
-      this.alertService.toastServerError(error);
+      }, {})(error);
     }
   }
 

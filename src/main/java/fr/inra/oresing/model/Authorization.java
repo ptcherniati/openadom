@@ -53,7 +53,7 @@ public class Authorization {
    public String toSQL(List<String> attributes) {
         List<String> sql = new LinkedList<>();
        if (requiredauthorizations == null) {
-           return null
+           return null;
        } else {
            sql.add(attributes.stream()
                    .map(attribute -> getRequiredauthorizations().getOrDefault(attribute, ""))

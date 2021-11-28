@@ -181,15 +181,24 @@ public class AuthorizationService {
     }
 
     private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization) {
+        List<OreSiUser> all = userRepository.findAll();
         return new GetAuthorizationResult(
                 oreSiAuthorization.getId(),
                 oreSiAuthorization.getName(),
-                oreSiAuthorization.getOreSiUsers(),
+                getOreSIUSers(all, oreSiAuthorization.getOreSiUsers()),
                 oreSiAuthorization.getApplication(),
                 oreSiAuthorization.getDataType(),
                 extractTimeRangeToFromAndTo(oreSiAuthorization.getAuthorizations())
         );
     }
+
+    private Set<OreSiUser> getOreSIUSers(List<OreSiUser> users, Set<UUID> usersId){
+        return users.stream()
+                .filter(oreSiUser -> usersId.contains(oreSiUser.getId()))
+                .collect(Collectors.toSet());
+    }
+
+
 
     private Map<OperationType, List<AuthorizationParsed>> extractTimeRangeToFromAndTo(Map<OperationType, List<Authorization>> authorizations) {
         Map<OperationType, List<AuthorizationParsed>> transformedAuthorizations = new HashMap<>();
