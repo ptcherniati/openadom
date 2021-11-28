@@ -127,6 +127,7 @@ public class AuthorizationService {
             usingExpressionElements.add("\"authorization\" @> " +
                     authorization.getAuthorizations().get(OperationType.extraction).stream()
                             .map(auth -> auth.toSQL(application.getConfiguration().getRequiredAuthorizationsAttributes()))
+                            .filter(auth->auth!=null)
                             .map(sql -> String.format(sql, sqlSchemaForApplication.getName()))
                             .collect(Collectors.joining(",", "ARRAY[", "]::" + sqlSchemaForApplication.getName() + ".authorization[]"))
 

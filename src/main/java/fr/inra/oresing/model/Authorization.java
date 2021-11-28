@@ -52,16 +52,18 @@ public class Authorization {
 
    public String toSQL(List<String> attributes) {
         List<String> sql = new LinkedList<>();
-        if (!(requiredauthorizations == null || requiredauthorizations.isEmpty())) {
-            sql.add(attributes.stream()
-                    .map(attribute -> getRequiredauthorizations().getOrDefault(attribute, ""))
-                    .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredauthorizations"))
-            );
-        }
-        if(!(dataGroup == null || dataGroup.isEmpty())){
+       if (requiredauthorizations == null) {
+           return null
+       } else {
+           sql.add(attributes.stream()
+                   .map(attribute -> getRequiredauthorizations().getOrDefault(attribute, ""))
+                   .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredauthorizations"))
+           );
+       }
+       if(!(dataGroup == null)){
             sql.add(dataGroup.stream()
                     .map(dg -> String.format(String.format("'%s'", dg)))
-                    .collect(Collectors.joining(",", "array[", "]"))
+                    .collect(Collectors.joining(",", "array[", "]::TEXT[]"))
             );
         }
         sql.add(String.format("'%s'", timeScope.toSqlExpression()));
