@@ -56,8 +56,9 @@ BEGIN
                   into result
                   from unnest("authorizedArray") authorized
                   where ${requiredauthorizationscomparing}
-                  (authorized).datagroup @> COALESCE(("authorization").datagroup, array []::text[])
-                      and (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange));
+                  ((("authorized").datagroup= array[]::TEXT[]) or ((authorized).datagroup @> COALESCE(("authorization").datagroup, array[]::TEXT[])))
+                  and ((("authorized").timescope =  '(,)'::tsrange ) or (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
+        );
     return result;
 END;
 $$ language 'plpgsql';
