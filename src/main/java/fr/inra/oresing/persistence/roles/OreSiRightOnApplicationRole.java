@@ -24,6 +24,10 @@ public class OreSiRightOnApplicationRole implements OreSiRoleManagedByApplicatio
         return new OreSiRightOnApplicationRole(application.getId(), "reader", null);
     }
 
+    public static OreSiRightOnApplicationRole writerOn(Application application) {
+        return new OreSiRightOnApplicationRole(application.getId(), "writer", null);
+    }
+
     public static OreSiRightOnApplicationRole managementRole(Application application, UUID uuid) {
         return new OreSiRightOnApplicationRole(application.getId(), String.format("management_%s", uuid.toString()), uuid);
     }

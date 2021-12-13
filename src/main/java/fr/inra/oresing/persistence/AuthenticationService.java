@@ -66,6 +66,7 @@ public class AuthenticationService {
 
     /**
      * verifie que l'utilisateur existe et que son mot de passe est le bon
+     *
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
      */
     public LoginResult login(String login, String password) throws AuthenticationFailure {
@@ -85,6 +86,7 @@ public class AuthenticationService {
 
     /**
      * Permet de créer un nouvel utilisateur
+     *
      * @return l'objet OreSiUser qui vient d'être créé
      */
     public CreateUserResult createUser(String login, String password) {
@@ -98,6 +100,7 @@ public class AuthenticationService {
         db.createRole(userRole);
         return new CreateUserResult(result.getId());
     }
+
     public CreateUserResult createRole(UUID id) {
         //Preconditions.checkArgument(userRepository.findByLogin(id.toString()).isEmpty(), "Il existe déjà un rôle dont l’identifiant est " + id.toString());
         OreSiUser result = new OreSiUser();
@@ -124,7 +127,7 @@ public class AuthenticationService {
 
     private OreSiUser getOreSiUser(UUID userId) {
         return userRepository.tryFindById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("l'utilisateur " + userId + " n'existe pas en base"));
+                .orElseThrow(() -> new IllegalArgumentException("l'utilisateur " + userId + " n'existe pas en base"));
     }
 
     public OreSiUserRole getUserRole(UUID userId) {
