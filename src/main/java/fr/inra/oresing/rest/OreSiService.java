@@ -346,7 +346,7 @@ public class OreSiService {
                 parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
                 parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription)-1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    String parentHierarchicalKey = referenceValues.get(parentHierarchicalKeyColumn);
+                    String parentHierarchicalKey = escapeKeyComponent(referenceValues.get(parentHierarchicalKeyColumn));
                     return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
                 };
                 getHierarchicalReferenceFn = (reference) -> parentHierarchicalParentReference + LTREE_SEPARATOR + reference;
