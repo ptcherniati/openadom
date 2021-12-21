@@ -12,7 +12,7 @@ import java.util.Optional;
 public class RequiredDecorator implements ICheckerDecorator {
     public static final String PARAMS_REQUIRED = "required";
 
-    public ValidationCheckResult check(String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
+    public ValidationCheckResult check(Map<? extends Object, String> values, String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
         boolean required = params.containsKey(PARAMS_REQUIRED) &&
                 Optional.ofNullable(params.get(PARAMS_REQUIRED))
                         .map(req->req==null || Boolean.parseBoolean(req))

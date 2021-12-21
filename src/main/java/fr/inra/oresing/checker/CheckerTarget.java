@@ -1,21 +1,35 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.persistence.OreSiRepository;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Objects;
 
 @Getter
 @Setter
 abstract public class CheckerTarget<T>{
     private T target;
+    @JsonIgnore
+    private Application application;
+    @JsonIgnore
+    private OreSiRepository.RepositoryForApplication repository;
     private CheckerTargetType type;
-    public static CheckerTarget getInstance(Object target){
+    public static CheckerTarget getInstance(Object target, Application application, OreSiRepository.RepositoryForApplication repository){
+        CheckerTarget checkerTarget = null;
         if(target instanceof VariableComponentKey){
-            return new VariableComponentKeyCheckerTarget((VariableComponentKey) target);
+            checkerTarget =  new VariableComponentKeyCheckerTarget((VariableComponentKey) target);
         } else if (target instanceof String){
-            return new ColumnCheckerTarget((String) target);
+            checkerTarget =  new ColumnCheckerTarget((String) target);
         }
-        return null;
+        if(checkerTarget!=null){
+            checkerTarget.application = application;
+            checkerTarget.repository = repository;
+        }
+        return checkerTarget;
     }
     public String getInternationalizedKey(String key){
         if(CheckerTargetType.PARAM_COLUMN.equals(type)){
@@ -60,4 +74,16 @@ abstract public class CheckerTarget<T>{
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CheckerTarget<?> that = (CheckerTarget<?>) o;
+        return Objects.equals(target, that.target) && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(target, type);
+    }
 }

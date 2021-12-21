@@ -403,6 +403,7 @@ public class OreSiService {
                                     ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                     String reference = ((ReferenceLineChecker) lineChecker).getRefType();
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                                    refValues.put((String) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
                                             .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);

@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 public class CheckerDecorator {
-    public static List<ICheckerDecorator> checkerDecorators = List.of(new CodifyDecorator(), new RequiredDecorator());
+    public static List<ICheckerDecorator> checkerDecorators = List.of( new CodifyDecorator(),new GroovyDecorator(), new RequiredDecorator());
 
-    public static ValidationCheckResult check(String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
+    public static <T> ValidationCheckResult check(Map<T, String> values, String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
         if(params == null || params.isEmpty()){
             return DefaultValidationCheckResult.warn(value, null);
         }
         for (ICheckerDecorator checkerDecorator : checkerDecorators) {
-            ValidationCheckResult check = checkerDecorator.check(value, params, target);
+            ValidationCheckResult check = checkerDecorator.check(values, value, params, target);
             if(ValidationLevel.WARN.equals(check.getLevel())){
                 value = check.getMessage();
             }else{

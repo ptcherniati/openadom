@@ -15,6 +15,7 @@ import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.decorators.GroovyDecorator;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
@@ -595,6 +596,13 @@ public class ApplicationConfigurationService {
             }
             ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
             String columns = checker.getParams().get(CheckerFactory.COLUMNS);
+            Set<String> groovyColumn = Optional.ofNullable(checker)
+                    .map(check->check.getParams())
+                    .filter(params->params.containsKey(GroovyDecorator.PARAMS_GROOVY))
+                    .map(params-> params.getOrDefault(CheckerFactory.COLUMNS, ""))
+                    .map(values-> values.split(","))
+                    .map(values-> Arrays.stream(values).collect(Collectors.toSet()))
+                    .orElse(Set.of());
 
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
                 String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
@@ -609,10 +617,16 @@ public class ApplicationConfigurationService {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 else {
                     List<String> columnsList = Stream.of(columns.split(",")).collect(Collectors.toList());
-                    Set<String> availablesColumns = referenceDescription.getColumns().keySet();
+                    Set<String> referencesColumns = referenceDescription.getColumns().keySet();
+                    ImmutableSet availablesColumns = new ImmutableSet.Builder<>()
+                            .addAll(referencesColumns)
+                            .addAll(groovyColumn)
+                            .build();
+
                     List<String> missingColumns = columnsList.stream()
                             .filter(c -> !availablesColumns.contains(c))
                             .collect(Collectors.toList());
+
                     if (!missingColumns.isEmpty()) {
                         builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, availablesColumns, checker.getName(), missingColumns, reference);
                     }
