@@ -2,8 +2,8 @@ version: 0
 application:
   defaultLanguage: fr
   internationalization:
-    fr: SOERE mon SOERE
-    en: SOERE my SOERE
+    fr: SOERE mon SOERE avec dépôt
+    en: SOERE my SOERE with repository
   name: MONSORE
   version: 1
 compositeReferences:
