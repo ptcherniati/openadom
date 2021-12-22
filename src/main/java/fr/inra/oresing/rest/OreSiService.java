@@ -110,7 +110,7 @@ public class OreSiService {
 
     public static void checkNaturalKeySyntax(String keyComponent) {
         if (keyComponent.isEmpty())
-            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturel ne peut être vide. vérifier le nom des colonnes.");
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
         Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
 
@@ -142,7 +142,8 @@ public class OreSiService {
 
         return result;
     }
-    public Application initApplication(Application app){
+
+    public Application initApplication(Application app) {
         authenticationService.resetRole();
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
         org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
@@ -344,7 +345,7 @@ public class OreSiService {
                         .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
                         .collect(MoreCollectors.onlyElement());
                 parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
-                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription)-1).getReference();
+                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
                     String parentHierarchicalKey = escapeKeyComponent(referenceValues.get(parentHierarchicalKeyColumn));
                     return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
@@ -440,9 +441,9 @@ public class OreSiService {
                         }
                         String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
                         String selfHierarchicalReference = refType;
-                        if(isRecursive){
+                        if (isRecursive) {
                             for (int i = 1; i < recursiveNaturalKey.split("\\.").length; i++) {
-                                selfHierarchicalReference+=".".concat(refType);
+                                selfHierarchicalReference += ".".concat(refType);
                             }
                         }
                         String hierarchicalReference =

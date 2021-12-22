@@ -1,0 +1,144 @@
+nom du type de données;nom de la variable;nom de l'unité;min;max
+chambrefluxsol_infraj;FCH4;metre_par_seconde;-300.0;300.0
+chambrefluxsol_infraj;FCH4_gf;micromole_par_mole;-300.0;300.0
+chambrefluxsol_infraj;FCO2;gramme_de_carbonne_par_metre_carre_et_par_mois;-300.0;300.0
+chambrefluxsol_infraj;FCO2_gf;gramme_de_carbonne_par_metre_carre_et_par_mois;-300.0;300.0
+chambrefluxsol_infraj;PPFD;millimole_par_mole;-5.0;2300.0
+chambrefluxsol_infraj;Rh;megajoule_par_metre_et_par_mois;5.0;100.0
+chambrefluxsol_infraj;SWC;megajoule_par_metre_et_par_mois;5.0;50.0
+chambrefluxsol_infraj;Ta;megajoule_par_metre_et_par_mois;-40.0;50.0
+chambrefluxsol_infraj;Ts;megajoule_par_metre_et_par_mois;-40.0;50.0
+chambrefluxsol_j;FCH4;gramme_de_carbonne_par_metre_carre_et_par_mois;-300.0;300.0
+chambrefluxsol_j;FCO2;megajoule_par_metre_et_par_mois;-300.0;300.0
+chambrefluxsol_j;FCO2_gf;kilogramme_par_metre_et_par_seconde;-300.1;300.1
+chambrefluxsol_j;PPFD;litre_par_mois;-5.0;2300.0
+chambrefluxsol_j;Rh;sans_unite;5.0;100.0
+chambrefluxsol_j;SWC;metre_par_seconde;5.0;50.0
+chambrefluxsol_j;Ta;micromole_par_mole;-40.0;50.0
+chambrefluxsol_j;Ts;micromole_par_metre_carre_et_par_seconde;-40.0;50.0
+chambrefluxsol_m;FCH4;micromole_par_metre_carre_et_par_seconde;-300.0;300.0
+chambrefluxsol_m;FCO2;millimole_par_mole;-300.0;300.0
+chambrefluxsol_m;PPFD;watt_par_metre_carre;-5.0;2300.0
+chambrefluxsol_m;Rh;watt_par_metre_carre;5.0;100.0
+chambrefluxsol_m;SWC;micromole_par_metre_carre_et_par_seconde;5.0;50.0
+chambrefluxsol_m;Ta;micromole_par_metre_carre_et_par_seconde;-40.0;50.0
+chambrefluxsol_m;Ts;watt_par_metre_carre;-40.0;50.0
+flux_j;CO2;watt_par_metre_carre;300.0;700.0
+flux_j;FCO2;micromole_par_metre_carre_et_par_seconde;-25.0;70.0
+flux_j;FCO2_gf;watt_par_metre_carre;-25.0;70.0
+flux_j;H2O;kilogramme_par_metre_et_par_seconde;0.0;40.0
+flux_j;H;millimetre_par_demiheure;-25.0;70.0
+flux_j;LE;sans_unite;-25.0;70.0
+flux_j;Sa;metre_par_seconde;-50.0;50.0
+flux_j;Sb;watt_par_metre_carre;-30.0;30.0
+flux_j;Sc;watt_par_metre_carre;-20.0;20.0
+flux_j;Sw;metre;-20.0;20.0
+flux_j;T;metre;0.0;250.0
+flux_j;TR;micromole_par_metre_carre_et_par_jour;-50.0;2500.0
+flux_j;ZL;megajoule_par_metre_et_par_jour;-5000.0;8000.0
+flux_j;u*;megajoule_par_metre_et_par_jour;0.0;5.0
+flux_m;CO2;megajoule_par_metre_et_par_jour;300.0;700.0
+flux_m;FCO2;millimetre;-750.0;2100.0
+flux_m;FCO2_gf;micromole_par_metre_carre_et_par_jour;-750.0;2100.0
+flux_m;H2O;micromole_par_metre_carre_et_par_jour;0.0;40.0
+flux_m;H;micromole_par_metre_carre_et_par_jour;-750.0;2100.0
+flux_m;LE;micromole_par_metre_carre_et_par_jour;-750.0;2100.0
+flux_m;Sa;kilopascal;-1500.0;1500.0
+flux_m;Sb;megajoule_par_metre_et_par_jour;-900.0;900.0
+flux_m;Sc;megajoule_par_metre_et_par_jour;-900.0;900.0
+flux_m;Sw;percentage;-600.0;600.0
+flux_m;T;megajoule_par_metre_et_par_jour;0.0;7500.0
+flux_m;TR;megajoule_par_metre_et_par_jour;-0.6;75.0
+flux_m;ZL;degre_celsius;-5000.0;8000.0
+flux_m;u*;degre_celsius;0.0;5.0
+flux_sh;CO2;degre_celsius;300.0;700.0
+flux_sh;FCO2;degre;-60.0;60.0
+flux_sh;FCO2_gf;metre_par_seconde;-50.0;50.0
+flux_sh;H2O;micromole_par_metre_carre_et_par_mois;0.0;40.0
+flux_sh;H;megajoule_par_metre_et_par_mois;-450.0;800.0
+flux_sh;LE;megajoule_par_metre_et_par_mois;-250.0;1200.0
+flux_sh;NEE;megajoule_par_metre_et_par_mois;-60.0;60.0
+flux_sh;NEE_gf;metre;-60.0;60.0
+flux_sh;Sa;micromole_par_metre_carre_et_par_mois;-200.0;200.0
+flux_sh;Sb;micromole_par_metre_carre_et_par_mois;-200.0;200.0
+flux_sh;Sc;micromole_par_metre_carre_et_par_mois;-100.0;100.0
+flux_sh;Sw;micromole_par_metre_carre_et_par_mois;-200.0;200.0
+flux_sh;T;kilopascal;-1.0;5.7
+flux_sh;TR;megajoule_par_metre_et_par_mois;-5.0;50.0
+flux_sh;ZL;megajoule_par_metre_et_par_mois;-55000.0;8000.0
+flux_sh;u*;percentage;0.0;5.0
+g_infraj;G;megajoule_par_metre_et_par_mois;0.0;0.0
+g_j;G;megajoule_par_metre_et_par_mois;0.0;0.0
+gwd_infraj;GWD;degre_celsius;0.0;0.0
+gwd_j;GWD;degre_celsius;0.0;0.0
+meteo_j;APAR;degre_celsius;-500.0;3000.0
+meteo_j;G;degre;-26.0;26.0
+meteo_j;LWin;metre_par_seconde;5.0;3000.0
+meteo_j;LWout;micromole_par_metre_carre_et_par_seconde;5.0;3000.0
+meteo_j;P;watt_par_metre_carre;0.0;2000.0
+meteo_j;PPFD;watt_par_metre_carre;-500.0;3000.0
+meteo_j;PPFDbc;watt_par_metre_carre;-500.0;3000.0
+meteo_j;PPFDd;millimetre;-500.0;3000.0
+meteo_j;PPFDr;micromole_par_metre_carre_et_par_seconde;-500.0;500.0
+meteo_j;Pa;micromole_par_metre_carre_et_par_seconde;70.0;130.0
+meteo_j;Rd;micromole_par_metre_carre_et_par_seconde;-500.0;500.0
+meteo_j;Rg;micromole_par_metre_carre_et_par_seconde;-500.0;500.0
+meteo_j;Rh;kilopascal;5.0;100.0
+meteo_j;Rn;watt_par_metre_carre;-500.0;3000.0
+meteo_j;Rr;watt_par_metre_carre;0.0;3000.0
+meteo_j;Ta;percentage;-40.0;50.0
+meteo_j;Tarbre;watt_par_metre_carre;-40.0;70.0
+meteo_j;Tc;watt_par_metre_carre;-40.0;50.0
+meteo_j;WD;degre_celsius;0.0;360.0
+meteo_j;WS;degre_celsius;0.0;20.0
+meteo_m;APAR;degre_celsius;0.0;3000.0
+meteo_m;G;degre;-780.0;780.0
+meteo_m;LWin;metre_par_seconde;150.0;1800.0
+meteo_m;LWout;kilopascal;150.0;1800.0
+meteo_m;P;kilopascal;0.0;10.0
+meteo_m;PPFD;percentage;0.0;3000.0
+meteo_m;PPFDbc;percentage;0.0;3000.0
+meteo_m;PPFDd;degre_celsius;0.0;3000.0
+meteo_m;PPFDr;degre_celsius;0.0;3000.0
+meteo_m;Pa;watt_par_metre_carre;70.0;130.0
+meteo_m;Rd;metre;0.0;1500.0
+meteo_m;Rg;kilopascal;0.0;1500.0
+meteo_m;Rh;percentage;5.0;100.0
+meteo_m;Rn;degre_celsius;-600.0;2700.0
+meteo_m;Rr;mégajoule par mètre et par mois;0.0;1500.0
+meteo_m;Ta;degré Celsius;-40.0;50.0
+meteo_m;Tarbre;degré Celsius;-40.0;70.0
+meteo_m;Tc;degré Celsius;-40.0;50.0
+meteo_m;WD;degré;0.0;360.0
+meteo_m;WS;mètre par seconde;0.0;20.0
+meteo_sh;APAR;micromole par mètre carré et par seconde;-50.0;2300.0
+meteo_sh;G;watt par mètre carré;-300.0;300.0
+meteo_sh;LWin;watt par mètre carré;50.0;700.0
+meteo_sh;LWout;watt par mètre carré;50.0;700.0
+meteo_sh;P;millimètre;0.0;200.0
+meteo_sh;PPFD;micromole par mètre carré et par seconde;-10.0;2500.0
+meteo_sh;PPFDbc;micromole par mètre carré et par seconde;-50.0;2300.0
+meteo_sh;PPFDd;micromole par mètre carré et par seconde;-10.0;2300.0
+meteo_sh;PPFDr;micromole par mètre carré et par seconde;-10.0;2300.0
+meteo_sh;Pa;kilopascal;70.0;130.0
+meteo_sh;Rd;watt par mètre carré;-50.0;1200.0
+meteo_sh;Rg;watt par mètre carré;-50.0;1300.0
+meteo_sh;Rh;percentage;5.0;100.0
+meteo_sh;Rn;watt par mètre carré;-200.0;1100.0
+meteo_sh;Rr;watt par mètre carré;-50.0;1200.0
+meteo_sh;Ta;degré Celsius;-40.0;50.0
+meteo_sh;Tarbre;degré Celsius;-40.0;70.0
+meteo_sh;Tc;degré Celsius;-40.0;50.0
+meteo_sh;WD;degré;0.0;360.0
+meteo_sh;WS;mètre par seconde;0.0;20.0
+smp_infraj;SMP;kilopascal;0.0;0.0
+smp_j;SMP;kilopascal;0.0;0.0
+swc_infraj;SWC;percentage;0.0;0.0
+swc_j;SWC;percentage;0.0;0.0
+ts_infraj;Ts;degré Celsius;0.0;0.0
+ts_j;Ts;degré Celsius;0.0;0.0
+cms_m;G;watt par mètre carré;0.0;0.0
+cms_m;GWD;mètre par seconde;0.0;0.0
+cms_m;SMP;kilopascal;0.0;0.0
+cms_m;SWC;percentage;0.0;0.0
+cms_m;Ts;degré Celsius;0.0;0.0

@@ -982,6 +982,38 @@ public class OreSiResourcesTest {
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
+    @Test
+    public void addApplicationFORET_essai() throws Exception {
+        authenticationService.addUserRightCreateApplication(userId);
+        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetEssaiApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "foret_essai.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getForetEssaiReferentielFiles().entrySet()) {
+            log.debug( e.getKey());
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+//        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getFluxMeteoForetEssaiDataResourceName())) {
+//            MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
+//            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
+//                            .file(refFile)
+//                            .cookie(authCookie))
+//                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+//        }
+    }
 
     @Test
     public void addApplicationFORET() throws Exception {
@@ -1006,7 +1038,7 @@ public class OreSiResourcesTest {
         }
 
         // ajout de data
-        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getdFluxMeteoForetDataResourceName())) {
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getFluxMeteoForetDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
                             .file(refFile)

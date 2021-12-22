@@ -1,0 +1,32 @@
+code_key;code_fr;code_en;nom_key;nom_fr;nom_en
+%;%;%;percentage;percentage;percentage
+-;-;-;sans unité;sans unité;unit-less
+J m-2 d-1;J m-2 d-1;J m-2 d-1;joule par mètre carré et par jour;joule par mètre carré et par jour;joule per square meter and per day
+J m-2 m-1;J m-2 m-1;J m-2 m-1;joule par mètre carré et par mois;joule par mètre carré et par mois;joule per square meter and per month
+MJ m-2 d-1;MJ m-2 d-1;MJ m-2 d-1;mégajoule par mètre et par jour;mégajoule par mètre et par jour;megajoule per meter and per day
+MJ m-2 m-1;MJ m-2 m-1;MJ m-2 m-1;mégajoule par mètre et par mois;mégajoule par mètre et par mois;megajoule per meter and per month
+Sw;Sw;Sw;Stockage de chaleur dans la canopée;Stockage de chaleur dans la canopée;Heat storage in the canopy
+W m-2;W m-2;W m-2;watt par mètre carré;watt par mètre carré;watt per square meter
+W m-2 d-1;W m-2 d-1;W m-2 d-1;watt par mètre carré et par jour;watt par mètre carré et par jour;watt per square meter and per day
+W m-2 m-1;W m-2 m-1;W m-2 m-1;watt par mètre carré et par mois;watt par mètre carré et par mois;watt per square meter and per month
+gC m-2 d-1;gC m-2 d-1;gC m-2 d-1;gramme de carbone par mètre carré et par jour;gramme de carbone par mètre carré et par jour;grams of carbon per square meter and per day
+gC m-2 m-1;gC m-2 m-1;gC m-2 m-1;gramme de carbonne par mètre carré et par mois;gramme de carbonne par mètre carré et par mois;grams of carbon per square meter and per month
+kPa;kPa;kPa;kilopascal;kilopascal;kilopascal
+kg m-1 s-1;kg m-1 s-1;kg m-1 s-1;kilogramme par mètre et par seconde;kilogramme par mètre et par seconde;kilogram per meter and per second
+l m-1;l m-1;l m-1;litre par mois;litre par mois;liter per month
+m;m;m;mètre;mètre;meter
+m s-1;m s-1;m s-1;mètre par seconde;mètre par seconde;meter per second
+m3 m-3;m3 m-3;m3 m-3;mètre cube par mètre cube;mètre cube par mètre cube;cubic meter per cubic meter
+ml d-1;ml d-1;ml d-1;millilitre par jour;millilitre par jour;milliliter per day
+ml h-1;ml h-1;ml h-1;millilitre par heure;millilitre par heure;milliliter per hour
+mm;mm;mm;millimètre;millimètre;millimeter
+mm 30min-1;mm 30min-1;mm 30min-1;millimètre par demi-heure;millimètre par demi-heure;millimeter per 30 minutes
+mmol m-2 s-1;mmol m-2 s-1;mmol m-2 s-1;millimole par mètre carré et par seconde;millimole par mètre carré et par seconde;millimole per square meter and per second
+mmol mol-1;mmol mol-1;mmol mol-1;millimole par mole;millimole par mole;millimole per mole
+nmol m-2 s-1;nmol m-2 s-1;nmol m-2 s-1;nanomole par mètre carré et par seconde;nanomole par mètre carré et par seconde;nanomole per square meter and per second
+°;°;°;degré;degré;degree
+°C;°C;°C;degré Celsius;degré Celsius;degree Celsius
+µmol m-2 d-1;µmol m-2 d-1;µmol m-2 d-1;micromole par mètre carré et par jour;micromole par mètre carré et par jour;micromole per square meter and per day
+µmol m-2 m-1;µmol m-2 m-1;µmol m-2 m-1;micromole par mètre carré et par mois;micromole par mètre carré et par mois;micromole per square meter and per month
+µmol m-2 s-1;µmol m-2 s-1;µmol m-2 s-1;micromole par mètre carré et par seconde;micromole par mètre carré et par seconde;micromole per square meter and per second
+µmol mol-1;µmol mol-1;µmol mol-1;micromole par mole;micromole par mole;micromole per mole
