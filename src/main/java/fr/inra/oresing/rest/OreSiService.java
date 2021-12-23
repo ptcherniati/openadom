@@ -8,6 +8,7 @@ import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.*;
+import fr.inra.oresing.checker.decorators.GroovyDecorator;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.StringGroovyExpression;
@@ -754,7 +755,7 @@ public class OreSiService {
                                                                                String timeScopeColumnPattern,
                                                                                BinaryFileDataset binaryFileDataset) {
         return rowWithData -> {
-            Map<VariableComponentKey, String> values = rowWithData.getDatum();
+            Map<VariableComponentKey, String> values =  new HashMap<>(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -767,6 +768,9 @@ public class OreSiService {
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                        if(! lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)){
+                            values.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
+                        }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
                         UUID referenceId = referenceValidationCheckResult.getReferenceId();
