@@ -490,11 +490,11 @@ public class OreSiResourcesTest {
         //on publie 4 fichiers
 
         publishOrDepublish("manche", "plateforme", "scarff", 68, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme",  "scarff", 34, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme",  "nivelle", 34, true, 1, true);
-        publishOrDepublish("manche", "plateforme",  "nivelle", 34, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme", "scarff", 34, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme", "nivelle", 34, true, 1, true);
+        publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 1, true);
         //on publie une autre version
-        String fileUUID = publishOrDepublish("manche", "plateforme",  "nivelle", 34, true, 2, true);
+        String fileUUID = publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 2, true);
         // on supprime l'application publiée
         response = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/applications/monsore/file/" + fileUUID)
                         .cookie(authCookie))
@@ -982,6 +982,7 @@ public class OreSiResourcesTest {
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
+
     @Test
     public void addApplicationFORET_essai() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
@@ -995,7 +996,7 @@ public class OreSiResourcesTest {
 
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getForetEssaiReferentielFiles().entrySet()) {
-            log.debug( e.getKey());
+            log.debug(e.getKey());
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/references/{refType}", e.getKey())
@@ -1006,13 +1007,15 @@ public class OreSiResourcesTest {
         }
 
         // ajout de data
-//        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getFluxMeteoForetEssaiDataResourceName())) {
-//            MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-//            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-//                            .file(refFile)
-//                            .cookie(authCookie))
-//                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-//        }
+        for (String data : fixtures.getFluxMeteoForetEssaiDataResourceName()) {
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(data)) {
+                MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/meteo_semi_horaire_journalier")
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+            }
+        }
     }
 
     @Test

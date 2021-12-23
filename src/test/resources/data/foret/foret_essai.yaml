@@ -20,16 +20,17 @@ references:
       pattern:
         fr: '{nom_fr}'
         en: '{nom_fr}'
-    keyColumns: [nom_fr]
+    keyColumns:
+      - nom_fr
     columns:
-      nom_fr:
-      nom_en:
-      définition_fr:
-      définition_en:
+      nom_fr: null
+      nom_en: null
+      définition_fr: null
+      définition_en: null
   zones_etudes:
     validations:
       typeSitesRef:
-        description: "référence au type de site"
+        description: référence au type de site
         checker:
           name: Reference
           params:
@@ -38,7 +39,7 @@ references:
             required: true
             codify: true
       parent_ref:
-        description: "référence au parent"
+        description: référence au parent
         checker:
           name: Reference
           params:
@@ -47,19 +48,19 @@ references:
             required: false
             codify: true
       date début:
-        description: "date de début"
+        description: date de début
         checker:
           name: Date
           params:
-            pattern : "dd/MM/yyyy"
-            columns  : "date début"
+            pattern: dd/MM/yyyy
+            columns: date début
       date fin:
-        description: "date de fin"
+        description: date de fin
         checker:
           name: Date
           params:
-            pattern : "dd/MM/yyyy"
-            columns  : "date fin"
+            pattern: dd/MM/yyyy
+            columns: date fin
     internationalizationName:
       fr: Zones d'études
       en: Study areas
@@ -71,32 +72,34 @@ references:
       pattern:
         fr: '{nom}'
         en: '{nom}'
-    keyColumns: [parent, nom]
+    keyColumns:
+      - parent
+      - nom
     columns:
-      type de site:
-      nom:
-      description_fr:
-      description_en:
-      date début:
-      date fin:
-      latitude:
-      longitude:
-      surface:
-      altitude:
-      pente:
-      direction pente_fr:
-      direction pente_en:
-      pays_fr:
-      pays_en:
-      région_fr:
-      région_en:
-      temp moyenne:
-      précip moyenne:
-      direction vent_fr:
-      direction vent_en:
-      type foret_fr:
-      type foret_en:
-      parent:
+      type de site: null
+      nom: null
+      description_fr: null
+      description_en: null
+      date début: null
+      date fin: null
+      latitude: null
+      longitude: null
+      surface: null
+      altitude: null
+      pente: null
+      direction pente_fr: null
+      direction pente_en: null
+      pays_fr: null
+      pays_en: null
+      région_fr: null
+      région_en: null
+      temp moyenne: null
+      précip moyenne: null
+      direction vent_fr: null
+      direction vent_en: null
+      type foret_fr: null
+      type foret_en: null
+      parent: null
   themes:
     internationalizationName:
       fr: Thèmes
@@ -112,34 +115,25 @@ references:
       pattern:
         fr: '{nom_key}'
         en: '{nom_key}'
-    keyColumns: [nom_key]
+    keyColumns:
+      - nom_key
     columns:
-      nom_key:
-      nom_fr:
-      nom_en:
-      description_fr:
-      description_en:
+      nom_key: null
+      nom_fr: null
+      nom_en: null
+      description_fr: null
+      description_en: null
   theme_types_de_donnees_par_zone_etudes:
     validations:
-#      checkDatatype:
-#        description: "référence au datatype"
-#        checker:
-#          name: GroovyExpression
-#          params:
-#            expression: >
-#              String datatype = datum.get("nom_key");
-#              return application.getDataType().collect{fr.inra.oresing.rest.OreSiService.escapeKeyComponent(it)}.contains(datatype);
-#            required: true
-#            codify: true
       siteRef:
-        description: "référence au site"
+        description: référence au site
         checker:
           name: Reference
           params:
             refType: zones_etudes
             columns: nom du site
       themeRef:
-        description: "référence au thème"
+        description: référence au thème
         checker:
           name: Reference
           params:
@@ -150,13 +144,16 @@ references:
       en: Thematics and data types by study area
     internationalizationDisplay:
       pattern:
-        fr: "{nom du site}; {nom du thème}; {nom du type de données}"
-        en: "{nom du site}; {nom du thème}; {nom du type de données}"
-    keyColumns: [nom du site, nom du thème, nom du type de données]
+        fr: '{nom du site}; {nom du thème}; {nom du type de données}'
+        en: '{nom du site}; {nom du thème}; {nom du type de données}'
+    keyColumns:
+      - nom du site
+      - nom du thème
+      - nom du type de données
     columns:
-      nom du site:
-      nom du thème:
-      nom du type de données:
+      nom du site: null
+      nom du thème: null
+      nom du type de données: null
   unites:
     internationalizationName:
       fr: Unités
@@ -172,14 +169,15 @@ references:
       pattern:
         fr: '{nom_key} ({code_key})'
         en: '{nom_key} ({code_key})'
-    keyColumns: [nom_key]
+    keyColumns:
+      - nom_key
     columns:
-      code_key:
-      code_fr:
-      code_en:
-      nom_key:
-      nom_fr:
-      nom_en:
+      code_key: null
+      code_fr: null
+      code_en: null
+      nom_key: null
+      nom_fr: null
+      nom_en: null
   variables:
     internationalizationName:
       fr: Variables
@@ -192,15 +190,16 @@ references:
       pattern:
         fr: '{nom}'
         en: '{nom}'
-    keyColumns: [nom]
+    keyColumns:
+      - nom
     columns:
-      nom:
-      definition_fr:
-      definition_en:
+      nom: null
+      definition_fr: null
+      definition_en: null
   variables_par_types_de_donnees:
     validations:
       variableRef:
-        description: "référence à la variable"
+        description: référence à la variable
         checker:
           name: Reference
           params:
@@ -209,7 +208,7 @@ references:
             required: true
             codify: true
       uniteRef:
-        description: "référence à l'unité'"
+        description: référence à l'unité'
         checker:
           name: Reference
           params:
@@ -217,34 +216,26 @@ references:
             columns: nom de l'unité
             required: true
             codify: true
-#      checkDatatype:
-#        description: "référence au datatype"
-#        checker:
-#          name: GroovyExpression
-#          params:
-#            expression: >
-#              String datatype = datum.get("nom_key");
-#              return application.getDataType().collect{fr.inra.oresing.rest.OreSiService.escapeKeyComponent(it)}.contains(datatype);
-#            required: true
-#            codify: true
     internationalizationName:
       fr: Thèmes et types de données par zone d'étude
       en: Thematics and data types by study area
     internationalizationDisplay:
       pattern:
-        fr: "{nom du type de données} : {nom de la variable} ({nom de l'unité})"
-        en: "{nom du type de données} : {nom de la variable} ({nom de l'unité})"
-    keyColumns: [nom du type de données, nom de la variable]
+        fr: '{nom du type de données} : {nom de la variable} ({nom de l''unité})'
+        en: '{nom du type de données} : {nom de la variable} ({nom de l''unité})'
+    keyColumns:
+      - nom du type de données
+      - nom de la variable
     columns:
-      nom du type de données:
-      nom de la variable:
-      nom de l'unité:
-      min:
-      max:
+      nom du type de données: null
+      nom de la variable: null
+      nom de l'unité: null
+      min: null
+      max: null
   traitements:
     validations:
       siteRef:
-        description: "référence au site"
+        description: référence au site
         checker:
           name: Reference
           params:
@@ -266,14 +257,15 @@ references:
       pattern:
         fr: '{libellé_fr}'
         en: '{libellé_fr}'
-    keyColumns: [code]
+    keyColumns:
+      - code
     columns:
-      nom du site:
-      code:
-      libellé_fr:
-      libellé_en:
-      description_fr:
-      description_en:
+      nom du site: null
+      code: null
+      libellé_fr: null
+      libellé_en: null
+      description_fr: null
+      description_en: null
   reference:
     internationalizationName:
       fr: Références
@@ -282,11 +274,12 @@ references:
       pattern:
         fr: '{DOI} ({premier auteur} {année})'
         en: '{DOI} ({premier auteur} {année})'
-    keyColumns: [DOI]
+    keyColumns:
+      - DOI
     columns:
-      DOI:
-      premier auteur:
-      année:
+      DOI: null
+      premier auteur: null
+      année: null
   instruments:
     internationalizationName:
       fr: Instruments
@@ -308,21 +301,22 @@ references:
       pattern:
         fr: '{libellé_fr} ({code})'
         en: '{libellé_fr} ({code})'
-    keyColumns: [code]
+    keyColumns:
+      - code
     columns:
-      code:
-      libellé_fr:
-      libellé_en:
-      informations de calibration_fr:
-      informations de calibration_en:
-      fabricant_fr:
-      fabricant_en:
-      description_fr:
-      description_en:
+      code: null
+      libellé_fr: null
+      libellé_en: null
+      informations de calibration_fr: null
+      informations de calibration_en: null
+      fabricant_fr: null
+      fabricant_en: null
+      description_fr: null
+      description_en: null
   instruments_references:
     validations:
       instrumentRef:
-        description: "référence à l'instrument"
+        description: référence à l'instrument
         checker:
           name: Reference
           params:
@@ -331,7 +325,7 @@ references:
             required: true
             codify: true
       DOIRef:
-        description: "référence à la référence"
+        description: référence à la référence
         checker:
           name: Reference
           params:
@@ -344,16 +338,18 @@ references:
       en: Instruments references
     internationalizationDisplay:
       pattern:
-        fr: "{code de l'instrument} {doi de la référence}"
-        en: "{code de l'instrument} {doi de la référence}"
-    keyColumns: [code de l'instrument,doi de la référence]
+        fr: '{code de l''instrument} {doi de la référence}'
+        en: '{code de l''instrument} {doi de la référence}'
+    keyColumns:
+      - code de l'instrument
+      - doi de la référence
     columns:
-      code de l'instrument:
-      doi de la référence:
+      code de l'instrument: null
+      doi de la référence: null
   instruments_periodes:
     validations:
       instrumentRef:
-        description: "référence à l'instrument"
+        description: référence à l'instrument
         checker:
           name: Reference
           params:
@@ -362,25 +358,24 @@ references:
             required: true
             codify: true
       checkSiteThemeDatatype:
-        description: "référence au siteThemeDatatype"
+        description: référence au siteThemeDatatype
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
             columns: theme_types_de_donnees_par_zone_etudes
             groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de données-Variable").split("-");
-              String site = tab[0].strip();
-              String theme = tab[1].strip();
-              String datatype = tab[2].strip();
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String site = tab[0].strip();
+              String theme = tab[1].strip(); String datatype = tab[2].strip();
               return references["theme_types_de_donnees_par_zone_etudes"]
-              .findAll {it.refValues["nom du site"].equals(site)}
-              .findAll {it.refValues["nom du thème"].equals(theme)}
-              .find {it.refValues["nom du type de données"].equals(datatype)}
+              .findAll {it.refValues["nom du site"].equals(site)} .findAll
+              {it.refValues["nom du thème"].equals(theme)} .find
+              {it.refValues["nom du type de données"].equals(datatype)}
               .naturalKey
             references: theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
-        description: "référence au DataypeVariableUnite"
+        description: référence au DataypeVariableUnite
         checker:
           name: Reference
           params:
@@ -388,42 +383,46 @@ references:
             columns: variables_par_types_de_donnees
             required: true
             groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de données-Variable").split("-");
-              String datatype = fr.inra.oresing.rest.OreSiService.escapeKeyComponent( tab[2].strip());
-              String variable = fr.inra.oresing.rest.OreSiService.escapeKeyComponent( tab[3].strip());
-              return references.find{it.key.equals("variables_par_types_de_donnees")}.value
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String datatype =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[2].strip()); String variable =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[3].strip()); return
+              references.find{it.key.equals("variables_par_types_de_donnees")}.value
                       .findAll {it.refValues["nom de la variable"].equals(variable)}
                       .find {it.refValues["nom du type de données"].equals(datatype)}
                 .naturalKey
             references: variables_par_types_de_donnees
             codify: true
       date début:
-        description: "date de début"
+        description: date de début
         checker:
           name: Date
           params:
-            pattern : "dd/MM/yyyy"
-            columns  : "Date de début"
+            pattern: dd/MM/yyyy
+            columns: Date de début
       date fin:
-        description: "date de fin"
+        description: date de fin
         checker:
           name: Date
           params:
-            pattern : "dd/MM/yyyy"
-            columns  : "Date de fin"
+            pattern: dd/MM/yyyy
+            columns: Date de fin
     internationalizationName:
       fr: Périodes d'application des instruments
       en: Application periods of the instruments
     internationalizationDisplay:
       pattern:
-        fr: "{Nom du Thème-Type de données-Variable}"
-        en: "{Nom du Thème-Type de données-Variable}"
-    keyColumns: [Nom du Thème-Type de données-Variable]
+        fr: '{Nom du Thème-Type de données-Variable}'
+        en: '{Nom du Thème-Type de données-Variable}'
+    keyColumns:
+      - Nom du Thème-Type de données-Variable
     columns:
-        Nom du Thème-Type de données-Variable:
-        Code de l'instrument:
-        Date de début:
-        Date de fin:
+      Nom du Thème-Type de données-Variable: null
+      Code de l'instrument: null
+      Date de début: null
+      Date de fin: null
   methodes:
     internationalizationName:
       fr: Méthodes
@@ -439,17 +438,18 @@ references:
       pattern:
         fr: '{libellé_fr} ({code})'
         en: '{libellé_fr} ({code})'
-    keyColumns: [code]
+    keyColumns:
+      - code
     columns:
-      code:
-      libellé_fr:
-      libellé_en:
-      description_fr:
-      description_en:
+      code: null
+      libellé_fr: null
+      libellé_en: null
+      description_fr: null
+      description_en: null
   methodes_references:
     validations:
       instrumentRef:
-        description: "référence à la méthode"
+        description: référence à la méthode
         checker:
           name: Reference
           params:
@@ -458,7 +458,7 @@ references:
             required: true
             codify: true
       DOIRef:
-        description: "référence à la référence"
+        description: référence à la référence
         checker:
           name: Reference
           params:
@@ -473,14 +473,16 @@ references:
       pattern:
         fr: '{code de la méthode de calcul} {doi de la référence}'
         en: '{code de la méthode de calcul} {doi de la référence}'
-    keyColumns: [code de la méthode de calcul,doi de la référence]
+    keyColumns:
+      - code de la méthode de calcul
+      - doi de la référence
     columns:
-      code de la méthode de calcul:
-      doi de la référence:
+      code de la méthode de calcul: null
+      doi de la référence: null
   methodes_periodes:
     validations:
       methodeRef:
-        description: "référence à la méthode"
+        description: référence à la méthode
         checker:
           name: Reference
           params:
@@ -489,25 +491,24 @@ references:
             required: true
             codify: true
       checkSiteThemeDatatype:
-        description: "référence au siteThemeDatatype"
+        description: référence au siteThemeDatatype
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
             columns: theme_types_de_donnees_par_zone_etudes
             groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de données-Variable").split("-");
-              String site = tab[0].strip();
-              String theme = tab[1].strip();
-              String datatype = tab[2].strip();
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String site = tab[0].strip();
+              String theme = tab[1].strip(); String datatype = tab[2].strip();
               return references["theme_types_de_donnees_par_zone_etudes"]
-              .findAll {it.refValues["nom du site"].equals(site)}
-              .findAll {it.refValues["nom du thème"].equals(theme)}
-              .find {it.refValues["nom du type de données"].equals(datatype)}
+              .findAll {it.refValues["nom du site"].equals(site)} .findAll
+              {it.refValues["nom du thème"].equals(theme)} .find
+              {it.refValues["nom du type de données"].equals(datatype)}
               .naturalKey
             references: theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
-        description: "référence au DataypeVariableUnite"
+        description: référence au DataypeVariableUnite
         checker:
           name: Reference
           params:
@@ -515,42 +516,46 @@ references:
             columns: variables_par_types_de_donnees
             required: true
             groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de données-Variable").split("-");
-              String datatype = fr.inra.oresing.rest.OreSiService.escapeKeyComponent( tab[2].strip());
-              String variable = fr.inra.oresing.rest.OreSiService.escapeKeyComponent( tab[3].strip());
-              return references.find{it.key.equals("variables_par_types_de_donnees")}.value
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String datatype =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[2].strip()); String variable =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[3].strip()); return
+              references.find{it.key.equals("variables_par_types_de_donnees")}.value
                       .findAll {it.refValues["nom de la variable"].equals(variable)}
                       .find {it.refValues["nom du type de données"].equals(datatype)}
                 .naturalKey
             references: variables_par_types_de_donnees
             codify: true
       date début:
-        description: "date de début"
+        description: date de début
         checker:
           name: Date
           params:
-            pattern : "dd/MM/yyyy"
-            columns  : "Date de début"
+            pattern: dd/MM/yyyy
+            columns: Date de début
       date fin:
-        description: "date de fin"
+        description: date de fin
         checker:
           name: Date
           params:
-            pattern : "dd/MM/yyyy"
-            columns  : "Date de fin"
+            pattern: dd/MM/yyyy
+            columns: Date de fin
     internationalizationName:
       fr: Périodes d'application des méthodes
       en: Application periods of methods
     internationalizationDisplay:
       pattern:
-        fr: "{Nom du Thème-Type de données-Variable}"
-        en: "{Nom du Thème-Type de données-Variable}"
-    keyColumns: [Nom du Thème-Type de données-Variable]
+        fr: '{Nom du Thème-Type de données-Variable}'
+        en: '{Nom du Thème-Type de données-Variable}'
+    keyColumns:
+      - Nom du Thème-Type de données-Variable
     columns:
-        Nom du Thème-Type de données-Variable:
-        Code de la méthode de calcul:
-        Date de début:
-        Date de fin:
+      Nom du Thème-Type de données-Variable: null
+      Code de la méthode de calcul: null
+      Date de début: null
+      Date de fin: null
   liste_valeur_ic:
     internationalizationName:
       fr: Liste de valeurs d'informations complémentaires
@@ -564,19 +569,21 @@ references:
         en: libellé d'une valeur_en
     internationalizationDisplay:
       pattern:
-        fr: "{libellé d'une valeur_fr}"
-        en: "{libellé d'une valeur_fr}"
-    keyColumns: [nom de la liste_fr,libellé d'une valeur_fr]
+        fr: '{libellé d''une valeur_fr}'
+        en: '{libellé d''une valeur_fr}'
+    keyColumns:
+      - nom de la liste_fr
+      - libellé d'une valeur_fr
     columns:
-        nom de la liste_fr:
-        nom de la liste_en:
-        libellé d'une valeur_fr:
-        libellé d'une valeur_en:
-        note de la valeur:
+      nom de la liste_fr: null
+      nom de la liste_en: null
+      libellé d'une valeur_fr: null
+      libellé d'une valeur_en: null
+      note de la valeur: null
   informations_complementaires:
     validations:
       methodeRef:
-        description: "référence à la liste de valeurs d'informations complémentaires"
+        description: référence à la liste de valeurs d'informations complémentaires
         checker:
           name: Reference
           params:
@@ -591,36 +598,41 @@ references:
         en: description de l'information complémentaire_en
     internationalizationDisplay:
       pattern:
-        fr: "{nom de l'information complémentaire} ({description de l'information complémentaire_fr})"
-        en: "{nom de l'information complémentaire} ({description de l'information complémentaire_fr}"
-    keyColumns: [nom de l'information complémentaire,nom de la liste de valeurs informations complémentaires]
+        fr: >-
+          {nom de l'information complémentaire} ({description de l'information
+          complémentaire_fr})
+        en: >-
+          {nom de l'information complémentaire} ({description de l'information
+          complémentaire_fr}
+    keyColumns:
+      - nom de l'information complémentaire
+      - nom de la liste de valeurs informations complémentaires
     columns:
-      nom de l'information complémentaire:
-      description de l'information complémentaire_fr:
-      description de l'information complémentaire_en:
-      nom de la liste de valeurs informations complémentaires:
+      nom de l'information complémentaire: null
+      description de l'information complémentaire_fr: null
+      description de l'information complémentaire_en: null
+      nom de la liste de valeurs informations complémentaires: null
   ic_site_theme_dataype_variable:
     validations:
       checkSiteThemeDatatype:
-        description: "référence au siteThemeDatatype"
+        description: référence au siteThemeDatatype
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
             columns: theme_types_de_donnees_par_zone_etudes
             groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de données-Variable").split("-");
-              String site = tab[0].strip();
-              String theme = tab[1].strip();
-              String datatype = tab[2].strip();
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String site = tab[0].strip();
+              String theme = tab[1].strip(); String datatype = tab[2].strip();
               return references["theme_types_de_donnees_par_zone_etudes"]
-              .findAll {it.refValues["nom du site"].equals(site)}
-              .findAll {it.refValues["nom du thème"].equals(theme)}
-              .find {it.refValues["nom du type de données"].equals(datatype)}
+              .findAll {it.refValues["nom du site"].equals(site)} .findAll
+              {it.refValues["nom du thème"].equals(theme)} .find
+              {it.refValues["nom du type de données"].equals(datatype)}
               .naturalKey
             references: theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
-        description: "référence au DataypeVariableUnite"
+        description: référence au DataypeVariableUnite
         checker:
           name: Reference
           params:
@@ -628,227 +640,581 @@ references:
             columns: variables_par_types_de_donnees
             required: true
             groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de données-Variable").split("-");
-              String datatype = fr.inra.oresing.rest.OreSiService.escapeKeyComponent( tab[2].strip());
-              String variable = fr.inra.oresing.rest.OreSiService.escapeKeyComponent( tab[3].strip());
-              return references.find{it.key.equals("variables_par_types_de_donnees")}.value
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String datatype =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[2].strip()); String variable =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[3].strip()); return
+              references.find{it.key.equals("variables_par_types_de_donnees")}.value
                       .findAll {it.refValues["nom de la variable"].equals(variable)}
                       .find {it.refValues["nom du type de données"].equals(datatype)}
                 .naturalKey
             references: variables_par_types_de_donnees
             codify: true
     internationalizationName:
-      fr: Informations complémentaires par site, thème, type de données et variable
-      en: Complement information for site, theme, datatype and variable
+      fr: >-
+        Informations complémentaires par site, thème, type de données et
+        variable
+      en: 'Complement information for site, theme, datatype and variable'
     internationalizationDisplay:
       pattern:
-        fr: "{Nom du Thème-Type de données-Variable} {nom de l'information complémentaire}"
-        en: "{Nom du Thème-Type de données-Variable} {nom de l'information complémentaire}"
-    keyColumns: [Nom du Thème-Type de données-Variable,nom de l'information complémentaire]
+        fr: >-
+          {Nom du Thème-Type de données-Variable} {nom de l'information
+          complémentaire}
+        en: >-
+          {Nom du Thème-Type de données-Variable} {nom de l'information
+          complémentaire}
+    keyColumns:
+      - Nom du Thème-Type de données-Variable
+      - nom de l'information complémentaire
     columns:
-      Nom du Thème-Type de données-Variable:
-      nom de l'information complémentaire:
+      Nom du Thème-Type de données-Variable: null
+      nom de l'information complémentaire: null
   types_fichiers:
     internationalizationName:
       fr: Type de fichiers
       en: Files' type<
     internationalizationDisplay:
       pattern:
-        fr: "{nom}"
-        en: "{nom}"
-    keyColumns: [nom]
+        fr: '{nom}'
+        en: '{nom}'
+    keyColumns:
+      - nom
     columns:
-      nom:
-      description:
-
+      nom: null
+      description: null
 dataTypes:
-  flux_meteo_dataResult:
+  meteo_semi_horaire_journalier:
     authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
       dataGroups:
-        reference:
+        referentiel:
+          label: "Référentiel"
           data:
             - localization
-            - Date
-          label: "Reference"
-        variable:
-          label: "Variable"
+        informations:
+          label: "Informations"
           data:
-            - Ta
-            - Tarbre
-            - Rr
-            - PPFDr
-            - Pa
-            - Rh
-            - PPFDbc
-            - G
-            - WD
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
             - P
-            - Rn
-            - WS
-            - LWin
-            - PPFDd
-            - LWout
             - Rg
+            - Rr
+            - Lwin
+            - Lwout
+            - Rn
+            - Rd
             - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
             - APAR
-      authorizationScopes:
-        authorization_zoneEtude:
-          component: zones_etudes
-          variable: localization
-      timeScope:
-        component: day
-        variable: Date
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
     data:
-      Date:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(datumByVariableAndComponent.localization.zones_etudes_parent);
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  return references.find{it.key.equals("zones_etudes")}.value
+                  .findAll {it.refValues["parent"].equals(parent)}
+                  .find {it.refValues["nom"].equals(nom)}
+                  .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "meteorologie"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codufy: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+      date:
         components:
           day:
             checker:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-          time:
-      localization:
+      P:
         components:
-          zones_etudes:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "millimètre"
             checker:
               name: Reference
               params:
-                refType: zones_etudes
-      Ta:
-        components:
-          °C:
-      Tarbre:
-        components:
-          °C:
-      Rr:
-        components:
-          MJ m-2 m-1:
-      PPFDr:
-        components:
-          µmol m-2 m-1:
-      Pa:
-        components:
-          kPa:
-      Rh:
-        components:
-          _%:
-      PPFDbc:
-        components:
-          µmol m-2 m-1:
-      G:
-        components:
-          MJ m-2 m-1:
-      WD:
-        components:
-          °:
-      P:
-        components:
-          m:
-      Rn:
-        components:
-          MJ m-2 m-1:
-      WS:
-        components:
-          m s-1:
-      LWin:
-        components:
-          MJ m-2 m-1:
-      PPFDd:
-        components:
-          µmol m-2 m-1:
-      LWout:
-        components:
-          MJ m-2 m-1:
+                refType: unites
+                required: true
+                codify: true
       Rg:
         components:
-          MJ m-2 m-1:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwin:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwout:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rn:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
       PPFD:
         components:
-          µmol m-2 m-1:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDbc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
       APAR:
         components:
-          µmol m-2 m-1:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Pa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tarbre:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      G:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rh:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WS:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
     format:
-      headerLine: 2
-      firstRowLine: 4
-      columns:
-        - header: "site"
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
           boundTo:
             variable: localization
             component: zones_etudes
-        - header: "date"
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
           boundTo:
-            variable: Date
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
             component: day
-        - header: "Ta"
-          boundTo:
-            variable: Ta
-            component: °C
-        - header: "Tarbre"
-          boundTo:
-            variable: Tarbre
-            component: °C
-        - header: "Rr"
-          boundTo:
-            variable: Rr
-            component: MJ m-2 m-1
-        - header: "PPFDr"
-          boundTo:
-            variable: PPFDr
-            component: µmol m-2 m-1
-        - header: "Pa"
-          boundTo:
-            variable: Pa
-            component: kPa
-        - header: "Rh"
-          boundTo:
-            variable: Rh
-            component: _%
-        - header: "PPFDbc"
-          boundTo:
-            variable: PPFDbc
-            component: µmol m-2 m-1
-        - header: "G"
-          boundTo:
-            variable: G
-            component: MJ m-2 m-1
-        - header: "WD"
-          boundTo:
-            variable: WD
-            component: °
-        - header: "P"
+        - header: P
           boundTo:
             variable: P
-            component: m
-        - header: "Rn"
+            component: value
+        - header: Rr
           boundTo:
-            variable: Rn
-            component: MJ m-2 m-1
-        - header: "WS"
-          boundTo:
-            variable: WS
-            component: m s-1
-        - header: "LWin"
-          boundTo:
-            variable: LWin
-            component: MJ m-2 m-1
-        - header: "PPFDd"
-          boundTo:
-            variable: PPFDd
-            component: µmol m-2 m-1
-        - header: "LWout"
-          boundTo:
-            variable: LWout
-            component: MJ m-2 m-1
-        - header: "Rg"
+            variable: Rr
+            component: value
+        - header: Rg
           boundTo:
             variable: Rg
-            component: MJ m-2 m-1
-        - header: "PPFD"
+            component: value
+        - header: Lwin
+          boundTo:
+            variable: Lwin
+            component: value
+        - header: Lwout
+          boundTo:
+            variable: Lwout
+            component: value
+        - header: Rn
+          boundTo:
+            variable: Rn
+            component: value
+        - header: Rd
+          boundTo:
+            variable: Rd
+            component: value
+        - header: PPFD
           boundTo:
             variable: PPFD
-            component: µmol m-2 m-1
-        - header: "APAR"
+            component: value
+        - header: PPFDd
+          boundTo:
+            variable: PPFDd
+            component: value
+        - header: PPFDr
+          boundTo:
+            variable: PPFDr
+            component: value
+        - header: PPFDbc
+          boundTo:
+            variable: PPFDbc
+            component: value
+        - header: APAR
           boundTo:
             variable: APAR
-            component: µmol m-2 m-1
+            component: value
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Pa
+          boundTo:
+            variable: Pa
+            component: value
+        - header: Tc
+          boundTo:
+            variable: Tc
+            component: value
+        - header: Tarbre
+          boundTo:
+            variable: Tarbre
+            component: value
+        - header: G
+          boundTo:
+            variable: G
+            component: value
+        - header: Rh
+          boundTo:
+            variable: Rh
+            component: value
+        - header: WD
+          boundTo:
+            variable: WD
+            component: value
+        - header: WS
+          boundTo:
+            variable: WS
+            component: value

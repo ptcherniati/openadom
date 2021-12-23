@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -646,8 +647,15 @@ public class Fixtures {
         return "/data/foret/flux_meteo_dataResult.csv";
     }
 
-    public String getFluxMeteoForetEssaiDataResourceName() {
-        return "/data/foret/flux_meteo_dataResult.csv";
+    public List<String> getFluxMeteoForetEssaiDataResourceName() {
+        return List.of(
+                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv"
+        );
+        /*return List.of(
+                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
+                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-03-2012.csv",
+                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-12-2013.csv"
+        );*/
     }
 
     enum Application {
