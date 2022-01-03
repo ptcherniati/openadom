@@ -142,11 +142,11 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
+    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file, @RequestParam("comment") String comment) throws IOException, BadApplicationConfigurationException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        UUID result = service.changeApplicationConfiguration(nameOrId, file);
+        UUID result = service.changeApplicationConfiguration(nameOrId, file, comment);
         String uri = UriUtils.encodePath(String.format("/applications/%s/configuration/%s", nameOrId, result), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }

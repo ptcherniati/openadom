@@ -19,6 +19,7 @@ public class Configuration {
     private String defaultLanguage;
     private InternationalizationMap internationalization;
     private int version;
+    private String comment;
     private ApplicationDescription application;
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();

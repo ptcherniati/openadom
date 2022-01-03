@@ -118,7 +118,7 @@ public class OreSiService {
         Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(OreSiService::checkNaturalKeySyntax);
     }
 
-    protected UUID storeFile(Application app, MultipartFile file) throws IOException {
+    protected UUID storeFile(Application app, MultipartFile file, String commentApplication) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
@@ -128,6 +128,7 @@ public class OreSiService {
         binaryFile.setData(file.getBytes());
         BinaryFileInfos binaryFileInfos = new BinaryFileInfos();
         binaryFile.setParams(binaryFileInfos);
+        binaryFile.getParams().setComment(commentApplication);
         binaryFile.getParams().createuser = request.getRequestClient().getId();
         binaryFile.getParams().createdate = LocalDateTime.now().toString();
         UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
@@ -138,7 +139,7 @@ public class OreSiService {
 
         Application app = new Application();
         app.setName(name);
-        app.setComment(comment);
+        //app.setComment(comment);
 
         authenticationService.resetRole();
 
@@ -187,21 +188,22 @@ public class OreSiService {
 
         authenticationService.setRoleForClient();
         UUID result = repo.application().store(app);
-        changeApplicationConfiguration(app, configurationFile);
+        changeApplicationConfiguration(app, configurationFile, comment);
 
         relationalService.createViews(app.getName());
 
         return result;
     }
 
-    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         relationalService.dropViews(nameOrId);
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
-        UUID uuid = changeApplicationConfiguration(app, configurationFile);
+        UUID uuid = changeApplicationConfiguration(app, configurationFile, comment);
         Configuration newConfiguration = app.getConfiguration();
+        newConfiguration.setComment(comment);
         int oldVersion = oldConfiguration.getApplication().getVersion();
         int newVersion = newConfiguration.getApplication().getVersion();
         Preconditions.checkArgument(newVersion > oldVersion, "l'application " + app.getName() + " est déjà dans la version " + oldVersion);
@@ -298,14 +300,14 @@ public class OreSiService {
                 .forEach(validateRow);
     }
 
-    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, String commentApplication) throws IOException, BadApplicationConfigurationException {
         ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
-        UUID confId = storeFile(app, configurationFile);
+        UUID confId = storeFile(app, configurationFile, commentApplication);
         app.setConfigFile(confId);
         repo.application().store(app);
         return confId;
@@ -313,7 +315,7 @@ public class OreSiService {
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file);
+        UUID fileId = storeFile(app, file, app.getComment());
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
@@ -689,7 +691,7 @@ public class OreSiService {
                 .orElseGet(() -> {
                     UUID fileId = null;
                     try {
-                        fileId = storeFile(app, file);
+                        fileId = storeFile(app, file, app.getComment());
                     } catch (IOException e) {
                         return null;
                     }
