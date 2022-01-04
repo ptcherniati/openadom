@@ -1007,10 +1007,10 @@ public class OreSiResourcesTest {
         }
 
         // ajout de data
-        for (String data : fixtures.getFluxMeteoForetEssaiDataResourceName()) {
-            try (InputStream refStream = fixtures.getClass().getResourceAsStream(data)) {
+        for (Map.Entry<String, String> entry : fixtures.getFluxMeteoForetEssaiDataResourceName().entrySet()) {
+            try (InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/meteo_semi_horaire_journalier")
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/"+entry.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());

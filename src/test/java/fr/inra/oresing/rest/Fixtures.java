@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -647,14 +646,21 @@ public class Fixtures {
         return "/data/foret/flux_meteo_dataResult.csv";
     }
 
-    public List<String> getFluxMeteoForetEssaiDataResourceName() {
-        return List.of(
-                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv"
+    public Map<String, String> getFluxMeteoForetEssaiDataResourceName() {
+        return Map.of(
+                "meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
+                "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv",
+                "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"
         );
-        /*return List.of(
-                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
-                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-03-2012.csv",
-                "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-12-2013.csv"
+        /*return Map.of(
+                "meteo_j","/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
+                "meteo_j","/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-03-2012.csv",
+                "meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-12-2013.csv"
+                "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv"
+               "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-03-2008_31-03-2008.csv"
+               "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_31-12-2009.csv"",
+                "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"",
+                "meteo_m", "/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_12-2013.csv"
         );*/
     }
 

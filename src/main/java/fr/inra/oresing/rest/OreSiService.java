@@ -724,14 +724,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        String timeScopeColumnPattern = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
-                .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
-                .collect(MoreCollectors.onlyElement())
-                .getPattern();
-
-        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, timeScopeColumnPattern, binaryFileDataset);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
     }
 
     /**
@@ -752,8 +745,14 @@ public class OreSiService {
                                                                                List<CsvRowValidationCheckResult> errors,
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
-                                                                               String timeScopeColumnPattern,
                                                                                BinaryFileDataset binaryFileDataset) {
+        DateLineChecker timeScopeDateLineChecker = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                .map(lineChecker -> (DateLineChecker) lineChecker)
+                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .collect(MoreCollectors.onlyElement());
+
+
         return rowWithData -> {
             Map<VariableComponentKey, String> values =  new HashMap<>(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
@@ -788,7 +787,7 @@ public class OreSiService {
             }
 
             String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
-            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
+            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {

@@ -685,7 +685,563 @@ references:
       nom: null
       description: null
 dataTypes:
-  meteo_semi_horaire_journalier:
+  meteo_sh:
+    internationalizationName:
+      fr: Météorologie semi horaire
+      en: Meteorology half hourly
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - P
+            - Rg
+            - Rr
+            - LWin
+            - LWout
+            - Rn
+            - Rd
+            - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
+            - APAR
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(datumByVariableAndComponent.localization.zones_etudes_parent);
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  return references.find{it.key.equals("zones_etudes")}.value
+                  .findAll {it.refValues["parent"].equals(parent)}
+                  .find {it.refValues["nom"].equals(nom)}
+                  .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "meteorologie"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: semi-horaire
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "30 MINUTES"
+      P:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "millimètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rg:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LWin:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LWout:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rn:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDbc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      APAR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Pa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tarbre:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      G:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rh:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WS:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: time
+          boundTo:
+            variable: date
+            component: time
+        - header: P
+          boundTo:
+            variable: P
+            component: value
+        - header: Rr
+          boundTo:
+            variable: Rr
+            component: value
+        - header: Rg
+          boundTo:
+            variable: Rg
+            component: value
+        - header: LWin
+          boundTo:
+            variable: LWin
+            component: value
+        - header: LWout
+          boundTo:
+            variable: LWout
+            component: value
+        - header: Rn
+          boundTo:
+            variable: Rn
+            component: value
+        - header: Rd
+          boundTo:
+            variable: Rd
+            component: value
+        - header: PPFD
+          boundTo:
+            variable: PPFD
+            component: value
+        - header: PPFDd
+          boundTo:
+            variable: PPFDd
+            component: value
+        - header: PPFDr
+          boundTo:
+            variable: PPFDr
+            component: value
+        - header: PPFDbc
+          boundTo:
+            variable: PPFDbc
+            component: value
+        - header: APAR
+          boundTo:
+            variable: APAR
+            component: value
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Pa
+          boundTo:
+            variable: Pa
+            component: value
+        - header: Tc
+          boundTo:
+            variable: Tc
+            component: value
+        - header: Tarbre
+          boundTo:
+            variable: Tarbre
+            component: value
+        - header: G
+          boundTo:
+            variable: G
+            component: value
+        - header: Rh
+          boundTo:
+            variable: Rh
+            component: value
+        - header: WD
+          boundTo:
+            variable: WD
+            component: value
+        - header: WS
+          boundTo:
+            variable: WS
+            component: value
+  meteo_j:
+    internationalizationName:
+      fr: Météorologie journalière
+      en: Meteorology daily
     authorization:
       authorizationScopes:
         localization:
@@ -770,7 +1326,7 @@ dataTypes:
               params:
                 pattern: journalier
                 required: true
-                codufy: true
+                codify: true
           start date:
             checker:
               name: Date
@@ -1138,6 +1694,586 @@ dataTypes:
           boundTo:
             variable: date
             component: day
+        - header: P
+          boundTo:
+            variable: P
+            component: value
+        - header: Rr
+          boundTo:
+            variable: Rr
+            component: value
+        - header: Rg
+          boundTo:
+            variable: Rg
+            component: value
+        - header: Lwin
+          boundTo:
+            variable: Lwin
+            component: value
+        - header: Lwout
+          boundTo:
+            variable: Lwout
+            component: value
+        - header: Rn
+          boundTo:
+            variable: Rn
+            component: value
+        - header: Rd
+          boundTo:
+            variable: Rd
+            component: value
+        - header: PPFD
+          boundTo:
+            variable: PPFD
+            component: value
+        - header: PPFDd
+          boundTo:
+            variable: PPFDd
+            component: value
+        - header: PPFDr
+          boundTo:
+            variable: PPFDr
+            component: value
+        - header: PPFDbc
+          boundTo:
+            variable: PPFDbc
+            component: value
+        - header: APAR
+          boundTo:
+            variable: APAR
+            component: value
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Pa
+          boundTo:
+            variable: Pa
+            component: value
+        - header: Tc
+          boundTo:
+            variable: Tc
+            component: value
+        - header: Tarbre
+          boundTo:
+            variable: Tarbre
+            component: value
+        - header: G
+          boundTo:
+            variable: G
+            component: value
+        - header: Rh
+          boundTo:
+            variable: Rh
+            component: value
+        - header: WD
+          boundTo:
+            variable: WD
+            component: value
+        - header: WS
+          boundTo:
+            variable: WS
+            component: value
+  meteo_m:
+    internationalizationName:
+      fr: Météorologie mensuelle
+      en: Meteorology monthly
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - P
+            - Rg
+            - Rr
+            - Lwin
+            - Lwout
+            - Rn
+            - Rd
+            - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
+            - APAR
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: month
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - P
+            - Rg
+            - Rr
+            - Lwin
+            - Lwout
+            - Rn
+            - Rd
+            - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
+            - APAR
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(datumByVariableAndComponent.localization.zones_etudes_parent);
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  return references.find{it.key.equals("zones_etudes")}.value
+                  .findAll {it.refValues["parent"].equals(parent)}
+                  .find {it.refValues["nom"].equals(nom)}
+                  .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "meteorologie"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: mensuel
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          comment: null
+      date:
+        components:
+          month:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+      P:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rg:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwin:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwout:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rn:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDbc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      APAR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Pa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tarbre:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      G:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rh:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WS:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: month
         - header: P
           boundTo:
             variable: P
