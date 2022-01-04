@@ -1,14 +1,14 @@
 nom du type de données;nom de la variable;nom de l'unité;min;max
 chambrefluxsol_infraj;FCH4;metre_par_seconde;-300.0;300.0
 chambrefluxsol_infraj;FCH4_gf;micromole_par_mole;-300.0;300.0
-chambrefluxsol_infraj;FCO2;gramme_de_carbonne_par_metre_carre_et_par_mois;-300.0;300.0
-chambrefluxsol_infraj;FCO2_gf;gramme_de_carbonne_par_metre_carre_et_par_mois;-300.0;300.0
+chambrefluxsol_infraj;FCO2;gramme_de_carbone_par_metre_carre_et_par_mois;-300.0;300.0
+chambrefluxsol_infraj;FCO2_gf;gramme_de_carbone_par_metre_carre_et_par_mois;-300.0;300.0
 chambrefluxsol_infraj;PPFD;millimole_par_mole;-5.0;2300.0
 chambrefluxsol_infraj;Rh;megajoule_par_metre_et_par_mois;5.0;100.0
 chambrefluxsol_infraj;SWC;megajoule_par_metre_et_par_mois;5.0;50.0
 chambrefluxsol_infraj;Ta;megajoule_par_metre_et_par_mois;-40.0;50.0
 chambrefluxsol_infraj;Ts;megajoule_par_metre_et_par_mois;-40.0;50.0
-chambrefluxsol_j;FCH4;gramme_de_carbonne_par_metre_carre_et_par_mois;-300.0;300.0
+chambrefluxsol_j;FCH4;gramme_de_carbone_par_metre_carre_et_par_mois;-300.0;300.0
 chambrefluxsol_j;FCO2;megajoule_par_metre_et_par_mois;-300.0;300.0
 chambrefluxsol_j;FCO2_gf;kilogramme_par_metre_et_par_seconde;-300.1;300.1
 chambrefluxsol_j;PPFD;litre_par_mois;-5.0;2300.0
