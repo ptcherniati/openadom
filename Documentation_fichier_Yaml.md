@@ -409,6 +409,33 @@ Dans *dataGroups* nous regrouperont les données par type de données.
         component: datetime
 ```
 
+Les patterns de timescope valides sont :
+- dd/MM/yyyy HH:mm:ss
+- dd/MM/yyyy
+- MM/yyyy
+- yyyy
+Vous pouvez préciser la durée du timescope dans le params "duration" au format:
+- ([0-9]*) (NANOS|MICROS|MILLIS|SECONDS|MINUTES|HOURS|HALF_DAYS|DAYS|WEEKS|MONTHS|YEARS
+
+
+``` yaml
+    authorization:
+      ...
+      timeScope:
+        variable: date
+        component: datetime
+        
+    data:
+      date:
+        components:
+          datetime:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
+                duration: 30 MINUTES
+```
+
 <span style="color: orange">*authorization* est indenté de 2. *dataGroups*, *authorizationScopes* et *timeScope* sont 
 indenté de 3.</span>
 

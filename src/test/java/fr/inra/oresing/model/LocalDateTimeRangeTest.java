@@ -1,9 +1,11 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.checker.DateLineChecker;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Year;
+import java.util.Map;
 
 public class LocalDateTimeRangeTest {
 
@@ -23,5 +25,26 @@ public class LocalDateTimeRangeTest {
             LocalDateTimeRange parsed = LocalDateTimeRange.parseSql(sql);
             Assert.assertEquals(localDateTimeRange, parsed);
         }
+    }
+    @Test
+    public void testDayPattern() {
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", Map.of(DateLineChecker.PARAM_DURATION, "2 MONTHS")));
+        Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
+         range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", null));
+        Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
+    }
+    @Test
+    public void testSemiHourlyPattern() {
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", Map.of(DateLineChecker.PARAM_DURATION, "30 MINUTES")));
+        Assert.assertEquals("[\"2020-01-01 01:30:00\",\"2020-01-01 02:00:00\")", range.toSqlExpression());
+         range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", null));
+        Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
+    }
+    @Test
+    public void testMounthPattern() {
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", Map.of(DateLineChecker.PARAM_DURATION, "2 MONTHS")));
+        Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
+         range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", null));
+        Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-02-01 00:00:00\")", range.toSqlExpression());
     }
 }

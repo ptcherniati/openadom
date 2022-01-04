@@ -1,34 +1,42 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.*;
+import fr.inra.oresing.checker.DateLineChecker;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
  * A vocation a représenter une donnée en base stockée sous forme de tsrange.
- *
+ * <p>
  * https://www.postgresql.org/docs/current/rangetypes.html
  */
 @Value
 public class LocalDateTimeRange {
 
-    Range<LocalDateTime> range;
-    public LocalDateTimeRange(List<LocalDateTime> dates) {
-        this.range = LocalDateTimeRange.between(dates.get(0), dates.get(1)).getRange();
-    }
-
-    public LocalDateTimeRange(Range<LocalDateTime> range) {
-        this.range = range;
-    }
-
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     private static final ImmutableSet<StringToLocalDateTimeRangeConverter> ALL_CONVERTERS = ImmutableSet.of(
+            new StringToLocalDateTimeRangeConverter() {
+                @Override
+                public String getPattern() {
+                    return "MM/yyyy";
+                }
+
+                @Override
+                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
+                    String pattern = "01/" + str;
+                    final LocalDate date = LocalDate.parse(pattern, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    if (dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)) {
+                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                    }
+                    return LocalDateTimeRange.between(LocalDate.from(date.atStartOfDay()), date.plus(1L, ChronoUnit.MONTHS));
+                }
+            },
             new StringToLocalDateTimeRangeConverter() {
                 @Override
                 public String getPattern() {
@@ -36,7 +44,12 @@ public class LocalDateTimeRange {
                 }
 
                 @Override
-                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter) {
+                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
+                    if (dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)) {
+                        String pattern = "01/01/" + str;
+                        final LocalDate date = LocalDate.parse(pattern, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                    }
                     return LocalDateTimeRange.forYear(Year.parse(str, dateTimeFormatter));
                 }
             },
@@ -47,7 +60,11 @@ public class LocalDateTimeRange {
                 }
 
                 @Override
-                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter) {
+                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
+                    if (dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)) {
+                        final LocalDate date = LocalDate.parse(str, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                    }
                     return LocalDateTimeRange.forDay(LocalDate.parse(str, dateTimeFormatter));
                 }
             },
@@ -58,16 +75,28 @@ public class LocalDateTimeRange {
                 }
 
                 @Override
-                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter) {
-                    return LocalDateTimeRange.forDay(LocalDate.parse(str, dateTimeFormatter));
+                public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
+                    final LocalDate startDate = LocalDate.parse(str, dateTimeFormatter);
+                    if(dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)){
+                        final LocalDateTime date = LocalDateTime.parse(str, DateTimeFormatter.ofPattern(getPattern()));
+                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                    }
+                    return LocalDateTimeRange.forDay(startDate);
                 }
             }
     );
-
     private static final ImmutableMap<String, StringToLocalDateTimeRangeConverter> CONVERTER_PER_PATTERNS =
             Maps.uniqueIndex(ALL_CONVERTERS, StringToLocalDateTimeRangeConverter::getPattern);
-
     public static final ImmutableSet<String> KNOWN_PATTERNS = CONVERTER_PER_PATTERNS.keySet();
+    Range<LocalDateTime> range;
+
+    public LocalDateTimeRange(List<LocalDateTime> dates) {
+        this.range = LocalDateTimeRange.between(dates.get(0), dates.get(1)).getRange();
+    }
+
+    public LocalDateTimeRange(Range<LocalDateTime> range) {
+        this.range = range;
+    }
 
     public static LocalDateTimeRange always() {
         return new LocalDateTimeRange(Range.all());
@@ -179,8 +208,17 @@ public class LocalDateTimeRange {
         return KNOWN_PATTERNS;
     }
 
-    public static LocalDateTimeRange parse(String value, String pattern) {
-        return CONVERTER_PER_PATTERNS.get(pattern).toLocalDateTimeRange(value);
+    public static LocalDateTimeRange parse(String value, DateLineChecker pattern) {
+        return CONVERTER_PER_PATTERNS.get(pattern.getPattern()).toLocalDateTimeRange(value, pattern);
+    }
+
+    private static LocalDateTime parseBound(String boundString) {
+        String stripped = StringUtils.strip(boundString, "()[]\"");
+        return LocalDateTime.parse(stripped, SQL_TIMESTAMP_DATE_TIME_FORMATTER);
+    }
+
+    private static String formatBound(LocalDateTime bound) {
+        return "\"" + SQL_TIMESTAMP_DATE_TIME_FORMATTER.format(bound) + "\"";
     }
 
     public String toSqlExpression() {
@@ -216,23 +254,15 @@ public class LocalDateTimeRange {
         return sqlExpression;
     }
 
-    private static LocalDateTime parseBound(String boundString) {
-        String stripped = StringUtils.strip(boundString, "()[]\"");
-        return LocalDateTime.parse(stripped, SQL_TIMESTAMP_DATE_TIME_FORMATTER);
-    }
-
-    private static String formatBound(LocalDateTime bound) {
-        return "\"" + SQL_TIMESTAMP_DATE_TIME_FORMATTER.format(bound) + "\"";
-    }
-
     interface StringToLocalDateTimeRangeConverter {
 
         String getPattern();
 
-        default LocalDateTimeRange toLocalDateTimeRange(String str) {
-            return toLocalDateTimeRange(str, DateTimeFormatter.ofPattern(getPattern()));
+        default LocalDateTimeRange toLocalDateTimeRange(String str, DateLineChecker dateLineChecker) {
+            return toLocalDateTimeRange(str, DateTimeFormatter.ofPattern(getPattern()), dateLineChecker);
         }
 
-        LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter);
+        LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker);
     }
+
 }
