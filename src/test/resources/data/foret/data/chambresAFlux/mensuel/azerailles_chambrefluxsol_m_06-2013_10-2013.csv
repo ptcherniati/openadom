@@ -5,7 +5,7 @@ date de debut;06/2013;;;;
 date de fin;10/2013;;;;
 commentaire;;;;;
 ;;;;;
-date;code du traitement;no de la chambre ;FCO2;FCO2_sd;FCO2_nbval
+date;code du traitement;no de la chambre;FCO2;FCO2_sd;FCO2_nbval
 mm/yyyy;;;µmol m-2 s-1;;
 valeur min;;;;;
 valeur max;;;;;

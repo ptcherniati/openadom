@@ -751,7 +751,7 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "meteorologie"
+            defaultValue: return "flux gazeux"
             checker:
               name: Reference
               params:
@@ -927,6 +927,449 @@ dataTypes:
           boundTo:
             variable: FCH4
             component: gap_filling
+  chambrefluxsol_j:
+    internationalizationName:
+      fr: Flux de chambres journalier
+      en: Daily flux chambers
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - FCO2
+            - Ta
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "flux gazeux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          treatment:
+            checker:
+              name: Reference
+              params:
+                refType: traitements
+                required: true
+                codify: true
+          no_chamber:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          standard_deviation:
+            checker:
+              name: Float
+              params:
+                required: null
+          nbval:
+            checker:
+              name: Float
+              params:
+                required: null
+          gap_filling:
+            checker:
+              name: Float
+              params:
+                required: null
+          gap_filling_isgf:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          standard_deviation:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: code du traitement
+          boundTo:
+            variable: informations
+            component: treatment
+        - header: no de la chambre
+          boundTo:
+            variable: informations
+            component: no_chamber
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: FCO2_sd
+          boundTo:
+            variable: FCO2
+            component: standard_deviation
+        - header: FCO2_nbval
+          boundTo:
+            variable: FCO2
+            component: nbval
+        - header: FCO2_gf
+          boundTo:
+            variable: FCO2
+            component: gap_filling
+        - header: FCO2_gf_isgf
+          boundTo:
+            variable: FCO2
+            component: gap_filling_isgf
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Ta_sd
+          boundTo:
+            variable: Ta
+            component: standard_deviation
+  chambrefluxsol_m:
+    internationalizationName:
+      fr: Flux de chambres mensuel
+      en: Monthly flux chambers
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: month
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - FCO2
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "flux gazeux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: mensuel
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          comment: null
+          treatment:
+            checker:
+              name: Reference
+              params:
+                refType: traitements
+                required: true
+                codify: true
+          no_chamber:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          month:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          standard_deviation:
+            checker:
+              name: Float
+              params:
+                required: null
+          nbval:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: month
+        - header: code du traitement
+          boundTo:
+            variable: informations
+            component: treatment
+        - header: "no de la chambre"
+          boundTo:
+            variable: informations
+            component: no_chamber
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: FCO2_sd
+          boundTo:
+            variable: FCO2
+            component: standard_deviation
+        - header: FCO2_nbval
+          boundTo:
+            variable: FCO2
+            component: nbval
   flux_sh:
     internationalizationName:
       fr: Flux semi horaire
@@ -1005,7 +1448,7 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "meteorologie"
+            defaultValue: return "Tour à flux"
             checker:
               name: Reference
               params:
@@ -1490,7 +1933,7 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "meteorologie"
+            defaultValue: return "Tour à flux"
             checker:
               name: Reference
               params:
@@ -1914,7 +2357,7 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "meteorologie"
+            defaultValue: return "Tour à flux"
             checker:
               name: Reference
               params:
