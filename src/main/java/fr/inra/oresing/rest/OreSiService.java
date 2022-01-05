@@ -1089,7 +1089,7 @@ public class OreSiService {
             List<Map.Entry<String, String>> record = new LinkedList<>();
             line.forEach(value -> {
                 String header = currentHeader.next();
-                record.add(Map.entry(header, value));
+                record.add(Map.entry(header.strip(), value));
             });
             return new ParsedCsvRow(lineNumber, record);
         };
