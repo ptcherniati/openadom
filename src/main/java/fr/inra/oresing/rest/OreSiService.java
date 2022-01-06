@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -641,11 +642,18 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
             Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations());
-
             readPreHeader(formatDescription, constantValues, linesIterator);
 
             ImmutableList<String> columns = readHeaderRow(linesIterator);
+            final List<String> declaredColumns = dataTypeDescription.getFormat().getColumns().stream()
+                    .map(col -> col.getHeader())
+                    .collect(Collectors.toList());
+            columns.stream()
+                    .filter(col -> !declaredColumns.contains(col))
+                    .forEach(col -> boundColumnsWithTemplate(col, dataTypeDescription));
+            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations());
+
+
             readPostHeader(formatDescription, linesIterator);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
@@ -657,6 +665,61 @@ public class OreSiService {
 
             repo.getRepository(app).data().storeAll(dataStream);
         }
+    }
+
+    private void boundColumnsWithTemplate(String unboundedColumn, Configuration.DataTypeDescription dataTypeDescription) {
+        if (dataTypeDescription.getTemplate() == null || dataTypeDescription.getTemplate().isEmpty()) {
+            return;
+        }
+        final LinkedHashMap<String, Configuration.TemplateDescription> templates = dataTypeDescription.getTemplate();
+        final Matcher matcher = templates.entrySet().stream()
+                .map(entry -> {
+                    final Pattern pattern = Pattern.compile(entry.getKey());
+                    final Matcher match = pattern.matcher(unboundedColumn);
+                    if (match.matches()) {
+                        return match;
+                    }
+                    return null;
+                })
+                .filter(match -> match != null)
+                .findFirst().orElse(null);
+        if (matcher == null) {
+            return;
+        }
+        Configuration.TemplateDescription templateDescription = templates.get(matcher.pattern().pattern());
+        Map<String, String> variables = new HashMap<>();
+        for (int i = 0; i < templateDescription.getVariables().size(); i++) {
+            variables.put(templateDescription.getVariables().get(i), matcher.group(i));
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "";
+        try {
+            json = mapper.writeValueAsString(templateDescription);
+
+            for (Map.Entry<String, String> entry : variables.entrySet()) {
+                String searchFor = String.format("\\$\\{%s\\}", entry.getKey());
+                json = json.replaceAll(searchFor, entry.getValue());
+            }
+            templateDescription = mapper.readValue(json, Configuration.TemplateDescription.class);
+            dataTypeDescription.getData().putAll(templateDescription.getData());
+            final Configuration.ColumnBindingDescription columnBindingDescription = new Configuration.ColumnBindingDescription();
+            columnBindingDescription.setHeader(matcher.group(0));
+            final VariableComponentKey variableComponentKey = new VariableComponentKey(matcher.group(0), templateDescription.getBoundToComponent());
+            columnBindingDescription.setBoundTo(variableComponentKey);
+            dataTypeDescription.getFormat().getColumns().add(columnBindingDescription);
+            templateDescription.getDataGroups().entrySet().stream()
+                    .forEach(entry -> {
+                        final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
+                        dataGroupDescription.setLabel(entry.getValue().getLabel());
+                        dataGroupDescription.setInternationalizationName(entry.getValue().getInternationalizationName());
+                        dataTypeDescription.getAuthorization().getDataGroups()
+                                .computeIfAbsent(entry.getKey(), k -> dataGroupDescription);
+                        dataTypeDescription.getAuthorization().getDataGroups().get(entry.getKey()).getData().addAll(entry.getValue().getData());
+                    });
+        } catch (Exception e) {
+            return;
+        }
+        return;
     }
 
     private List<CsvRowValidationCheckResult> findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps) {
@@ -754,7 +817,7 @@ public class OreSiService {
 
 
         return rowWithData -> {
-            Map<VariableComponentKey, String> values =  new HashMap<>(rowWithData.getDatum());
+            Map<VariableComponentKey, String> values = new HashMap<>(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -767,7 +830,7 @@ public class OreSiService {
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                        if(! lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)){
+                        if (!lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)) {
                             values.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;

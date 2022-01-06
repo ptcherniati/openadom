@@ -117,6 +117,7 @@ public class Configuration {
     public static class DataTypeDescription {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
+        LinkedHashMap<String, TemplateDescription> template = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
@@ -193,6 +194,17 @@ public class Configuration {
     @ToString
     public static class ColumnDescription {
         LinkedHashMap<String, VariableComponentDescription> components = new LinkedHashMap<>();
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class TemplateDescription {
+        List<String> variables;
+        Map<String, DataGroupDescription> dataGroups;
+        Map<String, ColumnDescription> data;
+        String boundToComponent;
+
     }
 
     @Getter

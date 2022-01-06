@@ -1,0 +1,25 @@
+Ce fichier récapitule vos paramètres d'extraction. 
+------------------------------------------
+
+
+Sites sélectionnés : 
+	-Fou 4
+
+Fréquence sélectionnée : 
+	-m
+
+Dates sélectionnées : 
+	 du 01/2001 au 12/2002 
+
+Variables sélectionnées :
+	-SWC (Humidité volumique du sol)
+	-Ts (Température du sol)
+
+Profondeurs sélectionnés :
+	10, 20, 30, 55, 80, 120
+
+Affichage sélectionné :
+	Affichage des noms de variables au format européen 
+
+Commentaire :
+	extraction sur fougère
