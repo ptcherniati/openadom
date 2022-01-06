@@ -17,8 +17,8 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + " (id, name, referenceType, dataType, configuration, configFile) SELECT id, name, referenceType, dataType, configuration, configFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json)"
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, name=EXCLUDED.name, referenceType=EXCLUDED.referenceType, dataType=EXCLUDED.dataType, configuration=EXCLUDED.configuration, configFile=EXCLUDED.configFile"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + " (id, name, comment, referenceType, dataType, configuration, configFile) SELECT id, name,  comment, referenceType, dataType, configuration, configFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json)"
+                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, comment=EXCLUDED.comment, name=EXCLUDED.name, referenceType=EXCLUDED.referenceType, dataType=EXCLUDED.dataType, configuration=EXCLUDED.configuration, configFile=EXCLUDED.configFile"
                 + " RETURNING id";
     }
 

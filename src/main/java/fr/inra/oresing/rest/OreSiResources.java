@@ -87,7 +87,7 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam("comment") String comment,
+    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam(name = "comment",defaultValue = "") String comment,
                                                @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
         if (INVALID_APPLICATION_NAME_PREDICATE.test(name)) {
             return ResponseEntity.badRequest().body("'" + name + "' n’est pas un nom d'application valide, seules les lettres minuscules sont acceptées");
@@ -142,7 +142,7 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file, @RequestParam("comment") String comment) throws IOException, BadApplicationConfigurationException {
+    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file, @RequestParam(name = "comment", defaultValue = "") String comment) throws IOException, BadApplicationConfigurationException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }

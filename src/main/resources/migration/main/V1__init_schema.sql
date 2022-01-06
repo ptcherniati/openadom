@@ -153,6 +153,7 @@ create table Application (
     creationDate DateOrNow,
     updateDate DateOrNow,
     name Text,
+    comment TEXT,
     referenceType TEXT[], -- liste des types de references existantes
     dataType TEXT[],      -- liste des types de data existants
     configuration jsonb,  -- le fichier de configuration sous forme json
