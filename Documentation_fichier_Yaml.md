@@ -504,6 +504,79 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
             component: qualité
 ```
 
+# templating
+
+Pour des colonnes avec un pattern répétitif ont peut utiliser un templating templating. 
+
+Lors de la lecture de l'en-tête, on peut vérifier si la colonne a été déclarée. Dans le cas contraire, et en présence de templates déclarés, on peut alors chercher si le nom de la colonne matche un pattern de template. On créé alors à la volée les sections correspondantes dans data, authorization et format.
+
+par example avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*)
+
+``` csv
+Date	      Time	SWC_1_10	SWC_2_10	SWC_3_10	SWC_4_10
+01/01/2001	01:00	45	      35	      37	      49
+01/01/2001	02:00	45	      35	      37	      49
+
+
+```
+
+
+Dans une section template, on déclare les templates. Le nom du template correspond au pattern, sous la forme d'un expression régulière, que vérifie le nom de la colonne. 
+
+Dans un tableau variables, on indique le nom de chacun des groupes [variable, profondeur, répétition]. Le premier élément correspondant au nom de la colonne ($0) et les autres aux groupes $1, $2 ...
+
+On précise dans la section dataGroups le template du dataGroups auquel appartient cette variable. Il sera créé et/ou remplis avec les variable créées.
+
+Ensuite on déclare la section data en utilisant des ${variable} ${profondeur} ${répétition} qui seront remplacés par les valeurs parsées dans le nom de la colonne. Ces sections seront mergées aux sections existantes.
+
+La section format sera mise à jour avec cette colonne liée à ce data.
+
+
+``` yaml
+ template:
+      SWC_([0-9]*)_([0-9]*):
+        variables:
+          - variable
+          - profondeur
+          - répétition
+        boundToComponent : value
+        dataGroups:
+          SWC:
+            label: "variables"
+            data:
+              - ${variable}
+        data:
+          ${variable}:
+            components:
+              value:
+                checker:
+                  name: Float
+                  params:
+                    required: false
+              unit:
+                defaultValue: return "percentage"
+                checker:
+                  name: Reference
+                  params:
+                    refType: unites
+                    required: true
+                    codify: true
+              profondeur:
+                defaultValue: return "${profondeur}"
+                checker:
+                  name: Float
+                  params:
+                    required: false
+              repetition:
+                defaultValue: return "${répétition}"
+                checker:
+                  name: Integer
+                  params:
+                    required: false
+   
+```
+
+
 ## lors de l'importation du fichier yaml :
 	
 * mettre le nom de l'application en minuscule,
