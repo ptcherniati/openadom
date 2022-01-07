@@ -94,6 +94,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             }
         }
         if (overlap) {
+            where.add("params  #> '{\"binaryfiledataset\", \"datatype\"}' @@('$ == \""+datatype+"\"')");
             where.add("params @@ ('$.published==true')");
             String t = "(tsrange(\n" +
                     "\tcoalesce((params #>> '{\"binaryfiledataset\", \"from\"}'), '-infinity')::timestamp,\n" +
