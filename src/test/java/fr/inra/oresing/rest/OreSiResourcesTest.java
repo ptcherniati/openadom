@@ -1009,9 +1009,13 @@ public class OreSiResourcesTest {
         // ajout de data
         for (Map.Entry<String, String> entry : fixtures.getFluxMeteoForetEssaiDataResourceName().entrySet()) {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
+                final String[] path = entry.getValue().split("/");
+                final String filename = path[path.length - 1];
+                log.debug("upload file "+filename+" "+entry.getKey());
+                MockMultipartFile refFile = new MockMultipartFile("file", filename, "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/"+entry.getKey())
                                 .file(refFile)
+                                .param("params", fixtures.getForetRepositoryParams(refFile.getOriginalFilename(), entry.getKey() ))
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
             }
