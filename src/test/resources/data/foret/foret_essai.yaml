@@ -905,8 +905,8 @@ dataTypes:
             component: time
   smp_infraj:
     internationalizationName:
-      fr: Profondeur de la nappe infra-journalière
-      en: Infra-daily depth of the groundwater
+      fr: Tension de l'eau infra-journalière
+      en: Infra-daily tension water
     repository:
       toto: test
     template:

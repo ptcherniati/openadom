@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Value;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -44,6 +45,7 @@ public class ApplicationResult {
         String id;
         String label;
         Map<String, Variable> variables;
+        Map<String, Template> templates;
         Map<String, String> repository;
 
         @Value
@@ -57,6 +59,13 @@ public class ApplicationResult {
                 String id;
                 String label;
             }
+        }
+
+        @Value
+        public static class Template {
+            String pattern;
+            Map<String, Variable> variables;
+            List<String> variablesInPattern;
         }
     }
 }

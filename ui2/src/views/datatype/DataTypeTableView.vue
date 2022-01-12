@@ -547,16 +547,47 @@ export default class DataTypeTableView extends Vue {
       return { rowId: r.rowId, ...r.values };
     });
 
+    const templates = this.application.dataTypes[this.dataTypeId].templates;
+    const getVariableByPattern = function(v){
+      if (!templates){
+        return null;
+      }
+      for (var pattern in templates) {
+        if (new RegExp(pattern).test(v)){
+          var exec = new RegExp(pattern).exec(v);
+          var variablesInPattern = {}
+          var key;
+          for (key in templates[pattern].variablesInPattern) {
+            variablesInPattern[templates[pattern].variablesInPattern[key]] = exec[key];
+          }
+          for (key in templates[pattern].variables) {
+            var variable = {...templates[pattern].variables[key]};
+             for (var vv in variablesInPattern) {
+               variable.id = variable.id.replace("${" + vv + "}", variablesInPattern[vv])
+               variable.label = variable.label.replace("${" + vv + "}", variablesInPattern[vv])
+             }
+             return variable;
+            // console.log(variable, translatingKey)
+            // return variable;
+          }
+        }
+      }
+    };
     const variablesModels = this.application.dataTypes[this.dataTypeId].variables;
-    this.variables = dataTypes.variables.map((v) => variablesModels[v]);
+    this.variables = dataTypes.variables.map((v) => {
+      let variablesModel = variablesModels[v];
+      return variablesModel || getVariableByPattern(v);
+    });
     this.variableComponents = this.variables
       .map((v) => {
-        return Object.values(v.components).map((c) =>
-          Object.assign(c, {
-            variable: v.label,
-            component: c.id,
-            ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
-          })
+        return Object.values(v.components).map((c) => {
+              console.log(v.label, ":", c.id)
+              return Object.assign({...c}, {
+                variable: v.label,
+                component: c.id,
+                ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
+              })
+            }
         );
       })
       .flat();

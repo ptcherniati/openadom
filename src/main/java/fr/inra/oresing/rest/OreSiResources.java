@@ -127,8 +127,18 @@ public class OreSiResources {
                 });
                 return new ApplicationResult.DataType.Variable(variable, variable, components);
             });
+            final Map<String, ApplicationResult.DataType.Template> templates = Maps.transformEntries(dataTypeDescription.getTemplate(), (pattern, patternDescription) -> {
+                Map<String, ApplicationResult.DataType.Variable> variablesInTemplates = Maps.transformEntries(patternDescription.getData(), (variable, variableDescription) -> {
+                    Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
+                        return new ApplicationResult.DataType.Variable.Component(component, component);
+                    });
+                    return new ApplicationResult.DataType.Variable(variable, variable, components);
+                });
+                final List<String> variablesInPattern =  patternDescription.getVariables();
+                return new ApplicationResult.DataType.Template(pattern, variablesInTemplates,variablesInPattern);
+            });
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
-            return new ApplicationResult.DataType(dataType, dataType,  variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
+            return new ApplicationResult.DataType(dataType, dataType,  variables, templates, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getConfiguration().getInternationalization(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
