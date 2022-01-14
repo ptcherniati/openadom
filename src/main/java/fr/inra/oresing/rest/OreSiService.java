@@ -584,7 +584,7 @@ public class OreSiService {
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
         Optional.ofNullable(params)
-                .map(par->par.getBinaryfiledataset())
+                .map(par -> par.getBinaryfiledataset())
                 .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
         BinaryFile storedFile = loadOrCreateFile(file, params, app);
         if (params != null && !params.topublish) {
@@ -1254,15 +1254,18 @@ public class OreSiService {
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
-        Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
+        final Configuration.DataTypeDescription dataTypeDescription = downloadDatasetQueryCopy.getApplication()
                 .getConfiguration()
                 .getDataTypes()
-                .get(dataType)
+                .get(dataType);
+        Configuration.FormatDescription format = dataTypeDescription
                 .getFormat();
-        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf((LinkedHashMap<String, DownloadDatasetQuery.VariableComponentOrderBy>)getExportColumns(dataTypeDescription, getVariableComponentKeysFromTemplate(list, dataTypeDescription)).entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey(),
-                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
+                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC),
+                        DownloadDatasetQuery.VariableComponentOrderBy::returnNewValue,
+                        LinkedHashMap::new
                 )));
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
         List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
@@ -1307,7 +1310,43 @@ public class OreSiService {
         return result;
     }
 
-    private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.FormatDescription format) {
+    private Map<String, VariableComponentKey> getVariableComponentKeysFromTemplate(List<DataRow> list, Configuration.DataTypeDescription dataTypeDescription) {
+        return list.stream()
+                .map(dataRow -> dataRow.getValues().keySet())
+                .map(variables -> variables.stream().filter(
+                                variable -> dataTypeDescription.getTemplate().keySet().stream()
+                                        .anyMatch(pattern -> Pattern.compile(pattern).matcher(variable).matches())
+                        ).collect(Collectors.toSet())
+                )
+                .flatMap(Set::stream)
+                .distinct()
+                .map(variable -> {
+                    return dataTypeDescription.getTemplate()
+                            .entrySet().stream()
+                            .map(e -> {
+                                        Map<String, VariableComponentKey> variableComponentKeys = new HashMap<>();
+                                        for (Map.Entry<String, Configuration.ColumnDescription> columnDescriptionEntry : e.getValue().getData().entrySet()) {
+                                            for (String component : columnDescriptionEntry.getValue().getComponents().keySet()) {
+                                                variableComponentKeys.put(
+                                                        String.format("%s_%s", variable, component),
+                                                        new VariableComponentKey(variable, component)
+                                                );
+                                            }
+                                        }
+                                        return variableComponentKeys;
+                                    }
+                            )
+                            .flatMap (map -> map.entrySet().stream())
+                            .collect(Collectors.toMap(e -> e.getKey(),
+                                    e -> e.getValue()));
+                })
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(e -> e.getKey(),
+                        e -> e.getValue()));
+    }
+
+    private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.DataTypeDescription dataTypeDescription, Map<String, VariableComponentKey> variableComponentKeysFromtemplate) {
+        final Configuration.FormatDescription format = dataTypeDescription.getFormat();
         ImmutableMap<String, VariableComponentKey> valuesFromStaticColumns = format.getColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
         ImmutableMap<String, VariableComponentKey> valuesFromConstants = format.getConstants().stream()
@@ -1317,12 +1356,13 @@ public class OreSiService {
                 .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
         ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
-        return ImmutableMap.<String, VariableComponentKey>builder()
-                .putAll(valuesFromStaticColumns)
-                .putAll(valuesFromConstants)
-                .putAll(valuesFromHeaderPatterns)
-                .putAll(valuesFromRepeatedColumns)
-                .build();
+        final LinkedHashMap<String, VariableComponentKey> variableComponentKeyLinkedHashMap = new LinkedHashMap<>();
+        variableComponentKeyLinkedHashMap.putAll(valuesFromStaticColumns);
+        variableComponentKeyLinkedHashMap.putAll(valuesFromConstants);
+        variableComponentKeyLinkedHashMap.putAll(valuesFromHeaderPatterns);
+        variableComponentKeyLinkedHashMap.putAll(valuesFromRepeatedColumns);
+        variableComponentKeyLinkedHashMap.putAll(variableComponentKeysFromtemplate);
+        return ImmutableMap.copyOf(variableComponentKeyLinkedHashMap);
     }
 
     public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {

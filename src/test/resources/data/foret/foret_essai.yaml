@@ -706,6 +706,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "TS"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -924,6 +932,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "SMP"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -1142,6 +1158,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "GWD"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -1360,6 +1384,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "G"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -1578,6 +1610,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "SWC"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -1796,6 +1836,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "TS"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -1997,6 +2045,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "SMP"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -2198,6 +2254,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "GWD"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -2399,6 +2463,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "G"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float
@@ -2600,6 +2672,14 @@ dataTypes:
         data:
           ${variable}:
             components:
+              variable:
+                defaultValue: return "SWC"
+                checker:
+                  name: Reference
+                  params:
+                    refType: variables
+                    required: true
+                    codify: true
               value:
                 checker:
                   name: Float

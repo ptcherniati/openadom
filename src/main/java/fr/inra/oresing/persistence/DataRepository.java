@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.rest.DownloadDatasetQuery;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -60,7 +61,25 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 + " \nFROM " + getTable().getSqlIdentifier()
                 + " \nWHERE application = '" + applicationId + "'::uuid \n\tAND dataType = '" + dataType + "'"
                 + " \nGROUP BY rowId";
+       // sql = mergeValueFromTemplate(applicationId, getApplication().getConfiguration().getDataTypes().get(dataType), sql);
         return sql;
+    }
+
+    private String  mergeValueFromTemplate(String applicationName, Configuration.DataTypeDescription dataTypeDescription, String from) {
+        for (Map.Entry<String, Configuration.TemplateDescription> variableEntry : dataTypeDescription.getTemplate().entrySet()) {
+            String pattern = variableEntry.getKey();
+            final Configuration.TemplateDescription templateDescription = variableEntry.getValue();
+            final String variableName = templateDescription.getDataGroups().keySet().stream().findFirst().orElse("unknownDatagroup").toLowerCase();
+            return String.format(from + ",\n" +
+                            "\n JOIN (select rowid , \n" +
+                            "jsonb_path_query(datavalues, '$ ? (@.keyvalue().key like_regex \"%2$s\" flag \"i\").keyvalue().key') \"%1$skey\",\n" +
+                            "jsonb_path_query(datavalues, '$ ? (@.keyvalue().key like_regex \"%2$s\" flag \"i\").keyvalue().value' ) \"%1$svalue\"\n" +
+                            "from %3$s.\"data\") %1$s  using(rowid) \n",
+                    variableName,
+                    pattern,
+                    applicationName);
+        }
+        return from;
     }
 
     public int migrate(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Map<String, Map<String, UUID>> refsLinkedToToAdd) {

@@ -114,7 +114,26 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
+    /**
+     *  add to data the data from templating
+     *
+     *  return the columnsDescriptionMap adding to data
+     */
     public static class DataTypeDescription {
+        public Map<String, ColumnDescription> addTemplatedDatas() {
+            Map<String, ColumnDescription> columnDescriptionMap = new HashMap<>();
+            for (Map.Entry<String, Configuration.TemplateDescription> templateDescriptionEntry : this.getTemplate().entrySet()) {
+                String pattern = templateDescriptionEntry.getKey();
+                final Configuration.TemplateDescription templateDescription = templateDescriptionEntry.getValue();
+                final String variableName = templateDescription.getDataGroups().keySet().stream().findFirst().orElse("unknownDatagroup").toLowerCase();
+                LinkedHashMap<String, Configuration.VariableComponentDescription> components = new LinkedHashMap<>();
+                for (Configuration.ColumnDescription columnDescriptionEntry : templateDescription.getData().values()) {
+                    columnDescriptionMap.put(variableName, columnDescriptionEntry);
+                }
+            }
+            this.getData().putAll(columnDescriptionMap);
+            return columnDescriptionMap;
+        }
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, TemplateDescription> template = new LinkedHashMap<>();

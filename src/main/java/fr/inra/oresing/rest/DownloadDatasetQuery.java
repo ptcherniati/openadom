@@ -228,6 +228,9 @@ public class DownloadDatasetQuery {
     }
 
     public static class VariableComponentOrderBy {
+        public static VariableComponentOrderBy returnNewValue(VariableComponentOrderBy oldValue, VariableComponentOrderBy newValue){
+            return newValue;
+        }
         public VariableComponentKey variableComponentKey;
         public Order order;
         public String type;
