@@ -1,0 +1,225 @@
+  internationalizationName:
+    fr: Température infra-journalière
+    en: Infra-daily temperature
+  repository:
+    toto: test
+  template:
+    TS_([0-9]*)_([0-9]*):
+      variables:
+        - variable
+        - profondeur
+        - répétition
+      boundToComponent : value
+      dataGroups:
+        TS:
+          label: "variables"
+          data:
+            - ${variable}
+      data:
+        ${variable}:
+          components:
+            variable:
+              defaultValue: return "TS"
+              checker:
+                name: Reference
+                params:
+                  refType: variables
+                  required: true
+                  codify: true
+            value:
+              checker:
+                name: Float
+                params:
+                  required: false
+            unit:
+              defaultValue: return "degre celcius"
+              checker:
+                name: Reference
+                params:
+                  refType: unites
+                  required: true
+                  codify: true
+            profondeur:
+              defaultValue: return "${profondeur}"
+              checker:
+                name: Float
+                params:
+                  required: false
+            repetition:
+              defaultValue: return "${répétition}"
+              checker:
+                name: Integer
+                params:
+                  required: false
+  authorization:
+    authorizationScopes:
+      localization:
+        variable: localization
+        component: zones_etudes
+    timeScope:
+      variable: date
+      component: datetime
+    dataGroups:
+      informations:
+        label: "Informations"
+        data:
+          - informations
+      referentiel:
+        label: "Référentiel"
+        data:
+          - localization
+      date:
+        label: "date"
+        data:
+          - date
+  data:
+    localization:
+      components:
+        zones_etudes_parent:
+          checker:
+            name: Reference
+            params:
+              codify: true
+              refType: zones_etudes
+              required: false
+        zones_etudes:
+          checker:
+            name: Reference
+            params:
+              groovy: >
+                String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                String nom = datumByVariableAndComponent.localization.zones_etudes;
+                String hierarchicalKey = ""; 
+                if ("".equals(nom)){
+                  hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                }else{
+                  parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                  nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                  hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                }
+                
+                return references
+                .find{it.key.equals("zones_etudes")}.value
+                .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+              references: zones_etudes
+              codify: true
+              refType: zones_etudes
+              required: true
+    informations:
+      components:
+        thematic:
+          defaultValue: return "climat du sol"
+          checker:
+            name: Reference
+            params:
+              refType: themes
+              codify: true
+        frequency:
+          checker:
+            name: RegularExpression
+            params:
+              pattern: infrajournalier
+              required: true
+              codify: true
+        start date:
+          checker:
+            name: Date
+            params:
+              pattern: dd/MM/yyyy
+        end date:
+          checker:
+            name: Date
+            params:
+              pattern: dd/MM/yyyy
+        comment: null
+        profondeur max:
+          checker:
+            name: Float
+            params:
+              required: true
+        nombre de repetition max:
+          checker:
+            name: Integer
+            params:
+              required: true
+    date:
+      components:
+        day:
+          checker:
+            name: Date
+            params:
+              pattern: dd/MM/yyyy
+        time:
+          checker:
+            name: Date
+            params:
+              pattern: HH:mm
+        datetime:
+          defaultValue: >
+            return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+          checker:
+            name: Date
+            params:
+              pattern: "dd/MM/yyyy HH:mm:ss"
+              duration: "1 MINUTES"
+  format:
+    constants:
+      - rowNumber: 1
+        columnNumber: 2
+        boundTo:
+          variable: localization
+          component: zones_etudes_parent
+        exportHeader: zones_etudes_parent
+      - rowNumber: 1
+        columnNumber: 3
+        boundTo:
+          variable: localization
+          component: zones_etudes
+        exportHeader: zones_etudes
+      - rowNumber: 3
+        columnNumber: 2
+        boundTo:
+          variable: informations
+          component: frequency
+        exportHeader: frequency
+      - rowNumber: 4
+        columnNumber: 2
+        boundTo:
+          variable: informations
+          component: start date
+        exportHeader: start date
+      - rowNumber: 5
+        columnNumber: 2
+        boundTo:
+          variable: informations
+          component: end date
+        exportHeader: end date
+      - rowNumber: 6
+        columnNumber: 2
+        boundTo:
+          variable: informations
+          component: comment
+        exportHeader: comment
+      - rowNumber: 7
+        columnNumber: 2
+        boundTo:
+          variable: informations
+          component:  "profondeur max"
+        exportHeader: "profondeur max"
+      - rowNumber: 8
+        columnNumber: 2
+        boundTo:
+          variable: informations
+          component: "nombre de repetition max"
+        exportHeader: "nombre de repetition max"
+    headerLine: 10
+    firstRowLine: 13
+    columns:
+      - header: Date
+        boundTo:
+          variable: date
+          component: day
+      - header: Time
+        boundTo:
+          variable: date
+          component: time

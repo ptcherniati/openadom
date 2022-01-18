@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Strings;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
@@ -80,6 +81,9 @@ public class ApplicationConfigurationService {
             }
             return internationalizationMap;
         }
+    }
+    ConfigurationParsingResult unzipConfiguration(MultipartFile file){
+        return null;
     }
 
     ConfigurationParsingResult parseConfigurationBytes(byte[] bytes) {

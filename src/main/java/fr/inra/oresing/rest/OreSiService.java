@@ -304,7 +304,14 @@ public class OreSiService {
     }
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
-        ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+
+        ConfigurationParsingResult configurationParsingResult;
+        if (configurationFile.getOriginalFilename().matches(".*\\.zip")) {
+            final byte[] bytes = new MultiYaml().parseConfigurationBytes(configurationFile);
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(bytes);
+        } else {
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+        }
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
@@ -1260,7 +1267,7 @@ public class OreSiService {
                 .get(dataType);
         Configuration.FormatDescription format = dataTypeDescription
                 .getFormat();
-        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf((LinkedHashMap<String, DownloadDatasetQuery.VariableComponentOrderBy>)getExportColumns(dataTypeDescription, getVariableComponentKeysFromTemplate(list, dataTypeDescription)).entrySet().stream()
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf((LinkedHashMap<String, DownloadDatasetQuery.VariableComponentOrderBy>) getExportColumns(dataTypeDescription, getVariableComponentKeysFromTemplate(list, dataTypeDescription)).entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey(),
                         e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC),
@@ -1336,7 +1343,7 @@ public class OreSiService {
                                         return variableComponentKeys;
                                     }
                             )
-                            .flatMap (map -> map.entrySet().stream())
+                            .flatMap(map -> map.entrySet().stream())
                             .collect(Collectors.toMap(e -> e.getKey(),
                                     e -> e.getValue()));
                 })
@@ -1490,6 +1497,9 @@ public class OreSiService {
 
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
+        if (file.getOriginalFilename().matches(".zip")) {
+            return applicationConfigurationService.unzipConfiguration(file);
+        }
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 
