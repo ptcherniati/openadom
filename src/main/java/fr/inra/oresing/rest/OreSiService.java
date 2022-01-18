@@ -303,7 +303,14 @@ public class OreSiService {
     }
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
-        ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+
+        ConfigurationParsingResult configurationParsingResult;
+        if (configurationFile.getOriginalFilename().matches(".*\\.zip")) {
+            final byte[] bytes = new MultiYaml().parseConfigurationBytes(configurationFile);
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(bytes);
+        } else {
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+        }
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
@@ -583,7 +590,7 @@ public class OreSiService {
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
         Optional.ofNullable(params)
-                .map(par->par.getBinaryfiledataset())
+                .map(par -> par.getBinaryfiledataset())
                 .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
         BinaryFile storedFile = loadOrCreateFile(file, params, app);
         if (params != null && !params.topublish) {
@@ -758,7 +765,7 @@ public class OreSiService {
 
 
         return rowWithData -> {
-            Map<VariableComponentKey, String> values =  new HashMap<>(rowWithData.getDatum());
+            Map<VariableComponentKey, String> values = new HashMap<>(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -771,7 +778,7 @@ public class OreSiService {
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                        if(! lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)){
+                        if (!lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)) {
                             values.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
@@ -1387,6 +1394,9 @@ public class OreSiService {
 
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
+        if (file.getOriginalFilename().matches(".zip")) {
+            return applicationConfigurationService.unzipConfiguration(file);
+        }
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 

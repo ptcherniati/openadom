@@ -1,7 +1,5 @@
 # Aide fichier Yaml
-
 ## La création :
-
 Vous trouverez ci-dessous un exemple de fichier Yaml fictif qui décrit les parties attendues dans celui-ci pour qu'il 
 soit valide. **Attention le format Yaml est sensible** il faut donc respecter l'indentation. 
 
@@ -23,7 +21,6 @@ version: 0
 ```
 
 <span style="color: orange">*version* n'est pas indenté.</span>
-
 ### on présente l'application avec son nom et sa la version du fichier yaml : 
 (on commence par la version 1) 
 
@@ -35,7 +32,6 @@ application:
 ```
 
 <span style="color: orange">*application* n'est pas indenté. *nom* et *version* sont indentés de 1.</span>
-
 ### on décrit les donnés de référence dans la partie *references*, on y liste les noms des colonnes souhaitées (dans *columns*); on précisant la liste de colonnes qui forment la clef naturelle (dans *keyColumn*): 
 par exemple pour les fichiers :
 
@@ -143,7 +139,6 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
     datatypesValues : idem que datatypes
       -> datatypesValues.get("nom du datatype").get("nom de la colonne")
     params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
-
 ### il est possible de définir des clefs composite entre différentes références
 
   Une clef composite permet de définir une hiérarchie entre différentes données de référence.
@@ -201,7 +196,6 @@ compositeReferences:
       - parentRecursiveKey: nom du taxon superieur
         reference: taxon
 ```
-
 ### on met les infos des *dataTypes* 
  Pour enregistrer un type de données, il faut déclarer 
  - le data : ce qui sera enregistré en base de données (*section data*)
@@ -526,9 +520,8 @@ Ce qui premettra de traduire le nom de l'application.
     fr: Application_nom_fr
     en: Application_nom_en
 ```
-
 ### Internationalisation des *references*:
-Nous pouvons faire en sorte que le nom de la référence s'affiche dans la langue de l'application en y ajoutant 
+Nous pouvons faire en sorte que le nom de la référence s'affiche dans la langue de l'application en y ajoutant
 *internationalizationName* ainsi que les langues dans lequel on veux traduire le nom de la référence.
 *internationalizedColumns* ....
 
@@ -559,7 +552,6 @@ Pour cela on va rajouter une section internationalizationDisplay.
 On définit un pattern pour chaque langue en mettant entre accolades les nom des colonnes. C'est nom de colonnes seront remplacés par la valeur de la colonne ou bien, si la colonne est internationalisée, par la valeur de la colonne internationalisée correspondant à cette colonne.
 
 Par défaut, c'est le code du référentiel qui est affiché.
-
 ### Internationalisation des *dataTypes*:
 Nous pouvons aussi faire en sorte que *nomDonnéeCSV* soit traduit. Même chose pour les noms des *dataGroup*.
 
@@ -592,8 +584,38 @@ On peut surcharger l'affichage d'une colonne faisant référence à un référen
             fr: 'espèce :{esp_nom}'
             en: 'espèce :{esp_nom}'
 ```
+## Zip de YAML
+Il est possible au lieu de fournir un yaml, de fournir un fichier zip. Cela permet de découper les YAML long en plusieurs fichiers.
 
+Dans le zip le contenu de la section  <section><sous_section><sous_sous_section> sera placé dans un fichier sous_sous_section.yaml que l'on placera dans le dossier sous_section du dossier section.
 
+Au premier niveau il est possible de placer un fichier configuration.yaml qui servira de base à la génération du yaml.
+A défaut de se fichier on utilisera comme base 
+```yaml
+version: 0
+```
+
+voici un example du contenu du zip :
+
+``` html
+multiyaml.zip
+├── application.yaml
+├── compositeReferences.yaml
+├── configuration.yaml
+├── dataTypes
+│   ├── smp_infraj.yaml
+│   └── ts_infraj.yaml
+└── references
+    ├── types_de_zones_etudes.yaml
+
+```
+## lors de l'importation du fichier yaml :
+	
+* mettre le nom de l'application en minuscule,
+* sans espace,
+* sans accent,
+* sans chiffre et 
+* sans caractères speciaux
 # Aide fichier .csv 
 
 ## lors de l'ouverture du fichier csv via libre office:
