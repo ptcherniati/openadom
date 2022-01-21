@@ -77,7 +77,7 @@ public class CheckerFactory {
         VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
         if (variableDescription.getComponents().get(component) == null) {
             if (log.isDebugEnabled()) {
-                log.debug("pas de règle de validation pour " + variableComponentKey);
+                //log.debug("pas de règle de validation pour " + variableComponentKey);
             }
         } else {
             Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
