@@ -1436,6 +1436,18 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
           time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "30 MINUTES"
       contexte:
         components:
           répétition:
@@ -1518,7 +1530,7 @@ dataTypes:
           component: chemin
       timeScope:
         variable: Date
-        component: day
+        component: datetime
       dataGroups:
         all:
           label: "Toutes les données"
