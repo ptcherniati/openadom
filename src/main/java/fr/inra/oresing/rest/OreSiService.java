@@ -47,6 +47,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -63,7 +64,7 @@ import java.util.stream.Stream;
 @Transactional
 public class OreSiService {
 
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
@@ -581,6 +582,9 @@ public class OreSiService {
         log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
+        Optional.ofNullable(params)
+                .map(par->par.getBinaryfiledataset())
+                .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
         BinaryFile storedFile = loadOrCreateFile(file, params, app);
         if (params != null && !params.topublish) {
             if (storedFile.getParams() != null && storedFile.getParams().published) {
@@ -736,7 +740,7 @@ public class OreSiService {
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
-     * @param timeScopeColumnPattern
+     * @param binaryFileDataset
      * @return
      */
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
@@ -1179,7 +1183,7 @@ public class OreSiService {
         }
         ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
         if (log.isDebugEnabled()) {
-            log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
+            //log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
         }
         return defaultValueExpressions;
     }
