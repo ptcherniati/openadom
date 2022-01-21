@@ -497,7 +497,6 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
             variable: prélèvement
             component: qualité
 ```
-
 ## lors de l'importation du fichier yaml :
 	
 * mettre le nom de l'application en minuscule,
@@ -505,7 +504,6 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
 * sans accent,
 * sans chiffre et 
 * sans caractères speciaux
-
 ## Internationalisation du fichier yaml:
 Il est possible de faire un fichier international en ajoutant plusieurs parties Internationalisation en précisant la langue.
 
@@ -584,6 +582,90 @@ On peut surcharger l'affichage d'une colonne faisant référence à un référen
             fr: 'espèce :{esp_nom}'
             en: 'espèce :{esp_nom}'
 ```
+## templating
+IL est possible d'utiliser un template lorsque certaines colonnes de datatype on un format commun.
+par example avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*)
+
+``` csv
+Date	      Time	SWC_1_10	SWC_2_10	SWC_3_10	SWC_4_10
+01/01/2001	01:00	45	      35	      37	      49
+01/01/2001	02:00	45	      35	      37	      49
+
+
+```
+Il est possible d'enregistrer toutes les colonnes SWC_([0-9]*)_([0-9]*) dans une variable unique swc. 
+
+On declare cette variable dans la section data 
+
+```yaml
+      SWC:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+
+```
+Dans la section format on rajoute une section _repeatedColumns_ pour indiquer comment remplir le data à partir du pattern
+```yaml
+    format:
+      ... 
+      repeatedColumns:
+        - headerPattern: "(SWC)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SWC
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SWC
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SWC
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+
+```
+On note la présence de la section token contenant un tableau de boundTo dans lequel le résultat des capture de l'expression régulière seront utilisés comme une colonne.
+token d'indice 0 -> $1
+token d'indice 1 -> $2
+
+ etc...
+
+Dans l'exemple le variable-component SWC-variable aura pour valeur SWC résultat de la première parenthèse.
+
+
 ## Zip de YAML
 Il est possible au lieu de fournir un yaml, de fournir un fichier zip. Cela permet de découper les YAML long en plusieurs fichiers.
 
