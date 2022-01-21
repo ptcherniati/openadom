@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -48,7 +47,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -65,7 +63,7 @@ import java.util.stream.Stream;
 @Transactional
 public class OreSiService {
 
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
@@ -304,14 +302,7 @@ public class OreSiService {
     }
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
-
-        ConfigurationParsingResult configurationParsingResult;
-        if (configurationFile.getOriginalFilename().matches(".*\\.zip")) {
-            final byte[] bytes = new MultiYaml().parseConfigurationBytes(configurationFile);
-            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(bytes);
-        } else {
-            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
-        }
+        ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
@@ -590,9 +581,6 @@ public class OreSiService {
         log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
-        Optional.ofNullable(params)
-                .map(par -> par.getBinaryfiledataset())
-                .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
         BinaryFile storedFile = loadOrCreateFile(file, params, app);
         if (params != null && !params.topublish) {
             if (storedFile.getParams() != null && storedFile.getParams().published) {
@@ -653,18 +641,11 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
             Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
+            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations());
+
             readPreHeader(formatDescription, constantValues, linesIterator);
 
             ImmutableList<String> columns = readHeaderRow(linesIterator);
-            final List<String> declaredColumns = dataTypeDescription.getFormat().getColumns().stream()
-                    .map(col -> col.getHeader())
-                    .collect(Collectors.toList());
-            columns.stream()
-                    .filter(col -> !declaredColumns.contains(col))
-                    .forEach(col -> boundColumnsWithTemplate(col, dataTypeDescription));
-            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations());
-
-
             readPostHeader(formatDescription, linesIterator);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
@@ -676,61 +657,6 @@ public class OreSiService {
 
             repo.getRepository(app).data().storeAll(dataStream);
         }
-    }
-
-    private void boundColumnsWithTemplate(String unboundedColumn, Configuration.DataTypeDescription dataTypeDescription) {
-        if (dataTypeDescription.getTemplate() == null || dataTypeDescription.getTemplate().isEmpty()) {
-            return;
-        }
-        final LinkedHashMap<String, Configuration.TemplateDescription> templates = dataTypeDescription.getTemplate();
-        final Matcher matcher = templates.entrySet().stream()
-                .map(entry -> {
-                    final Pattern pattern = Pattern.compile(entry.getKey());
-                    final Matcher match = pattern.matcher(unboundedColumn);
-                    if (match.matches()) {
-                        return match;
-                    }
-                    return null;
-                })
-                .filter(match -> match != null)
-                .findFirst().orElse(null);
-        if (matcher == null) {
-            return;
-        }
-        Configuration.TemplateDescription templateDescription = templates.get(matcher.pattern().pattern());
-        Map<String, String> variables = new HashMap<>();
-        for (int i = 0; i < templateDescription.getVariables().size(); i++) {
-            variables.put(templateDescription.getVariables().get(i), matcher.group(i));
-        }
-        ObjectMapper mapper = new ObjectMapper();
-        String json = "";
-        try {
-            json = mapper.writeValueAsString(templateDescription);
-
-            for (Map.Entry<String, String> entry : variables.entrySet()) {
-                String searchFor = String.format("\\$\\{%s\\}", entry.getKey());
-                json = json.replaceAll(searchFor, entry.getValue());
-            }
-            templateDescription = mapper.readValue(json, Configuration.TemplateDescription.class);
-            dataTypeDescription.getData().putAll(templateDescription.getData());
-            final Configuration.ColumnBindingDescription columnBindingDescription = new Configuration.ColumnBindingDescription();
-            columnBindingDescription.setHeader(matcher.group(0));
-            final VariableComponentKey variableComponentKey = new VariableComponentKey(matcher.group(0), templateDescription.getBoundToComponent());
-            columnBindingDescription.setBoundTo(variableComponentKey);
-            dataTypeDescription.getFormat().getColumns().add(columnBindingDescription);
-            templateDescription.getDataGroups().entrySet().stream()
-                    .forEach(entry -> {
-                        final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
-                        dataGroupDescription.setLabel(entry.getValue().getLabel());
-                        dataGroupDescription.setInternationalizationName(entry.getValue().getInternationalizationName());
-                        dataTypeDescription.getAuthorization().getDataGroups()
-                                .computeIfAbsent(entry.getKey(), k -> dataGroupDescription);
-                        dataTypeDescription.getAuthorization().getDataGroups().get(entry.getKey()).getData().addAll(entry.getValue().getData());
-                    });
-        } catch (Exception e) {
-            return;
-        }
-        return;
     }
 
     private List<CsvRowValidationCheckResult> findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps) {
@@ -810,7 +736,7 @@ public class OreSiService {
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
-     * @param binaryFileDataset
+     * @param timeScopeColumnPattern
      * @return
      */
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
@@ -828,7 +754,7 @@ public class OreSiService {
 
 
         return rowWithData -> {
-            Map<VariableComponentKey, String> values = new HashMap<>(rowWithData.getDatum());
+            Map<VariableComponentKey, String> values =  new HashMap<>(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -841,7 +767,7 @@ public class OreSiService {
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                        if (!lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)) {
+                        if(! lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)){
                             values.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
@@ -1253,7 +1179,7 @@ public class OreSiService {
         }
         ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
         if (log.isDebugEnabled()) {
-            //log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
+            log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
         }
         return defaultValueExpressions;
     }
@@ -1261,18 +1187,15 @@ public class OreSiService {
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
-        final Configuration.DataTypeDescription dataTypeDescription = downloadDatasetQueryCopy.getApplication()
+        Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
                 .getConfiguration()
                 .getDataTypes()
-                .get(dataType);
-        Configuration.FormatDescription format = dataTypeDescription
+                .get(dataType)
                 .getFormat();
-        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf((LinkedHashMap<String, DownloadDatasetQuery.VariableComponentOrderBy>) getExportColumns(dataTypeDescription, getVariableComponentKeysFromTemplate(list, dataTypeDescription)).entrySet().stream()
+        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey(),
-                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC),
-                        DownloadDatasetQuery.VariableComponentOrderBy::returnNewValue,
-                        LinkedHashMap::new
+                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
                 )));
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
         List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
@@ -1317,43 +1240,7 @@ public class OreSiService {
         return result;
     }
 
-    private Map<String, VariableComponentKey> getVariableComponentKeysFromTemplate(List<DataRow> list, Configuration.DataTypeDescription dataTypeDescription) {
-        return list.stream()
-                .map(dataRow -> dataRow.getValues().keySet())
-                .map(variables -> variables.stream().filter(
-                                variable -> dataTypeDescription.getTemplate().keySet().stream()
-                                        .anyMatch(pattern -> Pattern.compile(pattern).matcher(variable).matches())
-                        ).collect(Collectors.toSet())
-                )
-                .flatMap(Set::stream)
-                .distinct()
-                .map(variable -> {
-                    return dataTypeDescription.getTemplate()
-                            .entrySet().stream()
-                            .map(e -> {
-                                        Map<String, VariableComponentKey> variableComponentKeys = new HashMap<>();
-                                        for (Map.Entry<String, Configuration.ColumnDescription> columnDescriptionEntry : e.getValue().getData().entrySet()) {
-                                            for (String component : columnDescriptionEntry.getValue().getComponents().keySet()) {
-                                                variableComponentKeys.put(
-                                                        String.format("%s_%s", variable, component),
-                                                        new VariableComponentKey(variable, component)
-                                                );
-                                            }
-                                        }
-                                        return variableComponentKeys;
-                                    }
-                            )
-                            .flatMap(map -> map.entrySet().stream())
-                            .collect(Collectors.toMap(e -> e.getKey(),
-                                    e -> e.getValue()));
-                })
-                .flatMap(map -> map.entrySet().stream())
-                .collect(Collectors.toMap(e -> e.getKey(),
-                        e -> e.getValue()));
-    }
-
-    private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.DataTypeDescription dataTypeDescription, Map<String, VariableComponentKey> variableComponentKeysFromtemplate) {
-        final Configuration.FormatDescription format = dataTypeDescription.getFormat();
+    private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.FormatDescription format) {
         ImmutableMap<String, VariableComponentKey> valuesFromStaticColumns = format.getColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
         ImmutableMap<String, VariableComponentKey> valuesFromConstants = format.getConstants().stream()
@@ -1363,13 +1250,12 @@ public class OreSiService {
                 .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
         ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
                 .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
-        final LinkedHashMap<String, VariableComponentKey> variableComponentKeyLinkedHashMap = new LinkedHashMap<>();
-        variableComponentKeyLinkedHashMap.putAll(valuesFromStaticColumns);
-        variableComponentKeyLinkedHashMap.putAll(valuesFromConstants);
-        variableComponentKeyLinkedHashMap.putAll(valuesFromHeaderPatterns);
-        variableComponentKeyLinkedHashMap.putAll(valuesFromRepeatedColumns);
-        variableComponentKeyLinkedHashMap.putAll(variableComponentKeysFromtemplate);
-        return ImmutableMap.copyOf(variableComponentKeyLinkedHashMap);
+        return ImmutableMap.<String, VariableComponentKey>builder()
+                .putAll(valuesFromStaticColumns)
+                .putAll(valuesFromConstants)
+                .putAll(valuesFromHeaderPatterns)
+                .putAll(valuesFromRepeatedColumns)
+                .build();
     }
 
     public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {
@@ -1497,9 +1383,6 @@ public class OreSiService {
 
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
-        if (file.getOriginalFilename().matches(".zip")) {
-            return applicationConfigurationService.unzipConfiguration(file);
-        }
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 

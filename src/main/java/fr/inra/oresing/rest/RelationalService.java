@@ -9,7 +9,13 @@ import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
+import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.SqlTable;
+import fr.inra.oresing.persistence.WithSqlIdentifier;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +28,13 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -200,12 +212,12 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 }
             }
 
-            String fromClause = "FROM " + dataTableName + " "
-                    + Joiner.on(" ").join(fromClauseJoinElements);
-
             String selectClause = "SELECT " + String.join(", ", selectClauseElements);
-            String viewSql = getSqlWithVariableComponentKeysForTemplate(application.getName(), dataTypeDescription, withClause, selectClause, fromClause);
 
+            String fromClause = "FROM " + dataTableName + " "
+                              + Joiner.on(" ").join(fromClauseJoinElements);
+
+            String viewSql = String.join("\n", withClause, selectClause, fromClause);
 
             SqlTable view = sqlSchema.forDataType(dataType);
             views.add(new ViewCreationCommand(view, viewSql, referenceColumnIds));
@@ -224,50 +236,11 @@ public class RelationalService implements InitializingBean, DisposableBean {
         return ImmutableSet.copyOf(references);
     }
 
-    private String getSqlWithVariableComponentKeysForTemplate(String applicationName, Configuration.DataTypeDescription dataTypeDescription, String withClause, String selectClause, String fromClause) {
-        for (Map.Entry<String, Configuration.TemplateDescription> variableEntry : dataTypeDescription.getTemplate().entrySet()) {
-            String pattern = variableEntry.getKey();
-            final Configuration.TemplateDescription templateDescription = variableEntry.getValue();
-            final String variableName = templateDescription.getDataGroups().keySet().stream().findFirst().orElse("unknownDatagroup").toLowerCase();
-            withClause = String.format(withClause + ",\n" +
-                            "%1$s as (select rowid , \n" +
-                            "jsonb_path_query(datavalues, '$ ? (@.keyvalue().key like_regex \"%2$s\" flag \"i\").keyvalue().key') \"%1$skey\",\n" +
-                            "jsonb_path_query(datavalues, '$ ? (@.keyvalue().key like_regex \"%2$s\" flag \"i\").keyvalue().value' ) \"%1$svalue\"\n" +
-                            "from %3$s.\"data\")\n",
-                    variableName,
-                    pattern,
-                    applicationName);
-            fromClause = String.format("%1$s\njoin %2$s using(rowid) \n", fromClause, variableName);
-            selectClause = String.format("%2$s,\n" +
-                    "%1$s.%1$skey::text \"%1$s_column\" \n", variableName, selectClause);
-            for (Configuration.ColumnDescription columnDescriptionEntry : templateDescription.getData().values()) {
-                for (Map.Entry<String, Configuration.VariableComponentDescription> variableComponentDescriptionEntry : columnDescriptionEntry.getComponents().entrySet()) {
-                    selectClause = String.format("%1$s,\n" +
-                                    "jsonb_extract_path_text(%2$s.%2$svalue, '%3$s') \"%2$s_%3$s\"",
-                            selectClause,
-                            variableName,
-                            variableComponentDescriptionEntry.getKey());
-                    if (variableComponentDescriptionEntry.getValue().getChecker().getName().equalsIgnoreCase("Reference")) {
-                        selectClause = String.format("%1$s,\n" +
-                                        "jsonb_path_query_first(refslinkedto, '$ ? (@.keyvalue().key like_regex \"%3$s\" flag \"i\").keyvalue().value.%4$s') #>> '{}' \"%2$s_%4$s_technicalId\"",
-                                selectClause,
-                                variableName,
-                                pattern,
-                                variableComponentDescriptionEntry.getKey()
-                        );
-                    }
-                }
-            }
-        }
-        return String.join("\n", withClause, selectClause, fromClause);
-    }
-
     private List<ViewCreationCommand> getDenormalizedViewsForDataTypes(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
         List<ViewCreationCommand> views = new LinkedList<>();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
-            dataTypeDescription.addTemplatedDatas();
             ImmutableMap<VariableComponentKey, ReferenceLineChecker> referenceCheckers = checkerFactory.getReferenceLineCheckers(application, dataType);
 
             Set<String> selectClauseReferenceElements = new LinkedHashSet<>();
@@ -286,7 +259,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 application.getConfiguration().getReferences().get(referenceType).getColumns().keySet().stream()
                         .map(referenceColumn -> alias + "." + quoteSqlIdentifier(referenceColumn) + " as " + getColumnName("ref", variableComponentKey.getVariable(), variableComponentKey.getComponent(), referenceColumn))
                         .forEach(selectClauseReferenceElements::add);
-                fromClauseJoinElements.add("left outer join " + quotedViewName + " " + alias + " on " + dataTableName + "." + foreignKeyColumnName + "::uuid = " + alias + "." + quoteSqlIdentifier(referenceType + "_id") + "::uuid\n");
+                fromClauseJoinElements.add("left outer join " + quotedViewName + " " + alias + " on " + dataTableName + "." + foreignKeyColumnName + "::uuid = " + alias + "." + quoteSqlIdentifier(referenceType + "_id") + "::uuid");
             }
 
             Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
@@ -296,7 +269,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .map(columnName -> dataTableName + "." + columnName)
                     .forEach(selectClauseElements::add);
 
-            String selectClause = "select " + String.join(",\n ", selectClauseElements);
+            String selectClause = "select " + String.join(", ", selectClauseElements);
 
             String fromClause = "from " + sqlSchema.forDataType(dataType).getSqlIdentifier() + " "
                     + Joiner.on(" ").join(fromClauseJoinElements);

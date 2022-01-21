@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -126,7 +125,7 @@ public class AuthorizationService {
     }
 
 
-    private SqlPolicy toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, SqlPolicy.Statement statement) {
+    private SqlPolicy toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, SqlPolicy.Statement statement){
         Set<String> usingExpressionElements = new LinkedHashSet<>();
         Application application = repository.application().findApplication(authorization.getApplication());
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
@@ -262,16 +261,10 @@ public class AuthorizationService {
     }
 
     private ImmutableSortedSet<GetGrantableResult.DataGroup> getDataGroups(Application application, String dataType) {
-        final Configuration.DataTypeDescription dataTypeDescription = application.getConfiguration().getDataTypes().get(dataType);
-        Stream<GetGrantableResult.DataGroup> dataGroups = dataTypeDescription.getAuthorization().getDataGroups().entrySet().stream()
-                .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()));
-        final Stream<GetGrantableResult.DataGroup> dataGroupsInTemplate = dataTypeDescription.getTemplate().values().stream()
-                .map(templateDescription -> templateDescription.getDataGroups().entrySet().stream()
-                        .map(entry -> new GetGrantableResult.DataGroup(entry.getKey(), entry.getValue().getLabel()))
-                        .collect(Collectors.toList()))
-                .flatMap(List::stream);
-       return  Stream.concat(dataGroupsInTemplate, dataGroups)
+        ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = application.getConfiguration().getDataTypes().get(dataType).getAuthorization().getDataGroups().entrySet().stream()
+                .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)));
+        return dataGroups;
     }
 
     private ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {

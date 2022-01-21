@@ -16,15 +16,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -75,38 +69,6 @@ public class Fixtures {
 
     public String getPemRepositoryDataResourceName(String projet, String site) {
         return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, site);
-    }
-
-    public String getForetRepositoryParams(String fileName, String datatype) {
-        //fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv
-        final Pattern pattern = Pattern.compile("(.*)_" + datatype + "_(.*)_(.*).csv");
-        final Matcher matcher = pattern.matcher(fileName);
-        if(!matcher.matches()){
-            return null;
-        }
-        String zone_etude = matcher.group(1);
-        final String[] parent_site = zone_etude.split("-");
-        if(parent_site.length>1){
-            zone_etude = String.format("%1$s.%1$s__%2$s", parent_site[0], parent_site[1]);
-        }
-        final DateTimeFormatter formaterIn = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        final DateTimeFormatter formaterOut = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        final boolean isMonthly = datatype.matches(".*_m");
-        final String format = (isMonthly ? "01-" : "") + "%s";
-        String dateDebut =formaterOut.format(LocalDate.parse(String.format(format, matcher.group(2)), formaterIn).atStartOfDay(ZoneOffset.UTC))+" 00:00:00";
-        String dateFin =formaterOut.format(LocalDate.parse(String.format(format, matcher.group(3)), formaterIn).atTime(0,0).plus(1, isMonthly ? ChronoUnit.MONTHS:ChronoUnit.DAYS))+" 00:00:00";
-        return String.format("{\n" +
-                "   \"fileid\":null,\n" +
-                "   \"binaryfiledataset\":{\n" +
-                "      \"requiredauthorizations\":{\n" +
-                "         \"localization\":\"%1$s\"\n" +
-                "      },\n" +
-                "      \"from\":\"%2$s\",\n" +
-                "      \"to\":\"%3$s\"\n" +
-                "   },\n" +
-                "   \"topublish\":true\n" +
-                "}", zone_etude, dateDebut, dateFin);
     }
 
     public String getPemRepositoryParamsWithId(String projet, String plateforme, String site, String fileId, boolean toPublish) {
@@ -685,26 +647,17 @@ public class Fixtures {
     }
 
     public Map<String, String> getFluxMeteoForetEssaiDataResourceName() {
-        Map<String, String> datas = new HashMap<>();
-        datas.putAll(Map.of(
-                "swc_j", "/data/foret/data/climatDuSol/journalier/fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv",
-                "swc_infraj", "/data/foret/data/climatDuSol/infraj/fougeres-fou_4_swc_infraj_01-01-2001_06-01-2001.csv"
-        ));
-        datas.putAll(Map.of(
+        return Map.of(
                 "chambrefluxsol_infraj", "/data/foret/data/chambresAFlux/infraj/azerailles_chambrefluxsol_infraj_03-10-2013_05-10-2013.csv",
                 "chambrefluxsol_j", "/data/foret/data/chambresAFlux/journalier/azerailles_chambrefluxsol_j_01-05-2013_08-05-2013.csv",
-                "chambrefluxsol_m", "/data/foret/data/chambresAFlux/mensuel/azerailles_chambrefluxsol_m_06-2013_10-2013.csv"
-        ));
-        datas.putAll(Map.of(
+                "chambrefluxsol_m", "/data/foret/data/chambresAFlux/mensuel/azerailles_chambrefluxsol_m_06-2013_10-2013.csv",
                 "flux_sh", "/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2010_02-01-2010.csv",
                 "flux_j", "/data/foret/data/flux/journalier/hesse-hesse_1_flux_j_01-01-2008_05-01-2008.csv",
-                "flux_m", "/data/foret/data/flux/mensuel/hesse-hesse_1_flux_m_01-2008_03-2008.csv"
-        ));
-        datas.putAll(Map.of(
+                "flux_m", "/data/foret/data/flux/mensuel/hesse-hesse_1_flux_m_01-2008_03-2008.csv",
                 "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv",
                 "meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
                 "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"
-        ));
+        );
         /*return Map.of(
                 "flux_j", "/data/foret/data/flux/journalier/hesse-hesse_1_flux_j_01-01-2008_05-01-2008.csv",
                 "flux_sh", "s/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2010_02-01-2010.csv",
@@ -719,7 +672,6 @@ public class Fixtures {
                 "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"",
                 "meteo_m", "/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_12-2013.csv"
         );*/
-        return datas;
     }
 
     enum Application {

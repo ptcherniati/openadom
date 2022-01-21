@@ -920,8 +920,8 @@ dataTypes:
           exportHeader: "TS"
   smp_infraj:
     internationalizationName:
-      fr: Tension de l'eau infra-journalière
-      en: Infra-daily tension water
+      fr: Profondeur de la nappe infra-journalière
+      en: Infra-daily depth of the groundwater
     repository:
       toto: test
     authorization:

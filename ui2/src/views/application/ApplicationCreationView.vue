@@ -44,7 +44,7 @@
                 'is-success': valid,
               }"
             >
-              <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
+              <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml">
                 <span class="file-cta">
                   <b-icon class="file-icon" icon="upload"></b-icon>
                   <span class="file-label">{{ $t("applications.chose-config") }}</span>
