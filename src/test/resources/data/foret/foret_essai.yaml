@@ -691,54 +691,6 @@ dataTypes:
       en: Infra-daily temperature
     repository:
       toto: test
-    template:
-      TS_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          TS:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "TS"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "degre celcius"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -760,6 +712,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        TS:
+          label: TS
+          data:
+            - TS
     data:
       localization:
         components:
@@ -850,6 +806,38 @@ dataTypes:
               params:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
+      TS:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "degre celcius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -911,60 +899,31 @@ dataTypes:
           boundTo:
             variable: date
             component: time
+      repeatedColumns:
+        - headerPattern: "(TS)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: TS
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: TS
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: TS
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: TS
+            component: valeur
+          exportHeader: "TS"
   smp_infraj:
     internationalizationName:
       fr: Tension de l'eau infra-journalière
       en: Infra-daily tension water
     repository:
       toto: test
-    template:
-      SMP_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          SMP:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "SMP"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "kilopascal"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -986,6 +945,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        SMP:
+          label: SMP
+          data:
+            - SMP
     data:
       localization:
         components:
@@ -1076,6 +1039,38 @@ dataTypes:
               params:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
+      SMP:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -1137,60 +1132,31 @@ dataTypes:
           boundTo:
             variable: date
             component: time
+      repeatedColumns:
+        - headerPattern: "(SMP)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SMP
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SMP
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SMP
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SMP
+            component: valeur
+          exportHeader: "SMP"
   gwd_infraj:
     internationalizationName:
       fr: Profondeur de la nappe infra-journalière
       en: Infra-daily depth of the groundwater
     repository:
       toto: test
-    template:
-      GWD_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          GWD:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "GWD"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "degre celcius"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -1212,6 +1178,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        GWD:
+          label: GWD
+          data:
+            - GWD
     data:
       localization:
         components:
@@ -1302,6 +1272,38 @@ dataTypes:
               params:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
+      GWD:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "mètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -1363,60 +1365,31 @@ dataTypes:
           boundTo:
             variable: date
             component: time
+      repeatedColumns:
+        - headerPattern: "(GWD)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: GWD
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: GWD
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: GWD
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: GWD
+            component: valeur
+          exportHeader: "GWD"
   g_infraj:
     internationalizationName:
       fr: Flux de chaleur infra-journalier
       en: Infra-daily flow of heat
     repository:
       toto: test
-    template:
-      G_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          G:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "G"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "megajoule_par_metre_et_par_mois"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -1438,6 +1411,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        G:
+          label: G
+          data:
+            - G
     data:
       localization:
         components:
@@ -1528,6 +1505,38 @@ dataTypes:
               params:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
+      G:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "watt_par_metre_carre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -1589,60 +1598,31 @@ dataTypes:
           boundTo:
             variable: date
             component: time
+      repeatedColumns:
+        - headerPattern: "(G)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: G
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: G
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: G
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: G
+            component: valeur
+          exportHeader: "G"
   swc_infraj:
     internationalizationName:
       fr: Humidité volumique infra-journalière
       en: Infra daily volume humidity
     repository:
       toto: test
-    template:
-      SWC_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          SWC:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "SWC"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "percentage"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -1664,6 +1644,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        SWC:
+          label: SWC
+          data:
+            - SWC
     data:
       localization:
         components:
@@ -1754,6 +1738,38 @@ dataTypes:
               params:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
+      SWC:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -1815,60 +1831,31 @@ dataTypes:
           boundTo:
             variable: date
             component: time
+      repeatedColumns:
+        - headerPattern: "(SWC)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SWC
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SWC
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SWC
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
   ts_j:
     internationalizationName:
       fr: Température journalière
       en: Daily temperature
     repository:
       toto: test
-    template:
-      TS_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          TS:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "TS"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "degre celcius"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -1890,6 +1877,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        TS:
+          label: TS
+          data:
+            - TS
     data:
       localization:
         components:
@@ -1967,6 +1958,38 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
+      TS:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "degre celcius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -2024,60 +2047,31 @@ dataTypes:
           boundTo:
             variable: date
             component: day
+      repeatedColumns:
+        - headerPattern: "(TS)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: TS
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: TS
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: TS
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: TS
+            component: valeur
+          exportHeader: "TS"
   smp_j:
     internationalizationName:
       fr: Tension de l'eau journalière
       en: Daily tension of water
     repository:
       toto: test
-    template:
-      SMP_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          SMP:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "SMP"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "kilopascal"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -2099,6 +2093,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        SMP:
+          label: SMP
+          data:
+            - SMP
     data:
       localization:
         components:
@@ -2176,6 +2174,38 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
+      SMP:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -2233,60 +2263,31 @@ dataTypes:
           boundTo:
             variable: date
             component: day
+      repeatedColumns:
+        - headerPattern: "(SMP)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SMP
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SMP
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SMP
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SMP
+            component: valeur
+          exportHeader: "SMP"
   gwd_j:
     internationalizationName:
       fr: Profondeur journalière de la nappe
       en: Daily depth of the groundwater
     repository:
       toto: test
-    template:
-      GWD_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          GWD:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "GWD"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "degre celcius"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -2308,6 +2309,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        GWD:
+          label: GWD
+          data:
+            - GWD
     data:
       localization:
         components:
@@ -2385,6 +2390,38 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
+      GWD:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "mètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -2442,60 +2479,31 @@ dataTypes:
           boundTo:
             variable: date
             component: day
+      repeatedColumns:
+        - headerPattern: "(GWD)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: GWD
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: GWD
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: GWD
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: GWD
+            component: valeur
+          exportHeader: "GWD"
   g_j:
     internationalizationName:
       fr: Flux de chaleur journalier
       en: Daily flow of heat
     repository:
       toto: test
-    template:
-      G_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          G:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "G"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "megajoule par metre et par mois"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -2517,6 +2525,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        G:
+          label: G
+          data:
+            - G
     data:
       localization:
         components:
@@ -2594,6 +2606,38 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
+      G:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "watt_par_metre_carre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -2651,60 +2695,31 @@ dataTypes:
           boundTo:
             variable: date
             component: day
+      repeatedColumns:
+        - headerPattern: "(G)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: G
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: G
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: G
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: G
+            component: valeur
+          exportHeader: "G"
   swc_j:
     internationalizationName:
       fr: Humidité volumique journalière
       en: Daily volume humidity
     repository:
       toto: test
-    template:
-      SWC_([0-9]*)_([0-9]*):
-        variables:
-          - variable
-          - profondeur
-          - répétition
-        boundToComponent : value
-        dataGroups:
-          SWC:
-            label: "variables"
-            data:
-              - ${variable}
-        data:
-          ${variable}:
-            components:
-              variable:
-                defaultValue: return "SWC"
-                checker:
-                  name: Reference
-                  params:
-                    refType: variables
-                    required: true
-                    codify: true
-              value:
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              unit:
-                defaultValue: return "percentage"
-                checker:
-                  name: Reference
-                  params:
-                    refType: unites
-                    required: true
-                    codify: true
-              profondeur:
-                defaultValue: return "${profondeur}"
-                checker:
-                  name: Float
-                  params:
-                    required: false
-              repetition:
-                defaultValue: return "${répétition}"
-                checker:
-                  name: Integer
-                  params:
-                    required: false
     authorization:
       authorizationScopes:
         localization:
@@ -2726,6 +2741,10 @@ dataTypes:
           label: "date"
           data:
             - date
+        SWC:
+          label: SWC
+          data:
+            - SWC
     data:
       localization:
         components:
@@ -2803,6 +2822,38 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
+      SWC:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
     format:
       constants:
         - rowNumber: 1
@@ -2860,6 +2911,25 @@ dataTypes:
           boundTo:
             variable: date
             component: day
+      repeatedColumns:
+        - headerPattern: "(SWC)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SWC
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SWC
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SWC
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
   chambrefluxsol_infraj:
     internationalizationName:
       fr: Flux de chambres infra journalier
