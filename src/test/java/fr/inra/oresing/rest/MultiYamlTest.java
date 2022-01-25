@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-public class MutiYamlTest {
+public class MultiYamlTest {
     @Test
     public void testYaml() throws IOException {
         try (final InputStream fileInputStream = getClass().getResourceAsStream("/data/foret/multiyaml/multiyaml.zip")) {
