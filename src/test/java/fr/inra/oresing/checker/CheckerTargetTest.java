@@ -4,7 +4,7 @@ import fr.inra.oresing.model.VariableComponentKey;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ChecketTargetTest {
+public class CheckerTargetTest {
     @Test
     public void testBuildColumnChecker(){
         CheckerTarget checkerTarget= CheckerTarget.getInstance( "bonjour",null, null);
