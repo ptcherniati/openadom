@@ -8,7 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Map;
 
-public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker {
+public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker<DateLineCheckerConfiguration> {
 
     public static final String PARAM_PATTERN = "pattern";
     public static final String PARAM_DURATION = "duration";

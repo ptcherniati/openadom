@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class RegularExpressionChecker implements CheckerOnOneVariableComponentLineChecker {
+public class RegularExpressionChecker implements CheckerOnOneVariableComponentLineChecker<RegularExpressionCheckerConfiguration> {
 
     public static final String PARAM_PATTERN = "pattern";
 

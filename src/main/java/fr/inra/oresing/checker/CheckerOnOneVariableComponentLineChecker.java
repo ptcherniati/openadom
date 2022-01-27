@@ -8,7 +8,7 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.Map;
 
-public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
+public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerConfiguration> extends LineChecker<C> {
 
     CheckerTarget getTarget();
 

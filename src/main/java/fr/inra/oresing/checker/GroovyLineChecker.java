@@ -14,7 +14,7 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.*;
 
-public class GroovyLineChecker implements LineChecker {
+public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfiguration> {
 
     public static final String NAME = "GroovyExpression";
 

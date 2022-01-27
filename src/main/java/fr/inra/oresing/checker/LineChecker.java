@@ -5,7 +5,7 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.Map;
 
-public interface LineChecker {
+public interface LineChecker<C extends LineCheckerConfiguration> {
 
     ValidationCheckResult check(Map<VariableComponentKey, String> values);
     ValidationCheckResult checkReference(Map<String, String> values);

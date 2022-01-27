@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker {
+public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker<ReferenceLineCheckerConfiguration> {
 
     public static final String PARAM_REFTYPE = "refType";
     private final String reference;
