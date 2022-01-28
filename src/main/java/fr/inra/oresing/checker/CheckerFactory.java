@@ -24,9 +24,12 @@ import java.util.stream.Stream;
 @Slf4j
 public class CheckerFactory {
 
+    @Deprecated
     public static final String COLUMNS = "columns";
+
+    @Deprecated
     public static final String VARIABLE_COMPONENT_KEY = "variableComponentKey";
-    public static final String REQUIRED = "required";
+
     @Autowired
     private OreSiRepository repository;
 
@@ -85,18 +88,21 @@ public class CheckerFactory {
             CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey, app, repository.getRepository(app));
             if ("Reference".equals(checkerDescription.getName())) {
                 variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, checkerTarget);
-            } else if ("Date".equals(checkerDescription.getName())) {
-                String pattern = checkerDescription.getParams().get(DateLineChecker.PARAM_PATTERN);
-                variableComponentChecker = new DateLineChecker(checkerTarget, pattern, checkerDescription.getParams());
-            } else if ("Integer".equals(checkerDescription.getName())) {
-                variableComponentChecker = new IntegerChecker(checkerTarget, checkerDescription.getParams());
-            } else if ("Float".equals(checkerDescription.getName())) {
-                variableComponentChecker = new FloatChecker(checkerTarget, checkerDescription.getParams());
-            } else if ("RegularExpression".equals(checkerDescription.getName())) {
-                String pattern = checkerDescription.getParams().get(RegularExpressionChecker.PARAM_PATTERN);
-                variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, checkerDescription.getParams());
             } else {
-                throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
+                final Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
+                if ("Date".equals(checkerDescription.getName())) {
+                    String pattern = configuration.getPattern();
+                    variableComponentChecker = new DateLineChecker(checkerTarget, pattern, configuration);
+                } else if ("Integer".equals(checkerDescription.getName())) {
+                    variableComponentChecker = new IntegerChecker(checkerTarget, configuration);
+                } else if ("Float".equals(checkerDescription.getName())) {
+                    variableComponentChecker = new FloatChecker(checkerTarget, configuration);
+                } else if ("RegularExpression".equals(checkerDescription.getName())) {
+                    String pattern = configuration.getPattern();
+                    variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, configuration);
+                } else {
+                    throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
+                }
             }
             Preconditions.checkState(variableComponentChecker.getTarget().getTarget().equals(variableComponentKey));
             checkersBuilder.add(variableComponentChecker);
@@ -105,7 +111,7 @@ public class CheckerFactory {
 
     private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, String locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget) {
         CheckerOnOneVariableComponentLineChecker variableComponentChecker;
-        String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+        String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
         ImmutableMap<String, UUID> referenceValues;
         ImmutableMap<String, String> display = null;
@@ -151,16 +157,15 @@ public class CheckerFactory {
             Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
             Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
             LineChecker lineChecker;
-            Map<String, String> params = checkerDescription.getParams();
-            String pattern;
+            Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
             if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
-                String expression = params.get(GroovyLineChecker.PARAM_EXPRESSION);
-                lineChecker = GroovyLineChecker.forExpression(expression, app, repository.getRepository(app), params);
+                String expression = configurationDescription.getExpression();
+                lineChecker = GroovyLineChecker.forExpression(expression, app, repository.getRepository(app), configurationDescription);
                 checkersBuilder.add(lineChecker);
             } else {
-                List<CheckerTarget> checkerTargets = buildCheckerTarget(params, app);
+                List<CheckerTarget> checkerTargets = buildCheckerTarget(configurationDescription, app);
                 if (checkerTargets != null) {
-                    checkerTargets.forEach(checkerTarget -> buildCheckers(app, checkerDescription, params, checkerTarget, checkersBuilder));
+                    checkerTargets.forEach(checkerTarget -> buildCheckers(app, checkerDescription, checkerTarget, checkersBuilder));
                 } else {
                     throw new IllegalArgumentException(String.format("Pour le checker de ligne %s, le paramètre %s doit être fourni.", checkerDescription.getName(), param));
                 }
@@ -169,37 +174,35 @@ public class CheckerFactory {
         }
     }
 
-    private void buildCheckers(Application app, Configuration.CheckerDescription checkerDescription, Map<String, String> params, CheckerTarget target, ImmutableSet.Builder<LineChecker> checkersBuilder) {
-        String pattern;
+    private void buildCheckers(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target, ImmutableSet.Builder<LineChecker> checkersBuilder) {
+        Configuration.CheckerConfigurationDescription checkerConfigurationDescription = checkerDescription.getParams();
         switch (checkerDescription.getName()) {
             case "Date":
-                pattern = params.get(DateLineChecker.PARAM_PATTERN);
-                checkersBuilder.add(new DateLineChecker(target, pattern, params));
+                checkersBuilder.add(new DateLineChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription));
                 break;
             case "Integer":
-                checkersBuilder.add(new IntegerChecker(target, params));
+                checkersBuilder.add(new IntegerChecker(target, checkerConfigurationDescription));
                 break;
             case "Float":
-                checkersBuilder.add(new FloatChecker(target, params));
+                checkersBuilder.add(new FloatChecker(target, checkerConfigurationDescription));
                 break;
             case "RegularExpression":
-                pattern = params.get(RegularExpressionChecker.PARAM_PATTERN);
-                checkersBuilder.add(new RegularExpressionChecker(target, pattern, params));
+                checkersBuilder.add(new RegularExpressionChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription));
                 break;
             case "Reference":
-                String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+                String refType = checkerConfigurationDescription.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, null, params));
+                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, null, checkerConfigurationDescription));
                 break;
             default:
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
         }
     }
 
-    private List<CheckerTarget> buildCheckerTarget(Map<String, String> params, Application application) {
-        String columnsString = params.getOrDefault(COLUMNS, null);
-        String variableComponentKeyParam = params.getOrDefault(VARIABLE_COMPONENT_KEY, null);
+    private List<CheckerTarget> buildCheckerTarget(Configuration.CheckerConfigurationDescription params, Application application) {
+        String columnsString = params.getColumns();
+        String variableComponentKeyParam = params.getVariableComponentKey();
         if (!Strings.isNullOrEmpty(columnsString)) {
             return Stream.of(columnsString.split(","))
                     .map(column -> CheckerTarget.getInstance(column, application, repository.getRepository(application)))

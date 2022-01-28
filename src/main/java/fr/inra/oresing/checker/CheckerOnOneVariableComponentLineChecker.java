@@ -16,7 +16,7 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
         VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
         String value = values.get(variableComponentKey);
         try {
-            ValidationCheckResult check = CheckerDecorator.check(values, value, getParams(), getTarget());
+            ValidationCheckResult check = CheckerDecorator.check(values, value, getConfiguration(), getTarget());
             if(ValidationLevel.WARN.equals(check.getLevel())){
                 value = check.getMessage();
             }else{
@@ -32,7 +32,7 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
     default ValidationCheckResult checkReference(Map<String, String> values) {
         String value = values.get(getTarget().getTarget());
         try {
-            ValidationCheckResult check = CheckerDecorator.check(values, value, getParams(), getTarget());
+            ValidationCheckResult check = CheckerDecorator.check(values, value, getConfiguration(), getTarget());
             if(ValidationLevel.WARN.equals(check.getLevel())){
                 value = check.getMessage();
             }else{
@@ -42,10 +42,6 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
             return e.getValidationCheckResult();
         }
         return check(value);
-    }
-
-    default Map<String, String> getParams(){
-        return Map.of();
     }
 
     ValidationCheckResult check(String value);

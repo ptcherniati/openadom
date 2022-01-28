@@ -9,7 +9,5 @@ public interface LineChecker<C extends LineCheckerConfiguration> {
 
     ValidationCheckResult check(Map<VariableComponentKey, String> values);
     ValidationCheckResult checkReference(Map<String, String> values);
-    default Map<String, String> getParams(){
-        return Map.of();
-    }
+    C getConfiguration();
 }

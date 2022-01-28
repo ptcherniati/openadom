@@ -1,7 +1,12 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.MoreCollectors;
-import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.DateLineCheckerConfiguration;
+import fr.inra.oresing.checker.FloatCheckerConfiguration;
+import fr.inra.oresing.checker.GroovyLineCheckerConfiguration;
+import fr.inra.oresing.checker.IntegerCheckerConfiguration;
+import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
+import fr.inra.oresing.checker.RegularExpressionCheckerConfiguration;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
@@ -10,7 +15,16 @@ import lombok.ToString;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 
 @Getter
 @Setter
@@ -52,9 +66,9 @@ public class Configuration {
             for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
                 CheckerDescription checker = validation.getValue().getChecker();
                 if (checker != null) {
-                    String refType = Optional.ofNullable(checker)
-                            .map(c -> c.getParams())
-                            .map(param -> param.get(ReferenceLineChecker.PARAM_REFTYPE))
+                    String refType = Optional.of(checker)
+                            .map(CheckerDescription::getParams)
+                            .map(CheckerConfigurationDescription::getRefType)
                             .orElse(null);
                     if ("Reference".equals(checker.getName()) && refType != null) {
                         DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -202,7 +216,15 @@ public class Configuration {
         CheckerDescription checker;
         @Nullable
         String defaultValue;
-        Map<String, String> params;
+        VariableComponentDescriptionConfiguration params;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class VariableComponentDescriptionConfiguration {
+        String references; // à remplacer par une collection car split(',')
+        boolean replace;
     }
 
     @Getter
@@ -210,7 +232,36 @@ public class Configuration {
     @ToString
     public static class CheckerDescription {
         String name;
-        Map<String, String> params = new LinkedHashMap<>();
+        CheckerConfigurationDescription params;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class CheckerConfigurationDescription implements
+            RegularExpressionCheckerConfiguration,
+            FloatCheckerConfiguration,
+            IntegerCheckerConfiguration,
+            DateLineCheckerConfiguration,
+            ReferenceLineCheckerConfiguration,
+            GroovyLineCheckerConfiguration {
+        String pattern;
+        String refType;
+        String expression;
+        String columns;
+        String variableComponentKey;
+        String references; // à remplacer par une collection car split(',')
+        String datatypes;
+        String duration;
+        String groovy;
+        boolean codify;
+        boolean required;
+
+
+        String datatype;
+        String variable;
+        String codeVariable;
+        String component;
     }
 
     @Getter

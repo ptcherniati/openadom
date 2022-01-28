@@ -11,8 +11,8 @@ import java.util.Map;
 public class CheckerDecorator {
     public static List<ICheckerDecorator> checkerDecorators = List.of( new CodifyDecorator(),new GroovyDecorator(), new RequiredDecorator());
 
-    public static <T> ValidationCheckResult check(Map<T, String> values, String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
-        if(params == null || params.isEmpty()){
+    public static <T> ValidationCheckResult check(Map<T, String> values, String value, DecoratorConfiguration params, CheckerTarget target) throws DecoratorException {
+        if (params == null) {
             return DefaultValidationCheckResult.warn(value, null);
         }
         for (ICheckerDecorator checkerDecorator : checkerDecorators) {

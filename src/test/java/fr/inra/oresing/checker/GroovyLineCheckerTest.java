@@ -40,7 +40,7 @@ public class GroovyLineCheckerTest {
 
         Application application = Mockito.mock(Application.class);
         OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository,null);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository, getConfiguration(expression));
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
@@ -85,7 +85,7 @@ public class GroovyLineCheckerTest {
         Application application = Mockito.mock(Application.class);
         OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
 
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository,null);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application, repository, getConfiguration(expression));
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
@@ -97,5 +97,59 @@ public class GroovyLineCheckerTest {
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getMessage().contains("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais 261.15."));
         }
+    }
+
+    private GroovyLineCheckerConfiguration getConfiguration(String expression) {
+        return new GroovyLineCheckerConfiguration() {
+            @Override
+            public String getExpression() {
+                return expression;
+            }
+
+            @Override
+            public String getReferences() {
+                return null;
+            }
+
+            @Override
+            public String getDatatypes() {
+                return null;
+            }
+
+            @Override
+            public String getDatatype() {
+                return null;
+            }
+
+            @Override
+            public String getVariable() {
+                return null;
+            }
+
+            @Override
+            public String getCodeVariable() {
+                return null;
+            }
+
+            @Override
+            public String getComponent() {
+                return null;
+            }
+
+            @Override
+            public boolean isCodify() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public boolean isRequired() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public String getGroovy() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+        };
     }
 }

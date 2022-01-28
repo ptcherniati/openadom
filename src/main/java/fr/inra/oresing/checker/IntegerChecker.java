@@ -4,18 +4,16 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
-import java.util.Map;
-
 public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker<IntegerCheckerConfiguration> {
     private final CheckerTarget target;
-    private final Map<String, String> params;
+    private final IntegerCheckerConfiguration configuration;
 
     public CheckerTarget getTarget(){
         return this.target;
     }
 
-    public IntegerChecker(CheckerTarget target, Map<String, String> params) {
-        this.params = params;
+    public IntegerChecker(CheckerTarget target, IntegerCheckerConfiguration configuration) {
+        this.configuration = configuration;
         this.target = target;
     }
 
@@ -34,7 +32,7 @@ public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker<
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public IntegerCheckerConfiguration getConfiguration() {
+        return configuration;
     }
 }

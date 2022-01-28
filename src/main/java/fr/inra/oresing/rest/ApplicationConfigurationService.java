@@ -6,16 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.GroovyLineChecker;
-import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.checker.decorators.GroovyDecorator;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
@@ -33,7 +30,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -330,11 +337,11 @@ public class ApplicationConfigurationService {
                                     builder.recordAuthorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
                                 }
                                 String refType = null;
-                                Map<String, String> params = authorizationScopeVariableComponentChecker.getParams();
-                                if (params == null) {
+                                Configuration.CheckerConfigurationDescription checkerConfigurationDescription = authorizationScopeVariableComponentChecker.getParams();
+                                if (checkerConfigurationDescription == null) {
                                     builder.recordAuthorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
                                 } else {
-                                    refType = params.getOrDefault(ReferenceLineChecker.PARAM_REFTYPE, null);
+                                    refType = checkerConfigurationDescription.getRefType();
                                     if (refType == null || !configuration.getReferences().containsKey(refType)) {
                                         builder.recordAuthorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
                                     } else {
@@ -379,7 +386,7 @@ public class ApplicationConfigurationService {
                             }
                             Optional.ofNullable(timeScopeVariableComponentChecker)
                                     .map(checkerDescription -> checkerDescription.getParams())
-                                    .map(params -> params.getOrDefault(DateLineChecker.PARAM_PATTERN, null))
+                                    .map(Configuration.CheckerConfigurationDescription::getPattern)
                                     .ifPresent(pattern -> {
                                         if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
                                             builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
@@ -421,7 +428,7 @@ public class ApplicationConfigurationService {
             String lineValidationRuleKey = validationEntry.getKey();
             Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
+                String expression = checker.getParams().getExpression();
                 if (StringUtils.isBlank(expression)) {
                     builder.recordMissingRequiredExpression(lineValidationRuleKey);
                 } else {
@@ -444,8 +451,8 @@ public class ApplicationConfigurationService {
                 if (variableComponentDescription != null) {
                     Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                     if ("Reference".equals(checkerDescription.getName())) {
-                        if (checkerDescription.getParams() != null && checkerDescription.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
-                            String refType = checkerDescription.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+                        if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
+                            String refType = checkerDescription.getParams().getRefType();
                             if (!references.contains(refType)) {
                                 builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
                             }
@@ -599,17 +606,19 @@ public class ApplicationConfigurationService {
                 continue;
             }
             ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
-            String columns = checker.getParams().get(CheckerFactory.COLUMNS);
+            String columns = checker.getParams().getColumns();
             Set<String> groovyColumn = Optional.ofNullable(checker)
                     .map(check->check.getParams())
-                    .filter(params->params.containsKey(GroovyDecorator.PARAMS_GROOVY))
-                    .map(params-> params.getOrDefault(CheckerFactory.COLUMNS, ""))
+                    .filter(params->params.getGroovy() != null)
+                    .map(params-> MoreObjects.firstNonNull(params.getColumns(), ""))
+
+                    // autant mettre une collection dans le YAML directement
                     .map(values-> values.split(","))
                     .map(values-> Arrays.stream(values).collect(Collectors.toSet()))
                     .orElse(Set.of());
 
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
+                String expression = checker.getParams().getExpression();
                 if (StringUtils.isBlank(expression)) {
                     builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
                 } else {
@@ -636,8 +645,8 @@ public class ApplicationConfigurationService {
                     }
                 }
                 if ("Reference".equals(checker.getName())) {
-                    if (checker.getParams() != null && checker.getParams().containsKey(ReferenceLineChecker.PARAM_REFTYPE)) {
-                        String refType = checker.getParams().get(ReferenceLineChecker.PARAM_REFTYPE);
+                    if (checker.getParams() != null && checker.getParams().getRefType() != null) {
+                        String refType = checker.getParams().getRefType();
                         if (!references.contains(refType)) {
                             builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
                         }

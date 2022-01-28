@@ -4,18 +4,17 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
-import java.util.Map;
-
 public class FloatChecker implements CheckerOnOneVariableComponentLineChecker<FloatCheckerConfiguration> {
     private final CheckerTarget target;
-    private final Map<String, String> params;
+    private final FloatCheckerConfiguration configuration;
 
     public CheckerTarget getTarget(){
         return this.target;
     }
 
-    public FloatChecker(CheckerTarget target, Map<String, String> params) {
-        this.params = params;this.target = target;
+    public FloatChecker(CheckerTarget target, FloatCheckerConfiguration configuration) {
+        this.target = target;
+        this.configuration = configuration;
     }
 
     @Override
@@ -34,7 +33,7 @@ public class FloatChecker implements CheckerOnOneVariableComponentLineChecker<Fl
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public FloatCheckerConfiguration getConfiguration() {
+        return configuration;
     }
 }

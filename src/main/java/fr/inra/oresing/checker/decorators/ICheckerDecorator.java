@@ -6,5 +6,5 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 import java.util.Map;
 
 public interface ICheckerDecorator {
-    ValidationCheckResult check(Map<? extends Object, String> values, String value, Map<String, String> params, CheckerTarget target) throws DecoratorException;
+    ValidationCheckResult check(Map<? extends Object, String> values, String value, DecoratorConfiguration params, CheckerTarget target) throws DecoratorException;
 }

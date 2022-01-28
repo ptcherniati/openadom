@@ -1,4 +1,6 @@
 package fr.inra.oresing.checker;
 
-public interface LineCheckerConfiguration {
+import fr.inra.oresing.checker.decorators.DecoratorConfiguration;
+
+public interface LineCheckerConfiguration extends DecoratorConfiguration {
 }

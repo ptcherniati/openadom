@@ -2,19 +2,17 @@ package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Map;
 import java.util.UUID;
 
 public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker<ReferenceLineCheckerConfiguration> {
 
-    public static final String PARAM_REFTYPE = "refType";
     private final String reference;
     public ImmutableMap<String, UUID> referenceValues;
     public ImmutableMap<String, String> display;
-    private final Map<String, String> params;
+    private final ReferenceLineCheckerConfiguration configuration;
     private final CheckerTarget target;
-    public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, ImmutableMap<String, String> display, Map<String, String> params) {
-        this.params = params;
+    public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, ImmutableMap<String, String> display, ReferenceLineCheckerConfiguration configuration) {
+        this.configuration = configuration;
         this.target = target;
         this.reference = reference;
         this.referenceValues = referenceValues;
@@ -53,7 +51,7 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public ReferenceLineCheckerConfiguration getConfiguration() {
+        return configuration;
     }
 }

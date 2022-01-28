@@ -1,9 +1,11 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.checker.decorators.DecoratorConfiguration;
 import fr.inra.oresing.groovy.BooleanGroovyExpression;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
@@ -18,40 +20,83 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
 
     public static final String NAME = "GroovyExpression";
 
-    public static final String PARAM_EXPRESSION = "expression";
-
-    public static final String PARAM_REFERENCES = "references";
-
-    public static final String PARAM_DATATYPES = "datatypes";
-
     private final BooleanGroovyExpression expression;
     private final Application application;
     private final OreSiRepository.RepositoryForApplication repository;
-    private Map<String, String> params = new HashMap<>();
+    private final GroovyLineCheckerConfiguration configuration;
 
-    private GroovyLineChecker(BooleanGroovyExpression expression, Application app, OreSiRepository.RepositoryForApplication repository, Map<String, String> params) {
+    private GroovyLineChecker(BooleanGroovyExpression expression, Application app, OreSiRepository.RepositoryForApplication repository, GroovyLineCheckerConfiguration configuration) {
         this.expression = expression;
         this.application = app;
         this.repository = repository;
-        this.params = params;
+        this.configuration = configuration;
     }
 
-    public static GroovyLineChecker forExpression(String expression, Application app, OreSiRepository.RepositoryForApplication repository, Map<String, String> params) {
+    public static GroovyLineChecker forExpression(String expression, Application app, OreSiRepository.RepositoryForApplication repository, GroovyLineCheckerConfiguration configuration) {
         BooleanGroovyExpression groovyExpression = BooleanGroovyExpression.forExpression(expression);
-        return new GroovyLineChecker(groovyExpression, app, repository, params);
+        return new GroovyLineChecker(groovyExpression, app, repository, configuration);
     }
 
     public static Optional<GroovyExpression.CompilationError> validateExpression(String expression) {
         return GroovyExpression.validateExpression(expression);
     }
 
-    public static ImmutableMap<String, Object> buildContext(Object datum, Application application, Map<String, String> params, OreSiRepository.RepositoryForApplication repository) {
+    public static ImmutableMap<String, Object> buildContext(Object datum, Application application, DecoratorConfiguration params, OreSiRepository.RepositoryForApplication repository) {
+        Optional<String> configurationReferences = Optional.of(params)
+                .map(DecoratorConfiguration::getReferences);
+        Optional<String> configurationDataTypes = Optional.empty();
+        ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
+        ImmutableMap<String, Object> contextWithParams = ImmutableMap.<String, Object>builder()
+                .putAll(context)
+                .put("params", params)
+                .build();
+        return contextWithParams;
+    }
+
+    public static ImmutableMap<String, Object> buildContext(Object datum, Application application, Configuration.VariableComponentDescriptionConfiguration params, OreSiRepository.RepositoryForApplication repository) {
+        Optional<String> configurationReferences = Optional.of(params)
+                .map(Configuration.VariableComponentDescriptionConfiguration::getReferences);
+        Optional<String> configurationDataTypes = Optional.empty();
+        ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
+        ImmutableMap<String, Object> contextWithParams = ImmutableMap.<String, Object>builder()
+                .putAll(context)
+                .put("params", params)
+                .build();
+        return contextWithParams;
+    }
+
+    public static ImmutableMap<String, Object> buildContext(Object datum, Application application, GroovyLineCheckerConfiguration params, OreSiRepository.RepositoryForApplication repository) {
+        Optional<String> configurationReferences = Optional.of(params)
+                .map(GroovyLineCheckerConfiguration::getReferences);
+        Optional<String> configurationDataTypes = Optional.of(params)
+                .map(GroovyLineCheckerConfiguration::getDatatypes);
+        ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
+        Map<String, String> paramsTest = new LinkedHashMap<>();
+        if (params.getVariable() != null) {
+            paramsTest.put("variable", params.getVariable());
+        }
+        if (params.getCodeVariable() != null) {
+            paramsTest.put("codeVariable", params.getCodeVariable());
+        }
+        if (params.getComponent() != null) {
+            paramsTest.put("component", params.getComponent());
+        }
+        if (params.getDatatype() != null) {
+            paramsTest.put("datatype", params.getDatatype());
+        }
+        ImmutableMap<String, Object> contextWithParams = ImmutableMap.<String, Object>builder()
+                .putAll(context)
+                .put("params", paramsTest)
+                .build();
+        return contextWithParams;
+    }
+
+    private static ImmutableMap<String, Object> buildContext(Object datum, Application application, OreSiRepository.RepositoryForApplication repository, Optional<String> configurationReferences, Optional<String> configurationDataTypes) {
         Map<String, List<ReferenceValue>> references = new HashMap<>();
         Map<String, List<DataRow>> datatypes = new HashMap<>();
         Map<String, List<Map<String, String>>> referencesValues = new HashMap<>();
         Map<String, List<Map<String, Map<String, String>>>> datatypesValues = new HashMap<>();
-        Optional.ofNullable(params)
-                .map(p -> p.get(PARAM_REFERENCES))
+        configurationReferences
                 .ifPresent(refs -> {
                     Arrays.stream(refs.split(","))
                             .forEach(ref -> {
@@ -63,8 +108,7 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
                             });
                 });
 
-        Optional.ofNullable(params)
-                .map(p -> p.get(PARAM_DATATYPES))
+        configurationDataTypes
                 .ifPresent(datas -> {
                     Arrays.stream(datas.split(","))
                             .forEach(dataType -> {
@@ -91,8 +135,12 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
         builder.put("referencesValues", referencesValues);
         builder.put("datatypes", datatypes);
         builder.put("datatypesValues", datatypesValues);
-        builder.put("params", Optional.ofNullable(params).orElseGet(HashMap::new));
         return builder.build();
+    }
+
+    @Override
+    public GroovyLineCheckerConfiguration getConfiguration() {
+        return configuration;
     }
 
     public ValidationCheckResult check(Map<VariableComponentKey, String> datum) {
@@ -103,13 +151,13 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
             String value = entry2.getValue();
             datumAsMap.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
         }
-        Map<String, Object> context = buildContext(datumAsMap, application, params, repository);
+        Map<String, Object> context = buildContext(datumAsMap, application, configuration, repository);
         return evaluate(context);
     }
 
     @Override
     public ValidationCheckResult checkReference(Map<String, String> datum) {
-        Map<String, Object> context = buildContext(datum, application, params, repository);
+        Map<String, Object> context = buildContext(datum, application, configuration, repository);
         return evaluate(context);
     }
 

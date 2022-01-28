@@ -4,19 +4,60 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.*;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
+import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.*;
-import fr.inra.oresing.checker.decorators.GroovyDecorator;
+import fr.inra.oresing.checker.CheckerFactory;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.DateValidationCheckResult;
+import fr.inra.oresing.checker.FloatChecker;
+import fr.inra.oresing.checker.GroovyLineChecker;
+import fr.inra.oresing.checker.IntegerChecker;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
+import fr.inra.oresing.checker.ReferenceValidationCheckResult;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.BinaryFileDataset;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.Data;
+import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.Value;
@@ -50,7 +91,19 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -778,7 +831,8 @@ public class OreSiService {
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                        if (!lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)) {
+                        ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
+                        if (configuration.getGroovy() != null) {
                             values.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
@@ -919,16 +973,16 @@ public class OreSiService {
             Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap(rowWithData.datum);
             defaultValueExpressions.entrySet().stream()
                     .forEach(variableComponentKeyExpressionEntry -> {
-                        Map<String, String> params = Optional.ofNullable(data)
+                        Configuration.VariableComponentDescriptionConfiguration params = Optional.ofNullable(data)
                                 .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKeyExpressionEntry.getKey().getVariable()))
                                 .map(columnDescription -> columnDescription.getComponents())
                                 .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKeyExpressionEntry.getKey().getComponent()))
                                 .map(variableComponentDescription -> variableComponentDescription.getParams())
-                                .orElseGet(HashMap::new);
+                                .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
                         ImmutableMap<String, Object> evaluationContext = GroovyLineChecker.buildContext(rowWithData.getDatum(), application, params, repository);
                         String evaluate = variableComponentKeyExpressionEntry.getValue().evaluate(evaluationContext);
                         if (StringUtils.isNotBlank(evaluate)) {
-                            if (params != null && Boolean.parseBoolean(params.get("replace"))) {
+                            if (params.isReplace()) {
                                 rowWithValues.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
                             } else {
                                 rowWithDefaults.put(variableComponentKeyExpressionEntry.getKey(), evaluate);

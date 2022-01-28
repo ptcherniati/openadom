@@ -11,12 +11,11 @@ import java.util.Map;
 public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker<DateLineCheckerConfiguration> {
 
     public static final String PARAM_PATTERN = "pattern";
-    public static final String PARAM_DURATION = "duration";
     public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
     public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
     private final CheckerTarget target;
-    private final Map<String, String> params;
+    private final DateLineCheckerConfiguration configuration;
 
     public CheckerTarget getTarget(){
         return this.target;
@@ -29,8 +28,8 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
     }
 
-    public DateLineChecker(CheckerTarget target, String pattern, Map<String, String> params) {
-        this.params = params;
+    public DateLineChecker(CheckerTarget target, String pattern, DateLineCheckerConfiguration configuration) {
+        this.configuration = configuration;
         this.target = target;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
@@ -64,7 +63,7 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public DateLineCheckerConfiguration getConfiguration() {
+        return configuration;
     }
 }
