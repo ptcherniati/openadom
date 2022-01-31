@@ -256,12 +256,6 @@ public class Configuration {
         String groovy;
         boolean codify;
         boolean required;
-
-
-        String datatype;
-        String variable;
-        String codeVariable;
-        String component;
     }
 
     @Getter

@@ -6,9 +6,4 @@ public interface GroovyLineCheckerConfiguration extends LineCheckerConfiguration
     String getReferences();
 
     String getDatatypes();
-
-    String getVariable();
-    String getCodeVariable();
-    String getComponent();
-    String getDatatype();
 }

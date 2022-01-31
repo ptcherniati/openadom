@@ -421,30 +421,30 @@ dataTypes:
           name: GroovyExpression
           params:
             expression: >
+              String datatype = "piegeage_en_montee";
+              String variable = "Couleur des individus";
+              String codeVariable = "couleur_des_individus";
+              String component = "unit";
               return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
+              .findAll{it.get("nom du type de données").equals(datatype)}
+              .find{it.get("nom de la variable").equals(codeVariable)}
+              .get("nom de l'unité").equals(datum.get(variable).get(component));
             references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Couleur des individus"
-            codeVariable: couleur_des_individus
-            component: unit
       unitOfIndividus:
         description: "vérifie l'unité du nombre d'individus"
         checker:
           name: GroovyExpression
           params:
             expression: >
+              String datatype = "piegeage_en_montee";
+              String variable = "Nombre d'individus";
+              String codeVariable = "nombre_d_individus";
+              String component = "unit";
               return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
+              .findAll{it.get("nom du type de données").equals(datatype)}
+              .find{it.get("nom de la variable").equals(codeVariable)}
+              .get("nom de l'unité").equals(datum.get(variable).get(component));
             references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Nombre d'individus"
-            codeVariable: nombre_d_individus
-            component: unit
     format:
       headerLine: 4
       firstRowLine: 5

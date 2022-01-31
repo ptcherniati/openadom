@@ -46,11 +46,7 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
                 .map(DecoratorConfiguration::getReferences);
         Optional<String> configurationDataTypes = Optional.empty();
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
-        ImmutableMap<String, Object> contextWithParams = ImmutableMap.<String, Object>builder()
-                .putAll(context)
-                .put("params", params)
-                .build();
-        return contextWithParams;
+        return context;
     }
 
     public static ImmutableMap<String, Object> buildContext(Object datum, Application application, Configuration.VariableComponentDescriptionConfiguration params, OreSiRepository.RepositoryForApplication repository) {
@@ -58,11 +54,7 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
                 .map(Configuration.VariableComponentDescriptionConfiguration::getReferences);
         Optional<String> configurationDataTypes = Optional.empty();
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
-        ImmutableMap<String, Object> contextWithParams = ImmutableMap.<String, Object>builder()
-                .putAll(context)
-                .put("params", params)
-                .build();
-        return contextWithParams;
+        return context;
     }
 
     public static ImmutableMap<String, Object> buildContext(Object datum, Application application, GroovyLineCheckerConfiguration params, OreSiRepository.RepositoryForApplication repository) {
@@ -71,24 +63,7 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
         Optional<String> configurationDataTypes = Optional.of(params)
                 .map(GroovyLineCheckerConfiguration::getDatatypes);
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
-        Map<String, String> paramsTest = new LinkedHashMap<>();
-        if (params.getVariable() != null) {
-            paramsTest.put("variable", params.getVariable());
-        }
-        if (params.getCodeVariable() != null) {
-            paramsTest.put("codeVariable", params.getCodeVariable());
-        }
-        if (params.getComponent() != null) {
-            paramsTest.put("component", params.getComponent());
-        }
-        if (params.getDatatype() != null) {
-            paramsTest.put("datatype", params.getDatatype());
-        }
-        ImmutableMap<String, Object> contextWithParams = ImmutableMap.<String, Object>builder()
-                .putAll(context)
-                .put("params", paramsTest)
-                .build();
-        return contextWithParams;
+        return context;
     }
 
     private static ImmutableMap<String, Object> buildContext(Object datum, Application application, OreSiRepository.RepositoryForApplication repository, Optional<String> configurationReferences, Optional<String> configurationDataTypes) {

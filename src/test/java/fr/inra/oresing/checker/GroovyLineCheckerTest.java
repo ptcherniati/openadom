@@ -117,26 +117,6 @@ public class GroovyLineCheckerTest {
             }
 
             @Override
-            public String getDatatype() {
-                return null;
-            }
-
-            @Override
-            public String getVariable() {
-                return null;
-            }
-
-            @Override
-            public String getCodeVariable() {
-                return null;
-            }
-
-            @Override
-            public String getComponent() {
-                return null;
-            }
-
-            @Override
             public boolean isCodify() {
                 throw new UnsupportedOperationException("doublure de test");
             }
