@@ -114,7 +114,6 @@ public class CheckerFactory {
         String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
         ImmutableMap<String, UUID> referenceValues;
-        ImmutableMap<String, String> display = null;
         if (locale == null) {
             referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
         } else {
@@ -123,12 +122,8 @@ public class CheckerFactory {
                     referenceIdAndDisplayPerKeys.entrySet().stream()
                             .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
             );
-            display = ImmutableMap.copyOf(
-                    referenceIdAndDisplayPerKeys.entrySet().stream()
-                            .collect(Collectors.toMap(e -> e.getKey(), e -> getOrBuildDisplay(app, refType, dataType, locale, e)))
-            );
         }
-        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, display, checkerDescription.getParams());
+        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams());
         return variableComponentChecker;
     }
 
@@ -193,7 +188,7 @@ public class CheckerFactory {
                 String refType = checkerConfigurationDescription.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, null, checkerConfigurationDescription));
+                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription));
                 break;
             default:
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
