@@ -1007,13 +1007,26 @@ public class OreSiResourcesTest {
         }
 
         // ajout de data
-        for (Map.Entry<String, String> entry : fixtures.getFluxMeteoForetEssaiDataResourceName().entrySet()) {
+        for (Map.Entry<String, String> entry : fixtures.getForetEssaiDataResourceName().entrySet()) {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/"+entry.getKey())
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/" + entry.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+
+                if (entry.getKey().equals("swc_j")) {
+                    authenticationService.setRoleAdmin();
+                    final String responseForBuildSynthesis = mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .cookie(authCookie))
+                            .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
+                            .andReturn().getResponse().getContentAsString();
+                    final String responseForGetSynthesis = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .cookie(authCookie))
+                            .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
+                            .andExpect(jsonPath("$.SWC[*].aggregation", Matchers.containsInAnyOrder("10","120","160","200","250","30","55","80")))
+                            .andReturn().getResponse().getContentAsString();
+                }
             }
         }
     }

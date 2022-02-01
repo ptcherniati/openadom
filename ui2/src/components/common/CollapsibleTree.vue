@@ -31,6 +31,24 @@
           >
             {{ option.localName || option.label }}
           </div>
+          <span v-if="!option.synthesisMinMax" class="nodata has-text-danger">
+              Pas de données
+            </span>
+        </div>
+        <div
+            :class="option.synthesisMinMax && onClickLabelSynthesisDetailCb ? 'tile synthesis-details link' : 'tile synthesis-details'"
+            @click="(event) => option.synthesisMinMax && onClickLabelSynthesisDetailCb && onClickLabelSynthesisDetailCb(event, option)">
+          <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark">
+             <b-field v-show="false">
+            {{ new Date(option.synthesisMinMax[0]).toLocaleDateString("fr") +' - '+  new Date(option.synthesisMinMax[1]).toLocaleDateString("fr") }}
+            </b-field>
+            <availiblity-chart
+                class="tile availiblity-chart"
+                :show-dates="false"
+                :minmax = "option.synthesis.minmax"
+                :ranges="option.synthesis.ranges"
+                :id="option.label"/>
+          </span>
         </div>
       </div>
       <div class="CollapsibleTree-buttons">
@@ -92,14 +110,16 @@
 <script>
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import AvailiblityChart from "../charts/AvailiblityChart.vue";
 
 @Component({
-  components: { FontAwesomeIcon },
+  components: { FontAwesomeIcon, AvailiblityChart },
 })
 export default class CollapsibleTree extends Vue {
   @Prop() option;
   @Prop({ default: 0 }) level;
   @Prop() onClickLabelCb;
+  @Prop() onClickLabelSynthesisDetailCb;
   @Prop() onUploadCb;
   @Prop() buttons;
   @Prop({ default: false }) withRadios;
@@ -127,7 +147,26 @@ export default class CollapsibleTree extends Vue {
 
 <style lang="scss" scoped>
 $row-height: 40px;
+.synthesisDetails{
+  margin-left: 10px;
+}
+.availiblity-chart canvas{
+  width: 900px;
+}
+.synthesis-infos{
+  width: 900px;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
 
+}
+.synthesis-details{
+  width: auto;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+
+}
 .CollapsibleTree-header {
   display: flex;
   align-items: center;
@@ -157,20 +196,25 @@ $row-height: 40px;
 .CollapsibleTree-header-infos {
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .CollapsibleTree-buttons {
   display: flex;
   height: $row-height;
   align-items: center;
+}
 
   .file {
     margin-bottom: 0;
+  }
 
     .file-cta {
       height: 100%;
       border-color: transparent;
     }
-  }
+.nodata {
+  margin-left: auto;
+  margin-right: 50px;
 }
 </style>

@@ -13,6 +13,7 @@ import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
@@ -597,7 +598,7 @@ public class OreSiService {
             if (storedFile.getParams() != null && storedFile.getParams().published) {
                 storedFile.getParams().published = false;
                 filesToStore.add(storedFile);
-                unPublishVersions(app, filesToStore);
+                unPublishVersions(app, filesToStore, dataType);
             }
             return storedFile.getId();
         }
@@ -608,7 +609,7 @@ public class OreSiService {
         publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
-        unPublishVersions(app, filesToStore);
+        unPublishVersions(app, filesToStore, dataType);
         storePublishedVersion(app, filesToStore, storedFile);
         filesToStore.stream()
                 .forEach(repo.getRepository(app.getId()).binaryFile()::store);
@@ -628,13 +629,17 @@ public class OreSiService {
         }
     }
 
-    private void unPublishVersions(Application app, Set<BinaryFile> filesToStore) {
+    private void unPublishVersions(Application app, Set<BinaryFile> filesToStore, String dataType) {
         filesToStore.stream()
                 .forEach(f -> {
                     repo.getRepository(app).data().removeByFileId(f.getId());
                     f.getParams().published = false;
                     repo.getRepository(app).binaryFile().store(f);
+                    buildSynthesis(app.getName(), dataType);
                 });
+        if(dataType!=null){
+            buildSynthesis(app.getName(), dataType);
+        }
     }
 
     private void publishVersion(String dataType,
@@ -667,6 +672,7 @@ public class OreSiService {
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
             repo.getRepository(app).data().storeAll(dataStream);
+            buildSynthesis(app.getName(), dataType);
         }
     }
 
@@ -1388,7 +1394,12 @@ public class OreSiService {
             Application app = getApplication(binaryFile.getApplication().toString());
             unPublishVersions(
                     app,
-                    Set.of(binaryFile)
+                    Set.of(binaryFile),
+                    Optional.of(binaryFile)
+                            .map(BinaryFile::getParams)
+                            .map(BinaryFileInfos::getBinaryFiledataset)
+                            .map(BinaryFileDataset::getDatatype)
+                            .orElse(null)
             );
         }
         boolean deleted = repo.getRepository(name).binaryFile().delete(id);
@@ -1463,6 +1474,52 @@ public class OreSiService {
 
                 })
                 .orElseGet(HashMap::new);
+    }
+
+    public int deleteSynthesis(String nameOrId, String dataType, String variable) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().removeSynthesisByApplicationDatatypeAndVariable(application.getId(), dataType, variable);
+    }
+
+    public int deleteSynthesis(String nameOrId, String dataType) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().removeSynthesisByApplicationDatatype(application.getId(), dataType);
+    }
+
+    public Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType) {
+        return buildSynthesis(nameOrId, dataType, null);
+    }
+
+    public Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType, String variable) {
+        Application application = getApplication(nameOrId);
+        final SynthesisRepository repo = this.repo.getRepository(application).synthesisRepository();
+        if (variable == null) {
+            repo.removeSynthesisByApplicationDatatype(application.getId(), dataType);
+        } else {
+            repo.removeSynthesisByApplicationDatatypeAndVariable(application.getId(), dataType, variable);
+        }
+        final String sql = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+                .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
+                .filter(entry -> entry.getValue().getChartDescription() != null)
+                .map(entry -> entry.getValue().getChartDescription().toSQL(entry.getKey(), dataType))
+                .collect(Collectors.joining(", \n"));
+        List<OreSiSynthesis> oreSiSynthesisList = new LinkedList<>();
+        final List<OreSiSynthesis> oreSiSynthesis  = repo.buildSynthesis(sql);
+        repo.storeAll(oreSiSynthesis.stream());
+
+        return oreSiSynthesis.stream().collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+    }
+
+    public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().selectSynthesisDatatype(application.getId(), dataType).stream()
+                .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+    }
+
+    public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType, String variable) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().selectSynthesisDatatypeAndVariable(application.getId(), dataType, variable).stream()
+                .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
     }
 
     @Value

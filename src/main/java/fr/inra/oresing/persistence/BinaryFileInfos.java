@@ -2,9 +2,11 @@ package fr.inra.oresing.persistence;
 
 
 import fr.inra.oresing.model.BinaryFileDataset;
+import lombok.Getter;
 
 import java.util.UUID;
 
+@Getter
 public class BinaryFileInfos {
     public final static BinaryFileInfos EMPTY_INSTANCE(){
         return new BinaryFileInfos();
