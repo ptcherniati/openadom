@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.ValidationCheckResult;
@@ -57,10 +58,10 @@ public class GroovyLineCheckerTest {
                         new VariableComponentKey("temperature", "unité"), "degrés"
                 );
 
-        Assert.assertTrue(groovyLineChecker.check(validDatum).isSuccess());
-        Assert.assertFalse(groovyLineChecker.check(invalidDatum).isSuccess());
+        Assert.assertTrue(groovyLineChecker.check(new Datum(validDatum)).isSuccess());
+        Assert.assertFalse(groovyLineChecker.check(new Datum(invalidDatum)).isSuccess());
         try {
-            groovyLineChecker.check(invalidDatum2).isSuccess();
+            groovyLineChecker.check(new Datum(invalidDatum2)).isSuccess();
             Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));
@@ -92,7 +93,7 @@ public class GroovyLineCheckerTest {
                         new VariableComponentKey("temperature", "unité"), "°C"
                 );
         try {
-            ValidationCheckResult validation = groovyLineChecker.check(validDatum);
+            ValidationCheckResult validation = groovyLineChecker.check(new Datum(validDatum));
             Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getMessage().contains("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais 261.15."));
