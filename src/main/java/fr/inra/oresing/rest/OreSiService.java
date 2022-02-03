@@ -98,22 +98,46 @@ public class OreSiService {
     private RelationalService relationalService;
 
     public static String escapeKeyComponent(String key) {
-        String toEscape = StringUtils.stripAccents(key.toLowerCase());
-        String escaped = StringUtils.remove(
-                RegExUtils.replaceAll(
-                        StringUtils.replace(toEscape, " ", "_"),
-                        "[^a-z0-9_]",
-                        ""
-                ), "-"
-        );
+        String lowerCased = key.toLowerCase();
+        String withAccentsStripped = StringUtils.stripAccents(lowerCased);
+        String toEscape = StringUtils.replace(withAccentsStripped, " ", "_");
+        String escaped = toEscape.chars()
+                .mapToObj(x -> (char) x)
+                .map(OreSiService::escapeSymbolFromKeyComponent)
+                .collect(Collectors.joining());
         checkNaturalKeySyntax(escaped);
         return escaped;
     }
 
     public static void checkNaturalKeySyntax(String keyComponent) {
-        if (keyComponent.isEmpty())
-            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
-        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+        Preconditions.checkState(keyComponent.length() <= 256, "Un label dans un ltree ne peut pas être plus long que 256 caractères à cause de PG");
+        Preconditions.checkState(!keyComponent.isEmpty(), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
+        Preconditions.checkState(keyComponent.matches("[a-zA-Z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+    }
+
+    private static String escapeSymbolFromKeyComponent(Character aChar) {
+        String escapedChar;
+        if (characterCanBeUsedInLtreeLabel(aChar)) {
+            escapedChar = String.valueOf(aChar);
+        } else {
+            escapedChar = RegExUtils.replaceAll(
+                    Character.getName(aChar),
+                    "[^a-zA-Z0-9_]",
+                    ""
+            );
+        }
+        return escapedChar;
+    }
+
+    /**
+     * D'après la documentation PostgreSQL sur ltree
+     *
+     * <blockquote>
+     *     A label is a sequence of alphanumeric characters and underscores (for example, in C locale the characters A-Za-z0-9_ are allowed). Labels must be less than 256 characters long.
+     * </blockquote>
+     */
+    private static boolean characterCanBeUsedInLtreeLabel(Character aChar) {
+        return Character.isAlphabetic(aChar) || Character.isDigit(aChar) || '_' == aChar;
     }
 
     private void checkHierarchicalKeySyntax(String compositeKey) {
