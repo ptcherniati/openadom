@@ -3,20 +3,19 @@ package fr.inra.oresing.checker;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.groovy.GroovyExpression;
-import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.Optional;
 
 @Slf4j
 public class GroovyLineCheckerTest {
+
+    private static final ImmutableMap<String, Object> EMPTY_CONTEXT = ImmutableMap.of();
 
     @Test
     public void testChecker() {
@@ -39,9 +38,7 @@ public class GroovyLineCheckerTest {
             Assert.assertTrue(compilationError.getMessage().contains("Integre"));
         });
 
-        Application application = Mockito.mock(Application.class);
-        OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository, getConfiguration(expression));
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, EMPTY_CONTEXT, getConfiguration(expression));
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
@@ -83,10 +80,7 @@ public class GroovyLineCheckerTest {
                 , "}"
                 , "throw new IllegalArgumentException(\"unité inconnue, \" + unité);"
         );
-        Application application = Mockito.mock(Application.class);
-        OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
-
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application, repository, getConfiguration(expression));
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, EMPTY_CONTEXT, getConfiguration(expression));
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",

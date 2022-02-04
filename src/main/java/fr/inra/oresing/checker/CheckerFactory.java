@@ -4,11 +4,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
+import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
 import fr.inra.oresing.rest.ApplicationResult;
@@ -33,6 +35,9 @@ public class CheckerFactory {
 
     @Autowired
     private OreSiRepository repository;
+
+    @Autowired
+    private GroovyContextHelper groovyContextHelper;
 
     public ImmutableMap<VariableComponentKey, ReferenceLineChecker> getReferenceLineCheckers(Application app, String dataType) {
         return getLineCheckers(app, dataType).stream()
@@ -149,6 +154,8 @@ public class CheckerFactory {
     }
 
     private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder, String param) {
+        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
+        DataRepository dataRepository = repository.getRepository(app).data();
         for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : lineValidationDescriptions.entrySet()) {
             Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
             Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
@@ -156,7 +163,15 @@ public class CheckerFactory {
             Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
             if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
                 String expression = configurationDescription.getExpression();
-                lineChecker = GroovyLineChecker.forExpression(expression, app, repository.getRepository(app), configurationDescription);
+                Set<String> references = configurationDescription.doGetReferencesAsCollection();
+                Set<String> dataTypes = configurationDescription.doGetDataTypesAsCollection();
+                ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
+                ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
+                ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
+                        .putAll(groovyContextForReferences)
+                        .putAll(groovyContextForDataTypes)
+                        .build();
+                lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
                 checkersBuilder.add(lineChecker);
             } else {
                 List<CheckerTarget> checkerTargets = buildCheckerTarget(configurationDescription, app);

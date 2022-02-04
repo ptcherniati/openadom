@@ -1,8 +1,12 @@
 package fr.inra.oresing.groovy;
 
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.rest.DownloadDatasetQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +33,22 @@ public class GroovyContextHelper {
         return ImmutableMap.<String, Object>builder()
                 .put("references", references)
                 .put("referencesValues", referencesValues)
+                .build();
+    }
+
+    public ImmutableMap<String, Object> getGroovyContextForDataTypes(DataRepository dataRepository, Set<String> dataTypes, @Deprecated Application application) {
+        Map<String, List<DataRow>> datatypes = new HashMap<>();
+        Map<String, List<Map<String, Map<String, String>>>> datatypesValues = new HashMap<>();
+        dataTypes.forEach(dataType -> {
+            List<DataRow> allByDataType = dataRepository.findAllByDataType(DownloadDatasetQuery.buildDownloadDatasetQuery(null, null, dataType, application));
+            datatypes.put(dataType, allByDataType);
+            allByDataType.stream()
+                    .map(datatValues -> datatValues.getValues())
+                    .forEach(dv -> datatypesValues.computeIfAbsent(dataType, k -> new LinkedList<>()).add(dv));
+        });
+        return ImmutableMap.<String, Object>builder()
+                .put("datatypes", datatypes)
+                .put("datatypesValues", datatypesValues)
                 .build();
     }
 }
