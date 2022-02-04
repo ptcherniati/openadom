@@ -9,7 +9,7 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 import java.util.List;
 
 public class CheckerDecorator {
-    public static List<ICheckerDecorator> checkerDecorators = List.of( new CodifyDecorator(),new GroovyDecorator(), new RequiredDecorator());
+    public static List<ICheckerDecorator> checkerDecorators = List.of(new RequiredDecorator());
 
     public static <T> ValidationCheckResult check(SomethingThatCanProvideEvaluationContext values, String value, DecoratorConfiguration params, CheckerTarget target) throws DecoratorException {
         if (params == null) {

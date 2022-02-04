@@ -63,6 +63,8 @@ import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.transformer.LineTransformer;
+import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -96,6 +98,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -134,6 +137,9 @@ public class OreSiService {
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private TransformerFactory transformerFactory;
 
     @Autowired
     private CheckerFactory checkerFactory;
@@ -387,6 +393,19 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
 
+        ImmutableSet<LineTransformer> lineTransformers = transformerFactory.getReferenceLineTransformers(app, refType);
+        Function<ReferenceDatum, ReferenceDatum> applyTransformationsFn = referenceDatumBeforeTransformation -> {
+            Deque<ReferenceDatum> transformations = new LinkedList<>();
+            transformations.add(referenceDatumBeforeTransformation);
+            lineTransformers.forEach(lineTransformer -> {
+                ReferenceDatum datumAfterLastTransformation = transformations.getLast();
+                ReferenceDatum datumAfterOneMoreTransformation = lineTransformer.transform(datumAfterLastTransformation);
+                transformations.add(datumAfterOneMoreTransformation);
+            });
+            ReferenceDatum datumAfterFullTransformation = transformations.getLast();
+            return datumAfterFullTransformation;
+        };
+
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
@@ -463,6 +482,7 @@ public class OreSiService {
                     .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
+                    .map(applyTransformationsFn)
                     .map(referenceDatum -> {
                         Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
                         lineCheckers.forEach(lineChecker -> {
@@ -724,6 +744,7 @@ public class OreSiService {
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
                     .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions, app.getConfiguration().getDataTypes().get(dataType).getData(), app, repo.getRepository(app)))
+                    .map(buildTransformationFn(app, dataType))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
             repo.getRepository(app).data().storeAll(dataStream);
@@ -796,6 +817,25 @@ public class OreSiService {
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
         return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
+    }
+
+    /**
+     * La fonction qui transforme une donnée en y appliquant les transformeurs.
+     */
+    private Function<RowWithData, RowWithData> buildTransformationFn(Application app, String dataType) {
+        ImmutableSet<LineTransformer> lineTransformers = transformerFactory.getDataTypeLineTransformers(app, dataType);
+        return rowWithData -> {
+            Datum datumBeforeTransformation = rowWithData.getDatum();
+            Deque<Datum> transformations = new LinkedList<>();
+            transformations.add(datumBeforeTransformation);
+            lineTransformers.forEach(lineTransformer -> {
+                Datum datumAfterLastTransformation = transformations.getLast();
+                Datum datumAfterOneMoreTransformation = lineTransformer.transform(datumAfterLastTransformation);
+                transformations.add(datumAfterOneMoreTransformation);
+            });
+            Datum datumAfterFullTransformation = transformations.getLast();
+            return new RowWithData(rowWithData.getLineNumber(), datumAfterFullTransformation);
+        };
     }
 
     /**

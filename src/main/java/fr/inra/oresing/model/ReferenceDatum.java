@@ -25,9 +25,12 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext 
         return values.get(column);
     }
 
-    public ImmutableMap<String, String> asMap() {
-        ImmutableMap<String, String> map = values.entrySet().stream()
-                .collect(ImmutableMap.toImmutableMap(entry -> entry.getKey().asString(), Map.Entry::getValue));
+    public Map<String, String> asMap() {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (Map.Entry<ReferenceColumn, String> entry : values.entrySet()) {
+            String valueThatMayBeNull = entry.getValue();
+            map.put(entry.getKey().asString(), valueThatMayBeNull);
+        }
         return map;
     }
 

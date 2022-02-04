@@ -1,5 +1,7 @@
 package fr.inra.oresing.model;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.DateLineCheckerConfiguration;
 import fr.inra.oresing.checker.FloatCheckerConfiguration;
@@ -12,7 +14,9 @@ import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.assertj.core.util.Streams;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -256,6 +260,13 @@ public class Configuration {
         String groovy;
         boolean codify;
         boolean required;
+
+        public ImmutableSet<String> doGetColumnsAsCollection() {
+            if (StringUtils.isEmpty(getColumns())) {
+                return ImmutableSet.of();
+            }
+            return Streams.stream(Splitter.on(",").split(getColumns())).collect(ImmutableSet.toImmutableSet());
+        }
     }
 
     @Getter

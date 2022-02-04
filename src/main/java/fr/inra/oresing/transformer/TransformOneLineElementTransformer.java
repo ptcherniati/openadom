@@ -2,6 +2,7 @@ package fr.inra.oresing.transformer;
 
 import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.model.Datum;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.SomethingThatCanProvideEvaluationContext;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -22,11 +23,11 @@ public interface TransformOneLineElementTransformer extends LineTransformer {
 
     @Override
     default ReferenceDatum transform(ReferenceDatum referenceDatum) {
-        String column = (String) getTarget().getTarget();
-        String value = referenceDatum.get(column);
+        ReferenceColumn referenceColumn = (ReferenceColumn) getTarget().getTarget();
+        String value = referenceDatum.get(referenceColumn);
         String transformedValue = transform(referenceDatum, value);
         ReferenceDatum transformedDatum = ReferenceDatum.copyOf(referenceDatum);
-        transformedDatum.put(column, transformedValue);
+        transformedDatum.put(referenceColumn, transformedValue);
         return transformedDatum;
     }
 
