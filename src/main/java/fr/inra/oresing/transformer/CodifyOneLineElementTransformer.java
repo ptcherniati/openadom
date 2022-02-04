@@ -1,0 +1,31 @@
+package fr.inra.oresing.transformer;
+
+import fr.inra.oresing.checker.CheckerTarget;
+import fr.inra.oresing.model.SomethingThatCanProvideEvaluationContext;
+import fr.inra.oresing.rest.OreSiService;
+import org.assertj.core.util.Strings;
+
+public class CodifyOneLineElementTransformer implements TransformOneLineElementTransformer {
+
+    private final CheckerTarget target;
+
+    public CodifyOneLineElementTransformer(CheckerTarget target) {
+        this.target = target;
+    }
+
+    @Override
+    public CheckerTarget getTarget() {
+        return target;
+    }
+
+    @Override
+    public String transform(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, String value) {
+        String valueAfterCodification;
+        if (Strings.isNullOrEmpty(value)) {
+            valueAfterCodification = value;
+        } else {
+            valueAfterCodification = OreSiService.escapeKeyComponent(value);
+        }
+        return valueAfterCodification;
+    }
+}
