@@ -51,25 +51,25 @@ public class AuthorizationResourcesTest {
     @Test
     public void testAddAuthorization() throws Exception {
         Cookie authCookie = fixtures.addApplicationAcbb();
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader" , "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "UnReader")
-                        .param("password", "xxxxxxxx"))
+                        .param("login" , "UnReader")
+                        .param("password" , "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("acbb"));
+            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste" , response.contains("acbb"));
         }
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("acbb"));
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés" , response.contains("acbb"));
         }
 
         {
@@ -88,7 +88,37 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"acbb\",\"dataType\":\"biomasse_production_teneur\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"theix.theix__22\"},\"fromDay\":[2010,1,1],\"toDay\":[2010,6,1]}";
+            String json = "{\n" +
+                    "   \"usersId\":[\""+readerUserId+"\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur acbb\",\n" +
+                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredauthorizations\":{\n" +
+                    "            \"localization\":\"theix.theix__22\"\n" +
+                    "         },\n" +
+                    "         \"dataGroup\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2010,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2010,\n" +
+                    "               6,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +134,7 @@ public class AuthorizationResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("acbb"));
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste" , response.contains("acbb"));
         }
 
         {
@@ -112,10 +142,10 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows[*].values.parcelle.chemin").value( hasItemInArray(equalTo("theix.theix__22")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( not(hasItemInArray(equalTo("theix.theix__7"))), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value( hasItemInArray(endsWith("26/05/2010")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value( not(hasItemInArray(endsWith("31/08/2010"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.parcelle.chemin").value(hasItemInArray(equalTo("theix.theix__22")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(not(hasItemInArray(equalTo("theix.theix__7"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value(hasItemInArray(endsWith("26/05/2010")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values['date de mesure'].valeur").value(not(hasItemInArray(endsWith("31/08/2010"))), String[].class))
 
                     .andReturn().getResponse().getContentAsString();
         }
@@ -126,17 +156,49 @@ public class AuthorizationResourcesTest {
 
         Cookie authCookie = fixtures.addApplicationHauteFrequence();
 
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader" , "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "UnReader")
-                        .param("password", "xxxxxxxx"))
+                        .param("login" , "UnReader")
+                        .param("password" , "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         String authorizationId;
 
         {
-            String json = "{\"userId\":\"" + readerUserId + "\",\"applicationNameOrId\":\"hautefrequence\",\"dataType\":\"hautefrequence\",\"dataGroup\":\"all\",\"authorizedScopes\":{\"localization\":\"bimont.bim13\",\"projet\":\"sou\"},\"fromDay\":[2016,1,1],\"toDay\":[2017,1,1]}";
+
+            String json = "{\n" +
+                    "   \"usersId\":[\""+readerUserId+"\"],\n" +
+                    "   \"applicationNameOrId\":\"hautefrequence\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur haute fréquence\",\n" +
+                    "   \"dataType\":\"hautefrequence\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredauthorizations\":{\n" +
+                    "            \"localization\":\"bimont.bim13\",\n" +
+                    "            \"projet\":\"sou\"\n" +
+                    "         },\n" +
+                    "         \"dataGroup\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2016,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2017,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -167,13 +229,13 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( hasItemInArray(equalTo("bimont.bim13")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value( not(hasItemInArray(equalTo("bimont.bim14"))), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value( hasItemInArray(equalTo("sou")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value( not(hasItemInArray(equalTo("rnt"))), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.date.day").value( hasItemInArray(equalTo("date:2016-06-14T00:00:00:14/06/2016")), String[].class))
-                    .andExpect(jsonPath("$.rows[*].values.date.day").value( not(hasItemInArray(equalTo("date:2017-01-30T00:00:00:30/01/2017"))), String[].class))
-                    .andExpect(jsonPath("$.totalRows", equalTo(7456)))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(hasItemInArray(equalTo("bimont.bim13")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(not(hasItemInArray(equalTo("bimont.bim14"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value(hasItemInArray(equalTo("sou")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.localization.projet").value(not(hasItemInArray(equalTo("rnt"))), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.date.day").value(hasItemInArray(equalTo("date:2016-06-14T00:00:00:14/06/2016")), String[].class))
+                    .andExpect(jsonPath("$.rows[*].values.date.day").value(not(hasItemInArray(equalTo("date:2017-01-30T00:00:00:30/01/2017"))), String[].class))
+                    .andExpect(jsonPath("$.totalRows" , equalTo(7456)))
                     .andReturn().getResponse().getContentAsString();
 
 
@@ -195,7 +257,7 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalRows", equalTo(-1)))
+                    .andExpect(jsonPath("$.totalRows" , equalTo(-1)))
                     .andReturn().getResponse().getContentAsString();
         }
     }

@@ -37,7 +37,7 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
     public ReferenceValidationCheckResult check(String value) {
         ReferenceValidationCheckResult validationCheckResult;
         if (referenceValues.containsKey(value)) {
-            validationCheckResult = ReferenceValidationCheckResult.success(target, referenceValues.get(value));
+            validationCheckResult = ReferenceValidationCheckResult.success(value, target, referenceValues.get(value));
         } else {
             validationCheckResult = ReferenceValidationCheckResult.error(getTarget().getInternationalizedKey("invalidReference"), ImmutableMap.of(
                     "target", target.getTarget(),

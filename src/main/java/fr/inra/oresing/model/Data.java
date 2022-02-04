@@ -14,9 +14,7 @@ public class Data extends OreSiEntity {
     private UUID application;
     private String dataType;
     private String rowId;
-    private String dataGroup;
-    private Map<String, String> requiredAuthorizations;
-    private LocalDateTimeRange timeScope;
+    private  Authorization authorization;
     private Map<String, Map<String, UUID>> refsLinkedTo;
     private Map<String, Map<String, String>> dataValues;
     private UUID binaryFile;

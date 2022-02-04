@@ -11,16 +11,17 @@ import java.util.UUID;
 @Value
 public class ReferenceValidationCheckResult implements ValidationCheckResult {
     ValidationLevel level;
+    Object value;
     String message;
     Map<String, Object> messageParams;
     CheckerTarget target;
     UUID referenceId;
 
-    public static ReferenceValidationCheckResult success(CheckerTarget target, UUID referenceId) {
-        return new ReferenceValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, referenceId);
+    public static ReferenceValidationCheckResult success(Object value, CheckerTarget target, UUID referenceId) {
+        return new ReferenceValidationCheckResult(ValidationLevel.SUCCESS, value,  null, null, target, referenceId);
     }
 
     public static ReferenceValidationCheckResult error(String message, ImmutableMap<String, Object> messageParams) {
-        return new ReferenceValidationCheckResult(ValidationLevel.ERROR, message, messageParams, null, null);
+        return new ReferenceValidationCheckResult(ValidationLevel.ERROR,null,  message, messageParams, null, null);
     }
 }

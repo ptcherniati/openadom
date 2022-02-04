@@ -16,7 +16,7 @@ public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
         VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
         String value = values.get(variableComponentKey);
         try {
-            ValidationCheckResult check = CheckerDecorator.check(value, getParams(), getTarget());
+            ValidationCheckResult check = CheckerDecorator.check(values, value, getParams(), getTarget());
             if(ValidationLevel.WARN.equals(check.getLevel())){
                 value = check.getMessage();
             }else{
@@ -32,7 +32,7 @@ public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
     default ValidationCheckResult checkReference(Map<String, String> values) {
         String value = values.get(getTarget().getTarget());
         try {
-            ValidationCheckResult check = CheckerDecorator.check(value, getParams(), getTarget());
+            ValidationCheckResult check = CheckerDecorator.check(values, value, getParams(), getTarget());
             if(ValidationLevel.WARN.equals(check.getLevel())){
                 value = check.getMessage();
             }else{

@@ -15,6 +15,7 @@ import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.decorators.GroovyDecorator;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Strings;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
@@ -79,6 +81,9 @@ public class ApplicationConfigurationService {
             }
             return internationalizationMap;
         }
+    }
+    ConfigurationParsingResult unzipConfiguration(MultipartFile file){
+        return null;
     }
 
     ConfigurationParsingResult parseConfigurationBytes(byte[] bytes) {
@@ -147,6 +152,7 @@ public class ApplicationConfigurationService {
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
         Set<String> references = configuration.getReferences().keySet();
+        ImmutableSet.Builder<String> requiredAuthorizationsAttributesBuilder = ImmutableSet.builder();
         for (Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry : configuration.getCompositeReferences().entrySet()) {
             verifyCompositeReferenceReferenceExists(configuration, builder, compositeReferenceEntry);
             verifyCompositeReferenceParentColumnExists(configuration, builder, compositeReferenceEntry);
@@ -181,6 +187,7 @@ public class ApplicationConfigurationService {
 
                 LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
                 verifyDatatypeAuthorizationScopeExistsAndIsValid(builder, dataType, configuration, variables, authorizationScopesVariableComponentKey);
+                requiredAuthorizationsAttributesBuilder.addAll(authorizationScopesVariableComponentKey.keySet());
             }
 
             Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
@@ -189,6 +196,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
             verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, variables);
         }
+        configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
 
         return builder.build(configuration);
     }
@@ -592,6 +600,13 @@ public class ApplicationConfigurationService {
             }
             ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
             String columns = checker.getParams().get(CheckerFactory.COLUMNS);
+            Set<String> groovyColumn = Optional.ofNullable(checker)
+                    .map(check->check.getParams())
+                    .filter(params->params.containsKey(GroovyDecorator.PARAMS_GROOVY))
+                    .map(params-> params.getOrDefault(CheckerFactory.COLUMNS, ""))
+                    .map(values-> values.split(","))
+                    .map(values-> Arrays.stream(values).collect(Collectors.toSet()))
+                    .orElse(Set.of());
 
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
                 String expression = checker.getParams().get(GroovyLineChecker.PARAM_EXPRESSION);
@@ -606,10 +621,16 @@ public class ApplicationConfigurationService {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 else {
                     List<String> columnsList = Stream.of(columns.split(",")).collect(Collectors.toList());
-                    Set<String> availablesColumns = referenceDescription.getColumns().keySet();
+                    Set<String> referencesColumns = referenceDescription.getColumns().keySet();
+                    ImmutableSet availablesColumns = new ImmutableSet.Builder<>()
+                            .addAll(referencesColumns)
+                            .addAll(groovyColumn)
+                            .build();
+
                     List<String> missingColumns = columnsList.stream()
                             .filter(c -> !availablesColumns.contains(c))
                             .collect(Collectors.toList());
+
                     if (!missingColumns.isEmpty()) {
                         builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, availablesColumns, checker.getName(), missingColumns, reference);
                     }

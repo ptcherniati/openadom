@@ -1,0 +1,6617 @@
+version: 0
+application:
+  name: foret
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: zones_etudes
+        parentRecursiveKey: parent
+references:
+  types_de_zones_etudes:
+    internationalizationName:
+      fr: Types de zones d'études
+      en: Types of study areas
+    internationalizedColumns:
+      nom_fr:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_fr}'
+        en: '{nom_fr}'
+    keyColumns:
+      - nom_fr
+    columns:
+      nom_fr: null
+      nom_en: null
+      définition_fr: null
+      définition_en: null
+  zones_etudes:
+    validations:
+      typeSitesRef:
+        description: référence au type de site
+        checker:
+          name: Reference
+          params:
+            refType: types_de_zones_etudes
+            columns: type de site
+            required: true
+            codify: true
+      parent_ref:
+        description: référence au parent
+        checker:
+          name: Reference
+          params:
+            refType: zones_etudes
+            columns: parent
+            required: false
+            codify: true
+      date début:
+        description: date de début
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: date début
+      date fin:
+        description: date de fin
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: date fin
+    internationalizationName:
+      fr: Zones d'études
+      en: Study areas
+    internationalizedColumns:
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom}'
+        en: '{nom}'
+    keyColumns:
+      - parent
+      - nom
+    columns:
+      type de site: null
+      nom: null
+      description_fr: null
+      description_en: null
+      date début: null
+      date fin: null
+      latitude: null
+      longitude: null
+      surface: null
+      altitude: null
+      pente: null
+      direction pente_fr: null
+      direction pente_en: null
+      pays_fr: null
+      pays_en: null
+      région_fr: null
+      région_en: null
+      temp moyenne: null
+      précip moyenne: null
+      direction vent_fr: null
+      direction vent_en: null
+      type foret_fr: null
+      type foret_en: null
+      parent: null
+  themes:
+    internationalizationName:
+      fr: Thèmes
+      en: Thématics
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
+    keyColumns:
+      - nom_key
+    columns:
+      nom_key: null
+      nom_fr: null
+      nom_en: null
+      description_fr: null
+      description_en: null
+  theme_types_de_donnees_par_zone_etudes:
+    validations:
+      siteRef:
+        description: référence au site
+        checker:
+          name: Reference
+          params:
+            refType: zones_etudes
+            columns: nom du site
+      themeRef:
+        description: référence au thème
+        checker:
+          name: Reference
+          params:
+            refType: themes
+            columns: nom du thème
+    internationalizationName:
+      fr: Thèmes et types de données par zone d'étude
+      en: Thematics and data types by study area
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du site}; {nom du thème}; {nom du type de données}'
+        en: '{nom du site}; {nom du thème}; {nom du type de données}'
+    keyColumns:
+      - nom du site
+      - nom du thème
+      - nom du type de données
+    columns:
+      nom du site: null
+      nom du thème: null
+      nom du type de données: null
+  unites:
+    internationalizationName:
+      fr: Unités
+      en: Units
+    internationalizedColumns:
+      code_key:
+        fr: code_fr
+        en: code_en
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
+    keyColumns:
+      - nom_key
+    columns:
+      code_key: null
+      code_fr: null
+      code_en: null
+      nom_key: null
+      nom_fr: null
+      nom_en: null
+  variables:
+    internationalizationName:
+      fr: Variables
+      en: Variables
+    internationalizedColumns:
+      definition_fr:
+        fr: definition_fr
+        en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom}'
+        en: '{nom}'
+    keyColumns:
+      - nom
+    columns:
+      nom: null
+      definition_fr: null
+      definition_en: null
+  variables_par_types_de_donnees:
+    validations:
+      variableRef:
+        description: référence à la variable
+        checker:
+          name: Reference
+          params:
+            refType: variables
+            columns: nom de la variable
+            required: true
+            codify: true
+      uniteRef:
+        description: référence à l'unité'
+        checker:
+          name: Reference
+          params:
+            refType: unites
+            columns: nom de l'unité
+            required: true
+            codify: true
+    internationalizationName:
+      fr: Thèmes et types de données par zone d'étude
+      en: Thematics and data types by study area
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du type de données} : {nom de la variable} ({nom de l''unité})'
+        en: '{nom du type de données} : {nom de la variable} ({nom de l''unité})'
+    keyColumns:
+      - nom du type de données
+      - nom de la variable
+    columns:
+      nom du type de données: null
+      nom de la variable: null
+      nom de l'unité: null
+      min: null
+      max: null
+  traitements:
+    validations:
+      siteRef:
+        description: référence au site
+        checker:
+          name: Reference
+          params:
+            refType: zones_etudes
+            columns: nom du site
+            required: true
+            codify: false
+    internationalizationName:
+      fr: Traitements
+      en: Treatments
+    internationalizedColumns:
+      libellé_fr:
+        fr: libellé_fr
+        en: libellé_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{libellé_fr}'
+        en: '{libellé_fr}'
+    keyColumns:
+      - code
+    columns:
+      nom du site: null
+      code: null
+      libellé_fr: null
+      libellé_en: null
+      description_fr: null
+      description_en: null
+  reference:
+    internationalizationName:
+      fr: Références
+      en: Références
+    internationalizationDisplay:
+      pattern:
+        fr: '{DOI} ({premier auteur} {année})'
+        en: '{DOI} ({premier auteur} {année})'
+    keyColumns:
+      - DOI
+    columns:
+      DOI: null
+      premier auteur: null
+      année: null
+  instruments:
+    internationalizationName:
+      fr: Instruments
+      en: Instruments
+    internationalizedColumns:
+      libellé_fr:
+        fr: libellé_fr
+        en: libellé_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+      informations de calibration_fr:
+        fr: informations de calibration_fr
+        en: informations de calibration_en
+      fabricant_fr:
+        fr: fabricant_fr
+        en: fabricant_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{libellé_fr} ({code})'
+        en: '{libellé_fr} ({code})'
+    keyColumns:
+      - code
+    columns:
+      code: null
+      libellé_fr: null
+      libellé_en: null
+      informations de calibration_fr: null
+      informations de calibration_en: null
+      fabricant_fr: null
+      fabricant_en: null
+      description_fr: null
+      description_en: null
+  instruments_references:
+    validations:
+      instrumentRef:
+        description: référence à l'instrument
+        checker:
+          name: Reference
+          params:
+            refType: instruments
+            columns: code de l'instrument
+            required: true
+            codify: true
+      DOIRef:
+        description: référence à la référence
+        checker:
+          name: Reference
+          params:
+            refType: reference
+            columns: doi de la référence
+            required: true
+            codify: true
+    internationalizationName:
+      fr: Références des instruments
+      en: Instruments references
+    internationalizationDisplay:
+      pattern:
+        fr: '{code de l''instrument} {doi de la référence}'
+        en: '{code de l''instrument} {doi de la référence}'
+    keyColumns:
+      - code de l'instrument
+      - doi de la référence
+    columns:
+      code de l'instrument: null
+      doi de la référence: null
+  instruments_periodes:
+    validations:
+      instrumentRef:
+        description: référence à l'instrument
+        checker:
+          name: Reference
+          params:
+            refType: instruments
+            columns: Code de l'instrument
+            required: true
+            codify: true
+      checkSiteThemeDatatype:
+        description: référence au siteThemeDatatype
+        checker:
+          name: Reference
+          params:
+            refType: theme_types_de_donnees_par_zone_etudes
+            columns: theme_types_de_donnees_par_zone_etudes
+            groovy: >
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String site = tab[0].strip();
+              String theme = tab[1].strip(); String datatype = tab[2].strip();
+              return references["theme_types_de_donnees_par_zone_etudes"]
+              .findAll {it.refValues["nom du site"].equals(site)} .findAll
+              {it.refValues["nom du thème"].equals(theme)} .find
+              {it.refValues["nom du type de données"].equals(datatype)}
+              .naturalKey
+            references: theme_types_de_donnees_par_zone_etudes
+      checkDataypeVariableUnite:
+        description: référence au DataypeVariableUnite
+        checker:
+          name: Reference
+          params:
+            refType: variables_par_types_de_donnees
+            columns: variables_par_types_de_donnees
+            required: true
+            groovy: >
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String datatype =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[2].strip()); String variable =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[3].strip()); return
+              references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                      .findAll {it.refValues["nom de la variable"].equals(variable)}
+                      .find {it.refValues["nom du type de données"].equals(datatype)}
+                .naturalKey
+            references: variables_par_types_de_donnees
+            codify: true
+      date début:
+        description: date de début
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: Date de début
+      date fin:
+        description: date de fin
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: Date de fin
+    internationalizationName:
+      fr: Périodes d'application des instruments
+      en: Application periods of the instruments
+    internationalizationDisplay:
+      pattern:
+        fr: '{Nom du Thème-Type de données-Variable}'
+        en: '{Nom du Thème-Type de données-Variable}'
+    keyColumns:
+      - Nom du Thème-Type de données-Variable
+    columns:
+      Nom du Thème-Type de données-Variable: null
+      Code de l'instrument: null
+      Date de début: null
+      Date de fin: null
+  methodes:
+    internationalizationName:
+      fr: Méthodes
+      en: Methods
+    internationalizedColumns:
+      libellé_fr:
+        fr: libellé_fr
+        en: libellé_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{libellé_fr} ({code})'
+        en: '{libellé_fr} ({code})'
+    keyColumns:
+      - code
+    columns:
+      code: null
+      libellé_fr: null
+      libellé_en: null
+      description_fr: null
+      description_en: null
+  methodes_references:
+    validations:
+      instrumentRef:
+        description: référence à la méthode
+        checker:
+          name: Reference
+          params:
+            refType: methodes
+            columns: code de la méthode de calcul
+            required: true
+            codify: true
+      DOIRef:
+        description: référence à la référence
+        checker:
+          name: Reference
+          params:
+            refType: reference
+            columns: doi de la référence
+            required: true
+            codify: true
+    internationalizationName:
+      fr: Références des méthodes
+      en: Methods references
+    internationalizationDisplay:
+      pattern:
+        fr: '{code de la méthode de calcul} {doi de la référence}'
+        en: '{code de la méthode de calcul} {doi de la référence}'
+    keyColumns:
+      - code de la méthode de calcul
+      - doi de la référence
+    columns:
+      code de la méthode de calcul: null
+      doi de la référence: null
+  methodes_periodes:
+    validations:
+      methodeRef:
+        description: référence à la méthode
+        checker:
+          name: Reference
+          params:
+            refType: methodes
+            columns: Code de la méthode de calcul
+            required: true
+            codify: true
+      checkSiteThemeDatatype:
+        description: référence au siteThemeDatatype
+        checker:
+          name: Reference
+          params:
+            refType: theme_types_de_donnees_par_zone_etudes
+            columns: theme_types_de_donnees_par_zone_etudes
+            groovy: >
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String site = tab[0].strip();
+              String theme = tab[1].strip(); String datatype = tab[2].strip();
+              return references["theme_types_de_donnees_par_zone_etudes"]
+              .findAll {it.refValues["nom du site"].equals(site)} .findAll
+              {it.refValues["nom du thème"].equals(theme)} .find
+              {it.refValues["nom du type de données"].equals(datatype)}
+              .naturalKey
+            references: theme_types_de_donnees_par_zone_etudes
+      checkDataypeVariableUnite:
+        description: référence au DataypeVariableUnite
+        checker:
+          name: Reference
+          params:
+            refType: variables_par_types_de_donnees
+            columns: variables_par_types_de_donnees
+            required: true
+            groovy: >
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String datatype =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[2].strip()); String variable =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[3].strip()); return
+              references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                      .findAll {it.refValues["nom de la variable"].equals(variable)}
+                      .find {it.refValues["nom du type de données"].equals(datatype)}
+                .naturalKey
+            references: variables_par_types_de_donnees
+            codify: true
+      date début:
+        description: date de début
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: Date de début
+      date fin:
+        description: date de fin
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            columns: Date de fin
+    internationalizationName:
+      fr: Périodes d'application des méthodes
+      en: Application periods of methods
+    internationalizationDisplay:
+      pattern:
+        fr: '{Nom du Thème-Type de données-Variable}'
+        en: '{Nom du Thème-Type de données-Variable}'
+    keyColumns:
+      - Nom du Thème-Type de données-Variable
+    columns:
+      Nom du Thème-Type de données-Variable: null
+      Code de la méthode de calcul: null
+      Date de début: null
+      Date de fin: null
+  liste_valeur_ic:
+    internationalizationName:
+      fr: Liste de valeurs d'informations complémentaires
+      en: List of complement information values
+    internationalizedColumns:
+      nom de la liste_fr:
+        fr: nom de la liste_fr
+        en: nom de la liste_en
+      libellé d'une valeur_fr:
+        fr: libellé d'une valeur_fr
+        en: libellé d'une valeur_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{libellé d''une valeur_fr}'
+        en: '{libellé d''une valeur_fr}'
+    keyColumns:
+      - nom de la liste_fr
+      - libellé d'une valeur_fr
+    columns:
+      nom de la liste_fr: null
+      nom de la liste_en: null
+      libellé d'une valeur_fr: null
+      libellé d'une valeur_en: null
+      note de la valeur: null
+  informations_complementaires:
+    validations:
+      methodeRef:
+        description: référence à la liste de valeurs d'informations complémentaires
+        checker:
+          name: Reference
+          params:
+            refType: liste_valeur_ic
+            columns: nom de la liste de valeurs informations complémentaires
+    internationalizationName:
+      fr: Informations complementaires
+      en: Complement information
+    internationalizedColumns:
+      description de l'information complémentaire_fr:
+        fr: description de l'information complémentaire_fr
+        en: description de l'information complémentaire_en
+    internationalizationDisplay:
+      pattern:
+        fr: >-
+          {nom de l'information complémentaire} ({description de l'information
+          complémentaire_fr})
+        en: >-
+          {nom de l'information complémentaire} ({description de l'information
+          complémentaire_fr}
+    keyColumns:
+      - nom de l'information complémentaire
+      - nom de la liste de valeurs informations complémentaires
+    columns:
+      nom de l'information complémentaire: null
+      description de l'information complémentaire_fr: null
+      description de l'information complémentaire_en: null
+      nom de la liste de valeurs informations complémentaires: null
+  ic_site_theme_dataype_variable:
+    validations:
+      checkSiteThemeDatatype:
+        description: référence au siteThemeDatatype
+        checker:
+          name: Reference
+          params:
+            refType: theme_types_de_donnees_par_zone_etudes
+            columns: theme_types_de_donnees_par_zone_etudes
+            groovy: >
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String site = tab[0].strip();
+              String theme = tab[1].strip(); String datatype = tab[2].strip();
+              return references["theme_types_de_donnees_par_zone_etudes"]
+              .findAll {it.refValues["nom du site"].equals(site)} .findAll
+              {it.refValues["nom du thème"].equals(theme)} .find
+              {it.refValues["nom du type de données"].equals(datatype)}
+              .naturalKey
+            references: theme_types_de_donnees_par_zone_etudes
+      checkDataypeVariableUnite:
+        description: référence au DataypeVariableUnite
+        checker:
+          name: Reference
+          params:
+            refType: variables_par_types_de_donnees
+            columns: variables_par_types_de_donnees
+            required: true
+            groovy: >
+              String[] tab = datum.get("Nom du Thème-Type de
+              données-Variable").split("-"); String datatype =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[2].strip()); String variable =
+              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+              tab[3].strip()); return
+              references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                      .findAll {it.refValues["nom de la variable"].equals(variable)}
+                      .find {it.refValues["nom du type de données"].equals(datatype)}
+                .naturalKey
+            references: variables_par_types_de_donnees
+            codify: true
+    internationalizationName:
+      fr: >-
+        Informations complémentaires par site, thème, type de données et
+        variable
+      en: 'Complement information for site, theme, datatype and variable'
+    internationalizationDisplay:
+      pattern:
+        fr: >-
+          {Nom du Thème-Type de données-Variable} {nom de l'information
+          complémentaire}
+        en: >-
+          {Nom du Thème-Type de données-Variable} {nom de l'information
+          complémentaire}
+    keyColumns:
+      - Nom du Thème-Type de données-Variable
+      - nom de l'information complémentaire
+    columns:
+      Nom du Thème-Type de données-Variable: null
+      nom de l'information complémentaire: null
+  types_fichiers:
+    internationalizationName:
+      fr: Type de fichiers
+      en: Files' type<
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom}'
+        en: '{nom}'
+    keyColumns:
+      - nom
+    columns:
+      nom: null
+      description: null
+dataTypes:
+  ts_infraj:
+    internationalizationName:
+      fr: Température infra-journalière
+      en: Infra-daily temperature
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        TS:
+          label: TS
+          data:
+            - TS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: infrajournalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      TS:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "degre celcius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+        - header: Time
+          boundTo:
+            variable: date
+            component: time
+      repeatedColumns:
+        - headerPattern: "(TS)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: TS
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: TS
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: TS
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: TS
+            component: valeur
+          exportHeader: "TS"
+  smp_infraj:
+    internationalizationName:
+      fr: Profondeur de la nappe infra-journalière
+      en: Infra-daily depth of the groundwater
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        SMP:
+          label: SMP
+          data:
+            - SMP
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: infrajournalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      SMP:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+        - header: Time
+          boundTo:
+            variable: date
+            component: time
+      repeatedColumns:
+        - headerPattern: "(SMP)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SMP
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SMP
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SMP
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SMP
+            component: valeur
+          exportHeader: "SMP"
+  gwd_infraj:
+    internationalizationName:
+      fr: Profondeur de la nappe infra-journalière
+      en: Infra-daily depth of the groundwater
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        GWD:
+          label: GWD
+          data:
+            - GWD
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: infrajournalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      GWD:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "mètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+        - header: Time
+          boundTo:
+            variable: date
+            component: time
+      repeatedColumns:
+        - headerPattern: "(GWD)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: GWD
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: GWD
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: GWD
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: GWD
+            component: valeur
+          exportHeader: "GWD"
+  g_infraj:
+    internationalizationName:
+      fr: Flux de chaleur infra-journalier
+      en: Infra-daily flow of heat
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        G:
+          label: G
+          data:
+            - G
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: infrajournalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      G:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "watt_par_metre_carre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+        - header: Time
+          boundTo:
+            variable: date
+            component: time
+      repeatedColumns:
+        - headerPattern: "(G)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: G
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: G
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: G
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: G
+            component: valeur
+          exportHeader: "G"
+  swc_infraj:
+    internationalizationName:
+      fr: Humidité volumique infra-journalière
+      en: Infra daily volume humidity
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        SWC:
+          label: SWC
+          data:
+            - SWC
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: infrajournalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      SWC:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+        - header: Time
+          boundTo:
+            variable: date
+            component: time
+      repeatedColumns:
+        - headerPattern: "(SWC)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SWC
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SWC
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SWC
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+  ts_j:
+    internationalizationName:
+      fr: Température journalière
+      en: Daily temperature
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        TS:
+          label: TS
+          data:
+            - TS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      TS:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "degre celcius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+      repeatedColumns:
+        - headerPattern: "(TS)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: TS
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: TS
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: TS
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: TS
+            component: valeur
+          exportHeader: "TS"
+  smp_j:
+    internationalizationName:
+      fr: Tension de l'eau journalière
+      en: Daily tension of water
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        SMP:
+          label: SMP
+          data:
+            - SMP
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      SMP:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+      repeatedColumns:
+        - headerPattern: "(SMP)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SMP
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SMP
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SMP
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SMP
+            component: valeur
+          exportHeader: "SMP"
+  gwd_j:
+    internationalizationName:
+      fr: Profondeur journalière de la nappe
+      en: Daily depth of the groundwater
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        GWD:
+          label: GWD
+          data:
+            - GWD
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      GWD:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "mètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+      repeatedColumns:
+        - headerPattern: "(GWD)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: GWD
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: GWD
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: GWD
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: GWD
+            component: valeur
+          exportHeader: "GWD"
+  g_j:
+    internationalizationName:
+      fr: Flux de chaleur journalier
+      en: Daily flow of heat
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        G:
+          label: G
+          data:
+            - G
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      G:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "watt_par_metre_carre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+      repeatedColumns:
+        - headerPattern: "(G)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: G
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: G
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: G
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: G
+            component: valeur
+          exportHeader: "G"
+  swc_j:
+    internationalizationName:
+      fr: Humidité volumique journalière
+      en: Daily volume humidity
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        informations:
+          label: "Informations"
+          data:
+          - informations
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        date:
+          label: "date"
+          data:
+            - date
+        SWC:
+          label: SWC
+          data:
+            - SWC
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "climat du sol"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          profondeur max:
+            checker:
+              name: Float
+              params:
+                required: true
+          nombre de repetition max:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      SWC:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+        - rowNumber: 7
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component:  "profondeur max"
+          exportHeader: "profondeur max"
+        - rowNumber: 8
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: "nombre de repetition max"
+          exportHeader: "nombre de repetition max"
+      headerLine: 10
+      firstRowLine: 13
+      columns:
+        - header: Date
+          boundTo:
+            variable: date
+            component: day
+      repeatedColumns:
+        - headerPattern: "(SWC)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SWC
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SWC
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SWC
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+  chambrefluxsol_infraj:
+    internationalizationName:
+      fr: Flux de chambres infra journalier
+      en: Intraday flux chambers
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - FCO2
+            - FCH4
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "flux gazeux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: Infra-journalier
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          treatment:
+            checker:
+              name: Reference
+              params:
+                refType: traitements
+                required: true
+                codify: true
+          no_chamber:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          duration:
+            checker:
+              name: Integer
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          gap_filling:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCH4:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          gap_filling:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "nanomole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: heure moyenne
+          boundTo:
+            variable: date
+            component: time
+        - header: duree de la mesure
+          boundTo:
+            variable: date
+            component: duration
+        - header: code du traitement
+          boundTo:
+            variable: informations
+            component: treatment
+        - header: no de la chambre
+          boundTo:
+            variable: informations
+            component: no_chamber
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: FCO2_gf
+          boundTo:
+            variable: FCH4
+            component: gap_filling
+        - header: FCH4
+          boundTo:
+            variable: FCH4
+            component: value
+        - header: FCH4_gf
+          boundTo:
+            variable: FCH4
+            component: gap_filling
+  chambrefluxsol_j:
+    internationalizationName:
+      fr: Flux de chambres journalier
+      en: Daily flux chambers
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - FCO2
+            - Ta
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "flux gazeux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+          treatment:
+            checker:
+              name: Reference
+              params:
+                refType: traitements
+                required: true
+                codify: true
+          no_chamber:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          standard_deviation:
+            checker:
+              name: Float
+              params:
+                required: null
+          nbval:
+            checker:
+              name: Float
+              params:
+                required: null
+          gap_filling:
+            checker:
+              name: Float
+              params:
+                required: null
+          gap_filling_isgf:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          standard_deviation:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: code du traitement
+          boundTo:
+            variable: informations
+            component: treatment
+        - header: no de la chambre
+          boundTo:
+            variable: informations
+            component: no_chamber
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: FCO2_sd
+          boundTo:
+            variable: FCO2
+            component: standard_deviation
+        - header: FCO2_nbval
+          boundTo:
+            variable: FCO2
+            component: nbval
+        - header: FCO2_gf
+          boundTo:
+            variable: FCO2
+            component: gap_filling
+        - header: FCO2_gf_isgf
+          boundTo:
+            variable: FCO2
+            component: gap_filling_isgf
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Ta_sd
+          boundTo:
+            variable: Ta
+            component: standard_deviation
+  chambrefluxsol_m:
+    internationalizationName:
+      fr: Flux de chambres mensuel
+      en: Monthly flux chambers
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: month
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - FCO2
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "flux gazeux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: mensuel
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          comment: null
+          treatment:
+            checker:
+              name: Reference
+              params:
+                refType: traitements
+                required: true
+                codify: true
+          no_chamber:
+            checker:
+              name: Integer
+              params:
+                required: true
+      date:
+        components:
+          month:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          standard_deviation:
+            checker:
+              name: Float
+              params:
+                required: null
+          nbval:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: month
+        - header: code du traitement
+          boundTo:
+            variable: informations
+            component: treatment
+        - header: "no de la chambre"
+          boundTo:
+            variable: informations
+            component: no_chamber
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: FCO2_sd
+          boundTo:
+            variable: FCO2
+            component: standard_deviation
+        - header: FCO2_nbval
+          boundTo:
+            variable: FCO2
+            component: nbval
+  flux_sh:
+    internationalizationName:
+      fr: Flux semi horaire
+      en: Flux half hourly
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - CO2
+            - H2O
+            - ZL
+            - FCO2
+            - H
+            - LE
+            - T
+            - u*
+            - TR
+            - Sb
+            - Sc
+            - Sw
+            - Sa
+            - FCO2_gf
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "Tour à flux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: semi-horaire
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "30 MINUTES"
+      CO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      H2O:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      ZL:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "sans unité"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          quality_class:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: "0|1|2"
+                required: true
+                codify: false
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      H:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          quality_class:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: "0|1|2"
+                required: true
+                codify: false
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LE:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          quality_class:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: "0|1|2"
+                required: true
+                codify: false
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      T:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          quality_class:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: "0|1|2"
+                required: true
+                codify: false
+          unit:
+            defaultValue: return "kilogramme par mètre et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      u*:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      TR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "millimètre par demi-heure"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sb:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sw:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCO2_gf:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: time
+          boundTo:
+            variable: date
+            component: time
+        - header: CO2
+          boundTo:
+            variable: CO2
+            component: value
+        - header: H2O
+          boundTo:
+            variable: H2O
+            component: value
+        - header: ZL
+          boundTo:
+            variable: ZL
+            component: value
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: FCO2_qc
+          boundTo:
+            variable: FCO2
+            component: quality_class
+        - header: H
+          boundTo:
+            variable: H
+            component: value
+        - header: H_qc
+          boundTo:
+            variable: H
+            component: quality_class
+        - header: LE
+          boundTo:
+            variable: LE
+            component: value
+        - header: LE_qc
+          boundTo:
+            variable: LE
+            component: quality_class
+        - header: T
+          boundTo:
+            variable: T
+            component: value
+        - header: T_qc
+          boundTo:
+            variable: T
+            component: quality_class
+        - header: u*
+          boundTo:
+            variable: u*
+            component: value
+        - header: TR
+          boundTo:
+            variable: TR
+            component: value
+        - header: Sb
+          boundTo:
+            variable: Sb
+            component: value
+        - header: Sc
+          boundTo:
+            variable: Sc
+            component: value
+        - header: Sw
+          boundTo:
+            variable: Sw
+            component: value
+        - header: Sa
+          boundTo:
+            variable: Sa
+            component: value
+        - header: FCO2_gf
+          boundTo:
+            variable: FCO2_gf
+            component: value
+  flux_j:
+    internationalizationName:
+      fr: Flux journalier
+      en: Flux daily
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - CO2
+            - H2O
+            - ZL
+            - FCO2
+            - H
+            - LE
+            - T
+            - u*
+            - TR
+            - Sb
+            - Sc
+            - Sw
+            - Sa
+            - FCO2_gf
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "Tour à flux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      CO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      H2O:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "millimole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      ZL:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "sans unité"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "gramme de carbone par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      H:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LE:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      T:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "kilogramme par mètre et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      u*:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      TR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "millilitre par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sb:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "gramme de carbone par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sw:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCO2_gf:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "gramme de carbone par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: CO2
+          boundTo:
+            variable: CO2
+            component: value
+        - header: H2O
+          boundTo:
+            variable: H2O
+            component: value
+        - header: ZL
+          boundTo:
+            variable: ZL
+            component: value
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: H
+          boundTo:
+            variable: H
+            component: value
+        - header: LE
+          boundTo:
+            variable: LE
+            component: value
+        - header: T
+          boundTo:
+            variable: T
+            component: value
+        - header: u*
+          boundTo:
+            variable: u*
+            component: value
+        - header: TR
+          boundTo:
+            variable: TR
+            component: value
+        - header: Sb
+          boundTo:
+            variable: Sb
+            component: value
+        - header: Sc
+          boundTo:
+            variable: Sc
+            component: value
+        - header: Sw
+          boundTo:
+            variable: Sw
+            component: value
+        - header: Sa
+          boundTo:
+            variable: Sa
+            component: value
+        - header: FCO2_gf
+          boundTo:
+            variable: FCO2_gf
+            component: value
+  flux_m:
+    internationalizationName:
+      fr: Flux mensuel
+      en: Flux monthly
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: month
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - CO2
+            - H2O
+            - ZL
+            - FCO2
+            - H
+            - LE
+            - T
+            - u*
+            - TR
+            - Sb
+            - Sc
+            - Sw
+            - Sa
+            - FCO2_gf
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "Tour à flux"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: mensuel
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          comment: null
+      date:
+        components:
+          month:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+      CO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      H2O:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "millimole par mole"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      ZL:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "sans unité"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "gramme de carbone par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      H:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LE:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      T:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "kilogramme par mètre et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      u*:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      TR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "litre par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sb:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "gramme de carbone par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sw:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Sa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      FCO2_gf:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "gramme de carbone par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: month
+        - header: CO2
+          boundTo:
+            variable: CO2
+            component: value
+        - header: H2O
+          boundTo:
+            variable: H2O
+            component: value
+        - header: ZL
+          boundTo:
+            variable: ZL
+            component: value
+        - header: FCO2
+          boundTo:
+            variable: FCO2
+            component: value
+        - header: H
+          boundTo:
+            variable: H
+            component: value
+        - header: LE
+          boundTo:
+            variable: LE
+            component: value
+        - header: T
+          boundTo:
+            variable: T
+            component: value
+        - header: u*
+          boundTo:
+            variable: u*
+            component: value
+        - header: TR
+          boundTo:
+            variable: TR
+            component: value
+        - header: Sb
+          boundTo:
+            variable: Sb
+            component: value
+        - header: Sc
+          boundTo:
+            variable: Sc
+            component: value
+        - header: Sw
+          boundTo:
+            variable: Sw
+            component: value
+        - header: Sa
+          boundTo:
+            variable: Sa
+            component: value
+        - header: FCO2_gf
+          boundTo:
+            variable: FCO2_gf
+            component: value
+  meteo_sh:
+    internationalizationName:
+      fr: Météorologie semi horaire
+      en: Meteorology half hourly
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - P
+            - Rg
+            - Rr
+            - LWin
+            - LWout
+            - Rn
+            - Rd
+            - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
+            - APAR
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "meteorologie"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: semi-horaire
+                required: true
+                codify: false
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "30 MINUTES"
+      P:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "millimètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rg:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LWin:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      LWout:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rn:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDbc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      APAR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Pa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tarbre:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      G:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rh:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WS:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: time
+          boundTo:
+            variable: date
+            component: time
+        - header: P
+          boundTo:
+            variable: P
+            component: value
+        - header: Rr
+          boundTo:
+            variable: Rr
+            component: value
+        - header: Rg
+          boundTo:
+            variable: Rg
+            component: value
+        - header: LWin
+          boundTo:
+            variable: LWin
+            component: value
+        - header: LWout
+          boundTo:
+            variable: LWout
+            component: value
+        - header: Rn
+          boundTo:
+            variable: Rn
+            component: value
+        - header: Rd
+          boundTo:
+            variable: Rd
+            component: value
+        - header: PPFD
+          boundTo:
+            variable: PPFD
+            component: value
+        - header: PPFDd
+          boundTo:
+            variable: PPFDd
+            component: value
+        - header: PPFDr
+          boundTo:
+            variable: PPFDr
+            component: value
+        - header: PPFDbc
+          boundTo:
+            variable: PPFDbc
+            component: value
+        - header: APAR
+          boundTo:
+            variable: APAR
+            component: value
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Pa
+          boundTo:
+            variable: Pa
+            component: value
+        - header: Tc
+          boundTo:
+            variable: Tc
+            component: value
+        - header: Tarbre
+          boundTo:
+            variable: Tarbre
+            component: value
+        - header: G
+          boundTo:
+            variable: G
+            component: value
+        - header: Rh
+          boundTo:
+            variable: Rh
+            component: value
+        - header: WD
+          boundTo:
+            variable: WD
+            component: value
+        - header: WS
+          boundTo:
+            variable: WS
+            component: value
+  meteo_j:
+    internationalizationName:
+      fr: Météorologie journalière
+      en: Meteorology daily
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - P
+            - Rg
+            - Rr
+            - Lwin
+            - Lwout
+            - Rn
+            - Rd
+            - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
+            - APAR
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "meteorologie"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: journalier
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          comment: null
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      P:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "millimètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rg:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwin:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwout:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rn:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "watt par mètre carré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDbc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      APAR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Pa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tarbre:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      G:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par jour"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rh:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WS:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: P
+          boundTo:
+            variable: P
+            component: value
+        - header: Rr
+          boundTo:
+            variable: Rr
+            component: value
+        - header: Rg
+          boundTo:
+            variable: Rg
+            component: value
+        - header: Lwin
+          boundTo:
+            variable: Lwin
+            component: value
+        - header: Lwout
+          boundTo:
+            variable: Lwout
+            component: value
+        - header: Rn
+          boundTo:
+            variable: Rn
+            component: value
+        - header: Rd
+          boundTo:
+            variable: Rd
+            component: value
+        - header: PPFD
+          boundTo:
+            variable: PPFD
+            component: value
+        - header: PPFDd
+          boundTo:
+            variable: PPFDd
+            component: value
+        - header: PPFDr
+          boundTo:
+            variable: PPFDr
+            component: value
+        - header: PPFDbc
+          boundTo:
+            variable: PPFDbc
+            component: value
+        - header: APAR
+          boundTo:
+            variable: APAR
+            component: value
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Pa
+          boundTo:
+            variable: Pa
+            component: value
+        - header: Tc
+          boundTo:
+            variable: Tc
+            component: value
+        - header: Tarbre
+          boundTo:
+            variable: Tarbre
+            component: value
+        - header: G
+          boundTo:
+            variable: G
+            component: value
+        - header: Rh
+          boundTo:
+            variable: Rh
+            component: value
+        - header: WD
+          boundTo:
+            variable: WD
+            component: value
+        - header: WS
+          boundTo:
+            variable: WS
+            component: value
+  meteo_m:
+    internationalizationName:
+      fr: Météorologie mensuelle
+      en: Meteorology monthly
+    repository:
+      toto: test
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: zones_etudes
+      timeScope:
+        variable: date
+        component: month
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+        informations:
+          label: "Informations"
+          data:
+            - informations
+        date:
+          label: "date"
+          data:
+            - date
+        variables:
+          label: "variables"
+          data:
+            - P
+            - Rg
+            - Rr
+            - Lwin
+            - Lwout
+            - Rn
+            - Rd
+            - PPFD
+            - PPFDd
+            - PPFDr
+            - PPFDbc
+            - APAR
+            - Ta
+            - Pa
+            - Tc
+            - Tarbre
+            - G
+            - Rh
+            - WD
+            - WS
+    data:
+      localization:
+        components:
+          zones_etudes_parent:
+            checker:
+              name: Reference
+              params:
+                codify: true
+                refType: zones_etudes
+                required: false
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                groovy: >
+                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                  String nom = datumByVariableAndComponent.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                  }else{
+                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
+                refType: zones_etudes
+                required: true
+      informations:
+        components:
+          thematic:
+            defaultValue: return "meteorologie"
+            checker:
+              name: Reference
+              params:
+                refType: themes
+                codify: true
+          frequency:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: mensuel
+                required: true
+                codify: true
+          start date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          end date:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+          comment: null
+      date:
+        components:
+          month:
+            checker:
+              name: Date
+              params:
+                pattern: MM/yyyy
+      P:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rg:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwin:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Lwout:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rn:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDd:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: true
+                codify: true
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDr:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      PPFDbc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      APAR:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "micromole par mètre carré et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Ta:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Pa:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "kilopascal"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Tarbre:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré Celsius"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      G:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mégajoule par mètre et par mois"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      Rh:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WD:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "degré"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+      WS:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: null
+          unit:
+            defaultValue: return "mètre par seconde"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: zones_etudes_parent
+          exportHeader: zones_etudes_parent
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: localization
+            component: zones_etudes
+          exportHeader: zones_etudes
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: frequency
+          exportHeader: frequency
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: start date
+          exportHeader: start date
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: end date
+          exportHeader: end date
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo:
+            variable: informations
+            component: comment
+          exportHeader: comment
+      headerLine: 9
+      firstRowLine: 11
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: month
+        - header: P
+          boundTo:
+            variable: P
+            component: value
+        - header: Rr
+          boundTo:
+            variable: Rr
+            component: value
+        - header: Rg
+          boundTo:
+            variable: Rg
+            component: value
+        - header: Lwin
+          boundTo:
+            variable: Lwin
+            component: value
+        - header: Lwout
+          boundTo:
+            variable: Lwout
+            component: value
+        - header: Rn
+          boundTo:
+            variable: Rn
+            component: value
+        - header: Rd
+          boundTo:
+            variable: Rd
+            component: value
+        - header: PPFD
+          boundTo:
+            variable: PPFD
+            component: value
+        - header: PPFDd
+          boundTo:
+            variable: PPFDd
+            component: value
+        - header: PPFDr
+          boundTo:
+            variable: PPFDr
+            component: value
+        - header: PPFDbc
+          boundTo:
+            variable: PPFDbc
+            component: value
+        - header: APAR
+          boundTo:
+            variable: APAR
+            component: value
+        - header: Ta
+          boundTo:
+            variable: Ta
+            component: value
+        - header: Pa
+          boundTo:
+            variable: Pa
+            component: value
+        - header: Tc
+          boundTo:
+            variable: Tc
+            component: value
+        - header: Tarbre
+          boundTo:
+            variable: Tarbre
+            component: value
+        - header: G
+          boundTo:
+            variable: G
+            component: value
+        - header: Rh
+          boundTo:
+            variable: Rh
+            component: value
+        - header: WD
+          boundTo:
+            variable: WD
+            component: value
+        - header: WS
+          boundTo:
+            variable: WS
+            component: value

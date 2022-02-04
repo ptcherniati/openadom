@@ -6,6 +6,7 @@ export class BinaryFileInfos {
   publisheddate;
   createuser;
   createdate;
+  datatype;
   comment;
   constructor(binaryFileInfos) {
     if (typeof binaryFileInfos == "object") {

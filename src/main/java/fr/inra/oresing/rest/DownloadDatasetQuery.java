@@ -157,7 +157,7 @@ public class DownloadDatasetQuery {
         } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
                 DateLineChecker dateLineChecker = new DateLineChecker(
-                        CheckerTarget.getInstance(vck.variableComponentKey),
+                        CheckerTarget.getInstance(vck.variableComponentKey, null, null),
                         vck.format, null);
                 filters.add(
                         String.format(

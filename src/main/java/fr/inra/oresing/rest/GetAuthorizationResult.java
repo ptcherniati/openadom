@@ -1,19 +1,20 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.persistence.OperationType;
 import lombok.Value;
 
-import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Value
 public class GetAuthorizationResult {
     UUID id;
-    UUID user;
+    String name;
+    Set<OreSiUser> users;
     UUID application;
     String dataType;
-    String dataGroup;
-    Map<String, String> authorizedScopes;
-    LocalDate fromDay;
-    LocalDate toDay;
+    Map<OperationType, List<AuthorizationParsed>> authorizations;
 }

@@ -22,7 +22,7 @@ public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
-            Float.parseFloat(value);
+            Float.parseFloat(value.replaceAll(",", "."));
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
             validationCheckResult = DefaultValidationCheckResult.error(

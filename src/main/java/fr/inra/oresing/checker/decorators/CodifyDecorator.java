@@ -12,7 +12,7 @@ import java.util.Optional;
 public class CodifyDecorator implements ICheckerDecorator {
     public static final String PARAMS_CODIFY = "codify";
 
-    public ValidationCheckResult check(String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
+    public ValidationCheckResult check(Map<? extends Object, String> values, String value, Map<String, String> params, CheckerTarget target) throws DecoratorException {
 
         boolean codify = params.containsKey(PARAMS_CODIFY) &&
                 Optional.ofNullable(params.get(PARAMS_CODIFY))

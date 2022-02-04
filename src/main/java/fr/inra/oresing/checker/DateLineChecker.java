@@ -11,6 +11,7 @@ import java.util.Map;
 public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker {
 
     public static final String PARAM_PATTERN = "pattern";
+    public static final String PARAM_DURATION = "duration";
     public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
     public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";

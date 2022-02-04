@@ -77,12 +77,12 @@ public class CheckerFactory {
         VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
         if (variableDescription.getComponents().get(component) == null) {
             if (log.isDebugEnabled()) {
-                log.debug("pas de règle de validation pour " + variableComponentKey);
+                //log.debug("pas de règle de validation pour " + variableComponentKey);
             }
         } else {
             Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
             CheckerOnOneVariableComponentLineChecker variableComponentChecker;
-            CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey);
+            CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey, app, repository.getRepository(app));
             if ("Reference".equals(checkerDescription.getName())) {
                 variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, checkerTarget);
             } else if ("Date".equals(checkerDescription.getName())) {
@@ -158,7 +158,7 @@ public class CheckerFactory {
                 lineChecker = GroovyLineChecker.forExpression(expression, app, repository.getRepository(app), params);
                 checkersBuilder.add(lineChecker);
             } else {
-                List<CheckerTarget> checkerTargets = buildCheckerTarget(params);
+                List<CheckerTarget> checkerTargets = buildCheckerTarget(params, app);
                 if (checkerTargets != null) {
                     checkerTargets.forEach(checkerTarget -> buildCheckers(app, checkerDescription, params, checkerTarget, checkersBuilder));
                 } else {
@@ -197,17 +197,17 @@ public class CheckerFactory {
         }
     }
 
-    private List<CheckerTarget> buildCheckerTarget(Map<String, String> params) {
+    private List<CheckerTarget> buildCheckerTarget(Map<String, String> params, Application application) {
         String columnsString = params.getOrDefault(COLUMNS, null);
         String variableComponentKeyParam = params.getOrDefault(VARIABLE_COMPONENT_KEY, null);
         if (!Strings.isNullOrEmpty(columnsString)) {
             return Stream.of(columnsString.split(","))
-                    .map(column -> CheckerTarget.getInstance(column))
+                    .map(column -> CheckerTarget.getInstance(column, application, repository.getRepository(application)))
                     .collect(Collectors.toList());
         } else if (!Strings.isNullOrEmpty(variableComponentKeyParam) || !variableComponentKeyParam.matches("_")) {
             String[] split = variableComponentKeyParam.split("_");
             Stream.of(new VariableComponentKey(split[0], split[1]))
-                    .map(variableComponentKey -> CheckerTarget.getInstance(variableComponentKey))
+                    .map(variableComponentKey -> CheckerTarget.getInstance(variableComponentKey, application, repository.getRepository(application)))
                     .collect(Collectors.toList());
 
         }

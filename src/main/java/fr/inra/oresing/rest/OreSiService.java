@@ -8,6 +8,7 @@ import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.*;
+import fr.inra.oresing.checker.decorators.GroovyDecorator;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.StringGroovyExpression;
@@ -46,6 +47,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -62,7 +64,7 @@ import java.util.stream.Stream;
 @Transactional
 public class OreSiService {
 
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
@@ -110,7 +112,7 @@ public class OreSiService {
 
     public static void checkNaturalKeySyntax(String keyComponent) {
         if (keyComponent.isEmpty())
-            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturel ne peut être vide. vérifier le nom des colonnes.");
+            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
         Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
     }
 
@@ -135,20 +137,26 @@ public class OreSiService {
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
-
+    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
         Application app = new Application();
         app.setName(name);
         app.setComment(comment);
+        UUID result = changeApplicationConfiguration(app, configurationFile, this::initApplication);
+        relationalService.createViews(app.getName());
 
+        return result;
+    }
+
+    public Application initApplication(Application app) {
         authenticationService.resetRole();
-
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
         org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
         flywayConfiguration.setDataSource(dataSource);
         flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
         flywayConfiguration.setLocations(new Location("classpath:migration/application"));
         flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
+        flywayConfiguration.getPlaceholders().put("requiredauthorizations", sqlSchemaForApplication.getRequiredauthorizationsAttributes(app));
+        flywayConfiguration.getPlaceholders().put("requiredauthorizationscomparing", sqlSchemaForApplication.getRequiredauthorizationsAttributesComparing(app));
         Flyway flyway = new Flyway(flywayConfiguration);
         flyway.migrate();
 
@@ -164,7 +172,7 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
                 adminOnApplicationRole,
-                "name = '" + name + "'"
+                "name = '" + app.getName() + "'"
         ));
 
         db.createPolicy(new SqlPolicy(
@@ -173,7 +181,7 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 readerOnApplicationRole,
-                "name = '" + name + "'"
+                "name = '" + app.getName() + "'"
         ));
 
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
@@ -187,12 +195,8 @@ public class OreSiService {
         db.addUserInRole(creator, adminOnApplicationRole);
 
         authenticationService.setRoleForClient();
-        UUID result = repo.application().store(app);
-        changeApplicationConfiguration(app, configurationFile);
-
-        relationalService.createViews(app.getName());
-
-        return result;
+        repo.application().store(app);
+        return app;
     }
 
     public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
@@ -202,7 +206,8 @@ public class OreSiService {
         app.setComment(comment);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
-        UUID uuid = changeApplicationConfiguration(app, configurationFile);
+        Application application = getApplication(nameOrId);
+        UUID uuid = changeApplicationConfiguration(app, configurationFile, Function.identity());
         Configuration newConfiguration = app.getConfiguration();
         int oldVersion = oldConfiguration.getApplication().getVersion();
         int newVersion = newConfiguration.getApplication().getVersion();
@@ -300,17 +305,25 @@ public class OreSiService {
                 .forEach(validateRow);
     }
 
-    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
-        ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
+
+        ConfigurationParsingResult configurationParsingResult;
+        if (configurationFile.getOriginalFilename().matches(".*\\.zip")) {
+            final byte[] bytes = new MultiYaml().parseConfigurationBytes(configurationFile);
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(bytes);
+        } else {
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+        }
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
+        app = initApplication.apply(app);
         UUID confId = storeFile(app, configurationFile, app.getComment());
         app.setConfigFile(confId);
-        repo.application().store(app);
-        return confId;
+        UUID appId = repo.application().store(app);
+        return appId;
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
@@ -344,9 +357,9 @@ public class OreSiService {
                         .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
                         .collect(MoreCollectors.onlyElement());
                 parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
-                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription)-1).getReference();
+                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    String parentHierarchicalKey = referenceValues.get(parentHierarchicalKeyColumn);
+                    String parentHierarchicalKey = escapeKeyComponent(referenceValues.get(parentHierarchicalKeyColumn));
                     return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
                 };
                 getHierarchicalReferenceFn = (reference) -> parentHierarchicalParentReference + LTREE_SEPARATOR + reference;
@@ -403,6 +416,7 @@ public class OreSiService {
                                     ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                     String reference = ((ReferenceLineChecker) lineChecker).getRefType();
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                                    refValues.put((String) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
                                             .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);
@@ -439,9 +453,9 @@ public class OreSiService {
                         }
                         String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
                         String selfHierarchicalReference = refType;
-                        if(isRecursive){
+                        if (isRecursive) {
                             for (int i = 1; i < recursiveNaturalKey.split("\\.").length; i++) {
-                                selfHierarchicalReference+=".".concat(refType);
+                                selfHierarchicalReference += ".".concat(refType);
                             }
                         }
                         String hierarchicalReference =
@@ -578,6 +592,9 @@ public class OreSiService {
         log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
+        Optional.ofNullable(params)
+                .map(par -> par.getBinaryfiledataset())
+                .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
         BinaryFile storedFile = loadOrCreateFile(file, params, app);
         if (params != null && !params.topublish) {
             if (storedFile.getParams() != null && storedFile.getParams().published) {
@@ -721,14 +738,7 @@ public class OreSiService {
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        String timeScopeColumnPattern = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
-                .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
-                .collect(MoreCollectors.onlyElement())
-                .getPattern();
-
-        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, timeScopeColumnPattern, binaryFileDataset);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
     }
 
     /**
@@ -740,7 +750,7 @@ public class OreSiService {
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
-     * @param timeScopeColumnPattern
+     * @param binaryFileDataset
      * @return
      */
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
@@ -749,10 +759,16 @@ public class OreSiService {
                                                                                List<CsvRowValidationCheckResult> errors,
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
-                                                                               String timeScopeColumnPattern,
                                                                                BinaryFileDataset binaryFileDataset) {
+        DateLineChecker timeScopeDateLineChecker = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                .map(lineChecker -> (DateLineChecker) lineChecker)
+                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .collect(MoreCollectors.onlyElement());
+
+
         return rowWithData -> {
-            Map<VariableComponentKey, String> values = rowWithData.getDatum();
+            Map<VariableComponentKey, String> values = new HashMap<>(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -765,6 +781,9 @@ public class OreSiService {
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                        if (!lineChecker.getParams().isEmpty() && lineChecker.getParams().containsKey(GroovyDecorator.PARAMS_GROOVY)) {
+                            values.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
+                        }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
                         UUID referenceId = referenceValidationCheckResult.getReferenceId();
@@ -782,7 +801,7 @@ public class OreSiService {
             }
 
             String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
-            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
+            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
@@ -820,12 +839,10 @@ public class OreSiService {
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
                 e.setRowId(rowId);
-                e.setDataGroup(dataGroup);
+                e.setAuthorization(new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope));
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
                 e.setDataValues(toStore);
-                e.setTimeScope(timeScope);
-                e.setRequiredAuthorizations(requiredAuthorizations);
                 return e;
             });
 
@@ -1086,7 +1103,7 @@ public class OreSiService {
             List<Map.Entry<String, String>> record = new LinkedList<>();
             line.forEach(value -> {
                 String header = currentHeader.next();
-                record.add(Map.entry(header, value));
+                record.add(Map.entry(header.strip(), value));
             });
             return new ParsedCsvRow(lineNumber, record);
         };
@@ -1176,7 +1193,7 @@ public class OreSiService {
         }
         ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
         if (log.isDebugEnabled()) {
-            log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
+            //log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
         }
         return defaultValueExpressions;
     }
@@ -1380,6 +1397,9 @@ public class OreSiService {
 
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
+        if (file.getOriginalFilename().matches(".zip")) {
+            return applicationConfigurationService.unzipConfiguration(file);
+        }
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 

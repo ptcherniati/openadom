@@ -23,8 +23,13 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, oreSiUser, application, dataType, dataGroup, authorizedScopes, timeScope) SELECT id, oreSiUser, application, dataType, dataGroup, authorizedScopes, timeScope FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, authorizedScopes=EXCLUDED.authorizedScopes, timeScope=EXCLUDED.timeScope"
+        return "INSERT INTO " + getTable().getSqlIdentifier() +
+                "(id, name, oreSiUsers, application, dataType, authorizations) \n" +
+                "SELECT id, name, oreSiUsers, application, dataType, authorizations \n" +
+                "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) \n" +
+                "ON CONFLICT (id) \n" +
+                "DO UPDATE \n" +
+                "SET updateDate=current_timestamp, name=EXCLUDED.name, authorizations=EXCLUDED.authorizations, oreSiUsers=EXCLUDED.oreSiUsers"
                 + " RETURNING id";
     }
 
