@@ -27,10 +27,10 @@
           class="mb-4"
         >
           <b-select
-              v-model="usersToAuthorize"
-              :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-              expanded
-              multiple
+            v-model="usersToAuthorize"
+            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+            expanded
+            multiple
           >
             <option v-for="user in users" :key="user.id" :value="user.id">
               {{ user.label }}
@@ -39,31 +39,30 @@
         </b-field>
 
         <b-field
-            :label="$t('dataTypeAuthorizations.name')"
-            :message="errors[0]"
-            :type="{
+          :label="$t('dataTypeAuthorizations.name')"
+          :message="errors[0]"
+          :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-            class="mb-4"
+          class="mb-4"
         >
-          <b-input
-            v-model="name"
-            />
+          <b-input v-model="name" />
         </b-field>
       </ValidationProvider>
       <AuthorizationTable
-          v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
-          :authReference="authReferences[0]"
-          :authorization-scopes="authorizationScopes"
-          :authorizations-tree="authorizationsTree"
-          :columnsVisible="columnsVisible"
-          :dataGroups="dataGroups"
-          :remaining-option="authReferences.slice && authReferences.slice(1,authReferences.length)"
-          :required-authorizations="{}"
-          class="rows"
-          @add-authorization="emitUpdateAuthorization($event)"
-          @delete-authorization="emitUpdateAuthorization($event)">
+        v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
+        :authReference="authReferences[0]"
+        :authorization-scopes="authorizationScopes"
+        :authorizations-tree="authorizationsTree"
+        :columnsVisible="columnsVisible"
+        :dataGroups="dataGroups"
+        :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
+        :required-authorizations="{}"
+        class="rows"
+        @add-authorization="emitUpdateAuthorization($event)"
+        @delete-authorization="emitUpdateAuthorization($event)"
+      >
         <div class="row">
           <div class="columns">
             <b-field
@@ -131,7 +130,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
-  authorizationsTree = {}
+  authorizationsTree = {};
   checkbox = false;
   authorizations = [];
   users = [];
@@ -164,7 +163,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   endDate = null;
   applications = [];
   configuration = {};
-  ToAuthorize
+  ToAuthorize;
   authReferences = {};
   authorizationsToSave = {};
 
@@ -200,8 +199,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     ];
   }
 
-  mounted() {
-  }
+  mounted() {}
 
   showDetail(parent) {
     for (const child in parent) {
@@ -229,8 +227,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         ),
       };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
-          this.applicationName,
-          this.dataTypeId
+        this.applicationName,
+        this.dataTypeId
       );
       this.authorizations = this.configuration.authorization.authorizationScopes;
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
@@ -242,7 +240,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
-      grantableInfos.authorizationScopes.reverse()
+      grantableInfos.authorizationScopes.reverse();
       // this.authorizationScopes[0].options[0].children[0].children.push({
       //   children: [],
       //   id: "toto",
@@ -431,22 +429,26 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     for (const type in event.authorizationsTree) {
       authorizationsToSave[type] = this.extractAuthorizations(event.authorizationsTree[type]);
     }
-    this.authorizationsToSave = {...authorizationsToSave}
-    console.log(JSON.stringify(this.authorizationsToSave))
+    this.authorizationsToSave = { ...authorizationsToSave };
+    console.log(JSON.stringify(this.authorizationsToSave));
   }
 
   extractAuthorizations(authorizationTree) {
-    var authorizationArray = []
+    var authorizationArray = [];
     if (!authorizationTree || Object.keys(authorizationTree).length == 0) {
       return authorizationArray;
     }
     for (const key in authorizationTree) {
-      var treeOrAuthorization = authorizationTree[key]
-      authorizationArray = [...authorizationArray, ...((treeOrAuthorization instanceof Authorization) ? [treeOrAuthorization.parse()] : this.extractAuthorizations(treeOrAuthorization))]
+      var treeOrAuthorization = authorizationTree[key];
+      authorizationArray = [
+        ...authorizationArray,
+        ...(treeOrAuthorization instanceof Authorization
+          ? [treeOrAuthorization.parse()]
+          : this.extractAuthorizations(treeOrAuthorization)),
+      ];
     }
-    return authorizationArray
+    return authorizationArray;
   }
-
 }
 </script>
 

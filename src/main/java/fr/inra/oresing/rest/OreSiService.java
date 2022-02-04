@@ -137,7 +137,7 @@ public class OreSiService {
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         Application app = new Application();
         app.setName(name);
         app.setComment(comment);

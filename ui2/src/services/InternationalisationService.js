@@ -81,7 +81,9 @@ export class InternationalisationService extends Fetcher {
   }
 
   localeDataTypeIdName(application, datatype) {
-    if (application?.internationalization?.dataTypes?.[datatype.id]?.internationalizationName != null) {
+    if (
+      application?.internationalization?.dataTypes?.[datatype.id]?.internationalizationName != null
+    ) {
       return application.internationalization.dataTypes[datatype.id].internationalizationName[
         localStorage.getItem(LOCAL_STORAGE_LANG)
       ];

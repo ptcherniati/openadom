@@ -25,16 +25,16 @@
       </div>
 
       <b-table
-          v-if="authorizations"
-          :data="authorizations"
-          :isFocusable="true"
-          :isHoverable="true"
-          :paginated="true"
-          :per-page="15"
-          :sticky-header="true"
-          :striped="true"
-          class="row"
-          height="100%"
+        v-if="authorizations"
+        :data="authorizations"
+        :isFocusable="true"
+        :isHoverable="true"
+        :paginated="true"
+        :per-page="15"
+        :sticky-header="true"
+        :striped="true"
+        class="row"
+        height="100%"
       >
         <!--b-table-column
             v-slot="props"
@@ -47,31 +47,31 @@
         </b-table-column-->
 
         <b-table-column
-            v-slot="props"
-            :label="$t('dataTypeAuthorizations.name')"
-            b-table-column
-            field="name"
-            sortable
+          v-slot="props"
+          :label="$t('dataTypeAuthorizations.name')"
+          b-table-column
+          field="name"
+          sortable
         >
           {{ props.row.name }}
         </b-table-column>
         <b-table-column
-            v-slot="props"
-            :label="$t('dataTypeAuthorizations.roles')"
-            b-table-column
-            field="authorizations"
-            sortable
+          v-slot="props"
+          :label="$t('dataTypeAuthorizations.roles')"
+          b-table-column
+          field="authorizations"
+          sortable
         >
-          {{Object.keys( props.row.authorizations || {} ) }}
+          {{ Object.keys(props.row.authorizations || {}) }}
         </b-table-column>
         <b-table-column
-            v-slot="props"
-            :label="$t('dataTypeAuthorizations.users')"
-            b-table-column
-            field="users"
-            sortable
+          v-slot="props"
+          :label="$t('dataTypeAuthorizations.users')"
+          b-table-column
+          field="users"
+          sortable
         >
-          {{ props.row.users.map(use=>use.login) }}
+          {{ props.row.users.map((use) => use.login) }}
         </b-table-column>
         <b-table-column v-slot="props" :label="$t('dataTypeAuthorizations.actions')" b-table-column>
           <b-button
@@ -119,7 +119,8 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 })
 export default class DataTypeAuthorizationsView extends Vue {
   @Prop() dataTypeId;
-  @Prop() applicationName;toList
+  @Prop() applicationName;
+  toList;
 
   authorizationService = AuthorizationService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
@@ -191,7 +192,7 @@ export default class DataTypeAuthorizationsView extends Vue {
         this.scopes = Object.keys(this.authorizations[0].authorizations);
       }
     } catch (error) {
-      this.alertService.toastServerError
+      this.alertService.toastServerError;
       this.authorizationByUser = this.authorizations.reduce((acc, auth) => {
         var user = auth.user;
         var userAuth = acc[user] || [];

@@ -6,6 +6,6 @@ export class ApplicationConfig {
   constructor() {
     this.file = null;
     this.name = "";
-    this.comment="";
+    this.comment = "";
   }
 }
