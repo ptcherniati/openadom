@@ -3,7 +3,6 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
 import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
@@ -25,7 +24,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.assertj.core.util.Strings;
@@ -66,12 +64,6 @@ public class OreSiService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    /**
-     * Déliminateur entre les différents niveaux d'un ltree postgresql.
-     * <p>
-     * https://www.postgresql.org/docs/current/ltree.html
-     */
-    private static final String LTREE_SEPARATOR = ".";
     private static final String KEYCOLUMN_SEPARATOR = "__";
     @Autowired
     private OreSiRepository repo;
@@ -97,51 +89,12 @@ public class OreSiService {
     @Autowired
     private RelationalService relationalService;
 
-    public static String escapeKeyComponent(String key) {
-        String lowerCased = key.toLowerCase();
-        String withAccentsStripped = StringUtils.stripAccents(lowerCased);
-        String toEscape = StringUtils.replace(withAccentsStripped, " ", "_");
-        String escaped = toEscape.chars()
-                .mapToObj(x -> (char) x)
-                .map(OreSiService::escapeSymbolFromKeyComponent)
-                .collect(Collectors.joining());
-        checkNaturalKeySyntax(escaped);
-        return escaped;
-    }
-
-    public static void checkNaturalKeySyntax(String keyComponent) {
-        Preconditions.checkState(keyComponent.length() <= 256, "Un label dans un ltree ne peut pas être plus long que 256 caractères à cause de PG");
-        Preconditions.checkState(!keyComponent.isEmpty(), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
-        Preconditions.checkState(keyComponent.matches("[a-zA-Z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
-    }
-
-    private static String escapeSymbolFromKeyComponent(Character aChar) {
-        String escapedChar;
-        if (characterCanBeUsedInLtreeLabel(aChar)) {
-            escapedChar = String.valueOf(aChar);
-        } else {
-            escapedChar = RegExUtils.replaceAll(
-                    Character.getName(aChar),
-                    "[^a-zA-Z0-9_]",
-                    ""
-            );
-        }
-        return escapedChar;
-    }
-
     /**
-     * D'après la documentation PostgreSQL sur ltree
-     *
-     * <blockquote>
-     *     A label is a sequence of alphanumeric characters and underscores (for example, in C locale the characters A-Za-z0-9_ are allowed). Labels must be less than 256 characters long.
-     * </blockquote>
+     * @deprecated utiliser directement {@link Ltree#escapeLabel(String)}
      */
-    private static boolean characterCanBeUsedInLtreeLabel(Character aChar) {
-        return Character.isAlphabetic(aChar) || Character.isDigit(aChar) || '_' == aChar;
-    }
-
-    private void checkHierarchicalKeySyntax(String compositeKey) {
-        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(OreSiService::checkNaturalKeySyntax);
+    @Deprecated
+    public static String escapeKeyComponent(String key) {
+        return Ltree.escapeLabel(key);
     }
 
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
@@ -380,10 +333,10 @@ public class OreSiService {
                 parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
                 parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    String parentHierarchicalKey = escapeKeyComponent(referenceValues.get(parentHierarchicalKeyColumn));
-                    return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
+                    String parentHierarchicalKey = Ltree.escapeLabel(referenceValues.get(parentHierarchicalKeyColumn));
+                    return parentHierarchicalKey + Ltree.SEPARATOR + naturalKey;
                 };
-                getHierarchicalReferenceFn = (reference) -> parentHierarchicalParentReference + LTREE_SEPARATOR + reference;
+                getHierarchicalReferenceFn = (reference) -> parentHierarchicalParentReference + Ltree.SEPARATOR + reference;
             }
         } else {
             getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
@@ -439,7 +392,7 @@ public class OreSiService {
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
                                     refValues.put((String) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
-                                            .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
+                                            .computeIfAbsent(Ltree.escapeLabel(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);
                                 }
                             } else {
@@ -450,15 +403,15 @@ public class OreSiService {
                         String naturalKey;
                         String technicalId = e.getId().toString();
                         if (ref.getKeyColumns().isEmpty()) {
-                            naturalKey = escapeKeyComponent(technicalId);
+                            naturalKey = Ltree.escapeLabel(technicalId);
                         } else {
                             naturalKey = ref.getKeyColumns().stream()
                                     .map(kc -> refValues.get(kc))
                                     .filter(key -> !Strings.isNullOrEmpty(key))
-                                    .map(key -> escapeKeyComponent(key))
+                                    .map(key -> Ltree.escapeLabel(key))
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
-                        OreSiService.checkNaturalKeySyntax(naturalKey);
+                        Ltree.checkLabelSyntax(naturalKey);
                         String recursiveNaturalKey = naturalKey;
                         if (isRecursive) {
                             selfLineChecker
@@ -468,7 +421,7 @@ public class OreSiService {
                                     .ifPresent(key -> e.setId(key));
                             String parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
                             while (!Strings.isNullOrEmpty(parentKey)) {
-                                recursiveNaturalKey = parentKey + LTREE_SEPARATOR + recursiveNaturalKey;
+                                recursiveNaturalKey = parentKey + Ltree.SEPARATOR + recursiveNaturalKey;
                                 parentKey = parentreferenceMap.getOrDefault(parentKey, null);
                             }
                         }
@@ -483,7 +436,7 @@ public class OreSiService {
                                 getHierarchicalReferenceFn.apply(selfHierarchicalReference);
                         refValues.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, refValues));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
-                        checkHierarchicalKeySyntax(hierarchicalKey);
+                        Ltree.checkSyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
@@ -533,11 +486,11 @@ public class OreSiService {
                     if (!Strings.isNullOrEmpty(s)) {
                         String naturalKey;
                         try {
-                            s = OreSiService.escapeKeyComponent(s);
+                            s = Ltree.escapeLabel(s);
                             naturalKey = ref.getKeyColumns()
                                     .stream()
                                     .map(kc -> columns.indexOf(kc))
-                                    .map(k -> OreSiService.escapeKeyComponent(csvrecord.get(k)))
+                                    .map(k -> Ltree.escapeLabel(csvrecord.get(k)))
                                     .collect(Collectors.joining("__"));
                         } catch (IllegalArgumentException e) {
                             return;
@@ -827,7 +780,7 @@ public class OreSiService {
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
                 String requiredAuthorization = values.get(variableComponentKey);
-                checkHierarchicalKeySyntax(requiredAuthorization);
+                Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
             });
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
