@@ -44,6 +44,7 @@ import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -392,10 +393,11 @@ public class OreSiService {
                 .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
                 .findFirst();
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
-        String parentHierarchicalKeyColumn, parentHierarchicalParentReference;
+        ReferenceColumn parentHierarchicalKeyColumn;
+        String parentHierarchicalParentReference;
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
-        BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
+        BiFunction<String, ReferenceDatum, String> getHierarchicalKeyFn;
         Function<String, String> getHierarchicalReferenceFn;
         Map<String, String> buildedHierarchicalKeys = new HashMap<>();
         Map<String, String> parentreferenceMap = new HashMap<>();
@@ -409,7 +411,7 @@ public class OreSiService {
                 Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
                         .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
                         .collect(MoreCollectors.onlyElement());
-                parentHierarchicalKeyColumn = referenceComponentDescription.getParentKeyColumn();
+                parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
                 parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
                     String parentHierarchicalKey = escapeKeyComponent(referenceValues.get(parentHierarchicalKeyColumn));
@@ -432,14 +434,15 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
+            Function<CSVRecord, ReferenceDatum> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
-                Map<String, String> recordAsMap = new LinkedHashMap<>();
+                ReferenceDatum referenceDatum = new ReferenceDatum();
                 line.forEach(value -> {
                     String header = currentHeader.next();
-                    recordAsMap.put(header, value);
+                    ReferenceColumn referenceColumn = new ReferenceColumn(header);
+                    referenceDatum.put(referenceColumn, value);
                 });
-                return recordAsMap;
+                return referenceDatum;
             };
 
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -460,16 +463,16 @@ public class OreSiService {
                     .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
-                    .map(refValues -> {
+                    .map(referenceDatum -> {
                         Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
                         lineCheckers.forEach(lineChecker -> {
-                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(new ReferenceDatum(refValues));
+                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(referenceDatum);
                             if (validationCheckResult.isSuccess()) {
                                 if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                                     ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                     String reference = ((ReferenceLineChecker) lineChecker).getRefType();
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
-                                    refValues.put((String) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
+                                    referenceDatum.put((ReferenceColumn) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
                                             .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);
@@ -485,9 +488,10 @@ public class OreSiService {
                             naturalKey = escapeKeyComponent(technicalId);
                         } else {
                             naturalKey = ref.getKeyColumns().stream()
-                                    .map(kc -> refValues.get(kc))
-                                    .filter(key -> !Strings.isNullOrEmpty(key))
-                                    .map(key -> escapeKeyComponent(key))
+                                    .map(ReferenceColumn::new)
+                                    .map(referenceDatum::get)
+                                    .filter(StringUtils::isNotEmpty)
+                                    .map(OreSiService::escapeKeyComponent)
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                         }
                         OreSiService.checkNaturalKeySyntax(naturalKey);
@@ -504,7 +508,7 @@ public class OreSiService {
                                 parentKey = parentreferenceMap.getOrDefault(parentKey, null);
                             }
                         }
-                        String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, refValues);
+                        String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
                         String selfHierarchicalReference = refType;
                         if (isRecursive) {
                             for (int i = 1; i < recursiveNaturalKey.split("\\.").length; i++) {
@@ -513,7 +517,7 @@ public class OreSiService {
                         }
                         String hierarchicalReference =
                                 getHierarchicalReferenceFn.apply(selfHierarchicalReference);
-                        refValues.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, refValues));
+                        referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
                         checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
@@ -523,7 +527,7 @@ public class OreSiService {
                         e.setRefsLinkedTo(refsLinkedTo);
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
-                        e.setRefValues(refValues);
+                        e.setRefValues(referenceDatum.asMap());
                         return e;
                     })
                     .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))

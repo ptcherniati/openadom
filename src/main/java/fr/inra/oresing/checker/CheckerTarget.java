@@ -2,6 +2,7 @@ package fr.inra.oresing.checker;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.OreSiRepository;
 import lombok.Getter;
@@ -18,25 +19,22 @@ abstract public class CheckerTarget<T>{
     @JsonIgnore
     private OreSiRepository.RepositoryForApplication repository;
     private CheckerTargetType type;
-    public static CheckerTarget getInstance(Object target, Application application, OreSiRepository.RepositoryForApplication repository){
-        CheckerTarget checkerTarget = null;
-        if(target instanceof VariableComponentKey){
-            checkerTarget =  new VariableComponentKeyCheckerTarget((VariableComponentKey) target);
-        } else if (target instanceof String){
-            checkerTarget =  new ColumnCheckerTarget((String) target);
-        }
-        if(checkerTarget!=null){
-            checkerTarget.application = application;
-            checkerTarget.repository = repository;
-        }
+
+    public static CheckerTarget getInstance(VariableComponentKey target, Application application, OreSiRepository.RepositoryForApplication repository){
+        CheckerTarget checkerTarget = new VariableComponentKeyCheckerTarget(target);
+        checkerTarget.application = application;
+        checkerTarget.repository = repository;
         return checkerTarget;
     }
-    public String getInternationalizedKey(String key){
-        if(CheckerTargetType.PARAM_COLUMN.equals(type)){
-            return key+"WithColumn";
-        }
-        return key;
+
+    public static CheckerTarget getInstance(ReferenceColumn target, Application application, OreSiRepository.RepositoryForApplication repository){
+        CheckerTarget checkerTarget = new ColumnCheckerTarget(target);
+        checkerTarget.application = application;
+        checkerTarget.repository = repository;
+        return checkerTarget;
     }
+
+    public abstract String getInternationalizedKey(String key);
 
     public CheckerTarget(CheckerTargetType type, T target) {
         this.type = type;
@@ -61,16 +59,27 @@ abstract public class CheckerTarget<T>{
             return type;
         }
     }
-    public static class ColumnCheckerTarget extends CheckerTarget<String>{
 
-        private ColumnCheckerTarget(String column) {
+    public static class ColumnCheckerTarget extends CheckerTarget<ReferenceColumn> {
+
+        private ColumnCheckerTarget(ReferenceColumn column) {
             super(CheckerTargetType.PARAM_COLUMN, column);
         }
+
+        @Override
+        public String getInternationalizedKey(String key){
+            return key+"WithColumn";
+        }
     }
-    public static class VariableComponentKeyCheckerTarget extends CheckerTarget<VariableComponentKey>{
+    public static class VariableComponentKeyCheckerTarget extends CheckerTarget<VariableComponentKey> {
 
         private VariableComponentKeyCheckerTarget(VariableComponentKey variableComponentKey) {
             super(CheckerTargetType.PARAM_VARIABLE_COMPONENT_KEY, variableComponentKey);
+        }
+
+        @Override
+        public String getInternationalizedKey(String key){
+            return key;
         }
     }
 

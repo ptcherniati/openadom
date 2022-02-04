@@ -7,29 +7,31 @@ import java.util.Map;
 
 public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext {
 
-    private final Map<String, String> values;
+    private final Map<ReferenceColumn, String> values;
 
     public ReferenceDatum() {
         this(new LinkedHashMap<>());
     }
 
-    public ReferenceDatum(Map<String, String> values) {
+    public ReferenceDatum(Map<ReferenceColumn, String> values) {
         this.values = values;
     }
 
     public static ReferenceDatum copyOf(ReferenceDatum referenceDatum) {
-        return new ReferenceDatum(new LinkedHashMap<>(referenceDatum.asMap()));
+        return new ReferenceDatum(new LinkedHashMap<>(referenceDatum.values));
     }
 
-    public String get(String column) {
+    public String get(ReferenceColumn column) {
         return values.get(column);
     }
 
-    public Map<String, String> asMap() {
-        return values;
+    public ImmutableMap<String, String> asMap() {
+        ImmutableMap<String, String> map = values.entrySet().stream()
+                .collect(ImmutableMap.toImmutableMap(entry -> entry.getKey().asString(), Map.Entry::getValue));
+        return map;
     }
 
-    public String put(String string, String value) {
+    public String put(ReferenceColumn string, String value) {
         return values.put(string, value);
     }
 

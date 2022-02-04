@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -200,7 +201,8 @@ public class CheckerFactory {
         String variableComponentKeyParam = params.getVariableComponentKey();
         if (!Strings.isNullOrEmpty(columnsString)) {
             return Stream.of(columnsString.split(","))
-                    .map(column -> CheckerTarget.getInstance(column, application, repository.getRepository(application)))
+                    .map(ReferenceColumn::new)
+                    .map(referenceColumn -> CheckerTarget.getInstance(referenceColumn, application, repository.getRepository(application)))
                     .collect(Collectors.toList());
         } else if (!Strings.isNullOrEmpty(variableComponentKeyParam) || !variableComponentKeyParam.matches("_")) {
             String[] split = variableComponentKeyParam.split("_");

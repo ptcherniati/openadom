@@ -4,6 +4,7 @@ import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.decorators.CheckerDecorator;
 import fr.inra.oresing.checker.decorators.DecoratorException;
 import fr.inra.oresing.model.Datum;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.ValidationCheckResult;
@@ -30,7 +31,7 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
 
     @Override
     default ValidationCheckResult checkReference(ReferenceDatum referenceDatum) {
-        final String column = (String) getTarget().getTarget();
+        final ReferenceColumn column = (ReferenceColumn) getTarget().getTarget();
         String value = referenceDatum.get(column);
         try {
             ValidationCheckResult check = CheckerDecorator.check(referenceDatum, value, getConfiguration(), getTarget());
