@@ -4,11 +4,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.checker.CheckerTarget;
+import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
@@ -16,9 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,9 +26,13 @@ public class TransformerFactory {
     @Autowired
     private OreSiRepository repository;
 
+    @Autowired
+    private GroovyContextHelper groovyContextHelper;
+
     public ImmutableSet<LineTransformer> getDataTypeLineTransformers(Application app, String dataType) {
         Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
+        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
         ImmutableSet.Builder<LineTransformer> transformersBuilder = ImmutableSet.builder();
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
@@ -57,7 +58,7 @@ public class TransformerFactory {
                             String groovy = configuration.getGroovy();
                             StringGroovyExpression groovyExpression = StringGroovyExpression.forExpression(groovy);
                             Set<String> references = configuration.doGetReferencesAsCollection();
-                            ImmutableMap<String, Object> groovyContext = getGroovyContextForReferences(repository.getRepository(app).referenceValue(), references);
+                            ImmutableMap<String, Object> groovyContext = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
                             TransformOneLineElementTransformer transformer = new GroovyExpressionOnOneLineElementTransformer(groovyExpression, groovyContext, target);
                             transformersBuilder.add(transformer);
                         }
@@ -72,24 +73,9 @@ public class TransformerFactory {
         return lineTransformers;
     }
 
-    private ImmutableMap<String, Object> getGroovyContextForReferences(ReferenceValueRepository referenceValueRepository, Set<String> refs) {
-        Map<String, List<ReferenceValue>> references = new HashMap<>();
-        Map<String, List<Map<String, String>>> referencesValues = new HashMap<>();
-        refs.forEach(ref -> {
-            List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(ref);
-            references.put(ref, allByReferenceType);
-            allByReferenceType.stream()
-                    .map(ReferenceValue::getRefValues)
-                    .forEach(values -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(values));
-        });
-        return ImmutableMap.<String, Object>builder()
-                .put("references", references)
-                .put("referencesValues", referencesValues)
-                .build();
-    }
-
     public ImmutableSet<LineTransformer> getReferenceLineTransformers(Application app, String reference) {
         Preconditions.checkArgument(app.getConfiguration().getReferences().containsKey(reference), "Pas de référence " + reference + " dans " + app);
+        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
         Configuration.ReferenceDescription referenceDescription = app.getConfiguration().getReferences().get(reference);
         ImmutableSet.Builder<LineTransformer> transformersBuilder = ImmutableSet.builder();
         for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : referenceDescription.getValidations().entrySet()) {
@@ -108,7 +94,7 @@ public class TransformerFactory {
                             String groovy = configuration.getGroovy();
                             StringGroovyExpression groovyExpression = StringGroovyExpression.forExpression(groovy);
                             Set<String> references = configuration.doGetReferencesAsCollection();
-                            ImmutableMap<String, Object> groovyContext = getGroovyContextForReferences(repository.getRepository(app).referenceValue(), references);
+                            ImmutableMap<String, Object> groovyContext = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
                             TransformOneLineElementTransformer transformer = new GroovyExpressionOnOneLineElementTransformer(groovyExpression, groovyContext, target);
                             transformersBuilder.add(transformer);
                         }

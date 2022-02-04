@@ -229,6 +229,13 @@ public class Configuration {
     public static class VariableComponentDescriptionConfiguration {
         String references; // à remplacer par une collection car split(',')
         boolean replace;
+
+        public ImmutableSet<String> doGetReferencesAsCollection() {
+            if (StringUtils.isEmpty(getReferences())) {
+                return ImmutableSet.of();
+            }
+            return Streams.stream(Splitter.on(",").split(getReferences())).collect(ImmutableSet.toImmutableSet());
+        }
     }
 
     @Getter

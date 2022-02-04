@@ -26,7 +26,6 @@ import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.DateValidationCheckResult;
 import fr.inra.oresing.checker.FloatChecker;
-import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.checker.IntegerChecker;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
@@ -35,6 +34,7 @@ import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
 import fr.inra.oresing.checker.ReferenceValidationCheckResult;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
+import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Authorization;
@@ -158,6 +158,9 @@ public class OreSiService {
 
     @Autowired
     private RelationalService relationalService;
+
+    @Autowired
+    private GroovyContextHelper groovyContextHelper;
 
     public static String escapeKeyComponent(String key) {
         String toEscape = StringUtils.stripAccents(key.toLowerCase());
@@ -732,8 +735,6 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
             Datum constantValues = new Datum();
-            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations());
-
             readPreHeader(formatDescription, constantValues, linesIterator);
 
             ImmutableList<String> columns = readHeaderRow(linesIterator);
@@ -743,7 +744,7 @@ public class OreSiService {
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions, app.getConfiguration().getDataTypes().get(dataType).getData(), app, repo.getRepository(app)))
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
                     .map(buildTransformationFn(app, dataType))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
@@ -1007,31 +1008,52 @@ public class OreSiService {
      * <p>
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions, LinkedHashMap<String, Configuration.ColumnDescription> data, Application application, OreSiRepository.RepositoryForApplication repository) {
-        return rowWithData -> {
-            Map<String, Map<String, String>> datumByVariableAndComponent = new HashMap<>();
-            for (Map.Entry<VariableComponentKey, String> entry : rowWithData.getDatum().asMap().entrySet()) {
-                datumByVariableAndComponent
-                        .computeIfAbsent(entry.getKey().getVariable(), k -> new HashMap<String, String>())
-                        .put(entry.getKey().getComponent(), entry.getValue());
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, String> requiredAuthorizations) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
+        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, requiredAuthorizations);
+        Map<String, Configuration.ColumnDescription> data = dataTypeDescription.getData();
+        Map<VariableComponentKey, Function<Datum, String>> defaultValueFns = new LinkedHashMap<>();
+        Set<VariableComponentKey> replaceEnabled = new LinkedHashSet<>();
+        for (Map.Entry<VariableComponentKey, Expression<String>> entry : defaultValueExpressions.entrySet()) {
+            VariableComponentKey variableComponentKey = entry.getKey();
+            Expression<String> expression = entry.getValue();
+            Configuration.VariableComponentDescriptionConfiguration params = Optional.ofNullable(data)
+                    .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKey.getVariable()))
+                    .map(columnDescription -> columnDescription.getComponents())
+                    .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKey.getComponent()))
+                    .map(variableComponentDescription -> variableComponentDescription.getParams())
+                    .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
+            ImmutableSet<String> configurationReferences = Optional.of(params)
+                    .map(Configuration.VariableComponentDescriptionConfiguration::doGetReferencesAsCollection)
+                    .orElseGet(ImmutableSet::of);
+            ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+            Function<Datum, String> computeDefaultValueFn = datum -> {
+                ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
+                        .putAll(contextForExpression)
+                        .putAll(datum.getEvaluationContext())
+                        .build();
+                String evaluate = expression.evaluate(evaluationContext);
+                return evaluate;
+            };
+            defaultValueFns.put(variableComponentKey, computeDefaultValueFn);
+            if (params.isReplace()) {
+                replaceEnabled.add(variableComponentKey);
             }
+        }
+        return rowWithData -> {
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>();
             Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap<>(rowWithData.getDatum().asMap());
-            defaultValueExpressions.entrySet().stream()
+            defaultValueFns.entrySet().stream()
                     .forEach(variableComponentKeyExpressionEntry -> {
-                        Configuration.VariableComponentDescriptionConfiguration params = Optional.ofNullable(data)
-                                .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKeyExpressionEntry.getKey().getVariable()))
-                                .map(columnDescription -> columnDescription.getComponents())
-                                .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKeyExpressionEntry.getKey().getComponent()))
-                                .map(variableComponentDescription -> variableComponentDescription.getParams())
-                                .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
-                        ImmutableMap<String, Object> evaluationContext = GroovyLineChecker.buildContext(rowWithData.getDatum(), application, params, repository);
-                        String evaluate = variableComponentKeyExpressionEntry.getValue().evaluate(evaluationContext);
+                        VariableComponentKey variableComponentKey = variableComponentKeyExpressionEntry.getKey();
+                        Function<Datum, String> computeDefaultValueFn = variableComponentKeyExpressionEntry.getValue();
+                        String evaluate = computeDefaultValueFn.apply(rowWithData.getDatum());
                         if (StringUtils.isNotBlank(evaluate)) {
-                            if (params.isReplace()) {
-                                rowWithValues.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
+                            if (replaceEnabled.contains(variableComponentKey)) {
+                                rowWithValues.put(variableComponentKey, evaluate);
                             } else {
-                                rowWithDefaults.put(variableComponentKeyExpressionEntry.getKey(), evaluate);
+                                rowWithDefaults.put(variableComponentKey, evaluate);
                             }
                         }
                     });
