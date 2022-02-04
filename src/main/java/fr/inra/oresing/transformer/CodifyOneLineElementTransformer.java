@@ -3,6 +3,7 @@ package fr.inra.oresing.transformer;
 import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.model.SomethingThatCanProvideEvaluationContext;
 import fr.inra.oresing.rest.OreSiService;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.assertj.core.util.Strings;
 
 public class CodifyOneLineElementTransformer implements TransformOneLineElementTransformer {
@@ -27,5 +28,12 @@ public class CodifyOneLineElementTransformer implements TransformOneLineElementT
             valueAfterCodification = OreSiService.escapeKeyComponent(value);
         }
         return valueAfterCodification;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("target", target)
+                .toString();
     }
 }

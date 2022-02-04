@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.SomethingThatCanProvideEvaluationContext;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class GroovyExpressionOnOneLineElementTransformer implements TransformOneLineElementTransformer {
 
@@ -32,5 +33,14 @@ public class GroovyExpressionOnOneLineElementTransformer implements TransformOne
                 .build();
         String transformed = groovyExpression.evaluate(context);
         return transformed;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("groovyExpression", groovyExpression)
+                .append("context", context)
+                .append("target", target)
+                .toString();
     }
 }

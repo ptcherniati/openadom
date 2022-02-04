@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.checker.CheckerTarget;
-import fr.inra.oresing.checker.decorators.DecoratorConfiguration;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
@@ -47,7 +46,7 @@ public class TransformerFactory {
                 } else {
                     Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
                     CheckerTarget target = CheckerTarget.getInstance(variableComponentKey, app, repository.getRepository(app));
-                    DecoratorConfiguration configuration = checkerDescription.getParams();
+                    TransformationConfiguration configuration = checkerDescription.getParams();
                     if (configuration == null) {
                         // possible car `params` peut être vide dans le cas d'un checker de type Integer
                     } else {
@@ -97,7 +96,7 @@ public class TransformerFactory {
             String validation = validationEntry.getKey();
             Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
             Configuration.CheckerConfigurationDescription params = lineValidationRuleDescription.getChecker().getParams();
-            DecoratorConfiguration configuration = params;
+            TransformationConfiguration configuration = params;
             params.doGetColumnsAsCollection().stream()
                     .map(ReferenceColumn::new)
                     .map(referenceColumn -> CheckerTarget.getInstance(referenceColumn, app, null))

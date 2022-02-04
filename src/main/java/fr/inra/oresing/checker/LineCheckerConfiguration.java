@@ -1,6 +1,11 @@
 package fr.inra.oresing.checker;
 
-import fr.inra.oresing.checker.decorators.DecoratorConfiguration;
+import fr.inra.oresing.transformer.TransformationConfiguration;
 
-public interface LineCheckerConfiguration extends DecoratorConfiguration {
+public interface LineCheckerConfiguration extends TransformationConfiguration {
+
+    /**
+     * Indique la valeur est obligatoire.
+     */
+    boolean isRequired();
 }

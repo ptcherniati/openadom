@@ -1,7 +1,7 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.checker.decorators.DecoratorConfiguration;
+import fr.inra.oresing.transformer.TransformationConfiguration;
 import fr.inra.oresing.groovy.BooleanGroovyExpression;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Application;
@@ -48,9 +48,9 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
         return GroovyExpression.validateExpression(expression);
     }
 
-    public static ImmutableMap<String, Object> buildContext(SomethingThatCanProvideEvaluationContext datum, Application application, DecoratorConfiguration params, OreSiRepository.RepositoryForApplication repository) {
+    public static ImmutableMap<String, Object> buildContext(SomethingThatCanProvideEvaluationContext datum, Application application, TransformationConfiguration params, OreSiRepository.RepositoryForApplication repository) {
         Optional<String> configurationReferences = Optional.of(params)
-                .map(DecoratorConfiguration::getReferences);
+                .map(TransformationConfiguration::getReferences);
         Optional<String> configurationDataTypes = Optional.empty();
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
         return context;
