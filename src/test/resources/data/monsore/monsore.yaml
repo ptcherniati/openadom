@@ -350,8 +350,8 @@ dataTypes:
               replace: true
             defaultValue: >
               return references.get("sites")
-              .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
-              .getHierarchicalKey();
+              .find{it.getNaturalKey().getSql().equals(datumByVariableAndComponent.get("site").get("bassin"))}
+              .getHierarchicalKey().getSql();
             checker:
               name: Reference
               params:
@@ -363,7 +363,7 @@ dataTypes:
             defaultValue: >
               return references.get("sites")
               .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin")) && it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
-              .getHierarchicalKey();
+              .getHierarchicalKey().getSql();
             checker:
               name: Reference
               params:

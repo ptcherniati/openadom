@@ -7,6 +7,7 @@ import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Value
@@ -89,6 +90,11 @@ public class Ltree {
 
     public static Ltree parseLabel(String labelToEscape) {
         String escaped = escapeLabel(labelToEscape);
+        return fromSql(escaped);
+    }
+
+    public static Ltree toLabel(UUID uuid) {
+        String escaped = escapeLabel(StringUtils.remove(uuid.toString(), "-"));
         return fromSql(escaped);
     }
 }
