@@ -3,7 +3,6 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
@@ -55,6 +54,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
 import fr.inra.oresing.persistence.SqlPolicy;
@@ -71,7 +71,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.assertj.core.util.Strings;
@@ -98,6 +97,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -125,12 +125,6 @@ public class OreSiService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    /**
-     * Déliminateur entre les différents niveaux d'un ltree postgresql.
-     * <p>
-     * https://www.postgresql.org/docs/current/ltree.html
-     */
-    private static final String LTREE_SEPARATOR = ".";
     private static final String KEYCOLUMN_SEPARATOR = "__";
     @Autowired
     private OreSiRepository repo;
@@ -162,27 +156,12 @@ public class OreSiService {
     @Autowired
     private GroovyContextHelper groovyContextHelper;
 
+    /**
+     * @deprecated utiliser directement {@link Ltree#escapeLabel(String)}
+     */
+    @Deprecated
     public static String escapeKeyComponent(String key) {
-        String toEscape = StringUtils.stripAccents(key.toLowerCase());
-        String escaped = StringUtils.remove(
-                RegExUtils.replaceAll(
-                        StringUtils.replace(toEscape, " ", "_"),
-                        "[^a-z0-9_]",
-                        ""
-                ), "-"
-        );
-        checkNaturalKeySyntax(escaped);
-        return escaped;
-    }
-
-    public static void checkNaturalKeySyntax(String keyComponent) {
-        if (keyComponent.isEmpty())
-            Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
-        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
-    }
-
-    private void checkHierarchicalKeySyntax(String compositeKey) {
-        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(OreSiService::checkNaturalKeySyntax);
+        return Ltree.escapeLabel(key);
     }
 
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
@@ -419,10 +398,10 @@ public class OreSiService {
         String parentHierarchicalParentReference;
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
-        BiFunction<String, ReferenceDatum, String> getHierarchicalKeyFn;
-        Function<String, String> getHierarchicalReferenceFn;
-        Map<String, String> buildedHierarchicalKeys = new HashMap<>();
-        Map<String, String> parentreferenceMap = new HashMap<>();
+        BiFunction<Ltree, ReferenceDatum, Ltree> getHierarchicalKeyFn;
+        Function<Ltree, Ltree> getHierarchicalReferenceFn;
+        Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
+        Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -436,10 +415,10 @@ public class OreSiService {
                 parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
                 parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    String parentHierarchicalKey = escapeKeyComponent(referenceValues.get(parentHierarchicalKeyColumn));
-                    return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
+                    Ltree parentHierarchicalKey = Ltree.parseLabel(referenceValues.get(parentHierarchicalKeyColumn));
+                    return Ltree.join(parentHierarchicalKey, naturalKey);
                 };
-                getHierarchicalReferenceFn = (reference) -> parentHierarchicalParentReference + LTREE_SEPARATOR + reference;
+                getHierarchicalReferenceFn = (reference) -> Ltree.join(Ltree.parseLabel(parentHierarchicalParentReference), reference);
             }
         } else {
             getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
@@ -472,7 +451,7 @@ public class OreSiService {
             if (isRecursive) {
                 recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
             }
-            List<String> hierarchicalKeys = new LinkedList<>();
+            List<Ltree> hierarchicalKeys = new LinkedList<>();
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
                     .map(inter -> inter.getReferences())
@@ -497,7 +476,7 @@ public class OreSiService {
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
                                     referenceDatum.put((ReferenceColumn) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
-                                            .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
+                                            .computeIfAbsent(Ltree.escapeLabel(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);
                                 }
                             } else {
@@ -505,44 +484,47 @@ public class OreSiService {
                             }
                         });
                         ReferenceValue e = new ReferenceValue();
-                        String naturalKey;
-                        String technicalId = e.getId().toString();
+                        Ltree naturalKey;
                         if (ref.getKeyColumns().isEmpty()) {
-                            naturalKey = escapeKeyComponent(technicalId);
+                            UUID technicalId = e.getId();
+                            naturalKey = Ltree.toLabel(technicalId);
                         } else {
-                            naturalKey = ref.getKeyColumns().stream()
+                            naturalKey = Ltree.parseLabel(ref.getKeyColumns().stream()
                                     .map(ReferenceColumn::new)
                                     .map(referenceDatum::get)
                                     .filter(StringUtils::isNotEmpty)
-                                    .map(OreSiService::escapeKeyComponent)
-                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                                    .map(Ltree::escapeLabel)
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR)));
                         }
-                        OreSiService.checkNaturalKeySyntax(naturalKey);
-                        String recursiveNaturalKey = naturalKey;
+                        Ltree recursiveNaturalKey = naturalKey;
+                        final Ltree refTypeAsLabel = Ltree.parseLabel(refType);
                         if (isRecursive) {
                             selfLineChecker
                                     .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
-                                    .map(values -> values.get(naturalKey))
+                                    .map(values -> values.get(naturalKey.getSql()))
                                     .filter(key -> key != null)
                                     .ifPresent(key -> e.setId(key));
-                            String parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
-                            while (!Strings.isNullOrEmpty(parentKey)) {
-                                recursiveNaturalKey = parentKey + LTREE_SEPARATOR + recursiveNaturalKey;
+                            Ltree parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
+                            while (parentKey != null) {
+                                recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
                                 parentKey = parentreferenceMap.getOrDefault(parentKey, null);
+                                //selfHierarchicalReference = Ltree.join(selfHierarchicalReference, refTypeAsLabel);
                             }
+//                            int x = StringUtils.countMatches(selfHierarchicalReference.getSql(), ".");
+//                            int y = StringUtils.countMatches(recursiveNaturalKey.getSql(), ".");
+//                            Preconditions.checkState(x == y);
                         }
-                        String hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
-                        String selfHierarchicalReference = refType;
+                        Ltree hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
+                        Ltree selfHierarchicalReference = refTypeAsLabel;
                         if (isRecursive) {
-                            for (int i = 1; i < recursiveNaturalKey.split("\\.").length; i++) {
-                                selfHierarchicalReference += ".".concat(refType);
+                            for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
+                                selfHierarchicalReference = Ltree.fromSql(selfHierarchicalReference.getSql() + ".".concat(refType));
                             }
                         }
-                        String hierarchicalReference =
+                        Ltree hierarchicalReference =
                                 getHierarchicalReferenceFn.apply(selfHierarchicalReference);
                         referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
-                        checkHierarchicalKeySyntax(hierarchicalKey);
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
@@ -553,7 +535,7 @@ public class OreSiService {
                         e.setRefValues(referenceDatum.asMap());
                         return e;
                     })
-                    .sorted((a, b) -> a.getHierarchicalKey().compareTo(b.getHierarchicalKey()))
+                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()))
                     .map(e -> {
                         if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
                             /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
@@ -574,7 +556,7 @@ public class OreSiService {
         return fileId;
     }
 
-    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<String, String> referenceMap) {
+    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap) {
         Integer parentRecursiveIndex = recursiveComponentDescription
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
@@ -592,16 +574,16 @@ public class OreSiService {
                     if (!Strings.isNullOrEmpty(s)) {
                         String naturalKey;
                         try {
-                            s = OreSiService.escapeKeyComponent(s);
+                            s = Ltree.escapeLabel(s);
                             naturalKey = ref.getKeyColumns()
                                     .stream()
                                     .map(kc -> columns.indexOf(kc))
-                                    .map(k -> OreSiService.escapeKeyComponent(csvrecord.get(k)))
+                                    .map(k -> Ltree.escapeLabel(csvrecord.get(k)))
                                     .collect(Collectors.joining("__"));
                         } catch (IllegalArgumentException e) {
                             return;
                         }
-                        referenceMap.put(naturalKey, s);
+                        referenceMap.put(Ltree.parseLabel(naturalKey), Ltree.parseLabel(s));
                         if (!referenceUUIDs.containsKey(s)) {
                             referenceUUIDs.put(s, UUID.randomUUID());
                         }
@@ -630,8 +612,8 @@ public class OreSiService {
                 .getConfiguration()
                 .getCompositeReferencesUsing(lowestLevelReference)
                 .orElseThrow();
-        BiMap<String, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
-        Map<ReferenceValue, String> parentHierarchicalKeys = new LinkedHashMap<>();
+        BiMap<Ltree, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
+        Map<ReferenceValue, Ltree> parentHierarchicalKeys = new LinkedHashMap<>();
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
                 .map(Configuration.CompositeReferenceComponentDescription::getReference)
                 .collect(ImmutableList.toImmutableList());
@@ -645,7 +627,7 @@ public class OreSiService {
                     referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
                         indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
                         if (parentKeyColumn != null) {
-                            String parentHierarchicalKey = referenceValue.getRefValues().get(parentKeyColumn);
+                            Ltree parentHierarchicalKey = Ltree.fromSql(referenceValue.getRefValues().get(parentKeyColumn));
                             parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
                         }
                     });
@@ -905,7 +887,7 @@ public class OreSiService {
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
                 String requiredAuthorization = datum.get(variableComponentKey);
-                checkHierarchicalKeySyntax(requiredAuthorization);
+                Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
             });
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());

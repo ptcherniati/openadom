@@ -21,16 +21,13 @@ import java.util.Set;
 public class GroovyContextHelper {
 
     public ImmutableMap<String, Object> getGroovyContextForReferences(ReferenceValueRepository referenceValueRepository, Set<String> refs) {
-        Map<String, List<Map<String, String>>> references = new HashMap<>();
+        Map<String, List<ReferenceValueDecorator>> references = new HashMap<>();
         Map<String, List<Map<String, String>>> referencesValues = new HashMap<>();
         refs.forEach(ref -> {
             List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(ref);
             allByReferenceType.stream()
-                    .forEach(referenceValue -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(Map.of(
-                            "hierarchicalKey", referenceValue.getHierarchicalKey(),
-                            "hierarchicalReference", referenceValue.getHierarchicalReference(),
-                            "naturalKey", referenceValue.getNaturalKey()
-                    )));
+                    .map(ReferenceValueDecorator::new)
+                    .forEach(referenceValue -> references.computeIfAbsent(ref, k -> new LinkedList<>()).add(referenceValue));
             allByReferenceType.stream()
                     .map(ReferenceValue::getRefValues)
                     .forEach(values -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(values));
@@ -55,5 +52,33 @@ public class GroovyContextHelper {
                 .put("datatypes", datatypes)
                 .put("datatypesValues", datatypesValues)
                 .build();
+    }
+
+    /**
+     * On expose pas directement les entités dans le contexte Groovy mais on contrôle un peu les types
+     */
+    private static class ReferenceValueDecorator {
+
+        private final ReferenceValue decorated;
+
+        public ReferenceValueDecorator(ReferenceValue decorated) {
+            this.decorated = decorated;
+        }
+
+        public String getHierarchicalKey() {
+            return decorated.getHierarchicalKey().getSql();
+        }
+
+        public String getHierarchicalReference() {
+            return decorated.getHierarchicalReference().getSql();
+        }
+
+        public String getNaturalKey() {
+            return decorated.getNaturalKey().getSql();
+        }
+
+        public Map<String, String> getRefValues() {
+            return decorated.getRefValues();
+        }
     }
 }
