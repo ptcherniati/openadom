@@ -229,7 +229,7 @@
                       size="is-medium"
                       type="is-primary is-light"
                       @click="publish(dataset, !dataset.params.published)"
-                      style="height:1.5em; background-color: transparent; font-size: 1.45rem;"
+                      style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                     />
                   </b-field>
                 </td>
@@ -240,7 +240,7 @@
                       size="is-medium"
                       type="is-danger is-light"
                       @click="remove(dataset, dataset.params.published)"
-                      style="height:1.5em; background-color: transparent; font-size: 1.45rem;"
+                      style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                     />
                   </b-field>
                 </td>

@@ -64,6 +64,9 @@
             <b-button type="is-light" @click="handleSubmit(testApplication)" icon-left="vial">
               {{ $t("applications.test") }}
             </b-button>
+            <b-button type="is-warning" @click="handleSubmit(changeApplication)" icon-left="edit">
+              {{ $t("applications.change") }}
+            </b-button>
             <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-left="plus">
               {{ $t("applications.create") }}
             </b-button>
@@ -114,6 +117,17 @@ export default class ApplicationCreationView extends Vue {
     try {
       await this.applicationService.createApplication(this.applicationConfig, this.comment);
       this.alertService.toastSuccess(this.$t("alert.application-creation-success"));
+      this.$router.push("/applications");
+    } catch (error) {
+      this.checkMessageErrors(error);
+    }
+  }
+
+  async changeApplication() {
+    this.errorsMessages = [];
+    try {
+      await this.applicationService.changeApplication(this.applicationConfig);
+      this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       this.$router.push("/applications");
     } catch (error) {
       this.checkMessageErrors(error);

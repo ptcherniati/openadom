@@ -32,6 +32,12 @@ export class ApplicationService extends Fetcher {
       file: applicationConfig.file,
     });
   }
+  async changeApplication(applicationConfig, comment) {
+    return this.post("applications/" + applicationConfig.name, {
+      file: applicationConfig.file,
+      comment: comment,
+    });
+  }
 
   async getValidateConfiguration() {
     return this.post("validate-configuration");

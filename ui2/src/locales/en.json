@@ -82,7 +82,8 @@
         "trierA_z":"Name A - z",
         "trierZ_a":"Name Z - a",
         "trierRecent":"Recent date",
-        "filter":"Filter by"
+        "filter":"Filter by",
+        "change": "Edit app"
     },
     "errors":{
         "emptyFile":"File is empty",

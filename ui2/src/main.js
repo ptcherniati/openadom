@@ -53,6 +53,7 @@ import {
   faSortDown,
   faArchive,
   faTimesCircle,
+  faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -104,7 +105,8 @@ library.add(
   faSortDown,
   faSortUp,
   faArchive,
-  faTimesCircle
+  faTimesCircle,
+  faEdit
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

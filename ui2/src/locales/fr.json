@@ -82,7 +82,8 @@
 	    "trierA_z": "Nom A - z",
 	    "trierZ_a": "Nom Z - a",
 	    "trierRecent": "Date récente",
-	    "filter": "Filtrer"
+	    "filter": "Filtrer",
+        "change": "Modifier l'application"
     },
     "errors": {
         "emptyFile": "Le fichier est vide",
