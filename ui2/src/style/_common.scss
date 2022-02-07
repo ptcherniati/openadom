@@ -158,6 +158,9 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 .button.is-danger.is-light {
   color: $danger;
 }
+.button.is-primary.is-light {
+  color: $dark;
+}
 
 .textarea:not([rows]) {
   min-height: 4em;

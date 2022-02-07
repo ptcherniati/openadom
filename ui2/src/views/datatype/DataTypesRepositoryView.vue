@@ -229,16 +229,18 @@
                       size="is-medium"
                       type="is-primary is-light"
                       @click="publish(dataset, !dataset.params.published)"
+                      style="height:1.5em; background-color: transparent; font-size: 1.45rem;"
                     />
                   </b-field>
                 </td>
                 <td>
                   <b-field>
                     <b-button
-                      icon-right="trash-alt"
+                      icon-right="times-circle"
                       size="is-medium"
                       type="is-danger is-light"
                       @click="remove(dataset, dataset.params.published)"
+                      style="height:1.5em; background-color: transparent; font-size: 1.45rem;"
                     />
                   </b-field>
                 </td>
@@ -649,8 +651,8 @@ export default class DataTypesRepositoryView extends Vue {
   }
 }
 .dropdown-content {
-  margin-left: 20px;
-  margin-right: -20px;
+  margin-left: 10px;
+  margin-right: -30px;
 }
 table.datasetsPanel {
   width: 50%;
