@@ -21,11 +21,16 @@ import java.util.Set;
 public class GroovyContextHelper {
 
     public ImmutableMap<String, Object> getGroovyContextForReferences(ReferenceValueRepository referenceValueRepository, Set<String> refs) {
-        Map<String, List<ReferenceValue>> references = new HashMap<>();
+        Map<String, List<Map<String, String>>> references = new HashMap<>();
         Map<String, List<Map<String, String>>> referencesValues = new HashMap<>();
         refs.forEach(ref -> {
             List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(ref);
-            references.put(ref, allByReferenceType);
+            allByReferenceType.stream()
+                    .forEach(referenceValue -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(Map.of(
+                            "hierarchicalKey", referenceValue.getHierarchicalKey(),
+                            "hierarchicalReference", referenceValue.getHierarchicalReference(),
+                            "naturalKey", referenceValue.getNaturalKey()
+                    )));
             allByReferenceType.stream()
                     .map(ReferenceValue::getRefValues)
                     .forEach(values -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(values));
