@@ -170,6 +170,7 @@ public class CheckerFactory {
                 ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
                         .putAll(groovyContextForReferences)
                         .putAll(groovyContextForDataTypes)
+                        .put("application", app)
                         .build();
                 lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
                 checkersBuilder.add(lineChecker);

@@ -2,6 +2,7 @@ package fr.inra.oresing.transformer;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 
 import java.util.Set;
@@ -27,6 +28,9 @@ public interface TransformationConfiguration {
     String getReferences();
 
     default Set<String> doGetReferencesAsCollection() {
+        if (StringUtils.isEmpty(getReferences())) {
+            return ImmutableSet.of();
+        }
         return Streams.stream(Splitter.on(",").split(getReferences())).collect(ImmutableSet.toImmutableSet());
     }
 }
