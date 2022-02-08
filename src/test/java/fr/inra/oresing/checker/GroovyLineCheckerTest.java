@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -101,20 +102,6 @@ public class GroovyLineCheckerTest {
 
     private GroovyLineCheckerConfiguration getConfiguration(String expression) {
         return new GroovyLineCheckerConfiguration() {
-            @Override
-            public String getExpression() {
-                return expression;
-            }
-
-            @Override
-            public String getReferences() {
-                return null;
-            }
-
-            @Override
-            public String getDatatypes() {
-                return null;
-            }
 
             @Override
             public boolean isCodify() {
@@ -127,8 +114,23 @@ public class GroovyLineCheckerTest {
             }
 
             @Override
-            public String getGroovy() {
-                throw new UnsupportedOperationException("doublure de test");
+            public GroovyConfiguration getGroovy() {
+                return new GroovyConfiguration() {
+                    @Override
+                    public String getExpression() {
+                        return expression;
+                    }
+
+                    @Override
+                    public List<String> getReferences() {
+                        return null;
+                    }
+
+                    @Override
+                    public List<String> getDatatypes() {
+                        return null;
+                    }
+                };
             }
         };
     }

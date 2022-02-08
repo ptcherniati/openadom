@@ -1,12 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.MoreCollectors;
-import fr.inra.oresing.checker.DateLineCheckerConfiguration;
-import fr.inra.oresing.checker.FloatCheckerConfiguration;
-import fr.inra.oresing.checker.GroovyLineCheckerConfiguration;
-import fr.inra.oresing.checker.IntegerCheckerConfiguration;
-import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
-import fr.inra.oresing.checker.RegularExpressionCheckerConfiguration;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
@@ -222,9 +217,11 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class VariableComponentDescriptionConfiguration {
-        String references; // à remplacer par une collection car split(',')
+    public static class VariableComponentDescriptionConfiguration implements IGroovyDataInjectionConfiguration {
+        List<String> references;
+        List<String> datatypes;
         boolean replace;
+
     }
 
     @Getter
@@ -247,13 +244,10 @@ public class Configuration {
             GroovyLineCheckerConfiguration {
         String pattern;
         String refType;
-        String expression;
+        GroovyConfiguration groovy;
         String columns;
         String variableComponentKey;
-        String references; // à remplacer par une collection car split(',')
-        String datatypes;
         String duration;
-        String groovy;
         boolean codify;
         boolean required;
     }

@@ -2,6 +2,7 @@ package fr.inra.oresing.model;
 
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.DateLineCheckerConfiguration;
+import fr.inra.oresing.checker.GroovyConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,14 +72,9 @@ public class LocalDateTimeRangeTest {
             }
 
             @Override
-            public String getGroovy() {
+            public GroovyConfiguration getGroovy() {
                 throw new UnsupportedOperationException("doublure de test");
             }
-
-            @Override
-            public String getReferences() {
-                throw new UnsupportedOperationException("doublure de test");
-            }
-        };
+};
     }
 }

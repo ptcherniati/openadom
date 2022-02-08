@@ -1,5 +1,7 @@
 package fr.inra.oresing.checker.decorators;
 
+import fr.inra.oresing.checker.GroovyConfiguration;
+
 /**
  * Configuration de la décoration d'une donnée.
  */
@@ -18,11 +20,5 @@ public interface DecoratorConfiguration {
     /**
      * Avant d'être vérifiée, la donnée doit être transformée en appliquant cette expression.
      */
-    String getGroovy();
-
-    /**
-     * Les référentiels qui devront être chargés puis injectés dans le contexte au moment de
-     * l'évaluation de l'expression {@link #getGroovy()}
-     */
-    String getReferences();
+    GroovyConfiguration getGroovy();
 }

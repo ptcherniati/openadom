@@ -364,16 +364,18 @@ references:
           params:
             refType: theme_types_de_donnees_par_zone_etudes
             columns: theme_types_de_donnees_par_zone_etudes
-            groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de
-              données-Variable").split("-"); String site = tab[0].strip();
-              String theme = tab[1].strip(); String datatype = tab[2].strip();
-              return references["theme_types_de_donnees_par_zone_etudes"]
-              .findAll {it.refValues["nom du site"].equals(site)} .findAll
-              {it.refValues["nom du thème"].equals(theme)} .find
-              {it.refValues["nom du type de données"].equals(datatype)}
-              .naturalKey
-            references: theme_types_de_donnees_par_zone_etudes
+            groovy:
+              expression: >
+                String[] tab = datum.get("Nom du Thème-Type de
+                données-Variable").split("-"); String site = tab[0].strip();
+                String theme = tab[1].strip(); String datatype = tab[2].strip();
+                return references["theme_types_de_donnees_par_zone_etudes"]
+                .findAll {it.refValues["nom du site"].equals(site)} .findAll
+                {it.refValues["nom du thème"].equals(theme)} .find
+                {it.refValues["nom du type de données"].equals(datatype)}
+                .naturalKey
+              references:
+                - theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
         description: référence au DataypeVariableUnite
         checker:
@@ -382,18 +384,20 @@ references:
             refType: variables_par_types_de_donnees
             columns: variables_par_types_de_donnees
             required: true
-            groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de
-              données-Variable").split("-"); String datatype =
-              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-              tab[2].strip()); String variable =
-              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-              tab[3].strip()); return
-              references.find{it.key.equals("variables_par_types_de_donnees")}.value
-                      .findAll {it.refValues["nom de la variable"].equals(variable)}
-                      .find {it.refValues["nom du type de données"].equals(datatype)}
-                .naturalKey
-            references: variables_par_types_de_donnees
+            groovy:
+              expression: >
+                String[] tab = datum.get("Nom du Thème-Type de
+                données-Variable").split("-"); String datatype =
+                fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+                tab[2].strip()); String variable =
+                fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+                tab[3].strip()); return
+                references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                        .findAll {it.refValues["nom de la variable"].equals(variable)}
+                        .find {it.refValues["nom du type de données"].equals(datatype)}
+                  .naturalKey
+              references:
+                - variables_par_types_de_donnees
             codify: true
       date début:
         description: date de début
@@ -497,16 +501,18 @@ references:
           params:
             refType: theme_types_de_donnees_par_zone_etudes
             columns: theme_types_de_donnees_par_zone_etudes
-            groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de
-              données-Variable").split("-"); String site = tab[0].strip();
-              String theme = tab[1].strip(); String datatype = tab[2].strip();
-              return references["theme_types_de_donnees_par_zone_etudes"]
-              .findAll {it.refValues["nom du site"].equals(site)} .findAll
-              {it.refValues["nom du thème"].equals(theme)} .find
-              {it.refValues["nom du type de données"].equals(datatype)}
-              .naturalKey
-            references: theme_types_de_donnees_par_zone_etudes
+            groovy:
+              expression: >
+                String[] tab = datum.get("Nom du Thème-Type de
+                données-Variable").split("-"); String site = tab[0].strip();
+                String theme = tab[1].strip(); String datatype = tab[2].strip();
+                return references["theme_types_de_donnees_par_zone_etudes"]
+                .findAll {it.refValues["nom du site"].equals(site)} .findAll
+                {it.refValues["nom du thème"].equals(theme)} .find
+                {it.refValues["nom du type de données"].equals(datatype)}
+                .naturalKey
+              references:
+                - theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
         description: référence au DataypeVariableUnite
         checker:
@@ -515,18 +521,20 @@ references:
             refType: variables_par_types_de_donnees
             columns: variables_par_types_de_donnees
             required: true
-            groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de
-              données-Variable").split("-"); String datatype =
-              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-              tab[2].strip()); String variable =
-              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-              tab[3].strip()); return
-              references.find{it.key.equals("variables_par_types_de_donnees")}.value
-                      .findAll {it.refValues["nom de la variable"].equals(variable)}
-                      .find {it.refValues["nom du type de données"].equals(datatype)}
-                .naturalKey
-            references: variables_par_types_de_donnees
+            groovy:
+              expression: >
+                String[] tab = datum.get("Nom du Thème-Type de
+                données-Variable").split("-"); String datatype =
+                fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+                tab[2].strip()); String variable =
+                fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+                tab[3].strip()); return
+                references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                        .findAll {it.refValues["nom de la variable"].equals(variable)}
+                        .find {it.refValues["nom du type de données"].equals(datatype)}
+                  .naturalKey
+              references:
+                - variables_par_types_de_donnees
             codify: true
       date début:
         description: date de début
@@ -621,16 +629,18 @@ references:
           params:
             refType: theme_types_de_donnees_par_zone_etudes
             columns: theme_types_de_donnees_par_zone_etudes
-            groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de
-              données-Variable").split("-"); String site = tab[0].strip();
-              String theme = tab[1].strip(); String datatype = tab[2].strip();
-              return references["theme_types_de_donnees_par_zone_etudes"]
-              .findAll {it.refValues["nom du site"].equals(site)} .findAll
-              {it.refValues["nom du thème"].equals(theme)} .find
-              {it.refValues["nom du type de données"].equals(datatype)}
-              .naturalKey
-            references: theme_types_de_donnees_par_zone_etudes
+            groovy:
+              expression: >
+                String[] tab = datum.get("Nom du Thème-Type de
+                données-Variable").split("-"); String site = tab[0].strip();
+                String theme = tab[1].strip(); String datatype = tab[2].strip();
+                return references["theme_types_de_donnees_par_zone_etudes"]
+                .findAll {it.refValues["nom du site"].equals(site)} .findAll
+                {it.refValues["nom du thème"].equals(theme)} .find
+                {it.refValues["nom du type de données"].equals(datatype)}
+                .naturalKey
+              references:
+                - theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
         description: référence au DataypeVariableUnite
         checker:
@@ -639,18 +649,20 @@ references:
             refType: variables_par_types_de_donnees
             columns: variables_par_types_de_donnees
             required: true
-            groovy: >
-              String[] tab = datum.get("Nom du Thème-Type de
-              données-Variable").split("-"); String datatype =
-              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-              tab[2].strip()); String variable =
-              fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-              tab[3].strip()); return
-              references.find{it.key.equals("variables_par_types_de_donnees")}.value
-                      .findAll {it.refValues["nom de la variable"].equals(variable)}
-                      .find {it.refValues["nom du type de données"].equals(datatype)}
-                .naturalKey
-            references: variables_par_types_de_donnees
+            groovy:
+              expression: >
+                String[] tab = datum.get("Nom du Thème-Type de
+                données-Variable").split("-"); String datatype =
+                fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+                tab[2].strip()); String variable =
+                fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+                tab[3].strip()); return
+                references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                        .findAll {it.refValues["nom de la variable"].equals(variable)}
+                        .find {it.refValues["nom du type de données"].equals(datatype)}
+                  .naturalKey
+              references:
+                - variables_par_types_de_donnees
             codify: true
     internationalizationName:
       fr: >-
@@ -730,22 +742,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -963,22 +977,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -1196,22 +1212,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -1429,22 +1447,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -1662,22 +1682,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -1895,22 +1917,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -2111,22 +2135,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -2327,22 +2353,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -2543,22 +2571,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -2759,22 +2789,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -2976,22 +3008,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -3220,22 +3254,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -3466,22 +3502,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -3679,22 +3717,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    -  zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -4166,22 +4206,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -4592,22 +4634,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -5024,22 +5068,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -5587,22 +5633,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true
@@ -6133,22 +6181,24 @@ dataTypes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
+                groovy:
+                  expression: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references:
+                    - zones_etudes
                 codify: true
                 refType: zones_etudes
                 required: true

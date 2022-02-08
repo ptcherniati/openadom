@@ -159,7 +159,10 @@ public class CheckerFactory {
             LineChecker lineChecker;
             Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
             if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
-                String expression = configurationDescription.getExpression();
+                String expression = Optional.of(configurationDescription)
+                        .map(Configuration.CheckerConfigurationDescription::getGroovy)
+                        .map(GroovyConfiguration::getExpression)
+                        .orElse(null);
                 lineChecker = GroovyLineChecker.forExpression(expression, app, repository.getRepository(app), configurationDescription);
                 checkersBuilder.add(lineChecker);
             } else {

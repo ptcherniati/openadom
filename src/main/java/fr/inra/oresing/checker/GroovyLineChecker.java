@@ -42,57 +42,68 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
     }
 
     public static ImmutableMap<String, Object> buildContext(Object datum, Application application, DecoratorConfiguration params, OreSiRepository.RepositoryForApplication repository) {
-        Optional<String> configurationReferences = Optional.of(params)
-                .map(DecoratorConfiguration::getReferences);
-        Optional<String> configurationDataTypes = Optional.empty();
+        List<String> configurationReferences = Optional.of(params)
+                .map(DecoratorConfiguration::getGroovy)
+                .map(GroovyConfiguration::getReferences)
+                .orElseGet(List::of);
+        List<String> configurationDataTypes = Optional.of(params)
+                .map(DecoratorConfiguration::getGroovy)
+                .map(GroovyConfiguration::getDatatypes)
+                .orElseGet(List::of);
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
         return context;
     }
 
     public static ImmutableMap<String, Object> buildContext(Object datum, Application application, Configuration.VariableComponentDescriptionConfiguration params, OreSiRepository.RepositoryForApplication repository) {
-        Optional<String> configurationReferences = Optional.of(params)
-                .map(Configuration.VariableComponentDescriptionConfiguration::getReferences);
-        Optional<String> configurationDataTypes = Optional.empty();
+        List<String> configurationReferences = Optional.of(params)
+                .map(Configuration.VariableComponentDescriptionConfiguration::getReferences)
+                .orElseGet(List::of);
+        ;
+        List<String> configurationDataTypes = Optional.of(params)
+                .map(Configuration.VariableComponentDescriptionConfiguration::getDatatypes)
+                .orElseGet(List::of);
+        ;
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
         return context;
     }
 
     public static ImmutableMap<String, Object> buildContext(Object datum, Application application, GroovyLineCheckerConfiguration params, OreSiRepository.RepositoryForApplication repository) {
-        Optional<String> configurationReferences = Optional.of(params)
-                .map(GroovyLineCheckerConfiguration::getReferences);
-        Optional<String> configurationDataTypes = Optional.of(params)
-                .map(GroovyLineCheckerConfiguration::getDatatypes);
+        List<String> configurationReferences = Optional.of(params)
+                .map(GroovyLineCheckerConfiguration::getGroovy)
+                .map(GroovyConfiguration::getReferences)
+                .orElseGet(List::of);
+        ;
+        List<String> configurationDataTypes = Optional.of(params)
+                .map(GroovyLineCheckerConfiguration::getGroovy)
+                .map(GroovyConfiguration::getDatatypes)
+                .orElseGet(List::of);
+        ;
+        ;
         ImmutableMap<String, Object> context = buildContext(datum, application, repository, configurationReferences, configurationDataTypes);
         return context;
     }
 
-    private static ImmutableMap<String, Object> buildContext(Object datum, Application application, OreSiRepository.RepositoryForApplication repository, Optional<String> configurationReferences, Optional<String> configurationDataTypes) {
+    private static ImmutableMap<String, Object> buildContext(Object datum, Application application, OreSiRepository.RepositoryForApplication repository, List<String> configurationReferences, List<String> configurationDataTypes) {
         Map<String, List<ReferenceValue>> references = new HashMap<>();
         Map<String, List<DataRow>> datatypes = new HashMap<>();
         Map<String, List<Map<String, String>>> referencesValues = new HashMap<>();
         Map<String, List<Map<String, Map<String, String>>>> datatypesValues = new HashMap<>();
         configurationReferences
-                .ifPresent(refs -> {
-                    Arrays.stream(refs.split(","))
-                            .forEach(ref -> {
-                                List<ReferenceValue> allByReferenceType = repository.referenceValue().findAllByReferenceType(ref);
-                                references.put(ref, allByReferenceType);
-                                allByReferenceType.stream()
-                                        .map(referenceValue -> referenceValue.getRefValues())
-                                        .forEach(values -> referencesValues.computeIfAbsent(ref, k->new LinkedList<>()).add(values));
-                            });
+                .forEach(ref -> {
+                    List<ReferenceValue> allByReferenceType = repository.referenceValue().findAllByReferenceType(ref);
+                    references.put(ref, allByReferenceType);
+                    allByReferenceType.stream()
+                            .map(referenceValue -> referenceValue.getRefValues())
+                            .forEach(values -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(values));
                 });
 
         configurationDataTypes
-                .ifPresent(datas -> {
-                    Arrays.stream(datas.split(","))
-                            .forEach(dataType -> {
-                                List<DataRow> allByDataType = repository.data().findAllByDataType(DownloadDatasetQuery.buildDownloadDatasetQuery(null, null, dataType, application));
-                                datatypes.put(dataType, allByDataType);
-                                allByDataType.stream()
-                                        .map(datatValues -> datatValues.getValues())
-                                        .forEach(dv -> datatypesValues.computeIfAbsent(dataType, k -> new LinkedList<>()).add(dv));
-                            });
+                .forEach(dataType -> {
+                    List<DataRow> allByDataType = repository.data().findAllByDataType(DownloadDatasetQuery.buildDownloadDatasetQuery(null, null, dataType, application));
+                    datatypes.put(dataType, allByDataType);
+                    allByDataType.stream()
+                            .map(datatValues -> datatValues.getValues())
+                            .forEach(dv -> datatypesValues.computeIfAbsent(dataType, k -> new LinkedList<>()).add(dv));
                 });
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         builder.put("datum", datum);
