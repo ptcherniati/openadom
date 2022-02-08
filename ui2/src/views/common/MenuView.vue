@@ -21,6 +21,11 @@
 
       <template #end>
         <img
+          class="logo_anaee"
+          src="@/assets/logo-AnaEE-france.png"
+          alt="Logo de l'Infrastructure de recherche nationale AnaEE France (Analyses et Expérimentations pour les Ecosystèmes)"
+        />
+        <img
           class="logo_rep"
           src="@/assets/Rep-FR-logo.svg"
           alt="Logo de la République Francçaise"
@@ -113,6 +118,10 @@ export default class MenuView extends Vue {
   height: $menu-height;
   width: 100%;
 
+  .logo_anaee {
+    margin: 0.7rem;
+    max-height: 4.5rem;
+  }
   .logo_rep {
     margin: 0.7rem;
     max-height: 4.5rem;
