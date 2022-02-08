@@ -38,6 +38,7 @@
         "user-unknown":"Unknown user",
         "application-creation-success":"The app has been created!",
         "application-validate-success":"The YAML file is valid!",
+        "application-edit-success": "The YAML file is update !",
         "warning":"Warning !",
         "reference-deletion-msg":"You're about to delete the reference : {label}. Are you sure ?",
         "delete":"Delete",

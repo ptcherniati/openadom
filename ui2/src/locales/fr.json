@@ -38,6 +38,7 @@
         "user-unknown": "Identifiants inconnus",
         "application-creation-success": "L'application a été créée !",
         "application-validate-success": "Le fichier YAML est valide !",
+        "application-edit-success": "Le fichier YAML est mis à jours !",
         "warning": "Attention !",
         "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
         "delete": "Supprimer",

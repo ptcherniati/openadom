@@ -32,8 +32,8 @@ export class ApplicationService extends Fetcher {
       file: applicationConfig.file,
     });
   }
-  async changeApplication(applicationConfig, comment) {
-    return this.post("applications/" + applicationConfig.name, {
+  async changeConfiguration(applicationConfig, comment) {
+    return this.post("/applications/" + applicationConfig.name + "/configuration", {
       file: applicationConfig.file,
       comment: comment,
     });
