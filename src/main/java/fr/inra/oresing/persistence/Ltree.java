@@ -34,7 +34,8 @@ public class Ltree {
     public static String escapeLabel(String key) {
         String lowerCased = key.toLowerCase();
         String withAccentsStripped = StringUtils.stripAccents(lowerCased);
-        String toEscape = StringUtils.replace(withAccentsStripped, " ", "_");
+        String withoutSpace = StringUtils.replace(withAccentsStripped, " ", "_");
+        String toEscape = StringUtils.remove(withoutSpace, "-");
         String escaped = toEscape.chars()
                 .mapToObj(x -> (char) x)
                 .map(Ltree::escapeSymbolFromKeyComponent)
