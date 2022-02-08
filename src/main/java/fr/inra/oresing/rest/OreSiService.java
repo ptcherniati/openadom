@@ -489,12 +489,13 @@ public class OreSiService {
                             UUID technicalId = e.getId();
                             naturalKey = Ltree.toLabel(technicalId);
                         } else {
-                            naturalKey = Ltree.parseLabel(ref.getKeyColumns().stream()
+                            String naturalKeyAsString = ref.getKeyColumns().stream()
                                     .map(ReferenceColumn::new)
                                     .map(referenceDatum::get)
                                     .filter(StringUtils::isNotEmpty)
                                     .map(Ltree::escapeLabel)
-                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR)));
+                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                            naturalKey = Ltree.fromSql(naturalKeyAsString);
                         }
                         Ltree recursiveNaturalKey = naturalKey;
                         final Ltree refTypeAsLabel = Ltree.parseLabel(refType);
