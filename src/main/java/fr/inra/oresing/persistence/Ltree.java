@@ -8,17 +8,28 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Représente une donnée correspondant à une valeur de type <code>ltree</code>.
+ *
+ * Un ltree correspond à une séquence de labels séparés par des points. Les labels sont
+ * contraingnants en terme de syntaxe et cette classe gère l'échappement.
+ *
+ * https://www.postgresql.org/docs/current/ltree.html
+ */
 @Value
 public class Ltree {
 
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
-     * <p>
-     * https://www.postgresql.org/docs/current/ltree.html
      */
     public static final String SEPARATOR = ".";
+
+    private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("[^a-zA-Z0-9_]");
+
+    private static final Pattern VALID_LABEL_REGEX = Pattern.compile("[a-zA-Z0-9_]+");
 
     String sql;
 
@@ -26,12 +37,38 @@ public class Ltree {
         this.sql = sql;
     }
 
+    /**
+     * Construire à partir d'un ltree tel qu'il a pu existé en base (donc déjà échappé et syntaxiquement correct)
+     */
     public static Ltree fromSql(String sql) {
         checkSyntax(sql);
         return new Ltree(sql);
     }
 
-    public static String escapeLabel(String key) {
+    /**
+     * Constuire un label à partir d'un UUID
+     */
+    public static Ltree fromUuid(UUID uuid) {
+        String escaped = escapeToLabel(StringUtils.remove(uuid.toString(), "-"));
+        return fromSql(escaped);
+    }
+
+    /**
+     * Constuire en concaténant deux ltree pour en former un
+     */
+    public static Ltree join(Ltree prefix, Ltree suffix) {
+        return fromSql(prefix.getSql() + SEPARATOR + suffix.getSql());
+    }
+
+    public static Ltree fromUnescapedString(String labelToEscape) {
+        String escaped = escapeToLabel(labelToEscape);
+        return fromSql(escaped);
+    }
+
+    /**
+     * Échapper une chaîne pour former un label.
+     */
+    public static String escapeToLabel(String key) {
         String lowerCased = key.toLowerCase();
         String withAccentsStripped = StringUtils.stripAccents(lowerCased);
         String withoutSpace = StringUtils.replace(withAccentsStripped, " ", "_");
@@ -44,10 +81,10 @@ public class Ltree {
         return escaped;
     }
 
-    public static void checkLabelSyntax(String keyComponent) {
-        Preconditions.checkState(keyComponent.length() <= 256, "Un label dans un ltree ne peut pas être plus long que 256 caractères à cause de PG");
-        Preconditions.checkState(!keyComponent.isEmpty(), "La clé naturelle ne peut être vide. vérifier le nom des colonnes.");
-        Preconditions.checkState(keyComponent.matches("[a-zA-Z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
+    public static void checkLabelSyntax(String label) {
+        Preconditions.checkState(label.length() <= 256, "Un label dans un ltree ne peut pas être plus long que 256 caractères");
+        Preconditions.checkState(!label.isEmpty(), "Un label ne peut être vide");
+        Preconditions.checkState(VALID_LABEL_REGEX.matcher(label).matches(), label + " contient des caractères invalides");
     }
 
     private static String escapeSymbolFromKeyComponent(Character aChar) {
@@ -55,10 +92,9 @@ public class Ltree {
         if (characterCanBeUsedInLabel(aChar)) {
             escapedChar = CharUtils.toString(aChar);
         } else {
-            escapedChar = RegExUtils.replaceAll(
+            escapedChar = RegExUtils.removeAll(
                     Character.getName(aChar),
-                    "[^a-zA-Z0-9_]",
-                    ""
+                    LABEL_INVALID_CHARACTERS_REGEX
             );
         }
         return escapedChar;
@@ -68,7 +104,7 @@ public class Ltree {
      * D'après la documentation PostgreSQL sur ltree
      *
      * <blockquote>
-     *     A label is a sequence of alphanumeric characters and underscores (for example, in C locale the characters A-Za-z0-9_ are allowed). Labels must be less than 256 characters long.
+     *     A label is a sequence of alphanumeric characters and underscores (for example, in C locale the characters A-Za-z0-9_ are allowed).
      * </blockquote>
      */
     private static boolean characterCanBeUsedInLabel(Character aChar) {
@@ -77,25 +113,5 @@ public class Ltree {
 
     public static void checkSyntax(String sql) {
         Splitter.on(SEPARATOR).split(sql).forEach(Ltree::checkLabelSyntax);
-    }
-
-    public static Ltree join(String prefix, String suffix) {
-        checkSyntax(prefix);
-        checkSyntax(suffix);
-        return fromSql(prefix + SEPARATOR + suffix);
-    }
-
-    public static Ltree join(Ltree prefix, Ltree suffix) {
-        return join(prefix.getSql(), suffix.getSql());
-    }
-
-    public static Ltree parseLabel(String labelToEscape) {
-        String escaped = escapeLabel(labelToEscape);
-        return fromSql(escaped);
-    }
-
-    public static Ltree toLabel(UUID uuid) {
-        String escaped = escapeLabel(StringUtils.remove(uuid.toString(), "-"));
-        return fromSql(escaped);
     }
 }

@@ -2,7 +2,7 @@ package fr.inra.oresing.transformer;
 
 import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.model.SomethingThatCanProvideEvaluationContext;
-import fr.inra.oresing.rest.OreSiService;
+import fr.inra.oresing.persistence.Ltree;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.assertj.core.util.Strings;
 
@@ -25,7 +25,7 @@ public class CodifyOneLineElementTransformer implements TransformOneLineElementT
         if (Strings.isNullOrEmpty(value)) {
             valueAfterCodification = value;
         } else {
-            valueAfterCodification = OreSiService.escapeKeyComponent(value);
+            valueAfterCodification = Ltree.escapeToLabel(value);
         }
         return valueAfterCodification;
     }

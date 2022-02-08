@@ -157,11 +157,11 @@ public class OreSiService {
     private GroovyContextHelper groovyContextHelper;
 
     /**
-     * @deprecated utiliser directement {@link Ltree#escapeLabel(String)}
+     * @deprecated utiliser directement {@link Ltree#escapeToLabel(String)}
      */
     @Deprecated
     public static String escapeKeyComponent(String key) {
-        return Ltree.escapeLabel(key);
+        return Ltree.escapeToLabel(key);
     }
 
     protected UUID storeFile(Application app, MultipartFile file) throws IOException {
@@ -415,10 +415,10 @@ public class OreSiService {
                 parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
                 parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    Ltree parentHierarchicalKey = Ltree.parseLabel(referenceValues.get(parentHierarchicalKeyColumn));
+                    Ltree parentHierarchicalKey = Ltree.fromUnescapedString(referenceValues.get(parentHierarchicalKeyColumn));
                     return Ltree.join(parentHierarchicalKey, naturalKey);
                 };
-                getHierarchicalReferenceFn = (reference) -> Ltree.join(Ltree.parseLabel(parentHierarchicalParentReference), reference);
+                getHierarchicalReferenceFn = (reference) -> Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
             }
         } else {
             getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
@@ -476,7 +476,7 @@ public class OreSiService {
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
                                     referenceDatum.put((ReferenceColumn) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
-                                            .computeIfAbsent(Ltree.escapeLabel(reference), k -> new LinkedHashSet<>())
+                                            .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);
                                 }
                             } else {
@@ -487,18 +487,18 @@ public class OreSiService {
                         Ltree naturalKey;
                         if (ref.getKeyColumns().isEmpty()) {
                             UUID technicalId = e.getId();
-                            naturalKey = Ltree.toLabel(technicalId);
+                            naturalKey = Ltree.fromUuid(technicalId);
                         } else {
                             String naturalKeyAsString = ref.getKeyColumns().stream()
                                     .map(ReferenceColumn::new)
                                     .map(referenceDatum::get)
                                     .filter(StringUtils::isNotEmpty)
-                                    .map(Ltree::escapeLabel)
+                                    .map(Ltree::escapeToLabel)
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
                             naturalKey = Ltree.fromSql(naturalKeyAsString);
                         }
                         Ltree recursiveNaturalKey = naturalKey;
-                        final Ltree refTypeAsLabel = Ltree.parseLabel(refType);
+                        final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
                         if (isRecursive) {
                             selfLineChecker
                                     .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
@@ -575,16 +575,16 @@ public class OreSiService {
                     if (!Strings.isNullOrEmpty(s)) {
                         String naturalKey;
                         try {
-                            s = Ltree.escapeLabel(s);
+                            s = Ltree.escapeToLabel(s);
                             naturalKey = ref.getKeyColumns()
                                     .stream()
                                     .map(kc -> columns.indexOf(kc))
-                                    .map(k -> Ltree.escapeLabel(csvrecord.get(k)))
+                                    .map(k -> Ltree.escapeToLabel(csvrecord.get(k)))
                                     .collect(Collectors.joining("__"));
                         } catch (IllegalArgumentException e) {
                             return;
                         }
-                        referenceMap.put(Ltree.parseLabel(naturalKey), Ltree.parseLabel(s));
+                        referenceMap.put(Ltree.fromUnescapedString(naturalKey), Ltree.fromUnescapedString(s));
                         if (!referenceUUIDs.containsKey(s)) {
                             referenceUUIDs.put(s, UUID.randomUUID());
                         }
