@@ -84,7 +84,8 @@
         "trierZ_a":"Name Z - a",
         "trierRecent":"Recent date",
         "filter":"Filter by",
-        "change": "Edit app"
+        "change": "Edit app",
+        "version" : "The current version of the application is "
     },
     "errors":{
         "emptyFile":"File is empty",

@@ -121,13 +121,13 @@
                     <div class="card">
                       <div class="card-header">
                         <div class="title card-header-title">
-                          <p field="name">{{ application.name }}</p>
+                          <p field="name">{{ application.localName }}</p>
                         </div>
                       </div>
                       <div class="card-content">
                         <div class="content">
                           <p>
-                            {{ application.dataType }}
+                            {{ $t("applications.version") }}<strong>{{ application.configuration.application.version }}</strong>.
                           </p>
                           <p>
                             {{ application.comment }}

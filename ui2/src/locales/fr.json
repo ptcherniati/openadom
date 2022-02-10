@@ -84,7 +84,8 @@
 	    "trierZ_a": "Nom Z - a",
 	    "trierRecent": "Date récente",
 	    "filter": "Filtrer",
-        "change": "Modifier l'application"
+        "change": "Modifier l'application",
+        "version" : "La version actuelle de l'application est la "
     },
     "errors": {
         "emptyFile": "Le fichier est vide",
