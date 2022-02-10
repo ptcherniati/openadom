@@ -375,9 +375,34 @@ public class OreSiService {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
-            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            List<String> columns = Streams.stream(headerRow)
+                    .collect(Collectors.toList());
+            Map<String, List<String>> repeatedHeaderColumns = new HashMap<>();
+            final List<Configuration.ReferencesRepeatedColumns> repeatedColumns = ref.getRepeatedColumns();
+            for (int i = 0; i < repeatedColumns.size(); i++) {
+                final Configuration.ReferencesRepeatedColumns referencesRepeatedColumns = repeatedColumns.get(i);
+                final Pattern pattern = Pattern.compile(referencesRepeatedColumns.getHeaderPattern());
+                final Iterator<String> iterator = columns.stream().iterator();
+                for (int j = 0; j < columns.size(); j++) {
+                    final String columnHeader = columns.get(j);
+                    final Matcher matcher = pattern.matcher(columnHeader);
+                    if (matcher.matches()) {
+                        repeatedHeaderColumns
+                                .computeIfAbsent(matcher.group(1), k -> new LinkedList<>())
+                                .add(matcher.group(1));
+                        final Configuration.CheckerDescription checkerDescriptionForHeader = referencesRepeatedColumns.getChecker();
+                        // on check si matcher.group(1) est une donnée de référence (colonne spécifique dans la base pour les reférences de header
+
+                        // la description de la colonne
+                        final Configuration.ColumnDescription columnDescription = referencesRepeatedColumns.getColumn();
+                        ref.getColumns().put(matcher.group(1), columnDescription);
+                        columns.remove(j);
+                        columns.add(j, matcher.group(1));
+                    }
+                }
+            }
             Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
-                Iterator<String> currentHeader = columns.iterator();
+                Iterator<String> currentHeader = List.copyOf(columns).iterator();
                 Map<String, String> recordAsMap = new LinkedHashMap<>();
                 line.forEach(value -> {
                     String header = currentHeader.next();
@@ -389,7 +414,7 @@ public class OreSiService {
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             Stream<CSVRecord> recordStream = Streams.stream(csvParser);
             if (isRecursive) {
-                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
+                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, ImmutableList.copyOf(columns), ref, parentreferenceMap);
             }
             List<String> hierarchicalKeys = new LinkedList<>();
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)

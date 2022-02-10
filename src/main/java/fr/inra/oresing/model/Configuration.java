@@ -87,6 +87,16 @@ public class Configuration {
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ColumnDescription> columns;
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+        private List<ReferencesRepeatedColumns> repeatedColumns = new LinkedList<>();
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferencesRepeatedColumns {
+        private String headerPattern;
+        private CheckerDescription checker;
+        private ColumnDescription column; //la description de la colonne avec le nom correspondant à $1 du headerpattern
     }
 
     @Getter

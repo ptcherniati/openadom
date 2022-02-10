@@ -12,6 +12,19 @@ compositeReferences:
       - parentRecursiveKey: nom du taxon superieur
         reference: taxon
 references:
+  proprietes_taxon:
+    keyColumns: [nom de la propriété_key]
+    columns:
+      nom de la propriété_key:
+      nom de la propriété_fr:
+      nom de la propriété_en:
+      définition_fr:
+      définition_en:
+      isFloatValue:
+      isQualitative:
+      type associé:
+      ordre d'affichage:
+
   taxon:
     keyColumns: [nom du taxon déterminé]
     validations:
@@ -49,33 +62,13 @@ references:
       Synonyme récent:
       Classe algale sensu Bourrelly:
       Code Sandre:
-      Code taxa Cemagref:
-      Code INRA:
-      code INRA lettres:
-      Rebecca name:
-      Code Rebecca:
-      Code Omnidia:
-      Unité de comptage du taxon:
-      Erreur sur le biovolume:
-      valeur du biovolume spécifique choisi pour le taxon:
-      Longueur de la cellule:
-      Largeur de la cellule:
-      Epaisseur de la cellule:
-      Forme géométrique de la cellule:
-      Facteur à multiplier cellule:
-      Facteur à diviser cellule:
-      Surface de la cellule:
-      Biovolume de la cellule:
-      Nombre de cellule par colonie:
-      Surface cumulée des cellules:
-      biovolume cumulé des cellules:
-      Longueur de la colonie (prends en compte la gelée):
-      Largeur de la colonie (prends en compte la gelée):
-      Epaisseur de la colonie (prends en compte la gelée):
-      Forme géométrique de la colonie:
-      Facteur à multiplier colonie:
-      Facteur à diviser colonie:
-      Surface de la colonie:
-      Biovolume de la colonie:
-      Notes sur les biovolumes:
       Notes libres:
+    repeatedColumns:
+      - headerPattern: "pt_(.+)"
+        checker: # le checker permettant de valider l'expression $1
+          name: Reference
+          params:
+            required: true
+            codify: true
+            refType: proprietes_taxon
+        column: # la description de la colonne correspondant à $1
