@@ -15,5 +15,4 @@ public class BinaryFileInfos {
     public String publisheddate;
     public UUID createuser;
     public String createdate;
-    public String datatype;
 }
