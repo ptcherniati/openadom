@@ -38,9 +38,9 @@ export default class SidePanel extends Vue {
 
 <style lang="scss" scoped>
 .SidePanel {
-  background-color: $light;
+  background-color: $white;
   z-index: 1;
-  position: absolute;
+  position: fixed;
   height: 100%;
   top: 0;
   width: 33%;
