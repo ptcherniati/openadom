@@ -22,7 +22,9 @@ a {
 .clickable {
   cursor: pointer;
 }
-
+.icon.is-small {
+  font-size: 0.75rem;
+}
 .link {
   cursor: pointer;
   &:hover {

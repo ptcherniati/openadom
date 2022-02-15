@@ -32,22 +32,37 @@
             {{ option.localName || option.label }}
           </div>
           <span v-if="!option.synthesisMinMax" class="nodata has-text-danger">
-              Pas de données
-            </span>
+            Pas de données
+          </span>
         </div>
         <div
-            :class="option.synthesisMinMax && onClickLabelSynthesisDetailCb ? 'tile synthesis-details link' : 'tile synthesis-details'"
-            @click="(event) => option.synthesisMinMax && onClickLabelSynthesisDetailCb && onClickLabelSynthesisDetailCb(event, option)">
+          :class="
+            option.synthesisMinMax && onClickLabelSynthesisDetailCb
+              ? 'tile synthesis-details link'
+              : 'tile synthesis-details'
+          "
+          @click="
+            (event) =>
+              option.synthesisMinMax &&
+              onClickLabelSynthesisDetailCb &&
+              onClickLabelSynthesisDetailCb(event, option)
+          "
+        >
           <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark">
-             <b-field v-show="false">
-            {{ new Date(option.synthesisMinMax[0]).toLocaleDateString("fr") +' - '+  new Date(option.synthesisMinMax[1]).toLocaleDateString("fr") }}
+            <b-field v-show="false">
+              {{
+                new Date(option.synthesisMinMax[0]).toLocaleDateString("fr") +
+                " - " +
+                new Date(option.synthesisMinMax[1]).toLocaleDateString("fr")
+              }}
             </b-field>
             <availiblity-chart
-                class="tile availiblity-chart"
-                :show-dates="false"
-                :minmax = "option.synthesis.minmax"
-                :ranges="option.synthesis.ranges"
-                :id="option.label"/>
+              class="tile availiblity-chart"
+              :show-dates="false"
+              :minmax="option.synthesis.minmax"
+              :ranges="option.synthesis.ranges"
+              :id="option.label"
+            />
           </span>
         </div>
       </div>
@@ -63,7 +78,7 @@
               {{ refFile.name }}
             </span>
             <span class="file-cta">
-              <b-icon class="file-icon" icon="upload"></b-icon>
+              <b-icon class="file-icon" icon="upload" style="font-size: 0.75rem"></b-icon>
             </span>
           </b-upload>
         </div>
@@ -147,25 +162,23 @@ export default class CollapsibleTree extends Vue {
 
 <style lang="scss" scoped>
 $row-height: 40px;
-.synthesisDetails{
+.synthesisDetails {
   margin-left: 10px;
 }
-.availiblity-chart canvas{
+.availiblity-chart canvas {
   width: 900px;
 }
-.synthesis-infos{
+.synthesis-infos {
   width: 900px;
   display: flex;
   align-items: center;
   padding: 0.75rem;
-
 }
-.synthesis-details{
+.synthesis-details {
   width: auto;
   display: flex;
   align-items: center;
   padding: 0.75rem;
-
 }
 .CollapsibleTree-header {
   display: flex;
@@ -205,14 +218,14 @@ $row-height: 40px;
   align-items: center;
 }
 
-  .file {
-    margin-bottom: 0;
-  }
+.file {
+  margin-bottom: 0;
+}
 
-    .file-cta {
-      height: 100%;
-      border-color: transparent;
-    }
+.file-cta {
+  height: 100%;
+  border-color: transparent;
+}
 .nodata {
   margin-left: auto;
   margin-right: 50px;

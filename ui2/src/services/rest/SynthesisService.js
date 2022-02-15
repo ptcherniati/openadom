@@ -8,9 +8,9 @@ export class SynthesisService extends Fetcher {
   }
 
   async getSynthesis(applicationName, dataTypeId, variableName) {
-    if (variableName){
+    if (variableName) {
       return this.get(`applications/${applicationName}/synthesis/${dataTypeId}/${variableName}`);
-    }else{
+    } else {
       return this.get(`applications/${applicationName}/synthesis/${dataTypeId}`);
     }
   }
