@@ -349,4 +349,9 @@ export default class ApplicationsView extends Vue {
     margin-bottom: 0px;
   }
 }
+
+.control.has-icons-left .icon, .control.has-icons-right .icon {
+  top: 5px;
+  left: 5px;
+}
 </style>
