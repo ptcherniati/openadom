@@ -568,7 +568,7 @@ public class OreSiService {
                         } catch (IllegalArgumentException e) {
                             return;
                         }
-                        referenceMap.put(Ltree.fromUnescapedString(naturalKey), Ltree.fromUnescapedString(s));
+                        referenceMap.put(Ltree.fromSql(naturalKey), Ltree.fromUnescapedString(s));
                         if (!referenceUUIDs.containsKey(s)) {
                             referenceUUIDs.put(s, UUID.randomUUID());
                         }
