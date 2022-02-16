@@ -126,6 +126,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             return new LinkedList<>();
         }
         String t = "params #> '{\"binaryfiledataset\", \"datatype\"}'  @@ ('$ == \"'||:datatype||'\"')::jsonpath";
+        where.add(t);
         mapSqlParameterSource.addValue("datatype", datatype);
         return find(where.stream().collect(Collectors.joining(" AND ")), mapSqlParameterSource);
     }

@@ -128,6 +128,7 @@ public class Fixtures {
         return String.format("{\n" +
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
+                "      \"datatype\":\"monsore\",\n" +
                 "      \"requiredauthorizations\":{\n" +
                 "         \"projet\":\"projet_%1$s\",\n" +
                 "         \"localization\":\"%2$s.%3$s.%3$s__p1\"\n" +
