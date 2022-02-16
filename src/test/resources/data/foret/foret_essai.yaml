@@ -3841,7 +3841,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           quality_class:
             checker:
               name: RegularExpression
@@ -3864,7 +3863,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           quality_class:
             checker:
               name: RegularExpression
@@ -3887,7 +3885,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mètre par seconde"
             checker:
@@ -3903,7 +3900,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "millimètre par demi-heure"
             checker:
@@ -4301,7 +4297,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mégajoule par mètre et par jour"
             checker:
@@ -4317,7 +4312,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "kilogramme par mètre et par seconde"
             checker:
@@ -4333,7 +4327,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mètre par seconde"
             checker:
@@ -4349,7 +4342,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "millilitre par jour"
             checker:
@@ -4727,7 +4719,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mégajoule par mètre et par mois"
             checker:
@@ -4743,7 +4734,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "kilogramme par mètre et par seconde"
             checker:
@@ -4759,7 +4749,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mètre par seconde"
             checker:
@@ -4775,7 +4764,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "litre par mois"
             checker:
@@ -5172,7 +5160,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "watt par mètre carré"
             checker:
@@ -5188,7 +5175,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "watt par mètre carré"
             checker:
@@ -5204,7 +5190,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "micromole par mètre carré et par seconde"
             checker:
@@ -5220,7 +5205,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "micromole par mètre carré et par seconde"
             checker:
@@ -5722,7 +5706,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "watt par mètre carré"
             checker:
@@ -5738,7 +5721,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "watt par mètre carré"
             checker:
@@ -5754,7 +5736,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "micromole par mètre carré et par jour"
             checker:
@@ -5770,7 +5751,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "micromole par mètre carré et par jour"
             checker:
@@ -6268,7 +6248,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mégajoule par mètre et par mois"
             checker:
@@ -6284,7 +6263,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "mégajoule par mètre et par mois"
             checker:
@@ -6300,7 +6278,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "micromole par mètre carré et par mois"
             checker:
@@ -6316,7 +6293,6 @@ dataTypes:
               name: Float
               params:
                 required: true
-                codify: true
           unit:
             defaultValue: return "micromole par mètre carré et par mois"
             checker:
