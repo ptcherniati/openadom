@@ -73,6 +73,32 @@
         <flyway-spring-test.version>5.2.1</flyway-spring-test.version>
         <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
     </properties>
+    <profiles>
+
+        <profile>
+            <id>mia</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>gitlab-maven</id>
+                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                </repository>
+            </repositories>
+            <distributionManagement>
+                <repository>
+                    <id>gitlab-maven</id>
+                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                </repository>
+                <snapshotRepository>
+                    <id>gitlab-maven</id>
+                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 
     <dependencies>
 
