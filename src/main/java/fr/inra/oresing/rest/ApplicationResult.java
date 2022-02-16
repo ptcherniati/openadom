@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Value;
 
@@ -51,11 +52,21 @@ public class ApplicationResult {
             String id;
             String label;
             Map<String, Component> components;
+            Chart chartDescription;
 
             @Value
             public static class Component {
                 String id;
                 String label;
+            }
+
+            @Value
+            public static class Chart {
+                String value;
+                String unit;
+                String gap;
+                String standardDeviation;
+                VariableComponentKey aggregation;
             }
         }
     }

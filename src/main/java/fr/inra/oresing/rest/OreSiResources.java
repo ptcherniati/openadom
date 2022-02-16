@@ -127,7 +127,17 @@ public class OreSiResources {
                 Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
                     return new ApplicationResult.DataType.Variable.Component(component, component);
                 });
-                return new ApplicationResult.DataType.Variable(variable, variable, components);
+                Configuration.Chart chartDescription = variableDescription.getChartDescription();
+                ApplicationResult.DataType.Variable.Chart chartDescriptionResult = null;
+                if (chartDescription != null) {
+                    VariableComponentKey aggregation = chartDescription.getAggregation();
+                    String value = chartDescription.getValue();
+                    String gap = chartDescription.getGap();
+                    String unit = chartDescription.getUnit();
+                    String standardDeviation = chartDescription.getStandardDeviation();
+                    chartDescriptionResult = new ApplicationResult.DataType.Variable.Chart(value, unit, gap, standardDeviation, aggregation);
+                }
+                return new ApplicationResult.DataType.Variable(variable, variable, components, chartDescriptionResult);
             });
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
             return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
