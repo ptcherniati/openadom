@@ -1389,7 +1389,10 @@ public class OreSiService {
         BinaryFile binaryFile = repo.getRepository(name).binaryFile().findById(id);
         if (binaryFile.getParams() != null && binaryFile.getParams().published) {
             Application app = getApplication(binaryFile.getApplication().toString());
-            unPublishVersions(app, Set.of(binaryFile));
+            unPublishVersions(
+                    app,
+                    Set.of(binaryFile)
+            );
         }
         boolean deleted = repo.getRepository(name).binaryFile().delete(id);
         return deleted;
