@@ -1,11 +1,6 @@
 package fr.inra.oresing.transformer;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
-import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Streams;
-
-import java.util.Set;
+import fr.inra.oresing.checker.GroovyConfiguration;
 
 /**
  * Indique qu'il faut transformer la donnée (avant de la vérifier) et comment
@@ -18,19 +13,8 @@ public interface TransformationConfiguration {
     boolean isCodify();
 
     /**
-     * La valeur doit être transformer en appliquant cette expression Groovy
+     * Avant d'être vérifiée, la donnée doit être transformée en appliquant cette expression.
      */
-    String getGroovy();
+    GroovyConfiguration getGroovy();
 
-    /**
-     * Ensemble des référentiels qu'il faut charger dans le contexte pour l'évaluation de l'expression {@link #getGroovy()}
-     */
-    String getReferences();
-
-    default Set<String> doGetReferencesAsCollection() {
-        if (StringUtils.isEmpty(getReferences())) {
-            return ImmutableSet.of();
-        }
-        return Streams.stream(Splitter.on(",").split(getReferences())).collect(ImmutableSet.toImmutableSet());
-    }
 }

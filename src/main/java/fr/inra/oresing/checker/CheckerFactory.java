@@ -177,9 +177,9 @@ public class CheckerFactory {
             LineChecker lineChecker;
             Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
             if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
-                String expression = configurationDescription.getExpression();
-                Set<String> references = configurationDescription.doGetReferencesAsCollection();
-                Set<String> dataTypes = configurationDescription.doGetDataTypesAsCollection();
+                String expression = configurationDescription.getGroovy().getExpression();
+                Set<String> references = configurationDescription.getGroovy().getReferences();
+                Set<String> dataTypes = configurationDescription.getGroovy().getDatatypes();
                 ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
                 ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
                 ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()

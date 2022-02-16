@@ -12,6 +12,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.checker.GroovyConfiguration;
 import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
@@ -428,7 +429,11 @@ public class ApplicationConfigurationService {
             String lineValidationRuleKey = validationEntry.getKey();
             Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = checker.getParams().getExpression();
+                String expression = Optional.of(checker)
+                        .map(Configuration.CheckerDescription::getParams)
+                        .map(Configuration.CheckerConfigurationDescription::getGroovy)
+                        .map(GroovyConfiguration::getExpression)
+                        .orElse(null);
                 if (StringUtils.isBlank(expression)) {
                     builder.recordMissingRequiredExpression(lineValidationRuleKey);
                 } else {
@@ -618,7 +623,11 @@ public class ApplicationConfigurationService {
                     .orElse(Set.of());
 
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = checker.getParams().getExpression();
+                String expression =Optional.of(checker)
+                        .map(Configuration.CheckerDescription::getParams)
+                        .map(Configuration.CheckerConfigurationDescription::getGroovy)
+                        .map(GroovyConfiguration::getExpression)
+                        .orElse(null);
                 if (StringUtils.isBlank(expression)) {
                     builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
                 } else {

@@ -1,8 +1,10 @@
 package fr.inra.oresing.transformer;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.checker.CheckerTarget;
+import fr.inra.oresing.checker.GroovyConfiguration;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.Application;
@@ -48,10 +50,12 @@ public class TransformerFactory {
             transformersBuilder.add(new CodifyOneLineElementTransformer(target));
         }
         if (configuration.getGroovy() != null) {
-            String groovy = configuration.getGroovy();
-            StringGroovyExpression groovyExpression = StringGroovyExpression.forExpression(groovy);
-            Set<String> references = configuration.doGetReferencesAsCollection();
+            GroovyConfiguration groovyConfiguration = configuration.getGroovy();
+            String expression = groovyConfiguration.getExpression();
+            StringGroovyExpression groovyExpression = StringGroovyExpression.forExpression(expression);
+            Set<String> references = groovyConfiguration.getReferences();
             ImmutableMap<String, Object> groovyContext = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
+            Preconditions.checkState(groovyConfiguration.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
             TransformOneLineElementTransformer transformer = new GroovyExpressionOnOneLineElementTransformer(groovyExpression, groovyContext, target);
             transformersBuilder.add(transformer);
         }

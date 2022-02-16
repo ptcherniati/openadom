@@ -971,10 +971,9 @@ public class OreSiService {
                     .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKey.getComponent()))
                     .map(variableComponentDescription -> variableComponentDescription.getParams())
                     .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
-            ImmutableSet<String> configurationReferences = Optional.of(params)
-                    .map(Configuration.VariableComponentDescriptionConfiguration::doGetReferencesAsCollection)
-                    .orElseGet(ImmutableSet::of);
+            Set<String> configurationReferences = params.getReferences();
             ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+            Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
             Function<Datum, String> computeDefaultValueFn = datum -> {
                 ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
                         .putAll(contextForExpression)

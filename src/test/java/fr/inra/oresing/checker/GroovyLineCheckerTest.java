@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class GroovyLineCheckerTest {
@@ -96,20 +98,6 @@ public class GroovyLineCheckerTest {
 
     private GroovyLineCheckerConfiguration getConfiguration(String expression) {
         return new GroovyLineCheckerConfiguration() {
-            @Override
-            public String getExpression() {
-                return expression;
-            }
-
-            @Override
-            public String getReferences() {
-                return null;
-            }
-
-            @Override
-            public String getDatatypes() {
-                return null;
-            }
 
             @Override
             public boolean isCodify() {
@@ -122,8 +110,23 @@ public class GroovyLineCheckerTest {
             }
 
             @Override
-            public String getGroovy() {
-                throw new UnsupportedOperationException("doublure de test");
+            public GroovyConfiguration getGroovy() {
+                return new GroovyConfiguration() {
+                    @Override
+                    public String getExpression() {
+                        return expression;
+                    }
+
+                    @Override
+                    public Set<String> getReferences() {
+                        return Collections.emptySet();
+                    }
+
+                    @Override
+                    public Set<String> getDatatypes() {
+                        return Collections.emptySet();
+                    }
+                };
             }
         };
     }
