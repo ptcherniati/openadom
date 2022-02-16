@@ -221,7 +221,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class VariableComponentDescriptionConfiguration implements IGroovyDataInjectionConfiguration {
+    public static class VariableComponentDescriptionConfiguration implements GroovyDataInjectionConfiguration {
         Set<String> references = new LinkedHashSet<>();
         Set<String> datatypes = new LinkedHashSet<>();
         boolean replace;
@@ -260,6 +260,15 @@ public class Configuration {
             }
             return Streams.stream(Splitter.on(",").split(getColumns())).collect(ImmutableSet.toImmutableSet());
         }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class GroovyConfiguration implements fr.inra.oresing.checker.GroovyConfiguration {
+        String expression;
+        Set<String> references = new LinkedHashSet<>();
+        Set<String> datatypes = new LinkedHashSet<>();
     }
 
     @Getter
