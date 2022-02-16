@@ -28,23 +28,23 @@ public class LocalDateTimeRangeTest {
     }
     @Test
     public void testDayPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", getDateCheckerConfiguration("2 MONTHS")));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", getDateCheckerConfiguration("2 MONTHS"), null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
-         range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", null));
+         range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
     }
     @Test
     public void testSemiHourlyPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", getDateCheckerConfiguration("30 MINUTES")));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", getDateCheckerConfiguration("30 MINUTES"), null));
         Assert.assertEquals("[\"2020-01-01 01:30:00\",\"2020-01-01 02:00:00\")", range.toSqlExpression());
-         range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", null));
+         range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
     }
     @Test
     public void testMounthPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", getDateCheckerConfiguration("2 MONTHS")));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", getDateCheckerConfiguration("2 MONTHS"), null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
-         range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", null));
+         range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-02-01 00:00:00\")", range.toSqlExpression());
     }
 

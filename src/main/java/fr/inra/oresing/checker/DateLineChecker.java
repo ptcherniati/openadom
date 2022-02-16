@@ -1,7 +1,9 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -16,6 +18,8 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
     private final CheckerTarget target;
     private final DateLineCheckerConfiguration configuration;
+    @JsonIgnore
+    private final LineTransformer transformer;
 
     public CheckerTarget getTarget(){
         return this.target;
@@ -28,11 +32,12 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
     }
 
-    public DateLineChecker(CheckerTarget target, String pattern, DateLineCheckerConfiguration configuration) {
+    public DateLineChecker(CheckerTarget target, String pattern, DateLineCheckerConfiguration configuration, LineTransformer transformer) {
         this.configuration = configuration;
         this.target = target;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
+        this.transformer = transformer;
     }
 
     public String getPattern() {
@@ -65,5 +70,10 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     @Override
     public DateLineCheckerConfiguration getConfiguration() {
         return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
     }
 }

@@ -1,20 +1,26 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
 public class FloatChecker implements CheckerOnOneVariableComponentLineChecker<FloatCheckerConfiguration> {
     private final CheckerTarget target;
     private final FloatCheckerConfiguration configuration;
 
+    @JsonIgnore
+    private final LineTransformer transformer;
+
     public CheckerTarget getTarget(){
         return this.target;
     }
 
-    public FloatChecker(CheckerTarget target, FloatCheckerConfiguration configuration) {
+    public FloatChecker(CheckerTarget target, FloatCheckerConfiguration configuration, LineTransformer transformer) {
         this.target = target;
         this.configuration = configuration;
+        this.transformer = transformer;
     }
 
     @Override
@@ -35,5 +41,10 @@ public class FloatChecker implements CheckerOnOneVariableComponentLineChecker<Fl
     @Override
     public FloatCheckerConfiguration getConfiguration() {
         return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
     }
 }

@@ -14,11 +14,18 @@ import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
 import fr.inra.oresing.rest.ApplicationResult;
+import fr.inra.oresing.transformer.LineTransformer;
+import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +45,9 @@ public class CheckerFactory {
 
     @Autowired
     private GroovyContextHelper groovyContextHelper;
+
+    @Autowired
+    private TransformerFactory transformerFactory;
 
     public ImmutableMap<VariableComponentKey, ReferenceLineChecker> getReferenceLineCheckers(Application app, String dataType) {
         return getLineCheckers(app, dataType).stream()
@@ -92,20 +102,25 @@ public class CheckerFactory {
             Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
             CheckerOnOneVariableComponentLineChecker variableComponentChecker;
             CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey, app, repository.getRepository(app));
+            LineTransformer transformer = Optional.ofNullable(checkerDescription.getParams())
+                    .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, checkerTarget))
+                    .orElseGet(transformerFactory::getNullTransformer);
             if ("Reference".equals(checkerDescription.getName())) {
-                variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, checkerTarget);
+                variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, checkerTarget, transformer);
             } else {
                 final Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
                 if ("Date".equals(checkerDescription.getName())) {
                     String pattern = configuration.getPattern();
-                    variableComponentChecker = new DateLineChecker(checkerTarget, pattern, configuration);
+                    variableComponentChecker = new DateLineChecker(checkerTarget, pattern, configuration, transformer);
                 } else if ("Integer".equals(checkerDescription.getName())) {
-                    variableComponentChecker = new IntegerChecker(checkerTarget, configuration);
+                    Preconditions.checkState(configuration == null || !configuration.isCodify(), "codify avec checker " + checkerDescription.getName() + " sur le composant " + component + " de la variable " + variable + " du type de données " + dataType + " de l'application " + app.getName());
+                    variableComponentChecker = new IntegerChecker(checkerTarget, configuration, transformer);
                 } else if ("Float".equals(checkerDescription.getName())) {
-                    variableComponentChecker = new FloatChecker(checkerTarget, configuration);
+                    Preconditions.checkState(configuration == null || !configuration.isCodify(), "codify avec checker " + checkerDescription.getName() + " sur le composant " + component + " de la variable " + variable + " du type de données " + dataType + " de l'application " + app.getName());
+                    variableComponentChecker = new FloatChecker(checkerTarget, configuration, transformer);
                 } else if ("RegularExpression".equals(checkerDescription.getName())) {
                     String pattern = configuration.getPattern();
-                    variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, configuration);
+                    variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, configuration, transformer);
                 } else {
                     throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
                 }
@@ -115,7 +130,7 @@ public class CheckerFactory {
         }
     }
 
-    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, String locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget) {
+    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, String locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
         CheckerOnOneVariableComponentLineChecker variableComponentChecker;
         String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
@@ -129,7 +144,7 @@ public class CheckerFactory {
                             .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
             );
         }
-        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams());
+        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams(), transformer);
         return variableComponentChecker;
     }
 
@@ -187,25 +202,26 @@ public class CheckerFactory {
     }
 
     private void buildCheckers(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target, ImmutableSet.Builder<LineChecker> checkersBuilder) {
+        LineTransformer transformer = transformerFactory.newTransformer(checkerDescription.getParams(), app, target);
         Configuration.CheckerConfigurationDescription checkerConfigurationDescription = checkerDescription.getParams();
         switch (checkerDescription.getName()) {
             case "Date":
-                checkersBuilder.add(new DateLineChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription));
+                checkersBuilder.add(new DateLineChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer));
                 break;
             case "Integer":
-                checkersBuilder.add(new IntegerChecker(target, checkerConfigurationDescription));
+                checkersBuilder.add(new IntegerChecker(target, checkerConfigurationDescription, transformer));
                 break;
             case "Float":
-                checkersBuilder.add(new FloatChecker(target, checkerConfigurationDescription));
+                checkersBuilder.add(new FloatChecker(target, checkerConfigurationDescription, transformer));
                 break;
             case "RegularExpression":
-                checkersBuilder.add(new RegularExpressionChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription));
+                checkersBuilder.add(new RegularExpressionChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer));
                 break;
             case "Reference":
                 String refType = checkerConfigurationDescription.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription));
+                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription, transformer));
                 break;
             default:
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
