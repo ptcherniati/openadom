@@ -7,11 +7,19 @@ import org.assertj.core.util.Streams;
 
 import java.util.Set;
 
+/**
+ * Configuration pour un checker de type "Expression Groovy"
+ */
 public interface GroovyLineCheckerConfiguration extends LineCheckerConfiguration {
+
+    /**
+     * L'expression groovy elle-même. Elle doit retourner un booléen.
+     */
     String getExpression();
 
     /**
-     * Ensemble des référentiels qu'il faut charger dans le contexte pour l'évaluation de l'expression {@link #getExpression()}
+     * Les référentiels qui devront être chargés puis injectés dans le contexte au moment de
+     * l'évaluation de l'expression {@link #getExpression()}
      */
     String getReferences();
 
@@ -23,7 +31,8 @@ public interface GroovyLineCheckerConfiguration extends LineCheckerConfiguration
     }
 
     /**
-     * Ensemble des données qu'il faut charger dans le contexte pour l'évaluation de l'expression {@link #getExpression()}
+     * Les types de données qui devront être chargées puis injectés dans le contexte au moment de
+     * l'évaluation de l'expression {@link #getExpression()}
      */
     String getDatatypes();
 

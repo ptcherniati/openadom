@@ -339,7 +339,6 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
       -> datatypes.get("nom du datatype").getValues().get("nom de la variable").get("nom du composant")
     datatypesValues : idem que datatypes
       -> datatypesValues.get("nom du datatype").get("nom de la variable").get("nom du composant")
-    params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
 
 
 ``` yaml
@@ -354,12 +353,6 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
               .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
               .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
             references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Nombre d'individus"
-            codeVariable: nombre_d_individus
-            component: unit
-
-
 ``` 
 Cette formulation vérifie que la valeur du component qualité de la variable SWC est vide ou égale à 0,1 ou 2
 L'expression doit renvoyer true
