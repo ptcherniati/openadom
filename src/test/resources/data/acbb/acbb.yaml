@@ -1482,7 +1482,8 @@ dataTypes:
         checker:
           name: GroovyExpression
           params:
-            expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
+            groovy:
+              expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
     format:
       headerLine: 7
       firstRowLine: 10

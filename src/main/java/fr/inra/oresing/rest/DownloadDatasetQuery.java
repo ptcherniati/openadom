@@ -158,7 +158,7 @@ public class DownloadDatasetQuery {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
                 DateLineChecker dateLineChecker = new DateLineChecker(
                         CheckerTarget.getInstance(vck.variableComponentKey, null, null),
-                        vck.format, null);
+                        vck.format, null, null);
                 filters.add(
                         String.format(
                                 "datavalues #> '{\"%1$s\",\"%2$s\"}'@@ ('$ >= \"date:'||%3$s||'\" && $ <= \"date:'||%4$s||'Z\"')::jsonpath",

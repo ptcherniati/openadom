@@ -1,5 +1,6 @@
 package fr.inra.oresing.checker;
 
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import org.junit.Assert;
 import org.junit.Test;
@@ -7,9 +8,10 @@ import org.junit.Test;
 public class CheckerTargetTest {
     @Test
     public void testBuildColumnChecker(){
-        CheckerTarget checkerTarget= CheckerTarget.getInstance( "bonjour",null, null);
+        ReferenceColumn referenceColumn = new ReferenceColumn("bonjour");
+        CheckerTarget checkerTarget= CheckerTarget.getInstance(referenceColumn,null, null);
         Assert.assertEquals(CheckerTarget.CheckerTargetType.PARAM_COLUMN, checkerTarget.getType());
-        Assert.assertEquals("bonjour", checkerTarget.getTarget());
+        Assert.assertEquals(referenceColumn, checkerTarget.getTarget());
         String key = checkerTarget.getInternationalizedKey("key");
         Assert.assertEquals("keyWithColumn", key);
     }

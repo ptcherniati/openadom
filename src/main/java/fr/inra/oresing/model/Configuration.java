@@ -1,16 +1,29 @@
 package fr.inra.oresing.model;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
-import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.assertj.core.util.Streams;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 
 @Getter
 @Setter
@@ -52,9 +65,9 @@ public class Configuration {
             for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
                 CheckerDescription checker = validation.getValue().getChecker();
                 if (checker != null) {
-                    String refType = Optional.ofNullable(checker)
-                            .map(c -> c.getParams())
-                            .map(param -> param.get(ReferenceLineChecker.PARAM_REFTYPE))
+                    String refType = Optional.of(checker)
+                            .map(CheckerDescription::getParams)
+                            .map(CheckerConfigurationDescription::getRefType)
                             .orElse(null);
                     if ("Reference".equals(checker.getName()) && refType != null) {
                         DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -234,7 +247,16 @@ public class Configuration {
         CheckerDescription checker;
         @Nullable
         String defaultValue;
-        Map<String, String> params;
+        VariableComponentDescriptionConfiguration params;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class VariableComponentDescriptionConfiguration implements GroovyDataInjectionConfiguration {
+        Set<String> references = new LinkedHashSet<>();
+        Set<String> datatypes = new LinkedHashSet<>();
+        boolean replace;
     }
 
     @Getter
@@ -242,7 +264,43 @@ public class Configuration {
     @ToString
     public static class CheckerDescription {
         String name;
-        Map<String, String> params = new LinkedHashMap<>();
+        CheckerConfigurationDescription params;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class CheckerConfigurationDescription implements
+            RegularExpressionCheckerConfiguration,
+            FloatCheckerConfiguration,
+            IntegerCheckerConfiguration,
+            DateLineCheckerConfiguration,
+            ReferenceLineCheckerConfiguration,
+            GroovyLineCheckerConfiguration {
+        String pattern;
+        String refType;
+        GroovyConfiguration groovy;
+        String columns;
+        String variableComponentKey;
+        String duration;
+        boolean codify;
+        boolean required;
+
+        public ImmutableSet<String> doGetColumnsAsCollection() {
+            if (StringUtils.isEmpty(getColumns())) {
+                return ImmutableSet.of();
+            }
+            return Streams.stream(Splitter.on(",").split(getColumns())).collect(ImmutableSet.toImmutableSet());
+        }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class GroovyConfiguration implements fr.inra.oresing.checker.GroovyConfiguration {
+        String expression;
+        Set<String> references = new LinkedHashSet<>();
+        Set<String> datatypes = new LinkedHashSet<>();
     }
 
     @Getter
