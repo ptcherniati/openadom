@@ -2,8 +2,8 @@ version: 0
 application:
   defaultLanguage: fr
   internationalization:
-    fr: SOERE mon SOERE
-    en: SOERE my SOERE
+    fr: SOERE mon SOERE avec dépôt
+    en: SOERE my SOERE with repository
   name: MONSORE
   version: 1
 compositeReferences:
@@ -176,7 +176,7 @@ references:
     internationalizationDisplay:
       pattern:
         fr: 'nom du projet: {nom du projet}, nom du site : {nom du site}, nom du thème : {nom du thème}, nom du type de données : {nom du type de données} '
-        en: 'project name: {nom du projet}, site name : {nom du site}, thematic : {nom du thème}, datatype : {nom du type de données} '
+        en: 'projet name: {nom du projet}, site name : {nom du site}, theme name : {nom du thème}, data type name : {nom du type de données} '
     validations:
       projetRef:
         description: "référence au projet"
@@ -205,9 +205,10 @@ references:
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
+            groovy:
+              expression: >
+                String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
+                return application.getDataType().contains(datatype);
     keyColumns: ["nom du projet","nom du site","nom du thème","nom du type de données" ]
     columns:
       nom du projet:
@@ -308,9 +309,10 @@ references:
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
+            groovy:
+              expression: >
+                String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
+                return application.getDataType().contains(datatype);
     keyColumns: [nom du type de données,nom de la variable]
     internationalizationName:
       fr: Variables et unités par type de données
@@ -331,9 +333,9 @@ dataTypes:
       en: Trap in ascent
     internationalizationDisplay:
       especes:
-          pattern:
-            fr: 'espèce :{esp_nom}'
-            en: 'espèce :{esp_nom}'
+        pattern:
+          fr: 'espèce :{esp_nom}'
+          en: 'espèce :{esp_nom}'
     data:
       projet:
         components:
@@ -346,7 +348,8 @@ dataTypes:
         components:
           bassin:
             params:
-              references: sites
+              references:
+                - sites
               replace: true
             defaultValue: >
               return references.get("sites")
@@ -359,7 +362,8 @@ dataTypes:
           plateforme:
           chemin:
             params:
-              references: sites
+              references:
+                -  sites
             defaultValue: >
               return references.get("sites")
               .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin")) && it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
@@ -418,31 +422,35 @@ dataTypes:
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Couleur des individus"
-            codeVariable: couleur_des_individus
-            component: unit
+            groovy:
+              expression: >
+                String datatype = "piegeage_en_montee";
+                String variable = "Couleur des individus";
+                String codeVariable = "couleur_des_individus";
+                String component = "unit";
+                return referencesValues.get("variables_et_unites_par_types_de_donnees")
+                .findAll{it.get("nom du type de données").equals(datatype)}
+                .find{it.get("nom de la variable").equals(codeVariable)}
+                .get("nom de l'unité").equals(datum.get(variable).get(component));
+              references:
+                - variables_et_unites_par_types_de_donnees
       unitOfIndividus:
         description: "vérifie l'unité du nombre d'individus"
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Nombre d'individus"
-            codeVariable: nombre_d_individus
-            component: unit
+            groovy:
+              expression: >
+                String datatype = "piegeage_en_montee";
+                String variable = "Nombre d'individus";
+                String codeVariable = "nombre_d_individus";
+                String component = "unit";
+                return referencesValues.get("variables_et_unites_par_types_de_donnees")
+                .findAll{it.get("nom du type de données").equals(datatype)}
+                .find{it.get("nom de la variable").equals(codeVariable)}
+                .get("nom de l'unité").equals(datum.get(variable).get(component));
+              references:
+                - variables_et_unites_par_types_de_donnees
     format:
       headerLine: 4
       firstRowLine: 5

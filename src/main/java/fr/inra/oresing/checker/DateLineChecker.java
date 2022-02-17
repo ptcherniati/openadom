@@ -1,22 +1,25 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Map;
 
-public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker {
+public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker<DateLineCheckerConfiguration> {
 
     public static final String PARAM_PATTERN = "pattern";
-    public static final String PARAM_DURATION = "duration";
     public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
     public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
     private final CheckerTarget target;
-    private final Map<String, String> params;
+    private final DateLineCheckerConfiguration configuration;
+    @JsonIgnore
+    private final LineTransformer transformer;
 
     public CheckerTarget getTarget(){
         return this.target;
@@ -29,11 +32,12 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
     }
 
-    public DateLineChecker(CheckerTarget target, String pattern, Map<String, String> params) {
-        this.params = params;
+    public DateLineChecker(CheckerTarget target, String pattern, DateLineCheckerConfiguration configuration, LineTransformer transformer) {
+        this.configuration = configuration;
         this.target = target;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
+        this.transformer = transformer;
     }
 
     public String getPattern() {
@@ -64,7 +68,12 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public DateLineCheckerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
     }
 }

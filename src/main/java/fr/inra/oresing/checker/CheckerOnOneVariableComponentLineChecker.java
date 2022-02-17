@@ -1,51 +1,56 @@
 package fr.inra.oresing.checker;
 
-import fr.inra.oresing.ValidationLevel;
-import fr.inra.oresing.checker.decorators.CheckerDecorator;
-import fr.inra.oresing.checker.decorators.DecoratorException;
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.Datum;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
+import org.assertj.core.util.Strings;
 
-import java.util.Map;
-
-public interface CheckerOnOneVariableComponentLineChecker extends LineChecker {
+public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerConfiguration> extends LineChecker<C> {
 
     CheckerTarget getTarget();
 
-    default ValidationCheckResult check(Map<VariableComponentKey, String> values) {
+    LineTransformer getTransformer();
+
+    default ValidationCheckResult check(Datum datum) {
+        Datum transformedDatum = getTransformer().transform(datum);
         VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
-        String value = values.get(variableComponentKey);
-        try {
-            ValidationCheckResult check = CheckerDecorator.check(values, value, getParams(), getTarget());
-            if(ValidationLevel.WARN.equals(check.getLevel())){
-                value = check.getMessage();
-            }else{
-                return check;
+        String value = transformedDatum.get(variableComponentKey);
+        ValidationCheckResult validationCheckResult;
+        if (Strings.isNullOrEmpty(value)) {
+            if (getConfiguration().isRequired()) {
+                CheckerTarget target = getTarget();
+                validationCheckResult = DefaultValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target.getTarget()));
+            } else {
+                validationCheckResult = DefaultValidationCheckResult.success();
             }
-        } catch (DecoratorException e) {
-            return e.getValidationCheckResult();
+        } else {
+            validationCheckResult = check(value);
         }
-        return check(value);
+        return validationCheckResult;
     }
 
     @Override
-    default ValidationCheckResult checkReference(Map<String, String> values) {
-        String value = values.get(getTarget().getTarget());
-        try {
-            ValidationCheckResult check = CheckerDecorator.check(values, value, getParams(), getTarget());
-            if(ValidationLevel.WARN.equals(check.getLevel())){
-                value = check.getMessage();
-            }else{
-                return check;
+    default ValidationCheckResult checkReference(ReferenceDatum referenceDatum) {
+        ReferenceDatum transformedReferenceDatum = getTransformer().transform(referenceDatum);
+        final ReferenceColumn column = (ReferenceColumn) getTarget().getTarget();
+        String value = transformedReferenceDatum.get(column);
+        ValidationCheckResult validationCheckResult;
+        if (Strings.isNullOrEmpty(value)) {
+            if (getConfiguration().isRequired()) {
+                CheckerTarget target = getTarget();
+                validationCheckResult = DefaultValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target.getTarget()));
+            } else {
+                validationCheckResult = DefaultValidationCheckResult.success();
             }
-        } catch (DecoratorException e) {
-            return e.getValidationCheckResult();
+        } else {
+            validationCheckResult = check(value);
         }
-        return check(value);
-    }
-
-    default Map<String, String> getParams(){
-        return Map.of();
+        return validationCheckResult;
     }
 
     ValidationCheckResult check(String value);

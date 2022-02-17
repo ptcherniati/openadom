@@ -398,16 +398,15 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
           params:
           groovy:
             expression: >
-	            String datatype= "piegeage_en_montee"
-	            String variable= "Nombre d'individus"
-	            String codeVariable= "nombre_d_individus"
-	            String component= "unit"
-	              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-	              .findAll{it.get("nom du type de données").equals(datatype)}
-	              .find{it.get("nom de la variable").equals(codeVariable)}
-	              .get("nom de l'unité").equals(datum.variable.component);
-            references: 
-            	- variables_et_unites_par_types_de_donnees
+            String datatype= "piegeage_en_montee"
+            String variable= "Nombre d'individus"
+            String codeVariable= "nombre_d_individus"
+            String component= "unit"
+              return referencesValues.get("variables_et_unites_par_types_de_donnees")
+              .findAll{it.get("nom du type de données").equals(datatype)}
+              .find{it.get("nom de la variable").equals(codeVariable)}
+              .get("nom de l'unité").equals(datum.variable.component);
+            references: variables_et_unites_par_types_de_donnees
 ``` 
 Des valeurs peuvent être définies dans l'expression.
 
