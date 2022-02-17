@@ -59,7 +59,7 @@ export default class AvailiblityChart extends Vue {
         );
         this.ctx.beginPath();
         this.ctx.lineWidth = 3;
-        this.ctx.strokeStyle = "#9d163a";
+        this.ctx.strokeStyle = "#006464FF";
         this.ctx.moveTo(inf + this.canvasW * 0.05, this.canvasH / 2.5);
         this.ctx.lineTo(inf + this.canvasW * 0.05, -this.canvasH);
         this.ctx.stroke();
@@ -78,7 +78,7 @@ export default class AvailiblityChart extends Vue {
 
     this.ctx.beginPath();
     this.ctx.lineWidth = this.canvasH / 3;
-    this.ctx.strokeStyle = "#7bee53";
+    this.ctx.strokeStyle = "#00A6A3FF";
     this.ctx.moveTo(inf + this.canvas.width * 0.05, this.canvasH / 4);
     this.ctx.lineTo(sup + this.canvas.width * 0.05, this.canvasH / 4);
     this.ctx.stroke();
