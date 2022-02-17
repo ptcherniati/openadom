@@ -3,19 +3,21 @@ package fr.inra.oresing.checker;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.groovy.GroovyExpression;
-import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class GroovyLineCheckerTest {
+
+    private static final ImmutableMap<String, Object> EMPTY_CONTEXT = ImmutableMap.of();
 
     @Test
     public void testChecker() {
@@ -38,9 +40,7 @@ public class GroovyLineCheckerTest {
             Assert.assertTrue(compilationError.getMessage().contains("Integre"));
         });
 
-        Application application = Mockito.mock(Application.class);
-        OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository,null);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, EMPTY_CONTEXT, getConfiguration(expression));
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
@@ -57,10 +57,10 @@ public class GroovyLineCheckerTest {
                         new VariableComponentKey("temperature", "unité"), "degrés"
                 );
 
-        Assert.assertTrue(groovyLineChecker.check(validDatum).isSuccess());
-        Assert.assertFalse(groovyLineChecker.check(invalidDatum).isSuccess());
+        Assert.assertTrue(groovyLineChecker.check(new Datum(validDatum)).isSuccess());
+        Assert.assertFalse(groovyLineChecker.check(new Datum(invalidDatum)).isSuccess());
         try {
-            groovyLineChecker.check(invalidDatum2).isSuccess();
+            groovyLineChecker.check(new Datum(invalidDatum2)).isSuccess();
             Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));
@@ -82,20 +82,52 @@ public class GroovyLineCheckerTest {
                 , "}"
                 , "throw new IllegalArgumentException(\"unité inconnue, \" + unité);"
         );
-        Application application = Mockito.mock(Application.class);
-        OreSiRepository.RepositoryForApplication repository = Mockito.mock(OreSiRepository.RepositoryForApplication.class);
-
-        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, application,repository,null);
+        GroovyLineChecker groovyLineChecker = GroovyLineChecker.forExpression(expression, EMPTY_CONTEXT, getConfiguration(expression));
         ImmutableMap<VariableComponentKey, String> validDatum =
                 ImmutableMap.of(
                         new VariableComponentKey("temperature", "valeur"), "-12",
                         new VariableComponentKey("temperature", "unité"), "°C"
                 );
         try {
-            ValidationCheckResult validation = groovyLineChecker.check(validDatum);
+            ValidationCheckResult validation = groovyLineChecker.check(new Datum(validDatum));
             Assert.fail("une exception aurait dû être levée");
         } catch (OreSiTechnicalException e) {
             Assert.assertTrue(e.getMessage().contains("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais 261.15."));
         }
+    }
+
+    private GroovyLineCheckerConfiguration getConfiguration(String expression) {
+        return new GroovyLineCheckerConfiguration() {
+
+            @Override
+            public boolean isCodify() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public boolean isRequired() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public GroovyConfiguration getGroovy() {
+                return new GroovyConfiguration() {
+                    @Override
+                    public String getExpression() {
+                        return expression;
+                    }
+
+                    @Override
+                    public Set<String> getReferences() {
+                        return Collections.emptySet();
+                    }
+
+                    @Override
+                    public Set<String> getDatatypes() {
+                        return Collections.emptySet();
+                    }
+                };
+            }
+        };
     }
 }

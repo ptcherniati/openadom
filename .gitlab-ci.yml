@@ -83,7 +83,6 @@ maven_registry:
     - mvn versions:commit
     - mvn deploy -Pmia -s ci-settings.xml
 
-
 npm:
   image: node:12-alpine
   stage: package

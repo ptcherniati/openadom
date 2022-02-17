@@ -164,7 +164,8 @@ dataTypes:
         checker:
           name: GroovyExpression
           params:
-            expression: "true"
+            groovy:
+              expression: "true"
     format:
       constants:
         - rowNumber: 1

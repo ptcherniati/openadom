@@ -1,11 +1,12 @@
 package fr.inra.oresing.model;
 
 import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.DateLineCheckerConfiguration;
+import fr.inra.oresing.checker.GroovyConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Year;
-import java.util.Map;
 
 public class LocalDateTimeRangeTest {
 
@@ -28,23 +29,52 @@ public class LocalDateTimeRangeTest {
     }
     @Test
     public void testDayPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", Map.of(DateLineChecker.PARAM_DURATION, "2 MONTHS")));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", getDateCheckerConfiguration("2 MONTHS"), null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
-         range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", null));
+         range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
     }
     @Test
     public void testSemiHourlyPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", Map.of(DateLineChecker.PARAM_DURATION, "30 MINUTES")));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", getDateCheckerConfiguration("30 MINUTES"), null));
         Assert.assertEquals("[\"2020-01-01 01:30:00\",\"2020-01-01 02:00:00\")", range.toSqlExpression());
-         range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", null));
+         range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
     }
     @Test
     public void testMounthPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", Map.of(DateLineChecker.PARAM_DURATION, "2 MONTHS")));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", getDateCheckerConfiguration("2 MONTHS"), null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
-         range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", null));
+         range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-02-01 00:00:00\")", range.toSqlExpression());
+    }
+
+    private DateLineCheckerConfiguration getDateCheckerConfiguration(String duration) {
+        return new DateLineCheckerConfiguration() {
+            @Override
+            public String getPattern() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public String getDuration() {
+                return duration;
+            }
+
+            @Override
+            public boolean isCodify() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public boolean isRequired() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public GroovyConfiguration getGroovy() {
+                throw new UnsupportedOperationException("doublure de test");
+            }
+        };
     }
 }

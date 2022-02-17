@@ -115,11 +115,11 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     public ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
         return findAllByReferenceType(referenceType).stream()
-                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey,result->new ApplicationResult.Reference.ReferenceUUIDAndDisplay(result.getRefValues().get("__display_"+locale), result.getId(), result.getRefValues())));
+                .collect(ImmutableMap.toImmutableMap(referenceValue -> referenceValue.getHierarchicalKey().getSql(),result->new ApplicationResult.Reference.ReferenceUUIDAndDisplay(result.getRefValues().get("__display_"+locale), result.getId(), result.getRefValues())));
     }
 
     public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {
         return findAllByReferenceType(referenceType).stream()
-                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
+                .collect(ImmutableMap.toImmutableMap(referenceValue -> referenceValue.getHierarchicalKey().getSql(), ReferenceValue::getId));
     }
 }
