@@ -168,7 +168,7 @@ public class ApplicationConfigurationService {
         }
 
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
-            verifyReferenceKeyColumnsExists(configuration, builder, referenceEntry);
+            verifyReferenceKeyColumns(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
             verifyValidationCheckersAreValids(configuration, builder, referenceEntry, references);
@@ -470,15 +470,19 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyReferenceKeyColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
+    private void verifyReferenceKeyColumns(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
         List<String> keyColumns = referenceDescription.getKeyColumns();
-        Set<String> columns = referenceDescription.getColumns().keySet();
-        ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
-        ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
-        if (!unknownUsedAsKeyElementColumns.isEmpty()) {
-            builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+        if (keyColumns.isEmpty()) {
+            builder.recordMissingKeyColumnsForReference(reference);
+        } else {
+            Set<String> columns = referenceDescription.getColumns().keySet();
+            ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
+            ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
+            if (!unknownUsedAsKeyElementColumns.isEmpty()) {
+                builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+            }
         }
     }
 

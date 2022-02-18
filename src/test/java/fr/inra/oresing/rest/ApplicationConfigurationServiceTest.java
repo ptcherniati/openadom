@@ -458,4 +458,14 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
         Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
     }
+
+    @Test
+    public void testMissingKeyColumnsForReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("keyColumns: [nom du projet_key]", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingKeyColumnsForReference", onlyError.getMessage());
+        Assert.assertEquals("projets", onlyError.getMessageParams().get("reference"));
+    }
 }

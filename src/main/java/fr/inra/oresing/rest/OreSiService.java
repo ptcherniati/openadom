@@ -468,19 +468,14 @@ public class OreSiService {
                             }
                         });
                         ReferenceValue e = new ReferenceValue();
-                        Ltree naturalKey;
-                        if (ref.getKeyColumns().isEmpty()) {
-                            UUID technicalId = e.getId();
-                            naturalKey = Ltree.fromUuid(technicalId);
-                        } else {
-                            String naturalKeyAsString = ref.getKeyColumns().stream()
-                                    .map(ReferenceColumn::new)
-                                    .map(referenceDatum::get)
-                                    .filter(StringUtils::isNotEmpty)
-                                    .map(Ltree::escapeToLabel)
-                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
-                            naturalKey = Ltree.fromSql(naturalKeyAsString);
-                        }
+                        Preconditions.checkState(!ref.getColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
+                        String naturalKeyAsString = ref.getKeyColumns().stream()
+                                .map(ReferenceColumn::new)
+                                .map(referenceDatum::get)
+                                .filter(StringUtils::isNotEmpty)
+                                .map(Ltree::escapeToLabel)
+                                .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                        Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                         Ltree recursiveNaturalKey = naturalKey;
                         final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
                         if (isRecursive) {
