@@ -5,7 +5,7 @@ import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import org.assertj.core.util.Strings;

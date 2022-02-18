@@ -6,6 +6,8 @@ import com.google.common.io.Resources;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.ValidationLevel;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
+import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.json.JSONArray;
 import org.junit.Assert;
@@ -36,6 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.util.NestedServletException;
 
 import javax.servlet.http.Cookie;
 import java.io.IOException;
@@ -898,6 +902,194 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    public void addDuplicatedTest() throws Exception {
+        authenticationService.addUserRightCreateApplication(userId);
+        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getDuplicatedApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "duplicated.yaml", "text/plain", configurationFile);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+        String message;
+
+        //on charge le fichier de type zone d'étude
+        final String typezonewithoutduplicationDuplication = fixtures.getDuplicatedReferentielFiles().get("typezonewithoutduplication");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude.csv", "text/plain", refStream);
+            message = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        // on vérifie le nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+
+
+        //on recharge le fichier de type zone d'étude
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude2.csv", "text/plain", refStream);
+            message = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        //il doit toujours y avoir le même nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+
+
+        //on charge le fichier de zone type d'étude avec une duplication
+        final String typezonewithduplicationDuplication = fixtures.getDuplicatedReferentielFiles().get("typezonewithduplication");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithduplicationDuplication)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude_duplicate.csv", "text/plain", refStream);
+            final ResultActions error = mockMvc
+                    .perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie));
+            Assert.fail();
+        } catch (NestedServletException e) {
+            Assert.assertTrue(e.getCause() instanceof InvalidDatasetContentException);
+            final InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
+            final List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(4, errors.get(0).getLineNumber());
+            final ValidationCheckResult validationCheckResult = errors.get(0).getValidationCheckResult();
+            Assert.assertEquals(ValidationLevel.ERROR, validationCheckResult.getLevel());
+            Assert.assertEquals("duplicatedLineInDatatype", validationCheckResult.getMessage());
+            final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
+            Assert.assertEquals("types_de_zones_etudes", messageParams.get("file"));
+            Assert.assertEquals(4L, messageParams.get("lineNumber"));
+            Assert.assertArrayEquals(new Long[]{3L, 4L}, ((List) messageParams.get("otherLines")).toArray());
+            Assert.assertEquals("zone20", messageParams.get("duplicateKey"));
+        }
+
+        //il doit toujours y avoir le même nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+/*
+on test le dépôt d'un fichier récursif
+ */
+
+
+//on charge le fichier de zone d'étude
+        final String zonewithoutduplicationDuplication = fixtures.getDuplicatedReferentielFiles().get("zonewithoutduplication");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude.csv", "text/plain", refStream);
+            message = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        // on vérifie le nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+
+
+        //on recharge le fichier de zone d'étude
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude2.csv", "text/plain", refStream);
+            message = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        //il doit toujours y avoir le même nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+
+
+        //on charge le fichier de zone d'étudeavec une duplication
+        final String zonewithduplicationDuplication = fixtures.getDuplicatedReferentielFiles().get("zonewithduplication");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithduplicationDuplication)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude_duplicated.csv", "text/plain", refStream);
+            final ResultActions error = mockMvc
+                    .perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie));
+            Assert.fail();
+        } catch (NestedServletException e) {
+            Assert.assertTrue(e.getCause() instanceof InvalidDatasetContentException);
+            final InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
+            final List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(4, errors.get(0).getLineNumber());
+            final ValidationCheckResult validationCheckResult = errors.get(0).getValidationCheckResult();
+            Assert.assertEquals(ValidationLevel.ERROR, validationCheckResult.getLevel());
+            Assert.assertEquals("duplicatedLineInDatatype", validationCheckResult.getMessage());
+            final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
+            Assert.assertEquals("zones_etudes", messageParams.get("file"));
+            Assert.assertEquals(4L, messageParams.get("lineNumber"));
+            Assert.assertArrayEquals(new Long[]{2L, 4L}, ((List) messageParams.get("otherLines")).toArray());
+            Assert.assertEquals("site1", messageParams.get("duplicateKey"));
+        }
+
+        //il doit toujours y avoir le même nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+
+        //on charge le fichier de zone d'étudeavec une duplication
+        final String zonewithmissingParent = fixtures.getDuplicatedReferentielFiles().get("zonewithmissingparent");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithmissingParent)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude_missing_parent.csv", "text/plain", refStream);
+            final ResultActions error = mockMvc
+                    .perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                            .file(refFile)
+                            .cookie(authCookie));
+            Assert.fail();
+        } catch (NestedServletException e) {
+            Assert.assertTrue(e.getCause() instanceof InvalidDatasetContentException);
+            final InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
+            final List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
+            Assert.assertEquals(1, errors.size());
+            Assert.assertEquals(3, errors.get(0).getLineNumber());
+            final ValidationCheckResult validationCheckResult = errors.get(0).getValidationCheckResult();
+            Assert.assertEquals(ValidationLevel.ERROR, validationCheckResult.getLevel());
+            Assert.assertEquals("missingParentLineInRecursiveReference", validationCheckResult.getMessage());
+            final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
+            Assert.assertEquals("zones_etudes", messageParams.get("references"));
+            Assert.assertEquals(3L, messageParams.get("lineNumber"));
+            Assert.assertEquals("site3", messageParams.get("missingReferencesKey"));
+            Assert.assertTrue(Set.of("site3","site1.site2","site1","site2").containsAll((Set) messageParams.get("knownReferences")));
+        }
+
+        //il doit toujours y avoir le même nombre de ligne
+        message = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
+                .andReturn().getResponse().getContentAsString();
+
+    }
+
+    @Test
     public void addApplicationOLAC() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getOlaApplicationConfigurationResourceName())) {
@@ -1010,7 +1202,7 @@ public class OreSiResourcesTest {
         for (Map.Entry<String, String> entry : fixtures.getFluxMeteoForetEssaiDataResourceName().entrySet()) {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/"+entry.getKey())
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/" + entry.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());

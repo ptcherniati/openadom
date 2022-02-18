@@ -1,4 +1,8 @@
 {
+    "duplicated": {
+        "duplicatedLineInReference": "Dans le fichier de references {file}, la ligne ${lineNumber} a le même identifiant ${duplicateKey} que les lignes ${otherLines}",
+        "duplicatedLineInDatatype": "Dans le fichier de data {file}, la ligne ${lineNumber} a le même identifiant ${duplicateKey} que les lignes ${otherLines}"
+    },
     "titles": {
         "login-page": "Bienvenue sur SI-ORE",
         "applications-page": "Mes applications",

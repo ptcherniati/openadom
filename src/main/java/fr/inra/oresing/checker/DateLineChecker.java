@@ -3,6 +3,7 @@ package fr.inra.oresing.checker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 
 import java.time.format.DateTimeFormatter;

@@ -1,0 +1,72 @@
+version: 0
+application:
+  name: duplication
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: zones_etudes
+        parentRecursiveKey: parent
+references:
+  types_de_zones_etudes:
+    keyColumns: [nom]
+    columns:
+      nom:
+  zones_etudes:
+    validations:
+      parent_ref:
+        description: référence au parent
+        checker:
+          name: Reference
+          params:
+            refType: zones_etudes
+            columns: parent
+            required: false
+            codify: true
+    keyColumns: [nom]
+    columns:
+      nom:
+      parent:
+dataTypes:
+  dty:
+    authorization:
+      dataGroups:
+        reference:
+          data:
+            - localization
+            - Date
+          label: "Reference"
+      authorizationScopes:
+        authorization_zoneEtude:
+          component: zones_etudes
+          variable: localization
+      timeScope:
+        component: day
+        variable: Date
+    data:
+      Date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      localization:
+        components:
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                refType: zones_etudes
+    format:
+      headerLine: 2
+      firstRowLine: 3
+      columns:
+        - header: "site"
+          boundTo:
+            variable: localization
+            component: zones_etudes
+        - header: "date"
+          boundTo:
+            variable: Date
+            component: day
