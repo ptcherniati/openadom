@@ -518,7 +518,8 @@ public class OreSiService {
                     String naturalKey = ref.getKeyColumns()
                             .stream()
                             .map(kc -> columns.indexOf(kc))
-                            .map(k -> Ltree.escapeToLabel(csvrecord.get(k)))
+                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k))?null:Ltree.escapeToLabel(csvrecord.get(k)))
+                            .filter(k->k!=null)
                             .collect(Collectors.joining("__"));
                     if (!referenceUUIDs.containsKey(naturalKey)) {
                         referenceUUIDs.put(naturalKey, UUID.randomUUID());
