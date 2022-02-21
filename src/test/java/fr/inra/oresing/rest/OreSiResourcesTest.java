@@ -1087,6 +1087,45 @@ on test le dépôt d'un fichier récursif
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
                 .andReturn().getResponse().getContentAsString();
 
+        //on teste un dépot de fichier de données
+        final String dataWithoutDuplicateds = fixtures.getDuplicatedDataFiles().get("data_without_duplicateds");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/data/dty")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+        //on teste le nombre de ligne
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+            final String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
+                    )))
+                .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+        }
+
+        // on  redepose le fichier
+
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/data/dty")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        }
+        // le nombre de ligne est inchangé
+        /*try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+            final String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
+                    )))
+                .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+        }*/
     }
 
     @Test

@@ -59,8 +59,8 @@ dataTypes:
               params:
                 refType: zones_etudes
     format:
-      headerLine: 2
-      firstRowLine: 3
+      headerLine: 1
+      firstRowLine: 2
       columns:
         - header: "site"
           boundTo:

@@ -482,6 +482,12 @@ public class Fixtures {
         return referentielFiles;
     }
 
+    public Map<String, String> getDuplicatedDataFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("data_without_duplicateds", "/data/duplication/data.csv");
+        return referentielFiles;
+    }
+
     public String getPhysicoChimieSolsProDataResourceName() {
         return "/data/pros/physico_chimie_sols.csv";
     }
