@@ -970,8 +970,8 @@ public class OreSiResourcesTest {
             Assert.assertEquals("duplicatedLineInDatatype", validationCheckResult.getMessage());
             final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
             Assert.assertEquals("types_de_zones_etudes", messageParams.get("file"));
-            Assert.assertEquals(4L, messageParams.get("lineNumber"));
-            Assert.assertArrayEquals(new Long[]{3L, 4L}, ((List) messageParams.get("otherLines")).toArray());
+            Assert.assertEquals(4, messageParams.get("lineNumber"));
+            Assert.assertArrayEquals(new Integer[]{3, 4}, ((List) messageParams.get("otherLines")).toArray());
             Assert.assertEquals("zone20", messageParams.get("duplicateKey"));
         }
 
@@ -1043,8 +1043,8 @@ on test le dépôt d'un fichier récursif
             Assert.assertEquals("duplicatedLineInDatatype", validationCheckResult.getMessage());
             final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
             Assert.assertEquals("zones_etudes", messageParams.get("file"));
-            Assert.assertEquals(4L, messageParams.get("lineNumber"));
-            Assert.assertArrayEquals(new Long[]{2L, 4L}, ((List) messageParams.get("otherLines")).toArray());
+            Assert.assertEquals(4, messageParams.get("lineNumber"));
+            Assert.assertArrayEquals(new Integer[]{2, 4}, ((List) messageParams.get("otherLines")).toArray());
             Assert.assertEquals("site1", messageParams.get("duplicateKey"));
         }
 

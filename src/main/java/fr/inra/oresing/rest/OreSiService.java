@@ -333,7 +333,7 @@ public class OreSiService {
         Function<Ltree, Ltree> getHierarchicalReferenceFn;
         Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
         Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
-        ListMultimap<Ltree, Long> hierarchicalKeys = LinkedListMultimap.create();
+        ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -366,16 +366,16 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, ReferenceDatum> csvRecordToLineAsMapFn = line -> {
+            Function<CSVRecord, RowWithReferenceDatum> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
                 ReferenceDatum referenceDatum = new ReferenceDatum();
-                referenceDatum.setLineNumber(line.getRecordNumber());
                 line.forEach(value -> {
                     String header = currentHeader.next();
                     ReferenceColumn referenceColumn = new ReferenceColumn(header);
                     referenceDatum.put(referenceColumn, value);
                 });
-                return referenceDatum;
+                int lineNumber = Ints.checkedCast(line.getRecordNumber());
+                return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
@@ -396,7 +396,8 @@ public class OreSiService {
                     .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
-                    .map(referenceDatum -> {
+                    .map(rowWithReferenceDatum -> {
+                        ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
                         Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
                         lineCheckers.forEach(lineChecker -> {
                             ValidationCheckResult validationCheckResult = lineChecker.checkReference(referenceDatum);
@@ -411,7 +412,7 @@ public class OreSiService {
                                             .add(referenceId);
                                 }
                             } else {
-                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, referenceDatum.getLineNumber()));
+                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
                             }
                         });
                         final ReferenceValue e = new ReferenceValue();
@@ -478,12 +479,12 @@ public class OreSiService {
                         e.setApplication(app.getId());
                         e.setRefValues(referenceDatum.asMap());
                         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
-                            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), referenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
-                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, referenceDatum.getLineNumber()));
-                            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatum.getLineNumber());
+                            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
+                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
+                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
                             return null;
                         } else {
-                            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatum.getLineNumber());
+                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
                             return e;
                         }
                     })
@@ -1496,6 +1497,12 @@ public class OreSiService {
     private static class RowWithData {
         int lineNumber;
         Datum datum;
+    }
+
+    @Value
+    private static class RowWithReferenceDatum {
+        int lineNumber;
+        ReferenceDatum referenceDatum;
     }
 
     @Value

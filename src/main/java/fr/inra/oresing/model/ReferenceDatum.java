@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext {
-    private long lineNumber;
     private final Map<ReferenceColumn, String> values;
 
     public ReferenceDatum() {
@@ -32,14 +31,6 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext 
             map.put(entry.getKey().asString(), valueThatMayBeNull);
         }
         return map;
-    }
-
-    public long getLineNumber() {
-        return lineNumber;
-    }
-
-    public void setLineNumber(long lineNumber) {
-        this.lineNumber = lineNumber;
     }
 
     public String put(ReferenceColumn string, String value) {

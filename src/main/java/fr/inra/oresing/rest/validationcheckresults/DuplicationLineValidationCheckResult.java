@@ -17,7 +17,7 @@ public class DuplicationLineValidationCheckResult implements ValidationCheckResu
 
     Map<String, Object> messageParams;
 
-    public DuplicationLineValidationCheckResult(FileType filetype, String file, ValidationLevel level, Ltree hierarchicalKey, long currentLineNumber, List<Long> otherLines) {
+    public DuplicationLineValidationCheckResult(FileType filetype, String file, ValidationLevel level, Ltree hierarchicalKey, int currentLineNumber, List<Integer> otherLines) {
         this.level = level;
         this.message = FileType.DATATYPE.message;
         this.messageParams = ImmutableMap.of(
