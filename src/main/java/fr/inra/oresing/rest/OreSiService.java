@@ -415,6 +415,7 @@ public class OreSiService {
                             }
                         });
                         final ReferenceValue e = new ReferenceValue();
+                        Preconditions.checkState(!ref.getColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
                         Ltree naturalKey;
                         if (ref.getKeyColumns().isEmpty()) {
                             UUID technicalId = e.getId();

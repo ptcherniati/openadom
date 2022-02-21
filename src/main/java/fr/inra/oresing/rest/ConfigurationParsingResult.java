@@ -364,5 +364,11 @@ public class ConfigurationParsingResult {
                     "references", references)
             );
         }
+
+        public Builder recordMissingKeyColumnsForReference(String reference) {
+            return recordError("missingKeyColumnsForReference", ImmutableMap.of(
+                    "reference", reference)
+            );
+        }
     }
 }
