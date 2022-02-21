@@ -1,24 +1,27 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.transformer.LineTransformer;
 
-import java.util.Map;
 import java.util.UUID;
 
-public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker {
+public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker<ReferenceLineCheckerConfiguration> {
 
-    public static final String PARAM_REFTYPE = "refType";
     private final String reference;
     public ImmutableMap<String, UUID> referenceValues;
-    public ImmutableMap<String, String> display;
-    private final Map<String, String> params;
+    private final ReferenceLineCheckerConfiguration configuration;
     private final CheckerTarget target;
-    public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, ImmutableMap<String, String> display, Map<String, String> params) {
-        this.params = params;
+
+    @JsonIgnore
+    private final LineTransformer transformer;
+
+    public ReferenceLineChecker(CheckerTarget target, String reference, ImmutableMap<String, UUID> referenceValues, ReferenceLineCheckerConfiguration configuration, LineTransformer transformer) {
+        this.configuration = configuration;
         this.target = target;
         this.reference = reference;
         this.referenceValues = referenceValues;
-        this.display = display;
+        this.transformer = transformer;
     }
 
     public ImmutableMap<String, UUID> getReferenceValues() {
@@ -53,7 +56,12 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
     }
 
     @Override
-    public Map<String, String> getParams() {
-        return params;
+    public ReferenceLineCheckerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
     }
 }

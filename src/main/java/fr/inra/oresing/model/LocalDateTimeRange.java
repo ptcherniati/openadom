@@ -31,8 +31,8 @@ public class LocalDateTimeRange {
                 public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
                     String pattern = "01/" + str;
                     final LocalDate date = LocalDate.parse(pattern, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                    if (dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)) {
-                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                    if (dateLineChecker.getConfiguration() != null && dateLineChecker.getConfiguration().getDuration() != null) {
+                        return new Duration(dateLineChecker.getConfiguration().getDuration()).getLocalDateTimeRange(date);
                     }
                     return LocalDateTimeRange.between(LocalDate.from(date.atStartOfDay()), date.plus(1L, ChronoUnit.MONTHS));
                 }
@@ -45,10 +45,10 @@ public class LocalDateTimeRange {
 
                 @Override
                 public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
-                    if (dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)) {
+                    if (dateLineChecker.getConfiguration() != null && dateLineChecker.getConfiguration().getDuration() != null) {
                         String pattern = "01/01/" + str;
                         final LocalDate date = LocalDate.parse(pattern, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                        return new Duration(dateLineChecker.getConfiguration().getDuration()).getLocalDateTimeRange(date);
                     }
                     return LocalDateTimeRange.forYear(Year.parse(str, dateTimeFormatter));
                 }
@@ -61,9 +61,9 @@ public class LocalDateTimeRange {
 
                 @Override
                 public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
-                    if (dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)) {
+                    if (dateLineChecker.getConfiguration() != null && dateLineChecker.getConfiguration().getDuration() != null) {
                         final LocalDate date = LocalDate.parse(str, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                        return new Duration(dateLineChecker.getConfiguration().getDuration()).getLocalDateTimeRange(date);
                     }
                     return LocalDateTimeRange.forDay(LocalDate.parse(str, dateTimeFormatter));
                 }
@@ -77,9 +77,9 @@ public class LocalDateTimeRange {
                 @Override
                 public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
                     final LocalDate startDate = LocalDate.parse(str, dateTimeFormatter);
-                    if(dateLineChecker.getParams() != null && dateLineChecker.getParams().containsKey(DateLineChecker.PARAM_DURATION)){
+                    if(dateLineChecker.getConfiguration() != null && dateLineChecker.getConfiguration().getDuration() != null){
                         final LocalDateTime date = LocalDateTime.parse(str, DateTimeFormatter.ofPattern(getPattern()));
-                        return new Duration(dateLineChecker.getParams().get(DateLineChecker.PARAM_DURATION)).getLocalDateTimeRange(date);
+                        return new Duration(dateLineChecker.getConfiguration().getDuration()).getLocalDateTimeRange(date);
                     }
                     return LocalDateTimeRange.forDay(startDate);
                 }

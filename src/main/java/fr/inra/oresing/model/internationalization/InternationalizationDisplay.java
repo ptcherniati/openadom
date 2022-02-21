@@ -1,10 +1,11 @@
 package fr.inra.oresing.model.internationalization;
 
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceDatum;
 import lombok.Getter;
 import lombok.Setter;
 import org.assertj.core.util.Strings;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,13 +17,13 @@ import java.util.stream.Stream;
 public class InternationalizationDisplay {
     Map<String, String> pattern;
 
-    public static Map<String, String> getDisplays(Optional<Map<String, String>> displayPattern, Map<String, Internationalization> displayColumns, Map<String, String> refValues) {
-        Map<String, String> displays = new HashMap<>();
+    public static ReferenceDatum getDisplays(Optional<Map<String, String>> displayPattern, Map<String, Internationalization> displayColumns, ReferenceDatum refValues) {
+        ReferenceDatum displays = new ReferenceDatum();
         displayPattern
                 .ifPresent(patterns -> {
                     patterns.entrySet().stream()
                             .forEach(stringEntry -> {
-                                displays.put("__display_" + stringEntry.getKey(),
+                                displays.put(new ReferenceColumn("__display_" + stringEntry.getKey()),
                                         parsePattern(stringEntry.getValue()).stream()
                                                 .map(patternSection -> {
                                                             String internationalizedPattern = patternSection.text;
@@ -31,7 +32,7 @@ public class InternationalizationDisplay {
                                                                 if (displayColumns.containsKey(referencedColumn)) {
                                                                     referencedColumn = displayColumns.get(referencedColumn).getOrDefault(stringEntry.getKey(), referencedColumn);
                                                                 }
-                                                                internationalizedPattern += refValues.get(referencedColumn);
+                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn));
                                                             }
                                                             return internationalizedPattern;
                                                         }

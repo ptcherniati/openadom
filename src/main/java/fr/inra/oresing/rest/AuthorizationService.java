@@ -300,6 +300,6 @@ public class AuthorizationService {
         ImmutableSortedSet<GetGrantableResult.AuthorizationScope.Option> options = tree.getChildren(referenceValue).stream()
                 .map(child -> toOption(tree, child))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
-        return new GetGrantableResult.AuthorizationScope.Option(referenceValue.getHierarchicalKey(), referenceValue.getHierarchicalKey(), options);
+        return new GetGrantableResult.AuthorizationScope.Option(referenceValue.getHierarchicalKey().getSql(), referenceValue.getHierarchicalKey().getSql(), options);
     }
 }

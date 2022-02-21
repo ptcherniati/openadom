@@ -197,9 +197,9 @@ public class OreSiResources {
         ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
                 .map(referenceValue ->
                         new GetReferenceResult.ReferenceValue(
-                                referenceValue.getHierarchicalKey(),
-                                referenceValue.getHierarchicalReference(),
-                                referenceValue.getNaturalKey(),
+                                referenceValue.getHierarchicalKey().getSql(),
+                                referenceValue.getHierarchicalReference().getSql(),
+                                referenceValue.getNaturalKey().getSql(),
                                 referenceValue.getRefValues()
                         )
                 )
