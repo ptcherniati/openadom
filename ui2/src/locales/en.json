@@ -144,9 +144,9 @@
         "timerangeoutofinterval":"The date <code> {value} </code> is incompatible with the date range of the deposit. It must be between <code> {from} </code> and <code> {to} </code>. ",
         "badauthorizationscopeforrepository":"Authorization <code> {authorization} </code>) must be <code> {expectedValue} / code> and not <code> {givenValue} </code>",
         "overlappingpublishedversion":"There is a deposited version in the deposit dates have an overlapping period with the deposited version. <code> {overlapingFiles] </code>",
-        "duplicateLineInReference": "In the repository file ${file}, line ${lineNumber} has the same id ${duplicateKey} as lines ${otherLines}",
-        "duplicateLineInDatatype": "In data file ${file}, line ${lineNumber} has the same identifier ${duplicateKey} as lines ${otherLines}",
-        "missingParentLineInRecursiveReference": "In repository file ${references} the id value ${missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}"
+        "duplicateLineInReference": "In the repository file {file}, line {lineNumber} has the same id {duplicateKey} as lines {otherLines}",
+        "duplicateLineInDatatype": "In data file {file}, line {lineNumber} has the same identifier {duplicateKey} as lines {otherLines}",
+        "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}"
     },
     "referencesManagement":{
         "actions":"Actions",
