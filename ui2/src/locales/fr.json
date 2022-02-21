@@ -145,9 +145,9 @@
         "timerangeoutofinterval": "La date  <code>{value}</code> est incompatible avec l'intervale de dates du dépôt. Elle doit être comprise entre <code>{from}</code> et <code>{to}</code>.",
         "badauthorizationscopeforrepository": "L'autorisation <code>{authorization}</code>) doit être <code>{expectedValue}/code> et non <code>{givenValue}</code>",
         "overlappingpublishedversion": "Il existe une version déposée dans les dates de dépôt ont une période chevauchante avec la version déposée. <code>{overlapingFiles]</code>",
-        "duplicatedLineInReference": "Dans le fichier du référentiel ${file}, la ligne ${lineNumber} a le même identifiant ${duplicateKey} que les lignes ${otherLines}",
-        "duplicatedLineInDatatype": "Dans le fichier de données ${file}, la ligne ${lineNumber} a le même identifiant ${duplicateKey} que les lignes ${otherLines}",
-        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel ${references} la valeur d'identifiant ${missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées ${knownReferences}"
+        "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées {knownReferences}"
     },
     "referencesManagement": {
         "actions": "Actions",
