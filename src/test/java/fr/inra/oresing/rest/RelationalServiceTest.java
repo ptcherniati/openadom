@@ -2,9 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.OreSiRequestClient;
-import fr.inra.oresing.OreSiUserRequestClient;
-import fr.inra.oresing.persistence.AuthenticationService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,13 +11,14 @@ import org.springframework.boot.test.autoconfigure.SpringBootDependencyInjection
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
-import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,22 +35,10 @@ public class RelationalServiceTest {
     private RelationalService relationalService;
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private AuthenticationService authenticationService;
-
-    @Autowired
     private Fixtures fixtures;
 
     @Autowired
-    private OreSiApiRequestContext request;
-
-    private OreSiUserRequestClient applicationCreatorRequestClient;
-
-    private OreSiRequestClient restrictedReaderRequestClient;
-
-    private String excludedReferenceId;
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Before
     public void createApplication() throws Exception {
@@ -116,6 +102,12 @@ public class RelationalServiceTest {
 //            request.setRequestClient(applicationCreatorRequestClient);
             List<Map<String, Object>> viewContent = relationalService.readView("acbb", "SWC", ViewStrategy.VIEW);
             Assert.assertEquals(1456, viewContent.size());
+        }
+
+        {
+            // on vérifie juste le bon typage des colonnes (on ne peut moyenne que si la colonne est un nombre)
+            int averageSwc = namedParameterJdbcTemplate.queryForObject("select avg(swc.\"SWC_valeur\") from acbb_view.swc where swc.\"SWC_valeur\" != -9999", Collections.emptyMap(), Integer.class);
+            Assert.assertEquals(26, averageSwc);
         }
 
         for (Fixtures.Application application : applications) {
