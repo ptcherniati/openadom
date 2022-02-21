@@ -333,7 +333,7 @@ public class OreSiService {
         Function<Ltree, Ltree> getHierarchicalReferenceFn;
         Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
         Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
-        Map<Ltree, List<Long>> hierarchicalKeys = new HashMap<>();
+        ListMultimap<Ltree, Long> hierarchicalKeys = LinkedListMultimap.create();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -480,14 +480,10 @@ public class OreSiService {
                         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
                             ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), referenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
                             rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, referenceDatum.getLineNumber()));
-                            hierarchicalKeys
-                                    .computeIfAbsent(e.getHierarchicalKey(), k -> new LinkedList<>())
-                                    .add(referenceDatum.getLineNumber());
+                            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatum.getLineNumber());
                             return null;
                         } else {
-                            hierarchicalKeys
-                                    .computeIfAbsent(e.getHierarchicalKey(), k -> new LinkedList<>())
-                                    .add(referenceDatum.getLineNumber());
+                            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatum.getLineNumber());
                             return e;
                         }
                     })
