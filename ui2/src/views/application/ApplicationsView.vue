@@ -126,11 +126,12 @@
                       </div>
                       <div class="card-content">
                         <div class="content">
-                          <p>
-                            {{ $t("applications.version") }}<strong>{{ application.configuration.application.version }}</strong>.
-                          </p>
-                          <p>
-                            {{ application.comment }}
+                          <p v-html="$t('applications.version', {'applicationName': application.localName,'version':application.configuration.application.version})" />
+                          <p class="comment">
+                            <span :class="application.comment?'has-text-primary':'has-text-warning'">
+                            {{ application.comment?$t("applications.comment"):$t("applications.no-comment") }}
+                              </span>
+                            <span>{{ application.comment }}</span>
                           </p>
                         </div>
                       </div>
@@ -315,6 +316,11 @@ export default class ApplicationsView extends Vue {
 .column {
   display: grid;
 
+  .comment{
+    display: flex;
+    align-items: center;
+    align-content: start;
+  }
   .card {
     &.applicationCard {
       width: 300px;

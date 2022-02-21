@@ -155,7 +155,7 @@ extend("validApplicationName", {
 extend("validApplicationNameLength", {
   message: i18n.t("validation.invalid-application-name-length"),
   validate: (value) => {
-    return value && value.length >= 4 && value.length <= 20;
+    return value && value.length >= 3 && value.length <= 20;
   },
 });
 

@@ -72,6 +72,8 @@
     "applications":{
         "chose-config":"Chose a configuration",
         "create":"Create application",
+        "comment": "Comment : ",
+        "no-comment": "No comment",
         "test":"Test",
         "name":"Application name",
         "name-placeholder":"Ex : olac",
@@ -85,7 +87,7 @@
         "trierRecent":"Recent date",
         "filter":"Filter by",
         "change": "Edit app",
-        "version" : "The current version of the application is "
+        "version" : "The current version of the application <b class=\"has-text-primary\">{applicationName}</b> is <b class=\"has-text-primary\">{version}.</b>"
     },
     "errors":{
         "emptyFile":"File is empty",
