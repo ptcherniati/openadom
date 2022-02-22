@@ -2,6 +2,7 @@ export class ApplicationResult {
   id;
   name;
   title;
+  comment;
   references = {
     idRef: {
       id: "",

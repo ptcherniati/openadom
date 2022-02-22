@@ -4,6 +4,10 @@ body {
   height: 100%;
 }
 
+.navbar-menu.is-active{
+  background-color: $primary;
+}
+
 .title {
   color: $primary;
   margin-top: $title-margin-top;
@@ -19,6 +23,22 @@ a {
   color: $info;
 }
 
+// affichage icon uniformisé
+.button .icon, .button .icon.is-small, .icon{
+  font-size: 0.75rem;
+  align-items: center;
+  display: inline-flex;
+}
+
+.control.has-icons-left .icon, .control.has-icons-left .icon.is-left{
+  top: 5px;
+  left: 5px;
+}
+.control.has-icons-right .icon.is-right{
+  top: 5px;
+  right: 15px;
+}
+
 .clickable {
   cursor: pointer;
 }
@@ -28,8 +48,8 @@ a {
 .link {
   cursor: pointer;
   &:hover {
-    color: $primary;
-    text-decoration: underline;
+    color: $dark;
+    font-weight: bold;
   }
 }
 
@@ -68,9 +88,13 @@ a {
 }
 
 // Buefy/Bulma UI overrides
-
-.tabs.is-boxed li.is-active a {
-  color: $primary;
+.notification a:not(.button):not(.dropdown-item){
+  text-decoration: none;
+}
+.b-tabs .tabs.is-boxed li:not(.is-active) a:focus {
+  background-color: $primary;
+  color: white;
+  font-weight: bold;
 }
 
 .tabs.is-boxed.is-right {
@@ -84,7 +108,28 @@ a {
 .b-tabs .tab-content {
   padding: 0.5rem;
 }
-
+.tabs.is-boxed{
+  li.is-active  {
+    a {
+      color: $dark;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:focus {
+      background-color: $primary;
+      color: white;
+      font-weight: bold;
+    }
+  }
+  a:hover{
+    background-color: $primary;
+    color: white;
+    font-weight: bold;
+  }
+}
+.dropdown-content{
+  box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.5), 0 0px 0 1px rgba(10, 10, 10, 0.1);
+}
 .pagination-link.is-current {
   background-color: $dark;
   border-color: $dark;
@@ -97,6 +142,9 @@ a {
 .pagination-link.is-current {
   background-color: $dark;
   border-color: $dark;
+}
+.pagination {
+  padding-bottom: 20px;
 }
 
 a.dropdown-item {
@@ -127,6 +175,13 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 }
 .button.is-danger.is-light {
   color: $danger;
+}
+.button.is-primary.is-light {
+  color: $dark;
+}
+
+.textarea:not([rows]) {
+  min-height: 4em;
 }
 
 // mise en forme modal card synthèse

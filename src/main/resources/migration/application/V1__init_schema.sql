@@ -5,6 +5,7 @@ create table BinaryFile
     updateDate   DateOrNow,
     application  EntityRef REFERENCES Application (id),
     name         Text,
+    comment      TEXT,
     size         INT,
     data         bytea,
     params       jsonb

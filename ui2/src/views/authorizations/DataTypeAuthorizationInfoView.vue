@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
 
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
@@ -72,7 +77,12 @@
       </AuthorizationTable>
 
       <div class="buttons">
-        <b-button icon-left="plus" type="is-primary" @click="handleSubmit(createAuthorization)">
+        <b-button
+          icon-left="plus"
+          type="is-dark"
+          @click="handleSubmit(createAuthorization)"
+          style="margin-bottom: 10px"
+        >
           {{ $t("dataTypeAuthorizations.create") }}
         </b-button>
       </div>
@@ -285,8 +295,11 @@ export default class DataTypeAuthorizationInfoView extends Vue {
             "nivelle": new Authorization(),
             "oir": new Authorization()
           },
-          "plateforme":new Authorization()
-        }
+          plateforme: new Authorization(),
+        },
+      },
+      depot: {
+        projet_manche: new Authorization(),
       },
       "depot": {
         "projet_manche": new Authorization()
@@ -476,6 +489,18 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
 .folder label {
   font-weight: bolder;
-  color: #007f7f;
+  color: $dark;
+}
+.rows .card-content .row.label .columns .column {
+  padding: 0 0 0 10px;
+  border-bottom: 2px solid;
+  border-color: $dark;
+  margin-bottom: 12px;
+}
+ul li.card-content {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+a {
+  color: $dark;
 }
 </style>

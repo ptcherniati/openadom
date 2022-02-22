@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
     <h1 class="title main-title">
       {{
         $t("titles.data-type-authorizations", {
@@ -79,6 +84,22 @@
           </b-button>
         </b-table-column>
       </b-table>
+      <b-pagination
+        v-if="selectedUser && perPage <= selectedUser.length"
+        v-model="currentPage"
+        :per-page="perPage"
+        :total="selectedUser.length"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+      >
+      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -110,6 +131,8 @@ export default class DataTypeAuthorizationsView extends Vue {
   authorizationByUser = {};
   application = new ApplicationResult();
   scopes = [];
+  currentPage = 1;
+  perPage = 15;
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),

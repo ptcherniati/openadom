@@ -3,6 +3,8 @@
     <FontAwesomeIcon
       icon="arrow-left"
       @click="goBack()"
+      @keypress.enter="goBack()"
+      tabindex="0"
       class="clickable mr-4 SubMenu-back-button"
     />
     <span class="SubMenu-root">{{ root }}</span>
@@ -11,6 +13,8 @@
       <span
         @click="index !== paths.length - 1 ? path.clickCb() : ''"
         :class="index !== paths.length - 1 ? 'link' : ''"
+        @keypress.enter="index !== paths.length - 1 ? path.clickCb() : ''"
+        tabindex="0"
         >{{ path.label }}</span
       >
     </div>

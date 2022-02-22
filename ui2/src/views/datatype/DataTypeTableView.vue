@@ -1,7 +1,12 @@
 /* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
-    <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
 
     <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
     <div class="columns" v-if="!showSort && !showFilter">
@@ -20,7 +25,7 @@
               :key="index"
             >
               <b-tag
-                type="is-primary"
+                type="is-dark"
                 size="is-medium"
                 rounded
                 style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
@@ -70,7 +75,7 @@
         <b-button
           icon-left="sort-amount-down"
           :label="$t('applications.trier')"
-          type="is-primary"
+          type="is-dark"
           @click="showSort = !showSort"
           outlined
         ></b-button>
@@ -107,11 +112,16 @@
         </div>
       </div>
     </b-modal>
-    <div v-if="showSort" class="notification" style="background-color: rgba(0, 163, 166, 0.1)">
+    <div
+      v-if="showSort"
+      class="notification"
+      role="search"
+      style="background-color: rgba(0, 163, 166, 0.1)"
+    >
       <h2>{{ $t("applications.trier") }}</h2>
       <div class="content">
         <div class="columns is-multiline">
-          <div class="column is-9-desktop is-12-tablet">
+          <div class="column is-9-widescreen is-12-desktop">
             <b-tabs
               v-model="activeTab"
               :multiline="true"
@@ -166,7 +176,7 @@
               </template>
             </b-tabs>
           </div>
-          <div class="column is-3-desktop is-12-tablet">
+          <div class="column is-3-widescreen is-12-desktop">
             <draggable class="rows">
               <div
                 v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
@@ -183,10 +193,10 @@
                   "
                 >
                   <div class="tags has-addons">
-                    <span class="tag is-primary grape" style="font-size: 1rem">
+                    <span class="tag is-dark grape" style="font-size: 1rem">
                       <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
                     </span>
-                    <span class="tag is-primary orderLabel" style="font-size: 1rem">
+                    <span class="tag is-dark orderLabel" style="font-size: 1rem">
                       {{ variableComponent.variableComponentKey.variable }}
                       {{ $t("ponctuation.colon") }}
                       {{ variableComponent.variableComponentKey.component }}
@@ -194,7 +204,7 @@
                       {{ variableComponent.order }}
                     </span>
                     <a
-                      class="tag is-delete is-primary"
+                      class="tag is-delete is-dark"
                       style="font-size: 1rem; color: white"
                       @click="
                         deleteTag(
@@ -227,11 +237,11 @@
         </div>
       </div>
     </div>
-    <div v-if="showFilter" class="notification">
+    <div v-if="showFilter" class="notification" role="search">
       <h2>{{ $t("applications.filter") }}</h2>
       <div class="columns is-multiline">
         <div
-          class="column is-2-desktop is-6-tablet is-12-mobile"
+          class="column is-2-widescreen is-6-desktop is-12-tablet"
           v-for="(variable, index) in variables"
           :key="variable.id"
           :variable="variable.id"
@@ -288,7 +298,7 @@
         </div>
       </div>
       <div class="columns">
-        <div class="column is-8">
+        <div class="column is-8-widescreen is-6-desktop">
           {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
           <b-field grouped group-multiline>
             <b-taglist>
@@ -311,13 +321,13 @@
             </b-taglist>
           </b-field>
         </div>
-        <div class="column is-2">
+        <div class="column is-2-widescreen is-3-desktop">
           <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
             >{{ $t("dataTypesManagement.réinitialiser") }}
             {{ $t("dataTypesManagement.filtre") }}</b-button
           >
         </div>
-        <div class="column is-2">
+        <div class="column is-2-widescreen is-3-desktop">
           <p class="control">
             <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
               >{{ $t("dataTypesManagement.validate") }}
@@ -402,16 +412,16 @@
         v-model="currentPage"
         :per-page="params.limit"
         :total="totalRows"
-        aria-current-label="Current page"
-        aria-next-label="Next page"
-        aria-page-label="Page"
-        aria-previous-label="Previous page"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
         order="is-centered"
         range-after="3"
         range-before="3"
         :rounded="true"
         @change="changePage"
-        style="padding-bottom: 20px"
       >
       </b-pagination>
     </div>
@@ -863,7 +873,7 @@ $row-variable-height: 60px;
 
 .ASC .asc,
 .DESC .desc {
-  background-color: $primary;
+  background-color: $dark;
   color: white;
 }
 
@@ -882,7 +892,6 @@ $row-variable-height: 60px;
   border: transparent;
   text-decoration: underline;
 }
-
 .columns {
   margin: 0;
 }

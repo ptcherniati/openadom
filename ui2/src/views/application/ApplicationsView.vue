@@ -3,7 +3,7 @@
     <h1 class="title main-title">{{ $t("titles.applications-page") }}</h1>
 
     <div class="columns columnPrincipale">
-      <div class="column is-3-desktop is-12-tablet">
+      <div class="column is-3-widescreen is-12-desktop">
         <section>
           <div v-if="canCreateApplication" class="card is-clickable">
             <div
@@ -11,6 +11,7 @@
               role="button"
               style="margin-bottom: 50px"
               @click="createApplication"
+              tabindex="0"
             >
               <a class="card-header-icon createApplication">
                 <b-icon icon="plus"></b-icon>
@@ -89,10 +90,14 @@
           </div>
         </section>
       </div>
-      <div class="column is-9-desktop is-12-tablet">
+      <div class="column is-9-widescreen is-12-desktop">
         <div class="columns">
-          <div v-for="(application, index) in selectedApplications" v-bind:key="application.name">
-            <div class="column is-3-desktop is-6-tablet is-12-mobile">
+          <div
+            v-for="(application, index) in selectedApplications"
+            v-bind:key="application.name"
+            style="margin-left: 30px"
+          >
+            <div class="column is-3-widescreen is-6-desktop is-12-tablet">
               <div
                 v-if="index >= (current - 1) * perPage && index < current * perPage"
                 class="applicationCard card"
@@ -109,21 +114,37 @@
                     @click="showModal(application.name)"
                   />
                   <b-modal
-                    v-show="isSelectedName == application.name"
+                    v-show="isSelectedName === application.name"
                     :id="application.name"
                     v-model="isCardModalActive"
                   >
                     <div class="card">
                       <div class="card-header">
                         <div class="title card-header-title">
-                          <p field="name">{{ application.name }}</p>
+                          <p field="name">{{ application.localName }}</p>
                         </div>
                       </div>
                       <div class="card-content">
                         <div class="content">
-                          <p>
-                            {{ application.referenceType }} {{ $t("ponctuation.comma") }}
-                            {{ application.dataType }}
+                          <p
+                            v-html="
+                              $t('applications.version', {
+                                applicationName: application.localName,
+                                version: application.configuration.application.version,
+                              })
+                            "
+                          />
+                          <p class="comment">
+                            <span
+                              :class="application.comment ? 'has-text-primary' : 'has-text-warning'"
+                            >
+                              {{
+                                application.comment
+                                  ? $t("applications.comment")
+                                  : $t("applications.no-comment")
+                              }}
+                            </span>
+                            <span>{{ application.comment }}</span>
                           </p>
                         </div>
                       </div>
@@ -178,6 +199,12 @@
           :range-after="2"
           :range-before="2"
           :rounded="true"
+          role="navigation"
+          :aria-label="$t('menu.aria-pagination')"
+          :aria-current-label="$t('menu.aria-curent-page')"
+          :aria-next-label="$t('menu.aria-next-page')"
+          :aria-previous-label="$t('menu.aria-previous-page')"
+          order="is-centered"
           :total="applications.length"
         >
         </b-pagination>
@@ -294,7 +321,7 @@ export default class ApplicationsView extends Vue {
   margin: 0px;
 
   &.columnPrincipale {
-    margin-left: 100px;
+    margin-left: 50px;
     margin-top: 50px;
   }
 }
@@ -302,6 +329,11 @@ export default class ApplicationsView extends Vue {
 .column {
   display: grid;
 
+  .comment {
+    display: flex;
+    align-items: center;
+    align-content: start;
+  }
   .card {
     &.applicationCard {
       width: 300px;
@@ -335,5 +367,11 @@ export default class ApplicationsView extends Vue {
     text-transform: uppercase;
     margin-bottom: 0px;
   }
+}
+
+.control.has-icons-left .icon,
+.control.has-icons-right .icon {
+  top: 5px;
+  left: 5px;
 }
 </style>

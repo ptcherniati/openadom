@@ -1,7 +1,12 @@
 <template>
   <div>
     <PageView class="with-submenu">
-      <SubMenu :paths="subMenuPaths" :root="application.localName || application.title" />
+      <SubMenu
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
+        :aria-label="$t('menu.aria-sub-menu')"
+      />
       <h1 class="title main-title">
         {{
           $t("titles.data-types-repository", {
@@ -69,9 +74,9 @@
             <b-collapse animation="slide" aria-id="fileDeposit" class="card">
               <template #trigger="props">
                 <div aria-controls="fileDeposit" class="card-header" role="button">
-                  <p class="card-header-title">
+                  <h2 class="card-header-title">
                     {{ $t("dataTypesRepository.card-title-upload-file") }}
-                  </p>
+                  </h2>
                   <a class="card-header-icon">
                     <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"></b-icon>
                   </a>
@@ -125,7 +130,9 @@
                     </div>
                   </div>
                   <div class="columns">
-                    <!-- TO DO ajouter un champs commentaire -->
+                    <b-field class="column" :label="$t('dataTypesRepository.comment')" expanded>
+                      <b-input v-model="comment" maxlength="200" type="textarea"></b-input>
+                    </b-field>
                   </div>
                 </div>
               </div>
@@ -146,7 +153,7 @@
           <div class="card-content">
             <table
               v-if="datasets && Object.keys(datasets).length"
-              class="table is-striped is-fullwidth"
+              class="table is-striped is-fullwidth numberData"
               style="text-align: center; vertical-align: center"
             >
               <caption>
@@ -163,6 +170,8 @@
                 v-for="(dataset, periode) in datasets"
                 :key="dataset.id"
                 @click="showDatasets(dataset)"
+                @keypress.enter="showDatasets(dataset)"
+                tabindex="0"
                 style="cursor: pointer"
               >
                 <td align>{{ periode }}</td>
@@ -194,7 +203,20 @@
                 <th align>{{ $t("dataTypesRepository.table-file-data-delete") }}</th>
               </tr>
               <tr v-for="dataset in currentDataset" :key="dataset.id">
-                <td align>{{ dataset.id.slice(0, 8) }}</td>
+                <td align>
+                  <b-tooltip type="is-dark" :id="dataset.id" multilined role="tooltip">
+                    <template v-slot:content>
+                      <h3>{{ $t("dataTypesRepository.comment") }} {{ $t("ponctuation.colon") }}</h3>
+                      <p>{{ UTCToString(dataset.params.binaryFiledataset.comment) }}</p>
+                    </template>
+                    <a
+                      :aria-describedby="dataset.id"
+                      tabindex="0"
+                      @keypress.enter="changeCss(dataset.id)"
+                      >{{ dataset.id.slice(0, 8) }}</a
+                    >
+                  </b-tooltip>
+                </td>
                 <td align>{{ dataset.size }}</td>
                 <td align>{{ UTCToString(dataset.params.createdate) }}</td>
                 <td align>{{ dataset.createuser }}</td>
@@ -207,16 +229,18 @@
                       size="is-medium"
                       type="is-primary is-light"
                       @click="publish(dataset, !dataset.params.published)"
+                      style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                     />
                   </b-field>
                 </td>
                 <td>
                   <b-field>
                     <b-button
-                      icon-right="trash-alt"
+                      icon-right="times-circle"
                       size="is-medium"
                       type="is-danger is-light"
                       @click="remove(dataset, dataset.params.published)"
+                      style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                     />
                   </b-field>
                 </td>
@@ -279,6 +303,7 @@ export default class DataTypesRepositoryView extends Vue {
   file = null;
   startDate = null;
   endDate = null;
+  comment = "";
   currentDataset = null;
 
   mounted() {
@@ -288,6 +313,12 @@ export default class DataTypesRepositoryView extends Vue {
     this.$on("deleted", this.updateDatasets);
     this.$on("listFilesUploaded", this.getDatasetMap);
     this.$on("parseAuth", this.parseAuth);
+  }
+
+  changeCss(id) {
+    if (document.getElementById(id).querySelector(".tooltip-content").style.display === "block")
+      document.getElementById(id).querySelector(".tooltip-content").style.display = "none";
+    else document.getElementById(id).querySelector(".tooltip-content").style.display = "block";
   }
 
   created() {
@@ -328,6 +359,7 @@ export default class DataTypesRepositoryView extends Vue {
         }, {}),
         from: "",
         to: "",
+        comment: "",
       });
       this.requiredauthorizationsObject = Object.keys(this.authorizations).reduce((acc, auth) => {
         acc[auth] = null;
@@ -428,7 +460,8 @@ export default class DataTypesRepositoryView extends Vue {
           /(.{10})T(.{8}).*/
             .exec(new Date(this.endDate).toISOString())
             .filter((a, i) => i != 0)
-            .join(" ")
+            .join(" "),
+          this.comment
         ),
         false
       );
@@ -438,6 +471,7 @@ export default class DataTypesRepositoryView extends Vue {
         this.file,
         fileOrId
       );
+      console.log(fileOrId);
       this.$emit("uploaded", uuid);
     }
   }
@@ -616,7 +650,10 @@ export default class DataTypesRepositoryView extends Vue {
     overflow-wrap: break-word;
   }
 }
-
+.dropdown-content {
+  margin-left: 10px;
+  margin-right: -30px;
+}
 table.datasetsPanel {
   width: 50%;
 }
@@ -626,5 +663,23 @@ table.datasetsPanel th,
 table.datasetsPanel td {
   border-collapse: collapse;
   text-align: center;
+}
+.numberData tr:hover td {
+  background-color: $primary;
+  color: white;
+}
+
+caption {
+  color: $dark;
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.b-tooltip {
+  .tooltip-trigger a {
+  }
+  .tooltip-content {
+  }
 }
 </style>

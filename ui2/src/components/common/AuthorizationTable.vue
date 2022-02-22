@@ -13,7 +13,7 @@
             :class="{ hover: upHere && scope.isLeaf }"
             class="column"
           >
-            <b-button
+            <a
               v-if="
                 column.display &&
                 indexColumn == 'label' &&
@@ -21,10 +21,10 @@
               "
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
               :field="indexColumn"
-              :label="localName(scope)"
               @click="indexColumn == 'label' && toggle(index)"
-            />
-            <b-field
+              >{{ localName(scope) }}</a
+            >
+            <p
               v-else-if="
                 column.display &&
                 indexColumn == 'label' &&
@@ -32,8 +32,10 @@
               "
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
               :field="indexColumn"
-              :label="localName(scope)"
-            />
+            >
+              {{ localName(scope) }}
+            </p>
+
             <b-field v-else-if="column.display && indexColumn != 'extraction'" :field="indexColumn">
               <b-icon
                 :icon="
@@ -49,6 +51,7 @@
               v-else-if="column.display && indexColumn == 'extraction'"
               :field="indexColumn"
               class="row"
+              style="margin-top: 6px"
             >
               <div class="columns">
                 <b-icon
@@ -79,7 +82,6 @@
                   class="column"
                   field="label"
                   type="is-primary"
-                  @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
                   @input.capture="selectCheckbox($event, index, indexColumn, scope)"
                 >
                 </b-taginput>
@@ -275,7 +277,7 @@ export default class AuthorizationTable extends Vue {
       for (var reference in this.authReference) {
         var state = 0;
         if (!this.localAuthorizationsTree) {
-          state = 0;
+          state = 1;
         } else if (this.localAuthorizationsTree?.[index] instanceof Authorization) {
           state = 1;
         } else if (this.localAuthorizationsTree?.[index]?.[reference]) {
@@ -524,6 +526,16 @@ export default class AuthorizationTable extends Vue {
         authorizationScope[id] = scope.key;
         state = 1;
       }
+    } else if (event instanceof Array) {
+      state = event.length ? 1 : 0;
+      eventType = event.length ? "add-authorization" : "delete-authorization";
+      localAuthorizationsTree[indexColumn][index].dataGroups = event;
+
+      // si indeterminate alors je ne supprime les enfants que
+    } else if (event instanceof Date) {
+      state = event ? 1 : 0;
+      eventType = event ? "add-authorization" : "delete-authorization";
+      localAuthorizationsTree[indexColumn][index][fromOrTo] = event;
     }
     if (this.EXTRACTION == indexColumn) {
       if (event instanceof Array) {
@@ -620,8 +632,7 @@ export default class AuthorizationTable extends Vue {
 <style lang="scss" scoped>
 .authorizationTable {
   margin-left: 10px;
-  margin-right: 10px;
-  padding: 5px;
+  padding: 0 0 0 5px;
 
   button {
     opacity: 0.75;
@@ -634,5 +645,23 @@ export default class AuthorizationTable extends Vue {
   dgSelected {
     color: #007f7f;
   }
+}
+a {
+  color: $dark;
+  font-weight: bold;
+  text-decoration: underline;
+}
+a:hover {
+  color: $primary;
+  text-decoration: none;
+}
+p {
+  font-weight: bold;
+}
+::marker {
+  color: transparent;
+}
+ul.rows {
+  margin-bottom: 12px;
 }
 </style>

@@ -1,44 +1,49 @@
 <template>
   <ModalCard
-      v-show="open"
-      :title="dataType && (dataType.localName || dataType.label)"
-      :closeCb="closeCb">
+    v-show="open"
+    :title="dataType && (dataType.localName || dataType.label)"
+    :closeCb="closeCb"
+  >
     <div class="modal-card" style="width: auto">
       <div v-if="options && options.synthesis">
         <b-collapse
-            class="card"
-            animation="slide"
-            :aria-id="key"
-            v-for="(option, key) in options.synthesis"
-            :key="key"
-            style="width: auto">
+          class="card"
+          animation="slide"
+          :aria-id="key"
+          v-for="(option, key) in options.synthesis"
+          :key="key"
+          style="width: auto"
+        >
           <template #trigger="props">
             <div class="card-header" v-show="key != 'minmax' && key != 'ranges'">
               <p class="card-header-title">
                 {{ key }}
                 <availiblity-chart :minmax="option.minmax" :ranges="option.ranges" :id="key" />
               </p>
-              <a class="card-header-icon"
-                  :aria-controls="key"
-                  role="button">
-                <b-icon
-                    :icon="props.open ? 'menu-down' : 'menu-up'">
-                </b-icon>
+              <a class="card-header-icon" :aria-controls="key" role="button">
+                <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"> </b-icon>
               </a>
             </div>
           </template>
-          <div class="card-content" v-for="(option2, key2) in Object.values(option)" :key="key2" v-show="option2.aggregation">
+          <div
+            class="card-content"
+            v-for="(option2, key2) in Object.values(option)"
+            :key="key2"
+            v-show="option2.aggregation"
+          >
             <b-field v-if="option2.aggregation">
-                {{ option2.aggregation }}
-                <availiblity-chart
-                    :minmax="option2.minmax"
-                    :ranges="
-                option2.ranges.reduce((acc, r) => {
-                  acc.push(r.range);
-                  return acc;}, [])"
-                    :id="key2"
-                />
-              </b-field>
+              {{ option2.aggregation }}
+              <availiblity-chart
+                :minmax="option2.minmax"
+                :ranges="
+                  option2.ranges.reduce((acc, r) => {
+                    acc.push(r.range);
+                    return acc;
+                  }, [])
+                "
+                :id="key2"
+              />
+            </b-field>
           </div>
         </b-collapse>
       </div>
@@ -52,7 +57,7 @@ import AvailiblityChart from "../charts/AvailiblityChart.vue";
 import ModalCard from "@/components/charts/ModalCard";
 
 @Component({
-  components: {ModalCard, AvailiblityChart },
+  components: { ModalCard, AvailiblityChart },
 })
 export default class DetailModalCard extends Vue {
   @Prop({ default: false }) open;
@@ -63,7 +68,7 @@ export default class DetailModalCard extends Vue {
 
   consultAuthorization() {
     this.$router.push(
-        `/applications/${this.applicationName}/dataTypes/${this.dataType.id}/authorizations`
+      `/applications/${this.applicationName}/dataTypes/${this.dataType.id}/authorizations`
     );
   }
 }
@@ -78,7 +83,7 @@ export default class DetailModalCard extends Vue {
     margin-bottom: 0.5rem;
   }
 }
-.modal-overlay  {
+.modal-overlay {
   .modal-card {
     width: 90%;
   }
@@ -86,7 +91,7 @@ export default class DetailModalCard extends Vue {
     width: 90%;
   }
 }
-.animation-content.modal-content{
+.animation-content.modal-content {
   max-width: 1400px;
 }
 </style>

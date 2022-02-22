@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" >
+  <div class="modal-overlay">
     <h1 class="title main-title">{{ title }}</h1>
     <slot></slot>
   </div>
@@ -51,7 +51,7 @@ export default class ModalCard extends Vue {
   top: 0;
   right: 0;
 }
-.animation-content.modal-content{
+.animation-content.modal-content {
   max-width: 1400px;
 }
 </style>
