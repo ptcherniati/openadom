@@ -86,6 +86,34 @@ references:
       nom_key:
       nom_fr:
       nom_en:
+  modalites:
+    keyColumns: [code]
+    columns:
+      Variable de forcage:
+      code:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  version_de_traitement:
+    keyColumns: [site, traitement]
+    columns:
+      site:
+      traitement:
+      version:
+      date début:
+      date fin:
+      commentaire_fr:
+      commentaire_en:
+      modalites:
+    validations:
+      modalitesRef:
+        description: "référence aux modalités"
+        checker:
+          name: Reference
+          params:
+            refType: modalites
+            columns: modalites
 compositeReferences:
   localizations:
     components:

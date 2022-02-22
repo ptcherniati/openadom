@@ -181,6 +181,8 @@ public class Fixtures {
         referentielFiles.put("sites", "/data/acbb/sites.csv");
         referentielFiles.put("parcelles", "/data/acbb/parcelle.csv");
         referentielFiles.put("unites", "/data/acbb/unites.csv");
+        referentielFiles.put("modalites", "/data/acbb/modalites.csv");
+        referentielFiles.put("version_de_traitement", "/data/acbb/version_de_traitement.csv");
         return referentielFiles;
     }
 
