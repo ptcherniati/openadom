@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext {
-
     private final Map<ReferenceColumn, String> values;
 
     public ReferenceDatum() {

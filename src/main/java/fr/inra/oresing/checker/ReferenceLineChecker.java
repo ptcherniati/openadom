@@ -3,6 +3,7 @@ package fr.inra.oresing.checker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
+import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 
 import java.util.UUID;
