@@ -37,14 +37,15 @@
         :closeCb="(newVal) => (openPanel = newVal)"
         :applicationName="applicationName"
       />
-      <SynthesisDetailPanel
-        :leftAlign="false"
-        :options="currentOptions"
-        :open="openSynthesisDetailPanel"
-        :dataType="chosenDataType"
-        :closeCb="(newVal) => (openSynthesisDetailPanel = newVal)"
-        :applicationName="applicationName"
-      />
+      <b-modal v-model="openSynthesisDetailPanel" width="100rem">
+        <DetailModalCard
+            v-show="openSynthesisDetailPanel"
+            :options="currentOptions"
+            :dataType="chosenDataType"
+            :closeCb="(newVal) => (openSynthesisDetailPanel = newVal)"
+            :applicationName="applicationName">
+        </DetailModalCard>
+      </b-modal>
     </div>
     <div v-if="errorsMessages.length">
       <div v-for="msg in errorsMessages" v-bind:key="msg">
@@ -79,9 +80,11 @@ import { InternationalisationService } from "@/services/InternationalisationServ
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 import SynthesisDetailPanel from "@/components/charts/SynthesisDetailPanel.vue";
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
+import DetailModalCard from "@/components/charts/DetailModalCard";
 
 @Component({
   components: {
+    DetailModalCard,
     CollapsibleTree,
     PageView,
     SubMenu,

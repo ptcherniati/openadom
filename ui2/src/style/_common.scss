@@ -128,3 +128,16 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 .button.is-danger.is-light {
   color: $danger;
 }
+
+// mise en forme modal card synthèse
+#ranges {
+  display: none;
+}
+#minmax {
+  display: none;
+}
+.modal {
+  .animation-content .modal-card {
+    margin: auto;
+  }
+}
