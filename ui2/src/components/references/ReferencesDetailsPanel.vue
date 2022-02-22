@@ -2,7 +2,7 @@
   <SidePanel
     :open="open"
     :leftAlign="leftAlign"
-    :title="reference && (reference.localName || reference.label)"
+    :title="reference && (reference.refNameLocal || reference.label)"
     :closeCb="closeCb"
   >
     <div class="Panel-buttons">

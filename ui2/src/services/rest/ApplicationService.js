@@ -8,9 +8,10 @@ export class ApplicationService extends Fetcher {
     super();
   }
 
-  async createApplication(applicationConfig) {
+  async createApplication(applicationConfig, comment) {
     return this.post("applications/" + applicationConfig.name, {
       file: applicationConfig.file,
+      comment: comment,
     });
   }
 
@@ -29,6 +30,12 @@ export class ApplicationService extends Fetcher {
   async validateConfiguration(applicationConfig) {
     return this.post("validate-configuration", {
       file: applicationConfig.file,
+    });
+  }
+  async changeConfiguration(applicationConfig, comment) {
+    return this.post("/applications/" + applicationConfig.name + "/configuration", {
+      file: applicationConfig.file,
+      comment: comment,
     });
   }
 

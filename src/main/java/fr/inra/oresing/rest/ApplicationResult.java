@@ -12,6 +12,7 @@ public class ApplicationResult {
     String id;
     String name;
     String title;
+    String comment;
     InternationalizationMap internationalization;
     Map<String, Reference> references;
     Map<String, DataType> dataTypes;

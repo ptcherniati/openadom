@@ -19,7 +19,9 @@
         "pwd-placeholder":"Ex: xxxx",
         "pwd-forgotten":"Forgotten password ? ",
         "register":"Register",
-        "confirm-pwd":"Confirmer le mot de passe"
+        "confirm-pwd":"Confirmer le mot de passe",
+        "aria-btn-login": "Validate login form button",
+        "aria-btn-signup": "Create an account button"
     },
     "validation":{
         "obligatoire":"Mandatory",
@@ -36,6 +38,7 @@
         "user-unknown":"Unknown user",
         "application-creation-success":"The app has been created!",
         "application-validate-success":"The YAML file is valid!",
+        "application-edit-success": "The YAML file is update !",
         "warning":"Warning !",
         "reference-deletion-msg":"You're about to delete the reference : {label}. Are you sure ?",
         "delete":"Delete",
@@ -44,7 +47,8 @@
         "data-updated":"Data type updated",
         "registered-user":"User registered",
         "revoke-authorization":"Authorization revoked",
-        "create-authorization":"Authorization created"
+        "create-authorization":"Authorization created",
+        "dataTypeFiltreEmpty" : "No data matching your criteria"
     },
     "message":{
         "app-config-error":"Error in yaml file",
@@ -57,11 +61,19 @@
         "references":"References",
         "french":"Français",
         "english":"English",
-        "language":"Language"
+        "language":"Language",
+        "aria-sub-menu": "Access path",
+        "aria-nav-bar": "Main menu",
+        "aria-pagination": "Pagination",
+        "aria-curent-page": "Curent page",
+        "aria-next-page": "Next page",
+        "aria-previous-page": "Previous page"
     },
     "applications":{
         "chose-config":"Chose a configuration",
         "create":"Create application",
+        "comment": "Comment : ",
+        "no-comment": "No comment",
         "test":"Test",
         "name":"Application name",
         "name-placeholder":"Ex : olac",
@@ -73,7 +85,9 @@
         "trierA_z":"Name A - z",
         "trierZ_a":"Name Z - a",
         "trierRecent":"Recent date",
-        "filter":"Filter by"
+        "filter":"Filter by",
+        "change": "Edit app",
+        "version" : "The current version of the application <b class=\"has-text-primary\">{applicationName}</b> is <b class=\"has-text-primary\">{version}.</b>"
     },
     "errors":{
         "emptyFile":"File is empty",
@@ -170,12 +184,14 @@
         "filtered": "Filters used",
         "sorted": "The sorts used",
         "title-modal-numeric": "Choice of value range",
-        "title-modal-date": "Choice of date range"
+        "title-modal-date": "Choice of date range",
+        "manage-datasets": "Manage datasets"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Drop a version on this dataset",
         "start-date": "Start date",
         "end-date": "End date",
+        "comment": "Comment",
         "choose-file": "Choose a file",
         "placeholder-datepicker": "Type or select a date...",
         "placeholder-select": "Select...",

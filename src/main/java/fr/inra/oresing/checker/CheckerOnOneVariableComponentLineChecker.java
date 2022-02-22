@@ -5,8 +5,9 @@ import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import org.assertj.core.util.Strings;
 
@@ -54,4 +55,6 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
     }
 
     ValidationCheckResult check(String value);
+
+    SqlPrimitiveType getSqlType();
 }

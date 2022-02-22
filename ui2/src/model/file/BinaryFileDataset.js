@@ -3,7 +3,8 @@ export class BinaryFileDataset {
   requiredauthorizations = {};
   from;
   to;
-  constructor(datatypeOrBinaryDataset, requiredauthorizations, from, to) {
+  comment;
+  constructor(datatypeOrBinaryDataset, requiredauthorizations, from, to, comment) {
     if (typeof datatypeOrBinaryDataset == "object") {
       Object.keys(this).forEach(
         (key) => (this[key] = datatypeOrBinaryDataset[key] ? datatypeOrBinaryDataset[key] : null)
@@ -13,6 +14,7 @@ export class BinaryFileDataset {
       this.requiredauthorizations = requiredauthorizations == null ? {} : requiredauthorizations;
       this.from = from;
       this.to = to;
+      this.comment = comment;
     }
   }
 }

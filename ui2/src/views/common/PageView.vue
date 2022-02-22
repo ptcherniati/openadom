@@ -1,5 +1,5 @@
 <template>
-  <div class="PageView">
+  <div class="PageView" role="main">
     <MenuView v-if="hasMenu" />
     <div :class="`PageView-container ${hasMenu ? '' : 'noMenu'}`">
       <slot></slot>

@@ -20,6 +20,7 @@ public class BinaryFileDataset {
     private Map<String, String> requiredauthorizations = new HashMap<>();
     private String from;
     private String to;
+    private String comment;
 
     @Override
     public String toString() {
