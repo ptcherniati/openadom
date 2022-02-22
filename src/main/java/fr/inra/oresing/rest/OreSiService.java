@@ -467,8 +467,8 @@ public class OreSiService {
                          * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
                          */
 
-                        if (storedReferences.containsKey(hierarchicalKey)) {
-                            e.setId(storedReferences.get(hierarchicalKey));
+                        if (storedReferences.containsKey(hierarchicalKey.getSql())) {
+                            e.setId(storedReferences.get(hierarchicalKey.getSql()));
                         }
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
