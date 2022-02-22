@@ -502,7 +502,7 @@ public class OreSiService {
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
                 .orElse(null);
-        Map<String, List<Long>> missingParentReferences = new HashMap<>();
+        ListMultimap<String, Long> missingParentReferences = LinkedListMultimap.create();
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             return recordStream;
         }
@@ -532,12 +532,10 @@ public class OreSiService {
                         if (!referenceUUIDs.containsKey(s)) {
                             final UUID uuid = UUID.randomUUID();
                             referenceUUIDs.put(s, uuid);
-                            missingParentReferences
-                                    .computeIfAbsent(s, k -> new LinkedList<>())
-                                    .add(csvrecord.getRecordNumber());
+                            missingParentReferences.put(s, csvrecord.getRecordNumber());
                         }
                     }
-                    missingParentReferences.remove(naturalKey);
+                    missingParentReferences.removeAll(naturalKey);
                     return;
                 })
                 .collect(Collectors.toList());
@@ -545,7 +543,7 @@ public class OreSiService {
                 .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
 
         if (!missingParentReferences.isEmpty()) {
-            missingParentReferences.entrySet().stream()
+            missingParentReferences.asMap().entrySet().stream()
                     .forEach(entry -> {
                         final String missingParentReference = entry.getKey();
                         entry.getValue().stream().forEach(
