@@ -83,7 +83,12 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(register)" icon-left="user-plus">
+      <b-button
+        type="is-primary"
+        @click="handleSubmit(register)"
+        icon-left="user-plus"
+        :aria-label="$t('login.aria-btn-signup')"
+      >
         {{ $t("login.register") }}
       </b-button>
     </div>

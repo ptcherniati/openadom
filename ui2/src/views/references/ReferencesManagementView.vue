@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.localName" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
     <h1 class="title main-title">
       {{ $t("titles.references-page", { applicationName: application.localName }) }}
     </h1>
@@ -21,6 +26,22 @@
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
       />
+      <!--      <b-pagination
+        v-model="currentPage"
+        :per-page="params.limit"
+        :total="references.length"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+        style="padding-bottom: 20px"
+      >
+      </b-pagination>-->
     </div>
   </PageView>
 </template>
@@ -52,6 +73,7 @@ export default class ReferencesManagementView extends Vue {
   alertService = AlertService.INSTANCE;
 
   references = [];
+  currentPage = 1;
   openPanel = false;
   chosenRef = null;
   application = new ApplicationResult();
@@ -61,7 +83,7 @@ export default class ReferencesManagementView extends Vue {
       this.$t("referencesManagement.consult"),
       "eye",
       (label) => this.consultReference(label),
-      "is-primary"
+      "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
       this.downloadReference(label)

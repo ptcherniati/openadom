@@ -1,14 +1,10 @@
 package fr.inra.oresing.model;
 
 import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.persistence.UserRepository;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.postgresql.util.Base64;
 
-import javax.xml.bind.DatatypeConverter;
-import java.util.Date;
 import java.util.UUID;
 
 @Getter
@@ -20,6 +16,7 @@ public class BinaryFile extends OreSiEntity {
     }
     private UUID application;
     private String name;
+    private String comment;
     private long size;
     private byte[] data;
     private BinaryFileInfos params;

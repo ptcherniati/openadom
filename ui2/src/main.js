@@ -51,6 +51,9 @@ import {
   faSortAmountDown,
   faSortUp,
   faSortDown,
+  faArchive,
+  faTimesCircle,
+  faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -100,7 +103,10 @@ library.add(
   faStream,
   faSortAmountDown,
   faSortDown,
-  faSortUp
+  faSortUp,
+  faArchive,
+  faTimesCircle,
+  faEdit
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
@@ -149,7 +155,7 @@ extend("validApplicationName", {
 extend("validApplicationNameLength", {
   message: i18n.t("validation.invalid-application-name-length"),
   validate: (value) => {
-    return value && value.length >= 4 && value.length <= 20;
+    return value && value.length >= 3 && value.length <= 20;
   },
 });
 

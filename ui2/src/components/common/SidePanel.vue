@@ -38,14 +38,18 @@ export default class SidePanel extends Vue {
 
 <style lang="scss" scoped>
 .SidePanel {
-  background-color: $light;
+  background-color: $white;
   z-index: 1;
-  position: absolute;
+  position: fixed;
   height: 100%;
   top: 0;
   width: 33%;
   padding: $container-padding-vert 2.5rem;
   transition: transform 250ms;
+
+  .title {
+    color: $dark;
+  }
 
   &.right-align {
     right: 0;

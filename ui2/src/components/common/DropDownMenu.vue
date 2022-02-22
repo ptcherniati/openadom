@@ -4,7 +4,7 @@
       <b-dropdown-item v-if="option.isLeaf" :value="option.referenceValues" @click="select()">
         {{ option.localName }}
       </b-dropdown-item>
-      <b-dropdown v-else v-on:select-menu-item="select" :ref="option.key" expanded >
+      <b-dropdown v-else v-on:select-menu-item="select" :ref="option.key" expanded>
         <template #trigger="{ active }">
           <b-button
             expanded
@@ -47,21 +47,21 @@ export default class DropDownMenu extends Vue {
   margin-right: 10px;
   padding: 5px;
   button {
-    background-color: rgba(0,100,100, 0.85);
+    background-color: rgba(0, 100, 100, 0.85);
   }
-  .dropdown-menu .dropdown-content .dropDownMenu  {
-    button{
-      background-color: rgba(0,100,100, 0.70);
+  .dropdown-menu .dropdown-content .dropDownMenu {
+    button {
+      background-color: rgba(0, 100, 100, 0.7);
     }
-    .dropdown-menu .dropdown-content .dropDownMenu  {
-      button{
-        background-color: rgba(0,100,100, 0.55);
-        .dropdown-menu .dropdown-content .dropDownMenu  {
-          button{
-            background-color: rgba(0,100,100, 0.40);
-            .dropdown-menu .dropdown-content .dropDownMenu  {
-              button{
-                background-color: rgba(0,100,100, 0.25);
+    .dropdown-menu .dropdown-content .dropDownMenu {
+      button {
+        background-color: rgba(0, 100, 100, 0.55);
+        .dropdown-menu .dropdown-content .dropDownMenu {
+          button {
+            background-color: rgba(0, 100, 100, 0.4);
+            .dropdown-menu .dropdown-content .dropDownMenu {
+              button {
+                background-color: rgba(0, 100, 100, 0.25);
                 color: black;
               }
             }

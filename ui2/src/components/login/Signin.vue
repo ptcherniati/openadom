@@ -16,7 +16,12 @@
               {{ $t("validation.obligatoire") }}
             </span>
           </template>
-          <b-input v-model="login" :placeholder="$t('login.login-placeholder')"> </b-input>
+          <b-input
+            v-model="login"
+            title="Champs nom d'utilisateur"
+            :placeholder="$t('login.login-placeholder')"
+          >
+          </b-input>
         </b-field>
       </ValidationProvider>
 
@@ -53,7 +58,12 @@
     </section>
 
     <div class="buttons">
-      <b-button type="is-primary" @click="handleSubmit(signIn)" icon-left="sign-in-alt">
+      <b-button
+        type="is-primary"
+        @click="handleSubmit(signIn)"
+        icon-left="sign-in-alt"
+        :aria-label="$t('login.aria-btn-login')"
+      >
         {{ $t("login.signin") }}
       </b-button>
       <router-link :to="{ path: '/' }">

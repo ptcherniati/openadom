@@ -5,6 +5,7 @@ export class Application {
   dataType;
   id;
   name;
+  comment;
   referenceType;
   updateDate;
 }

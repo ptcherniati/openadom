@@ -105,6 +105,7 @@ public class OreSiResourcesTest {
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                             .file(configuration)
+                            .param("comment", "commentaire")
                             .cookie(authCookie))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -124,6 +125,7 @@ public class OreSiResourcesTest {
 
         ApplicationResult applicationResult = objectMapper.readValue(response, ApplicationResult.class);
 
+        Assert.assertEquals("commentaire", applicationResult.getComment());
         Assert.assertEquals("monsore", applicationResult.getName());
         Assert.assertEquals(Set.of("especes", "projet", "sites", "themes", "type de fichiers", "type_de_sites", "types_de_donnees_par_themes_de_sites_et_projet", "unites", "valeurs_qualitatives", "variables", "variables_et_unites_par_types_de_donnees"), applicationResult.getReferences().keySet());
 //        Assert.assertEquals(List.of("pem"), applicationResult.getDataType());

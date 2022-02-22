@@ -162,10 +162,11 @@ public class OreSiService {
         return Ltree.escapeToLabel(key);
     }
 
-    protected UUID storeFile(Application app, MultipartFile file) throws IOException {
+    protected UUID storeFile(Application app, MultipartFile file, String comment) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
+        binaryFile.setComment(comment);
         binaryFile.setApplication(app.getId());
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
@@ -178,9 +179,10 @@ public class OreSiService {
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         Application app = new Application();
         app.setName(name);
+        app.setComment(comment);
         UUID result = changeApplicationConfiguration(app, configurationFile, this::initApplication);
         relationalService.createViews(app.getName());
 
@@ -239,10 +241,11 @@ public class OreSiService {
         return app;
     }
 
-    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         relationalService.dropViews(nameOrId);
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
+        app.setComment(comment);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
         Application application = getApplication(nameOrId);
@@ -360,7 +363,7 @@ public class OreSiService {
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
         app = initApplication.apply(app);
-        UUID confId = storeFile(app, configurationFile);
+        UUID confId = storeFile(app, configurationFile, app.getComment());
         app.setConfigFile(confId);
         UUID appId = repo.application().store(app);
         return appId;
@@ -368,7 +371,7 @@ public class OreSiService {
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file);
+        UUID fileId = storeFile(app, file,"");
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
@@ -748,7 +751,7 @@ public class OreSiService {
                 .orElseGet(() -> {
                     UUID fileId = null;
                     try {
-                        fileId = storeFile(app, file);
+                        fileId = storeFile(app, file,"");
                     } catch (IOException e) {
                         return null;
                     }
