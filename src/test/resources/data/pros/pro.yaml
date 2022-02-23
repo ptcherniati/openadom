@@ -1,7 +1,7 @@
 version: 0 
 application:
   defaultLanguage: fr
-  internationalization:
+  internationalizationName:
     fr: SOERE Pros
     en: Pros SOERE
   name: Pros

@@ -2,6 +2,9 @@ version: 0
 application:
   name: foret
   version: 1
+  internationalizationName:
+    fr: ORE F-ORE-T
+    en: ORE F-ORE-T
 compositeReferences:
   localizations:
     components:
