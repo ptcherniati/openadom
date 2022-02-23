@@ -442,8 +442,8 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceInInternationalizationDisplayPatternInDatatype() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplay:\n" +
-                "      sites:", "internationalizationDisplay:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplays:\n" +
+                "      sites:", "internationalizationDisplays:\n" +
                 "      plateforme:");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
