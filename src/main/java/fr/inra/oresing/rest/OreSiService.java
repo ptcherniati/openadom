@@ -467,11 +467,11 @@ public class OreSiService {
                 return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
-            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
+            List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
             Stream<CSVRecord> recordStream = Streams.stream(csvParser);
             if (isRecursive) {
-                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, rowErrors, refType);
-                InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, allErrors, refType);
+                InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
             }
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
@@ -486,25 +486,51 @@ public class OreSiService {
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
                     .map(rowWithReferenceDatum -> {
-                        ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
+                        ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
                         Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
+                        ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
                         lineCheckers.forEach(lineChecker -> {
-                            Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatum);
-                            validationCheckResults.forEach(validationCheckResult -> {
-                                if (validationCheckResult.isSuccess()) {
-                                    if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                                        ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                                        String reference = ((ReferenceLineChecker) lineChecker).getRefType();
-                                        UUID referenceId = referenceValidationCheckResult.getReferenceId();
-                                        referenceDatum.put((ReferenceColumn) referenceValidationCheckResult.getTarget().getTarget(), new ReferenceColumnSingleValue((String) referenceValidationCheckResult.getValue()));
-                                        refsLinkedTo
-                                                .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
-                                                .add(referenceId);
-                                    }
-                                } else {
-                                    rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
+                            Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
+                            if (lineChecker instanceof ReferenceLineChecker) {
+                                ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) lineChecker;
+                                ReferenceColumn referenceColumn = (ReferenceColumn) referenceLineChecker.getTarget().getTarget();
+                                SetMultimap<ReferenceColumn, String> rawValueReplacedByKeys = HashMultimap.create();
+                                String reference = referenceLineChecker.getRefType();
+                                validationCheckResults.stream()
+                                        .filter(ValidationCheckResult::isSuccess)
+                                        .filter(ReferenceValidationCheckResult.class::isInstance)
+                                        .map(ReferenceValidationCheckResult.class::cast)
+                                        .forEach(referenceValidationCheckResult -> {
+                                            UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                                            rawValueReplacedByKeys.put(referenceColumn, (String) referenceValidationCheckResult.getValue());
+                                            refsLinkedTo
+                                                    .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
+                                                    .add(referenceId);
+                                        });
+                                Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();
+                                Set<String> values = rawValueReplacedByKeys.get(referenceColumn);
+                                ReferenceColumnValue referenceColumnNewValue;
+                                switch (multiplicity) {
+                                    case ONE:
+                                        if (values.isEmpty()) {
+                                            referenceColumnNewValue = ReferenceColumnSingleValue.empty();
+                                        } else {
+                                            referenceColumnNewValue = new ReferenceColumnSingleValue(Iterables.getOnlyElement(values));
+                                        }
+                                        break;
+                                    case MANY:
+                                        referenceColumnNewValue = new ReferenceColumnMultipleValue(values);
+                                        break;
+                                    default:
+                                        throw new IllegalStateException("multiplicity = " + multiplicity);
                                 }
-                            });
+                                referenceDatum.put(referenceColumn, referenceColumnNewValue);
+                            }
+                            List<CsvRowValidationCheckResult> rowErrors = validationCheckResults.stream()
+                                    .filter(validationCheckResult -> !validationCheckResult.isSuccess())
+                                    .map(validationCheckResult -> new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()))
+                                    .collect(Collectors.toUnmodifiableList());
+                            allErrors.addAll(rowErrors);
                         });
                         final ReferenceValue e = new ReferenceValue();
                         Preconditions.checkState(!ref.getColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
@@ -571,7 +597,7 @@ public class OreSiService {
                         e.setRefValues(referenceDatum);
                         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
                             ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
-                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
+                            allErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
                             hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
                             return null;
                         } else {
@@ -582,7 +608,7 @@ public class OreSiService {
                     .filter(e -> e != null)
                     .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             referenceValueRepository.storeAll(referenceValuesStream);
-            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+            InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
         }
 
         return fileId;

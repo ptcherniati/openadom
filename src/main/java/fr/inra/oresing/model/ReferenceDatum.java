@@ -78,7 +78,10 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext,
     }
 
     public ReferenceColumnValue put(ReferenceColumn column, ReferenceColumnValue value) {
-        return values.put(column, value);
+        ReferenceColumnValue replaced = values.put(column, value);
+        boolean consistent = replaced == null || replaced.getClass().equals(value.getClass());
+        Preconditions.checkState(consistent, "dans ce cas, on est en train de remplacer un champs avec une valeur qui a une autre multiplicité, c'est sûrement une erreur");
+        return replaced;
     }
 
     public void putAll(ReferenceDatum anotherReferenceDatum) {
