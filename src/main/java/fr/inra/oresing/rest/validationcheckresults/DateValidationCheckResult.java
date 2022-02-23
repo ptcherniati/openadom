@@ -1,7 +1,9 @@
-package fr.inra.oresing.checker;
+package fr.inra.oresing.rest.validationcheckresults;
 
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
+import fr.inra.oresing.checker.CheckerTarget;
+import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import lombok.Value;
 

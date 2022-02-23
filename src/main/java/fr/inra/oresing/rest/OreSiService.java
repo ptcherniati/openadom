@@ -14,6 +14,8 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.Ordering;
@@ -21,9 +23,9 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.DateLineChecker;
-import fr.inra.oresing.checker.DateValidationCheckResult;
 import fr.inra.oresing.checker.FloatChecker;
 import fr.inra.oresing.checker.IntegerChecker;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
@@ -31,7 +33,6 @@ import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
-import fr.inra.oresing.checker.ReferenceValidationCheckResult;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
@@ -67,6 +68,11 @@ import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DuplicationLineValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.MissingParentLineValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -167,10 +173,11 @@ public class OreSiService {
         return Ltree.escapeToLabel(key);
     }
 
-    protected UUID storeFile(Application app, MultipartFile file) throws IOException {
+    protected UUID storeFile(Application app, MultipartFile file, String comment) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
+        binaryFile.setComment(comment);
         binaryFile.setApplication(app.getId());
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
@@ -183,9 +190,10 @@ public class OreSiService {
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         Application app = new Application();
         app.setName(name);
+        app.setComment(comment);
         UUID result = changeApplicationConfiguration(app, configurationFile, this::initApplication);
         relationalService.createViews(app.getName());
 
@@ -244,10 +252,11 @@ public class OreSiService {
         return app;
     }
 
-    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         relationalService.dropViews(nameOrId);
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
+        app.setComment(comment);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
         Application application = getApplication(nameOrId);
@@ -365,18 +374,20 @@ public class OreSiService {
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
         app = initApplication.apply(app);
-        UUID confId = storeFile(app, configurationFile);
+        UUID confId = storeFile(app, configurationFile, app.getComment());
         app.setConfigFile(confId);
         UUID appId = repo.application().store(app);
         return appId;
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file);
+        UUID fileId = storeFile(app, file,"");
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
+        final ImmutableMap<String, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
@@ -397,6 +408,7 @@ public class OreSiService {
         Function<Ltree, Ltree> getHierarchicalReferenceFn;
         Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
         Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
+        ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
@@ -423,8 +435,6 @@ public class OreSiService {
             getHierarchicalReferenceFn = (reference) -> reference;
         }
 
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
-
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(ref.getSeparator())
                 .withSkipHeaderRecord();
@@ -433,7 +443,7 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, ReferenceDatum> csvRecordToLineAsMapFn = line -> {
+            Function<CSVRecord, RowWithReferenceDatum> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
                 ReferenceDatum referenceDatum = new ReferenceDatum();
                 line.forEach(value -> {
@@ -453,15 +463,16 @@ public class OreSiService {
                     }
                     referenceDatum.put(referenceColumn, referenceColumnValue);
                 });
-                return referenceDatum;
+                int lineNumber = Ints.checkedCast(line.getRecordNumber());
+                return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             Stream<CSVRecord> recordStream = Streams.stream(csvParser);
             if (isRecursive) {
-                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
+                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, rowErrors, refType);
+                InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
             }
-            List<Ltree> hierarchicalKeys = new LinkedList<>();
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
                     .map(inter -> inter.getReferences())
@@ -474,7 +485,8 @@ public class OreSiService {
                     .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
-                    .map(referenceDatum -> {
+                    .map(rowWithReferenceDatum -> {
+                        ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
                         Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
                         lineCheckers.forEach(lineChecker -> {
                             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatum);
@@ -490,11 +502,11 @@ public class OreSiService {
                                                 .add(referenceId);
                                     }
                                 } else {
-                                    rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
+                                    rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
                                 }
                             });
                         });
-                        ReferenceValue e = new ReferenceValue();
+                        final ReferenceValue e = new ReferenceValue();
                         Preconditions.checkState(!ref.getColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
                         String naturalKeyAsString = ref.getKeyColumns().stream()
                                 .map(ReferenceColumn::new)
@@ -516,7 +528,9 @@ public class OreSiService {
                                     .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
                                     .map(values -> values.get(naturalKey.getSql()))
                                     .filter(key -> key != null)
-                                    .ifPresent(key -> e.setId(key));
+                                    .ifPresent(key -> {
+                                        e.setId(key);
+                                    });
                             Ltree parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
                             while (parentKey != null) {
                                 recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
@@ -538,6 +552,15 @@ public class OreSiService {
                                 getHierarchicalReferenceFn.apply(selfHierarchicalReference);
                         referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
+
+                        /**
+                         * on remplace l'id par celle en base si elle existe
+                         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
+                         */
+
+                        if (storedReferences.containsKey(hierarchicalKey.getSql())) {
+                            e.setId(storedReferences.get(hierarchicalKey.getSql()));
+                        }
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
@@ -546,22 +569,18 @@ public class OreSiService {
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
                         e.setRefValues(referenceDatum.toJsonForDatabase());
-                        return e;
-                    })
-                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()))
-                    .map(e -> {
-                        if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
-                            /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
-                            dans le fichier. Seule la première ligne est enregistrée
-                             */
-//                            ValidationCheckResult validationCheckResult = new ValidationCheckResult()
-//                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
+                        if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
+                            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
+                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
+                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
+                            return null;
                         } else {
-                            hierarchicalKeys.add(e.getHierarchicalKey());
+                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
+                            return e;
                         }
-                        return e;
                     })
-                    .filter(e -> e != null);
+                    .filter(e -> e != null)
+                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             referenceValueRepository.storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
@@ -569,11 +588,12 @@ public class OreSiService {
         return fileId;
     }
 
-    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap) {
+    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, List<CsvRowValidationCheckResult> rowErrors, String refType) {
         Integer parentRecursiveIndex = recursiveComponentDescription
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
                 .orElse(null);
+        ListMultimap<String, Long> missingParentReferences = LinkedListMultimap.create();
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             return recordStream;
         }
@@ -584,31 +604,44 @@ public class OreSiService {
         List<CSVRecord> collect = recordStream
                 .peek(csvrecord -> {
                     String s = csvrecord.get(parentRecursiveIndex);
+                    String naturalKey = ref.getKeyColumns()
+                            .stream()
+                            .map(kc -> columns.indexOf(kc))
+                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k))?null:Ltree.escapeToLabel(csvrecord.get(k)))
+                            .filter(k->k!=null)
+                            .collect(Collectors.joining("__"));
+                    if (!referenceUUIDs.containsKey(naturalKey)) {
+                        referenceUUIDs.put(naturalKey, UUID.randomUUID());
+                    }
                     if (!Strings.isNullOrEmpty(s)) {
-                        String naturalKey;
                         try {
                             s = Ltree.escapeToLabel(s);
-                            naturalKey = ref.getKeyColumns()
-                                    .stream()
-                                    .map(kc -> columns.indexOf(kc))
-                                    .map(k -> Ltree.escapeToLabel(csvrecord.get(k)))
-                                    .collect(Collectors.joining("__"));
                         } catch (IllegalArgumentException e) {
                             return;
                         }
                         referenceMap.put(Ltree.fromSql(naturalKey), Ltree.fromUnescapedString(s));
                         if (!referenceUUIDs.containsKey(s)) {
-                            referenceUUIDs.put(s, UUID.randomUUID());
-                        }
-                        if (!referenceUUIDs.containsKey(naturalKey)) {
-                            referenceUUIDs.put(naturalKey, UUID.randomUUID());
+                            final UUID uuid = UUID.randomUUID();
+                            referenceUUIDs.put(s, uuid);
+                            missingParentReferences.put(s, csvrecord.getRecordNumber());
                         }
                     }
+                    missingParentReferences.removeAll(naturalKey);
                     return;
                 })
                 .collect(Collectors.toList());
         selfLineChecker
                 .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
+
+        if (!missingParentReferences.isEmpty()) {
+            missingParentReferences.asMap().entrySet().stream()
+                    .forEach(entry -> {
+                        final String missingParentReference = entry.getKey();
+                        entry.getValue().stream().forEach(
+                                lineNumber -> rowErrors.add(new CsvRowValidationCheckResult(new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet()), lineNumber))
+                        );
+                    });
+        }
         return collect.stream();
     }
 
@@ -786,7 +819,7 @@ public class OreSiService {
                 .orElseGet(() -> {
                     UUID fileId = null;
                     try {
-                        fileId = storeFile(app, file);
+                        fileId = storeFile(app, file,"");
                     } catch (IOException e) {
                         return null;
                     }
@@ -1563,6 +1596,12 @@ public class OreSiService {
     private static class RowWithData {
         int lineNumber;
         Datum datum;
+    }
+
+    @Value
+    private static class RowWithReferenceDatum {
+        int lineNumber;
+        ReferenceDatum referenceDatum;
     }
 
     @Value

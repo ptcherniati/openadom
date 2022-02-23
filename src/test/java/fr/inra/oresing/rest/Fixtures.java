@@ -470,6 +470,26 @@ public class Fixtures {
         return "/data/pros/donnees_prelevement_pro.csv";
     }
 
+    public String getDuplicatedApplicationConfigurationResourceName() {
+        return "/data/duplication/duplication.yaml";
+    }
+
+    public Map<String, String> getDuplicatedReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("typezonewithoutduplication", "/data/duplication/typezone.csv");
+        referentielFiles.put("typezonewithduplication", "/data/duplication/typezoneduplique.csv");
+        referentielFiles.put("zonewithoutduplication", "/data/duplication/zone_etude.csv");
+        referentielFiles.put("zonewithduplication", "/data/duplication/zone_etude_dupliqué.csv");
+        referentielFiles.put("zonewithmissingparent", "/data/duplication/zone_etude_missing_parent.csv");
+        return referentielFiles;
+    }
+
+    public Map<String, String> getDuplicatedDataFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("data_without_duplicateds", "/data/duplication/data.csv");
+        return referentielFiles;
+    }
+
     public String getPhysicoChimieSolsProDataResourceName() {
         return "/data/pros/physico_chimie_sols.csv";
     }

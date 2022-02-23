@@ -1,7 +1,8 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.validationcheckresults;
 
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
+import fr.inra.oresing.rest.ValidationCheckResult;
 import lombok.Value;
 
 import java.util.Map;

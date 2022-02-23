@@ -6,7 +6,7 @@ import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.SomethingThatCanProvideEvaluationContext;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.Optional;

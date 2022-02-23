@@ -1,6 +1,11 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.localName" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
     <h1 class="title main-title">
       {{ $t("titles.references-data", { refName: application.localRefName }) }}
     </h1>
@@ -12,9 +17,8 @@
         :isFocusable="true"
         :isHoverable="true"
         :sticky-header="true"
-        :paginated="true"
-        :per-page="15"
         height="100%"
+        style="padding-bottom: 20px"
       >
         <b-table-column
           v-for="column in columns"
@@ -40,6 +44,22 @@
           </b-collapse>
         </b-table-column>
       </b-table>
+      <b-pagination
+        v-if="perPage <= tableValues.length"
+        v-model="currentPage"
+        :per-page="perPage"
+        :total="tableValues.length"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+      >
+      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -72,6 +92,8 @@ export default class ReferenceTableView extends Vue {
   columns = [];
   referenceValues = [];
   tableValues = [];
+  currentPage = 1;
+  perPage = 15;
 
   async created() {
     await this.init();

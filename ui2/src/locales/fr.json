@@ -19,7 +19,9 @@
         "pwd-placeholder": "Ex: xxxx",
         "pwd-forgotten": "Mot de passe oublié ?",
         "register": "Créer un compte",
-        "confirm-pwd": "Confirmer le mot de passe"
+        "confirm-pwd": "Confirmer le mot de passe",
+        "aria-btn-login": "Bouton valider le formulaire de connexion",
+        "aria-btn-signup": "Bouton création d'un compte"
     },
     "validation": {
         "obligatoire": "Obligatoire",
@@ -36,6 +38,7 @@
         "user-unknown": "Identifiants inconnus",
         "application-creation-success": "L'application a été créée !",
         "application-validate-success": "Le fichier YAML est valide !",
+        "application-edit-success": "Le fichier YAML est mis à jours !",
         "warning": "Attention !",
         "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
         "delete": "Supprimer",
@@ -58,11 +61,19 @@
         "references": "Référentiels",
         "french": "Français",
         "english": "English",
-        "language": "Langue"
+        "language": "Langue",
+        "aria-sub-menu": "Chemin d'acces",
+        "aria-nav-bar": "Menu principal",
+        "aria-pagination": "Pagination",
+        "aria-curent-page": "Page actuelle",
+        "aria-next-page": "Page suivante",
+        "aria-previous-page": "Page précédente"
     },
     "applications": {
         "chose-config": "Choisir une configuration",
         "create": "Créer l'application",
+        "comment": "Commentaire : ",
+        "no-comment": "Pas de commentaire",
         "test": "Tester",
         "name": "Nom de l'application",
         "name-placeholder": "Ex : olac",
@@ -74,7 +85,9 @@
 	    "trierA_z": "Nom A - z",
 	    "trierZ_a": "Nom Z - a",
 	    "trierRecent": "Date récente",
-	    "filter": "Filtrer"
+	    "filter": "Filtrer",
+        "change": "Modifier l'application",
+        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>"
     },
     "errors": {
         "emptyFile": "Le fichier est vide",
@@ -145,7 +158,10 @@
         "requiredValueWithColumn": "Pour la colonne : <code>{target}</code> la valeur ne peut pas être nulle.",
         "timerangeoutofinterval": "La date  <code>{value}</code> est incompatible avec l'intervale de dates du dépôt. Elle doit être comprise entre <code>{from}</code> et <code>{to}</code>.",
         "badauthorizationscopeforrepository": "L'autorisation <code>{authorization}</code>) doit être <code>{expectedValue}/code> et non <code>{givenValue}</code>",
-        "overlappingpublishedversion": "Il existe une version déposée dans les dates de dépôt ont une période chevauchante avec la version déposée. <code>{overlapingFiles]</code>"
+        "overlappingpublishedversion": "Il existe une version déposée dans les dates de dépôt ont une période chevauchante avec la version déposée. <code>{overlapingFiles]</code>",
+        "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées {knownReferences}"
     },
     "referencesManagement": {
         "actions": "Actions",
@@ -168,12 +184,14 @@
         "filtered": "Les filtres utilisés",
         "sorted": "Les tris utilisés",
         "title-modal-numeric": "Choix de l'interval de valeur",
-        "title-modal-date": "Choix de l'interval de date"
+        "title-modal-date": "Choix de l'interval de date",
+        "manage-datasets": "Gérer les jeux de données"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version sur ce jeux de données",
         "start-date": "Date de début",
         "end-date": "Date de fin",
+        "comment": "Commentaire",
         "choose-file": "Choisir un fichier",
         "placeholder-datepicker": "Taper ou sélectionner une date...",
         "placeholder-select": "Sélectionner...",
