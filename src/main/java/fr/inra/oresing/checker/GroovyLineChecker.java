@@ -10,6 +10,7 @@ import fr.inra.oresing.rest.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.Optional;
+import java.util.Set;
 
 public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfiguration> {
 
@@ -46,8 +47,9 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
     }
 
     @Override
-    public ValidationCheckResult checkReference(ReferenceDatum referenceDatum) {
-        return doCheck(referenceDatum);
+    public Set<ValidationCheckResult> checkReference(ReferenceDatum referenceDatum) {
+        ValidationCheckResult validationCheckResult = doCheck(referenceDatum);
+        return Set.of(validationCheckResult);
     }
 
     private ValidationCheckResult doCheck(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext) {

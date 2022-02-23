@@ -114,6 +114,8 @@ references:
           params:
             refType: modalites
             columns: modalites
+            codify: true
+            multiplicity: MANY
 compositeReferences:
   localizations:
     components:
