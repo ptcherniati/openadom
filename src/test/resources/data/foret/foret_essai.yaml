@@ -596,7 +596,8 @@ references:
           name: Reference
           params:
             refType: liste_valeur_ic
-            columns: nom de la liste de valeurs informations complémentaires
+            columns: nom de la liste de valeurs d'informations complémentaires
+            codify: true
     internationalizationName:
       fr: Informations complementaires
       en: Complement information
@@ -614,12 +615,12 @@ references:
           complémentaire_fr}
     keyColumns:
       - nom de l'information complémentaire
-      - nom de la liste de valeurs informations complémentaires
+      - nom de la liste de valeurs d'informations complémentaires
     columns:
       nom de l'information complémentaire: null
       description de l'information complémentaire_fr: null
       description de l'information complémentaire_en: null
-      nom de la liste de valeurs informations complémentaires: null
+      nom de la liste de valeurs d'informations complémentaires: null
   ic_site_theme_dataype_variable:
     validations:
       checkSiteThemeDatatype:
