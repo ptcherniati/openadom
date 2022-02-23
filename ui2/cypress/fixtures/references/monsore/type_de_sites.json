@@ -1,0 +1,32 @@
+{
+  "referenceValues": [
+    {
+      "hierarchicalKey": "bassin_versant",
+      "hierarchicalReference": "type_de_sites",
+      "naturalKey": "bassin_versant",
+      "values": {
+        "tze_nom_en": "Watershed",
+        "tze_nom_fr": "Bassin versant",
+        "tze_nom_key": "bassin_versant",
+        "__display_en": "Watershed",
+        "__display_fr": "Bassin versant",
+        "tze_definition_en": "Watershed",
+        "tze_definition_fr": "Bassin versant"
+      }
+    },
+    {
+      "hierarchicalKey": "plateforme",
+      "hierarchicalReference": "type_de_sites",
+      "naturalKey": "plateforme",
+      "values": {
+        "tze_nom_en": "Platform",
+        "tze_nom_fr": "Plateforme",
+        "tze_nom_key": "plateforme",
+        "__display_en": "Platform",
+        "__display_fr": "Plateforme",
+        "tze_definition_en": "Measurement platform",
+        "tze_definition_fr": "Plateforme de mesure"
+      }
+    }
+  ]
+}

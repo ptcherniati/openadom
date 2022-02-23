@@ -4,13 +4,17 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import fr.inra.oresing.checker.CheckerFactory;
+import fr.inra.oresing.checker.CheckerOnOneVariableComponentLineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
 import fr.inra.oresing.persistence.SqlService;
@@ -35,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -176,7 +181,17 @@ public class RelationalService implements InitializingBean, DisposableBean {
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
-            ImmutableMap<VariableComponentKey, ReferenceLineChecker> referenceCheckers = checkerFactory.getReferenceLineCheckers(application, dataType);
+            ImmutableMap<VariableComponentKey, CheckerOnOneVariableComponentLineChecker> checkerPerVariableComponentKeys = checkerFactory.getLineCheckers(application, dataType).stream()
+                    .filter(lineChecker -> lineChecker instanceof CheckerOnOneVariableComponentLineChecker)
+                    .map(lineChecker -> (CheckerOnOneVariableComponentLineChecker) lineChecker)
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget().getTarget(), Function.identity()));
+            Map<VariableComponentKey, ReferenceLineChecker> referenceCheckers =
+                    Maps.transformValues(
+                            Maps.filterValues(checkerPerVariableComponentKeys, checker -> checker instanceof ReferenceLineChecker),
+                            checker -> (ReferenceLineChecker) checker
+                    );
+            Map<VariableComponentKey, SqlPrimitiveType> sqlTypesPerVariableComponentKey =
+                    Maps.transformValues(checkerPerVariableComponentKeys, CheckerOnOneVariableComponentLineChecker::getSqlType);
 
             Set<String> referenceColumnIds = new LinkedHashSet<>();
             Set<String> selectClauseElements = new LinkedHashSet<>();
@@ -191,11 +206,19 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 String component = variableComponentKey.getComponent();
                 String escapedVariableName = StringUtils.replace(variable, "'", "''");
                 String escapedComponentName = StringUtils.replace(component, "'", "''");
+                SqlPrimitiveType sqlType = sqlTypesPerVariableComponentKey.getOrDefault(variableComponentKey, SqlPrimitiveType.TEXT);
+                String selectClausePattern;
+                if (sqlType.isEmptyStringValidValue()) {
+                    selectClausePattern = "jsonb_extract_path_text(%s.dataValues, '%s', '%s')::%s %s";
+                } else {
+                    selectClausePattern = "nullif(jsonb_extract_path_text(%s.dataValues, '%s', '%s'), '')::%s %s";
+                }
                 String selectClauseElement = String.format(
-                        "jsonb_extract_path_text(%s.dataValues, '%s', '%s') %s",
+                        selectClausePattern,
                         dataTableName,
                         escapedVariableName,
                         escapedComponentName,
+                        sqlType.getSql(),
                         getColumnName(variableComponentKey)
                 );
                 selectClauseElements.add(selectClauseElement);
@@ -250,7 +273,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();  // especes
-                VariableComponentKey variableComponentKey = referenceChecker.getVariableComponentKey();
+                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceChecker.getTarget().getTarget();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String foreignKeyColumnName = getTechnicalIdColumnName(variableComponentKey);
@@ -306,10 +329,21 @@ public class RelationalService implements InitializingBean, DisposableBean {
         List<ViewCreationCommand> views = new LinkedList<>();
         for (Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
             String referenceType = entry.getKey();
+
+            ImmutableMap<ReferenceColumn, SqlPrimitiveType> sqlTypePerColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
+                    .filter(lineChecker -> lineChecker instanceof CheckerOnOneVariableComponentLineChecker)
+                    .map(lineChecker -> (CheckerOnOneVariableComponentLineChecker) lineChecker)
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), CheckerOnOneVariableComponentLineChecker::getSqlType));
+
             Set<String> columns = entry.getValue().getColumns().keySet();
             String columnsAsSchema = columns.stream()
-                    .map(this::quoteSqlIdentifier)
-                    .map(quotedColumnName -> quotedColumnName + " text")
+                    .map(ReferenceColumn::new)
+                    .map(referenceColumn -> {
+                        String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
+                        SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
+                        String columnDeclaration = String.format("%s %s", columnName, columnType.getSql());
+                        return columnDeclaration;
+                    })
                     .collect(Collectors.joining(", ", "(", ")"));
             String quotedReferenceType = quoteSqlIdentifier(referenceType);
 

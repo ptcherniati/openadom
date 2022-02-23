@@ -1,9 +1,34 @@
 version: 0
 application:
+  defaultLanguage: fr
+  internationalization:
+    fr: SOERE mon SOERE avec dépôt
+    en: SOERE my SOERE with repository
   name: MONSORE
   version: 1
+compositeReferences:
+  sites:
+    components:
+      - reference: type_de_sites
+      - parentKeyColumn: tze_type_nom
+        parentRecursiveKey: zet_chemin_parent
+        reference: sites
+  projet:
+    components:
+      - reference: projet
 references:
   especes:
+    internationalizationName:
+      fr: Espèces
+      en: Species
+    internationalizedColumns:
+      esp_definition_fr:
+        fr: esp_definition_fr
+        en: esp_definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{esp_nom}'
+        en: '{esp_nom}'
     keyColumns: [esp_nom]
     columns:
       esp_nom:
@@ -12,6 +37,20 @@ references:
       colonne_homonyme_entre_referentiels:
 
   projet:
+    internationalizationName:
+      fr: Projet
+      en: Project
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      definition_fr:
+        fr: definition_fr
+        en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     keyColumns: [nom_key]
     columns:
       nom_key:
@@ -30,7 +69,28 @@ references:
           params:
             refType: type_de_sites
             columns: tze_type_nom
+      siteParentRef:
+        description: "référence à la colonne parent"
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            columns: zet_chemin_parent
     keyColumns: [zet_chemin_parent,zet_nom_key]
+    internationalizationName:
+      fr: Site
+      en: Site
+    internationalizedColumns:
+      zet_nom_key:
+        fr: zet_nom_fr
+        en: zet_nom_en
+      zet_description_fr:
+        fr: zet_description_fr
+        en: zet_description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{zet_nom_key}'
+        en: '{zet_nom_key}'
     columns:
       tze_type_nom:
       zet_nom_key:
@@ -42,6 +102,20 @@ references:
 
   themes:
     keyColumns: [nom_key]
+    internationalizationName:
+      fr: Thème
+      en: Thematic
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -51,6 +125,20 @@ references:
 
   type de fichiers:
     keyColumns: [nom_key]
+    internationalizationName:
+      fr: Types de fichiers
+      en: Files types
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -60,6 +148,20 @@ references:
 
   type_de_sites:
     keyColumns: [tze_nom_key]
+    internationalizationName:
+      fr: Types de sites
+      en: Sites types
+    internationalizedColumns:
+      tze_nom_key:
+        fr: tze_nom_fr
+        en: tze_nom_en
+      tze_definition_fr:
+        fr: tze_definition_fr
+        en: tze_definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{tze_nom_key}'
+        en: '{tze_nom_key}'
     columns:
       tze_nom_key:
       tze_nom_fr:
@@ -68,6 +170,13 @@ references:
       tze_definition_en:
 
   types_de_donnees_par_themes_de_sites_et_projet:
+    internationalizationName:
+      fr: Types de données par site et projet
+      en: Data types by site and project
+    internationalizationDisplay:
+      pattern:
+        fr: 'nom du projet: {nom du projet}, nom du site : {nom du site}, nom du thème : {nom du thème}, nom du type de données : {nom du type de données} '
+        en: 'projet name: {nom du projet}, site name : {nom du site}, theme name : {nom du thème}, data type name : {nom du type de données} '
     validations:
       projetRef:
         description: "référence au projet"
@@ -96,9 +205,10 @@ references:
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
+            groovy:
+              expression: >
+                String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
+                return application.getDataType().contains(datatype);
     keyColumns: ["nom du projet","nom du site","nom du thème","nom du type de données" ]
     columns:
       nom du projet:
@@ -108,6 +218,20 @@ references:
 
   unites:
     keyColumns: [nom_key]
+    internationalizationName:
+      fr: Unités
+      en: Units
+    internationalizedColumns:
+      code_key:
+        fr: code_fr
+        en: code_en
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
     columns:
       code_key:
       code_fr:
@@ -118,6 +242,20 @@ references:
 
   valeurs_qualitatives:
     keyColumns: [nom_key,valeur_key]
+    internationalizationName:
+      fr: Valeurs qualitatives
+      en: Qualitative values
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      valeur_key:
+        fr: valeur_fr
+        en: valeur_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{valeur_key}'
+        en: '{valeur_key}'
     columns:
       nom_key:
       nom_fr:
@@ -128,6 +266,20 @@ references:
 
   variables:
     keyColumns: [nom_key]
+    internationalizationName:
+      fr: Variables
+      en: Variables
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      definition_fr:
+        fr: definition_fr
+        en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key}'
+        en: '{nom_key}'
     columns:
       nom_key:
       nom_fr:
@@ -157,10 +309,18 @@ references:
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
+            groovy:
+              expression: >
+                String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
+                return application.getDataType().contains(datatype);
     keyColumns: [nom du type de données,nom de la variable]
+    internationalizationName:
+      fr: Variables et unités par type de données
+      en: Variables and units by data type
+    internationalizationDisplay:
+      pattern:
+        fr: "nom du type de données : {nom du type de données}, nom de la variable : {nom de la variable}, : nom de l'unité {nom de l'unité}"
+        en: "datatype name : {nom du type de données}, variable name : {nom de la variable}, : unit name {nom de l'unité}"
     columns:
       nom du type de données:
       nom de la variable:
@@ -168,6 +328,14 @@ references:
 
 dataTypes:
   pem:
+    internationalizationName:
+      fr: Piégeage en Montée
+      en: Trap in ascent
+    internationalizationDisplay:
+      especes:
+        pattern:
+          fr: 'espèce :{esp_nom}'
+          en: 'espèce :{esp_nom}'
     data:
       projet:
         components:
@@ -179,14 +347,27 @@ dataTypes:
       site:
         components:
           bassin:
+            params:
+              references:
+                - sites
+              replace: true
+            defaultValue: >
+              return references.get("sites")
+              .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
+              .getHierarchicalKey();
             checker:
               name: Reference
               params:
                 refType: sites
           plateforme:
           chemin:
+            params:
+              references:
+                -  sites
             defaultValue: >
-              return datumByVariableAndComponent.get("site").get("bassin") +"__" +datumByVariableAndComponent.get("site").get("plateforme")
+              return references.get("sites")
+              .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin")) && it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
+              .getHierarchicalKey();
             checker:
               name: Reference
               params:
@@ -241,31 +422,35 @@ dataTypes:
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Couleur des individus"
-            codeVariable: couleur_des_individus
-            component: unit
+            groovy:
+              expression: >
+                String datatype = "piegeage_en_montee";
+                String variable = "Couleur des individus";
+                String codeVariable = "couleur_des_individus";
+                String component = "unit";
+                return referencesValues.get("variables_et_unites_par_types_de_donnees")
+                .findAll{it.get("nom du type de données").equals(datatype)}
+                .find{it.get("nom de la variable").equals(codeVariable)}
+                .get("nom de l'unité").equals(datum.get(variable).get(component));
+              references:
+                - variables_et_unites_par_types_de_donnees
       unitOfIndividus:
         description: "vérifie l'unité du nombre d'individus"
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Nombre d'individus"
-            codeVariable: nombre_d_individus
-            component: unit
+            groovy:
+              expression: >
+                String datatype = "piegeage_en_montee";
+                String variable = "Nombre d'individus";
+                String codeVariable = "nombre_d_individus";
+                String component = "unit";
+                return referencesValues.get("variables_et_unites_par_types_de_donnees")
+                .findAll{it.get("nom du type de données").equals(datatype)}
+                .find{it.get("nom de la variable").equals(codeVariable)}
+                .get("nom de l'unité").equals(datum.get(variable).get(component));
+              references:
+                - variables_et_unites_par_types_de_donnees
     format:
       headerLine: 4
       firstRowLine: 5
@@ -300,7 +485,16 @@ dataTypes:
             component: value
     authorization:
       authorizationScopes:
+        projet:
+          internationalizationName:
+            fr: Projet
+            en: Project
+          variable: projet
+          component: value
         localization:
+          internationalizationName:
+            fr: Localisation
+            en: Localization
           variable: site
           component: chemin
       timeScope:
@@ -308,6 +502,9 @@ dataTypes:
         component: value
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiels
+            en: Repositories
           label: "Référentiel"
           data:
             - projet
@@ -315,10 +512,16 @@ dataTypes:
             - date
             - espece
         qualitatif:
+          internationalizationName:
+            fr: Qualitatif
+            en: Qualitative
           label: "Données qualitatives"
           data:
             - Couleur des individus
         quantitatif:
+          internationalizationName:
+            fr: Quantitatif
+            en: Quantitative
           label: "Données quantitatives"
           data:
             - Nombre d'individus

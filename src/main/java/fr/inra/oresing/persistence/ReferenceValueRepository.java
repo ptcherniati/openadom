@@ -3,8 +3,8 @@ package fr.inra.oresing.persistence;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -33,8 +33,13 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile) SELECT id, application, referenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" DO UPDATE SET updateDate=current_timestamp, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "\n" +
+                "(id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile) \n" +
+                "SELECT id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile \n" +
+                "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", \n" +
+                ":json::json) \n"
+                + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" \n" +
+                "DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, hierarchicalReference=EXCLUDED.hierarchicalReference, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
 
@@ -92,17 +97,29 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return (List<ReferenceValue>) result;
     }
 
-    public List<String> findReferenceValue(String refType, String column) {
-        String sqlPattern = " SELECT refValues->>'%s' "
+    public List<List<String>> findReferenceValue(String refType, String column) {
+        AtomicInteger ai = new AtomicInteger(0);
+        String select = Stream.of(column.split(","))
+                .map(c -> String.format("refValues->>'%1$s' as \"%1$s"+ai.getAndIncrement()+"\"", c))
+                .collect(Collectors.joining(", "));
+        String sqlPattern = " SELECT %s "
                 + " FROM " + getTable().getSqlIdentifier() + " t"
                 + " WHERE application=:applicationId::uuid AND referenceType=:refType";
-        String query = String.format(sqlPattern, column);
-        List<String> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType), String.class);
+        String query = String.format(sqlPattern, select);
+        List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType))
+                .stream()
+                .map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList()))
+                .collect(Collectors.toList());
         return result;
+    }
+
+    public ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
+        return findAllByReferenceType(referenceType).stream()
+                .collect(ImmutableMap.toImmutableMap(referenceValue -> referenceValue.getHierarchicalKey().getSql(),result->new ApplicationResult.Reference.ReferenceUUIDAndDisplay(result.getRefValues().get("__display_"+locale), result.getId(), result.getRefValues())));
     }
 
     public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {
         return findAllByReferenceType(referenceType).stream()
-                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
+                .collect(ImmutableMap.toImmutableMap(referenceValue -> referenceValue.getHierarchicalKey().getSql(), ReferenceValue::getId));
     }
 }

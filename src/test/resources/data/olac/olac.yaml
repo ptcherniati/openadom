@@ -1,6 +1,10 @@
 version: 0
 application:
-  name: olac
+  defaultLanguage: fr
+  internationalization:
+    fr: Observatoire des lacs
+    en: Lake observatory
+  name: ola
   version: 1
 compositeReferences:
   localizations:
@@ -10,8 +14,21 @@ compositeReferences:
         reference: sites
       - parentKeyColumn: nom du site
         reference: plateformes
+  projets:
+    components:
+      - reference: projets
 references:
   themes:
+    internationalizationName:
+      fr: Thèmes
+      en: Themes
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
     keyColumns: [nom_key]
     columns:
       nom_key:
@@ -20,6 +37,16 @@ references:
       description_fr:
       description_en:
   projets:
+    internationalizationName:
+      fr: Projet
+      en: Project
+    internationalizedColumns:
+      nom du projet_key:
+        fr: nom du projet_fr
+        en: nom du projet_en
+      description du projet_fr:
+        fr: description du projet_fr
+        en: description du projet_en
     keyColumns: [nom du projet_key]
     columns:
       nom du projet_key:
@@ -28,6 +55,16 @@ references:
       description du projet_fr:
       description du projet_en:
   typeSites:
+    internationalizationName:
+      fr: Types de sites
+      en: Sites types
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
     keyColumns: [nom_key]
     columns:
       nom_key:
@@ -38,6 +75,16 @@ references:
       code sandre:
       code sandre du contexte:
   sites:
+    internationalizationName:
+      fr: Site
+      en: Site
+    internationalizedColumns:
+      nom du site_key:
+        fr: nom du site_fr
+        en: nom du site_en
+      description du site_fr:
+        fr: description du site_fr
+        en: description du site_en
     keyColumns: [nom du site_key]
     columns:
       nom du type de site:
@@ -49,6 +96,16 @@ references:
       code sandre du Plan d'eau:
       code sandre de la Masse d'eau plan d'eau:
   typePlateformes:
+    internationalizationName:
+      fr: Types de plateforme
+      en: Plateform types
+    internationalizedColumns:
+      nom du type de plateforme_key:
+        fr: nom du type de plateforme_fr
+        en: nom du type de plateforme_en
+      description du type de plateforme_fr:
+        fr: description du type de plateforme_fr
+        en: description du type de plateforme_en
     keyColumns: [nom du type de plateforme_key]
     columns:
       nom du type de plateforme_key:
@@ -59,6 +116,13 @@ references:
       code sandre:
       code sandre du contexte:
   plateformes:
+    internationalizationName:
+      fr: Plateformes
+      en: Plateforms
+    internationalizedColumns:
+      nom de la plateforme_key:
+        fr: nom de la plateforme_fr
+        en: nom de la plateforme_en
     keyColumns: [nom de la plateforme_key, nom du type de plateforme_key]
     columns:
       nom du site:
@@ -72,6 +136,16 @@ references:
       code sandre:
       code sandre du contexte:
   valeurs_qualitatives:
+    internationalizationName:
+      fr: Valeurs qualitatives
+      en: Qualitative values
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      valeur_key:
+        fr: valeur_fr
+        en: valeur_en
     keyColumns: [nom_key, valeur_key]
     columns:
       nom_key:
@@ -82,6 +156,11 @@ references:
       valeur_en:
 dataTypes:
   condition_prelevements:
+    internationalizationName:
+      fr: Condition de prélèvement
+      en: Collection condition
+    repository:
+      toto: test
     data:
       date:
         components:
@@ -143,6 +222,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - date
@@ -150,10 +232,16 @@ dataTypes:
             - site
             - commentaire
         qualitatif:
+          internationalizationName:
+            fr: Données qualitatives
+            en: Qualitative data
           label: "Données qualitatives"
           data:
             - valeurs qualitatives
         quantitatif:
+          internationalizationName:
+            fr: Données quantitatives
+            en: Quantitative data
           label: "Données quantitatives"
           data:
             - valeurs quantitatives
@@ -244,6 +332,9 @@ dataTypes:
             variable: valeurs qualitatives
             component: vitesse du vent
   physico-chimie:
+    internationalizationName:
+      fr: Physico Chimie
+      en: Chemical Physics
     data:
       date:
         components:
@@ -322,6 +413,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - date
@@ -329,12 +423,18 @@ dataTypes:
             - site
             - plateforme
         condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
           label: "Contexte"
           data:
             - outil
             - profondeur
             - température
         variable:
+          internationalizationName:
+            fr: Données
+            en: Data
           label: "Données"
           data:
             - variables
@@ -520,6 +620,9 @@ dataTypes:
             variable: variables
             component: orthophosphates
   sonde_truncated:
+    internationalizationName:
+      fr: Données des sondes
+      en: Probe data
     data:
       dates:
         components:
@@ -581,6 +684,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - dates
@@ -588,6 +694,9 @@ dataTypes:
             - sites
             - plateformes
         condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
           label: "Contexte"
           data:
             - outils
@@ -750,6 +859,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - dates
@@ -757,6 +869,9 @@ dataTypes:
             - sites
             - plateformes
         condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
           label: "Contexte"
           data:
             - outils
@@ -859,6 +974,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - dates
@@ -866,6 +984,9 @@ dataTypes:
             - sites
             - plateformes
         condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
           label: "Contexte"
           data:
             - outils
@@ -1006,6 +1127,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - dates
@@ -1013,6 +1137,9 @@ dataTypes:
             - sites
             - plateformes
         condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
           label: "Contexte"
           data:
             - outils
@@ -1137,6 +1264,9 @@ dataTypes:
     authorization:
       dataGroups:
         referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
           label: "Référentiel"
           data:
             - dates
@@ -1144,6 +1274,9 @@ dataTypes:
             - sites
             - plateformes
         condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
           label: "Contexte"
           data:
             - outils

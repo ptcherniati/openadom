@@ -1,47 +1,35 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class RegularExpressionChecker implements CheckerOnOneVariableComponentLineChecker {
-
-    public static final String PARAM_PATTERN = "pattern";
-
-    private final VariableComponentKey variableComponentKey;
-
-    private final String column;
+public class RegularExpressionChecker implements CheckerOnOneVariableComponentLineChecker<RegularExpressionCheckerConfiguration> {
 
     private final String patternString;
 
     private final Predicate<String> predicate;
+    @JsonIgnore
+    private final LineTransformer transformer;
+    private final CheckerTarget target;
+    private final RegularExpressionCheckerConfiguration configuration;
 
-    public RegularExpressionChecker(VariableComponentKey variableComponentKey, String patternString) {
-        this.variableComponentKey = variableComponentKey;
+    public CheckerTarget getTarget(){
+        return this.target;
+    }
+
+    public RegularExpressionChecker(CheckerTarget target, String patternString, RegularExpressionCheckerConfiguration configuration, LineTransformer transformer) {
+        this.configuration = configuration;
+        this.target = target;
         this.patternString = patternString;
         predicate = Pattern.compile(patternString).asMatchPredicate();
-        this.column="";
-    }
-
-    public RegularExpressionChecker(String column, String patternString) {
-        this.column = column;
-        this.variableComponentKey = null;
-        this.patternString = patternString;
-        predicate = Pattern.compile(patternString).asMatchPredicate();
-    }
-
-    @Override
-    public VariableComponentKey getVariableComponentKey() {
-        return variableComponentKey;
-    }
-
-    @Override
-    public String getColumn() {
-        return this.column;
+        this.transformer = transformer;
     }
 
     @Override
@@ -50,8 +38,27 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
         if (predicate.test(value)) {
             validationCheckResult = DefaultValidationCheckResult.success();
         } else {
-            validationCheckResult = DefaultValidationCheckResult.error("patternNotMatched", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", patternString, "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error(
+                    getTarget().getInternationalizedKey("patternNotMatched"), ImmutableMap.of(
+                            "target", target.getTarget(),
+                            "pattern", patternString,
+                            "value", value));
         }
         return validationCheckResult;
+    }
+
+    @Override
+    public RegularExpressionCheckerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
+    }
+
+    @Override
+    public SqlPrimitiveType getSqlType() {
+        return SqlPrimitiveType.TEXT;
     }
 }

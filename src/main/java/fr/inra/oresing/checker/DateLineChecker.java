@@ -1,48 +1,45 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Map;
 
-public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker {
+public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker<DateLineCheckerConfiguration> {
 
     public static final String PARAM_PATTERN = "pattern";
     public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
-    public static final String PARAM_COLUMN = "column";
-    public static final String PARAM_VARIABLE_COMPONENT_KEY = "variableComponentKey";
     public static final String PARAM_DATE = "date";
+    public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
+    private final CheckerTarget target;
+    private final DateLineCheckerConfiguration configuration;
+    @JsonIgnore
+    private final LineTransformer transformer;
 
-    private final VariableComponentKey variableComponentKey;
-
-    private final String column;
+    public CheckerTarget getTarget(){
+        return this.target;
+    }
 
     private final DateTimeFormatter dateTimeFormatter;
 
     private final String pattern;
-
-    public DateLineChecker(VariableComponentKey variableComponentKey, String pattern) {
-        this.variableComponentKey = variableComponentKey;
-        this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
-        this.pattern = pattern;
-        this.column="";
+    public static String sortableDateToFormattedDate(String formattedDate){
+        return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
     }
 
-    public DateLineChecker(String column, String pattern) {
-        this.column = column;
-        this.variableComponentKey=null;
+    public DateLineChecker(CheckerTarget target, String pattern, DateLineCheckerConfiguration configuration, LineTransformer transformer) {
+        this.configuration = configuration;
+        this.target = target;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
         this.pattern = pattern;
-    }
-
-    @Override
-    public VariableComponentKey getVariableComponentKey() {
-        return variableComponentKey;
+        this.transformer = transformer;
     }
 
     public String getPattern() {
@@ -53,22 +50,37 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
+            value = sortableDateToFormattedDate(value);
             TemporalAccessor date = dateTimeFormatter.parse(value);
             Map<String, Object> params = ImmutableMap.of(
                     PARAM_PATTERN, pattern,
                     PARAM_DATE_TIME_FORMATTER, dateTimeFormatter,
-                    variableComponentKey==null? PARAM_COLUMN : PARAM_VARIABLE_COMPONENT_KEY, variableComponentKey==null?column:variableComponentKey,
+                    target.getType().name(), target.getTarget(),
                     PARAM_DATE, date
             );
             validationCheckResult = DateValidationCheckResult.success(params);
         } catch (DateTimeParseException e) {
-            validationCheckResult = DateValidationCheckResult.error("invalidDate", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "pattern", pattern, "value", value));
+            validationCheckResult = DateValidationCheckResult.error(
+                    getTarget().getInternationalizedKey("invalidDate"), ImmutableMap.of(
+                            "target", target.getTarget(),
+                            "pattern", pattern,
+                            "value", value));
         }
         return validationCheckResult;
     }
 
     @Override
-    public String getColumn() {
-        return column;
+    public DateLineCheckerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
+    }
+
+    @Override
+    public SqlPrimitiveType getSqlType() {
+        return SqlPrimitiveType.TEXT;
     }
 }

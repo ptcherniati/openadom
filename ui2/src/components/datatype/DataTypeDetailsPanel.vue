@@ -2,11 +2,11 @@
   <SidePanel
     :open="open"
     :leftAlign="leftAlign"
-    :title="dataType && dataType.label"
+    :title="dataType && (dataType.localName || dataType.label)"
     :closeCb="closeCb"
   >
     <div class="Panel-buttons">
-      <b-button type="is-primary" icon-left="key" @click="consultAuthorization">{{
+      <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{
         $t("dataTypesManagement.consult-authorization")
       }}</b-button>
     </div>

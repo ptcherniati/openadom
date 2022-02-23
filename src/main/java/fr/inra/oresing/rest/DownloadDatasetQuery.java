@@ -1,5 +1,7 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.checker.CheckerTarget;
+import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
@@ -24,6 +26,7 @@ public class DownloadDatasetQuery {
     Application application;
     String applicationNameOrId;
     String dataType;
+    String locale;
     Long offset;
     Long limit;
     @Nullable
@@ -111,9 +114,9 @@ public class DownloadDatasetQuery {
                 .map(vck -> {
                     String format;
                     if ("numeric".equals(vck.type)) {
-                        format = "(nullif(datavalues->'%s'->>'%s', ''))::numeric  %s";
+                        format = "(nullif(datavalues#>>'{\"%s\",\"%s\"}', ''))::numeric";
                     } else {
-                        format = "datavalues->'%s'->>'%s' %s";
+                        format = "datavalues #>'{\"%s\",\"%s\"}'";
                     }
 
                     return String.format(
@@ -140,50 +143,57 @@ public class DownloadDatasetQuery {
     }
 
     private String getFormat(VariableComponentFilters vck) {
-        boolean isRegExp = vck.isRegExp == null ? false : vck.isRegExp;
+        boolean isRegExp = vck.isRegExp != null && vck.isRegExp;
         List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(vck.filter)) {
             filters.add(String.format(
-                            "datavalues->'%s'->>'%s' %s",
+                            "datavalues #> '{\"%s\",\"%s\"}'  @@ ('$ like_regex \"'||%s||'\"')::jsonpath",
                             StringEscapeUtils.escapeSql(vck.getVariable()),
                             StringEscapeUtils.escapeSql(vck.getComponent()),
-                            String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", addArgumentAndReturnSubstitution(vck.getFilter()))
+                            /*String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", */addArgumentAndReturnSubstitution(vck.getFilter())//)
                     )
             );
 
         } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                DateLineChecker dateLineChecker = new DateLineChecker(
+                        CheckerTarget.getInstance(vck.variableComponentKey, null, null),
+                        vck.format, null, null);
                 filters.add(
                         String.format(
-                                "to_timestamp(datavalues->'%s'->>'%s', %s)  BETWEEN %s::TIMESTAMP AND %s::TIMESTAMP",
+                                "datavalues #> '{\"%1$s\",\"%2$s\"}'@@ ('$ >= \"date:'||%3$s||'\" && $ <= \"date:'||%4$s||'Z\"')::jsonpath",
                                 StringEscapeUtils.escapeSql(vck.getVariable()),
                                 StringEscapeUtils.escapeSql(vck.getComponent()),
-                                addArgumentAndReturnSubstitution(vck.format),
-                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "-infinity" : vck.intervalValues.from),
-                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "infinity" : vck.intervalValues.to)
+                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "0" : vck.intervalValues.from),
+                                addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "9" : vck.intervalValues.to)
                         )
                 );
             }
         } else if (vck.intervalValues != null && "numeric".equals(vck.type)) {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
+                //datavalues #> '{"t","value"}'@@ '$. double() >= 1 && $. double() <= 2'
+                List<String> filter = new LinkedList<>();
                 if (!Strings.isNullOrEmpty(vck.intervalValues.from)) {
-                    filters.add(String.format(
-                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric >= %s::numeric",
-                                    StringEscapeUtils.escapeSql(vck.getVariable()),
-                                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                    filter.add(String.format(
+                                    "$. double() >= '||%s||'",
                                     addArgumentAndReturnSubstitution(vck.intervalValues.from)
                             )
                     );
                 }
                 if (!Strings.isNullOrEmpty(vck.intervalValues.to)) {
-                    filters.add(String.format(
-                                    "(nullif(datavalues->'%s'->>'%s', ''))::numeric < %s::numeric",
-                                    StringEscapeUtils.escapeSql(vck.getVariable()),
-                                    StringEscapeUtils.escapeSql(vck.getComponent()),
+                    filter.add(String.format(
+                                    "$. double() <= '||%s||'",
                                     addArgumentAndReturnSubstitution(vck.intervalValues.to)
                             )
                     );
                 }
+                filters.add(
+                        String.format("datavalues #> '{\"%s\",\"%s\"}'@@ ('%s')::jsonpath",
+                                StringEscapeUtils.escapeSql(vck.getVariable()),
+                                StringEscapeUtils.escapeSql(vck.getComponent()),
+                                filter.stream().collect(Collectors.joining(" && "))
+                        )
+                );
             }
         }
         return filters.stream()
@@ -192,16 +202,16 @@ public class DownloadDatasetQuery {
     }
 
     public String buildQuery(String toMergeDataGroupsQuery) {
-        String query = "WITH my_data AS (" + toMergeDataGroupsQuery + ")"
-                + " SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
-                "jsonb_build_object(" +
-                "'rowNumber', row_number() over (), " +
-                "'totalRows', count(*) over (), " +
-                "'rowId', rowId, " +
-                "'values', dataValues, " +
-                "'refsLinkedTo', refsLinkedTo" +
-                ") AS json"
-                + " FROM my_data ";
+        String query = "WITH my_data AS (\n" + toMergeDataGroupsQuery + "\n)" +
+                "\n SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
+                "\njsonb_build_object(" +
+                "\n\t'rowNumber', row_number() over (), " +
+                "\n\t'totalRows', count(*) over (), " +
+                "\n\t'rowId', rowId, " +
+                "\n\t'values', dataValues, " +
+                "\n\t'refsLinkedTo', refsLinkedTo" +
+                "\n) AS json"
+                + " \nFROM my_data ";
         query = filterBy(query);
         query = addOrderBy(query);
         if (offset != null && limit >= 0) {

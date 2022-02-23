@@ -1,8 +1,13 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
     <h1 class="title main-title">
-      {{ $t("titles.references-data", { refName: reference.label }) }}
+      {{ $t("titles.references-data", { refName: application.localRefName }) }}
     </h1>
 
     <div v-if="reference && columns">
@@ -12,9 +17,8 @@
         :isFocusable="true"
         :isHoverable="true"
         :sticky-header="true"
-        :paginated="true"
-        :per-page="15"
         height="100%"
+        style="padding-bottom: 20px"
       >
         <b-table-column
           v-for="column in columns"
@@ -25,9 +29,37 @@
           :sticky="column.key"
           v-slot="props"
         >
-          {{ props.row[column.id] }}
+          <span v-if="column.id != '#'">
+            {{ props.row[column.id] }}
+          </span>
+          <b-collapse v-else :open="false">
+            <template #trigger>
+              <b-button
+                :label="'' + (tableValues.indexOf(props.row) + 1)"
+                type="is-small"
+                aria-controls="contentIdForA11y1"
+              />
+            </template>
+            {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
+          </b-collapse>
         </b-table-column>
       </b-table>
+      <b-pagination
+        v-if="perPage <= tableValues.length"
+        v-model="currentPage"
+        :per-page="perPage"
+        :total="tableValues.length"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+      >
+      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -40,6 +72,7 @@ import { ApplicationService } from "@/services/rest/ApplicationService";
 import { ReferenceService } from "@/services/rest/ReferenceService";
 import { Prop, Vue, Component } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
   components: { PageView, SubMenu },
@@ -50,6 +83,7 @@ export default class ReferenceTableView extends Vue {
 
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
 
   application = new ApplicationResult();
@@ -58,6 +92,8 @@ export default class ReferenceTableView extends Vue {
   columns = [];
   referenceValues = [];
   tableValues = [];
+  currentPage = 1;
+  perPage = 15;
 
   async created() {
     await this.init();
@@ -67,6 +103,15 @@ export default class ReferenceTableView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+        localRefName: this.internationalisationService.localeReferenceName(
+          this.application.references[this.refId],
+          this.application
+        ),
+      };
       const references = await this.referenceService.getReferenceValues(
         this.applicationName,
         this.refId
@@ -80,7 +125,7 @@ export default class ReferenceTableView extends Vue {
   }
 
   setInitialVariables() {
-    if (!this.application || !this.application.references) {
+    if (!this.application?.references) {
       return;
     }
 
@@ -102,16 +147,19 @@ export default class ReferenceTableView extends Vue {
     ];
 
     if (this.reference && this.reference.columns) {
-      this.columns = Object.values(this.reference.columns).sort((c1, c2) => {
-        if (c1.title < c2.title) {
-          return -1;
-        }
+      this.columns = [
+        { id: "#", title: "#id", key: false, linkedTo: null },
+        ...Object.values(this.reference.columns).sort((c1, c2) => {
+          if (c1.title < c2.title) {
+            return -1;
+          }
 
-        if (c1.title > c2.title) {
-          return 1;
-        }
-        return 0;
-      });
+          if (c1.title > c2.title) {
+            return 1;
+          }
+          return 0;
+        }),
+      ];
     }
 
     if (this.referenceValues) {

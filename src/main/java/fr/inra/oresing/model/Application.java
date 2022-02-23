@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import io.swagger.annotations.Api;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
     private String name;
+    private String comment;
     private List<String> referenceType;
     private List<String> dataType;
     private Configuration configuration;

@@ -14,6 +14,17 @@ references:
   projets:
     separator:
     keyColumns: [nom du projet_key]
+    internationalizationName:
+      fr: projet
+      en: Project
+    internationalizedColumns:
+      nom du projet_key:
+        fr: nom du projet_fr
+        en: nom du projet_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du projet_fr}'
+        en: '{nom du projet_en}'
     columns:
       nom du projet_key:
       nom du projet_fr:
@@ -44,6 +55,20 @@ references:
       description_fr:
       description_en:
   sites:
+    internationalizationName:
+      fr: Site
+      en: Site
+    internationalizedColumns:
+      nom du site_key:
+        fr: nom du site_fr
+        en: nom du site_en
+      description du site_fr:
+        fr: description du site_fr
+        en: description du site_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du site_fr}'
+        en: '{nom du site_en}'
     separator:
     keyColumns: [nom du site_key]
     columns:
@@ -57,6 +82,14 @@ references:
       code sandre de la Masse d'eau plan d'eau:
 dataTypes:
   site:
+    internationalizationName:
+      fr: Le site
+      en: the good place
+    internationalizationDisplay:
+      sites:
+          pattern:
+            fr: 'le nom du site {nom du site_fr}'
+            en: 'the very good place {nom du site_en}'
     authorization:
       dataGroups:
         referentiel:
@@ -109,7 +142,8 @@ dataTypes:
         checker:
           name: GroovyExpression
           params:
-            expression: "true"
+            groovy:
+              expression: "true"
     format:
       constants:
         - rowNumber: 1

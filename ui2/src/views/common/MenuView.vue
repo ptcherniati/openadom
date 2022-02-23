@@ -1,18 +1,35 @@
 <template>
-  <div class="menu-view-container">
-    <b-navbar class="menu-view" v-if="open">
+  <div class="menu-view-container" role="navigation">
+    <b-navbar class="menu-view" v-if="open" role="menubar" :aria-label="$t('menu.aria-nav-bar')">
       <template #start>
         <b-navbar-item href="https://www.inrae.fr/">
-          <img class="logo_blanc" src="@/assets/logo-inrae_blanc.svg" />
-          <img class="logo_vert" src="@/assets/Logo-INRAE.svg" />
+          <img
+            class="logo_blanc"
+            src="@/assets/logo-inrae_blanc.svg"
+            alt="Accès page de l’institut national de recherche pour l’agriculture, l’alimentation et l’environnement"
+          />
+          <img
+            class="logo_vert"
+            src="@/assets/Logo-INRAE.svg"
+            alt="Accès page de l’institut national de recherche pour l’agriculture, l’alimentation et l’environnement"
+          />
         </b-navbar-item>
-        <img class="logo_rep" src="@/assets/Rep-FR-logo.svg" />
         <b-navbar-item tag="router-link" :to="{ path: '/applications' }">
           {{ $t("menu.applications") }}
         </b-navbar-item>
       </template>
 
       <template #end>
+        <img
+          class="logo_anaee"
+          src="@/assets/logo-AnaEE-france.png"
+          alt="Logo de l'Infrastructure de recherche nationale AnaEE France (Analyses et Expérimentations pour les Ecosystèmes)"
+        />
+        <img
+          class="logo_rep"
+          src="@/assets/Rep-FR-logo.svg"
+          alt="Logo de la République Francçaise"
+        />
         <b-navbar-item tag="div">
           <b-field>
             <b-select
@@ -37,7 +54,12 @@
               </a>
             </template>
 
-            <b-dropdown-item @click="logout()" aria-role="menuitem">
+            <b-dropdown-item
+              @click="logout()"
+              @keypress.enter="logout()"
+              tabindex="0"
+              aria-role="menuitem"
+            >
               <b-icon icon="sign-out-alt" />
               {{ $t("menu.logout") }}
             </b-dropdown-item>
@@ -96,6 +118,10 @@ export default class MenuView extends Vue {
   height: $menu-height;
   width: 100%;
 
+  .logo_anaee {
+    margin: 0.7rem;
+    max-height: 4.5rem;
+  }
   .logo_rep {
     margin: 0.7rem;
     max-height: 4.5rem;

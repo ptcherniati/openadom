@@ -1,5 +1,5 @@
 <template>
-  <div class="PageView">
+  <div class="PageView" role="main">
     <MenuView v-if="hasMenu" />
     <div :class="`PageView-container ${hasMenu ? '' : 'noMenu'}`">
       <slot></slot>
@@ -22,7 +22,7 @@ export default class PageView extends Vue {
 
   created() {
     const authenticatedUser = this.loginService.getAuthenticatedUser();
-    if (!authenticatedUser || !authenticatedUser.id) {
+    if (!authenticatedUser?.id) {
       this.$router.push("/login").catch(() => {});
     }
   }

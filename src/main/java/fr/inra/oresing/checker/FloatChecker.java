@@ -1,45 +1,56 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
-public class FloatChecker implements CheckerOnOneVariableComponentLineChecker {
+public class FloatChecker implements CheckerOnOneVariableComponentLineChecker<FloatCheckerConfiguration> {
+    private final CheckerTarget target;
+    private final FloatCheckerConfiguration configuration;
 
+    @JsonIgnore
+    private final LineTransformer transformer;
 
-    private final VariableComponentKey variableComponentKey;
-
-    private final String column;
-
-    public FloatChecker(VariableComponentKey variableComponentKey) {
-        this.variableComponentKey = variableComponentKey;
-        this.column="";
-    }
-    public FloatChecker(String column) {
-        this.column = column;
-        this.variableComponentKey = null;
+    public CheckerTarget getTarget(){
+        return this.target;
     }
 
-    @Override
-    public VariableComponentKey getVariableComponentKey() {
-        return variableComponentKey;
+    public FloatChecker(CheckerTarget target, FloatCheckerConfiguration configuration, LineTransformer transformer) {
+        this.target = target;
+        this.configuration = configuration;
+        this.transformer = transformer;
     }
 
     @Override
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
-            Float.parseFloat(value);
+            Float.parseFloat(value.replaceAll(",", "."));
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidFloat", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error(
+                    getTarget().getInternationalizedKey("invalidFloat"), ImmutableMap.of(
+                            "target", target.getTarget(),
+                            "value", value));
         }
         return validationCheckResult;
     }
 
     @Override
-    public String getColumn() {
-        return column;
+    public FloatCheckerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
+    }
+
+    @Override
+    public SqlPrimitiveType getSqlType() {
+        return SqlPrimitiveType.NUMERIC;
     }
 }

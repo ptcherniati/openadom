@@ -1,8 +1,13 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
     <h1 class="title main-title">
-      {{ $t("titles.references-page", { applicationName: application.title }) }}
+      {{ $t("titles.references-page", { applicationName: application.localName }) }}
     </h1>
     <div>
       <CollapsibleTree
@@ -13,13 +18,30 @@
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
-      />
+      >
+      </CollapsibleTree>
       <ReferencesDetailsPanel
         :leftAlign="false"
         :open="openPanel"
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
       />
+      <!--      <b-pagination
+        v-model="currentPage"
+        :per-page="params.limit"
+        :total="references.length"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
+        order="is-centered"
+        range-after="3"
+        range-before="3"
+        :rounded="true"
+        style="padding-bottom: 20px"
+      >
+      </b-pagination>-->
     </div>
   </PageView>
 </template>
@@ -30,6 +52,7 @@ import { convertReferencesToTrees } from "@/utils/ConversionUtils";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import ReferencesDetailsPanel from "@/components/references/ReferencesDetailsPanel.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 import { ReferenceService } from "@/services/rest/ReferenceService";
 
 import PageView from "../common/PageView.vue";
@@ -46,9 +69,11 @@ export default class ReferencesManagementView extends Vue {
 
   applicationService = ApplicationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
 
   references = [];
+  currentPage = 1;
   openPanel = false;
   chosenRef = null;
   application = new ApplicationResult();
@@ -58,7 +83,7 @@ export default class ReferencesManagementView extends Vue {
       this.$t("referencesManagement.consult"),
       "eye",
       (label) => this.consultReference(label),
-      "is-primary"
+      "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
       this.downloadReference(label)
@@ -79,10 +104,17 @@ export default class ReferencesManagementView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      if (!this.application || !this.application.id) {
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+      };
+      if (!this.application?.id) {
         return;
       }
-      this.references = convertReferencesToTrees(Object.values(this.application.references));
+      this.references = convertReferencesToTrees(
+        Object.values(this.internationalisationService.treeReferenceName(this.application))
+      );
     } catch (error) {
       this.alertService.toastServerError();
     }
@@ -119,7 +151,8 @@ export default class ReferencesManagementView extends Vue {
   }
 
   findReferenceByLabel(label) {
-    return Object.values(this.application.references).find((ref) => ref.label === label);
+    var ref = Object.values(this.application.references).find((ref) => ref.label === label);
+    return ref;
   }
 }
 </script>

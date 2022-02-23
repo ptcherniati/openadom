@@ -1,30 +1,26 @@
 package fr.inra.oresing.checker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.transformer.LineTransformer;
 
-public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker {
+public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker<IntegerCheckerConfiguration> {
+    private final CheckerTarget target;
+    private final IntegerCheckerConfiguration configuration;
+    @JsonIgnore
+    private final LineTransformer transformer;
 
-
-    private final VariableComponentKey variableComponentKey;
-
-    private final String column;
-
-    public IntegerChecker(VariableComponentKey variableComponentKey) {
-        this.variableComponentKey = variableComponentKey;
-        this.column="";
+    public CheckerTarget getTarget(){
+        return this.target;
     }
 
-    public IntegerChecker(String column) {
-        this.variableComponentKey = null;
-        this.column=column;
-    }
-
-    @Override
-    public VariableComponentKey getVariableComponentKey() {
-        return variableComponentKey;
+    public IntegerChecker(CheckerTarget target, IntegerCheckerConfiguration configuration, LineTransformer transformer) {
+        this.configuration = configuration;
+        this.target = target;
+        this.transformer = transformer;
     }
 
     @Override
@@ -34,13 +30,25 @@ public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker 
             Integer.parseInt(value);
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
-            validationCheckResult = DefaultValidationCheckResult.error("invalidInteger", ImmutableMap.of("variableComponentKey", getVariableComponentKey()==null?getColumn():getVariableComponentKey(), "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error(getTarget().getInternationalizedKey("invalidInteger"),
+                    ImmutableMap.of("target",target.getTarget(),
+                            "value", value));
         }
         return validationCheckResult;
     }
 
     @Override
-    public String getColumn() {
-        return column;
+    public SqlPrimitiveType getSqlType() {
+        return SqlPrimitiveType.INTEGER;
+    }
+
+    @Override
+    public IntegerCheckerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public LineTransformer getTransformer() {
+        return transformer;
     }
 }

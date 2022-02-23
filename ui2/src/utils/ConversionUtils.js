@@ -18,8 +18,16 @@ function replaceChildrenIdByObject(references, initialRef) {
       });
       ref.children = replaceChildrenIdByObject(children, initialRef);
     } else {
+      if (ref && ref.internationalizationName) {
+        return { ...ref, localName: ref.refNameLocal || ref.name };
+      }
       return ref;
     }
   });
-  return references;
+  return references.map((ref) => {
+    if (ref && ref.refNameLocal) {
+      return { ...ref, localName: ref.refNameLocal || ref.name };
+    }
+    return ref;
+  });
 }

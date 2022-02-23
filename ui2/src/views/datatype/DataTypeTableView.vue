@@ -1,28 +1,103 @@
 /* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
 
-    <h1 class="title main-title">{{ dataTypeId }}</h1>
-    <div class="DataSetTableView-wrapper table-wrapper">
-      <table class="table is-striped">
-        <tr>
-          <td>
-            <b-button
-              label="trier"
-              @click="showSort = !showSort"
-              type="is-primary"
-              icon-left="filter"
-              >réinitialiser</b-button
+    <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
+    <div class="columns" v-if="!showSort && !showFilter">
+      <div
+        v-if="
+          this.params.variableComponentOrderBy.length !== 0 ||
+          this.params.variableComponentFilters.length !== 0
+        "
+        class="column is-5-desktop is-12-tablet"
+      >
+        {{ $t("dataTypesManagement.sorted") }} {{ $t("ponctuation.colon") }}
+        <b-field grouped group-multiline>
+          <b-taglist>
+            <div
+              v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+              :key="index"
             >
-          </td>
-          <td>
-            <b-button @click="reInit" type="is-primary" icon-left="redo">réinitialiser</b-button>
-          </td>
-        </tr>
-      </table>
+              <b-tag
+                type="is-dark"
+                size="is-medium"
+                rounded
+                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+              >
+                {{ variableComponent.variableComponentKey.variable }}
+                {{ $t("ponctuation.colon") }}
+                {{ variableComponent.variableComponentKey.component }}
+                {{ $t("ponctuation.arrow-right") }}
+                {{ variableComponent.order }}
+              </b-tag>
+            </div>
+          </b-taglist>
+        </b-field>
+      </div>
+      <div
+        v-if="
+          this.params.variableComponentOrderBy.length !== 0 ||
+          this.params.variableComponentFilters.length !== 0
+        "
+        class="column is-5-desktop is-12-tablet"
+      >
+        {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+        <b-field grouped group-multiline>
+          <b-taglist>
+            <div
+              v-for="(variableComponent, index) in this.params.variableComponentFilters"
+              :key="index"
+            >
+              <b-tag
+                size="is-medium"
+                rounded
+                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+              >
+                {{ variableComponent.variableComponentKey.variable }}
+                {{ $t("ponctuation.colon") }}
+                {{ variableComponent.variableComponentKey.component }}
+                {{ $t("ponctuation.arrow-right") }}
+                {{ variableComponent.filter }}
+              </b-tag>
+            </div>
+          </b-taglist>
+        </b-field>
+      </div>
     </div>
-    <b-modal v-model="currentReferenceDetail.active" width="500" custom-class="referenceDetails">
+    <div class="columns">
+      <div class="column is-5-desktop is-4-tablet">
+        <b-button
+          icon-left="sort-amount-down"
+          :label="$t('applications.trier')"
+          type="is-dark"
+          @click="showSort = !showSort"
+          outlined
+        ></b-button>
+      </div>
+      <div class="column is-5-desktop is-4-tablet">
+        <b-button
+          icon-left="filter"
+          :label="$t('applications.filter')"
+          type="is-light"
+          @click="showFilter = !showFilter"
+          outlined
+          inverted
+        ></b-button>
+      </div>
+      <div class="column is-2-desktop is-4-tablet">
+        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
+          >{{ $t("dataTypesManagement.réinitialiser") }}
+          {{ $t("dataTypesManagement.all") }}</b-button
+        >
+      </div>
+    </div>
+    <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails">
       <div class="card">
         <header class="card-header is-align-content-center">
           <p class="card-header-title">{{ currentReferenceDetail.reference }}</p>
@@ -30,92 +105,252 @@
         <div class="card-content">
           <div class="content is-align-content-center">
             <b-table
-              :data="currentReferenceDetail.data"
               :columns="currentReferenceDetail.columns"
+              :data="currentReferenceDetail.data"
             />
           </div>
         </div>
       </div>
     </b-modal>
-    <div class="notification" v-if="showSort">
+    <div
+      v-if="showSort"
+      class="notification"
+      role="search"
+      style="background-color: rgba(0, 163, 166, 0.1)"
+    >
+      <h2>{{ $t("applications.trier") }}</h2>
       <div class="content">
-        <div class="rows">
-          <div class="row">
-            <div class="columns">
-              <div class="column">
-                <b-field>
-                  <ul>
-                    <div class="rows">
-                      <div
-                        class="row variableComponent"
-                        v-for="(variableComponent, index) in variableComponentsListToSort"
-                        :key="index"
-                        :class="variableComponent.order"
-                      >
-                        <div class="columns">
-                          <div class="column orderLabel">
-                            {{ variableComponent.variableComponentKey.variable }} :
-                            {{ variableComponent.variableComponentKey.component }}
-                          </div>
-                          <div>
-                            <b-button
-                              class="column asc"
-                              @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
-                            >
-                              ASC
-                            </b-button>
-                          </div>
-
-                          <div>
-                            <button
-                              class="column desc"
-                              @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
-                            >
-                              DESC
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </ul>
-                </b-field>
-              </div>
-              <div class="column">
-                <div class="rows">
+        <div class="columns is-multiline">
+          <div class="column is-9-widescreen is-12-desktop">
+            <b-tabs
+              v-model="activeTab"
+              :multiline="true"
+              type="is-boxed"
+              position="is-centered"
+              style="text-transform: capitalize; text-decoration: none"
+            >
+              <template v-for="variable in variables" class="row variableComponent">
+                <b-tab-item
+                  :key="variable.id"
+                  :label="variable.id"
+                  style="text-transform: capitalize"
+                >
                   <div
-                    class="row"
-                    v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                    v-for="(variableComponent, index) in variableComponentsListToSort"
                     :key="index"
                     :class="variableComponent.order"
+                    class="row variableComponent"
                   >
-                    <div class="columns">
+                    <div
+                      v-if="variableComponent.variableComponentKey.variable === variable.id"
+                      class="columns"
+                    >
                       <div class="column orderLabel">
-                        {{ variableComponent.order }} ->
-                        {{ variableComponent.variableComponentKey.variable }} :
+                        {{ variableComponent.variableComponentKey.variable }}
+                        {{ $t("ponctuation.colon") }}
                         {{ variableComponent.variableComponentKey.component }}
+                      </div>
+                      <div>
+                        <b-button
+                          class="column asc"
+                          style="margin: 10px; border-color: #dbdbdb"
+                          type="is-white"
+                          @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
+                        >
+                          {{ $t("dataTypesManagement.ASC") }}
+                        </b-button>
+                      </div>
+                      <div style="margin-right: 10px">
+                        <b-button
+                          class="column desc"
+                          style="margin: 10px; border-color: #dbdbdb"
+                          type="is-white"
+                          @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
+                        >
+                          {{ $t("dataTypesManagement.DESC") }}
+                        </b-button>
                       </div>
                     </div>
                   </div>
+                </b-tab-item>
+              </template>
+            </b-tabs>
+          </div>
+          <div class="column is-3-widescreen is-12-desktop">
+            <draggable class="rows">
+              <div
+                v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                :key="index"
+                :class="variableComponent.order"
+                class="row"
+              >
+                <div
+                  class="control column"
+                  style="padding: 6px"
+                  :id="
+                    variableComponent.variableComponentKey.variable +
+                    variableComponent.variableComponentKey.component
+                  "
+                >
+                  <div class="tags has-addons">
+                    <span class="tag is-dark grape" style="font-size: 1rem">
+                      <b-icon icon="stream" style="transform: rotate(180deg)"></b-icon>
+                    </span>
+                    <span class="tag is-dark orderLabel" style="font-size: 1rem">
+                      {{ variableComponent.variableComponentKey.variable }}
+                      {{ $t("ponctuation.colon") }}
+                      {{ variableComponent.variableComponentKey.component }}
+                      {{ $t("ponctuation.arrow-right") }}
+                      {{ variableComponent.order }}
+                    </span>
+                    <a
+                      class="tag is-delete is-dark"
+                      style="font-size: 1rem; color: white"
+                      @click="
+                        deleteTag(
+                          variableComponent.variableComponentKey.variable,
+                          variableComponent.variableComponentKey.component
+                        )
+                      "
+                    ></a>
+                  </div>
+                </div>
+              </div>
+            </draggable>
+            <div class="row">
+              <div class="columns">
+                <div class="column">
+                  <b-button icon-left="redo" expanded type="is-danger" @click="clearOrder" outlined
+                    >{{ $t("dataTypesManagement.réinitialiser") }}
+                    {{ $t("dataTypesManagement.tri") }}</b-button
+                  >
+                </div>
+                <div class="column">
+                  <b-button icon-left="check" type="is-dark" expanded @click="initDatatype" outlined
+                    >{{ $t("dataTypesManagement.validate") }}
+                    {{ $t("dataTypesManagement.tri") }}</b-button
+                  >
                 </div>
               </div>
             </div>
           </div>
-          <div class="row">
-            <b-button type="is-success" expanded size="is-large" @click="initDatatype"
-              >order</b-button
+        </div>
+      </div>
+    </div>
+    <div v-if="showFilter" class="notification" role="search">
+      <h2>{{ $t("applications.filter") }}</h2>
+      <div class="columns is-multiline">
+        <div
+          class="column is-2-widescreen is-6-desktop is-12-tablet"
+          v-for="(variable, index) in variables"
+          :key="variable.id"
+          :variable="variable.id"
+        >
+          <b-collapse class="card" animation="slide" :open="isOpen == index" @open="isOpen = index">
+            <template #trigger="props">
+              <div class="card-header" role="button">
+                <p class="card-header-title" style="text-transform: capitalize">
+                  {{ variable.id }}
+                </p>
+                <a class="card-header-icon">
+                  <b-icon :icon="props.open ? 'sort-down' : 'sort-up'"> </b-icon>
+                </a>
+              </div>
+            </template>
+            <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
+              <div
+                class="content"
+                v-for="(component, index) in variableComponents"
+                :key="`${index}`"
+                :component="component.component"
+                :variable="component.variable"
+                style="margin-bottom: 10px"
+              >
+                <b-field v-if="variable.id === component.variable" :label="component.component">
+                  <b-field v-if="'date' === component.type || 'numeric' === component.type">
+                    <CollapsibleInterval
+                      :variableComponent="component"
+                      @setting_interval="addVariableSearch"
+                    ></CollapsibleInterval>
+                  </b-field>
+                  <b-input
+                    v-model="search[component.variable + '_' + component.component]"
+                    icon-right="search"
+                    placeholder="Search..."
+                    type="search"
+                    @blur="addVariableSearch(component)"
+                    size="is-small"
+                  ></b-input>
+                  <b-field>
+                    <b-button
+                      type="is-dark"
+                      size="is-small"
+                      @click="this.params.variableComponentFilters.isRegex = true"
+                      outlined
+                    >
+                      {{ $t("ponctuation.regEx") }}</b-button
+                    >
+                  </b-field>
+                </b-field>
+              </div>
+            </div>
+          </b-collapse>
+        </div>
+      </div>
+      <div class="columns">
+        <div class="column is-8-widescreen is-6-desktop">
+          {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+          <b-field grouped group-multiline>
+            <b-taglist>
+              <div
+                v-for="(variableComponent, index) in this.params.variableComponentFilters"
+                :key="index"
+              >
+                <b-tag
+                  size="is-medium"
+                  rounded
+                  style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                >
+                  {{ variableComponent.variableComponentKey.variable }}
+                  {{ $t("ponctuation.colon") }}
+                  {{ variableComponent.variableComponentKey.component }}
+                  {{ $t("ponctuation.arrow-right") }}
+                  {{ variableComponent.filter }}
+                </b-tag>
+              </div>
+            </b-taglist>
+          </b-field>
+        </div>
+        <div class="column is-2-widescreen is-3-desktop">
+          <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
+            >{{ $t("dataTypesManagement.réinitialiser") }}
+            {{ $t("dataTypesManagement.filtre") }}</b-button
+          >
+        </div>
+        <div class="column is-2-widescreen is-3-desktop">
+          <p class="control">
+            <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
+              >{{ $t("dataTypesManagement.validate") }}
+              {{ $t("dataTypesManagement.filtre") }}</b-button
             >
-          </div>
+          </p>
         </div>
       </div>
     </div>
     <div class="b-table">
-      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 750px">
+      <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 690px">
         <table class="table is-striped">
-          <caption v-if="variables.length == 0">
-            Pas de données correspondant à vos critères
-            <b-button @click="reInit" type="is-primary" icon-left="redo">réinitialiser</b-button>
+          <caption v-if="variables.length === 0">
+            <div class="columns">
+              {{ $t("alert.dataTypeFiltreEmpty") }}
+            </div>
+            <div class="columns">
+              <b-button icon-left="redo" type="is-danger" @click="reInit">{{
+                $t("dataTypesManagement.réinitialiser")
+              }}</b-button>
+            </div>
           </caption>
-          <thead>
+          <thead style="text-transform: capitalize; text-align: center">
             <tr class="DataSetTableView-variable-row">
               <th
                 v-for="variable in variables"
@@ -130,62 +365,43 @@
               <th
                 v-for="(comp, index) in variableComponents"
                 :key="`${comp.label}-${index}`"
-                :variable="comp.variable"
                 :component="comp.component"
+                :variable="comp.variable"
               >
                 {{ comp.label }}
                 <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
-              </th>
-            </tr>
-            <tr>
-              <th
-                v-for="(component, index) in variableComponents"
-                :key="`${index}`"
-                :variable="component.variable"
-                :component="component.component"
-              >
-                <b-field grouped>
-                  <b-field v-if="'date' == component.type || 'numeric' == component.type">
-                    <CollapsibleInterval
-                      :variableComponent="component"
-                      @setting_interval="addSearch"
-                    ></CollapsibleInterval>
-                  </b-field>
-                  <b-field>
-                    <b-input
-                      v-model="search[component.variable + '_' + component.component]"
-                      placeholder="Search..."
-                      type="search"
-                      icon-pack="fas"
-                      icon="search"
-                      icon-clickable
-                      @icon-click="addSearch(component)"
-                    >
-                    </b-input>
-                  </b-field>
-                </b-field>
               </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
               <td
+                style="text-align: center; vertical-align: middle"
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
-                :variable="component.variable"
                 :component="component.component"
+                :variable="component.variable"
               >
-                <span>
-                  {{ row[component.variable][component.component] }}
-                  {{ row.result }}
+                <span
+                  v-if="
+                    row[component.variable][component.component] &&
+                    component.checker &&
+                    component.checker.pattern
+                  "
+                >
+                  {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
-                <span v-if="getRefsLinkedToId(row, component)">
-                  <b-button
-                    size="is-small"
-                    icon-right="eye"
+                <span v-else>
+                  <a
+                    class="button inTable"
+                    v-if="getRefsLinkedToId(row, component)"
                     @click="getReferenceValues(row, component)"
                   >
-                  </b-button>
+                    {{ getDisplay(row, component.variable, component.component) }}
+                  </a>
+                  <p v-if="!getRefsLinkedToId(row, component)">
+                    {{ row[component.variable][component.component] }}
+                  </p>
                 </span>
               </td>
             </tr>
@@ -193,17 +409,18 @@
         </table>
       </div>
       <b-pagination
-        :total="totalRows"
         v-model="currentPage"
         :per-page="params.limit"
-        size="is-large"
+        :total="totalRows"
+        role="navigation"
+        :aria-label="$t('menu.aria-pagination')"
+        :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-next-label="$t('menu.aria-next-page')"
+        :aria-previous-label="$t('menu.aria-previous-page')"
         order="is-centered"
-        range-before="3"
         range-after="3"
-        aria-next-label="Next page"
-        aria-previous-label="Previous page"
-        aria-page-label="Page"
-        aria-current-label="Current page"
+        range-before="3"
+        :rounded="true"
         @change="changePage"
       >
       </b-pagination>
@@ -226,9 +443,11 @@ import { VariableComponentFilters } from "@/model/application/VariableComponentF
 import { VariableComponentKey } from "@/model/application/VariableComponentKey";
 import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
+import draggable from "vuedraggable";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval },
+  components: { PageView, SubMenu, CollapsibleInterval, draggable },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -239,6 +458,7 @@ export default class DataTypeTableView extends Vue {
   dataService = DataService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
   alertService = AlertService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   arrow;
   application = new ApplicationResult();
   subMenuPaths = [];
@@ -251,13 +471,14 @@ export default class DataTypeTableView extends Vue {
     applicationNameOrId: this.applicationName,
     dataType: this.dataTypeId,
     offset: 0,
-    limit: 15,
+    limit: 10,
     variableComponentSelects: [],
     variableComponentFilters: [],
     variableComponentOrderBy: [],
   });
   showDetails = false;
   showSort = false;
+  showFilter = false;
   controlPanels = null;
   totalRows = -1;
   currentPage = 1;
@@ -266,6 +487,11 @@ export default class DataTypeTableView extends Vue {
   refsLinkedTo = {};
   loadedReferences = {};
   currentReferenceDetail = { active: false };
+  activeTab = 0;
+  isOpen = 0;
+  variableSearch = [];
+  referenceLineCheckers = [];
+  isRegExp = false;
 
   async created() {
     await this.init();
@@ -283,6 +509,7 @@ export default class DataTypeTableView extends Vue {
       ),
     ];
   }
+
   async reInit() {
     this.params = new DownloadDatasetQuery({
       application: null,
@@ -299,8 +526,18 @@ export default class DataTypeTableView extends Vue {
 
   async init() {
     this.application = await this.applicationService.getApplication(this.applicationName);
+    this.application = {
+      ...this.application,
+      localName: this.internationalisationService.mergeInternationalization(this.application)
+        .localName,
+      localDatatypeName: this.internationalisationService.localeDataTypeIdName(
+        this.application,
+        this.application.dataTypes[this.dataTypeId]
+      ),
+    };
     await this.initDatatype();
   }
+
   async initDatatype() {
     this.showSort = false;
     const dataTypes = await this.dataService.getDataType(
@@ -308,6 +545,9 @@ export default class DataTypeTableView extends Vue {
       this.dataTypeId,
       this.params
     );
+    this.referenceLineCheckers = dataTypes.checkedFormatVariableComponents.ReferenceLineChecker;
+    this.translations = dataTypes.entitiesTranslations;
+    this.data;
     this.refsLinkedTo = dataTypes.rows.reduce((acc, d) => {
       acc[d.rowId] = d.refsLinkedTo;
       return acc;
@@ -358,8 +598,17 @@ export default class DataTypeTableView extends Vue {
       });
     });
   }
+
   getRefsLinkedToId(row, component) {
     return this.refsLinkedTo[row.rowId][component.variable][component.component];
+  }
+
+  getTranslation(row, component) {
+    let reference = component.checker.refType;
+    let translations = this.translations?.[reference];
+    console.log(translations);
+    let translation = row[component.variable][component.component];
+    return translation;
   }
   async getReferenceValues(row, component) {
     const rowId = this.getRefsLinkedToId(row, component);
@@ -405,10 +654,12 @@ export default class DataTypeTableView extends Vue {
     this.currentReferenceDetail = { ...referenceValue, active: true };
     return referenceValue;
   }
+
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;
     await this.initDatatype();
   }
+
   getVariableIndex(columnIndex) {
     let variableIndex = 0;
     for (const [key, value] of this.mapVariableIndexByColumnIndex) {
@@ -419,6 +670,7 @@ export default class DataTypeTableView extends Vue {
     }
     return variableIndex;
   }
+
   addVariableComponentToSortedList(variableComponentSorted, order) {
     variableComponentSorted.order = variableComponentSorted.order == order ? null : order;
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
@@ -432,6 +684,15 @@ export default class DataTypeTableView extends Vue {
       );
     }
   }
+  deleteTag(variable, component) {
+    this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
+      (c) =>
+        c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
+    );
+    this.params.variableComponentOrderBy.delete();
+    document.getElementById(variable + component).remove();
+  }
+
   getSortIcon(variable, component) {
     variable, component, event;
     let icon = this.params.variableComponentOrderBy
@@ -451,8 +712,10 @@ export default class DataTypeTableView extends Vue {
       })[0];
     return icon ? icon : null;
   }
-  addSearch(variableComponent) {
+
+  addVariableSearch(variableComponent) {
     let { key, variable, component, type, format } = variableComponent;
+    let isRegExp = this.params.variableComponentFilters.isRegex;
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
       (c) =>
@@ -468,6 +731,7 @@ export default class DataTypeTableView extends Vue {
         filter: value,
         type: type,
         format: format,
+        isRegExp: isRegExp,
       });
     }
     if (variableComponent.intervalValues) {
@@ -478,15 +742,51 @@ export default class DataTypeTableView extends Vue {
         }),
         type: type,
         format: format,
+        isRegExp: isRegExp,
         intervalValues: variableComponent.intervalValues,
         ...(search ? new IntervalValues(search) : {}),
       });
     }
     if (search) {
-      this.params.variableComponentFilters.push(search);
+      this.variableSearch.push(search);
     }
     this.initDatatype();
   }
+  addSearch() {
+    this.params.variableComponentFilters = [];
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      if (this.variableSearch[i]) {
+        this.params.variableComponentFilters.push(this.variableSearch[i]);
+      }
+    }
+    this.initDatatype();
+    this.showFilter = false;
+  }
+  clearSearch() {
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      this.params.variableComponentFilters = [];
+      this.variableSearch = [];
+    }
+    this.initDatatype();
+  }
+  clearOrder() {
+    for (var i = 0; i < this.params.variableComponentOrderBy.length; i++) {
+      this.params.variableComponentOrderBy = [];
+    }
+    this.initDatatype();
+  }
+  getDisplay(row, variable, component) {
+    var key = variable + "_" + component;
+    var value = row[variable][component];
+    if (this.referenceLineCheckers[key]) {
+      if (this.referenceLineCheckers[key].display) {
+        var display = this.referenceLineCheckers[key].display[value];
+        return display ? display : value;
+      }
+    }
+    return value;
+  }
+
   getVariableComponentInfos(variableId, componentId, dataTypes) {
     let type = null;
     let format = null;
@@ -552,25 +852,47 @@ $row-variable-height: 60px;
     }
   }
 }
-.referenceToast {
-  background-color: rgb(61, 107, 8);
-}
 
 .DataSetTableView-variable-row {
   height: $row-variable-height;
 }
+
 .orderLabel {
   flex-grow: 10;
 }
-.row.variableComponent:hover {
-  background-color: grey;
-  color: white;
+.grape {
+  cursor: move;
 }
+
+.row.variableComponent {
+  padding: 0;
+}
+.row.variableComponent:hover {
+  background-color: rgba(0, 163, 166, 0.2);
+}
+
 .ASC .asc,
 .DESC .desc {
-  background-color: rgb(87, 141, 87);
+  background-color: $dark;
+  color: white;
 }
+
 .numberInput {
   width: 3em;
+}
+
+.button.inTable {
+  color: $dark;
+  background-color: transparent;
+  border: transparent;
+}
+.button.inTable:hover {
+  color: $dark;
+  background-color: transparent;
+  border: transparent;
+  text-decoration: underline;
+}
+.columns {
+  margin: 0;
 }
 </style>

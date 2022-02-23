@@ -3,17 +3,26 @@
     <div>
       <b-button
         size="is-small"
-        type="is-success is-light"
+        type="is-dark is-light"
         icon-left="plus"
+        outlined
         @click="isCardModalActive = true"
       />
       <b-modal v-model="isCardModalActive" outlined scroll="keep">
         <div class="card">
+          <header class="card-header is-align-content-center">
+            <p class="card-header-title" v-if="this.variableComponent.type == 'numeric'">
+              {{ $t("dataTypesManagement.title-modal-numeric") }}
+            </p>
+            <p class="card-header-title" v-if="this.variableComponent.type == 'date'">
+              {{ $t("dataTypesManagement.title-modal-date") }}
+            </p>
+          </header>
           <div class="rows">
             <div class="row">
               <div class="columns">
                 <div class="column is-one-fifth">
-                  <label class="label">From</label>
+                  <label class="label">{{ $t("dataTypeAuthorizations.from") }}</label>
                 </div>
                 <div class="column is-four-fifth">
                   <b-input
@@ -31,7 +40,7 @@
             <div class="row">
               <div class="columns">
                 <div class="column is-one-fifth is-right">
-                  <label class="label">to</label>
+                  <label class="label">{{ $t("dataTypeAuthorizations.to") }}</label>
                 </div>
                 <div class="column is-four-fifth">
                   <b-input
@@ -48,9 +57,15 @@
             </div>
             <div class="row">
               <div class="columns">
-                <div class="column is-one-fifth>"></div>
-                <div class="column is-four-fifth">
-                  <b-button type="is-primary" size="is-large" icon-right="filter" @click="submit" />
+                <div class="column is-4"></div>
+                <div class="column is-4">
+                  <b-button
+                    icon-left="filter"
+                    type="is-dark"
+                    expanded
+                    @click="submit"
+                    outlined
+                  ></b-button>
                 </div>
               </div>
             </div>

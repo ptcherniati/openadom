@@ -1,30 +1,29 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.persistence.OperationType;
 import lombok.Value;
 
-import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Value
 public class CreateAuthorizationRequest {
+    UUID uuid;
 
-    UUID userId;
+    String name;
+
+    Set<UUID> usersId;
 
     String applicationNameOrId;
 
     String dataType;
 
-    String dataGroup;
+    Map<OperationType, List<Authorization>> authorizations;
 
-    Map<String, String> authorizedScopes;
-
-    LocalDate fromDay;
-
-    LocalDate toDay;
-
-    public LocalDateTimeRange getTimeScope() {
+    /*public LocalDateTimeRange getTimeScope() {
         LocalDateTimeRange timeScope;
         if (getFromDay() == null) {
             if (getToDay() == null) {
@@ -40,5 +39,5 @@ public class CreateAuthorizationRequest {
             }
         }
         return timeScope;
-    }
+    }*/
 }

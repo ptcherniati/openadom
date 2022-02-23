@@ -1,11 +1,6 @@
 package fr.inra.oresing.persistence;
 
-import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
-import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.persistence.roles.OreSiRoleManagedByApplication;
-import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
-import fr.inra.oresing.persistence.roles.OreSiRoleToBeGranted;
-import fr.inra.oresing.persistence.roles.OreSiRoleWeCanGrantOtherRolesTo;
+import fr.inra.oresing.persistence.roles.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
@@ -114,6 +109,12 @@ public class SqlService {
         String sql = "GRANT " + roleToAdd.getSqlIdentifier() + ""
                      + " TO " + roleToModify.getSqlIdentifier() + ""
                      + withAdminOptionClause;
+        execute(sql);
+    }
+
+    public void removeUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
+        String sql = "REVOKE " + roleToAdd.getSqlIdentifier() + ""
+                     + " FROM " + roleToModify.getSqlIdentifier();
         execute(sql);
     }
 

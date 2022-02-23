@@ -1,0 +1,72 @@
+validations:
+  typeSitesRef:
+    description: référence au type de site
+    checker:
+      name: Reference
+      params:
+        refType: types_de_zones_etudes
+        columns: type de site
+        required: true
+        codify: true
+  parent_ref:
+    description: référence au parent
+    checker:
+      name: Reference
+      params:
+        refType: zones_etudes
+        columns: parent
+        required: false
+        codify: true
+  date début:
+    description: date de début
+    checker:
+      name: Date
+      params:
+        pattern: dd/MM/yyyy
+        columns: date début
+  date fin:
+    description: date de fin
+    checker:
+      name: Date
+      params:
+        pattern: dd/MM/yyyy
+        columns: date fin
+internationalizationName:
+  fr: Zones d'études
+  en: Study areas
+internationalizedColumns:
+  description_fr:
+    fr: description_fr
+    en: description_en
+internationalizationDisplay:
+  pattern:
+    fr: '{nom}'
+    en: '{nom}'
+keyColumns:
+  - parent
+  - nom
+columns:
+  type de site: null
+  nom: null
+  description_fr: null
+  description_en: null
+  date début: null
+  date fin: null
+  latitude: null
+  longitude: null
+  surface: null
+  altitude: null
+  pente: null
+  direction pente_fr: null
+  direction pente_en: null
+  pays_fr: null
+  pays_en: null
+  région_fr: null
+  région_en: null
+  temp moyenne: null
+  précip moyenne: null
+  direction vent_fr: null
+  direction vent_en: null
+  type foret_fr: null
+  type foret_en: null
+  parent: null

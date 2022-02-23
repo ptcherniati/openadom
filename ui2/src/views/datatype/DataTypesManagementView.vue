@@ -1,8 +1,17 @@
 <template>
   <PageView class="with-submenu">
-    <SubMenu :root="application.title" :paths="subMenuPaths" />
+    <SubMenu
+      :root="application.localName || application.title"
+      :paths="subMenuPaths"
+      role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+    />
     <h1 class="title main-title">
-      {{ $t("titles.data-types-page", { applicationName: application.title }) }}
+      {{
+        $t("titles.data-types-page", {
+          applicationName: application.localName || application.title,
+        })
+      }}
     </h1>
     <div>
       <CollapsibleTree
@@ -11,7 +20,9 @@
         :option="data"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
-        :onUploadCb="(label, file) => uploadDataTypeCsv(label, file)"
+        :onUploadCb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
+        :repository="data.repository"
+        :repositoryRedirect="(label) => showRepository(label)"
         :buttons="buttons"
       />
       <DataTypeDetailsPanel
@@ -50,6 +61,7 @@ import { AlertService } from "@/services/AlertService";
 import { DataService } from "@/services/rest/DataService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
+import { InternationalisationService } from "@/services/InternationalisationService";
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 
 @Component({
@@ -59,6 +71,7 @@ export default class DataTypesManagementView extends Vue {
   @Prop() applicationName;
 
   applicationService = ApplicationService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
@@ -70,7 +83,7 @@ export default class DataTypesManagementView extends Vue {
       this.$t("referencesManagement.consult"),
       "eye",
       (label) => this.consultDataType(label),
-      "is-primary"
+      "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
       this.downloadDataType(label)
@@ -96,12 +109,17 @@ export default class DataTypesManagementView extends Vue {
   async init() {
     try {
       this.application = await this.applicationService.getApplication(this.applicationName);
-      if (!this.application || !this.application.id) {
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+          .localName,
+      };
+      if (!this.application?.id) {
         return;
       }
-      if (this.application.dataTypes) {
-        this.dataTypes = Object.values(this.application.dataTypes);
-      }
+      this.dataTypes = Object.values(
+        this.internationalisationService.localeDatatypeName(this.application)
+      );
     } catch (error) {
       this.alertService.toastServerError();
     }
@@ -129,16 +147,24 @@ export default class DataTypesManagementView extends Vue {
     }
   }
 
-  async downloadDataType(label) {
+  async downloadDataType(event, label) {
     this.dataService.getDataTypesCsv(this.applicationName, label);
   }
 
   checkMessageErrors(error) {
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-      this.errorsMessages = this.errorsService.getCsvErrorsMessages(error.content);
+      if (error.content != null) {
+        this.errorsMessages = this.errorsService.getCsvErrorsMessages(error.content);
+      } else {
+        this.alertService.toastServerError(error);
+      }
     } else {
       this.alertService.toastServerError(error);
     }
+  }
+  showRepository(label) {
+    const dataType = this.dataTypes.find((dt) => dt.label === label);
+    this.$router.push(`/applications/${this.applicationName}/dataTypesRepository/${dataType.id}`);
   }
 }
 </script>

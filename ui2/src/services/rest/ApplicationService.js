@@ -1,4 +1,5 @@
 import { Fetcher } from "../Fetcher";
+import { InternationalisationService } from "@/services/InternationalisationService";
 
 export class ApplicationService extends Fetcher {
   static INSTANCE = new ApplicationService();
@@ -7,23 +8,34 @@ export class ApplicationService extends Fetcher {
     super();
   }
 
-  async createApplication(applicationConfig) {
+  async createApplication(applicationConfig, comment) {
     return this.post("applications/" + applicationConfig.name, {
       file: applicationConfig.file,
+      comment: comment,
     });
   }
 
   async getApplications() {
-    return this.get("applications/");
+    var applications = await this.get("applications/");
+    return applications.map((a) => {
+      return InternationalisationService.INSTANCE.mergeInternationalization(a);
+    });
   }
 
   async getApplication(name) {
-    return this.get("applications/" + name);
+    var application = await this.get("applications/" + name);
+    return InternationalisationService.INSTANCE.mergeInternationalization(application);
   }
 
   async validateConfiguration(applicationConfig) {
     return this.post("validate-configuration", {
       file: applicationConfig.file,
+    });
+  }
+  async changeConfiguration(applicationConfig, comment) {
+    return this.post("/applications/" + applicationConfig.name + "/configuration", {
+      file: applicationConfig.file,
+      comment: comment,
     });
   }
 

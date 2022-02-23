@@ -28,7 +28,7 @@ public class JsonRowMapper<T> implements RowMapper<T> {
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
      */
-    private ObjectMapper jsonMapper;
+    private final ObjectMapper jsonMapper;
 
     public JsonRowMapper() {
         jsonMapper = new ObjectMapper();
@@ -53,6 +53,18 @@ public class JsonRowMapper<T> implements RowMapper<T> {
                     @Override
                     public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                         return LocalDateTimeRange.parseSql(p.getText());
+                    }
+                })
+                .addSerializer(Ltree.class, new JsonSerializer<>() {
+                    @Override
+                    public void serialize(Ltree value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                        gen.writeString(value.getSql());
+                    }
+                })
+                .addDeserializer(Ltree.class, new JsonDeserializer<>() {
+                    @Override
+                    public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                        return Ltree.fromSql(p.getText());
                     }
                 })
                 ;

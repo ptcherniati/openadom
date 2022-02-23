@@ -6,6 +6,7 @@
       } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
       :style="`background-color:rgba(240, 245, 245, ${1 - level / 2})`"
       @click="displayChildren = !displayChildren"
+      @keypress.enter="displayChildren = !displayChildren"
     >
       <div class="CollapsibleTree-header-infos">
         <div class="CollapsibleTree-header-infos" :style="`transform:translate(${level * 50}px);`">
@@ -13,33 +14,36 @@
             v-if="option.children && option.children.length !== 0"
             :icon="displayChildren ? 'caret-down' : 'caret-right'"
             class="clickable mr-3"
+            tabindex="0"
           />
 
-          <b-radio
+          <b-checkbox
             v-if="withRadios"
             v-model="innerOptionChecked"
             :name="radioName"
             @click.native="stopPropagation"
             :native-value="option.id"
           >
-            {{ option.label }}
-          </b-radio>
+            {{ option.localName || option.label }}
+          </b-checkbox>
           <div
             v-else
             :class="onClickLabelCb ? 'link' : ''"
             @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            tabindex="0"
           >
-            {{ option.label }}
+            {{ option.localName || option.label }}
           </div>
         </div>
       </div>
       <div class="CollapsibleTree-buttons">
-        <b-field class="file button is-small is-info" v-if="onUploadCb">
+        <div class="file button is-small is-info" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
             class="file-label"
             accept=".csv"
-            @input="() => onUploadCb(option.label, refFile)"
+            @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
             <span class="file-name" v-if="refFile">
               {{ refFile.name }}
@@ -48,7 +52,18 @@
               <b-icon class="file-icon" icon="upload"></b-icon>
             </span>
           </b-upload>
-        </b-field>
+        </div>
+        <div v-else>
+          <b-button
+            icon-left="archive"
+            size="is-small"
+            class="ml-1"
+            :label="$t('dataTypesManagement.manage-datasets')"
+            @click="repositoryRedirect(option.label)"
+            type="is-info"
+          >
+          </b-button>
+        </div>
         <div v-for="button in buttons" :key="button.id">
           <b-button
             :icon-left="button.iconName"
@@ -93,6 +108,8 @@ export default class CollapsibleTree extends Vue {
   @Prop() buttons;
   @Prop({ default: false }) withRadios;
   @Prop() radioName;
+  @Prop() repository;
+  @Prop() repositoryRedirect;
 
   displayChildren = false;
   refFile = null;
@@ -105,6 +122,9 @@ export default class CollapsibleTree extends Vue {
 
   stopPropagation(event) {
     event.stopPropagation();
+  }
+  showChildren() {
+    this.displayChildren = true;
   }
 }
 </script>
@@ -129,7 +149,7 @@ $row-height: 40px;
     display: inherit;
     border-right: solid 2px;
     border-radius: 0;
-    padding-right: 0 0.5em;
+    padding-right: 0.5em;
     background-color: rgba(255, 255, 255, 0.2);
 
     &:hover {

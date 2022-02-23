@@ -108,7 +108,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         return find(property + " = :" + property, new MapSqlParameterSource(property, value));
     }
 
-    private List<T> find(String whereClause, SqlParameterSource sqlParameterSource) {
+    protected List<T> find(String whereClause, SqlParameterSource sqlParameterSource) {
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM %s t";
         if (whereClause != null) {
             sql += " WHERE " + whereClause;

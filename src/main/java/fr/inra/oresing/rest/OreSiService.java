@@ -3,25 +3,30 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
 import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
+import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
+import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.validationcheckresults.*;
+import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.assertj.core.util.Strings;
@@ -35,10 +40,17 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -53,19 +65,17 @@ import java.util.stream.Stream;
 @Transactional
 public class OreSiService {
 
-    /**
-     * Déliminateur entre les différents niveaux d'un ltree postgresql.
-     * <p>
-     * https://www.postgresql.org/docs/current/ltree.html
-     */
-    private static final String LTREE_SEPARATOR = ".";
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
+    public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String KEYCOLUMN_SEPARATOR = "__";
-
     @Autowired
     private OreSiRepository repo;
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private TransformerFactory transformerFactory;
 
     @Autowired
     private CheckerFactory checkerFactory;
@@ -85,31 +95,54 @@ public class OreSiService {
     @Autowired
     private RelationalService relationalService;
 
-    protected UUID storeFile(Application app, MultipartFile file) throws IOException {
+    @Autowired
+    private GroovyContextHelper groovyContextHelper;
+
+    /**
+     * @deprecated utiliser directement {@link Ltree#escapeToLabel(String)}
+     */
+    @Deprecated
+    public static String escapeKeyComponent(String key) {
+        return Ltree.escapeToLabel(key);
+    }
+
+    protected UUID storeFile(Application app, MultipartFile file, String comment) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
+        binaryFile.setComment(comment);
         binaryFile.setApplication(app.getId());
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
+        BinaryFileInfos binaryFileInfos = new BinaryFileInfos();
+        binaryFile.setParams(binaryFileInfos);
+        binaryFile.getParams().createuser = request.getRequestClient().getId();
+        binaryFile.getParams().createdate = LocalDateTime.now().toString();
         UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
-
+    public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         Application app = new Application();
         app.setName(name);
+        app.setComment(comment);
+        UUID result = changeApplicationConfiguration(app, configurationFile, this::initApplication);
+        relationalService.createViews(app.getName());
 
+        return result;
+    }
+
+    public Application initApplication(Application app) {
         authenticationService.resetRole();
-
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
         org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
         flywayConfiguration.setDataSource(dataSource);
         flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
         flywayConfiguration.setLocations(new Location("classpath:migration/application"));
         flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
+        flywayConfiguration.getPlaceholders().put("requiredauthorizations", sqlSchemaForApplication.getRequiredauthorizationsAttributes(app));
+        flywayConfiguration.getPlaceholders().put("requiredauthorizationscomparing", sqlSchemaForApplication.getRequiredauthorizationsAttributesComparing(app));
         Flyway flyway = new Flyway(flywayConfiguration);
         flyway.migrate();
 
@@ -125,7 +158,7 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
                 adminOnApplicationRole,
-                "name = '" + name + "'"
+                "name = '" + app.getName() + "'"
         ));
 
         db.createPolicy(new SqlPolicy(
@@ -134,7 +167,7 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 readerOnApplicationRole,
-                "name = '" + name + "'"
+                "name = '" + app.getName() + "'"
         ));
 
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
@@ -148,21 +181,19 @@ public class OreSiService {
         db.addUserInRole(creator, adminOnApplicationRole);
 
         authenticationService.setRoleForClient();
-        UUID result = repo.application().store(app);
-        changeApplicationConfiguration(app, configurationFile);
-
-        relationalService.createViews(app.getName());
-
-        return result;
+        repo.application().store(app);
+        return app;
     }
 
-    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         relationalService.dropViews(nameOrId);
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
+        app.setComment(comment);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
-        UUID uuid = changeApplicationConfiguration(app, configurationFile);
+        Application application = getApplication(nameOrId);
+        UUID uuid = changeApplicationConfiguration(app, configurationFile, Function.identity());
         Configuration newConfiguration = app.getConfiguration();
         int oldVersion = oldConfiguration.getApplication().getVersion();
         int newVersion = newConfiguration.getApplication().getVersion();
@@ -232,21 +263,6 @@ public class OreSiService {
         return uuid;
     }
 
-    private void validateStoredData(DownloadDatasetQuery downloadDatasetQuery) {
-        Application application = downloadDatasetQuery.getApplication();
-        String dataType = downloadDatasetQuery.getDataType();
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(application, dataType);
-        Consumer<ImmutableMap<VariableComponentKey, String>> validateRow = line -> {
-            lineCheckers.forEach(lineChecker -> {
-                ValidationCheckResult validationCheckResult = lineChecker.check(line);
-                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
-            });
-        };
-        repo.getRepository(application).data().findAllByDataType(downloadDatasetQuery).stream()
-                .map(this::valuesToIndexedPerReferenceMap)
-                .forEach(validateRow);
-    }
-
     /*private void validateStoredReference(Application app, String reference) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, reference);
         Consumer<ImmutableMap<String, String>> validateRow = line -> {
@@ -260,51 +276,90 @@ public class OreSiService {
                 .forEach(validateRow);
     }*/
 
-    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
-        ConfigurationParsingResult configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+    private void validateStoredData(DownloadDatasetQuery downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.getApplication();
+        String dataType = downloadDatasetQuery.getDataType();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(application, dataType);
+        Consumer<Datum> validateRow = line -> {
+            lineCheckers.forEach(lineChecker -> {
+                ValidationCheckResult validationCheckResult = lineChecker.check(line);
+                Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
+            });
+        };
+        repo.getRepository(application).data().findAllByDataType(downloadDatasetQuery).stream()
+                .map(DataRow::getValues)
+                .map(Datum::fromMapMap)
+                .forEach(validateRow);
+    }
+
+    private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
+
+        ConfigurationParsingResult configurationParsingResult;
+        if (configurationFile.getOriginalFilename().matches(".*\\.zip")) {
+            final byte[] bytes = new MultiYaml().parseConfigurationBytes(configurationFile);
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(bytes);
+        } else {
+            configurationParsingResult = applicationConfigurationService.parseConfigurationBytes(configurationFile.getBytes());
+        }
         BadApplicationConfigurationException.check(configurationParsingResult);
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
-        UUID confId = storeFile(app, configurationFile);
+        app = initApplication.apply(app);
+        UUID confId = storeFile(app, configurationFile, app.getComment());
         app.setConfigFile(confId);
-        repo.application().store(app);
-        return confId;
+        UUID appId = repo.application().store(app);
+        return appId;
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file);
+        UUID fileId = storeFile(app, file,"");
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
+        final ImmutableMap<String, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+        Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                .findFirst();
         Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
-        String parentHierarchicalKeyColumn;
-        BiFunction<String, Map<String, String>, String> getHierarchicalKeyFn;
-        Map<String, String> buildedHierarchicalKeys = new HashMap<>();
+        ReferenceColumn parentHierarchicalKeyColumn;
+        String parentHierarchicalParentReference;
+        Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
+        boolean isRecursive = recursiveComponentDescription.isPresent();
+        BiFunction<Ltree, ReferenceDatum, Ltree> getHierarchicalKeyFn;
+        Function<Ltree, Ltree> getHierarchicalReferenceFn;
+        Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
+        Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
+        ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
         if (toUpdateCompositeReference.isPresent()) {
             Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
             boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
             if (root) {
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
+                getHierarchicalReferenceFn = (reference) -> reference;
             } else {
-                parentHierarchicalKeyColumn = compositeReferenceDescription.getComponents().stream()
+                Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
                         .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
-                        .collect(MoreCollectors.onlyElement())
-                        .getParentKeyColumn();
+                        .collect(MoreCollectors.onlyElement());
+                parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
+                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
                 getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    String parentHierarchicalKey = referenceValues.get(parentHierarchicalKeyColumn);
-                    return parentHierarchicalKey + LTREE_SEPARATOR + naturalKey;
+                    Ltree parentHierarchicalKey = Ltree.fromUnescapedString(referenceValues.get(parentHierarchicalKeyColumn));
+                    return Ltree.join(parentHierarchicalKey, naturalKey);
                 };
+                getHierarchicalReferenceFn = (reference) -> Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
             }
         } else {
             getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
+            getHierarchicalReferenceFn = (reference) -> reference;
         }
 
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(ref.getSeparator())
@@ -314,61 +369,130 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, Map<String, String>> csvRecordToLineAsMapFn = line -> {
+            Function<CSVRecord, RowWithReferenceDatum> csvRecordToLineAsMapFn = line -> {
                 Iterator<String> currentHeader = columns.iterator();
-                Map<String, String> recordAsMap = new LinkedHashMap<>();
+                ReferenceDatum referenceDatum = new ReferenceDatum();
                 line.forEach(value -> {
                     String header = currentHeader.next();
-                    recordAsMap.put(header, value);
+                    ReferenceColumn referenceColumn = new ReferenceColumn(header);
+                    referenceDatum.put(referenceColumn, value);
                 });
-                return recordAsMap;
+                int lineNumber = Ints.checkedCast(line.getRecordNumber());
+                return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
-            Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
-            Stream<ReferenceValue> referenceValuesStream = Streams.stream(csvParser)
+            Stream<CSVRecord> recordStream = Streams.stream(csvParser);
+            if (isRecursive) {
+                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, rowErrors, refType);
+                InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+            }
+            Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
+                    .map(configuration -> conf.getInternationalization())
+                    .map(inter -> inter.getReferences())
+                    .map(references -> references.getOrDefault(refType, null));
+            Map<String, Internationalization> displayColumns = internationalizationReferenceMap
+                    .map(internationalisationSection -> internationalisationSection.getInternationalizedColumns())
+                    .orElseGet(HashMap::new);
+            Optional<Map<String, String>> displayPattern = internationalizationReferenceMap
+                    .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
+                    .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
+            Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
-                    .map(refValues -> {
+                    .map(rowWithReferenceDatum -> {
+                        ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
+                        Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
                         lineCheckers.forEach(lineChecker -> {
-                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(refValues);
+                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(referenceDatum);
                             if (validationCheckResult.isSuccess()) {
                                 if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                                     ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                     String reference = ((ReferenceLineChecker) lineChecker).getRefType();
                                     UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                                    referenceDatum.put((ReferenceColumn) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
                                     refsLinkedTo
-                                            .computeIfAbsent(escapeKeyComponent(reference), k -> new LinkedHashSet<>())
+                                            .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
                                             .add(referenceId);
                                 }
                             } else {
-                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
+                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
                             }
                         });
-                        ReferenceValue e = new ReferenceValue();
-                        String naturalKey;
-                        String technicalId = e.getId().toString();
+                        final ReferenceValue e = new ReferenceValue();
+                        Preconditions.checkState(!ref.getColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
+                        Ltree naturalKey;
                         if (ref.getKeyColumns().isEmpty()) {
-                            naturalKey = escapeKeyComponent(technicalId);
+                            UUID technicalId = e.getId();
+                            naturalKey = Ltree.fromUuid(technicalId);
                         } else {
-                            naturalKey = ref.getKeyColumns().stream()
-                                    .map(kc -> refValues.get(kc))
-                                    .filter(key -> !Strings.isNullOrEmpty(key))
-                                    .map(key -> escapeKeyComponent(key))
+                            String naturalKeyAsString = ref.getKeyColumns().stream()
+                                    .map(ReferenceColumn::new)
+                                    .map(referenceDatum::get)
+                                    .filter(StringUtils::isNotEmpty)
+                                    .map(Ltree::escapeToLabel)
                                     .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                            naturalKey = Ltree.fromSql(naturalKeyAsString);
                         }
-                        checkNaturalKeySyntax(naturalKey);
-                        String hierarchicalKey = getHierarchicalKeyFn.apply(naturalKey, refValues);
+                        Ltree recursiveNaturalKey = naturalKey;
+                        final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
+                        if (isRecursive) {
+                            selfLineChecker
+                                    .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
+                                    .map(values -> values.get(naturalKey.getSql()))
+                                    .filter(key -> key != null)
+                                    .ifPresent(key -> {
+                                        e.setId(key);
+                                    });
+                            Ltree parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
+                            while (parentKey != null) {
+                                recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
+                                parentKey = parentreferenceMap.getOrDefault(parentKey, null);
+                                //selfHierarchicalReference = Ltree.join(selfHierarchicalReference, refTypeAsLabel);
+                            }
+//                            int x = StringUtils.countMatches(selfHierarchicalReference.getSql(), ".");
+//                            int y = StringUtils.countMatches(recursiveNaturalKey.getSql(), ".");
+//                            Preconditions.checkState(x == y);
+                        }
+                        Ltree hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
+                        Ltree selfHierarchicalReference = refTypeAsLabel;
+                        if (isRecursive) {
+                            for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
+                                selfHierarchicalReference = Ltree.fromSql(selfHierarchicalReference.getSql() + ".".concat(refType));
+                            }
+                        }
+                        Ltree hierarchicalReference =
+                                getHierarchicalReferenceFn.apply(selfHierarchicalReference);
+                        referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
-                        checkHierarchicalKeySyntax(hierarchicalKey);
+
+                        /**
+                         * on remplace l'id par celle en base si elle existe
+                         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
+                         */
+
+                        if (storedReferences.containsKey(hierarchicalKey.getSql())) {
+                            e.setId(storedReferences.get(hierarchicalKey.getSql()));
+                        }
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
                         e.setHierarchicalKey(hierarchicalKey);
+                        e.setHierarchicalReference(hierarchicalReference);
                         e.setRefsLinkedTo(refsLinkedTo);
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
-                        e.setRefValues(refValues);
-                        return e;
-                    });
+                        e.setRefValues(referenceDatum.asMap());
+                        if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
+                            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
+                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
+                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
+                            return null;
+                        } else {
+                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
+                            return e;
+                        }
+                    })
+                    .filter(e -> e != null)
+                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             referenceValueRepository.storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
         }
@@ -376,32 +500,78 @@ public class OreSiService {
         return fileId;
     }
 
-    private String escapeKeyComponent(String key) {
-        String toEscape = StringUtils.stripAccents(key.toLowerCase());
-        String escaped = StringUtils.remove(
-                RegExUtils.replaceAll(
-                        StringUtils.replace(toEscape, " ", "_"),
-                        "[^a-z0-9_]",
-                        ""
-                ), "-"
-        );
-        checkNaturalKeySyntax(escaped);
-        return escaped;
+    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, List<CsvRowValidationCheckResult> rowErrors, String refType) {
+        Integer parentRecursiveIndex = recursiveComponentDescription
+                .map(rcd -> rcd.getParentRecursiveKey())
+                .map(rck -> columns.indexOf(rck))
+                .orElse(null);
+        ListMultimap<String, Long> missingParentReferences = LinkedListMultimap.create();
+        if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
+            return recordStream;
+        }
+        HashMap<String, UUID> referenceUUIDs = selfLineChecker
+                .map(lc -> lc.getReferenceValues())
+                .map(HashMap::new)
+                .orElseGet(HashMap::new);
+        List<CSVRecord> collect = recordStream
+                .peek(csvrecord -> {
+                    String s = csvrecord.get(parentRecursiveIndex);
+                    String naturalKey = ref.getKeyColumns()
+                            .stream()
+                            .map(kc -> columns.indexOf(kc))
+                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k))?null:Ltree.escapeToLabel(csvrecord.get(k)))
+                            .filter(k->k!=null)
+                            .collect(Collectors.joining("__"));
+                    if (!referenceUUIDs.containsKey(naturalKey)) {
+                        referenceUUIDs.put(naturalKey, UUID.randomUUID());
+                    }
+                    if (!Strings.isNullOrEmpty(s)) {
+                        try {
+                            s = Ltree.escapeToLabel(s);
+                        } catch (IllegalArgumentException e) {
+                            return;
+                        }
+                        referenceMap.put(Ltree.fromSql(naturalKey), Ltree.fromUnescapedString(s));
+                        if (!referenceUUIDs.containsKey(s)) {
+                            final UUID uuid = UUID.randomUUID();
+                            referenceUUIDs.put(s, uuid);
+                            missingParentReferences.put(s, csvrecord.getRecordNumber());
+                        }
+                    }
+                    missingParentReferences.removeAll(naturalKey);
+                    return;
+                })
+                .collect(Collectors.toList());
+        selfLineChecker
+                .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
+
+        if (!missingParentReferences.isEmpty()) {
+            missingParentReferences.asMap().entrySet().stream()
+                    .forEach(entry -> {
+                        final String missingParentReference = entry.getKey();
+                        entry.getValue().stream().forEach(
+                                lineNumber -> rowErrors.add(new CsvRowValidationCheckResult(new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet()), lineNumber))
+                        );
+                    });
+        }
+        return collect.stream();
     }
 
-    private void checkNaturalKeySyntax(String keyComponent) {
-        Preconditions.checkState(keyComponent.matches("[a-z0-9_]+"), keyComponent + " n'est pas un élément valide pour une clé naturelle");
-    }
-
-    private void checkHierarchicalKeySyntax(String compositeKey) {
-        Splitter.on(LTREE_SEPARATOR).split(compositeKey).forEach(this::checkNaturalKeySyntax);
+    private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponent(LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences, String refType) {
+        return compositeReferences.values().stream()
+                .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> refType.equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
+                .filter(e -> e != null)
+                .findFirst();
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(application).referenceValue();
-        Configuration.CompositeReferenceDescription compositeReferenceDescription = application.getConfiguration().getCompositeReferencesUsing(lowestLevelReference).orElseThrow();
-        BiMap<String, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
-        Map<ReferenceValue, String> parentHierarchicalKeys = new LinkedHashMap<>();
+        Configuration.CompositeReferenceDescription compositeReferenceDescription = application
+                .getConfiguration()
+                .getCompositeReferencesUsing(lowestLevelReference)
+                .orElseThrow();
+        BiMap<Ltree, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
+        Map<ReferenceValue, Ltree> parentHierarchicalKeys = new LinkedHashMap<>();
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
                 .map(Configuration.CompositeReferenceComponentDescription::getReference)
                 .collect(ImmutableList.toImmutableList());
@@ -415,7 +585,7 @@ public class OreSiService {
                     referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
                         indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
                         if (parentKeyColumn != null) {
-                            String parentHierarchicalKey = referenceValue.getRefValues().get(parentKeyColumn);
+                            Ltree parentHierarchicalKey = Ltree.fromSql(referenceValue.getRefValues().get(parentKeyColumn));
                             parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
                         }
                     });
@@ -427,43 +597,84 @@ public class OreSiService {
         return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
-    @Value
-    private static class RowWithData {
-        int lineNumber;
-        Map<VariableComponentKey, String> datum;
+    public List<BinaryFile> getFilesOnRepository(String nameOrId, String datatype, BinaryFileDataset fileDatasetID, boolean overlap) {
+        authenticationService.setRoleForClient();
+        Application app = getApplication(nameOrId);
+        return repo.getRepository(app).binaryFile().findByBinaryFileDataset(datatype, fileDatasetID, overlap);
     }
-
-    @Value
-    private static class ParsedCsvRow {
-        int lineNumber;
-        List<Map.Entry<String, String>> columns;
-    }
-
 
     /**
      * Insérer un jeu de données.
      */
-    public UUID addData(String nameOrId, String dataType, MultipartFile file) throws IOException, InvalidDatasetContentException {
+    public UUID addData(String nameOrId, String dataType, MultipartFile file, FileOrUUID params) throws IOException, InvalidDatasetContentException {
         List<CsvRowValidationCheckResult> errors = new LinkedList<>();
         authenticationService.setRoleForClient();
-
+        log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
-        UUID fileId = storeFile(app, file);
-
+        Set<BinaryFile> filesToStore = new HashSet<>();
+        Optional.ofNullable(params)
+                .map(par -> par.getBinaryfiledataset())
+                .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
+        BinaryFile storedFile = loadOrCreateFile(file, params, app);
+        if (params != null && !params.topublish) {
+            if (storedFile.getParams() != null && storedFile.getParams().published) {
+                storedFile.getParams().published = false;
+                filesToStore.add(storedFile);
+                unPublishVersions(app, filesToStore);
+            }
+            return storedFile.getId();
+        }
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
+        InvalidDatasetContentException.checkErrorsIsEmpty(findPublishedVersion(nameOrId, dataType, params, filesToStore, true));
+        publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
+        InvalidDatasetContentException.checkErrorsIsEmpty(errors);
+        relationalService.onDataUpdate(app.getName());
+        unPublishVersions(app, filesToStore);
+        storePublishedVersion(app, filesToStore, storedFile);
+        filesToStore.stream()
+                .forEach(repo.getRepository(app.getId()).binaryFile()::store);
+        return storedFile.getId();
+    }
 
-        try (InputStream csv = file.getInputStream()) {
+    private void storePublishedVersion(Application app, Set<BinaryFile> filesToStore, BinaryFile storedFile) {
+        if (storedFile != null) {
+            if (storedFile.getParams() == null) {
+                storedFile.setParams(BinaryFileInfos.EMPTY_INSTANCE());
+            }
+            storedFile.getParams().published = true;
+            storedFile.getParams().publisheduser = request.getRequestClient().getId();
+            storedFile.getParams().publisheddate = LocalDateTime.now().toString();
+            repo.getRepository(app).binaryFile().store(storedFile);
+            filesToStore.add(storedFile);
+        }
+    }
+
+    private void unPublishVersions(Application app, Set<BinaryFile> filesToStore) {
+        filesToStore.stream()
+                .forEach(f -> {
+                    repo.getRepository(app).data().removeByFileId(f.getId());
+                    f.getParams().published = false;
+                    repo.getRepository(app).binaryFile().store(f);
+                });
+    }
+
+    private void publishVersion(String dataType,
+                                List<CsvRowValidationCheckResult> errors,
+                                Application app,
+                                BinaryFile storedFile,
+                                Configuration.DataTypeDescription dataTypeDescription,
+                                Configuration.FormatDescription formatDescription,
+                                BinaryFileDataset binaryFileDataset) throws IOException {
+        try (InputStream csv = new ByteArrayInputStream(storedFile.getData())) {
             CSVFormat csvFormat = CSVFormat.DEFAULT
                     .withDelimiter(formatDescription.getSeparator())
                     .withSkipHeaderRecord();
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
-            Map<VariableComponentKey, String> constantValues = new LinkedHashMap<>();
-            ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription);
-
+            Datum constantValues = new Datum();
             readPreHeader(formatDescription, constantValues, linesIterator);
 
             ImmutableList<String> columns = readHeaderRow(linesIterator);
@@ -473,14 +684,63 @@ public class OreSiService {
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(defaultValueExpressions))
-                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, fileId, errors));
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
+                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
             repo.getRepository(app).data().storeAll(dataStream);
         }
-        InvalidDatasetContentException.checkErrorsIsEmpty(errors);
-        relationalService.onDataUpdate(app.getName());
-        return fileId;
+    }
+
+    private List<CsvRowValidationCheckResult> findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps) {
+        if (params != null) {
+            if (searchOverlaps) {
+                List<BinaryFile> overlapingFiles = getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset, true);
+                if (!overlapingFiles.isEmpty()) {
+                    return List.of(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
+                            "overlappingpublishedversion",
+                            ImmutableMap.of("fileOrUUID", params, "files",
+                                    overlapingFiles.stream()
+                                            .map(f -> f.getParams().binaryFiledataset.toString())
+                                            .collect(Collectors.toSet())
+                            )), -1));
+                }
+            }
+            getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset, false)
+                    .stream()
+                    .filter(f -> f.getParams().published)
+                    .forEach(f -> {
+                        f.getParams().published = false;
+                        f.getParams().publisheduser = null;
+                        f.getParams().publisheddate = null;
+                        filesToStore.add(f);
+                    });
+        }
+        return new LinkedList<>();
+    }
+
+    @Nullable
+    private BinaryFile loadOrCreateFile(MultipartFile file, FileOrUUID params, Application app) {
+        BinaryFile storedFile = Optional.ofNullable(params)
+                .map(param -> param.getFileid())
+                .map(uuid -> repo.getRepository(app).binaryFile().tryFindByIdWithData(uuid).orElse(null))
+                .orElseGet(() -> {
+                    UUID fileId = null;
+                    try {
+                        fileId = storeFile(app, file,"");
+                    } catch (IOException e) {
+                        return null;
+                    }
+                    BinaryFile binaryFile = repo.getRepository(app).binaryFile().tryFindByIdWithData(fileId).orElse(null);
+                    if (binaryFile == null) {
+                        return null;
+                    }
+                    if (params != null) {
+                        binaryFile.getParams().binaryFiledataset = params.binaryfiledataset;
+                    }
+                    fileId = repo.getRepository(app).binaryFile().store(binaryFile);
+                    return repo.getRepository(app).binaryFile().tryFindByIdWithData(fileId).orElse(null);
+                });
+        return storedFile;
     }
 
     /**
@@ -491,20 +751,12 @@ public class OreSiService {
      * @param fileId
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors) {
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        String timeScopeColumnPattern = lineCheckers.stream()
-                .map(lineChecker -> lineChecker instanceof ILineCheckerDecorator ? ((ILineCheckerDecorator) lineChecker).getChecker() : lineChecker)
-                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
-                .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getVariableComponentKey().equals(dataTypeDescription.getAuthorization().getTimeScope()))
-                .collect(MoreCollectors.onlyElement())
-                .getPattern();
-
-        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, timeScopeColumnPattern);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
     }
 
     /**
@@ -516,32 +768,50 @@ public class OreSiService {
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
-     * @param timeScopeColumnPattern
+     * @param binaryFileDataset
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, ImmutableSet<LineChecker> lineCheckers, Configuration.DataTypeDescription dataTypeDescription, String timeScopeColumnPattern) {
+    private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
+                                                                               String dataType,
+                                                                               UUID fileId,
+                                                                               List<CsvRowValidationCheckResult> errors,
+                                                                               ImmutableSet<LineChecker> lineCheckers,
+                                                                               Configuration.DataTypeDescription dataTypeDescription,
+                                                                               BinaryFileDataset binaryFileDataset) {
+        DateLineChecker timeScopeDateLineChecker = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                .map(lineChecker -> (DateLineChecker) lineChecker)
+                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .collect(MoreCollectors.onlyElement());
+
+
         return rowWithData -> {
-            Map<VariableComponentKey, String> values = rowWithData.getDatum();
+            Datum datum = Datum.copyOf(rowWithData.getDatum());
             Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
             lineCheckers.forEach(lineChecker -> {
-                ValidationCheckResult validationCheckResult = lineChecker.check(values);
+                ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = ((DateValidationCheckResult) validationCheckResult).getVariableComponentKey();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                        ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
+                        if (configuration.getGroovy() != null) {
+                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
+                        }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                        VariableComponentKey variableComponentKey = referenceValidationCheckResult.getVariableComponentKey();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
                         UUID referenceId = referenceValidationCheckResult.getReferenceId();
                         refsLinkedTo.put(variableComponentKey, referenceId);
                     }
                 } else {
                     rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
                 }
+
             });
 
             if (!rowErrors.isEmpty()) {
@@ -549,16 +819,17 @@ public class OreSiService {
                 return Stream.empty();
             }
 
-            String timeScopeValue = values.get(dataTypeDescription.getAuthorization().getTimeScope());
-            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeColumnPattern);
+            String timeScopeValue = datum.get(dataTypeDescription.getAuthorization().getTimeScope());
+            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
-                String requiredAuthorization = values.get(variableComponentKey);
-                checkHierarchicalKeySyntax(requiredAuthorization);
+                String requiredAuthorization = datum.get(variableComponentKey);
+                Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
             });
-
+            checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
+            checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
 
@@ -567,11 +838,11 @@ public class OreSiService {
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
                 Predicate<VariableComponentKey> includeInDataGroupPredicate = variableComponentKey -> dataGroupDescription.getData().contains(variableComponentKey.getVariable());
-                Map<VariableComponentKey, String> dataGroupValues = Maps.filterKeys(values, includeInDataGroupPredicate);
+                Datum dataGroupValues = datum.filterOnVariable(includeInDataGroupPredicate);
 
                 Map<String, Map<String, String>> toStore = new LinkedHashMap<>();
                 Map<String, Map<String, UUID>> refsLinkedToToStore = new LinkedHashMap<>();
-                for (Map.Entry<VariableComponentKey, String> entry2 : dataGroupValues.entrySet()) {
+                for (Map.Entry<VariableComponentKey, String> entry2 : dataGroupValues.asMap().entrySet()) {
                     VariableComponentKey variableComponentKey = entry2.getKey();
                     String variable = variableComponentKey.getVariable();
                     String component = variableComponentKey.getComponent();
@@ -587,12 +858,10 @@ public class OreSiService {
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
                 e.setRowId(rowId);
-                e.setDataGroup(dataGroup);
+                e.setAuthorization(new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope));
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
                 e.setDataValues(toStore);
-                e.setTimeScope(timeScope);
-                e.setRequiredAuthorizations(requiredAuthorizations);
                 return e;
             });
 
@@ -600,24 +869,115 @@ public class OreSiService {
         };
     }
 
+    private void checkTimescopRangeInDatasetRange(LocalDateTimeRange timeScope,
+                                                  List<CsvRowValidationCheckResult> errors,
+                                                  BinaryFileDataset binaryFileDataset,
+                                                  int rowNumber) {
+        if (binaryFileDataset == null) {
+            return;
+        }
+        LocalDateTime from = LocalDate.from(DATE_TIME_FORMATTER.parse(binaryFileDataset.getFrom())).atStartOfDay();
+        LocalDateTime to = LocalDate.from(DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo()))
+                .plus(1, ChronoUnit.DAYS).atStartOfDay();
+        if (!LocalDateTimeRange.between(from, to).getRange().encloses(timeScope.getRange())) {
+            errors.add(
+                    new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
+                            "timerangeoutofinterval",
+                            ImmutableMap.of(
+                                    "from", DATE_FORMATTER_DDMMYYYY.format(from),
+                                    "to", DATE_TIME_FORMATTER.format(to),
+                                    "value", DATE_FORMATTER_DDMMYYYY.format(timeScope.getRange().lowerEndpoint())
+                            )
+                    ),
+                            rowNumber)
+            );
+        }
+
+    }
+
+
+    private void checkRequiredAuthorizationInDatasetRange(Map<String, String> requiredAuthorizations,
+                                                          List<CsvRowValidationCheckResult> errors,
+                                                          BinaryFileDataset binaryFileDataset,
+                                                          int rowNumber) {
+        if (binaryFileDataset == null) {
+            return;
+        }
+        binaryFileDataset.getRequiredauthorizations().entrySet()
+                .forEach(entry -> {
+                    if (!requiredAuthorizations.get(entry.getKey()).equals(entry.getValue())) {
+                        errors.add(
+                                new CsvRowValidationCheckResult(
+                                        DefaultValidationCheckResult.error(
+                                                "badauthorizationscopeforrepository",
+                                                ImmutableMap.of(
+                                                        "authorization", entry.getKey(),
+                                                        "expectedValue", entry.getValue(),
+                                                        "givenValue", requiredAuthorizations.get(entry.getKey())
+                                                )
+                                        ),
+                                        rowNumber)
+                        );
+                    }
+                });
+
+    }
+
     /**
      * Une fonction qui ajoute à une donnée les valeurs par défaut.
      * <p>
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions) {
-        return rowWithData -> {
-            Map<String, Map<String, String>> datumByVariableAndComponent = new HashMap<>();
-            for (Map.Entry<VariableComponentKey, String> entry : rowWithData.getDatum().entrySet()) {
-                datumByVariableAndComponent
-                        .computeIfAbsent(entry.getKey().getVariable(), k -> new HashMap<String, String>())
-                        .put(entry.getKey().getComponent(), entry.getValue());
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, String> requiredAuthorizations) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
+        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, requiredAuthorizations);
+        Map<String, Configuration.ColumnDescription> data = dataTypeDescription.getData();
+        Map<VariableComponentKey, Function<Datum, String>> defaultValueFns = new LinkedHashMap<>();
+        Set<VariableComponentKey> replaceEnabled = new LinkedHashSet<>();
+        for (Map.Entry<VariableComponentKey, Expression<String>> entry : defaultValueExpressions.entrySet()) {
+            VariableComponentKey variableComponentKey = entry.getKey();
+            Expression<String> expression = entry.getValue();
+            Configuration.VariableComponentDescriptionConfiguration params = Optional.ofNullable(data)
+                    .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKey.getVariable()))
+                    .map(columnDescription -> columnDescription.getComponents())
+                    .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKey.getComponent()))
+                    .map(variableComponentDescription -> variableComponentDescription.getParams())
+                    .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
+            Set<String> configurationReferences = params.getReferences();
+            ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+            Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
+            Function<Datum, String> computeDefaultValueFn = datum -> {
+                ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
+                        .putAll(contextForExpression)
+                        .putAll(datum.getEvaluationContext())
+                        .build();
+                String evaluate = expression.evaluate(evaluationContext);
+                return evaluate;
+            };
+            defaultValueFns.put(variableComponentKey, computeDefaultValueFn);
+            if (params.isReplace()) {
+                replaceEnabled.add(variableComponentKey);
             }
-            ImmutableMap<String, Object> evaluationContext = ImmutableMap.of("datum", rowWithData.getDatum(), "datumByVariableAndComponent", datumByVariableAndComponent);
-            Map<VariableComponentKey, String> defaultValues = Maps.transformValues(defaultValueExpressions, expression -> expression.evaluate(evaluationContext));
-            Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>(defaultValues);
-            rowWithDefaults.putAll(Maps.filterValues(rowWithData.getDatum(), StringUtils::isNotBlank));
-            return new RowWithData(rowWithData.getLineNumber(), ImmutableMap.copyOf(rowWithDefaults));
+        }
+        return rowWithData -> {
+            Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>();
+            Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap<>(rowWithData.getDatum().asMap());
+            defaultValueFns.entrySet().stream()
+                    .forEach(variableComponentKeyExpressionEntry -> {
+                        VariableComponentKey variableComponentKey = variableComponentKeyExpressionEntry.getKey();
+                        Function<Datum, String> computeDefaultValueFn = variableComponentKeyExpressionEntry.getValue();
+                        String evaluate = computeDefaultValueFn.apply(rowWithData.getDatum());
+                        if (StringUtils.isNotBlank(evaluate)) {
+                            if (replaceEnabled.contains(variableComponentKey)) {
+                                rowWithValues.put(variableComponentKey, evaluate);
+                            } else {
+                                rowWithDefaults.put(variableComponentKey, evaluate);
+                            }
+                        }
+                    });
+            rowWithDefaults.putAll(rowWithValues);
+            return new RowWithData(rowWithData.getLineNumber(), new Datum(ImmutableMap.copyOf(rowWithDefaults)));
         };
     }
 
@@ -628,12 +988,13 @@ public class OreSiService {
      * d'un fichier de données qu'on importe. Ce sont les données qu'on trouve dans l'entête
      * du fichier.
      */
-    private Function<RowWithData, RowWithData> buildMergeLineValuesAndConstantValuesFn(Map<VariableComponentKey, String> constantValues) {
+    private Function<RowWithData, RowWithData> buildMergeLineValuesAndConstantValuesFn(Datum constantValues) {
         return rowWithData -> {
-            ImmutableMap<VariableComponentKey, String> datum = ImmutableMap.<VariableComponentKey, String>builder()
-                    .putAll(constantValues)
-                    .putAll(rowWithData.getDatum())
+            final ImmutableMap<VariableComponentKey, String> values = ImmutableMap.<VariableComponentKey, String>builder()
+                    .putAll(constantValues.asMap())
+                    .putAll(rowWithData.getDatum().asMap())
                     .build();
+            Datum datum = new Datum(values);
             return new RowWithData(rowWithData.getLineNumber(), datum);
         };
     }
@@ -660,7 +1021,7 @@ public class OreSiService {
                 Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
                 record.put(bindingDescription.getBoundTo(), value);
             }
-            return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), record));
+            return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), new Datum(record)));
         };
         return lineAsMapToRecordsFn;
     }
@@ -742,7 +1103,8 @@ public class OreSiService {
                             .putAll(tokenValues)
                             .putAll(bodyValues)
                             .build();
-                    records.add(new RowWithData(parsedCsvRow.getLineNumber(), record));
+                    Datum datum = new Datum(record);
+                    records.add(new RowWithData(parsedCsvRow.getLineNumber(), datum));
 
                     // et on passe au groupe de colonnes répétées suivant
                     tokenValues.clear();
@@ -753,7 +1115,6 @@ public class OreSiService {
             return ImmutableSet.copyOf(records);
         };
     }
-
 
     /**
      * build the function Dispatch ParsedCsvRow into RowWithData
@@ -769,7 +1130,6 @@ public class OreSiService {
         }
     }
 
-
     /**
      * build the function that diplay the line in a {@link ParsedCsvRow}
      *
@@ -783,7 +1143,7 @@ public class OreSiService {
             List<Map.Entry<String, String>> record = new LinkedList<>();
             line.forEach(value -> {
                 String header = currentHeader.next();
-                record.add(Map.entry(header, value));
+                record.add(Map.entry(header.strip(), value));
             });
             return new ParsedCsvRow(lineNumber, record);
         };
@@ -796,7 +1156,7 @@ public class OreSiService {
      * @param constantValues
      * @param linesIterator
      */
-    private void readPreHeader(Configuration.FormatDescription formatDescription, Map<VariableComponentKey, String> constantValues, Iterator<CSVRecord> linesIterator) {
+    private void readPreHeader(Configuration.FormatDescription formatDescription, Datum constantValues, Iterator<CSVRecord> linesIterator) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
                 formatDescription.getConstants().stream()
                         .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
@@ -835,8 +1195,18 @@ public class OreSiService {
         Iterators.advance(linesIterator, lineToSkipAfterHeader);
     }
 
-    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription) {
+    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription, Map<String, String> requiredAuthorizations) {
         ImmutableMap.Builder<VariableComponentKey, Expression<String>> defaultValueExpressionsBuilder = ImmutableMap.builder();
+
+        List<String> variableComponentsFromRepository = new LinkedList<>();
+        if (requiredAuthorizations != null) {
+            for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
+                VariableComponentKey variableComponentKey = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                String value = entry.getValue();
+                defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\"" + value + "\""));
+                variableComponentsFromRepository.add(variableComponentKey.getId());
+            }
+        }
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
@@ -844,6 +1214,9 @@ public class OreSiService {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentDescription componentDescription = componentEntry.getValue();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                if (variableComponentsFromRepository.contains(variableComponentKey.getId())) {
+                    continue;
+                }
                 Expression<String> defaultValueExpression;
                 if (componentDescription == null) {
                     defaultValueExpression = CommonExpression.EMPTY_STRING;
@@ -860,12 +1233,12 @@ public class OreSiService {
         }
         ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
         if (log.isDebugEnabled()) {
-            log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
+            //log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
         }
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
         Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
@@ -879,6 +1252,11 @@ public class OreSiService {
                         e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
                 )));
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
+        List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
+                .filter(ch -> ch instanceof DateLineChecker)
+                .map(ch -> (DateLineChecker) ch)
+                .map(ch -> ((VariableComponentKey) ch.getTarget().getTarget()).getId())
+                .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
         } else {
@@ -899,7 +1277,11 @@ public class OreSiService {
                     ImmutableList<String> rowAsRecord = columns.values().stream()
                             .map(variableComponentSelect -> {
                                 Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
-                                return components.getOrDefault(variableComponentSelect.getComponent(), "");
+                                String value = components.getOrDefault(variableComponentSelect.getComponent(), "");
+                                if (dateLineCheckerVariableComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())) {
+                                    value = DateLineChecker.sortableDateToFormattedDate(value);
+                                }
+                                return value;
                             })
                             .collect(ImmutableList.toImmutableList());
                     csvPrinter.printRecord(rowAsRecord);
@@ -930,10 +1312,9 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
-        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
                 .stream()
-                .map(c -> (c instanceof RequiredChecker) ? ((RequiredChecker) c).getChecker() : c)
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
                 .collect(
                         Collectors.groupingBy(
@@ -942,13 +1323,13 @@ public class OreSiService {
                                         c -> {
                                             VariableComponentKey vc;
                                             if (c instanceof DateLineChecker) {
-                                                vc = ((DateLineChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((DateLineChecker) c).getTarget().getTarget();
                                             } else if (c instanceof IntegerChecker) {
-                                                vc = ((IntegerChecker) c).getVariableComponentKey();
-                                            } else if(c instanceof FloatChecker){
-                                                vc = ((FloatChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((IntegerChecker) c).getTarget().getTarget();
+                                            } else if (c instanceof FloatChecker) {
+                                                vc = (VariableComponentKey) ((FloatChecker) c).getTarget().getTarget();
                                             } else {
-                                                vc = ((ReferenceLineChecker) c).getVariableComponentKey();
+                                                vc = (VariableComponentKey) ((ReferenceLineChecker) c).getTarget().getTarget();
                                             }
                                             return vc.getId();
                                         },
@@ -981,20 +1362,6 @@ public class OreSiService {
     public Optional<Application> tryFindApplication(String nameOrId) {
         authenticationService.setRoleForClient();
         return repo.application().tryFindApplication(nameOrId);
-    }
-
-    private ImmutableMap<VariableComponentKey, String> valuesToIndexedPerReferenceMap(DataRow dataRow) {
-        Map<String, Map<String, String>> line = dataRow.getValues();
-        Map<VariableComponentKey, String> valuesPerReference = new LinkedHashMap<>();
-        for (Map.Entry<String, Map<String, String>> variableEntry : line.entrySet()) {
-            String variable = variableEntry.getKey();
-            for (Map.Entry<String, String> componentEntry : variableEntry.getValue().entrySet()) {
-                String component = componentEntry.getKey();
-                VariableComponentKey reference = new VariableComponentKey(variable, component);
-                valuesPerReference.put(reference, componentEntry.getValue());
-            }
-        }
-        return ImmutableMap.copyOf(valuesPerReference);
     }
 
     /**
@@ -1043,8 +1410,105 @@ public class OreSiService {
         return optionalBinaryFile;
     }
 
+    public boolean removeFile(String name, UUID id) {
+        authenticationService.setRoleForClient();
+        BinaryFile binaryFile = repo.getRepository(name).binaryFile().findById(id);
+        if (binaryFile.getParams() != null && binaryFile.getParams().published) {
+            Application app = getApplication(binaryFile.getApplication().toString());
+            unPublishVersions(
+                    app,
+                    Set.of(binaryFile)
+            );
+        }
+        boolean deleted = repo.getRepository(name).binaryFile().delete(id);
+        return deleted;
+    }
+
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
+        if (file.getOriginalFilename().matches(".zip")) {
+            return applicationConfigurationService.unzipConfiguration(file);
+        }
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
+    }
+
+    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, String locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
+        Application application = getApplication(nameOrId);
+        return Optional.ofNullable(application)
+                .map(a -> a.getConfiguration())
+                .map(c -> c.getInternationalization())
+                .map(i -> i.getReferences())
+                .map(r -> {
+                    Map<String, Map<String, String>> internationalizedReferences = r.entrySet()
+                            .stream()
+                            .filter(e -> e.getValue().getInternationalizedColumns() != null)
+                            .collect(Collectors.toMap(
+                                    e -> e.getKey(),
+                                    e -> e.getValue().getInternationalizedColumns().entrySet()
+                                            .stream()
+                                            .collect(Collectors.toMap(i -> i.getKey(), i -> i.getValue().get(locale)))
+                            ));
+                    List<String> neddedReferenceTranslation = checkedFormatVariableComponents.entrySet().stream()
+                            .filter(e -> "ReferenceLineChecker".equals(e.getKey()))
+                            .map(e -> e.getValue().values()
+                                    .stream()
+                                    .map(l -> ((ReferenceLineChecker) l).getRefType())
+                                    .collect(Collectors.toList())
+                            )
+                            .flatMap(List::stream)
+                            .collect(Collectors.toList());
+                    Map<String, Map<String, Map<String, String>>> collect = internationalizedReferences.entrySet()
+                            .stream()
+                            .filter(e -> neddedReferenceTranslation.contains(e.getKey()))
+                            .collect(Collectors.toMap(
+                                            e -> e.getKey(),
+                                            e -> {
+                                                String collectingKeys = e.getValue().entrySet()
+                                                        .stream()
+                                                        .map(i -> String.format("%s,%s", i.getKey(), i.getValue()))
+                                                        .collect(Collectors.joining(",")
+                                                        );
+                                                List<List<String>> referenceTranslations = repo.getRepository(application).referenceValue().findReferenceValue(
+                                                        e.getKey(),
+                                                        collectingKeys
+                                                );
+                                                Map<String, Map<String, String>> translationsMap = new HashMap();
+                                                referenceTranslations.stream()
+                                                        .forEach(list -> {
+                                                            String[] collectingKey = collectingKeys.split(",");
+                                                            for (int i = 0; i < collectingKey.length; i = i + 2) {
+                                                                if (list.size() > i && list.get(i) != null && list.get(i + 1) != null) {
+                                                                    translationsMap.
+                                                                            computeIfAbsent(collectingKey[i], k -> new HashMap<>())
+                                                                            .put(list.get(i), list.get(i + 1));
+                                                                }
+                                                            }
+                                                        });
+                                                return translationsMap;
+                                            }
+                                    )
+                            );
+                    return collect;
+
+                })
+                .orElseGet(HashMap::new);
+    }
+
+    @Value
+    private static class RowWithData {
+        int lineNumber;
+        Datum datum;
+    }
+
+    @Value
+    private static class RowWithReferenceDatum {
+        int lineNumber;
+        ReferenceDatum referenceDatum;
+    }
+
+    @Value
+    private static class ParsedCsvRow {
+        int lineNumber;
+        List<Map.Entry<String, String>> columns;
     }
 }

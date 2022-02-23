@@ -6,10 +6,12 @@ export class UserPreferencesService extends Fetcher {
 
   constructor() {
     super();
+    var lang = localStorage.getItem(LOCAL_STORAGE_LANG) || navigator.language.slice(0, 2) || "fr";
+    this.setUserPrefLocale(lang);
   }
 
   setUserPrefLocale(locale) {
     localStorage.setItem(LOCAL_STORAGE_LANG, locale);
-    app.$i18n.locale = locale;
+    if (app && app.$i18n) app.$i18n.locale = locale;
   }
 }

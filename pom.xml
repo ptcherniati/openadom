@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>fr.inra</groupId>
@@ -227,5 +228,135 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>mia</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>gitlab-maven</id>
+                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                </repository>
+            </repositories>
+            <distributionManagement>
+                <repository>
+                    <id>gitlab-maven</id>
+                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                </repository>
+                <snapshotRepository>
+                    <id>gitlab-maven</id>
+                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>test_checker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <forkCount>4</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <testSourceDirectory>src/test</testSourceDirectory>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <includes>
+                                <include>fr/inra/oresing/checker/**.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>test_model</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <forkCount>4</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <testSourceDirectory>src/test</testSourceDirectory>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <includes>
+                                <include>fr/inra/oresing/model/**Test.java</include>
+                                <include>fr/inra/oresing/model/**/**Test.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>test_persistence</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <forkCount>4</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <testSourceDirectory>src/test</testSourceDirectory>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <includes>
+                                <include>fr/inra/oresing/persistence/**Test.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>test_rest_1</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <forkCount>4</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <testSourceDirectory>src/test</testSourceDirectory>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <includes>
+                                <include>fr/inra/oresing/rest/**Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>fr/inra/oresing/rest/AuthorizationResourcesTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>test_rest_2</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <forkCount>4</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <testSourceDirectory>src/test</testSourceDirectory>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <includes>
+                                <include>fr/inra/oresing/rest/AuthorizationResourcesTest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

@@ -1,8 +1,6 @@
 # Aide fichier Yaml
-
 ## La création :
-
-Vous trouverez ci dessous un exemple de fichier Yaml fictif qui décrit les partie attendues dans celui ci pour qu'il 
+Vous trouverez ci-dessous un exemple de fichier Yaml fictif qui décrit les parties attendues dans celui-ci pour qu'il 
 soit valide. **Attention le format Yaml est sensible** il faut donc respecter l'indentation. 
 
 Il y a 5 parties (<span style="color: orange">sans indentation</span>) attendues dans le fichier : 
@@ -15,19 +13,29 @@ Il y a 5 parties (<span style="color: orange">sans indentation</span>) attendues
 
 <span style="color: orange">l'indentation du fichier yaml est très importante.</span>
 
-### on commence par mettre la version du parser de yaml. 
+
+### Description du fichier
+
+Informations sur le fichier lui même
+
+#### on renseigne la version du parser de yaml.
 Soit version actuelle du site qui est 0 actuellement.
+
 
 ``` yaml
 version: 0
 ```
 
-<span style="color: orange">*version* n'est pas indenté.</span>
+```
+  D'une version à l'autre le format du yaml peut changer
+```
 
-### on présente l'application avec son nom et sa la version du fichier yaml : 
+<span style="color: orange">*version* n'est pas indenté.</span>
+#### on présente l'application avec son nom et sa la version du fichier yaml :
 (on commence par la version 1) 
 
-S'il y a déjà une application du même nom mais que l'on a fait des modifications dans le fichier on change de version.
+S'il y a déjà une application du même nom mais que l'on a fait des modifications dans le fichier on incrémente la  version.
+
 ``` yaml
 application:
   name: Aplication_Nom
@@ -36,8 +44,17 @@ application:
 
 <span style="color: orange">*application* n'est pas indenté. *nom* et *version* sont indentés de 1.</span>
 
-### on décrit les donnés de référence dans la partie *references*, on y liste les noms des colonnes souhaitées (dans *columns*); on précisant la liste de colonnes qui forment la clef naturelle (dans *keyColumn*): 
-par exemple pour les fichiers :
+### Description référentiels
+on décrit les référentiels dans la partie *references*, on y liste les noms des colonnes souhaitées (dans *columns*); on précisant la liste de colonnes qui forment la clef naturelle (dans *keyColumn*):
+
+pour le modèle de référentiels
+
+```mermaid
+  classDiagram
+    sites *-- parcelles:site
+```
+
+et pour les fichiers :
 
 
 - sites
@@ -77,18 +94,31 @@ references:
       nom de la parcelle:
 ```
 
-Le nom des colonnes des references doivent être courte pour ne pas être tronqué lors de la création de l'application.
+```
+Le nom du référentiel est libre. Cependant pour ceux réutilisés  ailleurs dans l'application, préférer utiliser minuscules et underscores sous peine de générer des erreurss: 
+
+exampl : mon_nom_de_referentiel
+```
+
+Le nom des colonnes des references doivent être courte pour ne pas être tronqué lors de la création des vues de l'application.
+
+
+```
+  les noms des colonnes dans la base de données est limité à 63 caractères. Dans les vues, ce nom est une concaténation du nom du référentiel et du nom de la colonne
+```
+
 Penser à mettre le même nom de colonnes dans le fichier *.csv* que dans la partie *columns* du fichier yaml.
 
 <span style="color: orange">*references* n'est pas indenté. *sites* et *parcelles* sont indentés de 1. *keyColumns* et 
 *columns* sont indentés de 2. Le contenue de *columns* seront indenté de 3.</span>
 
 
-#### On rajoute contraintes sur les données de référence
+#### On peut poser des contraintes sur les données de référence
 
 Les contraintes se définissent pour chacune des données de référence dans la section validations.
 Chaque règle de validation peut porter sur plusieurs colonnes de la donnée de référence.
 Elle comporte une description et un checker (Reference, Integer, Float, RegularExpression, Date).
+
 
 
 ``` yaml
@@ -122,11 +152,29 @@ Elle comporte une description et un checker (Reference, Integer, Float, RegularE
         checker:
           name: GroovyExpression # utilisation d'un script groovy de validation
           params:
-            expression: >
-              String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
-              return application.getDataType().contains(datatype);
+            groovy:
+              expression: >
+                String datatype = Arrays.stream(datum.get("nom du type de données").split("_")).collect{it.substring(0, 1)}.join();
+                return application.getDataType().contains(datatype);
 
 ```
+
+|  name| References | Integer | Float | GroovyExpression | RegularExpression | *
+| --- | :-:  | :-:  | :-:  | :-:  | :-:  | --- | 
+| columns | X | X | X |  | X | La colonne dans laquelle on prend la valeur | 
+| refTypes | X | |  |  |  | Le référentiels de jointure | 
+| pattern |  | |  |  | X | Le pattern pour une expression régulière | 
+| codify | X | X | X |  | X | Le contenu de la colonne est codifié | 
+| required | X | X | X |  | X | Le contenu de la colonne ne peut être vide | 
+| groovy |  | |  | X |  | une section pour le traitement d'une expression groovy | 
+| replace |  | |  | X |  | l'expression groovy renvoie un résultat au lieu d'un booléen | 
+
+
+La section groovy accepte trois paramètres
+expression : une expression groovy (pour le checker GroovyExpression doit renvoyer true. Ou remplace la valeur actuelle pour les autres checkers)
+references : une liste de référentiels pour lesquels on veut disposer des valeurs dans l'expression
+datatypes : une liste de datatypes pour lesquels on veut disposer des valeurs dans l'expression
+
 
 Pour les checkers GroovyExpression, on récupère dans le script des informations :
 
@@ -142,11 +190,9 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
       -> datatypes.get("nom du datatype").getValues().get("nom de la colonne")
     datatypesValues : idem que datatypes
       -> datatypesValues.get("nom du datatype").get("nom de la colonne")
-    params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
-
+    params : la section params
 
 ### il est possible de définir des clefs composite entre différentes références
-
 
   Une clef composite permet de définir une hiérarchie entre différentes données de référence.
   Dans l'example ci-dessous il y a une relation oneToMany entre les deux données de référence nomDeLaReferences et 
@@ -159,9 +205,11 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
   La clef crée sera en minuscule, ne comportera pas d'accents; les espaces sont remplacés par des underscores; les 
   traits d'union sont supprimés.
   "Ma clé qui-sert-de-référence" -> "ma_cle_quisertdereference"
+
   Elle ne doit alors comporter que des lettres minuscules de chiffres et des underscores tous les autres caractères 
   seront supprimés.
 
+Pour créer une clef à partir d'une chaîne, on peut utiliser un checker et enrenseignant la section codify de params.
 
 ```mermaid
   classDiagram
@@ -181,17 +229,28 @@ compositeReferences:
 indenté de 2. *- reference* et *- parentKeyColumn* sont indentés de 3. Le *reference* qui est sous parentKeyColumn est 
 indenté de 4.</span>
 
-### on met les infos des *dataTypes* 
+Il est possible de définir une composite référence récursive dans le cas de données de références dui font référence à elle même. En ce cas on utilisera la clef `parentRecursiveKey` pour faire référence à la colonne parent du même fichier. 
+``` yaml
+
+compositeReferences:
+  taxon:
+    components:
+      - parentRecursiveKey: nom du taxon superieur
+        reference: taxon
+```
+### on renseigne la description des *dataTypes*
+ 
  Pour enregistrer un type de données, il faut déclarer 
  - le data : ce qui sera enregistré en base de données (*section data*)
  - le format du fichier (*section format*)
  - les authorisations (*section authorisations*)
  - les validations de chaque ligne
-#### Nous regrouperons les données par nom du fichier csv qu'on souhaite importer (*nomDonnéeCSV*).</h4>
+ 
+#### Nous regrouperons les données par nom du fichier csv qu'on souhaite importer (*nomDonnéeCSV*.csv)</h4>
 
 ``` yaml
 dataTypes:
-  nomDonnéeCSV:
+  nom_donnees_csv:
 ```
 
 <span style="color : orange">*dataTypes* n'est pas indenté. *nomDonnée* est indenté de 1.</span>
@@ -306,9 +365,14 @@ Les *variables/components* sont passés dans la map *datum*. On récupère la va
         checker:
           name: GroovyExpression
           params:
-            expression: >
-              Set.of("", "0", "1", "2").contains(datum.get("SWC").get("qualité"))
+          	groovy:
+	            expression: >
+	              Set.of("", "0", "1", "2").contains(datum.get("SWC").get("qualité"))
 ```
+
+Cette formulation vérifie que la valeur du component qualité de la variable SWC est vide ou égale à 0,1 ou 2
+L'expression doit renvoyer true
+
 
 Pour les checkers GroovyExpression, on récupère dans le script des informations :
 
@@ -324,7 +388,6 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
       -> datatypes.get("nom du datatype").getValues().get("nom de la variable").get("nom du composant")
     datatypesValues : idem que datatypes
       -> datatypesValues.get("nom du datatype").get("nom de la variable").get("nom du composant")
-    params : la section params dans laquelle on peut rajouter des information que l'on souhaite utiliser dans le script..
 
 
 ``` yaml
@@ -333,21 +396,20 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
         checker:
           name: GroovyExpression
           params:
+          groovy:
             expression: >
-              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-              .findAll{it.get("nom du type de données").equals(params.get("datatype"))}
-              .find{it.get("nom de la variable").equals(params.get("codeVariable"))}
-              .get("nom de l'unité").equals(datum.get(params.get("variable")).get(params.get("component")));
-            references: variables_et_unites_par_types_de_donnees
-            datatype: "piegeage_en_montee"
-            variable: "Nombre d'individus"
-            codeVariable: nombre_d_individus
-            component: unit
-
-
+	            String datatype= "piegeage_en_montee"
+	            String variable= "Nombre d'individus"
+	            String codeVariable= "nombre_d_individus"
+	            String component= "unit"
+	              return referencesValues.get("variables_et_unites_par_types_de_donnees")
+	              .findAll{it.get("nom du type de données").equals(datatype)}
+	              .find{it.get("nom de la variable").equals(codeVariable)}
+	              .get("nom de l'unité").equals(datum.variable.component);
+            references: 
+            	- variables_et_unites_par_types_de_donnees
 ``` 
-Cette formulation vérifie que la valeur du component qualité de la variable SWC est vide ou égale à 0,1 ou 2
-L'expression doit renvoyer true
+Des valeurs peuvent être définies dans l'expression.
 
 La partie validation peut être utilisée pour vérifier le contenu d'une colonne d'un fichier de référence
 
@@ -386,6 +448,33 @@ Dans *dataGroups* nous regrouperont les données par type de données.
       timeScope:
         variable: date
         component: datetime
+```
+
+Les patterns de timescope valides sont :
+- dd/MM/yyyy HH:mm:ss
+- dd/MM/yyyy
+- MM/yyyy
+- yyyy
+Vous pouvez préciser la durée du timescope dans le params "duration" au format:
+- ([0-9]*) (NANOS|MICROS|MILLIS|SECONDS|MINUTES|HOURS|HALF_DAYS|DAYS|WEEKS|MONTHS|YEARS
+
+
+``` yaml
+    authorization:
+      ...
+      timeScope:
+        variable: date
+        component: datetime
+        
+    data:
+      date:
+        components:
+          datetime:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
+                duration: 30 MINUTES
 ```
 
 <span style="color: orange">*authorization* est indenté de 2. *dataGroups*, *authorizationScopes* et *timeScope* sont 
@@ -455,7 +544,6 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
             variable: prélèvement
             component: qualité
 ```
-
 ## lors de l'importation du fichier yaml :
 	
 * mettre le nom de l'application en minuscule,
@@ -463,21 +551,219 @@ dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les d
 * sans accent,
 * sans chiffre et 
 * sans caractères speciaux
+## Internationalisation du fichier yaml:
+Il est possible de faire un fichier international en ajoutant plusieurs parties Internationalisation en précisant la langue.
 
-# Aide fichier .csv  
+### Internationalisation de l'application:
+Dans la partie application ajouter *defaultLanguage* pour préciser la langue par default de l'application.
+Ainsi que *internationalization* qui contient les abbreviations des langues de traduction (ex: *fr* ou *en*)
+Ce qui premettra de traduire le nom de l'application.
+
+``` yaml
+  defaultLanguage: fr
+  internationalization:
+    fr: Application_nom_fr
+    en: Application_nom_en
+```
+### Internationalisation des *references*:
+Nous pouvons faire en sorte que le nom de la référence s'affiche dans la langue de l'application en y ajoutant
+*internationalizationName* ainsi que les langues dans lequel on veux traduire le nom de la référence.
+*internationalizedColumns* ....
+
+``` yaml
+references:
+  especes:
+    internationalizationName:
+      fr: Espèces
+      en: Species
+    internationalizedColumns:
+      esp_definition_fr:
+        fr: esp_definition_fr
+        en: esp_definition_en
+```
+
+- Définition d'un affichage d'un référentiel'
+
+Il est possible de créer un affichage internationalisé d'un référentiel (dans les menus, les types de données).
+Pour cela on va rajouter une section internationalizationDisplay.
+
+``` Yaml
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_key} ({code_key})'
+        en: '{nom_key} ({code_key})'
+
+```
+On définit un pattern pour chaque langue en mettant entre accolades les nom des colonnes. C'est nom de colonnes seront remplacés par la valeur de la colonne ou bien, si la colonne est internationalisée, par la valeur de la colonne internationalisée correspondant à cette colonne.
+
+Par défaut, c'est le code du référentiel qui est affiché.
+### Internationalisation des *dataTypes*:
+Nous pouvons aussi faire en sorte que *nomDonnéeCSV* soit traduit. Même chose pour les noms des *dataGroup*.
+
+``` yaml
+dataTypes:
+  nomDonnéeCSV:
+    internationalizationName:
+      fr: Nom Donnée CSV
+      en: Name Data CSV
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - date
+            - projet
+            - site
+            - commentaire
+```
+
+On peut surcharger l'affichage d'une colonne faisant référence à un référentiel en rajoutant une section internationalizationDisplay dans le dataType.
+```Yaml
+  pem:
+    internationalizationDisplay:
+      especes:
+          pattern:
+            fr: 'espèce :{esp_nom}'
+            en: 'espèce :{esp_nom}'
+```
+## templating
+IL est possible d'utiliser un template lorsque certaines colonnes de datatype on un format commun.
+par example avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*)
+
+``` csv
+Date	      Time	SWC_1_10	SWC_2_10	SWC_3_10	SWC_4_10
+01/01/2001	01:00	45	      35	      37	      49
+01/01/2001	02:00	45	      35	      37	      49
+
+
+```
+Il est possible d'enregistrer toutes les colonnes SWC_([0-9]*)_([0-9]*) dans une variable unique swc. 
+
+On declare cette variable dans la section data 
+
+```yaml
+      SWC:
+        components:
+          variable:
+            checker:
+              name: Reference
+              params:
+                refType: variables
+                required: true
+                codify: true
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unit:
+            defaultValue: return "percentage"
+            checker:
+              name: Reference
+              params:
+                refType: unites
+                required: true
+                codify: true
+          profondeur:
+            checker:
+              name: Float
+              params:
+                required: true
+          repetition:
+            checker:
+              name: Integer
+              params:
+                required: true
+
+```
+Dans la section format on rajoute une section _repeatedColumns_ pour indiquer comment remplir le data à partir du pattern
+```yaml
+    format:
+      ... 
+      repeatedColumns:
+        - headerPattern: "(SWC)_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: SWC
+                component: variable
+              exportHeader: "variable"
+            - boundTo:
+                variable: SWC
+                component: repetition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: SWC
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+
+```
+On note la présence de la section token contenant un tableau de boundTo dans lequel le résultat des capture de l'expression régulière seront utilisés comme une colonne.
+token d'indice 0 -> $1
+token d'indice 1 -> $2
+
+ etc...
+
+Dans l'exemple le variable-component SWC-variable aura pour valeur SWC résultat de la première parenthèse.
+
+
+## Zip de YAML
+Il est possible au lieu de fournir un yaml, de fournir un fichier zip. Cela permet de découper les YAML long en plusieurs fichiers.
+
+Dans le zip le contenu de la section  <section><sous_section><sous_sous_section> sera placé dans un fichier sous_sous_section.yaml que l'on placera dans le dossier sous_section du dossier section.
+
+Au premier niveau il est possible de placer un fichier configuration.yaml qui servira de base à la génération du yaml.
+A défaut de se fichier on utilisera comme base 
+```yaml
+version: 0
+```
+
+voici un example du contenu du zip :
+
+``` html
+multiyaml.zip
+├── application.yaml
+├── compositeReferences.yaml
+├── configuration.yaml
+├── dataTypes
+│   ├── smp_infraj.yaml
+│   └── ts_infraj.yaml
+└── references
+    ├── types_de_zones_etudes.yaml
+
+```
+## lors de l'importation du fichier yaml :
 	
-## lors de la création du fichier csv : 
+* mettre le nom de l'application en minuscule,
+* sans espace,
+* sans accent,
+* sans chiffre et 
+* sans caractères speciaux
+# Aide fichier .csv 
+
+## lors de l'ouverture du fichier csv via libre office:
+
+<span style="color: red">* sélectionner le séparateur en ";"</span> 
+	
+## lors de la création du fichier csv de Référence et de donnée : 
 	
 * cocher lors de l'enregistrement du fichier 
   * Éditer les paramètre du filtre
   * Sélectionner le point virgule
-* dans les données qui se trouve dans les colonnes contenant des clés naturels ne pas mettre
+* dans les données qui se trouvent dans les colonnes contenant des clés naturelles on attend :
     * pas d'accents
     * pas de majuscules
     * pas de caratères spéciaux () , - : 
-    * autorisé _ et .
-* le nom des colonnes doivent être le plus court possible
+    * autorisé les _ et les .
+* le nom des colonnes doive être le plus court possible
+* le fichier doit être en UTF8 pour que les colonnes soient lisible (les caractères spéciaux ne passe pas sinon. ex : é, è, ç)
 
-## lors de l'ouverture du fichier csv via libre office:  
-	
-* sélectionner le séparateur en ";"
+## lors de l'importation de fichier csv dans l'application:
+
+* ouvrer la console avec F12 dans votre navigateur pour voir l'erreur de téléversement (erreur serveur) plus en détail.

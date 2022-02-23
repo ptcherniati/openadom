@@ -1,0 +1,81 @@
+version: 0
+application:
+  defaultLanguage: fr
+  internationalization:
+    fr: Récursivité
+    en: recusivity
+  name: recursivite
+  version: 1
+compositeReferences:
+  taxon:
+    components:
+      - parentRecursiveKey: nom du taxon superieur
+        reference: taxon
+references:
+  taxon:
+    keyColumns: [nom du taxon déterminé]
+    validations:
+      nom du taxon déterminé:
+        description: "nom du taxon déterminé"
+        checker:
+          name: RegularExpression
+          params:
+            pattern: .*
+            required: true
+            codify: true
+            columns: nom du taxon déterminé
+      nom du taxon superieur:
+        description: "nom du taxon superieur"
+        checker:
+          name: Reference
+          params:
+            required: false
+            codify: true
+            refType: taxon
+            columns: nom du taxon superieur
+    columns:
+      nom du taxon déterminé:
+      theme:
+      nom du niveau de taxon:
+      nom du taxon superieur:
+      code sandre du taxon:
+      code sandre du taxon supérieur:
+      niveau incertitude de détermination:
+      Auteur de la description:
+      Année de la description:
+      Référence de la description:
+      Références relatives à ce taxon:
+      Synonyme ancien:
+      Synonyme récent:
+      Classe algale sensu Bourrelly:
+      Code Sandre:
+      Code taxa Cemagref:
+      Code INRA:
+      code INRA lettres:
+      Rebecca name:
+      Code Rebecca:
+      Code Omnidia:
+      Unité de comptage du taxon:
+      Erreur sur le biovolume:
+      valeur du biovolume spécifique choisi pour le taxon:
+      Longueur de la cellule:
+      Largeur de la cellule:
+      Epaisseur de la cellule:
+      Forme géométrique de la cellule:
+      Facteur à multiplier cellule:
+      Facteur à diviser cellule:
+      Surface de la cellule:
+      Biovolume de la cellule:
+      Nombre de cellule par colonie:
+      Surface cumulée des cellules:
+      biovolume cumulé des cellules:
+      Longueur de la colonie (prends en compte la gelée):
+      Largeur de la colonie (prends en compte la gelée):
+      Epaisseur de la colonie (prends en compte la gelée):
+      Forme géométrique de la colonie:
+      Facteur à multiplier colonie:
+      Facteur à diviser colonie:
+      Surface de la colonie:
+      Biovolume de la colonie:
+      Notes sur les biovolumes:
+      Notes libres:

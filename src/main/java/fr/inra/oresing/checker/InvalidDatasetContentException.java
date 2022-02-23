@@ -1,13 +1,9 @@
 package fr.inra.oresing.checker;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.rest.CsvRowValidationCheckResult;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.List;

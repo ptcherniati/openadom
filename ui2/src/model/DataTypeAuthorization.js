@@ -1,9 +1,6 @@
 export class DataTypeAuthorization {
-  userId;
+  usersId;
   applicationNameOrId;
   dataType;
-  dataGroup;
-  authorizedScopes;
-  fromDay;
-  toDay;
+  authorizations;
 }
