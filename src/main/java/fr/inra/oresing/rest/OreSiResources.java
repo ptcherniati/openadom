@@ -200,7 +200,7 @@ public class OreSiResources {
                                 referenceValue.getHierarchicalKey().getSql(),
                                 referenceValue.getHierarchicalReference().getSql(),
                                 referenceValue.getNaturalKey().getSql(),
-                                ReferenceDatum.fromDatabaseJson(referenceValue.getRefValues()).toJsonForFrontend()
+                                referenceValue.getRefValues().toJsonForFrontend()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));

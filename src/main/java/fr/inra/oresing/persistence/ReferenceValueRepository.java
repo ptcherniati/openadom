@@ -123,7 +123,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     public ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
         Function<ReferenceValue, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceValueToReferenceUuidAndDisplayFunction =
                 result -> {
-                    ReferenceDatum referenceDatum = ReferenceDatum.fromDatabaseJson(result.getRefValues());
+                    ReferenceDatum referenceDatum = result.getRefValues();
                     ReferenceColumn referenceColumnForDisplay = ReferenceColumn.forDisplay(locale);
                     String display;
                     if (referenceDatum.contains(referenceColumnForDisplay)) {

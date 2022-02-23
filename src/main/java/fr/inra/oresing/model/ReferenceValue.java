@@ -18,7 +18,7 @@ public class ReferenceValue extends OreSiEntity {
     private Ltree hierarchicalKey;
     private Ltree hierarchicalReference;
     private Ltree naturalKey;
-    private Map<String, Object> refValues;
+    private ReferenceDatum refValues;
     private Map<String, Set<UUID>> refsLinkedTo;
     private UUID binaryFile;
 }

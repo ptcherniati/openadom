@@ -449,7 +449,7 @@ public class OreSiService {
                 line.forEach(value -> {
                     String header = currentHeader.next();
                     ReferenceColumn referenceColumn = new ReferenceColumn(header);
-                    Multiplicity multiplicity = multiplicityPerColumns.get(referenceColumn);
+                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
                     ReferenceColumnValue referenceColumnValue;
                     switch (multiplicity) {
                         case ONE:
@@ -568,7 +568,7 @@ public class OreSiService {
                         e.setRefsLinkedTo(refsLinkedTo);
                         e.setNaturalKey(naturalKey);
                         e.setApplication(app.getId());
-                        e.setRefValues(referenceDatum.toJsonForDatabase());
+                        e.setRefValues(referenceDatum);
                         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
                             ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
                             rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
@@ -673,8 +673,7 @@ public class OreSiService {
                     referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
                         indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
                         parentKeyColumn.ifPresent(presentParentKeyColumn -> {
-                            Map<String, Object> refValues = referenceValue.getRefValues();
-                            ReferenceDatum referenceDatum = ReferenceDatum.fromDatabaseJson(refValues);
+                            ReferenceDatum referenceDatum = referenceValue.getRefValues();
                             ReferenceColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
                             Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue);
                             String parentHierarchicalKeyAsString = ((ReferenceColumnSingleValue) referenceColumnValue).getValue();
@@ -1487,7 +1486,6 @@ public class OreSiService {
             ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
             List<ReferenceDatum> referenceData = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
                     .map(ReferenceValue::getRefValues)
-                    .map(ReferenceDatum::fromDatabaseJson)
                     .collect(Collectors.toUnmodifiableList());
             for (ReferenceDatum referenceDatum : referenceData) {
                 ImmutableList<String> rowAsRecord = model.values().stream()
