@@ -1,15 +1,15 @@
 <template>
-  <div>
+  <div style="margin-bottom: 10px; border: 1px solid white">
     <div
-      :class="`CollapsibleTree-header ${
+      :class="`columns CollapsibleTree-header ${
         option.children && option.children.length !== 0 ? 'clickable' : ''
       } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
       :style="`background-color:rgba(240, 245, 245, ${1 - level / 2})`"
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
-      <div class="CollapsibleTree-header-infos">
-        <div class="CollapsibleTree-header-infos" :style="`transform:translate(${level * 50}px);`">
+      <div class="CollapsibleTree-header-infos column is-three-quarters">
+        <div class="CollapsibleTree-header-infos column" :style="`transform:translate(${level * 50}px);`">
           <FontAwesomeIcon
             v-if="option.children && option.children.length !== 0"
             :icon="displayChildren ? 'caret-down' : 'caret-right'"
@@ -42,8 +42,8 @@
         <div
           :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
-              ? 'tile synthesis-details link'
-              : 'tile synthesis-details'
+              ? 'tile synthesis-details link column is-8'
+              : 'tile synthesis-details column'
           "
           @click="
             (event) =>
@@ -70,11 +70,11 @@
           </span>
         </div>
       </div>
-      <div class="CollapsibleTree-buttons">
+      <div class="CollapsibleTree-buttons column is-3">
         <div class="file button is-small is-info" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
-            class="file-label"
+            class="file-label ml-1"
             accept=".csv"
             @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
