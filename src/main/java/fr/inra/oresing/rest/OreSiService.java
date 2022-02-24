@@ -134,7 +134,15 @@ public class OreSiService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final String KEYCOLUMN_SEPARATOR = "__";
+
+    /**
+     * Séparateur pour les clés naturelles composites.
+     *
+     * Lorsqu'une clé naturelle est composite, c'est à dire composée de plusieurs {@link Configuration.ReferenceDescription#getKeyColumns()},
+     * les valeurs qui composent la clé sont séparées avec ce séparateur.
+     */
+    private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
+
     @Autowired
     private OreSiRepository repo;
 
@@ -545,7 +553,7 @@ public class OreSiService {
                                 .map(ReferenceColumnSingleValue::getValue)
                                 .filter(StringUtils::isNotEmpty)
                                 .map(Ltree::escapeToLabel)
-                                .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                                .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
                         Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                         Ltree recursiveNaturalKey = naturalKey;
                         final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
@@ -631,7 +639,7 @@ public class OreSiService {
                             .map(kc -> columns.indexOf(kc))
                             .map(k -> Strings.isNullOrEmpty(csvrecord.get(k))?null:Ltree.escapeToLabel(csvrecord.get(k)))
                             .filter(k->k!=null)
-                            .collect(Collectors.joining("__"));
+                            .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
                     Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                     if (!referenceUUIDs.containsKey(naturalKey)) {
                         referenceUUIDs.put(naturalKey, UUID.randomUUID());
