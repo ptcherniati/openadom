@@ -642,6 +642,7 @@ public class Fixtures {
         referentielFiles.put("methodes", "/data/foret/metadata/measure/methods.csv");
         referentielFiles.put("methodes_references", "/data/foret/metadata/measure/references_des_methodes.csv");
         referentielFiles.put("methodes_periodes", "/data/foret/metadata/measure/periodes_d_application_des_methodes.csv");
+        referentielFiles.put("listes_infos_complementaires", "/data/foret/metadata/measure/listes_infos_complementaires.csv");
         referentielFiles.put("liste_valeur_ic", "/data/foret/metadata/measure/liste_de_valeurs_d_informations_complementaires.csv");
         referentielFiles.put("informations_complementaires", "/data/foret/metadata/measure/informations_complementaires.csv");
         referentielFiles.put("ic_site_theme_dataype_variable", "/data/foret/metadata/measure/informations_complementaires_par_site_theme_type_de_donnees_et_variable.csv");

@@ -564,14 +564,28 @@ references:
       Code de la méthode de calcul: null
       Date de début: null
       Date de fin: null
+  listes_infos_complementaires:
+    internationalizationName:
+      fr: Listes d'informations complémentaires
+      en: List of complement information
+    internationalizedColumns:
+      nom de la liste_fr:
+        fr: nom de la liste_fr
+        en: nom de la liste_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom de la liste_fr}'
+        en: '{nom de la liste_fr}'
+    keyColumns:
+      - nom de la liste_fr
+    columns:
+      nom de la liste_fr: null
+      nom de la liste_en: null
   liste_valeur_ic:
     internationalizationName:
       fr: Liste de valeurs d'informations complémentaires
       en: List of complement information values
     internationalizedColumns:
-      nom de la liste_fr:
-        fr: nom de la liste_fr
-        en: nom de la liste_en
       libellé d'une valeur_fr:
         fr: libellé d'une valeur_fr
         en: libellé d'une valeur_en
@@ -579,12 +593,20 @@ references:
       pattern:
         fr: '{libellé d''une valeur_fr}'
         en: '{libellé d''une valeur_fr}'
+    validations:
+      listeRef:
+        description: référence à la liste de valeurs d'informations complémentaires
+        checker:
+          name: Reference
+          params:
+            refType: listes_infos_complementaires
+            columns: nom de la liste
+            codify: true
     keyColumns:
-      - nom de la liste_fr
+      - nom de la liste
       - libellé d'une valeur_fr
     columns:
-      nom de la liste_fr: null
-      nom de la liste_en: null
+      nom de la liste:
       libellé d'une valeur_fr: null
       libellé d'une valeur_en: null
       note de la valeur: null
@@ -595,9 +617,10 @@ references:
         checker:
           name: Reference
           params:
-            refType: liste_valeur_ic
+            refType: listes_infos_complementaires
             columns: nom de la liste de valeurs d'informations complémentaires
             codify: true
+            required: false
     internationalizationName:
       fr: Informations complementaires
       en: Complement information
