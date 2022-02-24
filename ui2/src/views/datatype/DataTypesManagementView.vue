@@ -84,7 +84,6 @@ import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
-import SynthesisDetailPanel from "@/components/charts/SynthesisDetailPanel.vue";
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
 import DetailModalCard from "@/components/charts/DetailModalCard";
 
@@ -95,7 +94,6 @@ import DetailModalCard from "@/components/charts/DetailModalCard";
     PageView,
     SubMenu,
     DataTypeDetailsPanel,
-    SynthesisDetailPanel,
     AvailablityChart,
   },
 })

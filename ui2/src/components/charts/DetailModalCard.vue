@@ -4,24 +4,39 @@
     :title="dataType && (dataType.localName || dataType.label)"
     :closeCb="closeCb"
   >
-    <div class="modal-card" style="width: auto">
+    <div class="modal-card" style="width: auto; height: auto">
       <div v-if="options && options.synthesis">
         <b-collapse
           class="card"
-          animation="slide"
           :aria-id="key"
           v-for="(option, key) in options.synthesis"
           :key="key"
           style="width: auto"
+          :open="true"
         >
           <template #trigger="props">
-            <div class="card-header" v-show="key != 'minmax' && key != 'ranges'">
-              <p class="card-header-title">
+            <div
+              class="card-header columns"
+              v-show="key !== 'minmax' && key !== 'ranges'"
+              style="margin-top: 0; margin-bottom: 0"
+            >
+              <p class="card-header-title column is-1" style="margin-left: 10px">
                 {{ key }}
-                <availiblity-chart :minmax="option.minmax" :ranges="option.ranges" :id="key" />
               </p>
-              <a class="card-header-icon" :aria-controls="key" role="button">
-                <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"> </b-icon>
+              <availiblity-chart
+                class="column is-10"
+                :minmax="option.minmax"
+                :ranges="option.ranges"
+                :id="key"
+                style="padding-bottom: 0"
+              />
+              <a
+                class="card-header-icon column is-1"
+                :aria-controls="key"
+                role="button"
+                v-if="Object.values(option).length > 4"
+              >
+                <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
               </a>
             </div>
           </template>
@@ -31,9 +46,10 @@
             :key="key2"
             v-show="option2.aggregation"
           >
-            <b-field v-if="option2.aggregation">
-              {{ option2.aggregation }}
+            <b-field class="columns" v-if="option2.aggregation">
+              <div class="column is-1">{{ option2.aggregation }}</div>
               <availiblity-chart
+                class="column is-10"
                 :minmax="option2.minmax"
                 :ranges="
                   option2.ranges.reduce((acc, r) => {
@@ -83,9 +99,16 @@ export default class DetailModalCard extends Vue {
     margin-bottom: 0.5rem;
   }
 }
-.modal-overlay {
+.modal-dialog-scrollable {
   .modal-card {
     width: 90%;
+    margin-bottom: 10px;
+    overflow-y: initial !important;
+    .card-content {
+      height: auto;
+      overflow-y: auto;
+      padding: 15px;
+    }
   }
   .card-header-title div {
     width: 90%;

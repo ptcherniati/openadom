@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay">
+  <div class="modal-dialog-scrollable">
     <h1 class="title main-title">{{ title }}</h1>
     <slot></slot>
   </div>
@@ -42,7 +42,6 @@ export default class ModalCard extends Vue {
   height: auto;
   top: 0;
   width: 100%;
-  padding: $container-padding-vert 2.5rem;
   transition: transform 250ms;
 }
 
