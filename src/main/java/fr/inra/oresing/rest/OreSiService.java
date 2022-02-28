@@ -3,76 +3,23 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
-import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.DateLineChecker;
-import fr.inra.oresing.checker.FloatChecker;
-import fr.inra.oresing.checker.IntegerChecker;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.Multiplicity;
-import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.Authorization;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.BinaryFileDataset;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.Data;
-import fr.inra.oresing.model.Datum;
-import fr.inra.oresing.model.LocalDateTimeRange;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnMultipleValue;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.Ltree;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.persistence.SqlPolicy;
-import fr.inra.oresing.persistence.SqlSchema;
-import fr.inra.oresing.persistence.SqlSchemaForApplication;
-import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
-import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
-import fr.inra.oresing.rest.validationcheckresults.DuplicationLineValidationCheckResult;
-import fr.inra.oresing.rest.validationcheckresults.MissingParentLineValidationCheckResult;
-import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.*;
 import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -104,21 +51,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -382,8 +315,9 @@ public class OreSiService {
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Map<ReferenceColumn, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
         authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file,"");
+        UUID fileId = storeFile(app, file, "");
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
@@ -491,7 +425,21 @@ public class OreSiService {
                         ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
                         lineCheckers.forEach(lineChecker -> {
                             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
-                            if (lineChecker instanceof ReferenceLineChecker) {
+                            if (lineChecker instanceof DateLineChecker) {
+                                validationCheckResults.forEach(validationCheckResult -> {
+                                    final DateLineChecker dateLineChecker = (DateLineChecker) lineChecker;
+                                    final DateValidationCheckResult dateValidationCheckResult = (DateValidationCheckResult) validationCheckResult;
+                                    final ReferenceColumnValue referenceColumnValue = referenceDatum.get((ReferenceColumn) dateValidationCheckResult.getTarget());
+                                     referenceDatum.put(
+                                             (ReferenceColumn) dateValidationCheckResult.getTarget(),
+                                             referenceDatumBeforeChecking.get((ReferenceColumn) dateValidationCheckResult.getTarget())
+                                                     .transform(v ->
+                                                     String.format("date:%s:%s",dateValidationCheckResult.getMessage(), v)
+                                                     )
+                                     );
+
+                                });
+                            } else if (lineChecker instanceof ReferenceLineChecker) {
                                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) lineChecker;
                                 ReferenceColumn referenceColumn = (ReferenceColumn) referenceLineChecker.getTarget().getTarget();
                                 SetMultimap<ReferenceColumn, String> rawValueReplacedByKeys = HashMultimap.create();
@@ -633,8 +581,8 @@ public class OreSiService {
                     String naturalKey = ref.getKeyColumns()
                             .stream()
                             .map(kc -> columns.indexOf(kc))
-                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k))?null:Ltree.escapeToLabel(csvrecord.get(k)))
-                            .filter(k->k!=null)
+                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
+                            .filter(k -> k != null)
                             .collect(Collectors.joining("__"));
                     if (!referenceUUIDs.containsKey(naturalKey)) {
                         referenceUUIDs.put(naturalKey, UUID.randomUUID());
@@ -844,7 +792,7 @@ public class OreSiService {
                 .orElseGet(() -> {
                     UUID fileId = null;
                     try {
-                        fileId = storeFile(app, file,"");
+                        fileId = storeFile(app, file, "");
                     } catch (IOException e) {
                         return null;
                     }

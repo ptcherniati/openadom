@@ -341,11 +341,20 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .map(referenceColumn -> {
                         String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
                         SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
-                        String columnDeclaration = String.format("%s %s", columnName, columnType.getSql());
+                        String columnDeclaration = String.format("%s %s", columnName, SqlPrimitiveType.TEXT);
                         return columnDeclaration;
                     })
                     .collect(Collectors.joining(", ", "(", ")"));
             String quotedReferenceType = quoteSqlIdentifier(referenceType);
+            String castedColumnSelect = columns.stream()
+                    .map(ReferenceColumn::new)
+                    .map(referenceColumn -> {
+                        String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
+                        SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
+                        String columnDeclaration = String.format("%s.%s::%s\n", quotedReferenceType,columnName, columnType.getSql());
+                        return columnDeclaration;
+                    })
+                    .collect(Collectors.joining(", "));
 
             // par exemple "projet"(nom_en text, nom_fr text, nom_key text, definition_en text, definition_fr text)
             String schemaDeclaration = quotedReferenceType + columnsAsSchema;
@@ -354,8 +363,10 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String quotedViewHierarchicalKeyColumnName = quoteSqlIdentifier(referenceType + "_hierarchicalKey");
             String quotedViewNaturalKeyColumnName = quoteSqlIdentifier(referenceType + "_naturalKey");
             String referenceValueTableName = SqlSchema.forApplication(app).referenceValue().getSqlIdentifier();
-            String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.hierarchicalKey as " + quotedViewHierarchicalKeyColumnName + ", referenceValue.naturalKey as " + quotedViewNaturalKeyColumnName + ", " + quotedReferenceType + ".* "
-                    + " from " + referenceValueTableName + ", jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
+            String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.hierarchicalKey as " + quotedViewHierarchicalKeyColumnName + ", referenceValue.naturalKey as " + quotedViewNaturalKeyColumnName + ", "
+                    + castedColumnSelect
+                    + " from " + referenceValueTableName + ", " +
+                    "jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
                     + " where referenceType = '" + referenceType + "' and application = '" + appId + "'::uuid";
 
             if (log.isTraceEnabled()) {

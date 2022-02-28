@@ -81,6 +81,6 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
 
     @Override
     public SqlPrimitiveType getSqlType() {
-        return SqlPrimitiveType.TEXT;
+        return SqlPrimitiveType.COMPOSITE_DATE;
     }
 }

@@ -7,7 +7,8 @@ public enum SqlPrimitiveType {
     UUID,
     TEXT,
     INTEGER,
-    NUMERIC;
+    NUMERIC,
+    COMPOSITE_DATE;
 
     /**
      * Le type en SQL, tel qu'il faut l'écrire pour faire un cast

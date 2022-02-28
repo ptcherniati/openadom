@@ -42,17 +42,17 @@ public class DateValidationCheckResult implements ValidationCheckResult {
                 ))
                 .orElse(null);
         this.date = (TemporalAccessor) Optional.ofNullable(messageParams).map(mp->mp.getOrDefault(DateLineChecker.PARAM_DATE, null)).orElse(null);
-        LocalDateTime localDateTime = LocalDateTime.MIN;
+        LocalDateTime localDateTime = null;
         if(date!=null){
             LocalDate localdate = date.query(TemporalQueries.localDate());
-            localdate=localdate==null?LocalDate.MIN:localdate;
+            localdate=localdate==null?LocalDate.of(1970, 1, 1):localdate;
             LocalTime localTime = date.query(TemporalQueries.localTime());
             localTime=localTime==null?LocalTime.MIN:localTime;
             localDateTime = localdate.atTime(localTime);
         }
 
 
-        this.message = localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        this.message = localDateTime==null?null:localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 
     public static DateValidationCheckResult success(Map<String, Object> params) {
