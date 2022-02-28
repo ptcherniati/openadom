@@ -426,7 +426,9 @@ public class OreSiService {
                         lineCheckers.forEach(lineChecker -> {
                             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
                             if (lineChecker instanceof DateLineChecker) {
-                                validationCheckResults.forEach(validationCheckResult -> {
+                                validationCheckResults.stream()
+                                        .filter(DateValidationCheckResult.class::isInstance)
+                                        .forEach(validationCheckResult -> {
                                     final DateLineChecker dateLineChecker = (DateLineChecker) lineChecker;
                                     final DateValidationCheckResult dateValidationCheckResult = (DateValidationCheckResult) validationCheckResult;
                                     final ReferenceColumnValue referenceColumnValue = referenceDatum.get((ReferenceColumn) dateValidationCheckResult.getTarget());
