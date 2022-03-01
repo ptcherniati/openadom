@@ -349,7 +349,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String columnsAsSchema = allReferenceColumnsPerMultiplicity.values().stream()
                     .map(referenceColumn -> {
                         String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
-                        SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
                         String columnDeclaration = String.format("%s %s", columnName, SqlPrimitiveType.TEXT);
                         return columnDeclaration;
                     })
