@@ -1,10 +1,13 @@
 package fr.inra.oresing.persistence;
 
+import java.util.Set;
+
 /**
  * L'ensemble des types SQL qui peuvent être utilisés pour représenter des valeurs des données.
  */
 public enum SqlPrimitiveType {
     UUID,
+    LTREE,
     TEXT,
     INTEGER,
     NUMERIC,
@@ -23,6 +26,6 @@ public enum SqlPrimitiveType {
      * Par exemple <code>SELECT ''::UUID</code> donne <code>invalid input syntax for type uuid: ""</code> donc non
      */
     public boolean isEmptyStringValidValue() {
-        return this == TEXT;
+        return Set.of(TEXT, LTREE).contains(this);
     }
 }

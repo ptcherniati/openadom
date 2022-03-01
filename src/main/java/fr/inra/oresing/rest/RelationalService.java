@@ -358,7 +358,15 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .map(referenceColumn -> {
                         String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
                         SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
-                        String columnDeclaration = String.format("%s.%s::%s\n", quotedReferenceType,columnName, columnType.getSql());
+                        Multiplicity multiplicity = declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                        String columnDeclaration;
+                        if (multiplicity == Multiplicity.ONE) {
+                            columnDeclaration = String.format("%s.%s::%s", quotedReferenceType,columnName, columnType.getSql());
+                        } else if (multiplicity == Multiplicity.MANY) {
+                            columnDeclaration = String.format("ARRAY(SELECT JSONB_ARRAY_ELEMENTS_TEXT(%s.%s::JSONB))::%s[] AS %s", quotedReferenceType, columnName, columnType.getSql(), columnName);
+                        } else {
+                            throw new IllegalStateException("multiplicy = " + multiplicity);
+                        }
                         return columnDeclaration;
                     })
                     .collect(Collectors.joining(", "));
@@ -388,14 +396,10 @@ public class RelationalService implements InitializingBean, DisposableBean {
                         String columnNameForOneValueFromTheManyArray = quoteSqlIdentifier(referenceColumn.getColumn() + "_value");
                         String columnFromReferenceViewThatContainsTheForeignKeysArray = quoteSqlIdentifier(referenceColumn.getColumn());
                         String associationViewPattern = String.join("\n"
-                                , "SELECT %s, %s::LTREE"
+                                , "SELECT %s, %s"
                                 , "FROM %s"
                                 , "JOIN LATERAL"
-                                , "    UNNEST("
-                                , "        ARRAY("
-                                , "            SELECT(JSONB_ARRAY_ELEMENTS_TEXT(%s::JSONB))"
-                                , "        )"
-                                , "    ) %s ON TRUE"
+                                , "    UNNEST(%s) %s ON TRUE"
                         );
                         String associationView = String.format(associationViewPattern
                                 , quotedViewHierarchicalKeyColumnName

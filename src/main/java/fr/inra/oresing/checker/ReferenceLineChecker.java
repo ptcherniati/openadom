@@ -71,6 +71,6 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
 
     @Override
     public SqlPrimitiveType getSqlType() {
-        return SqlPrimitiveType.TEXT;
+        return SqlPrimitiveType.LTREE;
     }
 }
