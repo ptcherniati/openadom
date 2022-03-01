@@ -43,7 +43,7 @@ public class RelationalServiceTest {
     @Before
     public void createApplication() throws Exception {
         fixtures.addMonsoreApplication();
-        fixtures.addApplicationPRO();
+        //fixtures.addApplicationPRO();
         fixtures.addApplicationOLAC();
         fixtures.addApplicationFORET();
         fixtures.addApplicationAcbb();
@@ -52,7 +52,7 @@ public class RelationalServiceTest {
     @Test
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
-        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.PRO, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
+        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.createViews(applicationName, ViewStrategy.VIEW);
