@@ -355,7 +355,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     })
                     .collect(Collectors.joining(", ", "(", ")"));
             String quotedReferenceType = quoteSqlIdentifier(referenceType);
-            String castedColumnSelect = columns.stream()
+            String castedColumnSelect = entry.getValue().getColumns().keySet().stream()
                     .map(ReferenceColumn::new)
                     .map(referenceColumn -> {
                         String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
