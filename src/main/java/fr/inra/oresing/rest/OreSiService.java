@@ -67,7 +67,15 @@ public class OreSiService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final String KEYCOLUMN_SEPARATOR = "__";
+
+    /**
+     * Séparateur pour les clés naturelles composites.
+     *
+     * Lorsqu'une clé naturelle est composite, c'est à dire composée de plusieurs {@link Configuration.ReferenceDescription#getKeyColumns()},
+     * les valeurs qui composent la clé sont séparées avec ce séparateur.
+     */
+    private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
+
     @Autowired
     private OreSiRepository repo;
 
@@ -236,7 +244,7 @@ public class OreSiService {
                                 ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
                                 ReferenceValidationCheckResult referenceCheckResult = referenceLineChecker.check(componentValue);
                                 Preconditions.checkState(referenceCheckResult.isSuccess(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
-                                UUID referenceId = referenceCheckResult.getReferenceId();
+                                UUID referenceId = referenceCheckResult.getMatchedReferenceId();
                                 refsLinkedToAddForVariable.put(component, referenceId);
                             }
                             variableValue.put(component, componentValue);
@@ -321,7 +329,7 @@ public class OreSiService {
 
         Configuration conf = app.getConfiguration();
         Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
-        final ImmutableMap<String, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
+        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
@@ -451,8 +459,8 @@ public class OreSiService {
                                         .filter(ReferenceValidationCheckResult.class::isInstance)
                                         .map(ReferenceValidationCheckResult.class::cast)
                                         .forEach(referenceValidationCheckResult -> {
-                                            UUID referenceId = referenceValidationCheckResult.getReferenceId();
-                                            rawValueReplacedByKeys.put(referenceColumn, (String) referenceValidationCheckResult.getValue());
+                                            UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
+                                            rawValueReplacedByKeys.put(referenceColumn, referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().getSql());
                                             refsLinkedTo
                                                     .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
                                                     .add(referenceId);
@@ -495,14 +503,14 @@ public class OreSiService {
                                 .map(ReferenceColumnSingleValue::getValue)
                                 .filter(StringUtils::isNotEmpty)
                                 .map(Ltree::escapeToLabel)
-                                .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
+                                .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
                         Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                         Ltree recursiveNaturalKey = naturalKey;
                         final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
                         if (isRecursive) {
                             selfLineChecker
                                     .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
-                                    .map(values -> values.get(naturalKey.getSql()))
+                                    .map(values -> values.get(naturalKey))
                                     .filter(key -> key != null)
                                     .ifPresent(key -> {
                                         e.setId(key);
@@ -511,11 +519,7 @@ public class OreSiService {
                             while (parentKey != null) {
                                 recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
                                 parentKey = parentreferenceMap.getOrDefault(parentKey, null);
-                                //selfHierarchicalReference = Ltree.join(selfHierarchicalReference, refTypeAsLabel);
                             }
-//                            int x = StringUtils.countMatches(selfHierarchicalReference.getSql(), ".");
-//                            int y = StringUtils.countMatches(recursiveNaturalKey.getSql(), ".");
-//                            Preconditions.checkState(x == y);
                         }
                         Ltree hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
                         Ltree selfHierarchicalReference = refTypeAsLabel;
@@ -534,8 +538,8 @@ public class OreSiService {
                          * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
                          */
 
-                        if (storedReferences.containsKey(hierarchicalKey.getSql())) {
-                            e.setId(storedReferences.get(hierarchicalKey.getSql()));
+                        if (storedReferences.containsKey(hierarchicalKey)) {
+                            e.setId(storedReferences.get(hierarchicalKey));
                         }
                         e.setBinaryFile(fileId);
                         e.setReferenceType(refType);
@@ -569,33 +573,35 @@ public class OreSiService {
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
                 .orElse(null);
-        ListMultimap<String, Long> missingParentReferences = LinkedListMultimap.create();
+        ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             return recordStream;
         }
-        HashMap<String, UUID> referenceUUIDs = selfLineChecker
+        HashMap<Ltree, UUID> referenceUUIDs = selfLineChecker
                 .map(lc -> lc.getReferenceValues())
                 .map(HashMap::new)
                 .orElseGet(HashMap::new);
         List<CSVRecord> collect = recordStream
                 .peek(csvrecord -> {
-                    String s = csvrecord.get(parentRecursiveIndex);
-                    String naturalKey = ref.getKeyColumns()
+                    String sAsString = csvrecord.get(parentRecursiveIndex);
+                    String naturalKeyAsString = ref.getKeyColumns()
                             .stream()
                             .map(kc -> columns.indexOf(kc))
-                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
-                            .filter(k -> k != null)
-                            .collect(Collectors.joining("__"));
+                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k))?null:Ltree.escapeToLabel(csvrecord.get(k)))
+                            .filter(k->k!=null)
+                            .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                    Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                     if (!referenceUUIDs.containsKey(naturalKey)) {
                         referenceUUIDs.put(naturalKey, UUID.randomUUID());
                     }
-                    if (!Strings.isNullOrEmpty(s)) {
+                    if (!Strings.isNullOrEmpty(sAsString)) {
+                        Ltree s;
                         try {
-                            s = Ltree.escapeToLabel(s);
+                            s = Ltree.fromUnescapedString(sAsString);
                         } catch (IllegalArgumentException e) {
                             return;
                         }
-                        referenceMap.put(Ltree.fromSql(naturalKey), Ltree.fromUnescapedString(s));
+                        referenceMap.put(naturalKey, s);
                         if (!referenceUUIDs.containsKey(s)) {
                             final UUID uuid = UUID.randomUUID();
                             referenceUUIDs.put(s, uuid);
@@ -612,7 +618,7 @@ public class OreSiService {
         if (!missingParentReferences.isEmpty()) {
             missingParentReferences.asMap().entrySet().stream()
                     .forEach(entry -> {
-                        final String missingParentReference = entry.getKey();
+                        final Ltree missingParentReference = entry.getKey();
                         entry.getValue().stream().forEach(
                                 lineNumber -> rowErrors.add(new CsvRowValidationCheckResult(new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet()), lineNumber))
                         );
@@ -869,11 +875,11 @@ public class OreSiService {
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
                         if (configuration.getGroovy() != null) {
-                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
+                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
-                        UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                        UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                         refsLinkedTo.put(variableComponentKey, referenceId);
                     }
                 } else {

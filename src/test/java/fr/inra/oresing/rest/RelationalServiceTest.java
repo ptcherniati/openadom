@@ -110,6 +110,12 @@ public class RelationalServiceTest {
             Assert.assertEquals(26, averageSwc);
         }
 
+        {
+            // on vérifie juste que la vue association est bien alimentée
+            int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject("select count(*) from acbb_view.version_de_traitement_modalites natural join acbb_view.version_de_traitement join acbb_view.modalites on modalites_value = modalites_hierarchicalkey", Collections.emptyMap(), Integer.class);
+            Assert.assertEquals(81, numberOfRowInAssociationView);
+        }
+
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.dropViews(applicationName, ViewStrategy.VIEW);

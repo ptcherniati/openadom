@@ -120,7 +120,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return result;
     }
 
-    public ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
+    public ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
         Function<ReferenceValue, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceValueToReferenceUuidAndDisplayFunction =
                 result -> {
                     ReferenceDatum referenceDatum = result.getRefValues();
@@ -137,11 +137,11 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                     return new ApplicationResult.Reference.ReferenceUUIDAndDisplay(display, result.getId(), values);
                 };
         return findAllByReferenceType(referenceType).stream()
-                .collect(ImmutableMap.toImmutableMap(referenceValue -> referenceValue.getHierarchicalKey().getSql(), referenceValueToReferenceUuidAndDisplayFunction));
+                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, referenceValueToReferenceUuidAndDisplayFunction));
     }
 
-    public ImmutableMap<String, UUID> getReferenceIdPerKeys(String referenceType) {
+    public ImmutableMap<Ltree, UUID> getReferenceIdPerKeys(String referenceType) {
         return findAllByReferenceType(referenceType).stream()
-                .collect(ImmutableMap.toImmutableMap(referenceValue -> referenceValue.getHierarchicalKey().getSql(), ReferenceValue::getId));
+                .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
     }
 }

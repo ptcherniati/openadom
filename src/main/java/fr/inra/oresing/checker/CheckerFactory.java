@@ -11,6 +11,7 @@ import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
 import fr.inra.oresing.rest.ApplicationResult;
@@ -134,11 +135,11 @@ public class CheckerFactory {
         CheckerOnOneVariableComponentLineChecker variableComponentChecker;
         String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-        ImmutableMap<String, UUID> referenceValues;
+        ImmutableMap<Ltree, UUID> referenceValues;
         if (locale == null) {
             referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
         } else {
-            ImmutableMap<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceIdAndDisplayPerKeys = referenceValueRepository.getReferenceIdAndDisplayPerKeys(refType, locale);
+            ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceIdAndDisplayPerKeys = referenceValueRepository.getReferenceIdAndDisplayPerKeys(refType, locale);
             referenceValues = ImmutableMap.copyOf(
                     referenceIdAndDisplayPerKeys.entrySet().stream()
                             .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
@@ -220,7 +221,7 @@ public class CheckerFactory {
             case "Reference":
                 String refType = checkerConfigurationDescription.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-                ImmutableMap<String, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
+                ImmutableMap<Ltree, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
                 checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription, transformer));
                 break;
             default:
