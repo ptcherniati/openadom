@@ -66,16 +66,6 @@ public class RelationalServiceTest {
         }
 
         {
-            List<Map<String, Object>> viewContent = relationalService.readView("pros", "donnees_prelevement_pro", ViewStrategy.VIEW);
-            Assert.assertEquals(80, viewContent.size());
-        }
-
-        {
-            List<Map<String, Object>> viewContent = relationalService.readView("pros", "physico_chimie_sols", ViewStrategy.VIEW);
-            Assert.assertEquals(99, viewContent.size());
-        }
-
-        {
             List<Map<String, Object>> viewContent = relationalService.readView("olac", "condition_prelevements", ViewStrategy.VIEW);
             Assert.assertEquals(19, viewContent.size());
         }
