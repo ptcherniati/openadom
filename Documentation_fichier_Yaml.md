@@ -238,6 +238,71 @@ compositeReferences:
       - parentRecursiveKey: nom du taxon superieur
         reference: taxon
 ```
+
+#### Relation entre deux référentiels avec multiplicité
+
+Lorsqu'un fichier CSV contient une colonne dont le contenu est une liste de clés naturelles pointant vers un autre référentiel, on parle de multiplicité.
+
+On peut configurer un checker de type `Reference` de façon à prendre en compte cette multiplicité.
+
+Par exemple, un fichier CSV de modalités dont la clé naturelle est composée de la seule colonne code :
+
+```csv
+Variable de forcage;code;nom_fr;nom_en;description_fr;description_en
+Fertilisation;F0;nulle;nulle;Aucune fertilisation;Aucune fertilisation
+Utilisation;U0;Sol nu;Sol nu;Maintient du sol en sol nu;Maintient du sol en sol nu
+Utilisation;UA;Abandon;Abandon;Pas de traitement;Pas de traitement
+Utilisation;UC;Culture;Culture;Utilisation du sol en culture lors d'une rotation;Utilisation du sol en culture lors d'une rotation
+Utilisation;UF;Fauche;Fauche;Prairies fauchées;Prairies fauchées
+Utilisation;UP;Pâture;Pâture;Prairies pâturées;Prairies pâturées
+```
+
+accompagné de ce fichier `version_de_traitement.csv` : 
+
+```
+site;traitement;version;date début;date fin;commentaire_fr;commentaire_en;modalites
+Theix;T4;1;01/01/2005;;version initiale;initial version;F0,UA
+Theix;T5;1;01/01/2005;;version initiale;initial version;F0,UF
+```
+
+On voit que la colonne `modalites` est multi-valuée : elle convient plusieurs codes vers des clés du fichier modalités.
+
+On paramètre le checker avec la `multiplicity: MANY`. Cela donne, par exemple, un YAML de la forme : 
+
+```yaml
+references:
+  modalites:
+    keyColumns: [code]
+    columns:
+      Variable de forcage:
+      code:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  version_de_traitement:
+    keyColumns: [site, traitement]
+    columns:
+      site:
+      traitement:
+      version:
+      date début:
+      date fin:
+      commentaire_fr:
+      commentaire_en:
+      modalites:
+    validations:
+      modalitesRef:
+        description: "référence aux modalités"
+        checker:
+          name: Reference
+          params:
+            refType: modalites
+            columns: modalites
+            codify: true
+            multiplicity: MANY
+```
+
 ### on renseigne la description des *dataTypes*
  
  Pour enregistrer un type de données, il faut déclarer 
