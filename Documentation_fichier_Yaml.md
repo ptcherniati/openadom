@@ -51,7 +51,7 @@ pour le modèle de référentiels
 
 ```mermaid
   classDiagram
-    sites *-- parcelles:site
+  sites *-- parcelles:site
 ```
 
 et pour les fichiers :
@@ -211,9 +211,9 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
 
 Pour créer une clef à partir d'une chaîne, on peut utiliser un checker et enrenseignant la section codify de params.
 
-```mermaid
+``` mermaid
   classDiagram
-    sites *-- parcelles:site
+  sites *-- parcelles:site
 ```
 
 ``` yaml
@@ -247,6 +247,16 @@ On peut configurer un checker de type `Reference` de façon à prendre en compte
 
 Par exemple, un fichier CSV de modalités dont la clé naturelle est composée de la seule colonne code :
 
+Une version d'un traitement est définie par une liste de modalités (plus ou moins d'engrais, plus ou moins de pesticide, pature ou non...)
+
+``` mermaid
+  classDiagram
+  class VersionDeTraitements{
+  List~Modalites~ modalites
+  }
+  VersionDeTraitements "n"--"n" Modalites
+```
+
 ```csv
 Variable de forcage;code;nom_fr;nom_en;description_fr;description_en
 Fertilisation;F0;nulle;nulle;Aucune fertilisation;Aucune fertilisation
@@ -265,9 +275,9 @@ Theix;T4;1;01/01/2005;;version initiale;initial version;F0,UA
 Theix;T5;1;01/01/2005;;version initiale;initial version;F0,UF
 ```
 
-On voit que la colonne `modalites` est multi-valuée : elle convient plusieurs codes vers des clés du fichier modalités.
+On voit que la colonne `modalites` est multi-valuée : elle contient plusieurs codes vers des clés du fichier modalités.
 
-On paramètre le checker avec la `multiplicity: MANY`. Cela donne, par exemple, un YAML de la forme : 
+On paramètre le checker avec la `multiplicity: MANY`. Cela donne, par exemple, un YAML de la forme (voir la section  _validations_ de _version_de_traitement_) : 
 
 ```yaml
 references:
