@@ -435,19 +435,17 @@ public class OreSiService {
                             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
                             if (lineChecker instanceof DateLineChecker) {
                                 validationCheckResults.stream()
+                                        .filter(ValidationCheckResult::isSuccess)
                                         .filter(DateValidationCheckResult.class::isInstance)
-                                        .forEach(validationCheckResult -> {
-                                    final DateLineChecker dateLineChecker = (DateLineChecker) lineChecker;
-                                    final DateValidationCheckResult dateValidationCheckResult = (DateValidationCheckResult) validationCheckResult;
-                                    final ReferenceColumnValue referenceColumnValue = referenceDatum.get((ReferenceColumn) dateValidationCheckResult.getTarget());
-                                     referenceDatum.put(
-                                             (ReferenceColumn) dateValidationCheckResult.getTarget(),
-                                             referenceDatumBeforeChecking.get((ReferenceColumn) dateValidationCheckResult.getTarget())
-                                                     .transform(v ->
-                                                     String.format("date:%s:%s",dateValidationCheckResult.getMessage(), v)
-                                                     )
-                                     );
-
+                                        .map(DateValidationCheckResult.class::cast)
+                                        .forEach(dateValidationCheckResult -> {
+                                            ReferenceColumn referenceColumn = (ReferenceColumn) dateValidationCheckResult.getTarget().getTarget();
+                                            ReferenceColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(referenceColumn);
+                                            ReferenceColumnValue valueToStoreInDatabase = referenceColumnRawValue
+                                                    .transform(rawValue ->
+                                                            String.format("date:%s:%s", dateValidationCheckResult.getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue)
+                                                    );
+                                            referenceDatum.put(referenceColumn, valueToStoreInDatabase);
                                 });
                             } else if (lineChecker instanceof ReferenceLineChecker) {
                                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) lineChecker;
@@ -869,7 +867,7 @@ public class OreSiService {
                 ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget().getTarget();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
@@ -922,7 +920,7 @@ public class OreSiService {
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
                     if (dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())) {
-                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getMessage(), value);
+                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), value);
                     }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
