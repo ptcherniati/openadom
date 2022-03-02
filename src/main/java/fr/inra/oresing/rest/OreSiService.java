@@ -82,6 +82,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.util.Streams;
 import org.assertj.core.util.Strings;
 import org.flywaydb.core.Flyway;
@@ -412,7 +413,6 @@ public class OreSiService {
         boolean isRecursive = recursiveComponentDescription.isPresent();
         HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
         Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
-        Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
         ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -448,8 +448,13 @@ public class OreSiService {
             };
 
             Stream<CSVRecord> recordStream = Streams.stream(csvParser);
+            final ImmutableMap<Ltree, Ltree> parentReferenceMap;
             if (isRecursive) {
-                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, refType);
+                Pair<Stream<CSVRecord>, ImmutableMap<Ltree, Ltree>> pair = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, refType);
+                recordStream = pair.getLeft();
+                parentReferenceMap = pair.getRight();
+            } else {
+                parentReferenceMap = ImmutableMap.of();
             }
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
@@ -550,10 +555,10 @@ public class OreSiService {
                                     .ifPresent(key -> {
                                         e.setId(key);
                                     });
-                            Ltree parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
+                            Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
                             while (parentKey != null) {
                                 recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
-                                parentKey = parentreferenceMap.getOrDefault(parentKey, null);
+                                parentKey = parentReferenceMap.getOrDefault(parentKey, null);
                             }
                         }
                         Ltree hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
@@ -602,19 +607,19 @@ public class OreSiService {
         return fileId;
     }
 
-    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, String refType) {
-        Stream<CSVRecord> result;
+    private Pair<Stream<CSVRecord>, ImmutableMap<Ltree, Ltree>> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, String refType) {
+        Pair<Stream<CSVRecord>, ImmutableMap<Ltree, Ltree>> result;
         Integer parentRecursiveIndex = recursiveComponentDescription
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
                 .orElse(null);
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
-            result = recordStream;
+            result = Pair.of(recordStream, ImmutableMap.of());
         } else {
             ImmutableMap<Ltree, UUID> beforeImportReferenceUuids = selfLineChecker
                     .map(ReferenceLineChecker::getReferenceValues)
                     .orElseGet(ImmutableMap::of);
-            PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStream, columns, ref, referenceMap, parentRecursiveIndex, beforeImportReferenceUuids);
+            PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStream, columns, ref, parentRecursiveIndex, beforeImportReferenceUuids);
             selfLineChecker
                     .ifPresent(slc -> slc.setReferenceValues(preloadingRecursiveReferenceResult.getReferenceUUIDs()));
             List<CsvRowValidationCheckResult> rowErrors = preloadingRecursiveReferenceResult.getMissingParentReferences().entries().stream()
@@ -627,12 +632,13 @@ public class OreSiService {
                     })
                     .collect(Collectors.toUnmodifiableList());
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-            result = preloadingRecursiveReferenceResult.getRecordStream();
+            result = Pair.of(preloadingRecursiveReferenceResult.getRecordStream(), preloadingRecursiveReferenceResult.getReferenceMap());
         }
         return result;
     }
 
-    private PreloadingRecursiveReferenceResult preloadRecursiveReference(Stream<CSVRecord> recordStream, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, Integer parentRecursiveIndex, ImmutableMap<Ltree, UUID> beforeImportReferenceUuids) {
+    private PreloadingRecursiveReferenceResult preloadRecursiveReference(Stream<CSVRecord> recordStream, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Integer parentRecursiveIndex, ImmutableMap<Ltree, UUID> beforeImportReferenceUuids) {
+        Map<Ltree, Ltree> referenceMap = new LinkedHashMap<>();
         Map<Ltree, UUID> referenceUUIDs = new LinkedHashMap<>(beforeImportReferenceUuids);
         ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
         List<CSVRecord> collect = recordStream
@@ -669,7 +675,9 @@ public class OreSiService {
                 new PreloadingRecursiveReferenceResult(
                         ImmutableMap.copyOf(referenceUUIDs),
                         ImmutableListMultimap.copyOf(missingParentReferences),
-                        collect.stream());
+                        collect.stream(),
+                        ImmutableMap.copyOf(referenceMap)
+                );
         return preloadingRecursiveReferenceResult;
     }
 
@@ -678,6 +686,7 @@ public class OreSiService {
         ImmutableMap<Ltree, UUID> referenceUUIDs;
         ImmutableListMultimap<Ltree, Long> missingParentReferences;
         Stream<CSVRecord> recordStream;
+        ImmutableMap<Ltree, Ltree> referenceMap;
     }
 
     private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponent(LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences, String refType) {
