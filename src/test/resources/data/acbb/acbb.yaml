@@ -124,6 +124,13 @@ compositeReferences:
         parentKeyColumn: "site"
 dataTypes:
   flux_tours:
+    uniqueness:
+      - variable: site
+        component: chemin
+      - variable: parcelle
+        component: chemin
+      - variable: date
+        component: datetime
     data:
       site:
         components:
@@ -145,12 +152,23 @@ dataTypes:
                 refType: parcelles
       date:
         components:
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
           day:
             checker:
               name: Date
               params:
                 pattern: dd/MM/yyyy
           time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
       CO2:
         components:
           value:
@@ -377,7 +395,7 @@ dataTypes:
           component: chemin
       timeScope:
         variable: date
-        component: day
+        component: datetime
       dataGroups:
         all:
           label: "Toutes les données"
@@ -395,6 +413,15 @@ dataTypes:
             - u*
             - Fc gf
   biomasse_production_teneur:
+    uniqueness:
+      - variable: parcelle
+        component: chemin
+      - variable: date de mesure
+        component: valeur
+      - variable: date ou num incrémental intervention
+        component: valeur
+      - variable: mav_nature
+        component: valeur
     data:
       parcelle:
         components:
@@ -1447,6 +1474,17 @@ dataTypes:
             - HUT
             - MOR
   SWC:
+    uniqueness:
+      - variable: Nom parcelle
+        component: chemin
+      - variable: Nom traitement
+        component: valeur
+      - variable: Date
+        component: datetime
+      - variable: contexte
+        component: profondeur
+      - variable: contexte
+        component: répétition
     data:
       Nom parcelle:
         components:
@@ -1472,7 +1510,7 @@ dataTypes:
                 pattern: HH:mm:ss
           datetime:
             defaultValue: >
-              return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
+              return datumByVariableAndComponent.Date.day +" " +datumByVariableAndComponent.Date.time
             checker:
               name: Date
               params:

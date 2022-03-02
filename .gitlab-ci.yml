@@ -42,6 +42,18 @@ maven_test_rest_1:
   script: mvn --batch-mode clean test -Ptest_rest_1
   tags:
     - docker
+maven_test_rest_1_ACBB:
+  image: maven:3.6.3-openjdk-11
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_1_ACBB
+  tags:
+    - docker
+maven_test_rest_1_Haute_Frequence:
+  image: maven:3.6.3-openjdk-11
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_1_Haute_Frequence
+  tags:
+    - docker
 maven_test_rest_2:
   image: maven:3.6.3-openjdk-11
   stage: test

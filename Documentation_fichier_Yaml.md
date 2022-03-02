@@ -490,6 +490,36 @@ La partie validation peut être utilisée pour vérifier le contenu d'une colonn
 
 <span style="color: orange">*validations* est indenté de 2. </span>
 
+##### Déclaration des contraintes d'unicité
+Il s'agit de déclarer comment une ligne d'un fichier s'exprime de manière unique (contrainte d'unicité au sens de la base de données)
+
+Il peut y avoir plusieurs contraintes d'unicité. Il suffit de déclarer chaque contrainte avec un nom dans la section _uniqueness_. Pour chacune des contraintes, on liste la liste des _variable components_ qui composent la clef.
+
+Si un fichier possède des lignes en doublon soit avec lui-même, soit avec des lignes déjà enregistrées en base, il sera rejeté.
+
+Les contraintes ne s'appliquent que pour les fichiers d'un même type de données.
+
+Exemple de déclaration de deux contraintes portant respectivement sur 3 et 2 valeurs.
+
+``` yaml
+dataTypes:
+  mon_datatype:
+    uniqueness:
+      uk1:
+        - variable: projet
+          component: value
+        - variable: site
+          component: chemin
+        - variable: date
+          component: value
+      uk2:
+        - variable: espece
+        component: value
+        - variable: Couleur des individus
+        component: value
+
+``` 
+
 ##### *authorization* porte bien son nom c'est là qu'on définira les autorisations d'accès aux données :
 Authorization permet de définir des groupes de valeurs. Une ligne du fichier est découpée en autant de ligne que de 
 *dataGroups* et contient un *authorizationScope* et un *timeScope*.

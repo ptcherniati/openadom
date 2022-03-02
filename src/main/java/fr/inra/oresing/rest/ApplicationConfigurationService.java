@@ -31,17 +31,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -90,7 +81,8 @@ public class ApplicationConfigurationService {
             return internationalizationMap;
         }
     }
-    ConfigurationParsingResult unzipConfiguration(MultipartFile file){
+
+    ConfigurationParsingResult unzipConfiguration(MultipartFile file) {
         return null;
     }
 
@@ -181,6 +173,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeCheckerReferenceRefersToExistingReference(builder, references, dataType, dataTypeDescription);
             verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(builder, dataTypeDescription);
             verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType, dataTypeDescription);
+            verifyUniquenessComponentKeysInDatatype(configuration, dataType, dataTypeDescription, builder);
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
@@ -578,6 +571,22 @@ public class ApplicationConfigurationService {
         }
     }
 
+    private void verifyUniquenessComponentKeysInDatatype(Configuration configuration, String dataType, Configuration.DataTypeDescription dataTypeDescription, ConfigurationParsingResult.Builder builder) {
+        final List<VariableComponentKey> uniqueness = dataTypeDescription.getUniqueness();
+        final Set<String> availableVariableComponents = dataTypeDescription.getData().entrySet().stream()
+                .map(entry -> entry.getValue().getComponents().keySet().stream()
+                        .map(componentName -> new VariableComponentKey(entry.getKey(), componentName).getId()))
+                .flatMap(Function.identity())
+                .collect(Collectors.<String>toSet());
+        Set<String> variableComponentsKeyInUniqueness = uniqueness.stream()
+                .map(variableComponentKey -> variableComponentKey.getId())
+                .collect(Collectors.toSet());
+        ImmutableSet<String> unknownUsedAsVariableComponentUniqueness = Sets.difference(variableComponentsKeyInUniqueness, availableVariableComponents).immutableCopy();
+        if (!unknownUsedAsVariableComponentUniqueness.isEmpty()) {
+            builder.recordUnknownUsedAsVariableComponentUniqueness(dataType, unknownUsedAsVariableComponentUniqueness, availableVariableComponents);
+        }
+    }
+
     private void verifyInternationalizedColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
@@ -617,17 +626,17 @@ public class ApplicationConfigurationService {
             ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
             String columns = checker.getParams().getColumns();
             Set<String> groovyColumn = Optional.ofNullable(checker)
-                    .map(check->check.getParams())
-                    .filter(params->params.getGroovy() != null)
-                    .map(params-> MoreObjects.firstNonNull(params.getColumns(), ""))
+                    .map(check -> check.getParams())
+                    .filter(params -> params.getGroovy() != null)
+                    .map(params -> MoreObjects.firstNonNull(params.getColumns(), ""))
 
                     // autant mettre une collection dans le YAML directement
-                    .map(values-> values.split(","))
-                    .map(values-> Arrays.stream(values).collect(Collectors.toSet()))
+                    .map(values -> values.split(","))
+                    .map(values -> Arrays.stream(values).collect(Collectors.toSet()))
                     .orElse(Set.of());
 
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression =Optional.of(checker)
+                String expression = Optional.of(checker)
                         .map(Configuration.CheckerDescription::getParams)
                         .map(Configuration.CheckerConfigurationDescription::getGroovy)
                         .map(GroovyConfiguration::getExpression)
@@ -733,5 +742,6 @@ public class ApplicationConfigurationService {
     private static class Versioned {
         int version;
     }
+
 
 }

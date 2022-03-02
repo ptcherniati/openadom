@@ -57,9 +57,11 @@ BEGIN
                   into result
                   from unnest("authorizedArray") authorized
                   where ${requiredauthorizationscomparing}
-                  ((("authorized").datagroup= array[]::TEXT[]) or ((authorized).datagroup @> COALESCE(("authorization").datagroup, array[]::TEXT[])))
-                  and ((("authorized").timescope =  '(,)'::tsrange ) or (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
-        );
+                  ((("authorized").datagroup = array []::TEXT[]) or
+                   ((authorized).datagroup @> COALESCE(("authorization").datagroup, array []::TEXT[])))
+                      and ((("authorized").timescope = '(,)'::tsrange) or
+                           (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
+               );
     return result;
 END;
 $$ language 'plpgsql';
@@ -76,17 +78,22 @@ create table Data
     creationDate    DateOrNow,
     updateDate      DateOrNow,
     application     EntityRef REFERENCES Application (id),
-    dataType        TEXT CHECK (name_check(application, 'dataType', dataType)),
+    dataType        TEXT
+        constraint name_check CHECK (name_check(application, 'dataType', dataType)),
     rowId           TEXT                                                             NOT NULL,
     datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED NOT NULL,
     "authorization" ${applicationSchema}.authorization                               NOT NULL check (("authorization").datagroup[1] is not null),
-    refsLinkedTo    jsonb check (refs_check_for_datatype('${applicationSchema}', application, refsLinkedTo,
-                                                         datatype)),
+    refsLinkedTo    jsonb
+        constraint refs_check_for_datatype check (refs_check_for_datatype('${applicationSchema}', application,
+                                                                          refsLinkedTo,
+                                                                          datatype)),
+    uniqueness      jsonb,
     dataValues      jsonb,
-    binaryFile      EntityRef REFERENCES BinaryFile (id)
+    binaryFile      EntityRef REFERENCES BinaryFile (id),
+    constraint refs_check_for_datatype_uniqueness unique (dataType, datagroup, uniqueness)
 );
-CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo);
-CREATE INDEX data_refvalues_index ON Data USING gin (dataValues);
+CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo jsonb_path_ops);
+CREATE INDEX data_refvalues_index ON Data USING gin (dataValues jsonb_path_ops);
 
 ALTER TABLE Data
     ADD CONSTRAINT row_uniqueness UNIQUE (rowId, dataGroup);

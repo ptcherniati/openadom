@@ -420,6 +420,7 @@ public class Fixtures {
     public Map<String, String> getDuplicatedDataFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
         referentielFiles.put("data_without_duplicateds", "/data/duplication/data.csv");
+        referentielFiles.put("data_with_duplicateds", "/data/duplication/data_with_duplicateds.csv");
         return referentielFiles;
     }
 

@@ -108,6 +108,13 @@ dataTypes:
       timeScope:
         variable: date
         component: day
+    uniqueness:
+      - variable: date
+        component: day
+      - variable: date
+        component: time
+      - variable: localization
+        component: site
     data:
       date:
         components:

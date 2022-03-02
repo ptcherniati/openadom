@@ -160,8 +160,10 @@
         "badauthorizationscopeforrepository": "L'autorisation <code>{authorization}</code>) doit être <code>{expectedValue}/code> et non <code>{givenValue}</code>",
         "overlappingpublishedversion": "Il existe une version déposée dans les dates de dépôt ont une période chevauchante avec la version déposée. <code>{overlapingFiles]</code>",
         "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
-        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
-        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées {knownReferences}"
+        "duplicatedLineInDatatype": "Dans le fichier de données {file} les lignes {duplicatedRows} rompent la contrainte d'unicité pour les valeurs {}",
+        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées {knownReferences}",
+        "unknownUsedAsVariableComponentUniqueness": "Dans la description du type de données {dataType} dans la section <I>uniqueness</i> les descriptions de variable composants {unknownUsedAsVariableComponentUniqueness} n'existent pas. Valeurs acceptées {availableVariableComponents}"
+
     },
     "referencesManagement": {
         "actions": "Actions",

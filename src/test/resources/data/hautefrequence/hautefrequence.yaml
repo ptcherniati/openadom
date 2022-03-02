@@ -22,7 +22,20 @@ compositeReferences:
       -
         reference: projet
 dataTypes: 
-  hautefrequence: 
+  hautefrequence:
+    uniqueness:
+      - variable: date
+        component: datetime
+      - variable: localization
+        component: projet
+      - variable: localization
+        component: site
+      - variable: localization
+        component: plateforme
+      - variable: localization
+        component: profondeur
+      - variable: outil
+        component: value
     authorization: 
       dataGroups: 
         all: 
@@ -42,11 +55,18 @@ dataTypes:
           component: projet
           variable: localization
       timeScope: 
-        component: day
+        component: datetime
         variable: date
     data: 
       date: 
-        components: 
+        components:
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
           day: 
             checker: 
               name: Date

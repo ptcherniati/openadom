@@ -18,7 +18,7 @@ import java.util.UUID;
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DataRepository extends JsonTableInApplicationSchemaRepositoryTemplate<Data> {
 
-    public DataRepository(Application application) {
+     public DataRepository(Application application) {
         super(application);
     }
 
@@ -27,12 +27,16 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getSchema().data();
     }
 
+
+
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, \"authorization\", refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, rowId, \"authorization\", refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, \"authorization\"=EXCLUDED.\"authorization\", refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, \"authorization\", uniqueness, refsLinkedTo, dataValues, binaryFile) \n" +
+                "SELECT id, application, dataType, rowId, \"authorization\", uniqueness,  refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
+                + " ON CONFLICT (dataType, datagroup, uniqueness) DO UPDATE SET id=EXCLUDED.id, updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, \"authorization\"=EXCLUDED.\"authorization\", refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
+
 
     @Override
     protected Class<Data> getEntityClass() {
@@ -49,7 +53,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public int removeByFileId(UUID fileId) {
         String query = "DELETE FROM " + getTable().getSqlIdentifier() +
                 "\n  WHERE binaryfile = :binaryFile";
-        return getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("binaryFile", fileId));
+        final int binaryFile = getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("binaryFile", fileId));
+        return binaryFile;
     }
 
     public String getSqlToMergeData(DownloadDatasetQuery downloadDatasetQuery) {
@@ -81,5 +86,13 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .addValue("dataGroup", dataGroup);
         int count = getNamedParameterJdbcTemplate().update(sql, sqlParams);
         return count;
+    }
+
+    public List<Uniqueness> findStoredUniquenessForDatatype(Application application, String dataType) {
+        String query = "select 'fr.inra.oresing.persistence.Uniqueness' as \"@class\",uniqueness as json from  " + getTable().getSqlIdentifier()
+                + "  WHERE application = :applicationId::uuid AND dataType = :dataType";
+        MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("dataType", dataType);
+        return getNamedParameterJdbcTemplate().query(query, sqlParams, new JsonRowMapper<Uniqueness>());
     }
 }
