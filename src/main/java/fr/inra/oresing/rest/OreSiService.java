@@ -607,59 +607,65 @@ public class OreSiService {
                 .map(rcd -> rcd.getParentRecursiveKey())
                 .map(rck -> columns.indexOf(rck))
                 .orElse(null);
-        ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             result = recordStream;
         } else {
-            HashMap<Ltree, UUID> referenceUUIDs = selfLineChecker
-                    .map(lc -> lc.getReferenceValues())
-                    .map(HashMap::new)
-                    .orElseGet(HashMap::new);
-            List<CSVRecord> collect = recordStream
-                    .peek(csvrecord -> {
-                        String sAsString = csvrecord.get(parentRecursiveIndex);
-                        String naturalKeyAsString = ref.getKeyColumns()
-                                .stream()
-                                .map(kc -> columns.indexOf(kc))
-                                .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
-                                .filter(k -> k != null)
-                                .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-                        Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-                        if (!referenceUUIDs.containsKey(naturalKey)) {
-                            referenceUUIDs.put(naturalKey, UUID.randomUUID());
-                        }
-                        if (!Strings.isNullOrEmpty(sAsString)) {
-                            Ltree s;
-                            try {
-                                s = Ltree.fromUnescapedString(sAsString);
-                            } catch (IllegalArgumentException e) {
-                                return;
-                            }
-                            referenceMap.put(naturalKey, s);
-                            if (!referenceUUIDs.containsKey(s)) {
-                                final UUID uuid = UUID.randomUUID();
-                                referenceUUIDs.put(s, uuid);
-                                missingParentReferences.put(s, csvrecord.getRecordNumber());
-                            }
-                        }
-                        missingParentReferences.removeAll(naturalKey);
-                        return;
-                    })
-                    .collect(Collectors.toList());
-            selfLineChecker
-                    .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
-            List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
-                    .map(entry -> {
-                        Ltree missingParentReference = entry.getKey();
-                        Long lineNumber = entry.getValue();
-                        ValidationCheckResult validationCheckResult =
-                                new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet());
-                        return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
-                    })
-                    .collect(Collectors.toUnmodifiableList());
-            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-            result = collect.stream();
+            result = addMissingReferencesWithParentRecursiveIndex(recordStream, selfLineChecker, columns, ref, referenceMap, refType, parentRecursiveIndex);
         }
+        return result;
+    }
+
+    private Stream<CSVRecord> addMissingReferencesWithParentRecursiveIndex(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, String refType, Integer parentRecursiveIndex) {
+        Stream<CSVRecord> result;
+        HashMap<Ltree, UUID> referenceUUIDs = selfLineChecker
+                .map(lc -> lc.getReferenceValues())
+                .map(HashMap::new)
+                .orElseGet(HashMap::new);
+        ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
+        List<CSVRecord> collect = recordStream
+                .peek(csvrecord -> {
+                    String sAsString = csvrecord.get(parentRecursiveIndex);
+                    String naturalKeyAsString = ref.getKeyColumns()
+                            .stream()
+                            .map(kc -> columns.indexOf(kc))
+                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
+                            .filter(k -> k != null)
+                            .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                    Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+                    if (!referenceUUIDs.containsKey(naturalKey)) {
+                        referenceUUIDs.put(naturalKey, UUID.randomUUID());
+                    }
+                    if (!Strings.isNullOrEmpty(sAsString)) {
+                        Ltree s;
+                        try {
+                            s = Ltree.fromUnescapedString(sAsString);
+                        } catch (IllegalArgumentException e) {
+                            return;
+                        }
+                        referenceMap.put(naturalKey, s);
+                        if (!referenceUUIDs.containsKey(s)) {
+                            final UUID uuid = UUID.randomUUID();
+                            referenceUUIDs.put(s, uuid);
+                            missingParentReferences.put(s, csvrecord.getRecordNumber());
+                        }
+                    }
+                    missingParentReferences.removeAll(naturalKey);
+                    return;
+                })
+                .collect(Collectors.toList());
+        selfLineChecker
+                .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
+        List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
+                .map(entry -> {
+                    Ltree missingParentReference = entry.getKey();
+                    Long lineNumber = entry.getValue();
+                    ValidationCheckResult validationCheckResult =
+                            new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet());
+                    return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
+                })
+                .collect(Collectors.toUnmodifiableList());
+        InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+        result = collect.stream();
         return result;
     }
 
