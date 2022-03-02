@@ -648,16 +648,15 @@ public class OreSiService {
                     .collect(Collectors.toList());
             selfLineChecker
                     .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
-            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
-            if (!missingParentReferences.isEmpty()) {
-                missingParentReferences.asMap().entrySet().stream()
-                        .forEach(entry -> {
-                            final Ltree missingParentReference = entry.getKey();
-                            entry.getValue().stream().forEach(
-                                    lineNumber -> rowErrors.add(new CsvRowValidationCheckResult(new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet()), lineNumber))
-                            );
-                        });
-            }
+            List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
+                    .map(entry -> {
+                        Ltree missingParentReference = entry.getKey();
+                        Long lineNumber = entry.getValue();
+                        ValidationCheckResult validationCheckResult =
+                                new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet());
+                        return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
+                    })
+                    .collect(Collectors.toUnmodifiableList());
             InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
             result = collect.stream();
         }
