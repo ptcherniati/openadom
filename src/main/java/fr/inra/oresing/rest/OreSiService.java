@@ -405,7 +405,6 @@ public class OreSiService {
                 .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
-        HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
         ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -440,19 +439,19 @@ public class OreSiService {
                 return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
-            final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids;
             final Stream<CSVRecord> recordStreamBeforePreloading = Streams.stream(csvParser);
             final Stream<CSVRecord> recordStream;
-            final ImmutableMap<Ltree, Ltree> parentReferenceMap;
-            final ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids;
+            final RecursionStrategy recursionStrategy;
+            final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
+            final HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
             if (isRecursive) {
                 Integer parentRecursiveIndex = recursiveComponentDescription
                         .map(rcd -> rcd.getParentRecursiveKey())
                         .map(rck -> columns.indexOf(rck))
                         .orElse(null);
                 if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
-                    recordStream = recordStreamBeforePreloading;
-                    parentReferenceMap = ImmutableMap.of();
+//                    recordStream = recordStreamBeforePreloading;
+//                    parentReferenceMap = ImmutableMap.of();
                     throw new IllegalStateException("n'arrive jamais");
                 } else {
                     ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
@@ -460,19 +459,17 @@ public class OreSiService {
                             .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
                             .findFirst()
                             .orElseThrow(() -> new IllegalStateException("pas de checker sur " + refType + " alors qu'on est sur un référentiel récursif"));
-                    beforePreloadReferenceUuids = referenceLineChecker
-                            .getReferenceValues();
+                    final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
                     PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStreamBeforePreloading, columns, ref, parentRecursiveIndex, beforePreloadReferenceUuids, refType);
-                    afterPreloadReferenceUuids = preloadingRecursiveReferenceResult.getReferenceUUIDs();
+                    final ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids = preloadingRecursiveReferenceResult.getReferenceUUIDs();
                     referenceLineChecker.setReferenceValues(afterPreloadReferenceUuids);
                     recordStream = preloadingRecursiveReferenceResult.getRecordStream();
-                    parentReferenceMap = preloadingRecursiveReferenceResult.getReferenceMap();
+                    final ImmutableMap<Ltree, Ltree> parentReferenceMap = preloadingRecursiveReferenceResult.getReferenceMap();
+                    recursionStrategy = RecursionStrategy.recursive(refType, refTypeAsLabel, hierarchicalKeyFactory, parentReferenceMap, afterPreloadReferenceUuids);
                 }
             } else {
                 recordStream = recordStreamBeforePreloading;
-                parentReferenceMap = ImmutableMap.of();
-                beforePreloadReferenceUuids = ImmutableMap.of();
-                afterPreloadReferenceUuids = beforePreloadReferenceUuids;
+                recursionStrategy = RecursionStrategy.nonRecursive(refType, refTypeAsLabel, hierarchicalKeyFactory);
             }
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
@@ -563,30 +560,10 @@ public class OreSiService {
                                 .map(Ltree::escapeToLabel)
                                 .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
                         final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-                        final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
-                        final Ltree hierarchicalKey;
-                        final Ltree selfHierarchicalReference;
-                        if (isRecursive) {
-                            if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
-                                e.setId(afterPreloadReferenceUuids.get(naturalKey));
-                            }
-                            Ltree recursiveNaturalKey = naturalKey;
-                            Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
-                            while (parentKey != null) {
-                                recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
-                                parentKey = parentReferenceMap.getOrDefault(parentKey, null);
-                            }
-                            hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(recursiveNaturalKey, referenceDatum);
-                            Ltree partialSelfHierarchicalReference = refTypeAsLabel;
-                            for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
-                                partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(refType));
-                            }
-                            selfHierarchicalReference = partialSelfHierarchicalReference;
-                        } else {
-                            hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(naturalKey, referenceDatum);
-                            selfHierarchicalReference = refTypeAsLabel;
-                        }
-                        Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
+                        recursionStrategy.getKnownId(naturalKey)
+                                .ifPresent(e::setId);
+                        final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
+                        final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
                         referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
 
                         /**
@@ -622,6 +599,107 @@ public class OreSiService {
         }
 
         return fileId;
+    }
+
+    private static abstract class RecursionStrategy {
+
+        final String refType;
+
+        final Ltree refTypeAsLabel;
+
+        final HierarchicalKeyFactory hierarchicalKeyFactory;
+
+        private RecursionStrategy(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory) {
+            this.refType = refType;
+            this.refTypeAsLabel = refTypeAsLabel;
+            this.hierarchicalKeyFactory = hierarchicalKeyFactory;
+        }
+
+        public abstract Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum);
+
+        public abstract Ltree getHierarchicalReference(Ltree naturalKey);
+
+        public static RecursionStrategy nonRecursive(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory) {
+            return new WithoutRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory);
+        }
+
+        public static RecursionStrategy recursive(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, ImmutableMap<Ltree, Ltree> parentReferenceMap, ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids) {
+            return new WithRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory, parentReferenceMap, afterPreloadReferenceUuids);
+        }
+
+        public abstract Optional<UUID> getKnownId(Ltree naturalKey);
+
+        private static class WithRecursion extends RecursionStrategy {
+
+            private final ImmutableMap<Ltree, Ltree> parentReferenceMap;
+
+            private final ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids;
+
+            private WithRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, ImmutableMap<Ltree, Ltree> parentReferenceMap, ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids) {
+                super(refType, refTypeAsLabel, hierarchicalKeyFactory);
+                this.parentReferenceMap = parentReferenceMap;
+                this.afterPreloadReferenceUuids = afterPreloadReferenceUuids;
+            }
+
+            @Override
+            public Optional<UUID> getKnownId(Ltree naturalKey) {
+                if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
+                    return Optional.of(afterPreloadReferenceUuids.get(naturalKey));
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
+                Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
+                final Ltree hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(recursiveNaturalKey, referenceDatum);
+                return hierarchicalKey;
+            }
+
+            private Ltree getRecursiveNaturalKey(Ltree naturalKey) {
+                Ltree recursiveNaturalKey = naturalKey;
+                Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
+                while (parentKey != null) {
+                    recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
+                    parentKey = parentReferenceMap.getOrDefault(parentKey, null);
+                }
+                return recursiveNaturalKey;
+            }
+
+            @Override
+            public Ltree getHierarchicalReference(Ltree naturalKey) {
+                Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
+                Ltree partialSelfHierarchicalReference = refTypeAsLabel;
+                for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
+                    partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(refType));
+                }
+                final Ltree selfHierarchicalReference = partialSelfHierarchicalReference;
+                final Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
+                return hierarchicalReference;
+            }
+        }
+
+        private static class WithoutRecursion extends RecursionStrategy {
+
+            private WithoutRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory) {
+                super(refType, refTypeAsLabel, hierarchicalKeyFactory);
+            }
+
+            @Override
+            public Optional<UUID> getKnownId(Ltree naturalKey) {
+                return Optional.empty();
+            }
+
+            @Override
+            public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
+                return hierarchicalKeyFactory.newHierarchicalKey(naturalKey, referenceDatum);
+            }
+
+            @Override
+            public Ltree getHierarchicalReference(Ltree naturalKey) {
+                return hierarchicalKeyFactory.newHierarchicalReference(refTypeAsLabel);
+            }
+        }
     }
 
     private PreloadingRecursiveReferenceResult preloadRecursiveReference(Stream<CSVRecord> recordStream, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Integer parentRecursiveIndex, ImmutableMap<Ltree, UUID> beforeImportReferenceUuids, String refType) {
