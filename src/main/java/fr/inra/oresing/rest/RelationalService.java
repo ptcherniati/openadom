@@ -3,10 +3,12 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.CheckerOnOneVariableComponentLineChecker;
+import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
@@ -243,7 +245,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String viewSql = String.join("\n", withClause, selectClause, fromClause);
 
             SqlTable view = sqlSchema.forDataType(dataType);
-            views.add(new ViewCreationCommand(view, viewSql, referenceColumnIds));
+            views.add(new ViewCreationCommand(view, viewSql));
         }
         return views;
     }
@@ -300,7 +302,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String viewSql = String.join("\n", selectClause, fromClause);
 
             SqlTable view = sqlSchema.forDenormalizedDataType(dataType);
-            views.add(new ViewCreationCommand(view, viewSql, selectClauseReferenceElements));
+            views.add(new ViewCreationCommand(view, viewSql));
         }
         return views;
     }
@@ -331,21 +333,43 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String referenceType = entry.getKey();
 
             ImmutableMap<ReferenceColumn, SqlPrimitiveType> sqlTypePerColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
-                    .filter(lineChecker -> lineChecker instanceof CheckerOnOneVariableComponentLineChecker)
-                    .map(lineChecker -> (CheckerOnOneVariableComponentLineChecker) lineChecker)
+                    .filter(CheckerOnOneVariableComponentLineChecker.class::isInstance)
+                    .map(CheckerOnOneVariableComponentLineChecker.class::cast)
                     .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), CheckerOnOneVariableComponentLineChecker::getSqlType));
 
-            Set<String> columns = entry.getValue().getColumns().keySet();
-            String columnsAsSchema = columns.stream()
+            ImmutableMap<ReferenceColumn, Multiplicity> declaredMultiplicityPerReferenceColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
+                    .filter(ReferenceLineChecker.class::isInstance)
+                    .map(ReferenceLineChecker.class::cast)
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+
+            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = entry.getValue().getColumns().keySet().stream()
                     .map(ReferenceColumn::new)
+                    .collect(ImmutableSetMultimap.toImmutableSetMultimap(referenceColumn -> declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE), Function.identity()));
+
+            String columnsAsSchema = allReferenceColumnsPerMultiplicity.values().stream()
                     .map(referenceColumn -> {
                         String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
-                        SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
-                        String columnDeclaration = String.format("%s %s", columnName, columnType.getSql());
+                        String columnDeclaration = String.format("%s %s", columnName, SqlPrimitiveType.TEXT);
                         return columnDeclaration;
                     })
                     .collect(Collectors.joining(", ", "(", ")"));
             String quotedReferenceType = quoteSqlIdentifier(referenceType);
+            String castedColumnSelect = allReferenceColumnsPerMultiplicity.values().stream()
+                    .map(referenceColumn -> {
+                        String columnName = quoteSqlIdentifier(referenceColumn.getColumn());
+                        SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
+                        Multiplicity multiplicity = declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                        String columnDeclaration;
+                        if (multiplicity == Multiplicity.ONE) {
+                            columnDeclaration = String.format("%s.%s::%s", quotedReferenceType,columnName, columnType.getSql());
+                        } else if (multiplicity == Multiplicity.MANY) {
+                            columnDeclaration = String.format("ARRAY(SELECT JSONB_ARRAY_ELEMENTS_TEXT(%s.%s::JSONB))::%s[] AS %s", quotedReferenceType, columnName, columnType.getSql(), columnName);
+                        } else {
+                            throw new IllegalStateException("multiplicy = " + multiplicity);
+                        }
+                        return columnDeclaration;
+                    })
+                    .collect(Collectors.joining(", "));
 
             // par exemple "projet"(nom_en text, nom_fr text, nom_key text, definition_en text, definition_fr text)
             String schemaDeclaration = quotedReferenceType + columnsAsSchema;
@@ -354,15 +378,41 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String quotedViewHierarchicalKeyColumnName = quoteSqlIdentifier(referenceType + "_hierarchicalKey");
             String quotedViewNaturalKeyColumnName = quoteSqlIdentifier(referenceType + "_naturalKey");
             String referenceValueTableName = SqlSchema.forApplication(app).referenceValue().getSqlIdentifier();
-            String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.hierarchicalKey as " + quotedViewHierarchicalKeyColumnName + ", referenceValue.naturalKey as " + quotedViewNaturalKeyColumnName + ", " + quotedReferenceType + ".* "
-                    + " from " + referenceValueTableName + ", jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
+            String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.hierarchicalKey as " + quotedViewHierarchicalKeyColumnName + ", referenceValue.naturalKey as " + quotedViewNaturalKeyColumnName + ", "
+                    + castedColumnSelect
+                    + " from " + referenceValueTableName + ", " +
+                    "jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
                     + " where referenceType = '" + referenceType + "' and application = '" + appId + "'::uuid";
 
             if (log.isTraceEnabled()) {
                 log.trace("pour le référentiel " + referenceType + ", la requête pour avoir un vue relationnelle des données JSON est " + referenceView);
             }
 
-            views.add(new ViewCreationCommand(sqlSchema.forReferenceType(referenceType), referenceView, Set.of(quotedViewIdColumnName)));
+            SqlTable view = sqlSchema.forReferenceType(referenceType);
+            views.add(new ViewCreationCommand(view, referenceView));
+
+            Set<ViewCreationCommand> associationViews = allReferenceColumnsPerMultiplicity.get(Multiplicity.MANY).stream()
+                    .map(referenceColumn -> {
+                        String columnNameForOneValueFromTheManyArray = quoteSqlIdentifier(referenceColumn.getColumn() + "_value");
+                        String columnFromReferenceViewThatContainsTheForeignKeysArray = quoteSqlIdentifier(referenceColumn.getColumn());
+                        String associationViewPattern = String.join("\n"
+                                , "SELECT %s, %s"
+                                , "FROM %s"
+                                , "JOIN LATERAL"
+                                , "    UNNEST(%s) %s ON TRUE"
+                        );
+                        String associationView = String.format(associationViewPattern
+                                , quotedViewHierarchicalKeyColumnName
+                                , columnNameForOneValueFromTheManyArray
+                                , view.getSqlIdentifier()
+                                , columnFromReferenceViewThatContainsTheForeignKeysArray
+                                , columnNameForOneValueFromTheManyArray
+                        );
+                        return new ViewCreationCommand(sqlSchema.forAssociation(referenceType, referenceColumn), associationView);
+                    })
+                    .collect(Collectors.toUnmodifiableSet());
+
+            views.addAll(associationViews);
         }
         return views;
     }
@@ -430,7 +480,5 @@ public class RelationalService implements InitializingBean, DisposableBean {
         SqlTable view;
 
         String sql;
-
-        Set<String> referenceIdColumns;
     }
 }

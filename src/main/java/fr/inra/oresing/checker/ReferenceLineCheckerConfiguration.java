@@ -10,4 +10,9 @@ public interface ReferenceLineCheckerConfiguration extends LineCheckerConfigurat
      * Le référentiel dans lequel la valeur vérifiée devra être contenu
      */
     String getRefType();
+
+    /**
+     * Si la donnée est associée à une ou plusieurs valeurs de référentiels.
+     */
+    Multiplicity getMultiplicity();
 }

@@ -10,13 +10,9 @@ import fr.inra.oresing.transformer.LineTransformer;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
-import java.util.Map;
 
 public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker<DateLineCheckerConfiguration> {
 
-    public static final String PARAM_PATTERN = "pattern";
-    public static final String PARAM_DATE_TIME_FORMATTER = "dateTimeFormatter";
-    public static final String PARAM_DATE = "date";
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
     private final CheckerTarget target;
     private final DateLineCheckerConfiguration configuration;
@@ -52,15 +48,10 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
         try {
             value = sortableDateToFormattedDate(value);
             TemporalAccessor date = dateTimeFormatter.parse(value);
-            Map<String, Object> params = ImmutableMap.of(
-                    PARAM_PATTERN, pattern,
-                    PARAM_DATE_TIME_FORMATTER, dateTimeFormatter,
-                    target.getType().name(), target.getTarget(),
-                    PARAM_DATE, date
-            );
-            validationCheckResult = DateValidationCheckResult.success(params);
+            validationCheckResult = DateValidationCheckResult.success(target, date);
         } catch (DateTimeParseException e) {
             validationCheckResult = DateValidationCheckResult.error(
+                    target,
                     getTarget().getInternationalizedKey("invalidDate"), ImmutableMap.of(
                             "target", target.getTarget(),
                             "pattern", pattern,
@@ -81,6 +72,6 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
 
     @Override
     public SqlPrimitiveType getSqlType() {
-        return SqlPrimitiveType.TEXT;
+        return SqlPrimitiveType.COMPOSITE_DATE;
     }
 }
