@@ -403,10 +403,6 @@ public class OreSiService {
                 .map(lineChecker -> (ReferenceLineChecker) lineChecker)
                 .filter(referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity() == Multiplicity.MANY)
                 .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
-        Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
-                .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
-                .findFirst();
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
         HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
@@ -444,9 +440,11 @@ public class OreSiService {
                 return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
+            final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids;
             final Stream<CSVRecord> recordStreamBeforePreloading = Streams.stream(csvParser);
             final Stream<CSVRecord> recordStream;
             final ImmutableMap<Ltree, Ltree> parentReferenceMap;
+            final ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids;
             if (isRecursive) {
                 Integer parentRecursiveIndex = recursiveComponentDescription
                         .map(rcd -> rcd.getParentRecursiveKey())
@@ -455,19 +453,26 @@ public class OreSiService {
                 if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
                     recordStream = recordStreamBeforePreloading;
                     parentReferenceMap = ImmutableMap.of();
+                    throw new IllegalStateException("n'arrive jamais");
                 } else {
-                    ImmutableMap<Ltree, UUID> beforeImportReferenceUuids = selfLineChecker
-                            .map(ReferenceLineChecker::getReferenceValues)
-                            .orElseGet(ImmutableMap::of);
-                    PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStreamBeforePreloading, columns, ref, parentRecursiveIndex, beforeImportReferenceUuids, refType);
-                    selfLineChecker
-                            .ifPresent(slc -> slc.setReferenceValues(preloadingRecursiveReferenceResult.getReferenceUUIDs()));
+                    ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
+                            .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                            .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("pas de checker sur " + refType + " alors qu'on est sur un référentiel récursif"));
+                    beforePreloadReferenceUuids = referenceLineChecker
+                            .getReferenceValues();
+                    PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStreamBeforePreloading, columns, ref, parentRecursiveIndex, beforePreloadReferenceUuids, refType);
+                    afterPreloadReferenceUuids = preloadingRecursiveReferenceResult.getReferenceUUIDs();
+                    referenceLineChecker.setReferenceValues(afterPreloadReferenceUuids);
                     recordStream = preloadingRecursiveReferenceResult.getRecordStream();
                     parentReferenceMap = preloadingRecursiveReferenceResult.getReferenceMap();
                 }
             } else {
                 recordStream = recordStreamBeforePreloading;
                 parentReferenceMap = ImmutableMap.of();
+                beforePreloadReferenceUuids = ImmutableMap.of();
+                afterPreloadReferenceUuids = beforePreloadReferenceUuids;
             }
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
@@ -562,14 +567,9 @@ public class OreSiService {
                         final Ltree hierarchicalKey;
                         final Ltree selfHierarchicalReference;
                         if (isRecursive) {
-                            selfLineChecker
-                                    .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
-                                    .map(values -> values.get(naturalKey))
-                                    .filter(key -> key != null)
-                                    .ifPresent(key -> {
-                                        e.setId(key);
-                                    });
-
+                            if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
+                                e.setId(afterPreloadReferenceUuids.get(naturalKey));
+                            }
                             Ltree recursiveNaturalKey = naturalKey;
                             Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
                             while (parentKey != null) {
