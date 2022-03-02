@@ -412,7 +412,6 @@ public class OreSiService {
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
         HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
-        Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
         ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -570,7 +569,6 @@ public class OreSiService {
                         }
                         Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
                         referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
-                        buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
 
                         /**
                          * on remplace l'id par celle en base si elle existe
