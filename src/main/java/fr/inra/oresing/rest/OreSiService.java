@@ -403,8 +403,6 @@ public class OreSiService {
                 .map(lineChecker -> (ReferenceLineChecker) lineChecker)
                 .filter(referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity() == Multiplicity.MANY)
                 .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
-        Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
-        boolean isRecursive = recursiveComponentDescription.isPresent();
         ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
@@ -440,37 +438,8 @@ public class OreSiService {
             };
 
             final Stream<CSVRecord> recordStreamBeforePreloading = Streams.stream(csvParser);
-            final Stream<CSVRecord> recordStream;
-            final RecursionStrategy recursionStrategy;
-            final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
-            final HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
-            if (isRecursive) {
-                Integer parentRecursiveIndex = recursiveComponentDescription
-                        .map(rcd -> rcd.getParentRecursiveKey())
-                        .map(rck -> columns.indexOf(rck))
-                        .orElse(null);
-                if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
-//                    recordStream = recordStreamBeforePreloading;
-//                    parentReferenceMap = ImmutableMap.of();
-                    throw new IllegalStateException("n'arrive jamais");
-                } else {
-                    ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
-                            .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
-                            .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalStateException("pas de checker sur " + refType + " alors qu'on est sur un référentiel récursif"));
-                    final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
-                    PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStreamBeforePreloading, columns, ref, parentRecursiveIndex, beforePreloadReferenceUuids, refType);
-                    final ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids = preloadingRecursiveReferenceResult.getReferenceUUIDs();
-                    referenceLineChecker.setReferenceValues(afterPreloadReferenceUuids);
-                    recordStream = preloadingRecursiveReferenceResult.getRecordStream();
-                    final ImmutableMap<Ltree, Ltree> parentReferenceMap = preloadingRecursiveReferenceResult.getReferenceMap();
-                    recursionStrategy = RecursionStrategy.recursive(refType, refTypeAsLabel, hierarchicalKeyFactory, parentReferenceMap, afterPreloadReferenceUuids);
-                }
-            } else {
-                recordStream = recordStreamBeforePreloading;
-                recursionStrategy = RecursionStrategy.nonRecursive(refType, refTypeAsLabel, hierarchicalKeyFactory);
-            }
+            final RecursionStrategy recursionStrategy = getRecursionStrategy(conf, refType, columns, lineCheckers);
+            final Stream<CSVRecord> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
                     .map(inter -> inter.getReferences())
@@ -619,26 +588,30 @@ public class OreSiService {
 
         public abstract Ltree getHierarchicalReference(Ltree naturalKey);
 
-        public static RecursionStrategy nonRecursive(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory) {
-            return new WithoutRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory);
-        }
-
-        public static RecursionStrategy recursive(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, ImmutableMap<Ltree, Ltree> parentReferenceMap, ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids) {
-            return new WithRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory, parentReferenceMap, afterPreloadReferenceUuids);
-        }
-
         public abstract Optional<UUID> getKnownId(Ltree naturalKey);
+
+        public abstract Stream<CSVRecord> firstPass(Stream<CSVRecord> recordStreamBeforePreloading);
 
         private static class WithRecursion extends RecursionStrategy {
 
-            private final ImmutableMap<Ltree, Ltree> parentReferenceMap;
+            private final int parentRecursiveIndex;
 
-            private final ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids;
+            private final ImmutableList<String> columns;
 
-            private WithRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, ImmutableMap<Ltree, Ltree> parentReferenceMap, ImmutableMap<Ltree, UUID> afterPreloadReferenceUuids) {
+            private final ImmutableList<String> keyColumns;
+
+            private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
+
+            private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
+
+            private final ReferenceLineChecker referenceLineChecker;
+
+            private WithRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, int parentRecursiveIndex, ImmutableList<String> columns, ImmutableList<String> keyColumns, ReferenceLineChecker referenceLineChecker) {
                 super(refType, refTypeAsLabel, hierarchicalKeyFactory);
-                this.parentReferenceMap = parentReferenceMap;
-                this.afterPreloadReferenceUuids = afterPreloadReferenceUuids;
+                this.parentRecursiveIndex = parentRecursiveIndex;
+                this.columns = columns;
+                this.keyColumns = keyColumns;
+                this.referenceLineChecker = referenceLineChecker;
             }
 
             @Override
@@ -677,6 +650,55 @@ public class OreSiService {
                 final Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
                 return hierarchicalReference;
             }
+
+            @Override
+            public Stream<CSVRecord> firstPass(Stream<CSVRecord> recordStreamBeforePreloading) {
+                final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
+                afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
+                ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
+                List<CSVRecord> collect = recordStreamBeforePreloading
+                        .peek(csvrecord -> {
+                            String sAsString = csvrecord.get(parentRecursiveIndex);
+                            String naturalKeyAsString = keyColumns
+                                    .stream()
+                                    .map(kc -> columns.indexOf(kc))
+                                    .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
+                                    .filter(k -> k != null)
+                                    .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                            Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+                            if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
+                                afterPreloadReferenceUuids.put(naturalKey, UUID.randomUUID());
+                            }
+                            if (!Strings.isNullOrEmpty(sAsString)) {
+                                Ltree s;
+                                try {
+                                    s = Ltree.fromUnescapedString(sAsString);
+                                } catch (IllegalArgumentException e) {
+                                    return;
+                                }
+                                parentReferenceMap.put(naturalKey, s);
+                                if (!afterPreloadReferenceUuids.containsKey(s)) {
+                                    final UUID uuid = UUID.randomUUID();
+                                    afterPreloadReferenceUuids.put(s, uuid);
+                                    missingParentReferences.put(s, csvrecord.getRecordNumber());
+                                }
+                            }
+                            missingParentReferences.removeAll(naturalKey);
+                        })
+                        .collect(Collectors.toList());
+                List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
+                        .map(entry -> {
+                            Ltree missingParentReference = entry.getKey();
+                            Long lineNumber = entry.getValue();
+                            ValidationCheckResult validationCheckResult =
+                                    new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, afterPreloadReferenceUuids.keySet());
+                            return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
+                        })
+                        .collect(Collectors.toUnmodifiableList());
+                InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+                referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
+                return collect.stream();
+            }
         }
 
         private static class WithoutRecursion extends RecursionStrategy {
@@ -699,74 +721,45 @@ public class OreSiService {
             public Ltree getHierarchicalReference(Ltree naturalKey) {
                 return hierarchicalKeyFactory.newHierarchicalReference(refTypeAsLabel);
             }
+
+            @Override
+            public Stream<CSVRecord> firstPass(Stream<CSVRecord> recordStreamBeforePreloading) {
+                return recordStreamBeforePreloading;
+            }
         }
     }
 
-    private PreloadingRecursiveReferenceResult preloadRecursiveReference(Stream<CSVRecord> recordStream, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Integer parentRecursiveIndex, ImmutableMap<Ltree, UUID> beforeImportReferenceUuids, String refType) {
-        Map<Ltree, Ltree> referenceMap = new LinkedHashMap<>();
-        Map<Ltree, UUID> referenceUUIDs = new LinkedHashMap<>(beforeImportReferenceUuids);
-        ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
-        List<CSVRecord> collect = recordStream
-                .peek(csvrecord -> {
-                    String sAsString = csvrecord.get(parentRecursiveIndex);
-                    String naturalKeyAsString = ref.getKeyColumns()
-                            .stream()
-                            .map(kc -> columns.indexOf(kc))
-                            .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
-                            .filter(k -> k != null)
-                            .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-                    Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-                    if (!referenceUUIDs.containsKey(naturalKey)) {
-                        referenceUUIDs.put(naturalKey, UUID.randomUUID());
-                    }
-                    if (!Strings.isNullOrEmpty(sAsString)) {
-                        Ltree s;
-                        try {
-                            s = Ltree.fromUnescapedString(sAsString);
-                        } catch (IllegalArgumentException e) {
-                            return;
-                        }
-                        referenceMap.put(naturalKey, s);
-                        if (!referenceUUIDs.containsKey(s)) {
-                            final UUID uuid = UUID.randomUUID();
-                            referenceUUIDs.put(s, uuid);
-                            missingParentReferences.put(s, csvrecord.getRecordNumber());
-                        }
-                    }
-                    missingParentReferences.removeAll(naturalKey);
-                })
-                .collect(Collectors.toList());
-        List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
-                .map(entry -> {
-                    Ltree missingParentReference = entry.getKey();
-                    Long lineNumber = entry.getValue();
-                    ValidationCheckResult validationCheckResult =
-                            new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, referenceUUIDs.keySet());
-                    return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
-                })
-                .collect(Collectors.toUnmodifiableList());
-        InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-        PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult =
-                new PreloadingRecursiveReferenceResult(
-                        ImmutableMap.copyOf(referenceUUIDs),
-                        collect.stream(),
-                        ImmutableMap.copyOf(referenceMap)
-                );
-        return preloadingRecursiveReferenceResult;
-    }
-
-    @Value
-    private static class PreloadingRecursiveReferenceResult {
-        ImmutableMap<Ltree, UUID> referenceUUIDs;
-        Stream<CSVRecord> recordStream;
-        ImmutableMap<Ltree, Ltree> referenceMap;
-    }
-
-    private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponent(LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences, String refType) {
-        return compositeReferences.values().stream()
+    private RecursionStrategy getRecursionStrategy(Configuration conf, String refType, ImmutableList<String> columns, ImmutableSet<LineChecker> lineCheckers) {
+        final HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
+        Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = conf.getCompositeReferences().values().stream()
                 .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> refType.equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
                 .filter(e -> e != null)
                 .findFirst();
+        final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
+        boolean isRecursive = recursiveComponentDescription.isPresent();
+        final RecursionStrategy recursionStrategy;
+        if (isRecursive) {
+            Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
+            ImmutableList<String> keyColumns = ImmutableList.copyOf(ref.getKeyColumns());
+            final Integer parentRecursiveIndex = recursiveComponentDescription
+                    .map(rcd -> rcd.getParentRecursiveKey())
+                    .map(rck -> columns.indexOf(rck))
+                    .orElse(null);
+            if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
+//                    recordStream = recordStreamBeforePreloading;
+//                    parentReferenceMap = ImmutableMap.of();
+                throw new IllegalStateException("n'arrive jamais");
+            }
+            final ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
+                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                    .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("pas de checker sur " + refType + " alors qu'on est sur un référentiel récursif"));
+            recursionStrategy = new RecursionStrategy.WithRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory, parentRecursiveIndex, columns, keyColumns, referenceLineChecker);
+        } else {
+            recursionStrategy = new RecursionStrategy.WithoutRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory);
+        }
+        return recursionStrategy;
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
