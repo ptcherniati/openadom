@@ -33,7 +33,6 @@ import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DuplicationLineValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.MissingParentLineValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
-import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -58,11 +57,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@AllArgsConstructor
 abstract class ReferenceImporter {
 
     /**
@@ -87,16 +84,48 @@ abstract class ReferenceImporter {
 
     private final ImmutableSet<LineChecker> lineCheckers;
 
-    void doImport() throws IOException {
+    private final ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns;
 
-        Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
-        ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
+    private RecursionStrategy recursionStrategy;
+
+    private final Configuration.ReferenceDescription ref;
+
+    private final ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
+
+    private final Map<String, Internationalization> displayColumns;
+
+    private final Optional<Map<String, String>> displayPattern;
+
+    private final List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
+
+    private ImmutableList<String> columns;
+
+    public ReferenceImporter(String refType, ImmutableMap<Ltree, UUID> storedReferences, MultipartFile file, UUID fileId, UUID applicationId, Configuration conf, ImmutableSet<LineChecker> lineCheckers) {
+        this.refType = refType;
+        this.storedReferences = storedReferences;
+        this.file = file;
+        this.fileId = fileId;
+        this.applicationId = applicationId;
+        this.conf = conf;
+        this.lineCheckers = lineCheckers;
+        this.multiplicityPerColumns = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
                 .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .filter(referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity() == Multiplicity.MANY)
                 .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
-        ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
+        Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
+                .map(configuration -> configuration.getInternationalization())
+                .map(inter -> inter.getReferences())
+                .map(references -> references.getOrDefault(refType, null));
+        displayColumns = internationalizationReferenceMap
+                .map(internationalisationSection -> internationalisationSection.getInternationalizedColumns())
+                .orElseGet(HashMap::new);
+        displayPattern = internationalizationReferenceMap
+                .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
+                .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
+        ref = conf.getReferences().get(refType);
+    }
 
+    void doImport() throws IOException {
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(ref.getSeparator())
                 .withSkipHeaderRecord();
@@ -104,155 +133,13 @@ abstract class ReferenceImporter {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
-            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, RowWithReferenceDatum> csvRecordToLineAsMapFn = line -> {
-                Iterator<String> currentHeader = columns.iterator();
-                ReferenceDatum referenceDatum = new ReferenceDatum();
-                line.forEach(value -> {
-                    String header = currentHeader.next();
-                    ReferenceColumn referenceColumn = new ReferenceColumn(header);
-                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
-                    ReferenceColumnValue referenceColumnValue;
-                    switch (multiplicity) {
-                        case ONE:
-                            referenceColumnValue = new ReferenceColumnSingleValue(value);
-                            break;
-                        case MANY:
-                            referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(value);
-                            break;
-                        default:
-                            throw new IllegalStateException("non géré " + multiplicity);
-                    }
-                    referenceDatum.put(referenceColumn, referenceColumnValue);
-                });
-                int lineNumber = Ints.checkedCast(line.getRecordNumber());
-                return new RowWithReferenceDatum(lineNumber, referenceDatum);
-            };
-
+            columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            recursionStrategy = getRecursionStrategy();
             final Stream<CSVRecord> recordStreamBeforePreloading = Streams.stream(csvParser);
-            final RecursionStrategy recursionStrategy = getRecursionStrategy(conf, refType, columns, lineCheckers);
             final Stream<CSVRecord> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
-            Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
-                    .map(configuration -> conf.getInternationalization())
-                    .map(inter -> inter.getReferences())
-                    .map(references -> references.getOrDefault(refType, null));
-            Map<String, Internationalization> displayColumns = internationalizationReferenceMap
-                    .map(internationalisationSection -> internationalisationSection.getInternationalizedColumns())
-                    .orElseGet(HashMap::new);
-            Optional<Map<String, String>> displayPattern = internationalizationReferenceMap
-                    .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
-                    .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
-            List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
             Stream<ReferenceValue> referenceValuesStream = recordStream
-                    .map(csvRecordToLineAsMapFn)
-                    .map(rowWithReferenceDatum -> {
-                        ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
-                        Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
-                        ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
-                        lineCheckers.forEach(lineChecker -> {
-                            Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
-                            if (lineChecker instanceof DateLineChecker) {
-                                validationCheckResults.stream()
-                                        .filter(ValidationCheckResult::isSuccess)
-                                        .filter(DateValidationCheckResult.class::isInstance)
-                                        .map(DateValidationCheckResult.class::cast)
-                                        .forEach(dateValidationCheckResult -> {
-                                            ReferenceColumn referenceColumn = (ReferenceColumn) dateValidationCheckResult.getTarget().getTarget();
-                                            ReferenceColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(referenceColumn);
-                                            ReferenceColumnValue valueToStoreInDatabase = referenceColumnRawValue
-                                                    .transform(rawValue ->
-                                                            String.format("date:%s:%s", dateValidationCheckResult.getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue)
-                                                    );
-                                            referenceDatum.put(referenceColumn, valueToStoreInDatabase);
-                                        });
-                            } else if (lineChecker instanceof ReferenceLineChecker) {
-                                ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) lineChecker;
-                                ReferenceColumn referenceColumn = (ReferenceColumn) referenceLineChecker.getTarget().getTarget();
-                                SetMultimap<ReferenceColumn, String> rawValueReplacedByKeys = HashMultimap.create();
-                                String reference = referenceLineChecker.getRefType();
-                                validationCheckResults.stream()
-                                        .filter(ValidationCheckResult::isSuccess)
-                                        .filter(ReferenceValidationCheckResult.class::isInstance)
-                                        .map(ReferenceValidationCheckResult.class::cast)
-                                        .forEach(referenceValidationCheckResult -> {
-                                            UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
-                                            rawValueReplacedByKeys.put(referenceColumn, referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().getSql());
-                                            refsLinkedTo
-                                                    .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
-                                                    .add(referenceId);
-                                        });
-                                Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();
-                                Set<String> values = rawValueReplacedByKeys.get(referenceColumn);
-                                ReferenceColumnValue referenceColumnNewValue;
-                                switch (multiplicity) {
-                                    case ONE:
-                                        if (values.isEmpty()) {
-                                            referenceColumnNewValue = ReferenceColumnSingleValue.empty();
-                                        } else {
-                                            referenceColumnNewValue = new ReferenceColumnSingleValue(Iterables.getOnlyElement(values));
-                                        }
-                                        break;
-                                    case MANY:
-                                        referenceColumnNewValue = new ReferenceColumnMultipleValue(values);
-                                        break;
-                                    default:
-                                        throw new IllegalStateException("multiplicity = " + multiplicity);
-                                }
-                                referenceDatum.put(referenceColumn, referenceColumnNewValue);
-                            }
-                            List<CsvRowValidationCheckResult> rowErrors = validationCheckResults.stream()
-                                    .filter(validationCheckResult -> !validationCheckResult.isSuccess())
-                                    .map(validationCheckResult -> new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()))
-                                    .collect(Collectors.toUnmodifiableList());
-                            allErrors.addAll(rowErrors);
-                        });
-                        final ReferenceValue e = new ReferenceValue();
-                        Preconditions.checkState(!ref.getColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
-                        String naturalKeyAsString = ref.getKeyColumns().stream()
-                                .map(ReferenceColumn::new)
-                                .map(referenceColumn -> {
-                                    ReferenceColumnValue referenceColumnValue = Objects.requireNonNullElse(referenceDatum.get(referenceColumn), ReferenceColumnSingleValue.empty());
-                                    Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + refType + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut avoir une valeur multiple.");
-                                    ReferenceColumnSingleValue referenceColumnSingleValue = ((ReferenceColumnSingleValue) referenceColumnValue);
-                                    return referenceColumnSingleValue;
-                                })
-                                .map(ReferenceColumnSingleValue::getValue)
-                                .filter(StringUtils::isNotEmpty)
-                                .map(Ltree::escapeToLabel)
-                                .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-                        final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-                        recursionStrategy.getKnownId(naturalKey)
-                                .ifPresent(e::setId);
-                        final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
-                        final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
-                        referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
-
-                        /**
-                         * on remplace l'id par celle en base si elle existe
-                         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
-                         */
-
-                        if (storedReferences.containsKey(hierarchicalKey)) {
-                            e.setId(storedReferences.get(hierarchicalKey));
-                        }
-                        e.setBinaryFile(fileId);
-                        e.setReferenceType(refType);
-                        e.setHierarchicalKey(hierarchicalKey);
-                        e.setHierarchicalReference(hierarchicalReference);
-                        e.setRefsLinkedTo(refsLinkedTo);
-                        e.setNaturalKey(naturalKey);
-                        e.setApplication(applicationId);
-                        e.setRefValues(referenceDatum);
-                        if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
-                            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
-                            allErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
-                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
-                            return null;
-                        } else {
-                            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
-                            return e;
-                        }
-                    })
+                    .map(this::csvRecordToLineAsMap)
+                    .map(this::toEntity)
                     .filter(e -> e != null)
                     .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             storeAll(referenceValuesStream);
@@ -260,7 +147,140 @@ abstract class ReferenceImporter {
         }
     }
 
-    private RecursionStrategy getRecursionStrategy(Configuration conf, String refType, ImmutableList<String> columns, ImmutableSet<LineChecker> lineCheckers) {
+    private ReferenceValue toEntity(RowWithReferenceDatum rowWithReferenceDatum) {
+        ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
+        Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
+        ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
+        lineCheckers.forEach(lineChecker -> {
+            Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
+            if (lineChecker instanceof DateLineChecker) {
+                validationCheckResults.stream()
+                        .filter(ValidationCheckResult::isSuccess)
+                        .filter(DateValidationCheckResult.class::isInstance)
+                        .map(DateValidationCheckResult.class::cast)
+                        .forEach(dateValidationCheckResult -> {
+                            ReferenceColumn referenceColumn = (ReferenceColumn) dateValidationCheckResult.getTarget().getTarget();
+                            ReferenceColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(referenceColumn);
+                            ReferenceColumnValue valueToStoreInDatabase = referenceColumnRawValue
+                                    .transform(rawValue ->
+                                            String.format("date:%s:%s", dateValidationCheckResult.getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue)
+                                    );
+                            referenceDatum.put(referenceColumn, valueToStoreInDatabase);
+                        });
+            } else if (lineChecker instanceof ReferenceLineChecker) {
+                ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) lineChecker;
+                ReferenceColumn referenceColumn = (ReferenceColumn) referenceLineChecker.getTarget().getTarget();
+                SetMultimap<ReferenceColumn, String> rawValueReplacedByKeys = HashMultimap.create();
+                String reference = referenceLineChecker.getRefType();
+                validationCheckResults.stream()
+                        .filter(ValidationCheckResult::isSuccess)
+                        .filter(ReferenceValidationCheckResult.class::isInstance)
+                        .map(ReferenceValidationCheckResult.class::cast)
+                        .forEach(referenceValidationCheckResult -> {
+                            UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
+                            rawValueReplacedByKeys.put(referenceColumn, referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().getSql());
+                            refsLinkedTo
+                                    .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
+                                    .add(referenceId);
+                        });
+                Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();
+                Set<String> values = rawValueReplacedByKeys.get(referenceColumn);
+                ReferenceColumnValue referenceColumnNewValue;
+                switch (multiplicity) {
+                    case ONE:
+                        if (values.isEmpty()) {
+                            referenceColumnNewValue = ReferenceColumnSingleValue.empty();
+                        } else {
+                            referenceColumnNewValue = new ReferenceColumnSingleValue(Iterables.getOnlyElement(values));
+                        }
+                        break;
+                    case MANY:
+                        referenceColumnNewValue = new ReferenceColumnMultipleValue(values);
+                        break;
+                    default:
+                        throw new IllegalStateException("multiplicity = " + multiplicity);
+                }
+                referenceDatum.put(referenceColumn, referenceColumnNewValue);
+            }
+            List<CsvRowValidationCheckResult> rowErrors = validationCheckResults.stream()
+                    .filter(validationCheckResult -> !validationCheckResult.isSuccess())
+                    .map(validationCheckResult -> new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()))
+                    .collect(Collectors.toUnmodifiableList());
+            allErrors.addAll(rowErrors);
+        });
+        final ReferenceValue e = new ReferenceValue();
+        Preconditions.checkState(!ref.getKeyColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
+        String naturalKeyAsString = ref.getKeyColumns().stream()
+                .map(ReferenceColumn::new)
+                .map(referenceColumn -> {
+                    ReferenceColumnValue referenceColumnValue = Objects.requireNonNullElse(referenceDatum.get(referenceColumn), ReferenceColumnSingleValue.empty());
+                    Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + refType + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut avoir une valeur multiple.");
+                    ReferenceColumnSingleValue referenceColumnSingleValue = ((ReferenceColumnSingleValue) referenceColumnValue);
+                    return referenceColumnSingleValue;
+                })
+                .map(ReferenceColumnSingleValue::getValue)
+                .filter(StringUtils::isNotEmpty)
+                .map(Ltree::escapeToLabel)
+                .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+        final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+        recursionStrategy.getKnownId(naturalKey)
+                .ifPresent(e::setId);
+        final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
+        final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
+        referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
+
+        /**
+         * on remplace l'id par celle en base si elle existe
+         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
+         */
+
+        if (storedReferences.containsKey(hierarchicalKey)) {
+            e.setId(storedReferences.get(hierarchicalKey));
+        }
+        e.setBinaryFile(fileId);
+        e.setReferenceType(refType);
+        e.setHierarchicalKey(hierarchicalKey);
+        e.setHierarchicalReference(hierarchicalReference);
+        e.setRefsLinkedTo(refsLinkedTo);
+        e.setNaturalKey(naturalKey);
+        e.setApplication(applicationId);
+        e.setRefValues(referenceDatum);
+        if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
+            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
+            allErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
+            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
+            return null;
+        } else {
+            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
+            return e;
+        }
+    }
+
+    private RowWithReferenceDatum csvRecordToLineAsMap(CSVRecord line) {
+        Iterator<String> currentHeader = columns.iterator();
+        ReferenceDatum referenceDatum = new ReferenceDatum();
+        line.forEach(value -> {
+            String header = currentHeader.next();
+            ReferenceColumn referenceColumn = new ReferenceColumn(header);
+            Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+            ReferenceColumnValue referenceColumnValue;
+            switch (multiplicity) {
+                case ONE:
+                    referenceColumnValue = new ReferenceColumnSingleValue(value);
+                    break;
+                case MANY:
+                    referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(value);
+                    break;
+                default:
+                    throw new IllegalStateException("non géré " + multiplicity);
+            }
+            referenceDatum.put(referenceColumn, referenceColumnValue);
+        });
+        int lineNumber = Ints.checkedCast(line.getRecordNumber());
+        return new RowWithReferenceDatum(lineNumber, referenceDatum);
+    }
+
+    private RecursionStrategy getRecursionStrategy() {
         final HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = conf.getCompositeReferences().values().stream()
                 .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> refType.equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
