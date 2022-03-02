@@ -558,7 +558,6 @@ public class OreSiService {
                                 .map(Ltree::escapeToLabel)
                                 .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
                         final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-                        Ltree recursiveNaturalKey = naturalKey;
                         final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
                         final Ltree hierarchicalKey;
                         final Ltree selfHierarchicalReference;
@@ -570,6 +569,8 @@ public class OreSiService {
                                     .ifPresent(key -> {
                                         e.setId(key);
                                     });
+
+                            Ltree recursiveNaturalKey = naturalKey;
                             Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
                             while (parentKey != null) {
                                 recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
