@@ -557,9 +557,11 @@ public class OreSiService {
                                 .filter(StringUtils::isNotEmpty)
                                 .map(Ltree::escapeToLabel)
                                 .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-                        Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+                        final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                         Ltree recursiveNaturalKey = naturalKey;
                         final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
+                        final Ltree hierarchicalKey;
+                        final Ltree selfHierarchicalReference;
                         if (isRecursive) {
                             selfLineChecker
                                     .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
@@ -573,13 +575,15 @@ public class OreSiService {
                                 recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
                                 parentKey = parentReferenceMap.getOrDefault(parentKey, null);
                             }
-                        }
-                        Ltree hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
-                        Ltree selfHierarchicalReference = refTypeAsLabel;
-                        if (isRecursive) {
+                            hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(recursiveNaturalKey, referenceDatum);
+                            Ltree partialSelfHierarchicalReference = refTypeAsLabel;
                             for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
-                                selfHierarchicalReference = Ltree.fromSql(selfHierarchicalReference.getSql() + ".".concat(refType));
+                                partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(refType));
                             }
+                            selfHierarchicalReference = partialSelfHierarchicalReference;
+                        } else {
+                            hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(naturalKey, referenceDatum);
+                            selfHierarchicalReference = refTypeAsLabel;
                         }
                         Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
                         referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
