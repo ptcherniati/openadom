@@ -611,29 +611,24 @@ public class OreSiService {
         if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
             result = recordStream;
         } else {
-            result = addMissingReferencesWithParentRecursiveIndex(recordStream, selfLineChecker, columns, ref, referenceMap, refType, parentRecursiveIndex);
+            ImmutableMap<Ltree, UUID> beforeImportReferenceUuids = selfLineChecker
+                    .map(ReferenceLineChecker::getReferenceValues)
+                    .orElseGet(ImmutableMap::of);
+            PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStream, columns, ref, referenceMap, parentRecursiveIndex, beforeImportReferenceUuids);
+            selfLineChecker
+                    .ifPresent(slc -> slc.setReferenceValues(preloadingRecursiveReferenceResult.getReferenceUUIDs()));
+            List<CsvRowValidationCheckResult> rowErrors = preloadingRecursiveReferenceResult.getMissingParentReferences().entries().stream()
+                    .map(entry -> {
+                        Ltree missingParentReference = entry.getKey();
+                        Long lineNumber = entry.getValue();
+                        ValidationCheckResult validationCheckResult =
+                                new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, preloadingRecursiveReferenceResult.getReferenceUUIDs().keySet());
+                        return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
+                    })
+                    .collect(Collectors.toUnmodifiableList());
+            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+            result = preloadingRecursiveReferenceResult.getRecordStream();
         }
-        return result;
-    }
-
-    private Stream<CSVRecord> addMissingReferencesWithParentRecursiveIndex(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, String refType, Integer parentRecursiveIndex) {
-        ImmutableMap<Ltree, UUID> beforeImportReferenceUuids = selfLineChecker
-                .map(ReferenceLineChecker::getReferenceValues)
-                .orElseGet(ImmutableMap::of);
-        PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStream, columns, ref, referenceMap, parentRecursiveIndex, beforeImportReferenceUuids);
-        selfLineChecker
-                .ifPresent(slc -> slc.setReferenceValues(preloadingRecursiveReferenceResult.getReferenceUUIDs()));
-        List<CsvRowValidationCheckResult> rowErrors = preloadingRecursiveReferenceResult.getMissingParentReferences().entries().stream()
-                .map(entry -> {
-                    Ltree missingParentReference = entry.getKey();
-                    Long lineNumber = entry.getValue();
-                    ValidationCheckResult validationCheckResult =
-                            new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, preloadingRecursiveReferenceResult.getReferenceUUIDs().keySet());
-                    return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
-                })
-                .collect(Collectors.toUnmodifiableList());
-        InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-        Stream<CSVRecord> result = preloadingRecursiveReferenceResult.getRecordStream();
         return result;
     }
 
