@@ -82,7 +82,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.util.Streams;
 import org.assertj.core.util.Strings;
 import org.flywaydb.core.Flyway;
@@ -446,13 +445,39 @@ public class OreSiService {
                 return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
-            Stream<CSVRecord> recordStream = Streams.stream(csvParser);
+            final Stream<CSVRecord> recordStreamBeforePreloading = Streams.stream(csvParser);
+            final Stream<CSVRecord> recordStream;
             final ImmutableMap<Ltree, Ltree> parentReferenceMap;
             if (isRecursive) {
-                Pair<Stream<CSVRecord>, ImmutableMap<Ltree, Ltree>> pair = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, refType);
-                recordStream = pair.getLeft();
-                parentReferenceMap = pair.getRight();
+                Integer parentRecursiveIndex = recursiveComponentDescription
+                        .map(rcd -> rcd.getParentRecursiveKey())
+                        .map(rck -> columns.indexOf(rck))
+                        .orElse(null);
+                if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
+                    recordStream = recordStreamBeforePreloading;
+                    parentReferenceMap = ImmutableMap.of();
+                } else {
+                    ImmutableMap<Ltree, UUID> beforeImportReferenceUuids = selfLineChecker
+                            .map(ReferenceLineChecker::getReferenceValues)
+                            .orElseGet(ImmutableMap::of);
+                    PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStreamBeforePreloading, columns, ref, parentRecursiveIndex, beforeImportReferenceUuids);
+                    selfLineChecker
+                            .ifPresent(slc -> slc.setReferenceValues(preloadingRecursiveReferenceResult.getReferenceUUIDs()));
+                    List<CsvRowValidationCheckResult> rowErrors = preloadingRecursiveReferenceResult.getMissingParentReferences().entries().stream()
+                            .map(entry -> {
+                                Ltree missingParentReference = entry.getKey();
+                                Long lineNumber = entry.getValue();
+                                ValidationCheckResult validationCheckResult =
+                                        new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, preloadingRecursiveReferenceResult.getReferenceUUIDs().keySet());
+                                return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
+                            })
+                            .collect(Collectors.toUnmodifiableList());
+                    InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+                    recordStream = preloadingRecursiveReferenceResult.getRecordStream();
+                    parentReferenceMap = preloadingRecursiveReferenceResult.getReferenceMap();
+                }
             } else {
+                recordStream = recordStreamBeforePreloading;
                 parentReferenceMap = ImmutableMap.of();
             }
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
@@ -603,36 +628,6 @@ public class OreSiService {
         }
 
         return fileId;
-    }
-
-    private Pair<Stream<CSVRecord>, ImmutableMap<Ltree, Ltree>> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, String refType) {
-        Pair<Stream<CSVRecord>, ImmutableMap<Ltree, Ltree>> result;
-        Integer parentRecursiveIndex = recursiveComponentDescription
-                .map(rcd -> rcd.getParentRecursiveKey())
-                .map(rck -> columns.indexOf(rck))
-                .orElse(null);
-        if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
-            result = Pair.of(recordStream, ImmutableMap.of());
-        } else {
-            ImmutableMap<Ltree, UUID> beforeImportReferenceUuids = selfLineChecker
-                    .map(ReferenceLineChecker::getReferenceValues)
-                    .orElseGet(ImmutableMap::of);
-            PreloadingRecursiveReferenceResult preloadingRecursiveReferenceResult = preloadRecursiveReference(recordStream, columns, ref, parentRecursiveIndex, beforeImportReferenceUuids);
-            selfLineChecker
-                    .ifPresent(slc -> slc.setReferenceValues(preloadingRecursiveReferenceResult.getReferenceUUIDs()));
-            List<CsvRowValidationCheckResult> rowErrors = preloadingRecursiveReferenceResult.getMissingParentReferences().entries().stream()
-                    .map(entry -> {
-                        Ltree missingParentReference = entry.getKey();
-                        Long lineNumber = entry.getValue();
-                        ValidationCheckResult validationCheckResult =
-                                new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, preloadingRecursiveReferenceResult.getReferenceUUIDs().keySet());
-                        return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
-                    })
-                    .collect(Collectors.toUnmodifiableList());
-            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-            result = Pair.of(preloadingRecursiveReferenceResult.getRecordStream(), preloadingRecursiveReferenceResult.getReferenceMap());
-        }
-        return result;
     }
 
     private PreloadingRecursiveReferenceResult preloadRecursiveReference(Stream<CSVRecord> recordStream, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Integer parentRecursiveIndex, ImmutableMap<Ltree, UUID> beforeImportReferenceUuids) {
