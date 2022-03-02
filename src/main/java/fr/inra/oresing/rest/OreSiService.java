@@ -3,23 +3,76 @@ package fr.inra.oresing.rest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.*;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
-import fr.inra.oresing.checker.*;
+import fr.inra.oresing.checker.CheckerFactory;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.FloatChecker;
+import fr.inra.oresing.checker.IntegerChecker;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.Multiplicity;
+import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.BinaryFileDataset;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.Data;
+import fr.inra.oresing.model.Datum;
+import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnMultipleValue;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
+import fr.inra.oresing.model.ReferenceColumnValue;
+import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
-import fr.inra.oresing.rest.validationcheckresults.*;
+import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DuplicationLineValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.MissingParentLineValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +104,21 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -341,41 +407,12 @@ public class OreSiService {
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
                 .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
                 .findFirst();
-        Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
-        ReferenceColumn parentHierarchicalKeyColumn;
-        String parentHierarchicalParentReference;
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
-        BiFunction<Ltree, ReferenceDatum, Ltree> getHierarchicalKeyFn;
-        Function<Ltree, Ltree> getHierarchicalReferenceFn;
+        HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
         Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
         Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
         ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
-        if (toUpdateCompositeReference.isPresent()) {
-            Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
-            boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
-            if (root) {
-                getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
-                getHierarchicalReferenceFn = (reference) -> reference;
-            } else {
-                Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
-                        .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
-                        .collect(MoreCollectors.onlyElement());
-                parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
-                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
-                getHierarchicalKeyFn = (naturalKey, referenceDatum) -> {
-                    ReferenceColumnValue parentHierarchicalKeyColumnValue = referenceDatum.get(parentHierarchicalKeyColumn);
-                    Preconditions.checkState(parentHierarchicalKeyColumnValue instanceof ReferenceColumnSingleValue);
-                    String parentHierarchicalKeyAsString = ((ReferenceColumnSingleValue) parentHierarchicalKeyColumnValue).getValue();
-                    Ltree parentHierarchicalKey = Ltree.fromUnescapedString(parentHierarchicalKeyAsString);
-                    return Ltree.join(parentHierarchicalKey, naturalKey);
-                };
-                getHierarchicalReferenceFn = (reference) -> Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
-            }
-        } else {
-            getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
-            getHierarchicalReferenceFn = (reference) -> reference;
-        }
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(ref.getSeparator())
@@ -519,15 +556,14 @@ public class OreSiService {
                                 parentKey = parentreferenceMap.getOrDefault(parentKey, null);
                             }
                         }
-                        Ltree hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
+                        Ltree hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
                         Ltree selfHierarchicalReference = refTypeAsLabel;
                         if (isRecursive) {
                             for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
                                 selfHierarchicalReference = Ltree.fromSql(selfHierarchicalReference.getSql() + ".".concat(refType));
                             }
                         }
-                        Ltree hierarchicalReference =
-                                getHierarchicalReferenceFn.apply(selfHierarchicalReference);
+                        Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
                         referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
                         buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
 
@@ -1586,5 +1622,113 @@ public class OreSiService {
     private static class ParsedCsvRow {
         int lineNumber;
         List<Map.Entry<String, String>> columns;
+    }
+
+    /**
+     * Contrat permettant de créer pour chaque ligne de référentiel sa clé hiérarchique.
+     *
+     * Comme la création de cette clé dépend de l'appartenance ou non à un référentiel hiérarchique, on gère
+     * ça par héritage.
+     */
+    private static abstract class HierarchicalKeyFactory {
+
+        static HierarchicalKeyFactory build(Configuration conf, String refType) {
+            HierarchicalKeyFactory hierarchicalKeyFactory;
+            Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
+            if (toUpdateCompositeReference.isPresent()) {
+                Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
+                boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
+                if (root) {
+                    hierarchicalKeyFactory = new ForCompositeReferenceRoot();
+                } else {
+                    Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
+                            .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
+                            .collect(MoreCollectors.onlyElement());
+                    ReferenceColumn parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
+                    String parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
+                    hierarchicalKeyFactory = new ForCompositeReferenceChild(parentHierarchicalKeyColumn, parentHierarchicalParentReference);
+                }
+            } else {
+                hierarchicalKeyFactory = new ForNotCompositeReference();
+            }
+            return hierarchicalKeyFactory;
+        }
+
+        public abstract Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceValues);
+
+        public abstract Ltree newHierarchicalReference(Ltree reference);
+
+        /**
+         * Pour un référentiel qui est la racine d'un référentiel hiérarchique
+         */
+        private static class ForCompositeReferenceRoot extends HierarchicalKeyFactory {
+
+            /**
+             * On est sur un référentiel qui est à la racine de la hiérarchie donc sa clé hiérarchique est simplement sa clé naturelle (pas de parent)
+             */
+            @Override
+            public Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceValues) {
+                return naturalKey;
+            }
+
+            @Override
+            public Ltree newHierarchicalReference(Ltree reference) {
+                return reference;
+            }
+        }
+
+        /**
+         * Pour un référentiel qui n'appartient pas à un référentiel hiérarchique
+         */
+        private static class ForNotCompositeReference extends HierarchicalKeyFactory {
+
+            /**
+             * On est sur un référentiel qui n'appartient pas à une hiérarchie donc la clé naturelle se suffit à elle-même
+             */
+            @Override
+            public Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceValues) {
+                return naturalKey;
+            }
+
+            @Override
+            public Ltree newHierarchicalReference(Ltree reference) {
+                return reference;
+            }
+        }
+
+        /**
+         * Pour un référentiel qui appartient à un référentiel hiérarchique mais qui est un enfant (= pas la racine).
+         */
+        private static class ForCompositeReferenceChild extends HierarchicalKeyFactory {
+
+            /**
+             * La colonne dans laquelle on va chercher la clé hiérachique du parent.
+             */
+            private final ReferenceColumn parentHierarchicalKeyColumn;
+
+            private final String parentHierarchicalParentReference;
+
+            public ForCompositeReferenceChild(ReferenceColumn parentHierarchicalKeyColumn, String parentHierarchicalParentReference) {
+                this.parentHierarchicalKeyColumn = parentHierarchicalKeyColumn;
+                this.parentHierarchicalParentReference = parentHierarchicalParentReference;
+            }
+
+            /**
+             * On calcule la clé hiérachique en préfixant la clé naturelle avec la clé hiérarchique du parent.
+             */
+            @Override
+            public Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
+                ReferenceColumnValue parentHierarchicalKeyColumnValue = referenceDatum.get(parentHierarchicalKeyColumn);
+                Preconditions.checkState(parentHierarchicalKeyColumnValue instanceof ReferenceColumnSingleValue);
+                String parentHierarchicalKeyAsString = ((ReferenceColumnSingleValue) parentHierarchicalKeyColumnValue).getValue();
+                Ltree parentHierarchicalKey = Ltree.fromUnescapedString(parentHierarchicalKeyAsString);
+                return Ltree.join(parentHierarchicalKey, naturalKey);
+            }
+
+            @Override
+            public Ltree newHierarchicalReference(Ltree reference) {
+                return Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
+            }
+        }
     }
 }
