@@ -446,11 +446,9 @@ public class OreSiService {
                 return new RowWithReferenceDatum(lineNumber, referenceDatum);
             };
 
-            List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
             Stream<CSVRecord> recordStream = Streams.stream(csvParser);
             if (isRecursive) {
-                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, allErrors, refType);
-                InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap, refType);
             }
             Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                     .map(configuration -> conf.getInternationalization())
@@ -462,6 +460,7 @@ public class OreSiService {
             Optional<Map<String, String>> displayPattern = internationalizationReferenceMap
                     .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
                     .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
+            List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(csvRecordToLineAsMapFn)
                     .map(rowWithReferenceDatum -> {
@@ -602,7 +601,7 @@ public class OreSiService {
         return fileId;
     }
 
-    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, List<CsvRowValidationCheckResult> rowErrors, String refType) {
+    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap, String refType) {
         Stream<CSVRecord> result;
         Integer parentRecursiveIndex = recursiveComponentDescription
                 .map(rcd -> rcd.getParentRecursiveKey())
@@ -649,6 +648,7 @@ public class OreSiService {
                     .collect(Collectors.toList());
             selfLineChecker
                     .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
+            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
             if (!missingParentReferences.isEmpty()) {
                 missingParentReferences.asMap().entrySet().stream()
                         .forEach(entry -> {
@@ -658,9 +658,9 @@ public class OreSiService {
                             );
                         });
             }
+            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
             result = collect.stream();
         }
-
         return result;
     }
 
