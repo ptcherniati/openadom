@@ -74,9 +74,9 @@ abstract class ReferenceImporter {
         this.file = file;
         this.fileId = fileId;
         if (referenceImporterContext.isRecursive()) {
-            recursionStrategy = new RecursionStrategy.WithRecursion(referenceImporterContext);
+            recursionStrategy = new WithRecursion();
         } else {
-            recursionStrategy = new RecursionStrategy.WithoutRecursion(referenceImporterContext);
+            recursionStrategy = new WithoutRecursion();
         }
     }
 
@@ -239,161 +239,144 @@ abstract class ReferenceImporter {
         ReferenceDatum referenceDatum;
     }
 
-    private static abstract class RecursionStrategy {
+    private interface RecursionStrategy {
 
-        private final ReferenceImporterContext referenceImporterContext;
+        Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum);
 
-        protected RecursionStrategy(ReferenceImporterContext referenceImporterContext) {
-            this.referenceImporterContext = referenceImporterContext;
+        Ltree getHierarchicalReference(Ltree naturalKey);
+
+        Optional<UUID> getKnownId(Ltree naturalKey);
+
+        Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
+
+    }
+
+    private class WithRecursion implements RecursionStrategy {
+
+        private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
+
+        private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
+
+        @Override
+        public Optional<UUID> getKnownId(Ltree naturalKey) {
+            if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
+                return Optional.of(afterPreloadReferenceUuids.get(naturalKey));
+            }
+            return Optional.empty();
         }
 
-        public abstract Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum);
-
-        public abstract Ltree getHierarchicalReference(Ltree naturalKey);
-
-        public abstract Optional<UUID> getKnownId(Ltree naturalKey);
-
-        public abstract Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
-
-        ReferenceImporterContext getReferenceImporterContext() {
-            return referenceImporterContext;
+        @Override
+        public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
+            Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
+            final Ltree hierarchicalKey = referenceImporterContext.newHierarchicalKey(recursiveNaturalKey, referenceDatum);
+            return hierarchicalKey;
         }
 
-        private static class WithRecursion extends RecursionStrategy {
-
-            private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
-
-            private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
-
-            private WithRecursion(ReferenceImporterContext referenceImporterContext) {
-                super(referenceImporterContext);
+        private Ltree getRecursiveNaturalKey(Ltree naturalKey) {
+            Ltree recursiveNaturalKey = naturalKey;
+            Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
+            while (parentKey != null) {
+                recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
+                parentKey = parentReferenceMap.getOrDefault(parentKey, null);
             }
+            return recursiveNaturalKey;
+        }
 
-            @Override
-            public Optional<UUID> getKnownId(Ltree naturalKey) {
-                if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
-                    return Optional.of(afterPreloadReferenceUuids.get(naturalKey));
-                }
-                return Optional.empty();
+        @Override
+        public Ltree getHierarchicalReference(Ltree naturalKey) {
+            Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
+            Ltree partialSelfHierarchicalReference = referenceImporterContext.getRefTypeAsLabel();
+            for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
+                partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(referenceImporterContext.getRefType()));
             }
+            final Ltree selfHierarchicalReference = partialSelfHierarchicalReference;
+            final Ltree hierarchicalReference = referenceImporterContext.newHierarchicalReference(selfHierarchicalReference);
+            return hierarchicalReference;
+        }
 
-            @Override
-            public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
-                Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
-                final Ltree hierarchicalKey = getReferenceImporterContext().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
-                return hierarchicalKey;
-            }
-
-            private Ltree getRecursiveNaturalKey(Ltree naturalKey) {
-                Ltree recursiveNaturalKey = naturalKey;
-                Ltree parentKey = parentReferenceMap.getOrDefault(recursiveNaturalKey, null);
-                while (parentKey != null) {
-                    recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
-                    parentKey = parentReferenceMap.getOrDefault(parentKey, null);
-                }
-                return recursiveNaturalKey;
-            }
-
-            @Override
-            public Ltree getHierarchicalReference(Ltree naturalKey) {
-                Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
-                Ltree partialSelfHierarchicalReference = getReferenceImporterContext().getRefTypeAsLabel();
-                for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
-                    partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(getReferenceImporterContext().getRefType()));
-                }
-                final Ltree selfHierarchicalReference = partialSelfHierarchicalReference;
-                final Ltree hierarchicalReference = getReferenceImporterContext().newHierarchicalReference(selfHierarchicalReference);
-                return hierarchicalReference;
-            }
-
-            @Override
-            public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
-                final ReferenceColumn columnToLookForParentKey = getReferenceImporterContext().getColumnToLookForParentKey();
-                ReferenceLineChecker referenceLineChecker = getReferenceImporterContext().getReferenceLineChecker();
-                final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
-                afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
-                ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
-                List<RowWithReferenceDatum> collect = streamBeforePreloading
-                        .peek(rowWithReferenceDatum -> {
-                            ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
-                            String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
-                            String naturalKeyAsString = getReferenceImporterContext().getKeyColumns().stream()
-                                    .map(ReferenceColumn::new)
-                                    .map(referenceDatum::get)
-                                    .map(columnDansLaquellle -> {
-                                        Preconditions.checkState(columnDansLaquellle instanceof ReferenceColumnSingleValue);
-                                        String keyColumnValue = ((ReferenceColumnSingleValue) columnDansLaquellle).getValue();
-                                        return keyColumnValue;
-                                    })
-                                    .filter(StringUtils::isNotEmpty)
-                                    .map(Ltree::escapeToLabel)
-                                    .collect(Collectors.joining(getReferenceImporterContext().getCompositeNaturalKeyComponentsSeparator()));
-                            Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-                            if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
-                                afterPreloadReferenceUuids.put(naturalKey, UUID.randomUUID());
+        @Override
+        public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
+            final ReferenceColumn columnToLookForParentKey = referenceImporterContext.getColumnToLookForParentKey();
+            ReferenceLineChecker referenceLineChecker = referenceImporterContext.getReferenceLineChecker();
+            final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
+            afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
+            ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
+            List<RowWithReferenceDatum> collect = streamBeforePreloading
+                    .peek(rowWithReferenceDatum -> {
+                        ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
+                        String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
+                        String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
+                                .map(ReferenceColumn::new)
+                                .map(referenceDatum::get)
+                                .map(columnDansLaquellle -> {
+                                    Preconditions.checkState(columnDansLaquellle instanceof ReferenceColumnSingleValue);
+                                    String keyColumnValue = ((ReferenceColumnSingleValue) columnDansLaquellle).getValue();
+                                    return keyColumnValue;
+                                })
+                                .filter(StringUtils::isNotEmpty)
+                                .map(Ltree::escapeToLabel)
+                                .collect(Collectors.joining(referenceImporterContext.getCompositeNaturalKeyComponentsSeparator()));
+                        Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+                        if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
+                            afterPreloadReferenceUuids.put(naturalKey, UUID.randomUUID());
+                        }
+                        if (!Strings.isNullOrEmpty(sAsString)) {
+                            Ltree s;
+                            try {
+                                s = Ltree.fromUnescapedString(sAsString);
+                            } catch (IllegalArgumentException e) {
+                                return;
                             }
-                            if (!Strings.isNullOrEmpty(sAsString)) {
-                                Ltree s;
-                                try {
-                                    s = Ltree.fromUnescapedString(sAsString);
-                                } catch (IllegalArgumentException e) {
-                                    return;
-                                }
-                                parentReferenceMap.put(naturalKey, s);
-                                if (!afterPreloadReferenceUuids.containsKey(s)) {
-                                    final UUID uuid = UUID.randomUUID();
-                                    afterPreloadReferenceUuids.put(s, uuid);
-                                    missingParentReferences.put(s, rowWithReferenceDatum.getLineNumber());
-                                }
+                            parentReferenceMap.put(naturalKey, s);
+                            if (!afterPreloadReferenceUuids.containsKey(s)) {
+                                final UUID uuid = UUID.randomUUID();
+                                afterPreloadReferenceUuids.put(s, uuid);
+                                missingParentReferences.put(s, rowWithReferenceDatum.getLineNumber());
                             }
-                            missingParentReferences.removeAll(naturalKey);
-                        })
-                        .collect(Collectors.toList());
-                checkMissingParentReferencesIsEmpty(missingParentReferences);
-                referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
-                return collect.stream();
-            }
-
-            private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
-                List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
-                        .map(entry -> {
-                            Ltree missingParentReference = entry.getKey();
-                            Integer lineNumber = entry.getValue();
-                            ValidationCheckResult validationCheckResult =
-                                    new MissingParentLineValidationCheckResult(lineNumber, getReferenceImporterContext().getRefType(), missingParentReference, afterPreloadReferenceUuids.keySet());
-                            return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
-                        })
-                        .collect(Collectors.toUnmodifiableList());
-                InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-            }
+                        }
+                        missingParentReferences.removeAll(naturalKey);
+                    })
+                    .collect(Collectors.toList());
+            checkMissingParentReferencesIsEmpty(missingParentReferences);
+            referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
+            return collect.stream();
         }
 
-        private static class WithoutRecursion extends RecursionStrategy {
+        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
+            List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
+                    .map(entry -> {
+                        Ltree missingParentReference = entry.getKey();
+                        Integer lineNumber = entry.getValue();
+                        ValidationCheckResult validationCheckResult =
+                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, afterPreloadReferenceUuids.keySet());
+                        return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
+                    })
+                    .collect(Collectors.toUnmodifiableList());
+            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
+        }
+    }
 
-            private WithoutRecursion(ReferenceImporterContext referenceImporterContext) {
-                super(referenceImporterContext);
-            }
+    private class WithoutRecursion implements RecursionStrategy {
 
-            @Override
-            public Optional<UUID> getKnownId(Ltree naturalKey) {
-                return Optional.empty();
-            }
+        @Override
+        public Optional<UUID> getKnownId(Ltree naturalKey) {
+            return Optional.empty();
+        }
 
-            @Override
-            public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
-                return getReferenceImporterContext().newHierarchicalKey(naturalKey, referenceDatum);
-            }
+        @Override
+        public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
+            return referenceImporterContext.newHierarchicalKey(naturalKey, referenceDatum);
+        }
 
-            @Override
-            public Ltree getHierarchicalReference(Ltree naturalKey) {
-                final Ltree refTypeAsLabel = getReferenceImporterContext().getRefTypeAsLabel();
-                return getReferenceImporterContext().newHierarchicalReference(refTypeAsLabel);
-            }
+        @Override
+        public Ltree getHierarchicalReference(Ltree naturalKey) {
+            final Ltree refTypeAsLabel = referenceImporterContext.getRefTypeAsLabel();
+            return referenceImporterContext.newHierarchicalReference(refTypeAsLabel);
+        }
 
-            @Override
-            public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
-                return streamBeforePreloading;
-            }
+        @Override
+        public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
+            return streamBeforePreloading;
         }
     }
 }
