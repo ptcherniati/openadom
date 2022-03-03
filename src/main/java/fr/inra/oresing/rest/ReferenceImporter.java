@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
@@ -194,8 +195,7 @@ abstract class ReferenceImporter {
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setHierarchicalReference(hierarchicalReference);
-        e.setRefsLinkedTo(referenceDatumAfterChecking.getRefsLinkedTo().asMap().entrySet().stream()
-                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Set.copyOf(entry.getValue()))));
+        e.setRefsLinkedTo(Maps.transformValues(referenceDatumAfterChecking.getRefsLinkedTo().asMap(), Set::copyOf));
         e.setNaturalKey(naturalKey);
         e.setApplication(referenceImporterContext.getApplicationId());
         e.setRefValues(referenceDatum);
