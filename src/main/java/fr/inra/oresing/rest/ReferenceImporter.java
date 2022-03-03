@@ -46,7 +46,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -177,18 +176,7 @@ abstract class ReferenceImporter {
     private ErrorsOrEntityToStore toErrorsOrEntityToStore(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final ReferenceValue e = new ReferenceValue();
-        String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
-                .map(referenceColumn -> {
-                    ReferenceColumnValue referenceColumnValue = Objects.requireNonNullElse(referenceDatum.get(referenceColumn), ReferenceColumnSingleValue.empty());
-                    Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + referenceImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut avoir une valeur multiple.");
-                    ReferenceColumnSingleValue referenceColumnSingleValue = ((ReferenceColumnSingleValue) referenceColumnValue);
-                    return referenceColumnSingleValue;
-                })
-                .map(ReferenceColumnSingleValue::getValue)
-                .filter(StringUtils::isNotEmpty)
-                .map(Ltree::escapeToLabel)
-                .collect(Collectors.joining(referenceImporterContext.getCompositeNaturalKeyComponentsSeparator()));
-        final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+        final Ltree naturalKey = computeNaturalKey(referenceDatum);
         recursionStrategy.getKnownId(naturalKey)
                 .ifPresent(e::setId);
         final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
@@ -226,6 +214,22 @@ abstract class ReferenceImporter {
             errorsOrEntityToStore = new ErrorsOrEntityToStore(Optional.of(e), referenceDatumAfterChecking.getErrors());
         }
         return errorsOrEntityToStore;
+    }
+
+    private Ltree computeNaturalKey(ReferenceDatum referenceDatum) {
+        String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
+                .map(referenceColumn -> {
+                    ReferenceColumnValue referenceColumnValue = referenceDatum.get(referenceColumn);
+                    Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + referenceImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut pas y avoir une valeur multiple.");
+                    return referenceColumnValue;
+                })
+                .map(ReferenceColumnSingleValue.class::cast)
+                .map(ReferenceColumnSingleValue::getValue)
+                .filter(StringUtils::isNotEmpty)
+                .map(Ltree::escapeToLabel)
+                .collect(Collectors.joining(referenceImporterContext.getCompositeNaturalKeyComponentsSeparator()));
+        final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+        return naturalKey;
     }
 
     private RowWithReferenceDatum csvRecordToLineAsMap(CSVRecord line) {
@@ -341,17 +345,7 @@ abstract class ReferenceImporter {
                     .peek(rowWithReferenceDatum -> {
                         ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
                         String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
-                        String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
-                                .map(referenceDatum::get)
-                                .map(columnDansLaquellle -> {
-                                    Preconditions.checkState(columnDansLaquellle instanceof ReferenceColumnSingleValue);
-                                    String keyColumnValue = ((ReferenceColumnSingleValue) columnDansLaquellle).getValue();
-                                    return keyColumnValue;
-                                })
-                                .filter(StringUtils::isNotEmpty)
-                                .map(Ltree::escapeToLabel)
-                                .collect(Collectors.joining(referenceImporterContext.getCompositeNaturalKeyComponentsSeparator()));
-                        Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
+                        Ltree naturalKey = computeNaturalKey(referenceDatum);
                         if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
                             afterPreloadReferenceUuids.put(naturalKey, UUID.randomUUID());
                         }
