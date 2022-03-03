@@ -178,7 +178,6 @@ abstract class ReferenceImporter {
         ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final ReferenceValue e = new ReferenceValue();
         String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
-                .map(ReferenceColumn::new)
                 .map(referenceColumn -> {
                     ReferenceColumnValue referenceColumnValue = Objects.requireNonNullElse(referenceDatum.get(referenceColumn), ReferenceColumnSingleValue.empty());
                     Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + referenceImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut avoir une valeur multiple.");
@@ -343,7 +342,6 @@ abstract class ReferenceImporter {
                         ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
                         String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
                         String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
-                                .map(ReferenceColumn::new)
                                 .map(referenceDatum::get)
                                 .map(columnDansLaquellle -> {
                                     Preconditions.checkState(columnDansLaquellle instanceof ReferenceColumnSingleValue);

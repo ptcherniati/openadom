@@ -94,9 +94,11 @@ public class ReferenceImporterContext {
         return getHierarchicalKeyFactory().newHierarchicalReference(selfHierarchicalReference);
     }
 
-    public ImmutableList<String> getKeyColumns() {
+    public ImmutableList<ReferenceColumn> getKeyColumns() {
         Preconditions.checkState(!getRef().getKeyColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + getRefType());
-        return ImmutableList.copyOf(getRef().getKeyColumns());
+        return getRef().getKeyColumns().stream()
+                .map(ReferenceColumn::new)
+                .collect(ImmutableList.toImmutableList());
     }
 
     private Configuration.ReferenceDescription getRef() {
