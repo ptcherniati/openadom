@@ -86,7 +86,7 @@ abstract class ReferenceImporter {
 
     private final ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns;
 
-    private RecursionStrategy recursionStrategy;
+    private final RecursionStrategy recursionStrategy;
 
     private final Configuration.ReferenceDescription ref;
 
@@ -123,6 +123,7 @@ abstract class ReferenceImporter {
                 .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
                 .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
         ref = conf.getReferences().get(refType);
+        recursionStrategy = getRecursionStrategy();
     }
 
     void doImport() throws IOException {
@@ -134,7 +135,6 @@ abstract class ReferenceImporter {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            recursionStrategy = getRecursionStrategy();
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = Streams.stream(csvParser).map(this::csvRecordToLineAsMap);
             final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
