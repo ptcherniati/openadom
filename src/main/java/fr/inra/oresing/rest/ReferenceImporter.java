@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -14,19 +13,15 @@ import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceColumnMultipleValue;
 import fr.inra.oresing.model.ReferenceColumnSingleValue;
 import fr.inra.oresing.model.ReferenceColumnValue;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
-import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DuplicationLineValidationCheckResult;
@@ -45,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -61,13 +55,7 @@ import java.util.stream.Stream;
 
 abstract class ReferenceImporter {
 
-    /**
-     * Séparateur pour les clés naturelles composites.
-     * <p>
-     * Lorsqu'une clé naturelle est composite, c'est à dire composée de plusieurs {@link Configuration.ReferenceDescription#getKeyColumns()},
-     * les valeurs qui composent la clé sont séparées avec ce séparateur.
-     */
-    private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
+    private final ReferenceImporterContext referenceImporterContext;
 
     private final ImmutableMap<Ltree, UUID> storedReferences;
 
@@ -75,59 +63,29 @@ abstract class ReferenceImporter {
 
     private final UUID fileId;
 
-    private final UUID applicationId;
-
-    private final Configuration conf;
-
-    private final ImmutableSet<LineChecker> lineCheckers;
-
-    private final ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns;
-
     private final RecursionStrategy recursionStrategy;
 
-    private final Configuration.ReferenceDescription ref;
-
     private final ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
-
-    private final Map<String, Internationalization> displayColumns;
-
-    private final Optional<Map<String, String>> displayPattern;
 
     private final List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
 
     private ImmutableList<String> columns;
 
-    private final ReferenceImporterContext referenceImporterContext;
-
-    public ReferenceImporter(String refType, ImmutableMap<Ltree, UUID> storedReferences, MultipartFile file, UUID fileId, UUID applicationId, Configuration conf, ImmutableSet<LineChecker> lineCheckers) {
+    public ReferenceImporter(ReferenceImporterContext referenceImporterContext, ImmutableMap<Ltree, UUID> storedReferences, MultipartFile file, UUID fileId) {
+        this.referenceImporterContext = referenceImporterContext;
         this.storedReferences = storedReferences;
         this.file = file;
         this.fileId = fileId;
-        this.applicationId = applicationId;
-        this.conf = conf;
-        this.lineCheckers = lineCheckers;
-        this.multiplicityPerColumns = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
-                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
-        Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
-                .map(configuration -> configuration.getInternationalization())
-                .map(inter -> inter.getReferences())
-                .map(references -> references.getOrDefault(refType, null));
-        displayColumns = internationalizationReferenceMap
-                .map(internationalisationSection -> internationalisationSection.getInternationalizedColumns())
-                .orElseGet(HashMap::new);
-        displayPattern = internationalizationReferenceMap
-                .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
-                .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
-        ref = conf.getReferences().get(refType);
-        recursionStrategy = getRecursionStrategy();
-        referenceImporterContext = new ReferenceImporterContext(conf, refType);
+        if (referenceImporterContext.isRecursive()) {
+            recursionStrategy = new RecursionStrategy.WithRecursion(referenceImporterContext);
+        } else {
+            recursionStrategy = new RecursionStrategy.WithoutRecursion(referenceImporterContext);
+        }
     }
 
     void doImport() throws IOException {
         CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(ref.getSeparator())
+                .withDelimiter(referenceImporterContext.getCsvSeparator())
                 .withSkipHeaderRecord();
         try (InputStream csv = file.getInputStream()) {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
@@ -149,7 +107,7 @@ abstract class ReferenceImporter {
         ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
         Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
         ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
-        lineCheckers.forEach(lineChecker -> {
+        referenceImporterContext.getLineCheckers().forEach(lineChecker -> {
             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
             if (lineChecker instanceof DateLineChecker) {
                 validationCheckResults.stream()
@@ -207,8 +165,7 @@ abstract class ReferenceImporter {
             allErrors.addAll(rowErrors);
         });
         final ReferenceValue e = new ReferenceValue();
-        Preconditions.checkState(!ref.getKeyColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + referenceImporterContext.getRefType());
-        String naturalKeyAsString = ref.getKeyColumns().stream()
+        String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
                 .map(ReferenceColumn::new)
                 .map(referenceColumn -> {
                     ReferenceColumnValue referenceColumnValue = Objects.requireNonNullElse(referenceDatum.get(referenceColumn), ReferenceColumnSingleValue.empty());
@@ -219,13 +176,13 @@ abstract class ReferenceImporter {
                 .map(ReferenceColumnSingleValue::getValue)
                 .filter(StringUtils::isNotEmpty)
                 .map(Ltree::escapeToLabel)
-                .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                .collect(Collectors.joining(referenceImporterContext.getCompositeNaturalKeyComponentsSeparator()));
         final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
         recursionStrategy.getKnownId(naturalKey)
                 .ifPresent(e::setId);
         final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
-        referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
+        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
 
         /**
          * on remplace l'id par celle en base si elle existe
@@ -241,7 +198,7 @@ abstract class ReferenceImporter {
         e.setHierarchicalReference(hierarchicalReference);
         e.setRefsLinkedTo(refsLinkedTo);
         e.setNaturalKey(naturalKey);
-        e.setApplication(applicationId);
+        e.setApplication(referenceImporterContext.getApplicationId());
         e.setRefValues(referenceDatum);
         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
             ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, referenceImporterContext.getRefType(), ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
@@ -260,7 +217,7 @@ abstract class ReferenceImporter {
         line.forEach(value -> {
             String header = currentHeader.next();
             ReferenceColumn referenceColumn = new ReferenceColumn(header);
-            Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+            Multiplicity multiplicity = referenceImporterContext.getMultiplicity(referenceColumn);
             ReferenceColumnValue referenceColumnValue;
             switch (multiplicity) {
                 case ONE:
@@ -276,32 +233,6 @@ abstract class ReferenceImporter {
         });
         int lineNumber = Ints.checkedCast(line.getRecordNumber());
         return new RowWithReferenceDatum(lineNumber, referenceDatum);
-    }
-
-    private RecursionStrategy getRecursionStrategy() {
-        Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = conf.getCompositeReferences().values().stream()
-                .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> referenceImporterContext.getRefType().equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
-                .filter(e -> e != null)
-                .findFirst();
-        boolean isRecursive = recursiveComponentDescription.isPresent();
-        final RecursionStrategy recursionStrategy;
-        if (isRecursive) {
-            Configuration.ReferenceDescription ref = conf.getReferences().get(referenceImporterContext.getRefType());
-            ImmutableList<String> keyColumns = ImmutableList.copyOf(ref.getKeyColumns());
-            final ReferenceColumn columnToLookForParentKey = recursiveComponentDescription
-                    .map(rcd -> rcd.getParentRecursiveKey())
-                    .map(ReferenceColumn::new)
-                    .orElseThrow(() -> new IllegalStateException("ne devrait jamais arriver (?)"));
-            final ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
-                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(referenceImporterContext.getRefType()))
-                    .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("pas de checker sur " + referenceImporterContext.getRefType() + " alors qu'on est sur un référentiel récursif"));
-            recursionStrategy = new RecursionStrategy.WithRecursion(referenceImporterContext, columnToLookForParentKey, keyColumns, referenceLineChecker);
-        } else {
-            recursionStrategy = new RecursionStrategy.WithoutRecursion(referenceImporterContext);
-        }
-        return recursionStrategy;
     }
 
     abstract void storeAll(Stream<ReferenceValue> stream);
@@ -334,21 +265,12 @@ abstract class ReferenceImporter {
 
         private static class WithRecursion extends RecursionStrategy {
 
-            private final ReferenceColumn columnToLookForParentKey;
-
-            private final ImmutableList<String> keyColumns;
-
             private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
 
             private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
 
-            private final ReferenceLineChecker referenceLineChecker;
-
-            private WithRecursion(ReferenceImporterContext referenceImporterContext, ReferenceColumn columnToLookForParentKey, ImmutableList<String> keyColumns, ReferenceLineChecker referenceLineChecker) {
+            private WithRecursion(ReferenceImporterContext referenceImporterContext) {
                 super(referenceImporterContext);
-                this.columnToLookForParentKey = columnToLookForParentKey;
-                this.keyColumns = keyColumns;
-                this.referenceLineChecker = referenceLineChecker;
             }
 
             @Override
@@ -390,6 +312,8 @@ abstract class ReferenceImporter {
 
             @Override
             public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
+                final ReferenceColumn columnToLookForParentKey = getReferenceImporterContext().getColumnToLookForParentKey();
+                ReferenceLineChecker referenceLineChecker = getReferenceImporterContext().getReferenceLineChecker();
                 final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
                 afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
                 ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
@@ -397,7 +321,7 @@ abstract class ReferenceImporter {
                         .peek(rowWithReferenceDatum -> {
                             ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
                             String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
-                            String naturalKeyAsString = keyColumns.stream()
+                            String naturalKeyAsString = getReferenceImporterContext().getKeyColumns().stream()
                                     .map(ReferenceColumn::new)
                                     .map(referenceDatum::get)
                                     .map(columnDansLaquellle -> {
@@ -407,7 +331,7 @@ abstract class ReferenceImporter {
                                     })
                                     .filter(StringUtils::isNotEmpty)
                                     .map(Ltree::escapeToLabel)
-                                    .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                                    .collect(Collectors.joining(getReferenceImporterContext().getCompositeNaturalKeyComponentsSeparator()));
                             Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                             if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
                                 afterPreloadReferenceUuids.put(naturalKey, UUID.randomUUID());

@@ -370,11 +370,11 @@ public class OreSiService {
         Map<ReferenceColumn, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file, "");
-
         Configuration conf = app.getConfiguration();
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
-        ReferenceImporter referenceImporter = new ReferenceImporter(refType, storedReferences, file, fileId, app.getId(), conf, lineCheckers) {
+        final ReferenceImporterContext referenceImporterContext = new ReferenceImporterContext(app.getId(), conf, refType, lineCheckers);
+        ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext, storedReferences, file, fileId) {
             @Override
             void storeAll(Stream<ReferenceValue> stream) {
                 referenceValueRepository.storeAll(stream);
