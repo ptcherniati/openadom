@@ -353,6 +353,12 @@ abstract class ReferenceImporter {
                             missingParentReferences.removeAll(naturalKey);
                         })
                         .collect(Collectors.toList());
+                checkMissingParentReferencesIsEmpty(missingParentReferences);
+                referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
+                return collect.stream();
+            }
+
+            private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
                 List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
                         .map(entry -> {
                             Ltree missingParentReference = entry.getKey();
@@ -363,8 +369,6 @@ abstract class ReferenceImporter {
                         })
                         .collect(Collectors.toUnmodifiableList());
                 InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-                referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
-                return collect.stream();
             }
         }
 
