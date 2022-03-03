@@ -45,6 +45,8 @@ public class ReferenceImporterContext {
 
     private final ImmutableSet<LineChecker> lineCheckers;
 
+    private final ImmutableMap<Ltree, UUID> storedReferences;
+
     private Optional<InternationalizationReferenceMap> getInternationalizationReferenceMap() {
         Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
                 .map(Configuration::getInternationalization)
@@ -151,6 +153,10 @@ public class ReferenceImporterContext {
 
     public UUID getApplicationId() {
         return applicationId;
+    }
+
+    public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(Ltree hierarchicalKey) {
+        return Optional.ofNullable(storedReferences.get(hierarchicalKey));
     }
 
     /**

@@ -57,8 +57,6 @@ abstract class ReferenceImporter {
 
     private final ReferenceImporterContext referenceImporterContext;
 
-    private final ImmutableMap<Ltree, UUID> storedReferences;
-
     private final MultipartFile file;
 
     private final UUID fileId;
@@ -71,9 +69,8 @@ abstract class ReferenceImporter {
 
     private ImmutableList<String> columns;
 
-    public ReferenceImporter(ReferenceImporterContext referenceImporterContext, ImmutableMap<Ltree, UUID> storedReferences, MultipartFile file, UUID fileId) {
+    public ReferenceImporter(ReferenceImporterContext referenceImporterContext, MultipartFile file, UUID fileId) {
         this.referenceImporterContext = referenceImporterContext;
-        this.storedReferences = storedReferences;
         this.file = file;
         this.fileId = fileId;
         if (referenceImporterContext.isRecursive()) {
@@ -189,9 +186,8 @@ abstract class ReferenceImporter {
          * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
          */
 
-        if (storedReferences.containsKey(hierarchicalKey)) {
-            e.setId(storedReferences.get(hierarchicalKey));
-        }
+        referenceImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
+                .ifPresent(e::setId);
         e.setBinaryFile(fileId);
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
