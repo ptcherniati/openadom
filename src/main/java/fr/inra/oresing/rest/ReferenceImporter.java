@@ -135,10 +135,9 @@ abstract class ReferenceImporter {
             CSVRecord headerRow = linesIterator.next();
             columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
             recursionStrategy = getRecursionStrategy();
-            final Stream<CSVRecord> recordStreamBeforePreloading = Streams.stream(csvParser);
-            final Stream<CSVRecord> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
+            final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = Streams.stream(csvParser).map(this::csvRecordToLineAsMap);
+            final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
-                    .map(this::csvRecordToLineAsMap)
                     .map(this::toEntity)
                     .filter(e -> e != null)
                     .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
@@ -292,21 +291,16 @@ abstract class ReferenceImporter {
         if (isRecursive) {
             Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
             ImmutableList<String> keyColumns = ImmutableList.copyOf(ref.getKeyColumns());
-            final Integer parentRecursiveIndex = recursiveComponentDescription
+            final ReferenceColumn columnToLookForParentKey = recursiveComponentDescription
                     .map(rcd -> rcd.getParentRecursiveKey())
-                    .map(rck -> columns.indexOf(rck))
-                    .orElse(null);
-            if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
-//                    recordStream = recordStreamBeforePreloading;
-//                    parentReferenceMap = ImmutableMap.of();
-                throw new IllegalStateException("n'arrive jamais");
-            }
+                    .map(ReferenceColumn::new)
+                    .orElseThrow(() -> new IllegalStateException("ne devrait jamais arriver (?)"));
             final ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
                     .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
                     .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("pas de checker sur " + refType + " alors qu'on est sur un référentiel récursif"));
-            recursionStrategy = new RecursionStrategy.WithRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory, parentRecursiveIndex, columns, keyColumns, referenceLineChecker);
+            recursionStrategy = new RecursionStrategy.WithRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory, columnToLookForParentKey, keyColumns, referenceLineChecker);
         } else {
             recursionStrategy = new RecursionStrategy.WithoutRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory);
         }
@@ -449,13 +443,11 @@ abstract class ReferenceImporter {
 
         public abstract Optional<UUID> getKnownId(Ltree naturalKey);
 
-        public abstract Stream<CSVRecord> firstPass(Stream<CSVRecord> recordStreamBeforePreloading);
+        public abstract Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
 
         private static class WithRecursion extends RecursionStrategy {
 
-            private final int parentRecursiveIndex;
-
-            private final ImmutableList<String> columns;
+            private final ReferenceColumn columnToLookForParentKey;
 
             private final ImmutableList<String> keyColumns;
 
@@ -465,10 +457,9 @@ abstract class ReferenceImporter {
 
             private final ReferenceLineChecker referenceLineChecker;
 
-            private WithRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, int parentRecursiveIndex, ImmutableList<String> columns, ImmutableList<String> keyColumns, ReferenceLineChecker referenceLineChecker) {
+            private WithRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, ReferenceColumn columnToLookForParentKey, ImmutableList<String> keyColumns, ReferenceLineChecker referenceLineChecker) {
                 super(refType, refTypeAsLabel, hierarchicalKeyFactory);
-                this.parentRecursiveIndex = parentRecursiveIndex;
-                this.columns = columns;
+                this.columnToLookForParentKey = columnToLookForParentKey;
                 this.keyColumns = keyColumns;
                 this.referenceLineChecker = referenceLineChecker;
             }
@@ -511,18 +502,24 @@ abstract class ReferenceImporter {
             }
 
             @Override
-            public Stream<CSVRecord> firstPass(Stream<CSVRecord> recordStreamBeforePreloading) {
+            public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
                 final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
                 afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
-                ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
-                List<CSVRecord> collect = recordStreamBeforePreloading
-                        .peek(csvrecord -> {
-                            String sAsString = csvrecord.get(parentRecursiveIndex);
-                            String naturalKeyAsString = keyColumns
-                                    .stream()
-                                    .map(kc -> columns.indexOf(kc))
-                                    .map(k -> Strings.isNullOrEmpty(csvrecord.get(k)) ? null : Ltree.escapeToLabel(csvrecord.get(k)))
-                                    .filter(k -> k != null)
+                ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
+                List<RowWithReferenceDatum> collect = streamBeforePreloading
+                        .peek(rowWithReferenceDatum -> {
+                            ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
+                            String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
+                            String naturalKeyAsString = keyColumns.stream()
+                                    .map(ReferenceColumn::new)
+                                    .map(referenceDatum::get)
+                                    .map(columnDansLaquellle -> {
+                                        Preconditions.checkState(columnDansLaquellle instanceof ReferenceColumnSingleValue);
+                                        String keyColumnValue = ((ReferenceColumnSingleValue) columnDansLaquellle).getValue();
+                                        return keyColumnValue;
+                                    })
+                                    .filter(StringUtils::isNotEmpty)
+                                    .map(Ltree::escapeToLabel)
                                     .collect(Collectors.joining(COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
                             Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
                             if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
@@ -539,7 +536,7 @@ abstract class ReferenceImporter {
                                 if (!afterPreloadReferenceUuids.containsKey(s)) {
                                     final UUID uuid = UUID.randomUUID();
                                     afterPreloadReferenceUuids.put(s, uuid);
-                                    missingParentReferences.put(s, csvrecord.getRecordNumber());
+                                    missingParentReferences.put(s, rowWithReferenceDatum.getLineNumber());
                                 }
                             }
                             missingParentReferences.removeAll(naturalKey);
@@ -548,7 +545,7 @@ abstract class ReferenceImporter {
                 List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
                         .map(entry -> {
                             Ltree missingParentReference = entry.getKey();
-                            Long lineNumber = entry.getValue();
+                            Integer lineNumber = entry.getValue();
                             ValidationCheckResult validationCheckResult =
                                     new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, afterPreloadReferenceUuids.keySet());
                             return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
@@ -582,8 +579,8 @@ abstract class ReferenceImporter {
             }
 
             @Override
-            public Stream<CSVRecord> firstPass(Stream<CSVRecord> recordStreamBeforePreloading) {
-                return recordStreamBeforePreloading;
+            public Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading) {
+                return streamBeforePreloading;
             }
         }
     }
