@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -42,7 +43,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -65,8 +65,6 @@ abstract class ReferenceImporter {
 
     private final ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
 
-    private final List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
-
     private ImmutableList<String> columns;
 
     public ReferenceImporter(ReferenceImporterContext referenceImporterContext, MultipartFile file, UUID fileId) {
@@ -84,6 +82,7 @@ abstract class ReferenceImporter {
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(referenceImporterContext.getCsvSeparator())
                 .withSkipHeaderRecord();
+        final List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
         try (InputStream csv = file.getInputStream()) {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
@@ -92,17 +91,22 @@ abstract class ReferenceImporter {
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = Streams.stream(csvParser).map(this::csvRecordToLineAsMap);
             final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
-                    .map(this::toEntity)
-                    .filter(e -> e != null)
+                    .map(this::check)
+                    .map(this::toErrorsOrEntityToStore)
+                    .peek(errorsOrEntityToStore -> allErrors.addAll(errorsOrEntityToStore.getErrors()))
+                    .map(ErrorsOrEntityToStore::getReferenceValueToStore)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
         }
     }
 
-    private ReferenceValue toEntity(RowWithReferenceDatum rowWithReferenceDatum) {
+    private ReferenceDatumAfterChecking check(RowWithReferenceDatum rowWithReferenceDatum) {
         ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
-        Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
+        ImmutableSetMultimap.Builder<String, UUID> refsLinkedToBuilder = ImmutableSetMultimap.builder();
+        ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
         ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
         referenceImporterContext.getLineCheckers().forEach(lineChecker -> {
             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
@@ -132,9 +136,7 @@ abstract class ReferenceImporter {
                         .forEach(referenceValidationCheckResult -> {
                             UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                             rawValueReplacedByKeys.put(referenceColumn, referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().getSql());
-                            refsLinkedTo
-                                    .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
-                                    .add(referenceId);
+                            refsLinkedToBuilder.put(Ltree.escapeToLabel(reference), referenceId);
                         });
                 Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();
                 Set<String> values = rawValueReplacedByKeys.get(referenceColumn);
@@ -155,12 +157,25 @@ abstract class ReferenceImporter {
                 }
                 referenceDatum.put(referenceColumn, referenceColumnNewValue);
             }
-            List<CsvRowValidationCheckResult> rowErrors = validationCheckResults.stream()
+            List<CsvRowValidationCheckResult> checkerErrors = validationCheckResults.stream()
                     .filter(validationCheckResult -> !validationCheckResult.isSuccess())
                     .map(validationCheckResult -> new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()))
                     .collect(Collectors.toUnmodifiableList());
-            allErrors.addAll(rowErrors);
+            allCheckerErrorsBuilder.addAll(checkerErrors);
         });
+        ReferenceDatumAfterChecking referenceDatumAfterChecking =
+                new ReferenceDatumAfterChecking(
+                        rowWithReferenceDatum.getLineNumber(),
+                        rowWithReferenceDatum.getReferenceDatum(),
+                        referenceDatum,
+                        refsLinkedToBuilder.build(),
+                        allCheckerErrorsBuilder.build()
+                );
+        return referenceDatumAfterChecking;
+    }
+
+    private ErrorsOrEntityToStore toErrorsOrEntityToStore(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+        ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final ReferenceValue e = new ReferenceValue();
         String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
                 .map(ReferenceColumn::new)
@@ -192,19 +207,26 @@ abstract class ReferenceImporter {
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setHierarchicalReference(hierarchicalReference);
-        e.setRefsLinkedTo(refsLinkedTo);
+        e.setRefsLinkedTo(referenceDatumAfterChecking.getRefsLinkedTo().asMap().entrySet().stream()
+                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Set.copyOf(entry.getValue()))));
         e.setNaturalKey(naturalKey);
         e.setApplication(referenceImporterContext.getApplicationId());
         e.setRefValues(referenceDatum);
+        ErrorsOrEntityToStore errorsOrEntityToStore;
         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
-            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, referenceImporterContext.getRefType(), ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
-            allErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
-            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
-            return null;
+            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, referenceImporterContext.getRefType(), ValidationLevel.ERROR, e.getHierarchicalKey(), referenceDatumAfterChecking.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
+            CsvRowValidationCheckResult error = new CsvRowValidationCheckResult(validationCheckResult, referenceDatumAfterChecking.getLineNumber());
+            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatumAfterChecking.getLineNumber());
+            ImmutableList<CsvRowValidationCheckResult> build = ImmutableList.<CsvRowValidationCheckResult>builder()
+                    .addAll(referenceDatumAfterChecking.getErrors())
+                    .add(error)
+                    .build();
+            errorsOrEntityToStore = new ErrorsOrEntityToStore(Optional.empty(), build);
         } else {
-            hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
-            return e;
+            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatumAfterChecking.getLineNumber());
+            errorsOrEntityToStore = new ErrorsOrEntityToStore(Optional.of(e), referenceDatumAfterChecking.getErrors());
         }
+        return errorsOrEntityToStore;
     }
 
     private RowWithReferenceDatum csvRecordToLineAsMap(CSVRecord line) {
@@ -237,6 +259,21 @@ abstract class ReferenceImporter {
     private static class RowWithReferenceDatum {
         int lineNumber;
         ReferenceDatum referenceDatum;
+    }
+
+    @Value
+    private static class ReferenceDatumAfterChecking {
+        int lineNumber;
+        ReferenceDatum referenceDatumBeforeChecking;
+        ReferenceDatum referenceDatumAfterChecking;
+        ImmutableSetMultimap<String, UUID> refsLinkedTo;
+        ImmutableList<CsvRowValidationCheckResult> errors;
+    }
+
+    @Value
+    private static class ErrorsOrEntityToStore {
+        Optional<ReferenceValue> referenceValueToStore;
+        ImmutableList<CsvRowValidationCheckResult> errors;
     }
 
     private interface RecursionStrategy {
