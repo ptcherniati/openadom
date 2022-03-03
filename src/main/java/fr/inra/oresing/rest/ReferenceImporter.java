@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,8 +65,6 @@ abstract class ReferenceImporter {
     private final RecursionStrategy recursionStrategy;
 
     private final ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
-
-    private ImmutableList<String> columns;
 
     public ReferenceImporter(ReferenceImporterContext referenceImporterContext, MultipartFile file, UUID fileId) {
         this.referenceImporterContext = referenceImporterContext;
@@ -87,8 +86,10 @@ abstract class ReferenceImporter {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
-            columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = Streams.stream(csvParser).map(this::csvRecordToLineAsMap);
+            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
+            Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
+            final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = csvRecordsStream.map(csvRecordToReferenceDatumFn);
             final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(this::check)
@@ -101,6 +102,30 @@ abstract class ReferenceImporter {
             storeAll(referenceValuesStream);
             InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
         }
+    }
+
+    private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
+        Iterator<String> currentHeader = columns.iterator();
+        ReferenceDatum referenceDatum = new ReferenceDatum();
+        csvRecord.forEach(cellContent -> {
+            String header = currentHeader.next();
+            ReferenceColumn referenceColumn = new ReferenceColumn(header);
+            Multiplicity multiplicity = referenceImporterContext.getMultiplicity(referenceColumn);
+            ReferenceColumnValue referenceColumnValue;
+            switch (multiplicity) {
+                case ONE:
+                    referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
+                    break;
+                case MANY:
+                    referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(cellContent);
+                    break;
+                default:
+                    throw new IllegalStateException("non géré " + multiplicity);
+            }
+            referenceDatum.put(referenceColumn, referenceColumnValue);
+        });
+        int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
+        return new RowWithReferenceDatum(lineNumber, referenceDatum);
     }
 
     private ReferenceDatumAfterChecking check(RowWithReferenceDatum rowWithReferenceDatum) {
@@ -230,30 +255,6 @@ abstract class ReferenceImporter {
                 .collect(Collectors.joining(referenceImporterContext.getCompositeNaturalKeyComponentsSeparator()));
         final Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
         return naturalKey;
-    }
-
-    private RowWithReferenceDatum csvRecordToLineAsMap(CSVRecord line) {
-        Iterator<String> currentHeader = columns.iterator();
-        ReferenceDatum referenceDatum = new ReferenceDatum();
-        line.forEach(value -> {
-            String header = currentHeader.next();
-            ReferenceColumn referenceColumn = new ReferenceColumn(header);
-            Multiplicity multiplicity = referenceImporterContext.getMultiplicity(referenceColumn);
-            ReferenceColumnValue referenceColumnValue;
-            switch (multiplicity) {
-                case ONE:
-                    referenceColumnValue = new ReferenceColumnSingleValue(value);
-                    break;
-                case MANY:
-                    referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(value);
-                    break;
-                default:
-                    throw new IllegalStateException("non géré " + multiplicity);
-            }
-            referenceDatum.put(referenceColumn, referenceColumnValue);
-        });
-        int lineNumber = Ints.checkedCast(line.getRecordNumber());
-        return new RowWithReferenceDatum(lineNumber, referenceDatum);
     }
 
     abstract void storeAll(Stream<ReferenceValue> stream);
