@@ -2,6 +2,7 @@ package fr.inra.oresing.checker;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;

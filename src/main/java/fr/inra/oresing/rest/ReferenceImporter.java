@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.SetMultimap;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
@@ -70,8 +69,6 @@ abstract class ReferenceImporter {
      */
     private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
 
-    private final String refType;
-
     private final ImmutableMap<Ltree, UUID> storedReferences;
 
     private final MultipartFile file;
@@ -100,8 +97,9 @@ abstract class ReferenceImporter {
 
     private ImmutableList<String> columns;
 
+    private final ReferenceImporterContext referenceImporterContext;
+
     public ReferenceImporter(String refType, ImmutableMap<Ltree, UUID> storedReferences, MultipartFile file, UUID fileId, UUID applicationId, Configuration conf, ImmutableSet<LineChecker> lineCheckers) {
-        this.refType = refType;
         this.storedReferences = storedReferences;
         this.file = file;
         this.fileId = fileId;
@@ -124,6 +122,7 @@ abstract class ReferenceImporter {
                 .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
         ref = conf.getReferences().get(refType);
         recursionStrategy = getRecursionStrategy();
+        referenceImporterContext = new ReferenceImporterContext(conf, refType);
     }
 
     void doImport() throws IOException {
@@ -208,12 +207,12 @@ abstract class ReferenceImporter {
             allErrors.addAll(rowErrors);
         });
         final ReferenceValue e = new ReferenceValue();
-        Preconditions.checkState(!ref.getKeyColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + refType);
+        Preconditions.checkState(!ref.getKeyColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + referenceImporterContext.getRefType());
         String naturalKeyAsString = ref.getKeyColumns().stream()
                 .map(ReferenceColumn::new)
                 .map(referenceColumn -> {
                     ReferenceColumnValue referenceColumnValue = Objects.requireNonNullElse(referenceDatum.get(referenceColumn), ReferenceColumnSingleValue.empty());
-                    Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + refType + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut avoir une valeur multiple.");
+                    Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue, "dans le référentiel " + referenceImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut avoir une valeur multiple.");
                     ReferenceColumnSingleValue referenceColumnSingleValue = ((ReferenceColumnSingleValue) referenceColumnValue);
                     return referenceColumnSingleValue;
                 })
@@ -237,7 +236,7 @@ abstract class ReferenceImporter {
             e.setId(storedReferences.get(hierarchicalKey));
         }
         e.setBinaryFile(fileId);
-        e.setReferenceType(refType);
+        e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setHierarchicalReference(hierarchicalReference);
         e.setRefsLinkedTo(refsLinkedTo);
@@ -245,7 +244,7 @@ abstract class ReferenceImporter {
         e.setApplication(applicationId);
         e.setRefValues(referenceDatum);
         if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
-            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, refType, ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
+            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, referenceImporterContext.getRefType(), ValidationLevel.ERROR, e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
             allErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithReferenceDatum.getLineNumber()));
             hierarchicalKeys.put(e.getHierarchicalKey(), rowWithReferenceDatum.getLineNumber());
             return null;
@@ -280,29 +279,27 @@ abstract class ReferenceImporter {
     }
 
     private RecursionStrategy getRecursionStrategy() {
-        final HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
         Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = conf.getCompositeReferences().values().stream()
-                .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> refType.equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
+                .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> referenceImporterContext.getRefType().equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
                 .filter(e -> e != null)
                 .findFirst();
-        final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
         boolean isRecursive = recursiveComponentDescription.isPresent();
         final RecursionStrategy recursionStrategy;
         if (isRecursive) {
-            Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
+            Configuration.ReferenceDescription ref = conf.getReferences().get(referenceImporterContext.getRefType());
             ImmutableList<String> keyColumns = ImmutableList.copyOf(ref.getKeyColumns());
             final ReferenceColumn columnToLookForParentKey = recursiveComponentDescription
                     .map(rcd -> rcd.getParentRecursiveKey())
                     .map(ReferenceColumn::new)
                     .orElseThrow(() -> new IllegalStateException("ne devrait jamais arriver (?)"));
             final ReferenceLineChecker referenceLineChecker = lineCheckers.stream()
-                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
+                    .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(referenceImporterContext.getRefType()))
                     .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("pas de checker sur " + refType + " alors qu'on est sur un référentiel récursif"));
-            recursionStrategy = new RecursionStrategy.WithRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory, columnToLookForParentKey, keyColumns, referenceLineChecker);
+                    .orElseThrow(() -> new IllegalStateException("pas de checker sur " + referenceImporterContext.getRefType() + " alors qu'on est sur un référentiel récursif"));
+            recursionStrategy = new RecursionStrategy.WithRecursion(referenceImporterContext, columnToLookForParentKey, keyColumns, referenceLineChecker);
         } else {
-            recursionStrategy = new RecursionStrategy.WithoutRecursion(refType, refTypeAsLabel, hierarchicalKeyFactory);
+            recursionStrategy = new RecursionStrategy.WithoutRecursion(referenceImporterContext);
         }
         return recursionStrategy;
     }
@@ -315,126 +312,12 @@ abstract class ReferenceImporter {
         ReferenceDatum referenceDatum;
     }
 
-    /**
-     * Contrat permettant de créer pour chaque ligne de référentiel sa clé hiérarchique.
-     * <p>
-     * Comme la création de cette clé dépend de l'appartenance ou non à un référentiel hiérarchique, on gère
-     * ça par héritage.
-     */
-    private static abstract class HierarchicalKeyFactory {
-
-        static HierarchicalKeyFactory build(Configuration conf, String refType) {
-            HierarchicalKeyFactory hierarchicalKeyFactory;
-            Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
-            if (toUpdateCompositeReference.isPresent()) {
-                Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
-                boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
-                if (root) {
-                    hierarchicalKeyFactory = new HierarchicalKeyFactory.ForCompositeReferenceRoot();
-                } else {
-                    Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
-                            .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
-                            .collect(MoreCollectors.onlyElement());
-                    ReferenceColumn parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
-                    String parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
-                    hierarchicalKeyFactory = new HierarchicalKeyFactory.ForCompositeReferenceChild(parentHierarchicalKeyColumn, parentHierarchicalParentReference);
-                }
-            } else {
-                hierarchicalKeyFactory = new HierarchicalKeyFactory.ForNotCompositeReference();
-            }
-            return hierarchicalKeyFactory;
-        }
-
-        public abstract Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceValues);
-
-        public abstract Ltree newHierarchicalReference(Ltree reference);
-
-        /**
-         * Pour un référentiel qui est la racine d'un référentiel hiérarchique
-         */
-        private static class ForCompositeReferenceRoot extends HierarchicalKeyFactory {
-
-            /**
-             * On est sur un référentiel qui est à la racine de la hiérarchie donc sa clé hiérarchique est simplement sa clé naturelle (pas de parent)
-             */
-            @Override
-            public Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceValues) {
-                return naturalKey;
-            }
-
-            @Override
-            public Ltree newHierarchicalReference(Ltree reference) {
-                return reference;
-            }
-        }
-
-        /**
-         * Pour un référentiel qui n'appartient pas à un référentiel hiérarchique
-         */
-        private static class ForNotCompositeReference extends HierarchicalKeyFactory {
-
-            /**
-             * On est sur un référentiel qui n'appartient pas à une hiérarchie donc la clé naturelle se suffit à elle-même
-             */
-            @Override
-            public Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceValues) {
-                return naturalKey;
-            }
-
-            @Override
-            public Ltree newHierarchicalReference(Ltree reference) {
-                return reference;
-            }
-        }
-
-        /**
-         * Pour un référentiel qui appartient à un référentiel hiérarchique mais qui est un enfant (= pas la racine).
-         */
-        private static class ForCompositeReferenceChild extends HierarchicalKeyFactory {
-
-            /**
-             * La colonne dans laquelle on va chercher la clé hiérachique du parent.
-             */
-            private final ReferenceColumn parentHierarchicalKeyColumn;
-
-            private final String parentHierarchicalParentReference;
-
-            public ForCompositeReferenceChild(ReferenceColumn parentHierarchicalKeyColumn, String parentHierarchicalParentReference) {
-                this.parentHierarchicalKeyColumn = parentHierarchicalKeyColumn;
-                this.parentHierarchicalParentReference = parentHierarchicalParentReference;
-            }
-
-            /**
-             * On calcule la clé hiérachique en préfixant la clé naturelle avec la clé hiérarchique du parent.
-             */
-            @Override
-            public Ltree newHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
-                ReferenceColumnValue parentHierarchicalKeyColumnValue = referenceDatum.get(parentHierarchicalKeyColumn);
-                Preconditions.checkState(parentHierarchicalKeyColumnValue instanceof ReferenceColumnSingleValue);
-                String parentHierarchicalKeyAsString = ((ReferenceColumnSingleValue) parentHierarchicalKeyColumnValue).getValue();
-                Ltree parentHierarchicalKey = Ltree.fromUnescapedString(parentHierarchicalKeyAsString);
-                return Ltree.join(parentHierarchicalKey, naturalKey);
-            }
-
-            @Override
-            public Ltree newHierarchicalReference(Ltree reference) {
-                return Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
-            }
-        }
-    }
-
     private static abstract class RecursionStrategy {
 
-        final String refType;
+        private final ReferenceImporterContext referenceImporterContext;
 
-        final Ltree refTypeAsLabel;
-
-        final HierarchicalKeyFactory hierarchicalKeyFactory;
-
-        private RecursionStrategy(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory) {
-            this.refType = refType;
-            this.refTypeAsLabel = refTypeAsLabel;
-            this.hierarchicalKeyFactory = hierarchicalKeyFactory;
+        protected RecursionStrategy(ReferenceImporterContext referenceImporterContext) {
+            this.referenceImporterContext = referenceImporterContext;
         }
 
         public abstract Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum);
@@ -444,6 +327,10 @@ abstract class ReferenceImporter {
         public abstract Optional<UUID> getKnownId(Ltree naturalKey);
 
         public abstract Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
+
+        ReferenceImporterContext getReferenceImporterContext() {
+            return referenceImporterContext;
+        }
 
         private static class WithRecursion extends RecursionStrategy {
 
@@ -457,8 +344,8 @@ abstract class ReferenceImporter {
 
             private final ReferenceLineChecker referenceLineChecker;
 
-            private WithRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory, ReferenceColumn columnToLookForParentKey, ImmutableList<String> keyColumns, ReferenceLineChecker referenceLineChecker) {
-                super(refType, refTypeAsLabel, hierarchicalKeyFactory);
+            private WithRecursion(ReferenceImporterContext referenceImporterContext, ReferenceColumn columnToLookForParentKey, ImmutableList<String> keyColumns, ReferenceLineChecker referenceLineChecker) {
+                super(referenceImporterContext);
                 this.columnToLookForParentKey = columnToLookForParentKey;
                 this.keyColumns = keyColumns;
                 this.referenceLineChecker = referenceLineChecker;
@@ -475,7 +362,7 @@ abstract class ReferenceImporter {
             @Override
             public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
                 Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
-                final Ltree hierarchicalKey = hierarchicalKeyFactory.newHierarchicalKey(recursiveNaturalKey, referenceDatum);
+                final Ltree hierarchicalKey = getReferenceImporterContext().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
                 return hierarchicalKey;
             }
 
@@ -492,12 +379,12 @@ abstract class ReferenceImporter {
             @Override
             public Ltree getHierarchicalReference(Ltree naturalKey) {
                 Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
-                Ltree partialSelfHierarchicalReference = refTypeAsLabel;
+                Ltree partialSelfHierarchicalReference = getReferenceImporterContext().getRefTypeAsLabel();
                 for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
-                    partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(refType));
+                    partialSelfHierarchicalReference = Ltree.fromSql(partialSelfHierarchicalReference.getSql() + ".".concat(getReferenceImporterContext().getRefType()));
                 }
                 final Ltree selfHierarchicalReference = partialSelfHierarchicalReference;
-                final Ltree hierarchicalReference = hierarchicalKeyFactory.newHierarchicalReference(selfHierarchicalReference);
+                final Ltree hierarchicalReference = getReferenceImporterContext().newHierarchicalReference(selfHierarchicalReference);
                 return hierarchicalReference;
             }
 
@@ -547,7 +434,7 @@ abstract class ReferenceImporter {
                             Ltree missingParentReference = entry.getKey();
                             Integer lineNumber = entry.getValue();
                             ValidationCheckResult validationCheckResult =
-                                    new MissingParentLineValidationCheckResult(lineNumber, refType, missingParentReference, afterPreloadReferenceUuids.keySet());
+                                    new MissingParentLineValidationCheckResult(lineNumber, getReferenceImporterContext().getRefType(), missingParentReference, afterPreloadReferenceUuids.keySet());
                             return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
                         })
                         .collect(Collectors.toUnmodifiableList());
@@ -559,8 +446,8 @@ abstract class ReferenceImporter {
 
         private static class WithoutRecursion extends RecursionStrategy {
 
-            private WithoutRecursion(String refType, Ltree refTypeAsLabel, HierarchicalKeyFactory hierarchicalKeyFactory) {
-                super(refType, refTypeAsLabel, hierarchicalKeyFactory);
+            private WithoutRecursion(ReferenceImporterContext referenceImporterContext) {
+                super(referenceImporterContext);
             }
 
             @Override
@@ -570,12 +457,13 @@ abstract class ReferenceImporter {
 
             @Override
             public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
-                return hierarchicalKeyFactory.newHierarchicalKey(naturalKey, referenceDatum);
+                return getReferenceImporterContext().newHierarchicalKey(naturalKey, referenceDatum);
             }
 
             @Override
             public Ltree getHierarchicalReference(Ltree naturalKey) {
-                return hierarchicalKeyFactory.newHierarchicalReference(refTypeAsLabel);
+                final Ltree refTypeAsLabel = getReferenceImporterContext().getRefTypeAsLabel();
+                return getReferenceImporterContext().newHierarchicalReference(refTypeAsLabel);
             }
 
             @Override
