@@ -15,4 +15,8 @@ public interface ValidationCheckResult {
     default boolean isSuccess() {
         return getLevel().isSuccess();
     }
+
+    default boolean isError() {
+        return getLevel().isError();
+    }
 }

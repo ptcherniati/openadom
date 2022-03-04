@@ -6,4 +6,8 @@ public enum ValidationLevel {
     public boolean isSuccess() {
         return this == SUCCESS;
     }
+
+    public boolean isError() {
+        return this == ERROR;
+    }
 }

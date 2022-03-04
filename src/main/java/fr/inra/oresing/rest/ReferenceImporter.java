@@ -6,6 +6,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -41,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -49,7 +51,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,8 +68,6 @@ abstract class ReferenceImporter {
     private final UUID fileId;
 
     private final RecursionStrategy recursionStrategy;
-
-    private final ListMultimap<Ltree, Integer> hierarchicalKeys = LinkedListMultimap.create();
 
     public ReferenceImporter(ReferenceImporterContext referenceImporterContext, MultipartFile file, UUID fileId) {
         this.referenceImporterContext = referenceImporterContext;
@@ -81,7 +84,15 @@ abstract class ReferenceImporter {
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(referenceImporterContext.getCsvSeparator())
                 .withSkipHeaderRecord();
+
+        final SetMultimap<Ltree, Integer> encounteredHierarchicalKeysForConflictDetection = HashMultimap.create();
+        final Consumer<KeysAndReferenceDatumAfterChecking> storeHierarchicalKeyForConflictDetection = keysAndReferenceDatumAfterChecking -> {
+            int lineNumber = keysAndReferenceDatumAfterChecking.getLineNumber();
+            Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.getHierarchicalKey();
+            encounteredHierarchicalKeysForConflictDetection.put(hierarchicalKey, lineNumber);
+        };
         final List<CsvRowValidationCheckResult> allErrors = new LinkedList<>();
+
         try (InputStream csv = file.getInputStream()) {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
@@ -93,15 +104,56 @@ abstract class ReferenceImporter {
             final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(this::check)
-                    .map(this::toErrorsOrEntityToStore)
-                    .peek(errorsOrEntityToStore -> allErrors.addAll(errorsOrEntityToStore.getErrors()))
-                    .map(ErrorsOrEntityToStore::getReferenceValueToStore)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
+                    .peek(referenceDatumAfterChecking -> allErrors.addAll(referenceDatumAfterChecking.getErrors()))
+                    .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.getErrors().isEmpty())
+                    .map(this::computeKeys)
+                    .peek(storeHierarchicalKeyForConflictDetection)
+                    .filter(keysAndReferenceDatumAfterChecking -> {
+                        Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.getHierarchicalKey();
+                        boolean canSave = encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
+                        return canSave;
+                    })
+                    .map(this::toEntity)
                     .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             storeAll(referenceValuesStream);
-            InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
         }
+
+        Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
+        allErrors.addAll(hierarchicalKeysConflictErrors);
+        InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+    }
+
+    private Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(SetMultimap<Ltree, Integer> hierarchicalKeys) {
+        Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = hierarchicalKeys.asMap().entrySet().stream()
+                .filter(entry -> {
+                    Collection<Integer> lineNumbers = entry.getValue();
+                    boolean hierarchicalKeyConflictDetected = lineNumbers.size() > 1;
+                    return hierarchicalKeyConflictDetected;
+                })
+                .flatMap(entry -> {
+                    Ltree conflictingHierarchicalKey = entry.getKey();
+                    ImmutableSortedSet<Integer> lineNumbers = ImmutableSortedSet.copyOf(entry.getValue());
+                    SortedSet<Integer> conflictingLineNumbers = new TreeSet<>(lineNumbers);
+                    Integer firstLineNumberToIgnore = conflictingLineNumbers.first();
+                    conflictingLineNumbers.remove(firstLineNumberToIgnore);
+                    return conflictingLineNumbers.stream().map(conflictingLineNumber -> {
+                        TreeSet<Integer> otherLines = new TreeSet<>(lineNumbers);
+                        otherLines.remove(conflictingLineNumber);
+                        ValidationCheckResult validationCheckResult =
+                                new DuplicationLineValidationCheckResult(
+                                        DuplicationLineValidationCheckResult.FileType.REFERENCES,
+                                        referenceImporterContext.getRefType(),
+                                        ValidationLevel.ERROR,
+                                        conflictingHierarchicalKey,
+                                        conflictingLineNumber,
+                                        lineNumbers
+                                );
+                        CsvRowValidationCheckResult error = new CsvRowValidationCheckResult(validationCheckResult, conflictingLineNumber);
+                        return error;
+                    });
+                })
+                .collect(Collectors.toSet());
+        return hierarchicalKeysConflictErrors;
     }
 
     private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
@@ -199,13 +251,22 @@ abstract class ReferenceImporter {
         return referenceDatumAfterChecking;
     }
 
-    private ErrorsOrEntityToStore toErrorsOrEntityToStore(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
-        final ReferenceValue e = new ReferenceValue();
+    private KeysAndReferenceDatumAfterChecking computeKeys(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+        final ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final Ltree naturalKey = computeNaturalKey(referenceDatum);
+        final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
+        return new KeysAndReferenceDatumAfterChecking(referenceDatumAfterChecking, naturalKey, hierarchicalKey);
+    }
+
+    private ReferenceValue toEntity(KeysAndReferenceDatumAfterChecking keysAndReferenceDatumAfterChecking) {
+        final ReferenceDatumAfterChecking referenceDatumAfterChecking = keysAndReferenceDatumAfterChecking.getReferenceDatumAfterChecking();
+        final ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
+        final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.getHierarchicalKey();
+
+        final ReferenceValue e = new ReferenceValue();
+        final Ltree naturalKey = keysAndReferenceDatumAfterChecking.getNaturalKey();
         recursionStrategy.getKnownId(naturalKey)
                 .ifPresent(e::setId);
-        final Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, referenceDatum);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
         referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
 
@@ -224,21 +285,7 @@ abstract class ReferenceImporter {
         e.setNaturalKey(naturalKey);
         e.setApplication(referenceImporterContext.getApplicationId());
         e.setRefValues(referenceDatum);
-        ErrorsOrEntityToStore errorsOrEntityToStore;
-        if (hierarchicalKeys.containsKey(e.getHierarchicalKey())) {
-            ValidationCheckResult validationCheckResult = new DuplicationLineValidationCheckResult(DuplicationLineValidationCheckResult.FileType.REFERENCES, referenceImporterContext.getRefType(), ValidationLevel.ERROR, e.getHierarchicalKey(), referenceDatumAfterChecking.getLineNumber(), hierarchicalKeys.get(e.getHierarchicalKey()));
-            CsvRowValidationCheckResult error = new CsvRowValidationCheckResult(validationCheckResult, referenceDatumAfterChecking.getLineNumber());
-            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatumAfterChecking.getLineNumber());
-            ImmutableList<CsvRowValidationCheckResult> build = ImmutableList.<CsvRowValidationCheckResult>builder()
-                    .addAll(referenceDatumAfterChecking.getErrors())
-                    .add(error)
-                    .build();
-            errorsOrEntityToStore = new ErrorsOrEntityToStore(Optional.empty(), build);
-        } else {
-            hierarchicalKeys.put(e.getHierarchicalKey(), referenceDatumAfterChecking.getLineNumber());
-            errorsOrEntityToStore = new ErrorsOrEntityToStore(Optional.of(e), referenceDatumAfterChecking.getErrors());
-        }
-        return errorsOrEntityToStore;
+        return e;
     }
 
     private Ltree computeNaturalKey(ReferenceDatum referenceDatum) {
@@ -275,9 +322,14 @@ abstract class ReferenceImporter {
     }
 
     @Value
-    private static class ErrorsOrEntityToStore {
-        Optional<ReferenceValue> referenceValueToStore;
-        ImmutableList<CsvRowValidationCheckResult> errors;
+    private static class KeysAndReferenceDatumAfterChecking {
+        ReferenceDatumAfterChecking referenceDatumAfterChecking;
+        Ltree naturalKey;
+        Ltree hierarchicalKey;
+
+        public int getLineNumber() {
+            return getReferenceDatumAfterChecking().getLineNumber();
+        }
     }
 
     private interface RecursionStrategy {
