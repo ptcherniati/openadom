@@ -367,7 +367,6 @@ public class OreSiService {
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
-        Map<ReferenceColumn, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file, "");
         Configuration conf = app.getConfiguration();
