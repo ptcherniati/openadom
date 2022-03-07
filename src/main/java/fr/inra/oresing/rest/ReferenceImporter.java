@@ -397,23 +397,18 @@ abstract class ReferenceImporter {
             List<RowWithReferenceDatum> collect = streamBeforePreloading
                     .peek(rowWithReferenceDatum -> {
                         ReferenceDatum referenceDatum = rowWithReferenceDatum.getReferenceDatum();
-                        String sAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
                         Ltree naturalKey = computeNaturalKey(referenceDatum);
                         if (!afterPreloadReferenceUuids.containsKey(naturalKey)) {
                             afterPreloadReferenceUuids.put(naturalKey, UUID.randomUUID());
                         }
-                        if (!Strings.isNullOrEmpty(sAsString)) {
-                            Ltree s;
-                            try {
-                                s = Ltree.fromUnescapedString(sAsString);
-                            } catch (IllegalArgumentException e) {
-                                return;
-                            }
-                            parentReferenceMap.put(naturalKey, s);
-                            if (!afterPreloadReferenceUuids.containsKey(s)) {
+                        String parentKeyAsString = ((ReferenceColumnSingleValue) referenceDatum.get(columnToLookForParentKey)).getValue();
+                        if (!Strings.isNullOrEmpty(parentKeyAsString)) {
+                            Ltree parentKey = Ltree.fromUnescapedString(parentKeyAsString);
+                            parentReferenceMap.put(naturalKey, parentKey);
+                            if (!afterPreloadReferenceUuids.containsKey(parentKey)) {
                                 final UUID uuid = UUID.randomUUID();
-                                afterPreloadReferenceUuids.put(s, uuid);
-                                missingParentReferences.put(s, rowWithReferenceDatum.getLineNumber());
+                                afterPreloadReferenceUuids.put(parentKey, uuid);
+                                missingParentReferences.put(parentKey, rowWithReferenceDatum.getLineNumber());
                             }
                         }
                         missingParentReferences.removeAll(naturalKey);
