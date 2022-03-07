@@ -374,13 +374,13 @@ public class OreSiService {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
         final ReferenceImporterContext referenceImporterContext = new ReferenceImporterContext(app.getId(), conf, refType, lineCheckers, storedReferences);
-        ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext, file, fileId) {
+        ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
             @Override
             void storeAll(Stream<ReferenceValue> stream) {
                 referenceValueRepository.storeAll(stream);
             }
         };
-        referenceImporter.doImport();
+        referenceImporter.doImport(file, fileId);
         return fileId;
     }
 

@@ -63,16 +63,10 @@ abstract class ReferenceImporter {
 
     private final ReferenceImporterContext referenceImporterContext;
 
-    private final MultipartFile file;
-
-    private final UUID fileId;
-
     private final RecursionStrategy recursionStrategy;
 
-    public ReferenceImporter(ReferenceImporterContext referenceImporterContext, MultipartFile file, UUID fileId) {
+    public ReferenceImporter(ReferenceImporterContext referenceImporterContext) {
         this.referenceImporterContext = referenceImporterContext;
-        this.file = file;
-        this.fileId = fileId;
         if (referenceImporterContext.isRecursive()) {
             recursionStrategy = new WithRecursion();
         } else {
@@ -80,7 +74,7 @@ abstract class ReferenceImporter {
         }
     }
 
-    void doImport() throws IOException {
+    void doImport(MultipartFile file, UUID fileId) throws IOException {
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(referenceImporterContext.getCsvSeparator())
                 .withSkipHeaderRecord();
@@ -113,7 +107,7 @@ abstract class ReferenceImporter {
                         boolean canSave = encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                         return canSave;
                     })
-                    .map(this::toEntity)
+                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId))
                     .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             storeAll(referenceValuesStream);
         }
@@ -258,7 +252,7 @@ abstract class ReferenceImporter {
         return new KeysAndReferenceDatumAfterChecking(referenceDatumAfterChecking, naturalKey, hierarchicalKey);
     }
 
-    private ReferenceValue toEntity(KeysAndReferenceDatumAfterChecking keysAndReferenceDatumAfterChecking) {
+    private ReferenceValue toEntity(KeysAndReferenceDatumAfterChecking keysAndReferenceDatumAfterChecking, UUID fileId) {
         final ReferenceDatumAfterChecking referenceDatumAfterChecking = keysAndReferenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.getHierarchicalKey();
