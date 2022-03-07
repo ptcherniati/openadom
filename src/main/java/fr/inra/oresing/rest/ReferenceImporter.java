@@ -74,6 +74,13 @@ abstract class ReferenceImporter {
         }
     }
 
+    /**
+     * Importer le fichier passé en paramètre.
+     *
+     * @param file le fichier à lire en flux
+     * @param fileId l'id du fichier file car chaque entité stockée est associée au fichier dont elle provient
+     * @throws IOException en cas d'erreur pendant la lecture du fichier passé
+     */
     void doImport(MultipartFile file, UUID fileId) throws IOException {
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(referenceImporterContext.getCsvSeparator())
@@ -117,6 +124,9 @@ abstract class ReferenceImporter {
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
     }
 
+    /**
+     * Étant donné les clé hiérarchiques qu'on a rencontré (normalement une seule par ligne), vérifie s'il y a des doublons et calcul des erreurs le cas échéant
+     */
     private Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(SetMultimap<Ltree, Integer> hierarchicalKeys) {
         Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = hierarchicalKeys.asMap().entrySet().stream()
                 .filter(entry -> {
@@ -150,6 +160,9 @@ abstract class ReferenceImporter {
         return hierarchicalKeysConflictErrors;
     }
 
+    /**
+     * Transforme une ligne du fichier CSV ({@link CSVRecord}) en {@link ReferenceDatum}, plus simple à lire et y associe un n° de ligne.
+     */
     private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
         Iterator<String> currentHeader = columns.iterator();
         ReferenceDatum referenceDatum = new ReferenceDatum();
@@ -174,6 +187,17 @@ abstract class ReferenceImporter {
         return new RowWithReferenceDatum(lineNumber, referenceDatum);
     }
 
+    /**
+     * Passe les {@link fr.inra.oresing.checker.LineChecker} sur la ligne passée.
+     *
+     * Cela aura pour effet :
+     *
+     * <ul>
+     *     <li>de passer les vérifications et d'associer à la ligne les erreurs détectées</li>
+     *     <li>d'application les transformations (échappement, expressions groovy)</li>
+     *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
+     * </ul>
+     */
     private ReferenceDatumAfterChecking check(RowWithReferenceDatum rowWithReferenceDatum) {
         ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
         ImmutableSetMultimap.Builder<String, UUID> refsLinkedToBuilder = ImmutableSetMultimap.builder();
@@ -245,6 +269,9 @@ abstract class ReferenceImporter {
         return referenceDatumAfterChecking;
     }
 
+    /**
+     * Associe à chaque ligne une clé naturelle (peut-être composite ?) et une clé hiérarchique.
+     */
     private KeysAndReferenceDatumAfterChecking computeKeys(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         final ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final Ltree naturalKey = computeNaturalKey(referenceDatum);
@@ -252,6 +279,9 @@ abstract class ReferenceImporter {
         return new KeysAndReferenceDatumAfterChecking(referenceDatumAfterChecking, naturalKey, hierarchicalKey);
     }
 
+    /**
+     * Transforme une ligne de données en une entité prête à être sauvée en base de données.
+     */
     private ReferenceValue toEntity(KeysAndReferenceDatumAfterChecking keysAndReferenceDatumAfterChecking, UUID fileId) {
         final ReferenceDatumAfterChecking referenceDatumAfterChecking = keysAndReferenceDatumAfterChecking.getReferenceDatumAfterChecking();
         final ReferenceDatum referenceDatum = referenceDatumAfterChecking.getReferenceDatumAfterChecking();
@@ -282,6 +312,12 @@ abstract class ReferenceImporter {
         return e;
     }
 
+    /**
+     * Pour une ligne passée, calcule la clé naturelle composite de cette ligne.
+     *
+     * Il s'agit d'aller lire les différentes colonnes qui composent la clé, de joindre le tout et de gérer
+     * l'échappement.
+     */
     private Ltree computeNaturalKey(ReferenceDatum referenceDatum) {
         String naturalKeyAsString = referenceImporterContext.getKeyColumns().stream()
                 .map(referenceColumn -> {
@@ -326,6 +362,9 @@ abstract class ReferenceImporter {
         }
     }
 
+    /**
+     * Représente les variations de l'algorithme d'import selon que le référentiel soit récursif ou non.
+     */
     private interface RecursionStrategy {
 
         Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum);
@@ -413,6 +452,11 @@ abstract class ReferenceImporter {
             return collect.stream();
         }
 
+        /**
+         * Si on a détecté des lignes qui font référence à un parent mais que celui-ci n'existe pas, on lève une exception
+         *
+         * @param missingParentReferences pour chaque parent manquant, les lignes du CSV où il est mentionné
+         */
         private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
             List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
                     .map(entry -> {

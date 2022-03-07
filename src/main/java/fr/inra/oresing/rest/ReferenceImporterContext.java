@@ -26,25 +26,39 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Toutes les informations nécessaires à l'import d'un référentiel donné.
+ *
+ * C'est un objet immuable, toutes ces informations sont constantes tout au long de l'import;
+ */
 @AllArgsConstructor
 public class ReferenceImporterContext {
 
-    /**
-     * Séparateur pour les clés naturelles composites.
-     * <p>
-     * Lorsqu'une clé naturelle est composite, c'est à dire composée de plusieurs {@link Configuration.ReferenceDescription#getKeyColumns()},
-     * les valeurs qui composent la clé sont séparées avec ce séparateur.
-     */
     private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
 
+    /**
+     * Identifiant de l'application à laquelle le référentiel importé appartient
+     */
     private final UUID applicationId;
 
+    /**
+     * La configuration de l'application qui contient le référentiel mais aussi les utilisations de ce référentiel
+     */
     private final Configuration conf;
 
+    /**
+     * Le nom du référentiel
+     */
     private final String refType;
 
+    /**
+     * Tous les {@link LineChecker} qui s'appliquent sur chaque ligne à importer
+     */
     private final ImmutableSet<LineChecker> lineCheckers;
 
+    /**
+     * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
+     */
     private final ImmutableMap<Ltree, UUID> storedReferences;
 
     private Optional<InternationalizationReferenceMap> getInternationalizationReferenceMap() {
@@ -69,6 +83,12 @@ public class ReferenceImporterContext {
                 .map(InternationalizationDisplay::getPattern);
     }
 
+    /**
+     * Séparateur pour les clés naturelles composites.
+     * <p>
+     * Lorsqu'une clé naturelle est composite, c'est à dire composée de plusieurs {@link Configuration.ReferenceDescription#getKeyColumns()},
+     * les valeurs qui composent la clé sont séparées avec ce séparateur.
+     */
     public String getCompositeNaturalKeyComponentsSeparator() {
         return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
     }
@@ -86,14 +106,23 @@ public class ReferenceImporterContext {
         return Ltree.fromUnescapedString(refType);
     }
 
+    /**
+     * Crée une clé hiérarchique
+     */
     public Ltree newHierarchicalKey(Ltree recursiveNaturalKey, ReferenceDatum referenceDatum) {
         return getHierarchicalKeyFactory().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
     }
 
+    /**
+     * Crée une nom de référentiel hiérarchique
+     */
     public Ltree newHierarchicalReference(Ltree selfHierarchicalReference) {
         return getHierarchicalKeyFactory().newHierarchicalReference(selfHierarchicalReference);
     }
 
+    /**
+     * Les colonnes dont les valeurs composent la clé naturelle composite de chaque ligne pour ce référentiel
+     */
     public ImmutableList<ReferenceColumn> getKeyColumns() {
         Preconditions.checkState(!getRef().getKeyColumns().isEmpty(), "aucune colonne désignée comme clé naturelle pour le référentiel " + getRefType());
         return getRef().getKeyColumns().stream()
@@ -113,10 +142,16 @@ public class ReferenceImporterContext {
                 .findFirst();
     }
 
+    /**
+     * Si le référentiel contient des colonnes qui font références à d'autres lignes de ce même référentiel
+     */
     public boolean isRecursive() {
         return getRecursiveComponentDescription().isPresent();
     }
 
+    /**
+     * Pour un référentiel récursif, indique la colonne dans laquelle la valeur est la clé vers le parent de la ligne courante
+     */
     public ReferenceColumn getColumnToLookForParentKey() {
         Preconditions.checkState(isRecursive());
         return getRecursiveComponentDescription()
@@ -125,6 +160,9 @@ public class ReferenceImporterContext {
                 .orElseThrow(() -> new IllegalStateException("ne devrait jamais arriver (?)"));
     }
 
+    /**
+     * Le séparateur à utiliser pour distinguer les cellules du fichier CSV
+     */
     public char getCsvSeparator() {
         return getRef().getSeparator();
     }
@@ -140,10 +178,16 @@ public class ReferenceImporterContext {
                 .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
     }
 
+    /**
+     * Indique la multiplicité pour une colonne donnée du référentiel importé
+     */
     public Multiplicity getMultiplicity(ReferenceColumn referenceColumn) {
         return getMultiplicityPerColumns().getOrDefault(referenceColumn, Multiplicity.ONE);
     }
 
+    /**
+     * Dans le cas d'un référentiel récursif, le {@link ReferenceLineChecker} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
+     */
     public ReferenceLineChecker getReferenceLineChecker() {
         Preconditions.checkState(isRecursive());
         return getLineCheckers().stream()
