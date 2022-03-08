@@ -1,16 +1,18 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnIndexedValue;
+import fr.inra.oresing.model.ReferenceColumnMultipleValue;
 import fr.inra.oresing.model.ReferenceColumnSingleValue;
 import fr.inra.oresing.model.ReferenceColumnValue;
 import fr.inra.oresing.model.ReferenceDatum;
@@ -22,9 +24,12 @@ import fr.inra.oresing.persistence.Ltree;
 import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Toutes les informations nécessaires à l'import d'un référentiel donné.
@@ -60,6 +65,8 @@ public class ReferenceImporterContext {
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
     private final ImmutableMap<Ltree, UUID> storedReferences;
+
+    private final ImmutableMap<String, Column> columnsPerHeader;
 
     private Optional<InternationalizationReferenceMap> getInternationalizationReferenceMap() {
         Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
@@ -171,20 +178,6 @@ public class ReferenceImporterContext {
         return lineCheckers;
     }
 
-    private ImmutableMap<ReferenceColumn, Multiplicity> getMultiplicityPerColumns() {
-        return getLineCheckers().stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
-                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
-    }
-
-    /**
-     * Indique la multiplicité pour une colonne donnée du référentiel importé
-     */
-    public Multiplicity getMultiplicity(ReferenceColumn referenceColumn) {
-        return getMultiplicityPerColumns().getOrDefault(referenceColumn, Multiplicity.ONE);
-    }
-
     /**
      * Dans le cas d'un référentiel récursif, le {@link ReferenceLineChecker} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
      */
@@ -203,6 +196,15 @@ public class ReferenceImporterContext {
 
     public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(Ltree hierarchicalKey) {
         return Optional.ofNullable(storedReferences.get(hierarchicalKey));
+    }
+
+    public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent) {
+        Column column = columnsPerHeader.get(header);
+        column.pushValue(referenceDatum, cellContent);
+    }
+
+    public ImmutableSet<String> getExpectedHeaders() {
+        return columnsPerHeader.keySet();
     }
 
     /**
@@ -310,6 +312,87 @@ public class ReferenceImporterContext {
             public Ltree newHierarchicalReference(Ltree reference) {
                 return Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
             }
+        }
+    }
+
+    public abstract static class Column {
+
+        private final String expectedHeader;
+
+        private final ReferenceColumn referenceColumn;
+
+        public Column(ReferenceColumn referenceColumn, String expectedHeader) {
+            this.referenceColumn = referenceColumn;
+            this.expectedHeader = expectedHeader;
+        }
+
+        public boolean canHandle(String header) {
+            return expectedHeader.equals(header);
+        }
+
+        abstract void pushValue(ReferenceDatum referenceDatum, String cellContent);
+
+        public ReferenceColumn getReferenceColumn() {
+            return referenceColumn;
+        }
+
+        public String getExpectedHeader() {
+            return expectedHeader;
+        }
+    }
+
+    public static class OneValueStaticColumn extends Column {
+
+        public OneValueStaticColumn(ReferenceColumn referenceColumn) {
+            super(referenceColumn, referenceColumn.getColumn());
+        }
+
+        @Override
+        public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
+            ReferenceColumnValue referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
+            referenceDatum.put(getReferenceColumn(), referenceColumnValue);
+        }
+    }
+
+    public static class ManyValuesStaticColumn extends Column {
+
+        public ManyValuesStaticColumn(ReferenceColumn referenceColumn) {
+            super(referenceColumn, referenceColumn.getColumn());
+        }
+
+        @Override
+        public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
+            Set<String> values = Splitter.on(ReferenceColumnMultipleValue.CSV_CELL_SEPARATOR)
+                    .splitToStream(cellContent)
+                    .collect(Collectors.toSet());
+            ReferenceColumnValue referenceColumnValue = new ReferenceColumnMultipleValue(values);
+            referenceDatum.put(getReferenceColumn(), referenceColumnValue);
+        }
+    }
+
+    public static class DynamicColumn extends Column {
+
+        private final Ltree expectedHierarchicalKey;
+
+        public DynamicColumn(ReferenceColumn referenceColumn, String expectedHeader, Ltree expectedHierarchicalKey) {
+            super(referenceColumn, expectedHeader);
+            this.expectedHierarchicalKey = expectedHierarchicalKey;
+        }
+
+        @Override
+        public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
+            ReferenceColumnIndexedValue existingReferenceColumnIndexedValue;
+            final Map<Ltree, String> values;
+            if (referenceDatum.contains(getReferenceColumn())) {
+                existingReferenceColumnIndexedValue = (ReferenceColumnIndexedValue) referenceDatum.get(getReferenceColumn());
+                final Map<Ltree, String> existingValues = existingReferenceColumnIndexedValue.getValues();
+                values = new LinkedHashMap<>(existingValues);
+            } else {
+                values = new LinkedHashMap<>();
+            }
+            values.put(expectedHierarchicalKey, cellContent);
+            ReferenceColumnIndexedValue newReferenceColumnIndexedValue = new ReferenceColumnIndexedValue(values);
+            referenceDatum.put(getReferenceColumn(), newReferenceColumnIndexedValue);
         }
     }
 }

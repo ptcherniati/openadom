@@ -26,6 +26,7 @@ import fr.inra.oresing.checker.FloatChecker;
 import fr.inra.oresing.checker.IntegerChecker;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
 import fr.inra.oresing.groovy.CommonExpression;
@@ -369,10 +370,7 @@ public class OreSiService {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file, "");
-        Configuration conf = app.getConfiguration();
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
-        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
-        final ReferenceImporterContext referenceImporterContext = new ReferenceImporterContext(app.getId(), conf, refType, lineCheckers, storedReferences);
+        final ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(app, refType);
         ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
             @Override
             void storeAll(Stream<ReferenceValue> stream) {
@@ -381,6 +379,72 @@ public class OreSiService {
         };
         referenceImporter.doImport(file, fileId);
         return fileId;
+    }
+
+    private ReferenceImporterContext getReferenceImporterContext(Application app, String refType) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Configuration conf = app.getConfiguration();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
+
+        ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
+                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
+                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+
+        Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
+
+        Stream<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().keySet().stream()
+                .map(ReferenceColumn::new)
+                .map(referenceColumn -> {
+                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                    ReferenceImporterContext.Column column;
+                    if (multiplicity == Multiplicity.ONE) {
+                        column = new ReferenceImporterContext.OneValueStaticColumn(referenceColumn);
+                    } else if (multiplicity == Multiplicity.MANY) {
+                        column = new ReferenceImporterContext.ManyValuesStaticColumn(referenceColumn);
+                    } else {
+                        throw new IllegalStateException("multiplicity = " + multiplicity);
+                    }
+                    return column;
+                });
+
+        Stream<ReferenceImporterContext.Column> dynamicColumns = referenceDescription.getDynamicColumns().entrySet().stream()
+                .flatMap(entry -> {
+                    ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
+                    Configuration.ReferenceDynamicColumnDescription value = entry.getValue();
+                    String reference = value.getReference();
+                    ReferenceColumn referenceColumnToLookForHeader = new ReferenceColumn(value.getReferenceColumnToLookForHeader());
+                    List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(reference);
+                    Stream<ReferenceImporterContext.Column> valuedDynamicColumns = allByReferenceType.stream()
+                            .map(referenceValue -> {
+                                ReferenceDatum referenceDatum = referenceValue.getRefValues();
+                                Ltree hierarchicalKey = referenceValue.getHierarchicalKey();
+                                ReferenceColumnSingleValue referenceColumnValue = (ReferenceColumnSingleValue) referenceDatum.get(referenceColumnToLookForHeader);
+                                String header = referenceColumnValue.getValue();
+                                String fullHeader = value.getHeaderPrefix() + header;
+                                return new ReferenceImporterContext.DynamicColumn(referenceColumn, fullHeader, hierarchicalKey);
+                            });
+                    return valuedDynamicColumns;
+                });
+
+        ImmutableMap<String, ReferenceImporterContext.Column> columns =
+                Stream.concat(staticColumns, dynamicColumns)
+                        .collect(ImmutableMap.toImmutableMap(
+                                ReferenceImporterContext.Column::getExpectedHeader,
+                                Function.identity()
+                        ));
+
+        final ReferenceImporterContext referenceImporterContext =
+                new ReferenceImporterContext(
+                        app.getId(),
+                        conf,
+                        refType,
+                        lineCheckers,
+                        storedReferences,
+                        columns
+                );
+        return referenceImporterContext;
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {

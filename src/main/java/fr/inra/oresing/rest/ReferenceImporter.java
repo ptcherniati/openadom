@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -99,6 +100,7 @@ abstract class ReferenceImporter {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            InvalidDatasetContentException.checkHeader(referenceImporterContext.getExpectedHeaders(), ImmutableMultiset.copyOf(columns), 1);
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = csvRecordsStream.map(csvRecordToReferenceDatumFn);
@@ -168,20 +170,7 @@ abstract class ReferenceImporter {
         ReferenceDatum referenceDatum = new ReferenceDatum();
         csvRecord.forEach(cellContent -> {
             String header = currentHeader.next();
-            ReferenceColumn referenceColumn = new ReferenceColumn(header);
-            Multiplicity multiplicity = referenceImporterContext.getMultiplicity(referenceColumn);
-            ReferenceColumnValue referenceColumnValue;
-            switch (multiplicity) {
-                case ONE:
-                    referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
-                    break;
-                case MANY:
-                    referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(cellContent);
-                    break;
-                default:
-                    throw new IllegalStateException("non géré " + multiplicity);
-            }
-            referenceDatum.put(referenceColumn, referenceColumnValue);
+            referenceImporterContext.pushValue(referenceDatum, header, cellContent);
         });
         int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
         return new RowWithReferenceDatum(lineNumber, referenceDatum);

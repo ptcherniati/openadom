@@ -63,12 +63,8 @@ references:
       Classe algale sensu Bourrelly:
       Code Sandre:
       Notes libres:
-    repeatedColumns:
-      - headerPattern: "pt_(.+)"
-        checker: # le checker permettant de valider l'expression $1
-          name: Reference
-          params:
-            required: true
-            codify: true
-            refType: proprietes_taxon
-        column: # la description de la colonne correspondant à $1
+    dynamicColumns:
+      propriétés de taxons:
+        headerPrefix: "pt_"
+        reference: proprietes_taxon
+        referenceColumnToLookForHeader: nom de la propriété_key

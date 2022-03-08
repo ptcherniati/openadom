@@ -1,7 +1,6 @@
 package fr.inra.oresing.model;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import lombok.Value;
 
 import java.util.Set;
@@ -13,21 +12,11 @@ import java.util.stream.Collectors;
  */
 @Value
 public class ReferenceColumnMultipleValue implements ReferenceColumnValue<Set<String>> {
-    private static final String CSV_CELL_SEPARATOR = ",";
+    public static final String CSV_CELL_SEPARATOR = ",";
 
     private static final String COLLECTION_AS_JSON_STRING_SEPARATOR = ",";
 
     Set<String> values;
-
-    /**
-     * Étant donné le contenu d'une cellule d'un fichier CSV contenant plusieurs valeurs, on split
-     */
-    public static ReferenceColumnMultipleValue parseCsvCellContent(String csvCellContent) {
-        Set<String> values = Splitter.on(CSV_CELL_SEPARATOR)
-                .splitToStream(csvCellContent)
-                .collect(Collectors.toSet());
-        return new ReferenceColumnMultipleValue(values);
-    }
 
     @Override
     public Set<String> toJsonForDatabase() {

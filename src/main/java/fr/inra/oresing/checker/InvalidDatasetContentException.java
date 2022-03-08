@@ -5,6 +5,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.rest.CsvRowValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
 
@@ -93,5 +94,12 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
 
     public List<CsvRowValidationCheckResult> getErrors() {
         return errors;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("errors", errors)
+                .toString();
     }
 }
