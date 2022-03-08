@@ -1264,30 +1264,32 @@ public class OreSiService {
     }
 
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
-        Configuration.ReferenceDescription referenceDescription = getApplication(applicationNameOrId)
-                .getConfiguration()
-                .getReferences()
-                .get(referenceType);
-        ImmutableMap<ReferenceColumn, Function<ReferenceDatum, String>> model = referenceDescription.getColumns().keySet().stream()
-                .map(ReferenceColumn::new)
-                .collect(ImmutableMap.toImmutableMap(Function.identity(), referenceColumn -> referenceDatum -> referenceDatum.get(referenceColumn).getAsContentForCsvCell()));
+        Application application = getApplication(applicationNameOrId);
+        ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(application, referenceType);
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
+        Stream<ImmutableList<String>> recordsStream = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
+                .map(ReferenceValue::getRefValues)
+                .map(referenceDatum -> {
+                    ImmutableList<String> rowAsRecord = referenceImporterContext.getExpectedHeaders().stream()
+                            .map(header -> referenceImporterContext.getCsvCellContent(referenceDatum, header))
+                            .collect(ImmutableList.toImmutableList());
+                    return rowAsRecord;
+                });
+        ImmutableSet<String> headers = referenceImporterContext.getExpectedHeaders();
         CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(referenceDescription.getSeparator())
+                .withDelimiter(referenceImporterContext.getCsvSeparator())
                 .withSkipHeaderRecord();
         StringWriter out = new StringWriter();
         try {
             CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-            csvPrinter.printRecord(model.keySet());
-            ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
-            List<ReferenceDatum> referenceData = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
-                    .map(ReferenceValue::getRefValues)
-                    .collect(Collectors.toUnmodifiableList());
-            for (ReferenceDatum referenceDatum : referenceData) {
-                ImmutableList<String> rowAsRecord = model.values().stream()
-                        .map(getCellContentFn -> getCellContentFn.apply(referenceDatum))
-                        .collect(ImmutableList.toImmutableList());
-                csvPrinter.printRecord(rowAsRecord);
-            }
+            csvPrinter.printRecord(headers);
+            recordsStream.forEach(record -> {
+                try {
+                    csvPrinter.printRecord(record);
+                } catch (IOException e) {
+                    throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+                }
+            });
         } catch (IOException e) {
             throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
         }

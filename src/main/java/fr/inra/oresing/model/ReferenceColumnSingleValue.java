@@ -39,11 +39,6 @@ public class ReferenceColumnSingleValue implements ReferenceColumnValue<String> 
     }
 
     @Override
-    public String getAsContentForCsvCell() {
-        return value;
-    }
-
-    @Override
     public String toJsonForFrontend() {
         return value;
     }

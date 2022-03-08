@@ -37,9 +37,4 @@ public class ReferenceColumnIndexedValue implements ReferenceColumnValue<Map<Str
                 .collect(Collectors.toMap(entry -> entry.getKey().getSql(), Map.Entry::getValue));
         return jsonForDatabase;
     }
-
-    @Override
-    public String getAsContentForCsvCell() {
-        throw new UnsupportedOperationException();
-    }
 }

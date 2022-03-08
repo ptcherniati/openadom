@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
  */
 @Value
 public class ReferenceColumnMultipleValue implements ReferenceColumnValue<Set<String>> {
-    public static final String CSV_CELL_SEPARATOR = ",";
 
     private static final String COLLECTION_AS_JSON_STRING_SEPARATOR = ",";
 
@@ -32,14 +31,6 @@ public class ReferenceColumnMultipleValue implements ReferenceColumnValue<Set<St
     public ReferenceColumnValue<Set<String>> transform(Function<String, String> transformation) {
         Set<String> transformedValues = values.stream().map(transformation).collect(Collectors.toSet());
         return new ReferenceColumnMultipleValue(transformedValues);
-    }
-
-    @Override
-    public String getAsContentForCsvCell() {
-        String csvCellContent = values.stream()
-                .peek(value -> Preconditions.checkState(value.contains(CSV_CELL_SEPARATOR), value + " contient " + CSV_CELL_SEPARATOR))
-                .collect(Collectors.joining(CSV_CELL_SEPARATOR));
-        return csvCellContent;
     }
 
     @Override

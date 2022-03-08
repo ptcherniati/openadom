@@ -207,6 +207,11 @@ public class ReferenceImporterContext {
         return columnsPerHeader.keySet();
     }
 
+    public String getCsvCellContent(ReferenceDatum referenceDatum, String header) {
+        Column column = columnsPerHeader.get(header);
+        return column.getCsvCellContent(referenceDatum);
+    }
+
     /**
      * Contrat permettant de créer pour chaque ligne de référentiel sa clé hiérarchique.
      * <p>
@@ -332,6 +337,8 @@ public class ReferenceImporterContext {
 
         abstract void pushValue(ReferenceDatum referenceDatum, String cellContent);
 
+        abstract String getCsvCellContent(ReferenceDatum referenceDatum);
+
         public ReferenceColumn getReferenceColumn() {
             return referenceColumn;
         }
@@ -352,9 +359,17 @@ public class ReferenceImporterContext {
             ReferenceColumnValue referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
             referenceDatum.put(getReferenceColumn(), referenceColumnValue);
         }
+
+        @Override
+        public String getCsvCellContent(ReferenceDatum referenceDatum) {
+            ReferenceColumnSingleValue referenceColumnSingleValue = (ReferenceColumnSingleValue) referenceDatum.get(getReferenceColumn());
+            return referenceColumnSingleValue.getValue();
+        }
     }
 
     public static class ManyValuesStaticColumn extends Column {
+
+        private static final String CSV_CELL_SEPARATOR = ",";
 
         public ManyValuesStaticColumn(ReferenceColumn referenceColumn) {
             super(referenceColumn, referenceColumn.getColumn());
@@ -362,11 +377,20 @@ public class ReferenceImporterContext {
 
         @Override
         public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
-            Set<String> values = Splitter.on(ReferenceColumnMultipleValue.CSV_CELL_SEPARATOR)
+            Set<String> values = Splitter.on(CSV_CELL_SEPARATOR)
                     .splitToStream(cellContent)
                     .collect(Collectors.toSet());
             ReferenceColumnValue referenceColumnValue = new ReferenceColumnMultipleValue(values);
             referenceDatum.put(getReferenceColumn(), referenceColumnValue);
+        }
+
+        @Override
+        public String getCsvCellContent(ReferenceDatum referenceDatum) {
+            ReferenceColumnMultipleValue referenceColumnMultipleValue = (ReferenceColumnMultipleValue) referenceDatum.get(getReferenceColumn());
+            String csvCellContent = referenceColumnMultipleValue.getValues().stream()
+                    .peek(value -> Preconditions.checkState(!value.contains(CSV_CELL_SEPARATOR), value + " contient " + CSV_CELL_SEPARATOR))
+                    .collect(Collectors.joining(CSV_CELL_SEPARATOR));
+            return csvCellContent;
         }
     }
 
@@ -393,6 +417,12 @@ public class ReferenceImporterContext {
             values.put(expectedHierarchicalKey, cellContent);
             ReferenceColumnIndexedValue newReferenceColumnIndexedValue = new ReferenceColumnIndexedValue(values);
             referenceDatum.put(getReferenceColumn(), newReferenceColumnIndexedValue);
+        }
+
+        @Override
+        public String getCsvCellContent(ReferenceDatum referenceDatum) {
+            ReferenceColumnIndexedValue referenceColumnIndexedValue = (ReferenceColumnIndexedValue) referenceDatum.get(getReferenceColumn());
+            return referenceColumnIndexedValue.getValues().get(expectedHierarchicalKey);
         }
     }
 }

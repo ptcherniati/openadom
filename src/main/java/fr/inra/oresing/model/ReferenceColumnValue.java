@@ -3,7 +3,7 @@ package fr.inra.oresing.model;
 import java.util.Collection;
 import java.util.function.Function;
 
-public interface ReferenceColumnValue<T> extends SomethingToBeStoredAsJsonInDatabase<T>, SomethingToFormatAsCsvCellContent, SomethingToBeSentToFrontend<String> {
+public interface ReferenceColumnValue<T> extends SomethingToBeStoredAsJsonInDatabase<T>, SomethingToBeSentToFrontend<String> {
 
     Collection<String> getValuesToCheck();
 
