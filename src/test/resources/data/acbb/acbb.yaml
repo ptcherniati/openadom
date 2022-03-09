@@ -123,6 +123,26 @@ compositeReferences:
         parentKeyColumn: "site"
 dataTypes:
   flux_tours:
+    validations:
+      check_CO2_value:
+        description: check value in range
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: >
+                String stringValue = datum.CO2.value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                }
+                    Float value = stringValue.equals("")?null:Float.parseFloat(stringValue);
+                Float minValue = datum.CO2.min_value.equals("")?null:Float.parseFloat(datum.CO2.min_value);
+                Float maxValue = datum.CO2.max_value.equals("")?null:Float.parseFloat(datum.CO2.max_value);
+                Boolean isValid = true;
+                isValid = minValue==null  || minValue<value;
+                isValid = isValid && (maxValue!=null || value<=maxValue);
+                return isValid
+
     data:
       site:
         components:
@@ -163,6 +183,12 @@ dataTypes:
               name: Reference
               params:
                 refType: unites
+          min_value:
+            checker:
+              name: Float
+          max_value:
+            checker:
+              name: Float
       H2O:
         components:
           value:
@@ -176,6 +202,12 @@ dataTypes:
               name: Reference
               params:
                 refType: unites
+          min_value:
+            checker:
+              name: Float
+          max_value:
+            checker:
+              name: Float
       ZL:
         components:
           value:
@@ -306,6 +338,29 @@ dataTypes:
             variable: parcelle
             component: name
           exportHeader: "Parcelle"
+        - rowNumber: 10
+          columnNumber: 3
+          boundTo:
+            variable: CO2
+            component: min_value
+          exportHeader: "CO2_min"
+        - rowNumber: 11
+          columnNumber: 3
+          boundTo:
+            variable: CO2
+            component: max_value
+        - rowNumber: 10
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: min_value
+          exportHeader: "H2O_min"
+        - rowNumber: 11
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: max_value
+          exportHeader: "H2O_max"
       headerLine: 8
       firstRowLine: 12
       columns:
