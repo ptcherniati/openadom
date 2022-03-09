@@ -10,7 +10,6 @@ references:
       Agroécosystème_fr:
       Agroécosystème_en:
       region:
-      filter:
       Département:
   sites:
     keyColumns: [nom du site_key]
