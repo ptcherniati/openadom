@@ -1,4 +1,4 @@
-nom;parent;
-site1;;
-site1;site3;
-site2;site1;
+nom;parent
+site1;
+site1;site3
+site2;site1

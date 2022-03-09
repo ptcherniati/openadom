@@ -1,8 +1,8 @@
-nom de la liste_fr;nom de la liste_en;libellé d'une valeur_fr;libellé d'une valeur_en;note de la valeur
-ListeQualitative1;ListeQualitative1;Très Bien;Very Good;0
-ListeQualitative1;ListeQualitative1;Bien;Good;1
-ListeQualitative1;ListeQualitative1;Moins Bien;Less Good;2
-ListeQual1;ListeQual1;Très bonne valeur;Very good value;0
-ListeQual1;ListeQual1;Valeur de qualité intermédiaire;middle quality value;1
-ListeQual1;ListeQual1;Valeur de mauvaise qualité;bad quality value;2
-ListeQual1;ListeQual1;valeur aberrantes;Aberrant values;3
+nom de la liste;libellé d'une valeur_fr;libellé d'une valeur_en;note de la valeur
+ListeQualitative1;Très Bien;Very Good;0
+ListeQualitative1;Bien;Good;1
+ListeQualitative1;Moins Bien;Less Good;2
+ListeQual1;Très bonne valeur;Very good value;0
+ListeQual1;Valeur de qualité intermédiaire;middle quality value;1
+ListeQual1;Valeur de mauvaise qualité;bad quality value;2
+ListeQual1;valeur aberrantes;Aberrant values;3

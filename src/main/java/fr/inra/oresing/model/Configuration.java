@@ -301,6 +301,7 @@ public class Configuration {
         String duration;
         boolean codify;
         boolean required;
+        Multiplicity multiplicity = Multiplicity.ONE;
 
         public ImmutableSet<String> doGetColumnsAsCollection() {
             if (StringUtils.isEmpty(getColumns())) {

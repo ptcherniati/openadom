@@ -43,7 +43,7 @@ public class RelationalServiceTest {
     @Before
     public void createApplication() throws Exception {
         fixtures.addMonsoreApplication();
-        fixtures.addApplicationPRO();
+        //fixtures.addApplicationPRO();
         fixtures.addApplicationOLAC();
         fixtures.addApplicationFORET();
         fixtures.addApplicationAcbb();
@@ -52,7 +52,7 @@ public class RelationalServiceTest {
     @Test
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
-        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.PRO, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
+        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.createViews(applicationName, ViewStrategy.VIEW);
@@ -63,16 +63,6 @@ public class RelationalServiceTest {
 //            request.setRequestClient(applicationCreatorRequestClient);
             List<Map<String, Object>> viewContent = relationalService.readView("monsore", "pem", ViewStrategy.VIEW);
             Assert.assertEquals(306, viewContent.size());
-        }
-
-        {
-            List<Map<String, Object>> viewContent = relationalService.readView("pros", "donnees_prelevement_pro", ViewStrategy.VIEW);
-            Assert.assertEquals(80, viewContent.size());
-        }
-
-        {
-            List<Map<String, Object>> viewContent = relationalService.readView("pros", "physico_chimie_sols", ViewStrategy.VIEW);
-            Assert.assertEquals(99, viewContent.size());
         }
 
         {
@@ -108,6 +98,12 @@ public class RelationalServiceTest {
             // on vérifie juste le bon typage des colonnes (on ne peut moyenne que si la colonne est un nombre)
             int averageSwc = namedParameterJdbcTemplate.queryForObject("select avg(swc.\"SWC_valeur\") from acbb_view.swc where swc.\"SWC_valeur\" != -9999", Collections.emptyMap(), Integer.class);
             Assert.assertEquals(26, averageSwc);
+        }
+
+        {
+            // on vérifie juste que la vue association est bien alimentée
+            int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject("select count(*) from acbb_view.version_de_traitement_modalites natural join acbb_view.version_de_traitement join acbb_view.modalites on modalites_value = modalites_hierarchicalkey", Collections.emptyMap(), Integer.class);
+            Assert.assertEquals(81, numberOfRowInAssociationView);
         }
 
         for (Fixtures.Application application : applications) {

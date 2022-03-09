@@ -42,10 +42,6 @@ public class ApplicationConfigurationServiceTest {
 
     @Autowired
     private ApplicationConfigurationService service;
-    @Test
-    public void parseConfigurationProFile() {
-        parseConfigurationFromResource(fixtures.getProApplicationConfigurationResourceName());
-    }
 
     @Test
     public void parseConfigurationFile() {
@@ -54,8 +50,8 @@ public class ApplicationConfigurationServiceTest {
                 fixtures.getAcbbApplicationConfigurationResourceName(),
                 fixtures.getOlaApplicationConfigurationResourceName(),
                 fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
-                fixtures.getValidationApplicationConfigurationResourceName(),
-                fixtures.getProApplicationConfigurationResourceName()
+                fixtures.getValidationApplicationConfigurationResourceName()
+                //fixtures.getProApplicationConfigurationResourceName()
         ).forEach(resource -> {
             parseConfigurationFromResource(resource);
         });

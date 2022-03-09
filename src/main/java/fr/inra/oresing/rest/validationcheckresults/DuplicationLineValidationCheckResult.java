@@ -5,8 +5,8 @@ import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
-import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 public class DuplicationLineValidationCheckResult implements ValidationCheckResult {
 
@@ -17,7 +17,7 @@ public class DuplicationLineValidationCheckResult implements ValidationCheckResu
 
     Map<String, Object> messageParams;
 
-    public DuplicationLineValidationCheckResult(FileType filetype, String file, ValidationLevel level, Ltree hierarchicalKey, int currentLineNumber, List<Integer> otherLines) {
+    public DuplicationLineValidationCheckResult(FileType filetype, String file, ValidationLevel level, Ltree hierarchicalKey, int currentLineNumber, SortedSet<Integer> otherLines) {
         this.level = level;
         this.message = FileType.DATATYPE.message;
         this.messageParams = ImmutableMap.of(

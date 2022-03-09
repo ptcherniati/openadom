@@ -863,47 +863,6 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    public void addApplicationPRO() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
-        try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getProApplicationConfigurationResourceName())) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
-                            .file(configuration)
-                            .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-        }
-
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getProReferentielFiles().entrySet()) {
-            try (InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(authCookie))
-                        .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-            }
-        }
-
-        // ajout de data PrelevementPro
-        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPrelevementProDataResourceName())) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
-                            .file(refFile)
-                            .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-        }
-
-        // ajout de data PhysicoChimieSols
-        try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getPhysicoChimieSolsProDataResourceName())) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
-                            .file(refFile)
-                            .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-        }
-    }
-
-    @Test
     public void addDuplicatedTest() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getDuplicatedApplicationConfigurationResourceName())) {
@@ -973,7 +932,7 @@ public class OreSiResourcesTest {
             final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
             Assert.assertEquals("types_de_zones_etudes", messageParams.get("file"));
             Assert.assertEquals(4, messageParams.get("lineNumber"));
-            Assert.assertArrayEquals(new Integer[]{3, 4}, ((List) messageParams.get("otherLines")).toArray());
+            Assert.assertArrayEquals(new Integer[]{3, 4}, ((Set) messageParams.get("otherLines")).toArray());
             Assert.assertEquals("zone20", messageParams.get("duplicateKey"));
         }
 
@@ -1046,7 +1005,7 @@ on test le dépôt d'un fichier récursif
             final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
             Assert.assertEquals("zones_etudes", messageParams.get("file"));
             Assert.assertEquals(4, messageParams.get("lineNumber"));
-            Assert.assertArrayEquals(new Integer[]{2, 4}, ((List) messageParams.get("otherLines")).toArray());
+            Assert.assertArrayEquals(new Integer[]{2, 4}, ((Set) messageParams.get("otherLines")).toArray());
             Assert.assertEquals("site1", messageParams.get("duplicateKey"));
         }
 
