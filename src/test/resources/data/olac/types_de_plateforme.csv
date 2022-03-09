@@ -1,4 +1,4 @@
-nom du type de plateforme_key;nom du type de plateforme_fr;nom du type de plateforme_en;description_fr;description_en;code sandre;code sandre du contexte
+nom du type de plateforme_key;nom du type de plateforme_fr;nom du type de plateforme_en;description du type de plateforme_fr;description du type de plateforme_en;code sandre;code sandre du contexte
 station de prélèvement;station de prélèvement;sampling station;;;;
 station météo;station météo;meteo station;Une station météo quelconque;A random meteo station;;
 station de prélèvement lac;station de prélèvement lac;lake sampling station;;;;
