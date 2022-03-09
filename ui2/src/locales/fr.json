@@ -142,6 +142,7 @@
         "headerColumnPatternNotMatching": "Erreur dans le format de l'en-tête de colonne. Format à respecter : <code>{expectedHeaderColumnPattern}</code><br/>En-tête actuel : <code>{actualHeaderColumn}</code>",
         "unexpectedTokenCount": "Le nombre de token est inattendu. Nombre attendu : <code>{expectedTokenCount}</code><br/>L'en-tête actuel : <code>{actualHeader}</code> comprend <code>{actualTokenCount}</code> tokens",
         "invalidHeaders": "En-têtes de colonne invalides. Les colonnes attendues sont : <code>{expectedColumns}</code><br/>Les colonnes actuelles sont : <code>{actualColumns}</code><br/> Il manque les colonnes : <code>{missingColumns}</code><br/>Les colonnes suivantes sont inconnues : <code>{unknownColumns}</code>",
+        "emptyHeader": "Le fichier contient un en-tête de colonne vide",
         "duplicatedHeaders": "Les en-têtes suivants sont dupliqués : <code>{duplicatedHeaders}</code>",
         "patternNotMatched": "Pour le composant identifié : <code>{target}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",
         "patternNotMatchedWithColumn": "Pour la colonne : <code>{target}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",

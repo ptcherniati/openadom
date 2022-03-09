@@ -142,6 +142,7 @@
     "headerColumnPatternNotMatching": "Column header pattern not matching. Pattern to match : <code>{expectedHeaderColumnPattern}</code><br/>Actual header : <code>{actualHeaderColumn}</code>",
     "unexpectedTokenCount": "Unexpected token count. Expected : <code>{expectedTokenCount}</code><br/>Actual header : <code>{actualHeader}</code> has <code>{actualTokenCount}</code> tokens",
     "invalidHeaders": "Invalid headers. Expected columns : <code>{expectedColumns}</code><br/>Actual columns : <code>{actualColumns}</code><br/>Missing columns : <code>{missingColumns}</code><br/>Unknown columns : <code>{unknownColumns}</code>",
+    "emptyHeader": "The file contains a column with an empty header",
     "duplicatedHeaders": "These headers are duplicated : <code>{duplicatedHeaders}</code>",
     "patternNotMatched": "For the identified component: <code> {target} </code> the value <code> {value} </code> does not respect the expected format: <code> {pattern} </code>. ",
     "patternNotMatchedWithColumn": "For column: <code> {target} </code> the value <code> {value} </code> does not respect the expected format: <code> {pattern} </code>.",
