@@ -9,6 +9,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.model.ColumnPresenceConstraint;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceColumnIndexedValue;
@@ -207,6 +208,13 @@ public class ReferenceImporterContext {
         return columnsPerHeader.keySet();
     }
 
+    public ImmutableSet<String> getMandatoryHeaders() {
+        return columnsPerHeader.values().stream()
+                .filter(Column::isMandatory)
+                .map(Column::getExpectedHeader)
+                .collect(ImmutableSet.toImmutableSet());
+    }
+
     public String getCsvCellContent(ReferenceDatum referenceDatum, String header) {
         Column column = columnsPerHeader.get(header);
         return column.getCsvCellContent(referenceDatum);
@@ -326,9 +334,12 @@ public class ReferenceImporterContext {
 
         private final ReferenceColumn referenceColumn;
 
-        public Column(ReferenceColumn referenceColumn, String expectedHeader) {
+        private final ColumnPresenceConstraint presenceConstraint;
+
+        public Column(ReferenceColumn referenceColumn, String expectedHeader, ColumnPresenceConstraint presenceConstraint) {
             this.referenceColumn = referenceColumn;
             this.expectedHeader = expectedHeader;
+            this.presenceConstraint = presenceConstraint;
         }
 
         public boolean canHandle(String header) {
@@ -346,12 +357,20 @@ public class ReferenceImporterContext {
         public String getExpectedHeader() {
             return expectedHeader;
         }
+
+        public ColumnPresenceConstraint getPresenceConstraint() {
+            return presenceConstraint;
+        }
+
+        public boolean isMandatory() {
+            return getPresenceConstraint().isMandatory();
+        }
     }
 
     public static class OneValueStaticColumn extends Column {
 
-        public OneValueStaticColumn(ReferenceColumn referenceColumn) {
-            super(referenceColumn, referenceColumn.getColumn());
+        public OneValueStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
+            super(referenceColumn, referenceColumn.getColumn(), presenceConstraint);
         }
 
         @Override
@@ -371,8 +390,8 @@ public class ReferenceImporterContext {
 
         private static final String CSV_CELL_SEPARATOR = ",";
 
-        public ManyValuesStaticColumn(ReferenceColumn referenceColumn) {
-            super(referenceColumn, referenceColumn.getColumn());
+        public ManyValuesStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
+            super(referenceColumn, referenceColumn.getColumn(), presenceConstraint);
         }
 
         @Override
@@ -398,8 +417,8 @@ public class ReferenceImporterContext {
 
         private final Ltree expectedHierarchicalKey;
 
-        public DynamicColumn(ReferenceColumn referenceColumn, String expectedHeader, Ltree expectedHierarchicalKey) {
-            super(referenceColumn, expectedHeader);
+        public DynamicColumn(ReferenceColumn referenceColumn, String expectedHeader, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey) {
+            super(referenceColumn, expectedHeader, presenceConstraint);
             this.expectedHierarchicalKey = expectedHierarchicalKey;
         }
 

@@ -6,6 +6,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -100,7 +101,7 @@ abstract class ReferenceImporter {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            InvalidDatasetContentException.checkHeader(referenceImporterContext.getExpectedHeaders(), ImmutableMultiset.copyOf(columns), 1);
+            checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()));
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = csvRecordsStream.map(csvRecordToReferenceDatumFn);
@@ -124,6 +125,12 @@ abstract class ReferenceImporter {
         Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+    }
+
+    private void checkHeader(ImmutableList<String> columns, int headerLineNumber) {
+        ImmutableSet<String> expectedHeaders = referenceImporterContext.getExpectedHeaders();
+        ImmutableSet<String> mandatoryHeaders = referenceImporterContext.getMandatoryHeaders();
+        InvalidDatasetContentException.checkHeader(expectedHeaders, mandatoryHeaders, ImmutableMultiset.copyOf(columns), headerLineNumber);
     }
 
     /**

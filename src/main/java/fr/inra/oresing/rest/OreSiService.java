@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.BiMap;
@@ -37,6 +38,7 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Authorization;
 import fr.inra.oresing.model.BinaryFile;
 import fr.inra.oresing.model.BinaryFileDataset;
+import fr.inra.oresing.model.ColumnPresenceConstraint;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.model.Datum;
@@ -394,15 +396,16 @@ public class OreSiService {
 
         Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
 
-        Stream<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().keySet().stream()
-                .map(ReferenceColumn::new)
-                .map(referenceColumn -> {
+        Stream<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().entrySet().stream()
+                .map(entry -> {
+                    ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
                     Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                    ColumnPresenceConstraint presenceConstraint = MoreObjects.firstNonNull(entry.getValue(), new Configuration.ReferenceColumnDescription()).getPresenceConstraint();
                     ReferenceImporterContext.Column column;
                     if (multiplicity == Multiplicity.ONE) {
-                        column = new ReferenceImporterContext.OneValueStaticColumn(referenceColumn);
+                        column = new ReferenceImporterContext.OneValueStaticColumn(referenceColumn, presenceConstraint);
                     } else if (multiplicity == Multiplicity.MANY) {
-                        column = new ReferenceImporterContext.ManyValuesStaticColumn(referenceColumn);
+                        column = new ReferenceImporterContext.ManyValuesStaticColumn(referenceColumn, presenceConstraint);
                     } else {
                         throw new IllegalStateException("multiplicity = " + multiplicity);
                     }
@@ -423,7 +426,8 @@ public class OreSiService {
                                 ReferenceColumnSingleValue referenceColumnValue = (ReferenceColumnSingleValue) referenceDatum.get(referenceColumnToLookForHeader);
                                 String header = referenceColumnValue.getValue();
                                 String fullHeader = value.getHeaderPrefix() + header;
-                                return new ReferenceImporterContext.DynamicColumn(referenceColumn, fullHeader, hierarchicalKey);
+                                ColumnPresenceConstraint presenceConstraint = value.getPresenceConstraint();
+                                return new ReferenceImporterContext.DynamicColumn(referenceColumn, fullHeader, presenceConstraint, hierarchicalKey);
                             });
                     return valuedDynamicColumns;
                 });
@@ -900,7 +904,7 @@ public class OreSiService {
             ImmutableMultiset<String> actualHeaderColumns = line.stream()
                     .map(Map.Entry::getKey)
                     .collect(ImmutableMultiset.toImmutableMultiset());
-            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, actualHeaderColumns, headerLine);
+            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, expectedHeaderColumns, actualHeaderColumns, headerLine);
             Map<VariableComponentKey, String> record = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : line) {
                 String header = entry.getKey();

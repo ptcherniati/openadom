@@ -108,7 +108,7 @@ public class Configuration {
     @Setter
     @ToString
     public static class ReferenceColumnDescription {
-
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
@@ -118,6 +118,7 @@ public class Configuration {
         private String headerPrefix = "";
         private String reference;
         private String referenceColumnToLookForHeader;
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter

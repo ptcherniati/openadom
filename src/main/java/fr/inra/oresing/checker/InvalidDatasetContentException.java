@@ -1,5 +1,6 @@
 package fr.inra.oresing.checker;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.rest.CsvRowValidationCheckResult;
@@ -43,8 +44,8 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         ));
     }
 
-    public static InvalidDatasetContentException forInvalidHeaders(ImmutableSet<String> expectedColumns, ImmutableSet<String> actualColumns, int headerLine) {
-        ImmutableSet<String> missingColumns = Sets.difference(expectedColumns, actualColumns).immutableCopy();
+    public static InvalidDatasetContentException forInvalidHeaders(ImmutableSet<String> expectedColumns, ImmutableSet<String> mandatoryHeaders, ImmutableSet<String> actualColumns, int headerLine) {
+        ImmutableSet<String> missingColumns = Sets.difference(mandatoryHeaders, actualColumns).immutableCopy();
         ImmutableSet<String> unknownColumns = Sets.difference(actualColumns, expectedColumns).immutableCopy();
         return newInvalidDatasetContentException(headerLine, "invalidHeaders", ImmutableMap.of(
                 "expectedColumns", expectedColumns,
@@ -66,7 +67,8 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         return new InvalidDatasetContentException(List.of(csvRowValidationCheckResult));
     }
 
-    public static void checkHeader(ImmutableSet<String> expectedColumns, ImmutableMultiset<String> actualColumns, int headerLine) {
+    public static void checkHeader(ImmutableSet<String> expectedColumns, ImmutableSet<String> mandatoryColumns, ImmutableMultiset<String> actualColumns, int headerLine) {
+        Preconditions.checkArgument(expectedColumns.containsAll(mandatoryColumns), "il y des colonnes obligatoires qui ne font pas parti des colonnes possibles");
         if (actualColumns.contains("")) {
             throw forEmptyHeader(headerLine);
         }
@@ -78,8 +80,10 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
             throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
         }
         ImmutableSet<String> actualColumnsAsSet = actualColumns.elementSet();
-        if (!expectedColumns.equals(actualColumnsAsSet)) {
-            throw forInvalidHeaders(expectedColumns, actualColumnsAsSet, headerLine);
+        boolean givenColumnIsUnexpected = !expectedColumns.containsAll(actualColumnsAsSet);
+        boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
+        if (givenColumnIsUnexpected || mandatoryColumnIsMissing) {
+            throw forInvalidHeaders(expectedColumns, mandatoryColumns, actualColumnsAsSet, headerLine);
         }
     }
 
