@@ -28,6 +28,13 @@ create table ReferenceValue
 
     CONSTRAINT "hierarchicalKey_uniqueness" UNIQUE (application, referenceType, hierarchicalKey)
 );
+create table Reference_Reference
+(
+    referenceId entityid REFERENCES ReferenceValue(id) ON DELETE CASCADE,
+    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE RESTRICT,
+    CONSTRAINT "Reference_Reference_PK" PRIMARY KEY (referenceId, referencedBy)
+);
+
 CREATE INDEX ref_refslinkedto_index ON ReferenceValue USING gin (refsLinkedTo);
 CREATE INDEX ref_refvalues_index ON ReferenceValue USING gin (refValues);
 
@@ -85,6 +92,14 @@ create table Data
     dataValues      jsonb,
     binaryFile      EntityRef REFERENCES BinaryFile (id)
 );
+
+create table Data_Reference
+(
+    dataId entityid REFERENCES Data(id) ON DELETE CASCADE,
+    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE RESTRICT,
+    CONSTRAINT "Data_Reference_PK" PRIMARY KEY (dataId, referencedBy)
+);
+
 CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo);
 CREATE INDEX data_refvalues_index ON Data USING gin (dataValues);
 
@@ -105,11 +120,13 @@ CREATE TABLE OreSiAuthorization
 
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON Reference_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON OreSiAuthorization TO "superadmin" WITH GRANT OPTION;
 
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Reference_Reference TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiAuthorization TO public;
 

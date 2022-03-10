@@ -10,8 +10,10 @@ import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -143,5 +145,23 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     public ImmutableMap<Ltree, UUID> getReferenceIdPerKeys(String referenceType) {
         return findAllByReferenceType(referenceType).stream()
                 .collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
+    }
+
+    public void updateConstraintForeignReferences(List<UUID> uuids) {
+        String sql = "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencedBy)\n" +
+                "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencedBy\n" +
+                "from  " + getTable().getSqlIdentifier() + "\n" +
+                "where id in (:ids)" +
+                "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING;";
+        final String ids = uuids.stream()
+                .map(uuid -> String.format("'%s'::uuid", uuid))
+                .collect(Collectors.joining(","));
+        try {
+            List result = getNamedParameterJdbcTemplate().query(sql, ImmutableMap.of("ids", uuids), getJsonRowMapper());
+        } catch (DataIntegrityViolationException e) {
+            if(e.getCause() instanceof PSQLException && !"02000".equals(((PSQLException)e.getCause()).getSQLState())){
+                throw e;
+            }
+        }
     }
 }

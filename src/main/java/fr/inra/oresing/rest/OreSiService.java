@@ -376,7 +376,8 @@ public class OreSiService {
         ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
             @Override
             void storeAll(Stream<ReferenceValue> stream) {
-                referenceValueRepository.storeAll(stream);
+                final List<UUID> uuids = referenceValueRepository.storeAll(stream);
+                referenceValueRepository.updateConstraintForeignReferences(uuids);
             }
         };
         referenceImporter.doImport(file, fileId);
