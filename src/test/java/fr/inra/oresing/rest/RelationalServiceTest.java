@@ -47,12 +47,13 @@ public class RelationalServiceTest {
         fixtures.addApplicationOLAC();
         fixtures.addApplicationFORET();
         fixtures.addApplicationAcbb();
+        fixtures.addApplicationRecursivity();
     }
 
     @Test
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
-        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
+        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET, Fixtures.Application.RECURSIVITY);
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.createViews(applicationName, ViewStrategy.VIEW);
@@ -104,6 +105,20 @@ public class RelationalServiceTest {
             // on vérifie juste que la vue association est bien alimentée
             int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject("select count(*) from acbb_view.version_de_traitement_modalites natural join acbb_view.version_de_traitement join acbb_view.modalites on modalites_value = modalites_hierarchicalkey", Collections.emptyMap(), Integer.class);
             Assert.assertEquals(81, numberOfRowInAssociationView);
+        }
+
+        {
+            // on vérifie juste que la vue association pour les colonnes dynamiques est bien alimentée
+            // que les deux clés étrangères sont bien placées et qu'on a bien la valeur
+            String sql = String.join("\n"
+                    , "select count(*)"
+                    , "from recursivite_view.\"taxon_propriétés de taxons\" tpt"
+                    , "join recursivite_view.taxon as t on tpt.taxon_hierarchicalKey = t.taxon_hierarchicalKey"
+                    , "join recursivite_view.proprietes_taxon pt on tpt.\"propriétés de taxons_hierarchicalKey\" = pt.proprietes_taxon_hierarchicalKey"
+                    , "where value != ''"
+            );
+            int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject(sql, Collections.emptyMap(), Integer.class);
+            Assert.assertEquals(384, numberOfRowInAssociationView);
         }
 
         for (Fixtures.Application application : applications) {

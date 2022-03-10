@@ -676,13 +676,46 @@ public class Fixtures {
         return datas;
     }
 
+    public void addApplicationRecursivity() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        String response;
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getRecursiviteReferentielOrderFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+        for (Map.Entry<String, String> e : getRecursiviteReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+    }
+
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         //PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         OLAC("olac", ImmutableSet.of("condition_prelevements")),
         FORET("foret", ImmutableSet.of("flux_meteo_dataResult")),
-        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
+        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of()),
+        RECURSIVITY("recursivite", ImmutableSet.of());
 
         private final String name;
 
