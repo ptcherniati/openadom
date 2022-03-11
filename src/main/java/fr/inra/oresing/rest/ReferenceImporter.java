@@ -292,13 +292,6 @@ abstract class ReferenceImporter {
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
         referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
 
-        /**
-         * on remplace l'id par celle en base si elle existe
-         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
-         */
-
-        referenceImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
-                .ifPresent(e::setId);
         e.setBinaryFile(fileId);
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);

@@ -63,11 +63,6 @@ public class ReferenceImporterContext {
      */
     private final ImmutableSet<LineChecker> lineCheckers;
 
-    /**
-     * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
-     */
-    private final ImmutableMap<Ltree, UUID> storedReferences;
-
     private final ImmutableMap<String, Column> columnsPerHeader;
 
     private Optional<InternationalizationReferenceMap> getInternationalizationReferenceMap() {
@@ -194,10 +189,6 @@ public class ReferenceImporterContext {
 
     public UUID getApplicationId() {
         return applicationId;
-    }
-
-    public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(Ltree hierarchicalKey) {
-        return Optional.ofNullable(storedReferences.get(hierarchicalKey));
     }
 
     public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent, SetMultimap<String, UUID> refsLinkedTo) {
