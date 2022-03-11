@@ -28,7 +28,7 @@ public class ReferenceColumnIndexedValue implements ReferenceColumnValue<Map<Str
 
     @Override
     public String toJsonForFrontend() {
-        return Joiner.on(",").withKeyValueSeparator("=").join(values);
+        return Joiner.on(",").withKeyValueSeparator("=").join(toJsonForDatabase());
     }
 
     @Override
