@@ -34,13 +34,13 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
 
     public Optional<BinaryFile> tryFindByIdWithData(UUID id) {
         Preconditions.checkArgument(id != null);
-        String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (select id, application, name, size, convert_from(data, 'UTF8') as \"data\", params from %s  WHERE id = :id) t", getEntityClass().getName(), getTable().getSqlIdentifier());
+        String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (select id, application, name, comment, size, convert_from(data, 'UTF8') as \"data\", params from %s  WHERE id = :id) t", getEntityClass().getName(), getTable().getSqlIdentifier());
         Optional<BinaryFile> result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
         return result;
     }
 
     protected List<BinaryFile> find(String whereClause, SqlParameterSource sqlParameterSource) {
-        String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM (select id, application, name, size, null as \"data\", params from %s ";
+        String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json FROM (select id, application, name, comment, size, null as \"data\", params from %s ";
         if (whereClause != null) {
             sql += " WHERE " + whereClause;
         }
@@ -57,9 +57,9 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, name, size, data, params) " +
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, name, comment, size, data, params) " +
                 "SELECT " +
-                "   id, application, name, size, data, " +
+                "   id, application, name, comment, size, data, " +
                 "jsonb_set(jsonb_set((case when params is null then '{}' else params end ),\n" +
                 "\t'{createdate}',('\"' ||CURRENT_TIMESTAMP::text ||'\"')::jsonb),\n" +
                 "\t'{create_user}' , ('\"' ||current_role::text ||'\"')::jsonb)" +
@@ -69,6 +69,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 "SET " +
                 "   updateDate=current_timestamp, " +
                 "   application=EXCLUDED.application, " +
+                "   comment=EXCLUDED.comment, " +
                 "   name=EXCLUDED.name, " +
                 "   size=EXCLUDED.size, " +
                 "   data=CASE WHEN EXCLUDED.data IS NULL THEN " + getTable().getSqlIdentifier() + ".data ELSE EXCLUDED.data END, " +

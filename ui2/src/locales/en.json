@@ -19,7 +19,9 @@
         "pwd-placeholder":"Ex: xxxx",
         "pwd-forgotten":"Forgotten password ? ",
         "register":"Register",
-        "confirm-pwd":"Confirmer le mot de passe"
+        "confirm-pwd":"Confirmer le mot de passe",
+        "aria-btn-login": "Validate login form button",
+        "aria-btn-signup": "Create an account button"
     },
     "validation":{
         "obligatoire":"Mandatory",
@@ -36,6 +38,7 @@
         "user-unknown":"Unknown user",
         "application-creation-success":"The app has been created!",
         "application-validate-success":"The YAML file is valid!",
+        "application-edit-success": "The YAML file is update !",
         "warning":"Warning !",
         "reference-deletion-msg":"You're about to delete the reference : {label}. Are you sure ?",
         "delete":"Delete",
@@ -44,7 +47,8 @@
         "data-updated":"Data type updated",
         "registered-user":"User registered",
         "revoke-authorization":"Authorization revoked",
-        "create-authorization":"Authorization created"
+        "create-authorization":"Authorization created",
+        "dataTypeFiltreEmpty" : "No data matching your criteria"
     },
     "message":{
         "app-config-error":"Error in yaml file",
@@ -57,11 +61,19 @@
         "references":"References",
         "french":"Français",
         "english":"English",
-        "language":"Language"
+        "language":"Language",
+        "aria-sub-menu": "Access path",
+        "aria-nav-bar": "Main menu",
+        "aria-pagination": "Pagination",
+        "aria-curent-page": "Curent page",
+        "aria-next-page": "Next page",
+        "aria-previous-page": "Previous page"
     },
     "applications":{
         "chose-config":"Chose a configuration",
         "create":"Create application",
+        "comment": "Comment : ",
+        "no-comment": "No comment",
         "test":"Test",
         "name":"Application name",
         "name-placeholder":"Ex : olac",
@@ -73,7 +85,9 @@
         "trierA_z":"Name A - z",
         "trierZ_a":"Name Z - a",
         "trierRecent":"Recent date",
-        "filter":"Filter by"
+        "filter":"Filter by",
+        "change": "Edit app",
+        "version" : "The current version of the application <b class=\"has-text-primary\">{applicationName}</b> is <b class=\"has-text-primary\">{version}.</b>"
     },
     "errors":{
         "emptyFile":"File is empty",
@@ -120,6 +134,7 @@
         "missingParamColumnReferenceForCheckerInReference":"In the description of the <code> {reference} </code>, the validation rule <code> {validationRuleDescriptionEntryKey} </code> does not specify on which columns the rule should be executed by declaring a <code> columns </code> parameter ",
         "csvBoundToUnknownVariableComponent":"In the CSV format, header <code>{header}</code> is bound to <code>{variable}</code> but it has no <code>{component}</code> component. Known components: <code>{components}</code>",
         "invalidKeyColumns":"In the description of reference <code>{reference}</code>, colomns <code>{unknownUsedAsKeyElementColumns}</code> are declared as components of the key but there are no such columns. Known columns are <code>{knownColumns}</code>",
+        "missingKeyColumnsForReference": "In the description of reference <code>{reference}</code>, you must declare the components (at least one) of the key",
         "invalidInternationalizedColumns":"In the repository description <code> {reference} </code>, the columns <code> {unknownUsedAsInternationalizedColumns} </code> are declared as part of internationalizable columns when they do not exist. Known columns: <code> {knownColumns} </code> ",
         "invalidInternationalizedColumnsForDataType": "In the <code> {reference} </code> repository overload of the <code> {dataType} </code> data type description, the <code> {unknownUsedAsInternationalizedColumns} </code> columns are declared as part of internationalizable columns when they do not exist. Known columns: <code> {knownColumns} </code> ",
         "unknownReferenceInDatatypeReferenceDisplay": "In the repository display overload of the <code> {dataType} </code> datatype description, the <code> {reference} </code> repository is unknown. Known repositories known : <code> {references} </code> ",
@@ -127,6 +142,7 @@
         "headerColumnPatternNotMatching":"Column header pattern not matching. Pattern to match : <code>{expectedHeaderColumnPattern}</code><br/>Actual header : <code>{actualHeaderColumn}</code>",
         "unexpectedTokenCount":"Unexpected token count. Expected : <code>{expectedTokenCount}</code><br/>Actual header : <code>{actualHeader}</code> has <code>{actualTokenCount}</code> tokens",
         "invalidHeaders":"Invalid headers. Expected columns : <code>{expectedColumns}</code><br/>Actual columns : <code>{actualColumns}</code><br/>Missing columns : <code>{missingColumns}</code><br/>Unknown columns : <code>{unknownColumns}</code>",
+        "emptyHeader": "The file contains a column with an empty header",
         "duplicatedHeaders":"These headers are duplicated : <code>{duplicatedHeaders}</code>",
         "patternNotMatched": "For the identified component: <code> {target} </code> the value <code> {value} </code> does not respect the expected format: <code> {pattern} </code>. ",
         "patternNotMatchedWithColumn": "For column: <code> {target} </code> the value <code> {value} </code> does not respect the expected format: <code> {pattern} </code>." ,
@@ -149,7 +165,10 @@
         "missingAggregationVariableForChart":"In the chart description of variable <code>{variable}</code> of data type <code>{dataType}</code>, aggregation variable <code>{aggregationVariable}< /code> is not declared.<br /> Expected Values ​​<code>{variables}</code>",
         "missingAggregationComponentForChart":"In the graph description of variable <code>{variable}</code> of data type <code>{dataType}</code>, component <code>{aggregationComponent}</code> of the aggregation variable <code>{aggregationVariable}</code> is not declared.<br /> Expected Values ​​<code>{components}</code>",
         "missingStandardDeviationComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, the standard deviation <code> {standardDeviation}</ code> is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
-        "missingUnitComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, unit <code> {unit}</code > is not a declared component.<br /> Expected Values ​​<code>{components}</code>"
+        "missingUnitComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, unit <code> {unit}</code > is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
+        "duplicateLineInReference": "In the repository file {file}, line {lineNumber} has the same id {duplicateKey} as lines {otherLines}",
+        "duplicateLineInDatatype": "In data file {file}, line {lineNumber} has the same identifier {duplicateKey} as lines {otherLines}",
+        "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}"
     },
     "referencesManagement":{
         "actions":"Actions",
@@ -172,12 +191,14 @@
         "filtered": "Filters used",
         "sorted": "The sorts used",
         "title-modal-numeric": "Choice of value range",
-        "title-modal-date": "Choice of date range"
+        "title-modal-date": "Choice of date range",
+        "manage-datasets": "Manage datasets"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Drop a version on this dataset",
         "start-date": "Start date",
         "end-date": "End date",
+        "comment": "Comment",
         "choose-file": "Choose a file",
         "placeholder-datepicker": "Type or select a date...",
         "placeholder-select": "Select...",

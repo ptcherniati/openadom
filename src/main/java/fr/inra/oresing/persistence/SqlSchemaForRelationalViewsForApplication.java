@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.rest.ViewStrategy;
 import lombok.Value;
 import org.testcontainers.shaded.com.google.common.base.Preconditions;
@@ -32,7 +33,16 @@ public class SqlSchemaForRelationalViewsForApplication implements SqlSchema {
     }
 
     public SqlTable forReferenceType(String referenceName) {
-        Preconditions.checkArgument(application.getReferenceType().contains(referenceName), referenceName + " n'est pas un référentiel de " + getApplication());
+        checkReferenceName(referenceName);
         return new SqlTable(this, referenceName);
+    }
+
+    public SqlTable forAssociation(String referenceName, ReferenceColumn referenceColumn) {
+        checkReferenceName(referenceName);
+        return new SqlTable(this, referenceName + "_" + referenceColumn.getColumn());
+    }
+
+    private void checkReferenceName(String referenceName) {
+        Preconditions.checkArgument(application.getReferenceType().contains(referenceName), referenceName + " n'est pas un référentiel de " + getApplication());
     }
 }

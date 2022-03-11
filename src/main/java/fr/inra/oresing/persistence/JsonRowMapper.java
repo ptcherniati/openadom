@@ -15,12 +15,14 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceDatum;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 @Component
 public class JsonRowMapper<T> implements RowMapper<T> {
@@ -65,6 +67,19 @@ public class JsonRowMapper<T> implements RowMapper<T> {
                     @Override
                     public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                         return Ltree.fromSql(p.getText());
+                    }
+                })
+                .addSerializer(ReferenceDatum.class, new JsonSerializer<>() {
+                    @Override
+                    public void serialize(ReferenceDatum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                        gen.writeObject(value.toJsonForDatabase());
+                    }
+                })
+                .addDeserializer(ReferenceDatum.class, new JsonDeserializer<>() {
+                    @Override
+                    public ReferenceDatum deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                        Map map = p.readValueAs(Map.class);
+                        return ReferenceDatum.fromDatabaseJson(map);
                     }
                 })
                 ;

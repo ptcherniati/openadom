@@ -6,6 +6,7 @@
       } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
       :style="`background-color:rgba(240, 245, 245, ${1 - level / 2})`"
       @click="displayChildren = !displayChildren"
+      @keypress.enter="displayChildren = !displayChildren"
     >
       <div class="CollapsibleTree-header-infos">
         <div class="CollapsibleTree-header-infos" :style="`transform:translate(${level * 50}px);`">
@@ -13,6 +14,7 @@
             v-if="option.children && option.children.length !== 0"
             :icon="displayChildren ? 'caret-down' : 'caret-right'"
             class="clickable mr-3"
+            tabindex="0"
           />
 
           <b-checkbox
@@ -28,6 +30,8 @@
             v-else
             :class="onClickLabelCb ? 'link' : ''"
             @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            tabindex="0"
           >
             {{ option.localName || option.label }}
           </div>
@@ -69,12 +73,12 @@
         </div>
         <div v-else>
           <b-button
+            icon-left="archive"
             size="is-small"
             class="ml-1"
-            label="Gérer les jeux de données"
+            :label="$t('dataTypesManagement.manage-datasets')"
             @click="repositoryRedirect(option.label)"
-            type="is-dark"
-            outlined
+            type="is-info"
           >
           </b-button>
         </div>

@@ -13,12 +13,12 @@ import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
-import fr.inra.oresing.model.internationalization.Internationalization;
-import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
-import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -66,7 +65,7 @@ public class OreSiService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final String KEYCOLUMN_SEPARATOR = "__";
+
     @Autowired
     private OreSiRepository repo;
 
@@ -105,10 +104,11 @@ public class OreSiService {
         return Ltree.escapeToLabel(key);
     }
 
-    protected UUID storeFile(Application app, MultipartFile file) throws IOException {
+    protected UUID storeFile(Application app, MultipartFile file, String comment) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
+        binaryFile.setComment(comment);
         binaryFile.setApplication(app.getId());
         binaryFile.setName(file.getOriginalFilename());
         binaryFile.setSize(file.getSize());
@@ -121,9 +121,10 @@ public class OreSiService {
         return result;
     }
 
-    public UUID createApplication(String name, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         Application app = new Application();
         app.setName(name);
+        app.setComment(comment);
         UUID result = changeApplicationConfiguration(app, configurationFile, this::initApplication);
         relationalService.createViews(app.getName());
 
@@ -182,10 +183,11 @@ public class OreSiService {
         return app;
     }
 
-    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile) throws IOException, BadApplicationConfigurationException {
+    public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
         relationalService.dropViews(nameOrId);
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
+        app.setComment(comment);
         Configuration oldConfiguration = app.getConfiguration();
         UUID oldConfigFileId = app.getConfigFile();
         Application application = getApplication(nameOrId);
@@ -232,7 +234,7 @@ public class OreSiService {
                                 ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
                                 ReferenceValidationCheckResult referenceCheckResult = referenceLineChecker.check(componentValue);
                                 Preconditions.checkState(referenceCheckResult.isSuccess(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
-                                UUID referenceId = referenceCheckResult.getReferenceId();
+                                UUID referenceId = referenceCheckResult.getMatchedReferenceId();
                                 refsLinkedToAddForVariable.put(component, referenceId);
                             }
                             variableValue.put(component, componentValue);
@@ -303,235 +305,28 @@ public class OreSiService {
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
         app = initApplication.apply(app);
-        UUID confId = storeFile(app, configurationFile);
+        UUID confId = storeFile(app, configurationFile, app.getComment());
         app.setConfigFile(confId);
         UUID appId = repo.application().store(app);
         return appId;
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
-        authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file);
-
-        Configuration conf = app.getConfiguration();
-        Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
-
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
-        Optional<ReferenceLineChecker> selfLineChecker = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker && ((ReferenceLineChecker) lineChecker).getRefType().equals(refType))
-                .map(lineChecker -> ((ReferenceLineChecker) lineChecker))
-                .findFirst();
-        Optional<Configuration.CompositeReferenceDescription> toUpdateCompositeReference = conf.getCompositeReferencesUsing(refType);
-        ReferenceColumn parentHierarchicalKeyColumn;
-        String parentHierarchicalParentReference;
-        Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription = getRecursiveComponent(conf.getCompositeReferences(), refType);
-        boolean isRecursive = recursiveComponentDescription.isPresent();
-        BiFunction<Ltree, ReferenceDatum, Ltree> getHierarchicalKeyFn;
-        Function<Ltree, Ltree> getHierarchicalReferenceFn;
-        Map<Ltree, Ltree> buildedHierarchicalKeys = new HashMap<>();
-        Map<Ltree, Ltree> parentreferenceMap = new HashMap<>();
-        if (toUpdateCompositeReference.isPresent()) {
-            Configuration.CompositeReferenceDescription compositeReferenceDescription = toUpdateCompositeReference.get();
-            boolean root = Iterables.get(compositeReferenceDescription.getComponents(), 0).getReference().equals(refType);
-            if (root) {
-                getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
-                getHierarchicalReferenceFn = (reference) -> reference;
-            } else {
-                Configuration.CompositeReferenceComponentDescription referenceComponentDescription = compositeReferenceDescription.getComponents().stream()
-                        .filter(compositeReferenceComponentDescription -> compositeReferenceComponentDescription.getReference().equals(refType))
-                        .collect(MoreCollectors.onlyElement());
-                parentHierarchicalKeyColumn = new ReferenceColumn(referenceComponentDescription.getParentKeyColumn());
-                parentHierarchicalParentReference = compositeReferenceDescription.getComponents().get(compositeReferenceDescription.getComponents().indexOf(referenceComponentDescription) - 1).getReference();
-                getHierarchicalKeyFn = (naturalKey, referenceValues) -> {
-                    Ltree parentHierarchicalKey = Ltree.fromUnescapedString(referenceValues.get(parentHierarchicalKeyColumn));
-                    return Ltree.join(parentHierarchicalKey, naturalKey);
-                };
-                getHierarchicalReferenceFn = (reference) -> Ltree.join(Ltree.fromUnescapedString(parentHierarchicalParentReference), reference);
-            }
-        } else {
-            getHierarchicalKeyFn = (naturalKey, referenceValues) -> naturalKey;
-            getHierarchicalReferenceFn = (reference) -> reference;
-        }
-
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
-
-        CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(ref.getSeparator())
-                .withSkipHeaderRecord();
-        try (InputStream csv = file.getInputStream()) {
-            CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
-            Iterator<CSVRecord> linesIterator = csvParser.iterator();
-            CSVRecord headerRow = linesIterator.next();
-            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            Function<CSVRecord, ReferenceDatum> csvRecordToLineAsMapFn = line -> {
-                Iterator<String> currentHeader = columns.iterator();
-                ReferenceDatum referenceDatum = new ReferenceDatum();
-                line.forEach(value -> {
-                    String header = currentHeader.next();
-                    ReferenceColumn referenceColumn = new ReferenceColumn(header);
-                    referenceDatum.put(referenceColumn, value);
-                });
-                return referenceDatum;
-            };
-
-            List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
-            Stream<CSVRecord> recordStream = Streams.stream(csvParser);
-            if (isRecursive) {
-                recordStream = addMissingReferences(recordStream, selfLineChecker, recursiveComponentDescription, columns, ref, parentreferenceMap);
+        authenticationService.setRoleForClient();
+        UUID fileId = storeFile(app, file, "");
+        Configuration conf = app.getConfiguration();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
+        final ReferenceImporterContext referenceImporterContext = new ReferenceImporterContext(app.getId(), conf, refType, lineCheckers, storedReferences);
+        ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
+            @Override
+            void storeAll(Stream<ReferenceValue> stream) {
+                referenceValueRepository.storeAll(stream);
             }
-            List<Ltree> hierarchicalKeys = new LinkedList<>();
-            Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
-                    .map(configuration -> conf.getInternationalization())
-                    .map(inter -> inter.getReferences())
-                    .map(references -> references.getOrDefault(refType, null));
-            Map<String, Internationalization> displayColumns = internationalizationReferenceMap
-                    .map(internationalisationSection -> internationalisationSection.getInternationalizedColumns())
-                    .orElseGet(HashMap::new);
-            Optional<Map<String, String>> displayPattern = internationalizationReferenceMap
-                    .map(internationalisationSection -> internationalisationSection.getInternationalizationDisplay())
-                    .map(internationalizationDisplay -> internationalizationDisplay.getPattern());
-            Stream<ReferenceValue> referenceValuesStream = recordStream
-                    .map(csvRecordToLineAsMapFn)
-                    .map(referenceDatum -> {
-                        Map<String, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
-                        lineCheckers.forEach(lineChecker -> {
-                            ValidationCheckResult validationCheckResult = lineChecker.checkReference(referenceDatum);
-                            if (validationCheckResult.isSuccess()) {
-                                if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                                    ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                                    String reference = ((ReferenceLineChecker) lineChecker).getRefType();
-                                    UUID referenceId = referenceValidationCheckResult.getReferenceId();
-                                    referenceDatum.put((ReferenceColumn) referenceValidationCheckResult.getTarget().getTarget(), (String) referenceValidationCheckResult.getValue());
-                                    refsLinkedTo
-                                            .computeIfAbsent(Ltree.escapeToLabel(reference), k -> new LinkedHashSet<>())
-                                            .add(referenceId);
-                                }
-                            } else {
-                                rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
-                            }
-                        });
-                        ReferenceValue e = new ReferenceValue();
-                        Ltree naturalKey;
-                        if (ref.getKeyColumns().isEmpty()) {
-                            UUID technicalId = e.getId();
-                            naturalKey = Ltree.fromUuid(technicalId);
-                        } else {
-                            String naturalKeyAsString = ref.getKeyColumns().stream()
-                                    .map(ReferenceColumn::new)
-                                    .map(referenceDatum::get)
-                                    .filter(StringUtils::isNotEmpty)
-                                    .map(Ltree::escapeToLabel)
-                                    .collect(Collectors.joining(KEYCOLUMN_SEPARATOR));
-                            naturalKey = Ltree.fromSql(naturalKeyAsString);
-                        }
-                        Ltree recursiveNaturalKey = naturalKey;
-                        final Ltree refTypeAsLabel = Ltree.fromUnescapedString(refType);
-                        if (isRecursive) {
-                            selfLineChecker
-                                    .map(referenceLineChecker -> referenceLineChecker.getReferenceValues())
-                                    .map(values -> values.get(naturalKey.getSql()))
-                                    .filter(key -> key != null)
-                                    .ifPresent(key -> e.setId(key));
-                            Ltree parentKey = parentreferenceMap.getOrDefault(recursiveNaturalKey, null);
-                            while (parentKey != null) {
-                                recursiveNaturalKey = Ltree.join(parentKey, recursiveNaturalKey);
-                                parentKey = parentreferenceMap.getOrDefault(parentKey, null);
-                                //selfHierarchicalReference = Ltree.join(selfHierarchicalReference, refTypeAsLabel);
-                            }
-//                            int x = StringUtils.countMatches(selfHierarchicalReference.getSql(), ".");
-//                            int y = StringUtils.countMatches(recursiveNaturalKey.getSql(), ".");
-//                            Preconditions.checkState(x == y);
-                        }
-                        Ltree hierarchicalKey = getHierarchicalKeyFn.apply(isRecursive ? recursiveNaturalKey : naturalKey, referenceDatum);
-                        Ltree selfHierarchicalReference = refTypeAsLabel;
-                        if (isRecursive) {
-                            for (int i = 1; i < recursiveNaturalKey.getSql().split("\\.").length; i++) {
-                                selfHierarchicalReference = Ltree.fromSql(selfHierarchicalReference.getSql() + ".".concat(refType));
-                            }
-                        }
-                        Ltree hierarchicalReference =
-                                getHierarchicalReferenceFn.apply(selfHierarchicalReference);
-                        referenceDatum.putAll(InternationalizationDisplay.getDisplays(displayPattern, displayColumns, referenceDatum));
-                        buildedHierarchicalKeys.put(naturalKey, hierarchicalKey);
-                        e.setBinaryFile(fileId);
-                        e.setReferenceType(refType);
-                        e.setHierarchicalKey(hierarchicalKey);
-                        e.setHierarchicalReference(hierarchicalReference);
-                        e.setRefsLinkedTo(refsLinkedTo);
-                        e.setNaturalKey(naturalKey);
-                        e.setApplication(app.getId());
-                        e.setRefValues(referenceDatum.asMap());
-                        return e;
-                    })
-                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()))
-                    .map(e -> {
-                        if (hierarchicalKeys.contains(e.getHierarchicalKey())) {
-                            /*envoyer un message de warning : le refType avec la clef e.getNaturalKey existe en plusieurs exemplaires
-                            dans le fichier. Seule la première ligne est enregistrée
-                             */
-//                            ValidationCheckResult validationCheckResult = new ValidationCheckResult()
-//                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, csvParser.getCurrentLineNumber()));
-                        } else {
-                            hierarchicalKeys.add(e.getHierarchicalKey());
-                        }
-                        return e;
-                    })
-                    .filter(e -> e != null);
-            referenceValueRepository.storeAll(referenceValuesStream);
-            InvalidDatasetContentException.checkErrorsIsEmpty(rowErrors);
-        }
-
+        };
+        referenceImporter.doImport(file, fileId);
         return fileId;
-    }
-
-    private Stream<CSVRecord> addMissingReferences(Stream<CSVRecord> recordStream, Optional<ReferenceLineChecker> selfLineChecker, Optional<Configuration.CompositeReferenceComponentDescription> recursiveComponentDescription, ImmutableList<String> columns, Configuration.ReferenceDescription ref, Map<Ltree, Ltree> referenceMap) {
-        Integer parentRecursiveIndex = recursiveComponentDescription
-                .map(rcd -> rcd.getParentRecursiveKey())
-                .map(rck -> columns.indexOf(rck))
-                .orElse(null);
-        if (parentRecursiveIndex == null || parentRecursiveIndex < 0) {
-            return recordStream;
-        }
-        HashMap<String, UUID> referenceUUIDs = selfLineChecker
-                .map(lc -> lc.getReferenceValues())
-                .map(HashMap::new)
-                .orElseGet(HashMap::new);
-        List<CSVRecord> collect = recordStream
-                .peek(csvrecord -> {
-                    String s = csvrecord.get(parentRecursiveIndex);
-                    if (!Strings.isNullOrEmpty(s)) {
-                        String naturalKey;
-                        try {
-                            s = Ltree.escapeToLabel(s);
-                            naturalKey = ref.getKeyColumns()
-                                    .stream()
-                                    .map(kc -> columns.indexOf(kc))
-                                    .map(k -> Ltree.escapeToLabel(csvrecord.get(k)))
-                                    .collect(Collectors.joining("__"));
-                        } catch (IllegalArgumentException e) {
-                            return;
-                        }
-                        referenceMap.put(Ltree.fromSql(naturalKey), Ltree.fromUnescapedString(s));
-                        if (!referenceUUIDs.containsKey(s)) {
-                            referenceUUIDs.put(s, UUID.randomUUID());
-                        }
-                        if (!referenceUUIDs.containsKey(naturalKey)) {
-                            referenceUUIDs.put(naturalKey, UUID.randomUUID());
-                        }
-                    }
-                    return;
-                })
-                .collect(Collectors.toList());
-        selfLineChecker
-                .ifPresent(slc -> slc.setReferenceValues(ImmutableMap.copyOf(referenceUUIDs)));
-        return collect.stream();
-    }
-
-    private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponent(LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences, String refType) {
-        return compositeReferences.values().stream()
-                .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> refType.equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
-                .filter(e -> e != null)
-                .findFirst();
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
@@ -551,13 +346,17 @@ public class OreSiService {
                 .filter(compositeReferenceComponentDescription -> includedReferences.contains(compositeReferenceComponentDescription.getReference()))
                 .forEach(compositeReferenceComponentDescription -> {
                     String reference = compositeReferenceComponentDescription.getReference();
-                    String parentKeyColumn = compositeReferenceComponentDescription.getParentKeyColumn();
+                    Optional<ReferenceColumn> parentKeyColumn = Optional.ofNullable(compositeReferenceComponentDescription.getParentKeyColumn()).map(ReferenceColumn::new);
                     referenceValueRepository.findAllByReferenceType(reference).forEach(referenceValue -> {
                         indexedByHierarchicalKeyReferenceValues.put(referenceValue.getHierarchicalKey(), referenceValue);
-                        if (parentKeyColumn != null) {
-                            Ltree parentHierarchicalKey = Ltree.fromSql(referenceValue.getRefValues().get(parentKeyColumn));
+                        parentKeyColumn.ifPresent(presentParentKeyColumn -> {
+                            ReferenceDatum referenceDatum = referenceValue.getRefValues();
+                            ReferenceColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
+                            Preconditions.checkState(referenceColumnValue instanceof ReferenceColumnSingleValue);
+                            String parentHierarchicalKeyAsString = ((ReferenceColumnSingleValue) referenceColumnValue).getValue();
+                            Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
                             parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
-                        }
+                        });
                     });
                 });
         Map<ReferenceValue, ReferenceValue> childToParents = Maps.transformValues(parentHierarchicalKeys, indexedByHierarchicalKeyReferenceValues::get);
@@ -701,7 +500,7 @@ public class OreSiService {
                 .orElseGet(() -> {
                     UUID fileId = null;
                     try {
-                        fileId = storeFile(app, file);
+                        fileId = storeFile(app, file, "");
                     } catch (IOException e) {
                         return null;
                     }
@@ -770,17 +569,17 @@ public class OreSiService {
                 ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget().getTarget();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
                         if (configuration.getGroovy() != null) {
-                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getValue().toString());
+                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                         VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
-                        UUID referenceId = referenceValidationCheckResult.getReferenceId();
+                        UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                         refsLinkedTo.put(variableComponentKey, referenceId);
                     }
                 } else {
@@ -823,7 +622,7 @@ public class OreSiService {
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
                     if (dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())) {
-                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getMessage(), value);
+                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), value);
                     }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
@@ -1356,8 +1155,9 @@ public class OreSiService {
                 .getConfiguration()
                 .getReferences()
                 .get(referenceType);
-        ImmutableMap<String, Function<ReferenceValue, String>> model = referenceDescription.getColumns().keySet().stream()
-                .collect(ImmutableMap.toImmutableMap(Function.identity(), column -> referenceValue -> referenceValue.getRefValues().get(column)));
+        ImmutableMap<ReferenceColumn, Function<ReferenceDatum, String>> model = referenceDescription.getColumns().keySet().stream()
+                .map(ReferenceColumn::new)
+                .collect(ImmutableMap.toImmutableMap(Function.identity(), referenceColumn -> referenceDatum -> referenceDatum.get(referenceColumn).getAsContentForCsvCell()));
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(referenceDescription.getSeparator())
                 .withSkipHeaderRecord();
@@ -1365,10 +1165,13 @@ public class OreSiService {
         try {
             CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
             csvPrinter.printRecord(model.keySet());
-            List<ReferenceValue> list = repo.getRepository(applicationNameOrId).referenceValue().findAllByReferenceType(referenceType, params);
-            for (ReferenceValue referenceValue : list) {
+            ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
+            List<ReferenceDatum> referenceData = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
+                    .map(ReferenceValue::getRefValues)
+                    .collect(Collectors.toUnmodifiableList());
+            for (ReferenceDatum referenceDatum : referenceData) {
                 ImmutableList<String> rowAsRecord = model.values().stream()
-                        .map(getCellContentFn -> getCellContentFn.apply(referenceValue))
+                        .map(getCellContentFn -> getCellContentFn.apply(referenceDatum))
                         .collect(ImmutableList.toImmutableList());
                 csvPrinter.printRecord(rowAsRecord);
             }

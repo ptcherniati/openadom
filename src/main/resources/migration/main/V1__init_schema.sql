@@ -164,6 +164,7 @@ create table Application (
     creationDate DateOrNow,
     updateDate DateOrNow,
     name Text,
+    comment TEXT NOT NULL,
     referenceType TEXT[], -- liste des types de references existantes
     dataType TEXT[],      -- liste des types de data existants
     configuration jsonb,  -- le fichier de configuration sous forme json
@@ -199,3 +200,28 @@ CREATE POLICY "applicationCreator_Application_select" ON Application AS PERMISSI
 
 CREATE AGGREGATE jsonb_object_agg(jsonb) (SFUNC = 'jsonb_concat', STYPE = jsonb, INITCOND = '{}');
 CREATE AGGREGATE aggregate_by_array_concatenation(anyarray) (SFUNC = 'array_cat', STYPE = anyarray, INITCOND = '{}');
+
+create type COMPOSITE_DATE as (
+  datetimestamp           "timestamp",
+  formattedDate           "varchar"
+) ;
+CREATE FUNCTION castTextToCompositeDate(Text) RETURNS COMPOSITE_DATE AS
+ 'select
+        (substring($1 from 6 for 19)::timestamp,
+         substring($1 from 26))::COMPOSITE_DATE;'
+    LANGUAGE SQL
+    IMMUTABLE
+    RETURNS NULL ON NULL INPUT;
+CREATE CAST (TEXT AS COMPOSITE_DATE) WITH FUNCTION castTextToCompositeDate(Text) AS ASSIGNMENT;
+CREATE FUNCTION castCompositeDateToTimestamp(COMPOSITE_DATE) RETURNS TIMESTAMP
+AS 'select ($1).datetimestamp;'
+    LANGUAGE SQL
+    IMMUTABLE
+    RETURNS NULL ON NULL INPUT;
+CREATE CAST (COMPOSITE_DATE AS TIMESTAMP) WITH FUNCTION castCompositeDateToTimestamp(COMPOSITE_DATE) AS ASSIGNMENT;
+CREATE FUNCTION castCompositeDateToFormattedDate(COMPOSITE_DATE) RETURNS Text
+AS 'select ($1).formattedDate;'
+    LANGUAGE SQL
+    IMMUTABLE
+    RETURNS NULL ON NULL INPUT;
+CREATE CAST (COMPOSITE_DATE AS Text) WITH FUNCTION castCompositeDateToFormattedDate(COMPOSITE_DATE) AS ASSIGNMENT;

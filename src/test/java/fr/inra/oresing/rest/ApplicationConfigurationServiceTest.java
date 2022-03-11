@@ -42,10 +42,6 @@ public class ApplicationConfigurationServiceTest {
 
     @Autowired
     private ApplicationConfigurationService service;
-    @Test
-    public void parseConfigurationProFile() {
-        parseConfigurationFromResource(fixtures.getProApplicationConfigurationResourceName());
-    }
 
     @Test
     public void parseConfigurationFile() {
@@ -54,8 +50,8 @@ public class ApplicationConfigurationServiceTest {
                 fixtures.getAcbbApplicationConfigurationResourceName(),
                 fixtures.getOlaApplicationConfigurationResourceName(),
                 fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
-                fixtures.getValidationApplicationConfigurationResourceName(),
-                fixtures.getProApplicationConfigurationResourceName()
+                fixtures.getValidationApplicationConfigurationResourceName()
+                //fixtures.getProApplicationConfigurationResourceName()
         ).forEach(resource -> {
             parseConfigurationFromResource(resource);
         });
@@ -550,5 +546,15 @@ public class ApplicationConfigurationServiceTest {
     public void testvalid(){
         ConfigurationParsingResult configurationParsingResult = parseYaml("","");
         Assert.assertTrue(configurationParsingResult.isValid());
+    }
+
+    @Test
+    public void testMissingKeyColumnsForReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("keyColumns: [nom du projet_key]", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingKeyColumnsForReference", onlyError.getMessage());
+        Assert.assertEquals("projets", onlyError.getMessageParams().get("reference"));
     }
 }

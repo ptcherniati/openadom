@@ -19,7 +19,9 @@
         "pwd-placeholder": "Ex: xxxx",
         "pwd-forgotten": "Mot de passe oublié ?",
         "register": "Créer un compte",
-        "confirm-pwd": "Confirmer le mot de passe"
+        "confirm-pwd": "Confirmer le mot de passe",
+        "aria-btn-login": "Bouton valider le formulaire de connexion",
+        "aria-btn-signup": "Bouton création d'un compte"
     },
     "validation": {
         "obligatoire": "Obligatoire",
@@ -36,6 +38,7 @@
         "user-unknown": "Identifiants inconnus",
         "application-creation-success": "L'application a été créée !",
         "application-validate-success": "Le fichier YAML est valide !",
+        "application-edit-success": "Le fichier YAML est mis à jours !",
         "warning": "Attention !",
         "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
         "delete": "Supprimer",
@@ -58,11 +61,19 @@
         "references": "Référentiels",
         "french": "Français",
         "english": "English",
-        "language": "Langue"
+        "language": "Langue",
+        "aria-sub-menu": "Chemin d'acces",
+        "aria-nav-bar": "Menu principal",
+        "aria-pagination": "Pagination",
+        "aria-curent-page": "Page actuelle",
+        "aria-next-page": "Page suivante",
+        "aria-previous-page": "Page précédente"
     },
     "applications": {
         "chose-config": "Choisir une configuration",
         "create": "Créer l'application",
+        "comment": "Commentaire : ",
+        "no-comment": "Pas de commentaire",
         "test": "Tester",
         "name": "Nom de l'application",
         "name-placeholder": "Ex : olac",
@@ -74,7 +85,9 @@
 	    "trierA_z": "Nom A - z",
 	    "trierZ_a": "Nom Z - a",
 	    "trierRecent": "Date récente",
-	    "filter": "Filtrer"
+	    "filter": "Filtrer",
+        "change": "Modifier l'application",
+        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>"
     },
     "errors": {
         "emptyFile": "Le fichier est vide",
@@ -121,6 +134,7 @@
         "missingParamColumnReferenceForCheckerInReference": "Dans la description de la <code>{reference}</code>, la règle de validation <code>{validationRuleDescriptionEntryKey}</code> ne précise pas sur quelles colonnes la règle doit s'exécuter en déclarant un paramètre <code>columns</code>",
         "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>",
         "invalidKeyColumns": "Dans la description du référentiel <code>{reference}</code>, les colonnes <code>{unknownUsedAsKeyElementColumns}</code> sont déclarées comme faisant partie de la clé alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
+        "missingKeyColumnsForReference": "Dans la description du référentiel <code>{reference}</code>, vous devez déclarer les colonnes (au moins une) qui composent la clé naturelle",
         "invalidInternationalizedColumns": "Dans la description du référentiel <code>{reference}</code>, les colonnes <code>{unknownUsedAsInternationalizedColumns}</code> sont déclarées comme faisant partie de colonnes internationalisables alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
         "invalidInternationalizedColumnsForDataType": "Dans la surcharge du référentiel <code>{reference}</code> de la description du type de donnée <code>{dataType}</code>, les colonnes <code>{unknownUsedAsInternationalizedColumns}</code> sont déclarées comme faisant partie de colonnes internationalisables alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
         "unknownReferenceInDatatypeReferenceDisplay": "Dans la surcharge de l'affichage des référentiels de la description du type de donnée <code>{dataType}</code>, le référentiel <code>{reference}</code> est inconnu . Référentiels connus connues : <code>{references}</code>",
@@ -128,6 +142,7 @@
         "headerColumnPatternNotMatching": "Erreur dans le format de l'en-tête de colonne. Format à respecter : <code>{expectedHeaderColumnPattern}</code><br/>En-tête actuel : <code>{actualHeaderColumn}</code>",
         "unexpectedTokenCount": "Le nombre de token est inattendu. Nombre attendu : <code>{expectedTokenCount}</code><br/>L'en-tête actuel : <code>{actualHeader}</code> comprend <code>{actualTokenCount}</code> tokens",
         "invalidHeaders": "En-têtes de colonne invalides. Les colonnes attendues sont : <code>{expectedColumns}</code><br/>Les colonnes actuelles sont : <code>{actualColumns}</code><br/> Il manque les colonnes : <code>{missingColumns}</code><br/>Les colonnes suivantes sont inconnues : <code>{unknownColumns}</code>",
+        "emptyHeader": "Le fichier contient un en-tête de colonne vide",
         "duplicatedHeaders": "Les en-têtes suivants sont dupliqués : <code>{duplicatedHeaders}</code>",
         "patternNotMatched": "Pour le composant identifié : <code>{target}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",
         "patternNotMatchedWithColumn": "Pour la colonne : <code>{target}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",
@@ -150,7 +165,10 @@
         "missingAggregationVariableForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{variables}</code>",
         "missingAggregationComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, le componsant <code> {aggregationComponent}</code> de la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{components}</code>",
         "missingStandardDeviationComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'écart type  <code> {standardDeviation}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
-        "missingUnitComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'unité  <code> {unit}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>"
+        "missingUnitComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'unité  <code> {unit}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
+        "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées {knownReferences}"
     },
     "referencesManagement": {
         "actions": "Actions",
@@ -173,12 +191,14 @@
         "filtered": "Les filtres utilisés",
         "sorted": "Les tris utilisés",
         "title-modal-numeric": "Choix de l'interval de valeur",
-        "title-modal-date": "Choix de l'interval de date"
+        "title-modal-date": "Choix de l'interval de date",
+        "manage-datasets": "Gérer les jeux de données"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version sur ce jeux de données",
         "start-date": "Date de début",
         "end-date": "Date de fin",
+        "comment": "Commentaire",
         "choose-file": "Choisir un fichier",
         "placeholder-datepicker": "Taper ou sélectionner une date...",
         "placeholder-select": "Sélectionner...",

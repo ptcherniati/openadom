@@ -1,19 +1,24 @@
 package fr.inra.oresing.model;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext {
+public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, Object>>, SomethingToBeSentToFrontend<Map<String, String>> {
 
-    private final Map<ReferenceColumn, String> values;
+    private final Map<ReferenceColumn, ReferenceColumnValue> values;
 
     public ReferenceDatum() {
         this(new LinkedHashMap<>());
     }
 
-    public ReferenceDatum(Map<ReferenceColumn, String> values) {
+    public ReferenceDatum(Map<ReferenceColumn, ReferenceColumnValue> values) {
         this.values = values;
     }
 
@@ -21,21 +26,62 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext 
         return new ReferenceDatum(new LinkedHashMap<>(referenceDatum.values));
     }
 
-    public String get(ReferenceColumn column) {
+    public static ReferenceDatum fromDatabaseJson(Map<String, Object> mapFromDatabase) {
+        Map<ReferenceColumn, ReferenceColumnValue> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : mapFromDatabase.entrySet()) {
+            ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
+            Object storedValue = entry.getValue();
+            ReferenceColumnValue referenceColumnValue;
+            if (storedValue instanceof String) {
+                referenceColumnValue = new ReferenceColumnSingleValue((String) storedValue);
+            } else if (storedValue instanceof Collection) {
+                Set<String> collect = new HashSet<>(((Collection<String>) storedValue));
+                referenceColumnValue = new ReferenceColumnMultipleValue(collect);
+            } else {
+                throw new IllegalStateException("valeur inattendue en base pour un référentiel à la clé " + entry.getKey() + " dans " + mapFromDatabase);
+            }
+            result.put(referenceColumn, referenceColumnValue);
+        }
+        return new ReferenceDatum(result);
+    }
+
+    public boolean contains(ReferenceColumn column) {
+        return values.containsKey(column);
+    }
+
+    public ReferenceColumnValue get(ReferenceColumn column) {
+        Preconditions.checkArgument(contains(column), "pas de colonne " + column + " dans " + values);
         return values.get(column);
     }
 
-    public Map<String, String> asMap() {
-        Map<String, String> map = new LinkedHashMap<>();
-        for (Map.Entry<ReferenceColumn, String> entry : values.entrySet()) {
-            String valueThatMayBeNull = entry.getValue();
-            map.put(entry.getKey().asString(), valueThatMayBeNull);
+    @Override
+    public ImmutableMap<String, Object> toJsonForDatabase() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        for (Map.Entry<ReferenceColumn, ReferenceColumnValue> entry : values.entrySet()) {
+            Object valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+                    .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                    .orElse(null);
+            map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
         }
-        return map;
+        return ImmutableMap.copyOf(map);
     }
 
-    public String put(ReferenceColumn string, String value) {
-        return values.put(string, value);
+    public ImmutableMap<String, Object> toObjectsExposedInGroovyContext() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        for (Map.Entry<ReferenceColumn, ReferenceColumnValue> entry : values.entrySet()) {
+            Object valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+                    .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                    .orElse(null);
+            map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+        }
+        return ImmutableMap.copyOf(map);
+    }
+
+    public ReferenceColumnValue put(ReferenceColumn column, ReferenceColumnValue value) {
+        ReferenceColumnValue replaced = values.put(column, value);
+        boolean consistent = replaced == null || replaced.getClass().equals(value.getClass());
+        Preconditions.checkState(consistent, "dans ce cas, on est en train de remplacer un champs avec une valeur qui a une autre multiplicité, c'est sûrement une erreur");
+        return replaced;
     }
 
     public void putAll(ReferenceDatum anotherReferenceDatum) {
@@ -44,6 +90,25 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext 
 
     @Override
     public ImmutableMap<String, Object> getEvaluationContext() {
-        return ImmutableMap.of("datum", asMap());
+        return ImmutableMap.of("datum", toObjectsExposedInGroovyContext());
+    }
+
+    /**
+     * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et checker
+     */
+    public Set<String> getValuesToCheck(ReferenceColumn column) {
+        return get(column).getValuesToCheck();
+    }
+
+    @Override
+    public Map<String, String> toJsonForFrontend() {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (Map.Entry<ReferenceColumn, ReferenceColumnValue> entry : values.entrySet()) {
+            String valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+                    .map(ReferenceColumnValue::toJsonForFrontend)
+                    .orElse(null);
+            map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+        }
+        return ImmutableMap.copyOf(map);
     }
 }

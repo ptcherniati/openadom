@@ -89,12 +89,12 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createApplication(@PathVariable("name") String name,
+    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam(name = "comment",defaultValue = "") String comment,
                                                @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
         if (INVALID_APPLICATION_NAME_PREDICATE.test(name)) {
             return ResponseEntity.badRequest().body("'" + name + "' n’est pas un nom d'application valide, seules les lettres minuscules sont acceptées");
         }
-        UUID result = service.createApplication(name, file);
+        UUID result = service.createApplication(name, file, comment);
         String uri = UriUtils.encodePath("/applications/" + result, Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }
@@ -142,7 +142,7 @@ public class OreSiResources {
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
             return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getConfiguration().getInternationalization(), references, dataTypes);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -154,11 +154,11 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
+    public ResponseEntity<Map<String, Object>> changeConfiguration(@PathVariable("nameOrId") String nameOrId, @RequestParam("file") MultipartFile file, @RequestParam(name = "comment", defaultValue = "") String comment) throws IOException, BadApplicationConfigurationException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        UUID result = service.changeApplicationConfiguration(nameOrId, file);
+        UUID result = service.changeApplicationConfiguration(nameOrId, file, comment);
         String uri = UriUtils.encodePath(String.format("/applications/%s/configuration/%s", nameOrId, result), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }
@@ -212,7 +212,7 @@ public class OreSiResources {
                                 referenceValue.getHierarchicalKey().getSql(),
                                 referenceValue.getHierarchicalReference().getSql(),
                                 referenceValue.getNaturalKey().getSql(),
-                                referenceValue.getRefValues()
+                                referenceValue.getRefValues().toJsonForFrontend()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));

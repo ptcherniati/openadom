@@ -17,4 +17,13 @@ public class BinaryFileInfos {
     public String publisheddate;
     public UUID createuser;
     public String createdate;
+    public String comment;
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public String getComment() {
+        return comment;
+    }
 }
