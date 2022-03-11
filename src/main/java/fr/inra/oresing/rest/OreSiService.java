@@ -427,7 +427,13 @@ public class OreSiService {
                                 String header = referenceColumnValue.getValue();
                                 String fullHeader = value.getHeaderPrefix() + header;
                                 ColumnPresenceConstraint presenceConstraint = value.getPresenceConstraint();
-                                return new ReferenceImporterContext.DynamicColumn(referenceColumn, fullHeader, presenceConstraint, hierarchicalKey);
+                                return new ReferenceImporterContext.DynamicColumn(
+                                        referenceColumn,
+                                        fullHeader,
+                                        presenceConstraint,
+                                        hierarchicalKey,
+                                        Map.entry(reference, referenceValue.getId())
+                                );
                             });
                     return valuedDynamicColumns;
                 });

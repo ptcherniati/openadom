@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.SetMultimap;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.ColumnPresenceConstraint;
@@ -199,9 +200,9 @@ public class ReferenceImporterContext {
         return Optional.ofNullable(storedReferences.get(hierarchicalKey));
     }
 
-    public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent) {
+    public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent, SetMultimap<String, UUID> refsLinkedTo) {
         Column column = columnsPerHeader.get(header);
-        column.pushValue(referenceDatum, cellContent);
+        column.pushValue(cellContent, referenceDatum, refsLinkedTo);
     }
 
     public ImmutableSet<String> getExpectedHeaders() {
@@ -346,7 +347,7 @@ public class ReferenceImporterContext {
             return expectedHeader.equals(header);
         }
 
-        abstract void pushValue(ReferenceDatum referenceDatum, String cellContent);
+        abstract void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo);
 
         abstract String getCsvCellContent(ReferenceDatum referenceDatum);
 
@@ -374,7 +375,7 @@ public class ReferenceImporterContext {
         }
 
         @Override
-        public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
+        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo) {
             ReferenceColumnValue referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
             referenceDatum.put(getReferenceColumn(), referenceColumnValue);
         }
@@ -395,7 +396,7 @@ public class ReferenceImporterContext {
         }
 
         @Override
-        public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
+        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo) {
             Set<String> values = Splitter.on(CSV_CELL_SEPARATOR)
                     .splitToStream(cellContent)
                     .collect(Collectors.toSet());
@@ -415,15 +416,24 @@ public class ReferenceImporterContext {
 
     public static class DynamicColumn extends Column {
 
+        /**
+         * Les colonnes dynamiques sont représentées sous forme de Map dont la clé est la clé hiérarchique correspondant au référentiel qui décrit cette colonne dynamique
+         */
         private final Ltree expectedHierarchicalKey;
 
-        public DynamicColumn(ReferenceColumn referenceColumn, String expectedHeader, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey) {
+        /**
+         * Cette colonne dynamique a été générée par une ligne de référentiel, donc il faut lier la donnée à ce référentiel
+         */
+        private final Map.Entry<String, UUID> refsLinkedToEntryToAdd;
+
+        public DynamicColumn(ReferenceColumn referenceColumn, String expectedHeader, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, UUID> refsLinkedToEntryToAdd) {
             super(referenceColumn, expectedHeader, presenceConstraint);
             this.expectedHierarchicalKey = expectedHierarchicalKey;
+            this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
         }
 
         @Override
-        public void pushValue(ReferenceDatum referenceDatum, String cellContent) {
+        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo) {
             ReferenceColumnIndexedValue existingReferenceColumnIndexedValue;
             final Map<Ltree, String> values;
             if (referenceDatum.contains(getReferenceColumn())) {
@@ -436,6 +446,7 @@ public class ReferenceImporterContext {
             values.put(expectedHierarchicalKey, cellContent);
             ReferenceColumnIndexedValue newReferenceColumnIndexedValue = new ReferenceColumnIndexedValue(values);
             referenceDatum.put(getReferenceColumn(), newReferenceColumnIndexedValue);
+            refsLinkedTo.put(refsLinkedToEntryToAdd.getKey(), refsLinkedToEntryToAdd.getValue());
         }
 
         @Override

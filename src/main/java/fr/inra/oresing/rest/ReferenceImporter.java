@@ -175,12 +175,13 @@ abstract class ReferenceImporter {
     private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
         Iterator<String> currentHeader = columns.iterator();
         ReferenceDatum referenceDatum = new ReferenceDatum();
+        SetMultimap<String, UUID> refsLinkedTo = HashMultimap.create();
         csvRecord.forEach(cellContent -> {
             String header = currentHeader.next();
-            referenceImporterContext.pushValue(referenceDatum, header, cellContent);
+            referenceImporterContext.pushValue(referenceDatum, header, cellContent, refsLinkedTo);
         });
         int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
-        return new RowWithReferenceDatum(lineNumber, referenceDatum);
+        return new RowWithReferenceDatum(lineNumber, referenceDatum, ImmutableSetMultimap.copyOf(refsLinkedTo));
     }
 
     /**
@@ -254,6 +255,7 @@ abstract class ReferenceImporter {
                     .collect(Collectors.toUnmodifiableList());
             allCheckerErrorsBuilder.addAll(checkerErrors);
         });
+        refsLinkedToBuilder.putAll(rowWithReferenceDatum.getRefsLinkedTo());
         ReferenceDatumAfterChecking referenceDatumAfterChecking =
                 new ReferenceDatumAfterChecking(
                         rowWithReferenceDatum.getLineNumber(),
@@ -336,6 +338,7 @@ abstract class ReferenceImporter {
     private static class RowWithReferenceDatum {
         int lineNumber;
         ReferenceDatum referenceDatum;
+        ImmutableSetMultimap<String, UUID> refsLinkedTo;
     }
 
     @Value
