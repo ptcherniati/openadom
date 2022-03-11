@@ -22,7 +22,7 @@ create table ReferenceValue
     hierarchicalKey       ltree NOT NULL,
     hierarchicalReference ltree NOT NULL,
     naturalKey            ltree NOT NULL,
-    refsLinkedTo          jsonb check (refs_check_for_reference('${applicationSchema}', application, refsLinkedTo)),
+    refsLinkedTo          jsonb ,
     refValues             jsonb,
     binaryFile            EntityRef REFERENCES BinaryFile (id),
 
@@ -87,8 +87,7 @@ create table Data
     rowId           TEXT                                                             NOT NULL,
     datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED NOT NULL,
     "authorization" ${applicationSchema}.authorization                               NOT NULL check (("authorization").datagroup[1] is not null),
-    refsLinkedTo    jsonb check (refs_check_for_datatype('${applicationSchema}', application, refsLinkedTo,
-                                                         datatype)),
+    refsLinkedTo    jsonb ,
     dataValues      jsonb,
     binaryFile      EntityRef REFERENCES BinaryFile (id)
 );
@@ -122,12 +121,14 @@ GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Reference_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON Data_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON OreSiAuthorization TO "superadmin" WITH GRANT OPTION;
 
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Reference_Reference TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data_Reference TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiAuthorization TO public;
 
 --ALTER TABLE BinaryFile ENABLE ROW LEVEL SECURITY;

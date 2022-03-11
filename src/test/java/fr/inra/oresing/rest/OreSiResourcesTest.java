@@ -256,6 +256,30 @@ public class OreSiResourcesTest {
         // on supprime le fic
     }
 
+    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
+        URL resource;
+        String response;
+        resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
+
+            //dépôt et publication d'un fichier projet site__p1
+            MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
+            refFile.transferTo(Path.of("/tmp/pem.csv"));
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, toPublish))
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+            String fileUUID = JsonPath.parse(response).read("$.fileId");
+
+            //liste des fichiers projet/site
+            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
+            log.debug(StringUtils.abbreviate(response, 50));
+            return fileUUID;
+        }
+    }
+
     @Test
     public void addApplicationMonsore() throws Exception {
         String appId;
@@ -543,30 +567,6 @@ public class OreSiResourcesTest {
 //        }
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
-    }
-
-    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
-        URL resource;
-        String response;
-        resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
-        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-
-            //dépôt et publication d'un fichier projet site__p1
-            MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
-            refFile.transferTo(Path.of("/tmp/pem.csv"));
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                            .file(refFile)
-                            .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, toPublish))
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            String fileUUID = JsonPath.parse(response).read("$.fileId");
-
-            //liste des fichiers projet/site
-            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
-            log.debug(StringUtils.abbreviate(response, 50));
-            return fileUUID;
-        }
     }
 
     @Test

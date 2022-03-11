@@ -5,14 +5,17 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.rest.DownloadDatasetQuery;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -81,5 +84,26 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .addValue("dataGroup", dataGroup);
         int count = getNamedParameterJdbcTemplate().update(sql, sqlParams);
         return count;
+    }
+
+    public void updateConstraintForeigData(List<UUID> uuids) {
+        String sql = "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)\n" +
+                "with tuple as (\n" +
+                "select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencedBy\n" +
+                "from " + getTable().getSqlIdentifier() + "\n" +
+                ")\n" +
+                "select dataId, referencedBy from tuple\n" +
+                "where dataId in (:ids) and referencedBy is not null\n" +
+                "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING;";
+        final String ids = uuids.stream()
+                .map(uuid -> String.format("'%s'::uuid", uuid))
+                .collect(Collectors.joining(","));
+        try {
+            List result = getNamedParameterJdbcTemplate().query(sql, ImmutableMap.of("ids", uuids), getJsonRowMapper());
+        } catch (DataIntegrityViolationException e) {
+            if(e.getCause() instanceof PSQLException && !"02000".equals(((PSQLException)e.getCause()).getSQLState())){
+                throw e;
+            }
+        }
     }
 }
