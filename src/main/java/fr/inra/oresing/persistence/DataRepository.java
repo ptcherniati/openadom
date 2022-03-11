@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.rest.DownloadDatasetQuery;
@@ -95,15 +96,18 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 "select dataId, referencedBy from tuple\n" +
                 "where dataId in (:ids) and referencedBy is not null\n" +
                 "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING;";
-        final String ids = uuids.stream()
-                .map(uuid -> String.format("'%s'::uuid", uuid))
-                .collect(Collectors.joining(","));
-        try {
-            List result = getNamedParameterJdbcTemplate().query(sql, ImmutableMap.of("ids", uuids), getJsonRowMapper());
-        } catch (DataIntegrityViolationException e) {
-            if(e.getCause() instanceof PSQLException && !"02000".equals(((PSQLException)e.getCause()).getSQLState())){
-                throw e;
-            }
-        }
+        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE-1)
+                .forEachRemaining(uuidsByBatch -> {
+                    final String ids = uuidsByBatch.stream()
+                            .map(uuid -> String.format("'%s'::uuid", uuid))
+                            .collect(Collectors.joining(","));
+                    try {
+                        getNamedParameterJdbcTemplate().query(sql, ImmutableMap.of("ids", uuidsByBatch), getJsonRowMapper());
+                    } catch (DataIntegrityViolationException e) {
+                        if (e.getCause() instanceof PSQLException && !"02000".equals(((PSQLException) e.getCause()).getSQLState())) {
+                            throw e;
+                        }
+                    }
+                });
     }
 }
