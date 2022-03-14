@@ -8,8 +8,8 @@
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
-      <div class="CollapsibleTree-header-infos column is-three-quarters">
-        <div class="CollapsibleTree-header-infos column" :style="`transform:translate(${level * 50}px);`">
+      <div class="CollapsibleTree-header-infos column is-variable is-half-desktop is-three-quarters-widescreen">
+        <div class="CollapsibleTree-header-infos column is-variable is-12-desktop is-5-widescreen" :style="`transform:translate(${level * 50}px);`">
           <FontAwesomeIcon
             v-if="option.children && option.children.length !== 0"
             :icon="displayChildren ? 'caret-down' : 'caret-right'"
@@ -42,7 +42,7 @@
         <div
           :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
-              ? 'tile synthesis-details link column is-8'
+              ? 'tile synthesis-details link column is-variable is-12-desktop is-8-widescreen'
               : 'tile synthesis-details column'
           "
           @click="
@@ -70,7 +70,7 @@
           </span>
         </div>
       </div>
-      <div class="CollapsibleTree-buttons column is-3">
+      <div class="CollapsibleTree-buttons column">
         <div class="file button is-small is-info" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
@@ -86,7 +86,7 @@
             </span>
           </b-upload>
         </div>
-        <div v-else>
+        <div class="column is-5" v-else>
           <b-button
             icon-left="archive"
             size="is-small"
@@ -97,7 +97,7 @@
           >
           </b-button>
         </div>
-        <div v-for="button in buttons" :key="button.id">
+        <div class="column is-3" v-for="button in buttons" :key="button.id">
           <b-button
             :icon-left="button.iconName"
             size="is-small"
