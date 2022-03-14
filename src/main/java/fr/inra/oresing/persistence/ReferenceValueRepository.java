@@ -3,18 +3,22 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
+import fr.inra.oresing.model.ReferenceColumnValue;
+import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
-import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -122,16 +126,14 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public void updateConstraintForeignReferences(List<UUID> uuids) {
-        String sql = "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencedBy)\n" + "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencedBy\n" + "from  " + getTable().getSqlIdentifier() + "\n" + "where id in (:ids)" + "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING;";
-        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE - 1).forEachRemaining(uuidsByBatch -> {
-            final String ids = uuidsByBatch.stream().map(uuid -> String.format("'%s'::uuid", uuid)).collect(Collectors.joining(","));
-            try {
-                getNamedParameterJdbcTemplate().query(sql, ImmutableMap.of("ids", uuidsByBatch), getJsonRowMapper());
-            } catch (DataIntegrityViolationException e) {
-                if (e.getCause() instanceof PSQLException && !"02000".equals(((PSQLException) e.getCause()).getSQLState())) {
-                    throw e;
-                }
-            }
-        });
+        String sql = String.join(" "
+                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencedBy)"
+                , "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencedBy"
+                , "from " + getTable().getSqlIdentifier()
+                , "where id in (:ids)"
+                , "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING"
+        );
+        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE - 1)
+                .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }
 }
