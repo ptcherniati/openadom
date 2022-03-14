@@ -8,8 +8,13 @@
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
-      <div class="CollapsibleTree-header-infos column is-variable is-half-desktop is-three-quarters-widescreen">
-        <div class="CollapsibleTree-header-infos column is-variable is-12-desktop is-5-widescreen" :style="`transform:translate(${level * 50}px);`">
+      <div
+        class="CollapsibleTree-header-infos column is-variable is-half-desktop is-three-quarters-widescreen"
+      >
+        <div
+          class="CollapsibleTree-header-infos column"
+          :style="`transform:translate(${level * 50}px);`"
+        >
           <FontAwesomeIcon
             v-if="option.children && option.children.length !== 0"
             :icon="displayChildren ? 'caret-down' : 'caret-right'"
@@ -35,8 +40,11 @@
           >
             {{ option.localName || option.label }}
           </div>
-          <span v-if="!option.synthesisMinMax" class="nodata has-text-danger">
-            Pas de données
+          <span class="file-name" v-if="refFile">
+            {{ refFile.name }}
+          </span>
+          <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
+            {{ $t("validation.data-empty") }}
           </span>
         </div>
         <div
@@ -78,9 +86,6 @@
             accept=".csv"
             @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
-            <span class="file-name" v-if="refFile">
-              {{ refFile.name }}
-            </span>
             <span class="file-cta">
               <b-icon class="file-icon" icon="upload" style="font-size: 0.75rem"></b-icon>
             </span>
@@ -190,6 +195,7 @@ $row-height: 40px;
   height: $row-height;
   padding: 0.75rem;
   justify-content: space-between;
+  margin: -7px;
 
   .file-icon {
     margin-right: 0;
@@ -199,10 +205,12 @@ $row-height: 40px;
     border: none;
     height: 100%;
     display: inherit;
-    border-right: solid 2px;
+    border-left: solid 2px;
     border-radius: 0;
-    padding-right: 0.5em;
+    padding-left: 0.5em;
+    margin-left: 0.5em;
     background-color: rgba(255, 255, 255, 0.2);
+    color: $primary;
 
     &:hover {
       opacity: 1;

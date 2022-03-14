@@ -13,13 +13,13 @@
           :key="key"
           style="width: auto"
           :open="open"
-          :id="'collapse.'+ key"
+          :id="'collapse.' + key"
         >
           <template #trigger="props">
             <div
               class="card-header columns"
               v-show="key !== 'minmax' && key !== 'ranges'"
-              style="margin: 0; cursor: auto;"
+              style="margin: 0; cursor: auto"
             >
               <p class="card-header-title column is-1" style="margin-left: 10px">
                 {{ key }}
@@ -37,7 +37,7 @@
                 role="button"
                 v-if="Object.values(option).length > 4"
                 style="text-align: center"
-                @click="loadSynthese(!collapse,Object.values(option),option.variable)"
+                @click="loadSynthese(!collapse, Object.values(option), option.variable)"
               >
                 <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
               </a>
@@ -86,17 +86,16 @@ export default class DetailModalCard extends Vue {
   @Prop() applicationName;
   collapse = false;
 
-  loadSynthese(open,options,name) {
-    if(open===true) {
-      var lambda = document.createElement('div');
+  loadSynthese(open, options, name) {
+    if (open === true) {
+      var lambda = document.createElement("div");
       lambda.id = name;
       lambda.className = "collapse-content";
-      document.getElementById("collapse."+name).appendChild(lambda);
+      document.getElementById("collapse." + name).appendChild(lambda);
       console.log(options);
-      return this.collapse = open;
-    }
-    else {
-      return this.collapse = !open;
+      return (this.collapse = open);
+    } else {
+      return (this.collapse = !open);
     }
   }
 }
