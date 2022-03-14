@@ -12,13 +12,14 @@
           v-for="(option, key) in options.synthesis"
           :key="key"
           style="width: auto"
-          :open="true"
+          :open="open"
+          :id="'collapse.'+ key"
         >
           <template #trigger="props">
             <div
               class="card-header columns"
               v-show="key !== 'minmax' && key !== 'ranges'"
-              style="margin-top: 0; margin-bottom: 0"
+              style="margin: 0; cursor: auto;"
             >
               <p class="card-header-title column is-1" style="margin-left: 10px">
                 {{ key }}
@@ -35,6 +36,8 @@
                 :aria-controls="key"
                 role="button"
                 v-if="Object.values(option).length > 4"
+                style="text-align: center"
+                @click="loadSynthese(!collapse,Object.values(option),option.variable)"
               >
                 <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
               </a>
@@ -81,11 +84,20 @@ export default class DetailModalCard extends Vue {
   @Prop({ default: false }) options;
   @Prop() closeCb;
   @Prop() applicationName;
+  collapse = false;
 
-  consultAuthorization() {
-    this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataType.id}/authorizations`
-    );
+  loadSynthese(open,options,name) {
+    if(open===true) {
+      var lambda = document.createElement('div');
+      lambda.id = name;
+      lambda.className = "collapse-content";
+      document.getElementById("collapse."+name).appendChild(lambda);
+      console.log(options);
+      return this.collapse = open;
+    }
+    else {
+      return this.collapse = !open;
+    }
   }
 }
 </script>
