@@ -1,6 +1,7 @@
 package fr.inra.oresing.model.internationalization;
 
 import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
 import fr.inra.oresing.model.ReferenceDatum;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,8 +24,8 @@ public class InternationalizationDisplay {
                 .ifPresent(patterns -> {
                     patterns.entrySet().stream()
                             .forEach(stringEntry -> {
-                                displays.put(new ReferenceColumn("__display_" + stringEntry.getKey()),
-                                        parsePattern(stringEntry.getValue()).stream()
+                                displays.put(ReferenceColumn.forDisplay(stringEntry.getKey()),
+                                        new ReferenceColumnSingleValue(parsePattern(stringEntry.getValue()).stream()
                                                 .map(patternSection -> {
                                                             String internationalizedPattern = patternSection.text;
                                                             if (!Strings.isNullOrEmpty(patternSection.variable)) {
@@ -37,7 +38,7 @@ public class InternationalizationDisplay {
                                                             return internationalizedPattern;
                                                         }
                                                 )
-                                                .collect(Collectors.joining())
+                                                .collect(Collectors.joining()))
                                 );
                             });
                 });

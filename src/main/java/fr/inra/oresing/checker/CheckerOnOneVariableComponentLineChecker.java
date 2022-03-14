@@ -5,10 +5,14 @@ import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import org.assertj.core.util.Strings;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerConfiguration> extends LineChecker<C> {
 
@@ -35,10 +39,17 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
     }
 
     @Override
-    default ValidationCheckResult checkReference(ReferenceDatum referenceDatum) {
+    default Set<ValidationCheckResult> checkReference(ReferenceDatum referenceDatum) {
         ReferenceDatum transformedReferenceDatum = getTransformer().transform(referenceDatum);
         final ReferenceColumn column = (ReferenceColumn) getTarget().getTarget();
-        String value = transformedReferenceDatum.get(column);
+        final Set<String> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
+        final Set<ValidationCheckResult> validationCheckResults = valuesToCheck.stream()
+                .map(this::checkRequiredThenCheck)
+                .collect(Collectors.toUnmodifiableSet());
+        return validationCheckResults;
+    }
+
+    default ValidationCheckResult checkRequiredThenCheck(String value) {
         ValidationCheckResult validationCheckResult;
         if (Strings.isNullOrEmpty(value)) {
             if (getConfiguration().isRequired()) {
@@ -54,4 +65,6 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
     }
 
     ValidationCheckResult check(String value);
+
+    SqlPrimitiveType getSqlType();
 }

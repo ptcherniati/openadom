@@ -72,7 +72,6 @@ public class SqlService {
                 sqlPolicy.getRole().getSqlIdentifier(),
                 sqlPolicy.getUsingExpression()
         );
-        System.out.println(createPolicySql);
         execute(createPolicySql);
     }
 

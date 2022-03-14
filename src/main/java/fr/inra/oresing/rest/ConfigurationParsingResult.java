@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import lombok.Value;
 
 import javax.annotation.Nullable;
@@ -417,6 +418,12 @@ public class ConfigurationParsingResult {
                     "dataType", datatype,
                     "components", components
             ));
+        }
+
+        public Builder recordMissingKeyColumnsForReference(String reference) {
+            return recordError("missingKeyColumnsForReference", ImmutableMap.of(
+                    "reference", reference)
+            );
         }
     }
 }

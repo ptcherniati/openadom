@@ -29,6 +29,7 @@ const ERRORS = {
   headerColumnPatternNotMatching :(params) => i18n.t("errors.headerColumnPatternNotMatching", params),
   unexpectedTokenCount : (params) => i18n.t("errors.unexpectedTokenCount", params),
   invalidHeaders : (params) => i18n.t("errors.invalidHeaders", params),
+  emptyHeader : (params) => i18n.t("errors.emptyHeader", params),
   duplicatedHeaders : (params) => i18n.t("errors.duplicatedHeaders", params),
   patternNotMatched : (params) => i18n.t("errors.patternNotMatched", params),
   invalidDate : (params) => i18n.t("errors.invalidDate", params),

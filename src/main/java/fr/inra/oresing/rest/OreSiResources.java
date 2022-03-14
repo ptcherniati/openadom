@@ -212,7 +212,7 @@ public class OreSiResources {
                                 referenceValue.getHierarchicalKey().getSql(),
                                 referenceValue.getHierarchicalReference().getSql(),
                                 referenceValue.getNaturalKey().getSql(),
-                                referenceValue.getRefValues()
+                                referenceValue.getRefValues().toJsonForFrontend()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));

@@ -134,6 +134,7 @@
         "missingParamColumnReferenceForCheckerInReference": "Dans la description de la <code>{reference}</code>, la règle de validation <code>{validationRuleDescriptionEntryKey}</code> ne précise pas sur quelles colonnes la règle doit s'exécuter en déclarant un paramètre <code>columns</code>",
         "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’entête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Composants connus <code>{components}</code>",
         "invalidKeyColumns": "Dans la description du référentiel <code>{reference}</code>, les colonnes <code>{unknownUsedAsKeyElementColumns}</code> sont déclarées comme faisant partie de la clé alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
+        "missingKeyColumnsForReference": "Dans la description du référentiel <code>{reference}</code>, vous devez déclarer les colonnes (au moins une) qui composent la clé naturelle",
         "invalidInternationalizedColumns": "Dans la description du référentiel <code>{reference}</code>, les colonnes <code>{unknownUsedAsInternationalizedColumns}</code> sont déclarées comme faisant partie de colonnes internationalisables alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
         "invalidInternationalizedColumnsForDataType": "Dans la surcharge du référentiel <code>{reference}</code> de la description du type de donnée <code>{dataType}</code>, les colonnes <code>{unknownUsedAsInternationalizedColumns}</code> sont déclarées comme faisant partie de colonnes internationalisables alors qu’elles n’existent pas. Colonnes connues : <code>{knownColumns}</code>",
         "unknownReferenceInDatatypeReferenceDisplay": "Dans la surcharge de l'affichage des référentiels de la description du type de donnée <code>{dataType}</code>, le référentiel <code>{reference}</code> est inconnu . Référentiels connus connues : <code>{references}</code>",
@@ -141,6 +142,7 @@
         "headerColumnPatternNotMatching": "Erreur dans le format de l'en-tête de colonne. Format à respecter : <code>{expectedHeaderColumnPattern}</code><br/>En-tête actuel : <code>{actualHeaderColumn}</code>",
         "unexpectedTokenCount": "Le nombre de token est inattendu. Nombre attendu : <code>{expectedTokenCount}</code><br/>L'en-tête actuel : <code>{actualHeader}</code> comprend <code>{actualTokenCount}</code> tokens",
         "invalidHeaders": "En-têtes de colonne invalides. Les colonnes attendues sont : <code>{expectedColumns}</code><br/>Les colonnes actuelles sont : <code>{actualColumns}</code><br/> Il manque les colonnes : <code>{missingColumns}</code><br/>Les colonnes suivantes sont inconnues : <code>{unknownColumns}</code>",
+        "emptyHeader": "Le fichier contient un en-tête de colonne vide",
         "duplicatedHeaders": "Les en-têtes suivants sont dupliqués : <code>{duplicatedHeaders}</code>",
         "patternNotMatched": "Pour le composant identifié : <code>{target}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",
         "patternNotMatchedWithColumn": "Pour la colonne : <code>{target}</code> la valeur <code>{value}</code> ne respecte pas le format attendu : <code>{pattern}</code>.",
@@ -163,7 +165,10 @@
         "missingAggregationVariableForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{variables}</code>",
         "missingAggregationComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, le componsant <code> {aggregationComponent}</code> de la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{components}</code>",
         "missingStandardDeviationComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'écart type  <code> {standardDeviation}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
-        "missingUnitComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'unité  <code> {unit}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>"
+        "missingUnitComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'unité  <code> {unit}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
+        "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le  parent n'existe pas. Valeurs acceptées {knownReferences}"
     },
     "referencesManagement": {
         "actions": "Actions",

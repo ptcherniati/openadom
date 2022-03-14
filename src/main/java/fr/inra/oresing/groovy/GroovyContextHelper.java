@@ -22,7 +22,7 @@ public class GroovyContextHelper {
 
     public ImmutableMap<String, Object> getGroovyContextForReferences(ReferenceValueRepository referenceValueRepository, Set<String> refs) {
         Map<String, List<ReferenceValueDecorator>> references = new HashMap<>();
-        Map<String, List<Map<String, String>>> referencesValues = new HashMap<>();
+        Map<String, List<Map<String, Object>>> referencesValues = new HashMap<>();
         refs.forEach(ref -> {
             List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(ref);
             allByReferenceType.stream()
@@ -30,7 +30,7 @@ public class GroovyContextHelper {
                     .forEach(referenceValue -> references.computeIfAbsent(ref, k -> new LinkedList<>()).add(referenceValue));
             allByReferenceType.stream()
                     .map(ReferenceValue::getRefValues)
-                    .forEach(values -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(values));
+                    .forEach(values -> referencesValues.computeIfAbsent(ref, k -> new LinkedList<>()).add(values.toObjectsExposedInGroovyContext()));
         });
         return ImmutableMap.<String, Object>builder()
                 .put("references", references)
@@ -77,8 +77,8 @@ public class GroovyContextHelper {
             return decorated.getNaturalKey().getSql();
         }
 
-        public Map<String, String> getRefValues() {
-            return decorated.getRefValues();
+        public Map<String, Object> getRefValues() {
+            return decorated.getRefValues().toObjectsExposedInGroovyContext();
         }
     }
 }

@@ -3,7 +3,7 @@ package fr.inra.oresing.checker;
 import com.google.common.collect.*;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.rest.CsvRowValidationCheckResult;
-import fr.inra.oresing.rest.DefaultValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 
 import java.util.List;
@@ -66,17 +66,26 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
     }
 
     public static void checkHeader(ImmutableSet<String> expectedColumns, ImmutableMultiset<String> actualColumns, int headerLine) {
+        if (actualColumns.contains("")) {
+            throw forEmptyHeader(headerLine);
+        }
         ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
                 .filter(column -> column.getCount() > 1)
                 .map(Multiset.Entry::getElement)
                 .collect(ImmutableSet.toImmutableSet());
         if (!duplicatedHeaders.isEmpty()) {
-            throw InvalidDatasetContentException.forDuplicatedHeaders(headerLine, duplicatedHeaders);
+            throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
         }
         ImmutableSet<String> actualColumnsAsSet = actualColumns.elementSet();
         if (!expectedColumns.equals(actualColumnsAsSet)) {
-            throw InvalidDatasetContentException.forInvalidHeaders(expectedColumns, actualColumnsAsSet, headerLine);
+            throw forInvalidHeaders(expectedColumns, actualColumnsAsSet, headerLine);
         }
+    }
+
+    private static InvalidDatasetContentException forEmptyHeader(int headerLine) {
+        return newInvalidDatasetContentException(headerLine, "emptyHeader", ImmutableMap.of(
+                "headerLine", headerLine
+        ));
     }
 
     public static void checkErrorsIsEmpty(List<CsvRowValidationCheckResult> errors) {
