@@ -133,7 +133,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                     } else {
                         display = null;
                     }
-                    Map<String, String> values = referenceDatum.toJsonForFrontend();
+                    Map<String, Object> values = referenceDatum.toJsonForFrontend();
                     return new ApplicationResult.Reference.ReferenceUUIDAndDisplay(display, result.getId(), values);
                 };
         return findAllByReferenceType(referenceType).stream()

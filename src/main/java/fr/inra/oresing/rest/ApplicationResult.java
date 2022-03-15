@@ -36,7 +36,7 @@ public class ApplicationResult {
         public static class ReferenceUUIDAndDisplay {
             String display;
             UUID uuid;
-            Map<String, String> values;
+            Map<String, Object> values;
         }
     }
 

@@ -1,6 +1,5 @@
 package fr.inra.oresing.model;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import fr.inra.oresing.persistence.Ltree;
 import lombok.Value;
@@ -11,7 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Value
-public class ReferenceColumnIndexedValue implements ReferenceColumnValue<Map<String, String>> {
+public class ReferenceColumnIndexedValue implements ReferenceColumnValue<Map<String, String>, Map<String, String>> {
 
     Map<Ltree, String> values;
 
@@ -27,12 +26,16 @@ public class ReferenceColumnIndexedValue implements ReferenceColumnValue<Map<Str
     }
 
     @Override
-    public String toJsonForFrontend() {
-        return Joiner.on(",").withKeyValueSeparator("=").join(toJsonForDatabase());
+    public Map<String, String> toJsonForFrontend() {
+        return toStringStringMap();
     }
 
     @Override
     public Map<String, String> toJsonForDatabase() {
+        return toStringStringMap();
+    }
+
+    private Map<String, String> toStringStringMap() {
         Map<String, String> jsonForDatabase = values.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().getSql(), Map.Entry::getValue));
         return jsonForDatabase;
