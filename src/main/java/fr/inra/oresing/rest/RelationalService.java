@@ -331,6 +331,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
         List<ViewCreationCommand> views = new LinkedList<>();
         for (Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
             String referenceType = entry.getKey();
+            Configuration.ReferenceDescription referenceDescription = entry.getValue();
 
             ImmutableMap<ReferenceColumn, SqlPrimitiveType> sqlTypePerColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
                     .filter(CheckerOnOneVariableComponentLineChecker.class::isInstance)
@@ -342,7 +343,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .map(ReferenceLineChecker.class::cast)
                     .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
 
-            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = entry.getValue().getColumns().keySet().stream()
+            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = referenceDescription.getColumns().keySet().stream()
                     .map(ReferenceColumn::new)
                     .collect(ImmutableSetMultimap.toImmutableSetMultimap(referenceColumn -> declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE), Function.identity()));
 
@@ -378,11 +379,12 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String quotedViewHierarchicalKeyColumnName = quoteSqlIdentifier(referenceType + "_hierarchicalKey");
             String quotedViewNaturalKeyColumnName = quoteSqlIdentifier(referenceType + "_naturalKey");
             String referenceValueTableName = SqlSchema.forApplication(app).referenceValue().getSqlIdentifier();
+            String whereClause = " referenceType = '" + referenceType + "' and application = '" + appId + "'::uuid";
             String referenceView = "select referenceValue.id as " + quotedViewIdColumnName + ", referenceValue.hierarchicalKey as " + quotedViewHierarchicalKeyColumnName + ", referenceValue.naturalKey as " + quotedViewNaturalKeyColumnName + ", "
                     + castedColumnSelect
                     + " from " + referenceValueTableName + ", " +
                     "jsonb_to_record(referenceValue.refValues) as " + schemaDeclaration
-                    + " where referenceType = '" + referenceType + "' and application = '" + appId + "'::uuid";
+                    + " where " + whereClause;
 
             if (log.isTraceEnabled()) {
                 log.trace("pour le référentiel " + referenceType + ", la requête pour avoir un vue relationnelle des données JSON est " + referenceView);
@@ -413,6 +415,30 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .collect(Collectors.toUnmodifiableSet());
 
             views.addAll(associationViews);
+
+            Set<ViewCreationCommand> dynamicColumnViews = referenceDescription.getDynamicColumns().keySet().stream()
+                    .map(dynamicColumn -> {
+                        String sqlPattern = String.join("\n"
+                                , "SELECT"
+                                , "    referenceValue.hierarchicalKey AS %s,"
+                                , "    (jsonb_each_text(referenceValue.refValues->'%s')).key::LTREE AS %s,"
+                                , "    (jsonb_each_text(referenceValue.refValues->'%s')).value"
+                                , "   FROM %s"
+                                , "  WHERE %s"
+                        );
+                        String dynamicColumnsView = String.format(sqlPattern,
+                                quotedViewHierarchicalKeyColumnName,
+                                dynamicColumn,
+                                quoteSqlIdentifier(dynamicColumn + "_hierarchicalKey"),
+                                dynamicColumn,
+                                referenceValueTableName,
+                                whereClause
+                        );
+                        return new ViewCreationCommand(sqlSchema.forAssociation(referenceType, new ReferenceColumn(dynamicColumn)), dynamicColumnsView);
+                    })
+                    .collect(Collectors.toUnmodifiableSet());
+
+            views.addAll(dynamicColumnViews);
         }
         return views;
     }

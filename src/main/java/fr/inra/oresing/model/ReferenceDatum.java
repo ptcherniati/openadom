@@ -2,6 +2,7 @@ package fr.inra.oresing.model;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.persistence.Ltree;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, Object>>, SomethingToBeSentToFrontend<Map<String, String>> {
 
@@ -34,6 +36,11 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext,
             ReferenceColumnValue referenceColumnValue;
             if (storedValue instanceof String) {
                 referenceColumnValue = new ReferenceColumnSingleValue((String) storedValue);
+            } else if (storedValue instanceof Map) {
+                Map<String, String> castedStoredValue = (Map<String, String>) storedValue;
+                Map<Ltree, String> storedValueAs = castedStoredValue.entrySet().stream()
+                        .collect(Collectors.toMap(storedValueEntry -> Ltree.fromSql(storedValueEntry.getKey()), Map.Entry::getValue));
+                referenceColumnValue = new ReferenceColumnIndexedValue(storedValueAs);
             } else if (storedValue instanceof Collection) {
                 Set<String> collect = new HashSet<>(((Collection<String>) storedValue));
                 referenceColumnValue = new ReferenceColumnMultipleValue(collect);
@@ -96,7 +103,7 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext,
     /**
      * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et checker
      */
-    public Set<String> getValuesToCheck(ReferenceColumn column) {
+    public Collection<String> getValuesToCheck(ReferenceColumn column) {
         return get(column).getValuesToCheck();
     }
 
