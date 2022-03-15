@@ -315,6 +315,7 @@ public class OreSiService {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file, "");
+        System.out.println(file);
         Configuration conf = app.getConfiguration();
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);

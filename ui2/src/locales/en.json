@@ -30,7 +30,8 @@
         "invalid-application-name":"The name must only includes lowercase letters.",
         "invalid-application-name-length":"The name's length should be between 4 and 20 characters.",
         "invalid-confirmed":"Fields don't match.",
-        "data-empty": "No data"
+        "data-empty": "No data",
+        "count-line": "Total line : "
     },
     "alert":{
         "cancel":"Cancel",

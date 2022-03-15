@@ -87,7 +87,8 @@ export default class DetailModalCard extends Vue {
   collapse = false;
 
   loadSynthese(open, options, name) {
-    if (open === true) {
+    if (!this.collapse) {
+
       var lambda = document.createElement("div");
       lambda.id = name;
       lambda.className = "collapse-content";

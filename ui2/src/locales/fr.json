@@ -30,7 +30,8 @@
         "invalid-application-name": "Le nom ne doit comporter que des lettresminuscules .",
         "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères.",
         "invalid-confirmed": "Les deux champs ne correspondent pas.",
-        "data-empty": "Pas de données"
+        "data-empty": "Pas de données",
+        "count-line": "Total de lignes : "
     },
     "alert": {
         "cancel": "Annuler",

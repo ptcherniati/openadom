@@ -43,6 +43,9 @@
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
+          <span class="file-name" v-else-if="onUploadCb">
+            {{ $t("validation.count-line") }}
+          </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
             {{ $t("validation.data-empty") }}
           </span>
@@ -50,7 +53,7 @@
         <div
           :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
-              ? 'tile synthesis-details link column is-variable is-12-desktop is-8-widescreen'
+              ? 'tile synthesis-details link column is-variable is-10-desktop is-8-widescreen'
               : 'tile synthesis-details column'
           "
           @click="
@@ -127,6 +130,7 @@
       :withRadios="withRadios"
       :radioName="radioName"
       @optionChecked="onInnerOptionChecked"
+      :applicationTitle="applicationTitle"
     />
   </div>
 </template>
@@ -150,6 +154,7 @@ export default class CollapsibleTree extends Vue {
   @Prop() radioName;
   @Prop() repository;
   @Prop() repositoryRedirect;
+  @Prop({ default: null }) applicationTitle;
 
   displayChildren = false;
   refFile = null;

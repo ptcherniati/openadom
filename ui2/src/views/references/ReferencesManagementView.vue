@@ -18,6 +18,7 @@
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
+        :applicationTitle="$t('titles.references-page')"
       >
       </CollapsibleTree>
       <ReferencesDetailsPanel
