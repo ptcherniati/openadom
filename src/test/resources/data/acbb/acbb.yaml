@@ -349,6 +349,7 @@ dataTypes:
           boundTo:
             variable: CO2
             component: max_value
+          exportHeader: "CO2_max"
         - rowNumber: 10
           headerName: H2O
           boundTo:

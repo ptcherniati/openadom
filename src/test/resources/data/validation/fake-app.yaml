@@ -152,8 +152,8 @@ dataTypes:
             variable: localization
             component: site
           exportHeader: "Site"
-      headerLine: 1
-      firstRowLine: 2
+      headerLine: 2
+      firstRowLine: 3
       columns:
         - header: "typeSite"
           boundTo:
