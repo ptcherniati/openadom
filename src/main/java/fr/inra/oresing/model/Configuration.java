@@ -98,7 +98,8 @@ public class Configuration {
     public static class ReferenceDescription extends InternationalizationDisplayImpl {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
-        private LinkedHashMap<String, ColumnDescription> columns;
+        private LinkedHashMap<String, ReferenceColumnDescription> columns = new LinkedHashMap<>();
+        private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
 
         public static Map<String, InternationalizationReferenceMap>  getInternationalization(LinkedHashMap<String, ReferenceDescription> referenceDescriptionMap) {
@@ -114,6 +115,23 @@ public class Configuration {
             }
             return internationalizationReferenceMap;
         }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferenceColumnDescription {
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferenceDynamicColumnDescription {
+        private String headerPrefix = "";
+        private String reference;
+        private String referenceColumnToLookForHeader;
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
