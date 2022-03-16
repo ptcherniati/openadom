@@ -376,7 +376,8 @@ public class OreSiService {
         ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
             @Override
             void storeAll(Stream<ReferenceValue> stream) {
-                referenceValueRepository.storeAll(stream);
+                final List<UUID> uuids = referenceValueRepository.storeAll(stream);
+                referenceValueRepository.updateConstraintForeignReferences(uuids);
             }
         };
         referenceImporter.doImport(file, fileId);
@@ -582,7 +583,9 @@ public class OreSiService {
                     .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
-            repo.getRepository(app).data().storeAll(dataStream);
+            final DataRepository dataRepository = repo.getRepository(app).data();
+            final List<UUID> uuids = dataRepository.storeAll(dataStream);
+            dataRepository.updateConstraintForeigData(uuids);
         }
     }
 
