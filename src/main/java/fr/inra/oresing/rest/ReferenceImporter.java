@@ -368,8 +368,6 @@ abstract class ReferenceImporter {
 
         private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
 
-        private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
-
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
             Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
@@ -404,7 +402,7 @@ abstract class ReferenceImporter {
             final ReferenceColumn columnToLookForParentKey = referenceImporterContext.getColumnToLookForParentKey();
             ReferenceLineChecker referenceLineChecker = referenceImporterContext.getReferenceLineChecker();
             final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
-            afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
+            final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>(beforePreloadReferenceUuids);
             ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
             List<RowWithReferenceDatum> collect = streamBeforePreloading
                     .peek(rowWithReferenceDatum -> {
@@ -426,7 +424,8 @@ abstract class ReferenceImporter {
                         missingParentReferences.removeAll(naturalKey);
                     })
                     .collect(Collectors.toList());
-            checkMissingParentReferencesIsEmpty(missingParentReferences);
+            Set<Ltree> knownReferences = afterPreloadReferenceUuids.keySet();
+            checkMissingParentReferencesIsEmpty(missingParentReferences, knownReferences);
             referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
             return collect.stream();
         }
@@ -436,13 +435,13 @@ abstract class ReferenceImporter {
          *
          * @param missingParentReferences pour chaque parent manquant, les lignes du CSV où il est mentionné
          */
-        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
+        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences, Set<Ltree> knownReferences) {
             List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
                     .map(entry -> {
                         Ltree missingParentReference = entry.getKey();
                         Integer lineNumber = entry.getValue();
                         ValidationCheckResult validationCheckResult =
-                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, afterPreloadReferenceUuids.keySet());
+                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, knownReferences);
                         return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
                     })
                     .collect(Collectors.toUnmodifiableList());
