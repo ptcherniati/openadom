@@ -51,7 +51,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -287,8 +286,6 @@ abstract class ReferenceImporter {
 
         final ReferenceValue e = new ReferenceValue();
         final Ltree naturalKey = keysAndReferenceDatumAfterChecking.getNaturalKey();
-        recursionStrategy.getKnownId(naturalKey)
-                .ifPresent(e::setId);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
         referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
 
@@ -363,8 +360,6 @@ abstract class ReferenceImporter {
 
         Ltree getHierarchicalReference(Ltree naturalKey);
 
-        Optional<UUID> getKnownId(Ltree naturalKey);
-
         Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
 
     }
@@ -374,14 +369,6 @@ abstract class ReferenceImporter {
         private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
 
         private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
-
-        @Override
-        public Optional<UUID> getKnownId(Ltree naturalKey) {
-            if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
-                return Optional.of(afterPreloadReferenceUuids.get(naturalKey));
-            }
-            return Optional.empty();
-        }
 
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
@@ -464,11 +451,6 @@ abstract class ReferenceImporter {
     }
 
     private class WithoutRecursion implements RecursionStrategy {
-
-        @Override
-        public Optional<UUID> getKnownId(Ltree naturalKey) {
-            return Optional.empty();
-        }
 
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
