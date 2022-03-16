@@ -388,7 +388,6 @@ public class OreSiService {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         Configuration conf = app.getConfiguration();
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
-        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
         ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
@@ -452,7 +451,6 @@ public class OreSiService {
                         conf,
                         refType,
                         lineCheckers,
-                        storedReferences,
                         columns
                 );
         return referenceImporterContext;

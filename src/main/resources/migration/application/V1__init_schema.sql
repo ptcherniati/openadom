@@ -31,7 +31,7 @@ create table ReferenceValue
 create table Reference_Reference
 (
     referenceId entityid REFERENCES ReferenceValue(id) ON DELETE CASCADE,
-    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE RESTRICT,
+    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT "Reference_Reference_PK" PRIMARY KEY (referenceId, referencedBy)
 );
 
@@ -95,7 +95,7 @@ create table Data
 create table Data_Reference
 (
     dataId entityid REFERENCES Data(id) ON DELETE CASCADE,
-    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE RESTRICT,
+    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT "Data_Reference_PK" PRIMARY KEY (dataId, referencedBy)
 );
 
