@@ -365,7 +365,7 @@ public class Configuration {
     public static class ApplicationDescription extends InternationalizationImpl {
         String name;
         int version;
-        String defaultLanguage;
+        Locale defaultLanguage;
 
         public InternationalizationApplicationMap getInternationalization() {
             final InternationalizationApplicationMap internationalizationApplicationMap = new InternationalizationApplicationMap();
