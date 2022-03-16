@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -116,8 +115,7 @@ abstract class ReferenceImporter {
                         boolean canSave = encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                         return canSave;
                     })
-                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId))
-                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
+                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId));
             storeAll(referenceValuesStream);
         }
 
