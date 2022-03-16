@@ -101,6 +101,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -1061,7 +1062,7 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
         Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
@@ -1135,7 +1136,7 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, Locale locale) {
         return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
                 .stream()
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
@@ -1259,7 +1260,7 @@ public class OreSiService {
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 
-    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, String locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
+    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, Locale locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
         Application application = getApplication(nameOrId);
         return Optional.ofNullable(application)
                 .map(a -> a.getConfiguration())

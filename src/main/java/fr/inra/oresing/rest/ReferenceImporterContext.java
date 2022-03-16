@@ -22,6 +22,7 @@ import fr.inra.oresing.persistence.Ltree;
 import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -76,7 +77,7 @@ public class ReferenceImporterContext {
                 .orElseGet(HashMap::new);
     }
 
-    public Optional<Map<String, String>> getDisplayPattern() {
+    public Optional<Map<Locale, String>> getDisplayPattern() {
         Optional<InternationalizationReferenceMap> internationalizationReferenceMap = getInternationalizationReferenceMap();
         return internationalizationReferenceMap
                 .map(InternationalizationReferenceMap::getInternationalizationDisplay)
