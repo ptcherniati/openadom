@@ -126,13 +126,15 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public void updateConstraintForeignReferences(List<UUID> uuids) {
-        String sql = String.join(" "
+        String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference WHERE referenceId in (:ids)";
+        String insertSql = String.join(" "
                 , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencedBy)"
                 , "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencedBy"
                 , "from " + getTable().getSqlIdentifier()
                 , "where id in (:ids)"
                 , "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING"
         );
+        String sql = String.join(";", insertSql, deleteSql);
         Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE - 1)
                 .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }

@@ -86,7 +86,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public void updateConstraintForeigData(List<UUID> uuids) {
-        String sql = String.join(" "
+        String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference WHERE dataId in (:ids)";
+        String insertSql = String.join(" "
                 , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)"
                 , "with tuple as ("
                 , "  select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencedBy"
@@ -96,6 +97,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 , "where dataId in (:ids) and referencedBy is not null"
                 , "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING"
         );
+        String sql = String.join(";", deleteSql, insertSql);
         Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE-1)
                 .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }
