@@ -721,7 +721,8 @@ public class OreSiService {
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
-            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
+            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
+                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String requiredAuthorization = datum.get(variableComponentKey);
                 Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
@@ -1099,7 +1100,8 @@ public class OreSiService {
         List<String> variableComponentsFromRepository = new LinkedList<>();
         if (requiredAuthorizations != null) {
             for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
-                VariableComponentKey variableComponentKey = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String value = entry.getValue();
                 defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\"" + value + "\""));
                 variableComponentsFromRepository.add(variableComponentKey.getId());

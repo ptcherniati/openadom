@@ -123,7 +123,7 @@ public class ApplicationConfigurationService {
                 VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
                 verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
 
-                LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
+                LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
                 verifyDatatypeAuthorizationScopeExistsAndIsValid(builder, dataType, configuration, variables, authorizationScopesVariableComponentKey);
                 requiredAuthorizationsAttributesBuilder.addAll(authorizationScopesVariableComponentKey.keySet());
             }
@@ -239,14 +239,15 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey) {
+    private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey) {
         if (authorizationScopesVariableComponentKey == null || authorizationScopesVariableComponentKey.isEmpty()) {
             builder.recordMissingAuthorizationScopeVariableComponentKey(dataType);
         } else {
             Configuration.DataTypeDescription dataTypeDescription = configuration.getDataTypes().get(dataType);
             authorizationScopesVariableComponentKey.entrySet().stream().forEach(authorizationScopeVariableComponentKeyEntry -> {
                 String authorizationScopeName = authorizationScopeVariableComponentKeyEntry.getKey();
-                VariableComponentKey authorizationScopeVariableComponentKey = authorizationScopeVariableComponentKeyEntry.getValue();
+                Configuration.AuthorizationScopeDescription authorizationScopeDescription = authorizationScopeVariableComponentKeyEntry.getValue();
+                VariableComponentKey authorizationScopeVariableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 if (authorizationScopeVariableComponentKey.getVariable() == null) {
                     builder.recordAuthorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
                 } else {

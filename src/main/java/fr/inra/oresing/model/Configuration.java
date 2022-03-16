@@ -196,13 +196,13 @@ public class Configuration {
     @ToString
     public static class AuthorizationDescription {
         VariableComponentKey timeScope;
-        LinkedHashMap<String, VariableComponentKey> authorizationScopes = new LinkedHashMap<>();
+        LinkedHashMap<String, AuthorizationScopeDescription> authorizationScopes = new LinkedHashMap<>();
         LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
 
         public InternationalizationAuthorisationMap getInternationalization() {
             final InternationalizationAuthorisationMap internationalizationAuthorisationMap = new InternationalizationAuthorisationMap();
             Map<String, InternationalizationAuthorisationName> authorizationScopesLocalization = new HashMap<>();
-            for (Map.Entry<String, VariableComponentKey> entry : authorizationScopes.entrySet()) {
+            for (Map.Entry<String, AuthorizationScopeDescription> entry : authorizationScopes.entrySet()) {
                 final InternationalizationAuthorisationName internationalizationAuthorisationName = new InternationalizationAuthorisationName();
                 internationalizationAuthorisationName.setInternationalizationName(entry.getValue().getInternationalizationName());
                 authorizationScopesLocalization.put(entry.getKey(), internationalizationAuthorisationName);
@@ -216,6 +216,18 @@ public class Configuration {
             }
             internationalizationAuthorisationMap.setDataGroups(datagroupsLocalization);
             return internationalizationAuthorisationMap;
+        }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class AuthorizationScopeDescription extends InternationalizationImpl {
+        String variable;
+        String component;
+
+        public VariableComponentKey getVariableComponentKey() {
+            return new VariableComponentKey(variable, component);
         }
     }
 

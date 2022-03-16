@@ -1,11 +1,10 @@
 package fr.inra.oresing.model;
 
-import fr.inra.oresing.model.internationalization.InternationalizationImpl;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 @Value
-public class VariableComponentKey extends InternationalizationImpl {
+public class VariableComponentKey {
 
     private static final String SEPARATOR = "_";
 
