@@ -93,6 +93,194 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    public void addApplicationMonsoreWithRepository() throws Exception {
+        URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
+        String oirFilesUUID;
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+
+            JsonPath.parse(response).read("$.id");
+        }
+
+        String response = null;
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
+        // ajout de data
+        String projet = "manche";
+        String plateforme = "plateforme";
+        String site = "oir";
+        resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
+
+        // on dépose 3 fois le même fichier sans le publier
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
+
+            //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
+            for (int i = 0; i < 3; i++) {
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                                .file(refFile)
+                                .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, false))
+                                .cookie(authCookie))
+                        .andExpect(status().is2xxSuccessful())
+                        .andReturn().getResponse().getContentAsString();
+            }
+            log.debug(response);
+            //on regarde les versions déposées
+            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+                            .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$").isArray())
+                    .andExpect(jsonPath("$", Matchers.hasSize(3)))
+                    .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
+                    .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
+                    .andReturn().getResponse().getContentAsString();
+//            log.debug(response);
+            //récupération de l'identifiant de la dernière version déposée
+            oirFilesUUID = JsonPath.parse(response).read("$[2].id");
+
+            // on vérifie l'absence de data
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.totalRows").value(-1))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+
+
+            // on publie le dernier fichier déposé
+
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
+                            .cookie(authCookie))
+                    // .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+
+            // on récupère la liste des versions déposées
+
+            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+                            .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$").isArray())
+                    .andExpect(jsonPath("$", Matchers.hasSize(3)))
+                    .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(2)))
+                    .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(1)))
+                    .andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+
+            // on récupère le data en base
+
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.totalRows").value(34))
+                    .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(34)))
+                    .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'plateforme.oir.oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(34)))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+        }
+        //on publie 4 fichiers
+
+        publishOrDepublish("manche", "plateforme", "scarff", 68, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme", "scarff", 34, true, 1, true);
+        publishOrDepublish("atlantique", "plateforme", "nivelle", 34, true, 1, true);
+        publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 1, true);
+        //on publie une autre version
+        String fileUUID = publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 2, true);
+        // on supprime l'application publiée
+        response = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/applications/monsore/file/" + fileUUID)
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn().getResponse().getContentAsString();
+        log.debug(StringUtils.abbreviate(response, 50));
+        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 1, fileUUID, false);
+
+
+        // on depublie le fichier oir déposé
+
+        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                        .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false))
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn().getResponse().getContentAsString();
+        log.debug(StringUtils.abbreviate(response, 50));
+
+        // on récupère la liste des versions déposées
+
+        response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+                        .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$", Matchers.hasSize(3)))
+                .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
+                .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
+                .andReturn().getResponse().getContentAsString();
+        log.debug(StringUtils.abbreviate(response, 50));
+
+        // on récupère le data en base
+
+        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.totalRows").value(136))
+                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(136)))
+                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
+                .andReturn().getResponse().getContentAsString();
+        log.debug(StringUtils.abbreviate(response, 50));
+        // on supprime le fic
+    }
+
+    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
+        URL resource;
+        String response;
+        resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
+
+            //dépôt et publication d'un fichier projet site__p1
+            MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
+            refFile.transferTo(Path.of("/tmp/pem.csv"));
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, toPublish))
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+            String fileUUID = JsonPath.parse(response).read("$.fileId");
+
+            //liste des fichiers projet/site
+            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
+            log.debug(StringUtils.abbreviate(response, 50));
+            return fileUUID;
+        }
+    }
+
+    @Test
     public void addApplicationMonsore() throws Exception {
         String appId;
 
@@ -379,194 +567,6 @@ public class OreSiResourcesTest {
 //        }
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
-    }
-
-    @Test
-    public void addApplicationMonsoreWithRepository() throws Exception {
-        URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
-        String oirFilesUUID;
-        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
-            //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
-
-            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
-                            .file(configuration)
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                    .andReturn().getResponse().getContentAsString();
-
-            JsonPath.parse(response).read("$.id");
-        }
-
-        String response = null;
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                JsonPath.parse(response).read("$.id");
-            }
-        }
-        // ajout de data
-        String projet = "manche";
-        String plateforme = "plateforme";
-        String site = "oir";
-        resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
-
-        // on dépose 3 fois le même fichier sans le publier
-        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-            MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
-
-            //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
-            for (int i = 0; i < 3; i++) {
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                                .file(refFile)
-                                .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, false))
-                                .cookie(authCookie))
-                        .andExpect(status().is2xxSuccessful())
-                        .andReturn().getResponse().getContentAsString();
-            }
-            log.debug(response);
-            //on regarde les versions déposées
-            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
-                            .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$", Matchers.hasSize(3)))
-                    .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
-                    .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
-                    .andReturn().getResponse().getContentAsString();
-//            log.debug(response);
-            //récupération de l'identifiant de la dernière version déposée
-            oirFilesUUID = JsonPath.parse(response).read("$[2].id");
-
-            // on vérifie l'absence de data
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows").value(-1))
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(response);
-
-
-            // on publie le dernier fichier déposé
-
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                            .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
-                            .cookie(authCookie))
-                    // .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
-
-            // on récupère la liste des versions déposées
-
-            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
-                            .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$", Matchers.hasSize(3)))
-                    .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(2)))
-                    .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(1)))
-                    .andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID))
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
-
-            // on récupère le data en base
-
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows").value(34))
-                    .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(34)))
-                    .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'plateforme.oir.oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(34)))
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
-        }
-        //on publie 4 fichiers
-
-        publishOrDepublish("manche", "plateforme", "scarff", 68, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme", "scarff", 34, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme", "nivelle", 34, true, 1, true);
-        publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 1, true);
-        //on publie une autre version
-        String fileUUID = publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 2, true);
-        // on supprime l'application publiée
-        response = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/applications/monsore/file/" + fileUUID)
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
-        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 1, fileUUID, false);
-
-
-        // on depublie le fichier oir déposé
-
-        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                        .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false))
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
-
-        // on récupère la liste des versions déposées
-
-        response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
-                        .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$", Matchers.hasSize(3)))
-                .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
-                .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
-                .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
-
-        // on récupère le data en base
-
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.totalRows").value(136))
-                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(136)))
-                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
-                .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
-        // on supprime le fic
-    }
-
-    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
-        URL resource;
-        String response;
-        resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
-        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-
-            //dépôt et publication d'un fichier projet site__p1
-            MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
-            refFile.transferTo(Path.of("/tmp/pem.csv"));
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
-                            .file(refFile)
-                            .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, toPublish))
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            String fileUUID = JsonPath.parse(response).read("$.fileId");
-
-            //liste des fichiers projet/site
-            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
-            log.debug(StringUtils.abbreviate(response, 50));
-            return fileUUID;
-        }
     }
 
     @Test

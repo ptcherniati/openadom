@@ -11,6 +11,7 @@ import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import org.assertj.core.util.Strings;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
     default Set<ValidationCheckResult> checkReference(ReferenceDatum referenceDatum) {
         ReferenceDatum transformedReferenceDatum = getTransformer().transform(referenceDatum);
         final ReferenceColumn column = (ReferenceColumn) getTarget().getTarget();
-        final Set<String> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
+        final Collection<String> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
         final Set<ValidationCheckResult> validationCheckResults = valuesToCheck.stream()
                 .map(this::checkRequiredThenCheck)
                 .collect(Collectors.toUnmodifiableSet());
