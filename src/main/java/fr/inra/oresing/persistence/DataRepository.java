@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.rest.DownloadDatasetQuery;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -81,5 +83,22 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .addValue("dataGroup", dataGroup);
         int count = getNamedParameterJdbcTemplate().update(sql, sqlParams);
         return count;
+    }
+
+    public void updateConstraintForeigData(List<UUID> uuids) {
+        String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference WHERE dataId in (:ids)";
+        String insertSql = String.join(" "
+                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)"
+                , "with tuple as ("
+                , "  select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencedBy"
+                , "  from " + getTable().getSqlIdentifier() + ""
+                , ")"
+                , "select dataId, referencedBy from tuple"
+                , "where dataId in (:ids) and referencedBy is not null"
+                , "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING"
+        );
+        String sql = String.join(";", deleteSql, insertSql);
+        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE-1)
+                .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }
 }
