@@ -168,7 +168,7 @@
     "missingRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez indiquer un numéro de ligne.",
     "recordCsvMissingColumnNumberOrHeaderNameForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez indiquer un numéro de ligne ou un nom d'en-tête.",
     "missingBoundToForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez remplir la section boundTo.",
-    "missinExportHeaderNameForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez spécifier un exportHeaderName.",
+    "missingExportHeaderNameForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez spécifier un exportHeaderName.",
     "sameHeaderLineAndFirstRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} la ligne d'en-tête ne doit pas être egale à la ligne de données."
   },
   "referencesManagement": {

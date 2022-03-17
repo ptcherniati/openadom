@@ -168,7 +168,7 @@
     "missingRowLineForConstantDescription": "In the format->constant section of dataType {dataType} you must specify a line number.",
     "recordCsvMissingColumnNumberOrHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify a row number or header name.",
     "missingBoundToForConstantDescription": "In the format->constant section of the dataType {dataType} you must fill in the boundTo section.",
-    "missinExportHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify an exportHeaderName.",
+    "missingExportHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify an exportHeaderName.",
     "sameHeaderLineAndFirstRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the header row must not be equal to the data row."
   },
   "referencesManagement": {

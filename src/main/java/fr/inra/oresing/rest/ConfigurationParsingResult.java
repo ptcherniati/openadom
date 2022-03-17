@@ -411,7 +411,7 @@ public class ConfigurationParsingResult {
         }
 
         public Builder recordCsvMissingExportHeaderNameForConstantDescription(String dataType) {
-            return recordError("missinExportHeaderNameForConstantDescription", ImmutableMap.of(
+            return recordError("missingExportHeaderNameForConstantDescription", ImmutableMap.of(
                     "dataType", dataType
             ));
         }
