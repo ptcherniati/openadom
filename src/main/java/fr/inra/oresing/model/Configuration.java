@@ -195,9 +195,9 @@ public class Configuration {
         VariableComponentKey boundTo;
         String exportHeader;
 
-        public int getColumnNumber(ImmutableList<String> headerRows ) {
-            if(headerName!=null && headerRows.contains(headerName)){
-                return headerRows.indexOf(headerName)+1;
+        public int getColumnNumber(ImmutableList<String> headerRows) {
+            if (headerName != null && headerRows.contains(headerName)) {
+                return headerRows.indexOf(headerName) + 1;
             }
             return columnNumber;
         }

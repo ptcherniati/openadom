@@ -295,25 +295,25 @@ public class ApplicationConfigurationService {
                     final String headerName = headerConstantDescription.getHeaderName();
                     final int rowNumber = headerConstantDescription.getRowNumber();
                     final int headerLine = format.getHeaderLine();
-                    if(rowNumber== headerLine){
+                    if (rowNumber == headerLine) {
                         builder.recordCsvSameHeaderLineAndFirstRowLineForConstantDescription(dataType);
                     }
                     final int firstRowLine = format.getFirstRowLine();
-                    if(rowNumber>= firstRowLine){
+                    if (rowNumber >= firstRowLine) {
                         builder.recordCsvTooBigRowLineForConstantDescription(dataType);
                     }
-                    if(rowNumber<1){
+                    if (rowNumber < 1) {
                         builder.recordCsvTooLittleRowLineForConstantDescription(dataType);
                     }
-                    if(rowNumber< headerLine && rowNumber<1){
+                    if (rowNumber < headerLine && rowNumber < 1) {
                         builder.recordCsvMissingRowLineForConstantDescription(dataType);
-                    }else if (rowNumber >headerLine && columnNumber<1  && headerName == null) {
+                    } else if (rowNumber > headerLine && columnNumber < 1 && headerName == null) {
                         builder.recordCsvMissingColumnNumberOrHeaderNameForConstantDescription(dataType);
                     } else {
                         final VariableComponentKey boundTo = headerConstantDescription.getBoundTo();
-                        if(boundTo ==null){
+                        if (boundTo == null) {
                             builder.recordCsvMissingBoundToForConstantDescription(dataType);
-                        }else if (headerConstantDescription.getExportHeader() == null) {
+                        } else if (headerConstantDescription.getExportHeader() == null) {
                             builder.recordCsvMissingExportHeaderNameForConstantDescription(dataType);
                         }
                     }

@@ -514,7 +514,6 @@ public class OreSiService {
 
             Datum constantValues = new Datum();
             readPreHeader(formatDescription, constantValues, linesIterator);
-
             ImmutableList<String> columns = readHeaderRow(linesIterator);
             readPostHeader(formatDescription, columns, constantValues, linesIterator);
 
@@ -1026,33 +1025,26 @@ public class OreSiService {
 
     /**
      * read some post header as example line, units, min and max values for each columns
-     *
-     * @param formatDescription
-     * @param linesIterator
      */
     private void readPostHeader(Configuration.FormatDescription formatDescription,  ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
-                        formatDescription.getConstants().stream()
-                                .collect(ImmutableSetMultimap.toImmutableSetMultimap(
+                formatDescription.getConstants().stream()
+                        .collect(
+                                ImmutableSetMultimap.toImmutableSetMultimap(
                                         Configuration.HeaderConstantDescription::getRowNumber,
                                         Function.identity()
-                                        )
-                                );
-
-
+                                )
+                        );
         for (int lineNumber = formatDescription.getHeaderLine()+1; lineNumber < formatDescription.getFirstRowLine(); lineNumber++) {
             CSVRecord row = linesIterator.next();
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
-            constantDescriptions
-                    .stream()
-                    .forEach(constant -> {
+            constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber(headerRow);
                 String value = row.get(columnNumber - 1);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
             });
         }
-       // Iterators.advance(linesIterator, lineToSkipAfterHeader);
     }
 
     private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription, Map<String, String> requiredAuthorizations) {
