@@ -162,7 +162,14 @@
     "overlappingpublishedversion": "There is a deposited version in the deposit dates have an overlapping period with the deposited version. <code> {overlapingFiles] </code>",
     "duplicateLineInReference": "In the repository file {file}, line {lineNumber} has the same id {duplicateKey} as lines {otherLines}",
     "duplicateLineInDatatype": "In data file {file}, line {lineNumber} has the same identifier {duplicateKey} as lines {otherLines}",
-    "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}"
+    "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}",
+    "tooBigRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the row number must be less than the data row.",
+    "tooLittleRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the row number must be positive.",
+    "missingRowLineForConstantDescription": "In the format->constant section of dataType {dataType} you must specify a line number.",
+    "recordCsvMissingColumnNumberOrHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify a row number or header name.",
+    "missingBoundToForConstantDescription": "In the format->constant section of the dataType {dataType} you must fill in the boundTo section.",
+    "missingExportHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify an exportHeaderName.",
+    "sameHeaderLineAndFirstRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the header row must not be equal to the data row."
   },
   "referencesManagement": {
     "actions": "Actions",

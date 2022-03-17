@@ -587,6 +587,18 @@ ici le contenu de la première ligne deuxième colonne est lié au varaible/comp
       firstRowLine: 2
 ```
 
+Si l'on veut faire référence à des lignes entre la ligne d'en-tête et la première ligne de données, on peut faire référence à la colonne par le nom de :l'en-tête de colonne plutôt que par le numméro de la colonne. En ce cas onn utilise le champs _headerName_.
+
+```yaml
+        - rowNumber: 11
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: max_value
+          exportHeader: "H2O_max"
+
+```
+
 *columns* est la partie dans laquelle nous décrirons toutes les colonnes et leurs types de données que nous attendons 
 dans chaque colonne du fichier CSV (pour l'exemple utilisé ici c'est pour les données du fichier nomDonnées.csv):
 

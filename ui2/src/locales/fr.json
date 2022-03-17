@@ -162,7 +162,14 @@
     "overlappingpublishedversion": "Il existe une version déposée dans les dates de dépôt ont une période chevauchante avec la version déposée. <code>{overlapingFiles]</code>",
     "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
     "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
-    "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le parent n'existe pas. Valeurs acceptées {knownReferences}"
+    "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le    parent n'existe pas. Valeurs acceptées {knownReferences}",
+    "tooBigRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} le numéro de ligne doit être inférieur    à celui de la ligne de données.",
+    "tooLittleRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} le numéro de ligne doit être positif.",
+    "missingRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez indiquer un numéro de ligne.",
+    "recordCsvMissingColumnNumberOrHeaderNameForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez indiquer un numéro de ligne ou un nom d'en-tête.",
+    "missingBoundToForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez remplir la section boundTo.",
+    "missingExportHeaderNameForConstantDescription": "Dans la section format->constant du dataType {dataType} vous devez spécifier un exportHeaderName.",
+    "sameHeaderLineAndFirstRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} la ligne d'en-tête ne doit pas être egale à la ligne de données."
   },
   "referencesManagement": {
     "actions": "Actions",

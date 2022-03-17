@@ -1,6 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.*;
@@ -190,9 +191,18 @@ public class Configuration {
     public static class HeaderConstantDescription {
         int rowNumber;
         int columnNumber;
+        String headerName;
         VariableComponentKey boundTo;
         String exportHeader;
+
+        public int getColumnNumber(ImmutableList<String> headerRows) {
+            if (headerName != null && headerRows.contains(headerName)) {
+                return headerRows.indexOf(headerName) + 1;
+            }
+            return columnNumber;
+        }
     }
+
 
     @Getter
     @Setter

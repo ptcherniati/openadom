@@ -739,6 +739,8 @@ public class OreSiResourcesTest {
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows[0].values.CO2.min_value", IsEqual.equalTo("300")))
+                    .andExpect(jsonPath("$.rows[0].values.CO2.max_value", IsEqual.equalTo("700")))
 //                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
 
