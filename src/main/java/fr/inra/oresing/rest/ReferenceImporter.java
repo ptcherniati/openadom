@@ -205,7 +205,7 @@ abstract class ReferenceImporter {
                         .filter(DateValidationCheckResult.class::isInstance)
                         .map(DateValidationCheckResult.class::cast)
                         .forEach(dateValidationCheckResult -> {
-                            ReferenceColumn referenceColumn = (ReferenceColumn) dateValidationCheckResult.getTarget().getTarget();
+                            ReferenceColumn referenceColumn = (ReferenceColumn) dateValidationCheckResult.getTarget();
                             ReferenceColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(referenceColumn);
                             ReferenceColumnValue valueToStoreInDatabase = referenceColumnRawValue
                                     .transform(rawValue ->
@@ -215,7 +215,7 @@ abstract class ReferenceImporter {
                         });
             } else if (lineChecker instanceof ReferenceLineChecker) {
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) lineChecker;
-                ReferenceColumn referenceColumn = (ReferenceColumn) referenceLineChecker.getTarget().getTarget();
+                ReferenceColumn referenceColumn = (ReferenceColumn) referenceLineChecker.getTarget();
                 SetMultimap<ReferenceColumn, String> rawValueReplacedByKeys = HashMultimap.create();
                 String reference = referenceLineChecker.getRefType();
                 validationCheckResults.stream()

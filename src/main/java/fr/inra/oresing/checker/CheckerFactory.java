@@ -9,7 +9,6 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -54,7 +53,7 @@ public class CheckerFactory {
         return getLineCheckers(app, dataType).stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
                 .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget().getTarget(), Function.identity()));
+                .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget(), Function.identity()));
     }
 
     public ImmutableSet<LineChecker> getReferenceValidationLineCheckers(Application app, String reference) {
@@ -102,31 +101,30 @@ public class CheckerFactory {
         } else {
             Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
             CheckerOnOneVariableComponentLineChecker variableComponentChecker;
-            CheckerTarget checkerTarget = CheckerTarget.getInstance(variableComponentKey, app, repository.getRepository(app));
             LineTransformer transformer = Optional.ofNullable(checkerDescription.getParams())
-                    .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, checkerTarget))
+                    .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, variableComponentKey))
                     .orElseGet(transformerFactory::getNullTransformer);
             if ("Reference".equals(checkerDescription.getName())) {
-                variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, checkerTarget, transformer);
+                variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, variableComponentKey, transformer);
             } else {
                 final Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
                 if ("Date".equals(checkerDescription.getName())) {
                     String pattern = configuration.getPattern();
-                    variableComponentChecker = new DateLineChecker(checkerTarget, pattern, configuration, transformer);
+                    variableComponentChecker = new DateLineChecker(variableComponentKey, pattern, configuration, transformer);
                 } else if ("Integer".equals(checkerDescription.getName())) {
                     Preconditions.checkState(configuration == null || !configuration.isCodify(), "codify avec checker " + checkerDescription.getName() + " sur le composant " + component + " de la variable " + variable + " du type de données " + dataType + " de l'application " + app.getName());
-                    variableComponentChecker = new IntegerChecker(checkerTarget, configuration, transformer);
+                    variableComponentChecker = new IntegerChecker(variableComponentKey, configuration, transformer);
                 } else if ("Float".equals(checkerDescription.getName())) {
                     Preconditions.checkState(configuration == null || !configuration.isCodify(), "codify avec checker " + checkerDescription.getName() + " sur le composant " + component + " de la variable " + variable + " du type de données " + dataType + " de l'application " + app.getName());
-                    variableComponentChecker = new FloatChecker(checkerTarget, configuration, transformer);
+                    variableComponentChecker = new FloatChecker(variableComponentKey, configuration, transformer);
                 } else if ("RegularExpression".equals(checkerDescription.getName())) {
                     String pattern = configuration.getPattern();
-                    variableComponentChecker = new RegularExpressionChecker(checkerTarget, pattern, configuration, transformer);
+                    variableComponentChecker = new RegularExpressionChecker(variableComponentKey, pattern, configuration, transformer);
                 } else {
                     throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
                 }
             }
-            Preconditions.checkState(variableComponentChecker.getTarget().getTarget().equals(variableComponentKey));
+            Preconditions.checkState(variableComponentChecker.getTarget().equals(variableComponentKey));
             checkersBuilder.add(variableComponentChecker);
         }
     }
@@ -215,12 +213,10 @@ public class CheckerFactory {
         if (!Strings.isNullOrEmpty(columnsString)) {
             return Stream.of(columnsString.split(","))
                     .map(ReferenceColumn::new)
-                    .map(referenceColumn -> CheckerTarget.getInstance(referenceColumn, application, repository.getRepository(application)))
                     .collect(Collectors.toList());
         } else if (!Strings.isNullOrEmpty(variableComponentKeyParam) || !variableComponentKeyParam.matches("_")) {
             String[] split = variableComponentKeyParam.split("_");
             Stream.of(new VariableComponentKey(split[0], split[1]))
-                    .map(variableComponentKey -> CheckerTarget.getInstance(variableComponentKey, application, repository.getRepository(application)))
                     .collect(Collectors.toList());
 
         }

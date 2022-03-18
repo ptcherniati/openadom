@@ -1,10 +1,11 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.checker.CheckerTarget;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 @Value
-public class VariableComponentKey {
+public class VariableComponentKey implements CheckerTarget {
 
     private static final String SEPARATOR = "_";
 
@@ -19,5 +20,15 @@ public class VariableComponentKey {
 
     public String getId() {
         return variable + SEPARATOR + component;
+    }
+
+    @Override
+    public String getInternationalizedKey(String key) {
+        return key;
+    }
+
+    @Override
+    public CheckerTargetType getType() {
+        return CheckerTargetType.PARAM_VARIABLE_COMPONENT_KEY;
     }
 }

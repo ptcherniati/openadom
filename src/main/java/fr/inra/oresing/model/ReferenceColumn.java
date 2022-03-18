@@ -1,9 +1,10 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.checker.CheckerTarget;
 import lombok.Value;
 
 @Value
-public class ReferenceColumn implements SomethingToBeStoredAsJsonInDatabase<String> {
+public class ReferenceColumn implements CheckerTarget, SomethingToBeStoredAsJsonInDatabase<String> {
     String column;
 
     public static ReferenceColumn forDisplay(String locale) {
@@ -17,5 +18,15 @@ public class ReferenceColumn implements SomethingToBeStoredAsJsonInDatabase<Stri
     @Override
     public String toJsonForDatabase() {
         return column;
+    }
+
+    @Override
+    public String getInternationalizedKey(String key) {
+        return key + "WithColumn";
+    }
+
+    @Override
+    public CheckerTargetType getType() {
+        return CheckerTargetType.PARAM_COLUMN;
     }
 }

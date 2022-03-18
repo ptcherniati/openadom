@@ -30,9 +30,13 @@ public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker<
             Integer.parseInt(value);
             validationCheckResult = DefaultValidationCheckResult.success();
         } catch (NumberFormatException e) {
-            validationCheckResult = DefaultValidationCheckResult.error(getTarget().getInternationalizedKey("invalidInteger"),
-                    ImmutableMap.of("target",target.getTarget(),
-                            "value", value));
+            validationCheckResult = DefaultValidationCheckResult.error(
+                    getTarget().getInternationalizedKey("invalidInteger"),
+                    ImmutableMap.of(
+                            "target", target,
+                            "value", value
+                    )
+            );
         }
         return validationCheckResult;
     }

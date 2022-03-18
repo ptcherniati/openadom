@@ -40,7 +40,7 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
         } else {
             validationCheckResult = DefaultValidationCheckResult.error(
                     getTarget().getInternationalizedKey("patternNotMatched"), ImmutableMap.of(
-                            "target", target.getTarget(),
+                            "target", target,
                             "pattern", patternString,
                             "value", value));
         }

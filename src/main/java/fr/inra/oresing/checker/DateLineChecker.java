@@ -53,7 +53,7 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
             validationCheckResult = DateValidationCheckResult.error(
                     target,
                     getTarget().getInternationalizedKey("invalidDate"), ImmutableMap.of(
-                            "target", target.getTarget(),
+                            "target", target,
                             "pattern", pattern,
                             "value", value));
         }

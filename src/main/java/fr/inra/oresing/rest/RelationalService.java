@@ -186,7 +186,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             ImmutableMap<VariableComponentKey, CheckerOnOneVariableComponentLineChecker> checkerPerVariableComponentKeys = checkerFactory.getLineCheckers(application, dataType).stream()
                     .filter(lineChecker -> lineChecker instanceof CheckerOnOneVariableComponentLineChecker)
                     .map(lineChecker -> (CheckerOnOneVariableComponentLineChecker) lineChecker)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget().getTarget(), Function.identity()));
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget(), Function.identity()));
             Map<VariableComponentKey, ReferenceLineChecker> referenceCheckers =
                     Maps.transformValues(
                             Maps.filterValues(checkerPerVariableComponentKeys, checker -> checker instanceof ReferenceLineChecker),
@@ -275,7 +275,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();  // especes
-                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceChecker.getTarget().getTarget();
+                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceChecker.getTarget();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String foreignKeyColumnName = getTechnicalIdColumnName(variableComponentKey);
@@ -336,12 +336,12 @@ public class RelationalService implements InitializingBean, DisposableBean {
             ImmutableMap<ReferenceColumn, SqlPrimitiveType> sqlTypePerColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
                     .filter(CheckerOnOneVariableComponentLineChecker.class::isInstance)
                     .map(CheckerOnOneVariableComponentLineChecker.class::cast)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), CheckerOnOneVariableComponentLineChecker::getSqlType));
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget(), CheckerOnOneVariableComponentLineChecker::getSqlType));
 
             ImmutableMap<ReferenceColumn, Multiplicity> declaredMultiplicityPerReferenceColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
                     .filter(ReferenceLineChecker.class::isInstance)
                     .map(ReferenceLineChecker.class::cast)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
 
             ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = referenceDescription.getColumns().keySet().stream()
                     .map(ReferenceColumn::new)

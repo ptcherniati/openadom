@@ -334,7 +334,7 @@ public class OreSiService {
         ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
                 .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
 
         Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
 
@@ -620,7 +620,7 @@ public class OreSiService {
         DateLineChecker timeScopeDateLineChecker = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                 .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .filter(dateLineChecker -> dateLineChecker.getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
                 .collect(MoreCollectors.onlyElement());
 
 
@@ -634,16 +634,16 @@ public class OreSiService {
                 ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget().getTarget();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
                         if (configuration.getGroovy() != null) {
-                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
+                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
                         UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                         refsLinkedTo.put(variableComponentKey, referenceId);
                     }
@@ -1107,7 +1107,7 @@ public class OreSiService {
         List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
                 .filter(ch -> ch instanceof DateLineChecker)
                 .map(ch -> (DateLineChecker) ch)
-                .map(ch -> ((VariableComponentKey) ch.getTarget().getTarget()).getId())
+                .map(ch -> ((VariableComponentKey) ch.getTarget()).getId())
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
@@ -1175,13 +1175,13 @@ public class OreSiService {
                                         c -> {
                                             VariableComponentKey vc;
                                             if (c instanceof DateLineChecker) {
-                                                vc = (VariableComponentKey) ((DateLineChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((DateLineChecker) c).getTarget();
                                             } else if (c instanceof IntegerChecker) {
-                                                vc = (VariableComponentKey) ((IntegerChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((IntegerChecker) c).getTarget();
                                             } else if (c instanceof FloatChecker) {
-                                                vc = (VariableComponentKey) ((FloatChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((FloatChecker) c).getTarget();
                                             } else {
-                                                vc = (VariableComponentKey) ((ReferenceLineChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((ReferenceLineChecker) c).getTarget();
                                             }
                                             return vc.getId();
                                         },
