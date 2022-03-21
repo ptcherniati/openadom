@@ -73,7 +73,12 @@ public class CheckerFactory {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
-                parseVariableComponentdescription(app, dataType, checkersBuilder, variable, variableDescription, componentEntry);
+                String component = componentEntry.getKey();
+                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
+                Optional.ofNullable(variableComponentDescription.getChecker())
+                        .map(checkerDescription -> newChecker(app, checkerDescription, variableComponentKey))
+                        .ifPresent(checkersBuilder::add);
             }
         }
         addCheckersFromLineValidationDescriptions(app, dataTypeDescription.getValidations(), checkersBuilder, Type.DATATYPE.getParam()); //Configuration.DataTypeDescription dataTypeDescription,
@@ -82,52 +87,6 @@ public class CheckerFactory {
             log.trace("pour " + app.getName() + ", " + dataType + ", on validera avec " + lineCheckers);
         }
         return lineCheckers;
-    }
-
-    private void parseVariableComponentdescription(Application app, String dataType, ImmutableSet.Builder<LineChecker> checkersBuilder, String variable, Configuration.ColumnDescription variableDescription, Map.Entry<String, Configuration.VariableComponentDescription> componentEntry) {
-        String component = componentEntry.getKey();
-        VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-        if (variableDescription.getComponents().get(component) == null) {
-            if (log.isDebugEnabled()) {
-                //log.debug("pas de règle de validation pour " + variableComponentKey);
-            }
-        } else {
-            Configuration.CheckerDescription checkerDescription = variableDescription.getComponents().get(component).getChecker();
-            CheckerOnOneVariableComponentLineChecker variableComponentChecker;
-            LineTransformer transformer = Optional.ofNullable(checkerDescription.getParams())
-                    .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, variableComponentKey))
-                    .orElseGet(transformerFactory::getNullTransformer);
-            if ("Reference".equals(checkerDescription.getName())) {
-                variableComponentChecker = getCheckerOnReferenceChecker(app, checkerDescription, variableComponentKey, transformer);
-            } else {
-                final Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
-                if ("Date".equals(checkerDescription.getName())) {
-                    String pattern = configuration.getPattern();
-                    variableComponentChecker = new DateLineChecker(variableComponentKey, pattern, configuration, transformer);
-                } else if ("Integer".equals(checkerDescription.getName())) {
-                    Preconditions.checkState(configuration == null || !configuration.isCodify(), "codify avec checker " + checkerDescription.getName() + " sur le composant " + component + " de la variable " + variable + " du type de données " + dataType + " de l'application " + app.getName());
-                    variableComponentChecker = new IntegerChecker(variableComponentKey, configuration, transformer);
-                } else if ("Float".equals(checkerDescription.getName())) {
-                    Preconditions.checkState(configuration == null || !configuration.isCodify(), "codify avec checker " + checkerDescription.getName() + " sur le composant " + component + " de la variable " + variable + " du type de données " + dataType + " de l'application " + app.getName());
-                    variableComponentChecker = new FloatChecker(variableComponentKey, configuration, transformer);
-                } else if ("RegularExpression".equals(checkerDescription.getName())) {
-                    String pattern = configuration.getPattern();
-                    variableComponentChecker = new RegularExpressionChecker(variableComponentKey, pattern, configuration, transformer);
-                } else {
-                    throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
-                }
-            }
-            Preconditions.checkState(variableComponentChecker.getTarget().equals(variableComponentKey));
-            checkersBuilder.add(variableComponentChecker);
-        }
-    }
-
-    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
-        String refType = checkerDescription.getParams().getRefType();
-        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-        ImmutableMap<Ltree, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-        CheckerOnOneVariableComponentLineChecker variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams(), transformer);
-        return variableComponentChecker;
     }
 
     private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder, String param) {
@@ -162,31 +121,34 @@ public class CheckerFactory {
     }
 
     private CheckerOnOneVariableComponentLineChecker newChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target) {
-        LineTransformer transformer = transformerFactory.newTransformer(checkerDescription.getParams(), app, target);
-        Configuration.CheckerConfigurationDescription checkerConfigurationDescription = checkerDescription.getParams();
+        Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
+        LineTransformer transformer = Optional.ofNullable(configuration)
+                .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, target))
+                .orElseGet(transformerFactory::getNullTransformer);
         CheckerOnOneVariableComponentLineChecker lineChecker;
         switch (checkerDescription.getName()) {
             case "Date":
-                lineChecker = new DateLineChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer);
+                lineChecker = new DateLineChecker(target, configuration.getPattern(), configuration, transformer);
                 break;
             case "Integer":
-                lineChecker = new IntegerChecker(target, checkerConfigurationDescription, transformer);
+                lineChecker = new IntegerChecker(target, configuration, transformer);
                 break;
             case "Float":
-                lineChecker = new FloatChecker(target, checkerConfigurationDescription, transformer);
+                lineChecker = new FloatChecker(target, configuration, transformer);
                 break;
             case "RegularExpression":
-                lineChecker = new RegularExpressionChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer);
+                lineChecker = new RegularExpressionChecker(target, configuration.getPattern(), configuration, transformer);
                 break;
             case "Reference":
-                String refType = checkerConfigurationDescription.getRefType();
+                String refType = configuration.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<Ltree, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                lineChecker = new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription, transformer);
+                lineChecker = new ReferenceLineChecker(target, refType, referenceValues, configuration, transformer);
                 break;
             default:
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
         }
+        Preconditions.checkState(lineChecker.getTarget().equals(target));
         return lineChecker;
     }
 
