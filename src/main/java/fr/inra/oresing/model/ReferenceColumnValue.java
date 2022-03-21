@@ -1,5 +1,7 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.rest.ReferenceImporterContext;
+
 import java.util.Collection;
 import java.util.function.Function;
 
@@ -23,4 +25,5 @@ public interface ReferenceColumnValue<T, F> extends SomethingToBeStoredAsJsonInD
      */
     ReferenceColumnValue<T, F> transform(Function<String, String> transformation);
 
+    String toValueString(ReferenceImporterContext referenceImporterContext, String referencedColumn, String key);
 }

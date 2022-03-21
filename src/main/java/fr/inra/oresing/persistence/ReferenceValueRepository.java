@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -102,6 +103,38 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
         List result = getNamedParameterJdbcTemplate().query(query + cond, paramSource, getJsonRowMapper());
         return (List<ReferenceValue>) result;
+    }
+
+    public Map<String, Map<String, String>> findDisplayByNaturalKey(String refType) {
+        String query = "select 'java.util.Map' as \"@class\" , jsonb_build_object(naturalkey, jsonb_agg(display)) json\n" +
+                "           from " + getTable().getSqlIdentifier() + ",\n" +
+                "lateral\n" +
+                "(select  jsonb_build_object(\n" +
+                "                trim('\"__display_' from\n" +
+                "                     jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").key')::text),\n" +
+                "                trim('\"' FROM jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").value')::text)\n" +
+                "            ) as display\n" +
+                "    )displays\n" +
+                "where referencetype = :refType\n" +
+                "group by naturalkey";
+        Map<String, Map<String, String>> displayForNaturalKey  = new HashMap<>();
+        List result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("refType", refType), getJsonRowMapper());
+        for (Object o : result) {
+            final Map<String, List<Map<String, String>>> o1 = (Map<String, List<Map<String, String>>>) o;
+            final Map<String, Map<String, String>> collect = o1.entrySet()
+                    .stream().collect(Collectors.toMap(
+                            e -> e.getKey(),
+                            e -> {
+                                Map<String, String> displayMap = new HashMap<>();
+                                for (Map<String, String> s : e.getValue()) {
+                                    displayMap.putAll(s);
+                                }
+                                return displayMap;
+                            }
+                    ));
+            displayForNaturalKey.putAll(collect);
+        }
+        return displayForNaturalKey;
     }
 
     public List<List<String>> findReferenceValue(String refType, String column) {

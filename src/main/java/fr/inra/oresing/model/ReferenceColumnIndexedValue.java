@@ -2,6 +2,7 @@ package fr.inra.oresing.model;
 
 import com.google.common.collect.Maps;
 import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.rest.ReferenceImporterContext;
 import lombok.Value;
 
 import java.util.Collection;
@@ -23,6 +24,13 @@ public class ReferenceColumnIndexedValue implements ReferenceColumnValue<Map<Str
     public ReferenceColumnIndexedValue transform(Function<String, String> transformation) {
         Map<Ltree, String> transformedValues = Maps.transformValues(values, transformation::apply);
         return new ReferenceColumnIndexedValue(transformedValues);
+    }
+
+    @Override
+    public String toValueString(ReferenceImporterContext referenceImporterContext, String referencedColumn, String locale) {
+        return values.entrySet().stream()
+                .map(ltreeStringEntry -> String.format("\"%s\"\"=%s\"", referenceImporterContext.getDisplayByReferenceAndNaturalKey( referencedColumn,ltreeStringEntry.getKey().toString(), locale), ltreeStringEntry.getValue()))
+                .collect(Collectors.joining(",","[","]"));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.rest.ReferenceImporterContext;
 import lombok.Value;
 
 import java.util.Set;
@@ -30,6 +31,13 @@ public class ReferenceColumnMultipleValue implements ReferenceColumnValue<Set<St
     public ReferenceColumnMultipleValue transform(Function<String, String> transformation) {
         Set<String> transformedValues = values.stream().map(transformation).collect(Collectors.toSet());
         return new ReferenceColumnMultipleValue(transformedValues);
+    }
+
+    @Override
+    public String toValueString(ReferenceImporterContext referenceImporterContext, String referencedColumn, String locale) {
+        return values.stream()
+                .map(s->referenceImporterContext.getDisplayByReferenceAndNaturalKey(referencedColumn, s, locale))
+                .collect(Collectors.joining(",","[","]"));
     }
 
     @Override

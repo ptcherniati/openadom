@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.rest.ReferenceImporterContext;
 import lombok.Value;
 
 import java.util.Set;
@@ -36,6 +37,11 @@ public class ReferenceColumnSingleValue implements ReferenceColumnValue<String, 
     public ReferenceColumnSingleValue transform(Function<String, String> transformation) {
         String transformedValue = transformation.apply(value);
         return new ReferenceColumnSingleValue(transformedValue);
+    }
+
+    @Override
+    public String toValueString(ReferenceImporterContext referenceImporterContext, String referencedColumn, String locale) {
+        return referenceImporterContext.getDisplayByReferenceAndNaturalKey(referencedColumn, value, locale);
     }
 
     @Override

@@ -4,62 +4,16 @@ import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.DateLineChecker;
-import fr.inra.oresing.checker.FloatChecker;
-import fr.inra.oresing.checker.IntegerChecker;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.Multiplicity;
-import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.Authorization;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.BinaryFileDataset;
-import fr.inra.oresing.model.ColumnPresenceConstraint;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.Data;
-import fr.inra.oresing.model.Datum;
-import fr.inra.oresing.model.LocalDateTimeRange;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.Ltree;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.persistence.SqlPolicy;
-import fr.inra.oresing.persistence.SqlSchema;
-import fr.inra.oresing.persistence.SqlSchemaForApplication;
-import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.model.*;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
@@ -95,19 +49,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -444,15 +386,36 @@ public class OreSiService {
                                 ReferenceImporterContext.Column::getExpectedHeader,
                                 Function.identity()
                         ));
-
+        final ReferenceImporterContext.Constants constants = new ReferenceImporterContext.Constants(
+                app.getId(),
+                conf,
+                refType,
+                repo.getRepository(app).referenceValue());
+    /*    final Set<Object> patternColumns = constants.getPatternColumns()
+                .map(pt -> pt.values())
+                .flatMap(Collection::stream)
+                .stream().collect(Collectors.toSet());*/
+        Set<String> patternColumns = constants.getPatternColumns()
+                .map(m->m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
+                .orElseGet(HashSet::new);
+        final Map<String, String> referenceToColumnName = lineCheckers.stream()
+                .filter(ReferenceLineChecker.class::isInstance)
+                .map(ReferenceLineChecker.class::cast)
+                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) ((ReferenceLineChecker) lineCheckers.asList().get(0)).getTarget().getTarget()).getColumn()));
+        final Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey =
+                lineCheckers.stream()
+                .filter(ReferenceLineChecker.class::isInstance)
+                .map(ReferenceLineChecker.class::cast)
+                .map(ReferenceLineChecker::getRefType)
+                .filter(rt -> patternColumns.contains(rt))
+                .collect(Collectors.toMap(ref -> referenceToColumnName.getOrDefault(ref, ref), ref -> repo.getRepository(app).referenceValue().findDisplayByNaturalKey(ref)));
         final ReferenceImporterContext referenceImporterContext =
                 new ReferenceImporterContext(
-                        app.getId(),
-                        conf,
-                        refType,
+                        constants,
                         lineCheckers,
                         storedReferences,
-                        columns
+                        columns,
+                        displayByReferenceAndNaturalKey
                 );
         return referenceImporterContext;
     }

@@ -86,6 +86,14 @@ references:
       nom_fr:
       nom_en:
   modalites:
+    internationalizedColumns:
+      nom_fr:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_fr} ({code})'
+        en: '{nom_fr} ({code})'
     keyColumns: [code]
     columns:
       Variable de forcage:
@@ -96,6 +104,10 @@ references:
       description_en:
   version_de_traitement:
     keyColumns: [site, traitement]
+    internationalizationDisplay:
+      pattern:
+        fr: '{traitement} ({modalites})'
+        en: '{traitement} ({modalites})'
     columns:
       site:
       traitement:
