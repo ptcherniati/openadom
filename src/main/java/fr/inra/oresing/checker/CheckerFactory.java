@@ -12,7 +12,6 @@ import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.rest.ApplicationResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -68,10 +66,6 @@ public class CheckerFactory {
     }
 
     public ImmutableSet<LineChecker> getLineCheckers(Application app, String dataType) {
-        return getLineCheckers(app, dataType, null);
-    }
-
-    public ImmutableSet<LineChecker> getLineCheckers(Application app, String dataType, Locale locale) {
         Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
@@ -79,7 +73,7 @@ public class CheckerFactory {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
-                parseVariableComponentdescription(app, dataType, locale, checkersBuilder, variable, variableDescription, componentEntry);
+                parseVariableComponentdescription(app, dataType, checkersBuilder, variable, variableDescription, componentEntry);
             }
         }
         addCheckersFromLineValidationDescriptions(app, dataTypeDescription.getValidations(), checkersBuilder, Type.DATATYPE.getParam()); //Configuration.DataTypeDescription dataTypeDescription,
@@ -90,7 +84,7 @@ public class CheckerFactory {
         return lineCheckers;
     }
 
-    private void parseVariableComponentdescription(Application app, String dataType, Locale locale, ImmutableSet.Builder<LineChecker> checkersBuilder, String variable, Configuration.ColumnDescription variableDescription, Map.Entry<String, Configuration.VariableComponentDescription> componentEntry) {
+    private void parseVariableComponentdescription(Application app, String dataType, ImmutableSet.Builder<LineChecker> checkersBuilder, String variable, Configuration.ColumnDescription variableDescription, Map.Entry<String, Configuration.VariableComponentDescription> componentEntry) {
         String component = componentEntry.getKey();
         VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
         if (variableDescription.getComponents().get(component) == null) {
@@ -104,7 +98,7 @@ public class CheckerFactory {
                     .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, variableComponentKey))
                     .orElseGet(transformerFactory::getNullTransformer);
             if ("Reference".equals(checkerDescription.getName())) {
-                variableComponentChecker = getCheckerOnReferenceChecker(app, locale, checkerDescription, variableComponentKey, transformer);
+                variableComponentChecker = getCheckerOnReferenceChecker(app, checkerDescription, variableComponentKey, transformer);
             } else {
                 final Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
                 if ("Date".equals(checkerDescription.getName())) {
@@ -128,19 +122,10 @@ public class CheckerFactory {
         }
     }
 
-    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, Locale locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
+    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
         String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-        ImmutableMap<Ltree, UUID> referenceValues;
-        if (locale == null) {
-            referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-        } else {
-            ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceIdAndDisplayPerKeys = referenceValueRepository.getReferenceIdAndDisplayPerKeys(refType, locale);
-            referenceValues = ImmutableMap.copyOf(
-                    referenceIdAndDisplayPerKeys.entrySet().stream()
-                            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
-            );
-        }
+        ImmutableMap<Ltree, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
         CheckerOnOneVariableComponentLineChecker variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams(), transformer);
         return variableComponentChecker;
     }

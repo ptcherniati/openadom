@@ -1224,8 +1224,8 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, Locale locale) {
-        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
                 .stream()
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
                 .collect(

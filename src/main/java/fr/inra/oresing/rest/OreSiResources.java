@@ -272,7 +272,7 @@ public class OreSiResources {
                 })
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
-        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType, locale);
+        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
         Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale, dataType, checkedFormatVariableComponents);
          return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
     }
