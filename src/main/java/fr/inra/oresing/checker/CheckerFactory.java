@@ -1,7 +1,6 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.groovy.GroovyContextHelper;
@@ -28,7 +27,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
 @Slf4j
@@ -153,7 +151,6 @@ public class CheckerFactory {
         for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : lineValidationDescriptions.entrySet()) {
             Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
             Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
-            LineChecker lineChecker;
             Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
             if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
                 String expression = configurationDescription.getGroovy().getExpression();
@@ -166,61 +163,46 @@ public class CheckerFactory {
                         .putAll(groovyContextForDataTypes)
                         .put("application", app)
                         .build();
-                lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
+                LineChecker lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
                 checkersBuilder.add(lineChecker);
             } else {
-                List<CheckerTarget> checkerTargets = buildCheckerTarget(configurationDescription, app);
-                if (checkerTargets != null) {
-                    checkerTargets.forEach(checkerTarget -> buildCheckers(app, checkerDescription, checkerTarget, checkersBuilder));
-                } else {
-                    throw new IllegalArgumentException(String.format("Pour le checker de ligne %s, le paramètre %s doit être fourni.", checkerDescription.getName(), param));
-                }
+                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = configurationDescription.doGetColumnsAsCollection().stream()
+                        .map(ReferenceColumn::new)
+                        .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
+                        .collect(Collectors.toList());
+                checkersBuilder.addAll(lineCheckers);
             }
             checkersBuilder.build();
         }
     }
 
-    private void buildCheckers(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target, ImmutableSet.Builder<LineChecker> checkersBuilder) {
+    private CheckerOnOneVariableComponentLineChecker newChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target) {
         LineTransformer transformer = transformerFactory.newTransformer(checkerDescription.getParams(), app, target);
         Configuration.CheckerConfigurationDescription checkerConfigurationDescription = checkerDescription.getParams();
+        CheckerOnOneVariableComponentLineChecker lineChecker;
         switch (checkerDescription.getName()) {
             case "Date":
-                checkersBuilder.add(new DateLineChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer));
+                lineChecker = new DateLineChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer);
                 break;
             case "Integer":
-                checkersBuilder.add(new IntegerChecker(target, checkerConfigurationDescription, transformer));
+                lineChecker = new IntegerChecker(target, checkerConfigurationDescription, transformer);
                 break;
             case "Float":
-                checkersBuilder.add(new FloatChecker(target, checkerConfigurationDescription, transformer));
+                lineChecker = new FloatChecker(target, checkerConfigurationDescription, transformer);
                 break;
             case "RegularExpression":
-                checkersBuilder.add(new RegularExpressionChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer));
+                lineChecker = new RegularExpressionChecker(target, checkerConfigurationDescription.getPattern(), checkerConfigurationDescription, transformer);
                 break;
             case "Reference":
                 String refType = checkerConfigurationDescription.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<Ltree, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
-                checkersBuilder.add(new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription, transformer));
+                lineChecker = new ReferenceLineChecker(target, refType, referenceValues, checkerConfigurationDescription, transformer);
                 break;
             default:
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
         }
-    }
-
-    private List<CheckerTarget> buildCheckerTarget(Configuration.CheckerConfigurationDescription params, Application application) {
-        String columnsString = params.getColumns();
-        String variableComponentKeyParam = params.getVariableComponentKey();
-        if (!Strings.isNullOrEmpty(columnsString)) {
-            return Stream.of(columnsString.split(","))
-                    .map(ReferenceColumn::new)
-                    .collect(Collectors.toList());
-        } else if (!Strings.isNullOrEmpty(variableComponentKeyParam) || !variableComponentKeyParam.matches("_")) {
-            String[] split = variableComponentKeyParam.split("_");
-            Stream.of(new VariableComponentKey(split[0], split[1]))
-                    .collect(Collectors.toList());
-
-        }
-        return null;
+        return lineChecker;
     }
 
     enum Type {

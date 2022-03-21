@@ -283,11 +283,11 @@ public class ConfigurationParsingResult {
             ));
         }
 
-        public Builder missingColumnReferenceForCheckerInReference(String validationRuleDescriptionEntryKey, Set<String> availablesColumns, String name, List<String> missingColumns, String reference) {
+        public Builder missingColumnReferenceForCheckerInReference(String validationRuleDescriptionEntryKey, Set<String> knownColumns, String name, ImmutableSet<String> missingColumns, String reference) {
             return recordError("missingColumnReferenceForCheckerInReference", ImmutableMap.of(
                     "reference", reference,
                     "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
-                    "knownColumns", availablesColumns,
+                    "knownColumns", knownColumns,
                     "checkerName", name,
                     "missingColumns", missingColumns
             ));

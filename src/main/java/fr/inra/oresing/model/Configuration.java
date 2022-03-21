@@ -4,7 +4,14 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
-import fr.inra.oresing.checker.*;
+import com.google.common.collect.Sets;
+import fr.inra.oresing.checker.DateLineCheckerConfiguration;
+import fr.inra.oresing.checker.FloatCheckerConfiguration;
+import fr.inra.oresing.checker.GroovyLineCheckerConfiguration;
+import fr.inra.oresing.checker.IntegerCheckerConfiguration;
+import fr.inra.oresing.checker.Multiplicity;
+import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
+import fr.inra.oresing.checker.RegularExpressionCheckerConfiguration;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
@@ -15,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -25,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -103,6 +112,24 @@ public class Configuration {
         private LinkedHashMap<String, ReferenceColumnDescription> columns = new LinkedHashMap<>();
         private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+
+        public ImmutableSet<ReferenceColumn> doGetStaticColumns() {
+            return columns.keySet().stream()
+                    .map(ReferenceColumn::new).
+                    collect(ImmutableSet.toImmutableSet());
+        }
+
+        public ImmutableSet<ReferenceColumn> doGetComputedColumns() {
+            Set<ReferenceColumn> usedInTransformationColumns = validations.values().stream()
+                    .map(LineValidationRuleDescription::getChecker)
+                    .map(CheckerDescription::getParams)
+                    .map(CheckerConfigurationDescription::doGetColumnsAsCollection)
+                    .flatMap(Collection::stream)
+                    .map(ReferenceColumn::new)
+                    .collect(Collectors.toUnmodifiableSet());
+            ImmutableSet<ReferenceColumn> computedColumns = Sets.difference(usedInTransformationColumns, doGetStaticColumns()).immutableCopy();
+            return computedColumns;
+        }
     }
 
     @Getter
@@ -278,7 +305,6 @@ public class Configuration {
         String refType;
         GroovyConfiguration groovy;
         String columns;
-        String variableComponentKey;
         String duration;
         boolean codify;
         boolean required;

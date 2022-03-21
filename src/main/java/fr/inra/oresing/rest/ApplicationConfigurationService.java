@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
@@ -26,12 +25,10 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Strings;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +40,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
 @Slf4j
@@ -650,17 +646,6 @@ public class ApplicationConfigurationService {
                 continue;
             }
             ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
-            String columns = checker.getParams().getColumns();
-            Set<String> groovyColumn = Optional.ofNullable(checker)
-                    .map(check->check.getParams())
-                    .filter(params->params.getGroovy() != null)
-                    .map(params-> MoreObjects.firstNonNull(params.getColumns(), ""))
-
-                    // autant mettre une collection dans le YAML directement
-                    .map(values-> values.split(","))
-                    .map(values-> Arrays.stream(values).collect(Collectors.toSet()))
-                    .orElse(Set.of());
-
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
                 String expression =Optional.of(checker)
                         .map(Configuration.CheckerDescription::getParams)
@@ -674,22 +659,14 @@ public class ApplicationConfigurationService {
                     compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
                 }
             } else if (variableComponentCheckers.contains(checker.getName())) {
-                if (Strings.isNullOrEmpty(columns))
+                if (checker.getParams().doGetColumnsAsCollection().isEmpty()) {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
-                else {
-                    List<String> columnsList = Stream.of(columns.split(",")).collect(Collectors.toList());
-                    Set<String> referencesColumns = referenceDescription.getColumns().keySet();
-                    ImmutableSet availablesColumns = new ImmutableSet.Builder<>()
-                            .addAll(referencesColumns)
-                            .addAll(groovyColumn)
-                            .build();
-
-                    List<String> missingColumns = columnsList.stream()
-                            .filter(c -> !availablesColumns.contains(c))
-                            .collect(Collectors.toList());
-
-                    if (!missingColumns.isEmpty()) {
-                        builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, availablesColumns, checker.getName(), missingColumns, reference);
+                } else {
+                    ImmutableSet<String> columnsDeclaredInCheckerConfiguration = checker.getParams().doGetColumnsAsCollection();
+                    Set<String> knownColumns = referenceDescription.getColumns().keySet();
+                    ImmutableSet<String> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
+                    if (false && !missingColumns.isEmpty()) {
+                        builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, knownColumns, checker.getName(), missingColumns, reference);
                     }
                 }
                 if ("Reference".equals(checker.getName())) {
