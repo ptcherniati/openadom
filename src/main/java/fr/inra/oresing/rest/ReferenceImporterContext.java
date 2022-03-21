@@ -27,6 +27,7 @@ import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -80,7 +81,7 @@ public class ReferenceImporterContext {
                 .orElseGet(HashMap::new);
     }
 
-    public Optional<Map<String, String>> getDisplayPattern() {
+    public Optional<Map<Locale, String>> getDisplayPattern() {
         Optional<InternationalizationReferenceMap> internationalizationReferenceMap = getInternationalizationReferenceMap();
         return internationalizationReferenceMap
                 .map(InternationalizationReferenceMap::getInternationalizationDisplay)

@@ -20,6 +20,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -103,7 +104,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return result;
     }
 
-    public ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
+    public ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, Locale locale) {
         Function<ReferenceValue, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceValueToReferenceUuidAndDisplayFunction = result -> {
             ReferenceDatum referenceDatum = result.getRefValues();
             ReferenceColumn referenceColumnForDisplay = ReferenceColumn.forDisplay(locale);

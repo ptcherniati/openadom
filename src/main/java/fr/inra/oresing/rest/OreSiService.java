@@ -4,16 +4,61 @@ import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.*;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.*;
+import fr.inra.oresing.checker.CheckerFactory;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.FloatChecker;
+import fr.inra.oresing.checker.IntegerChecker;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.Multiplicity;
+import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
 import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.*;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.BinaryFileDataset;
+import fr.inra.oresing.model.ColumnPresenceConstraint;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.Data;
+import fr.inra.oresing.model.Datum;
+import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
+import fr.inra.oresing.model.ReferenceColumnValue;
+import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
@@ -49,7 +94,20 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -662,7 +720,8 @@ public class OreSiService {
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
-            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
+            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
+                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String requiredAuthorization = datum.get(variableComponentKey);
                 Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
@@ -1053,7 +1112,8 @@ public class OreSiService {
         List<String> variableComponentsFromRepository = new LinkedList<>();
         if (requiredAuthorizations != null) {
             for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
-                VariableComponentKey variableComponentKey = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String value = entry.getValue();
                 defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\"" + value + "\""));
                 variableComponentsFromRepository.add(variableComponentKey.getId());
@@ -1090,7 +1150,7 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
         Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
@@ -1164,7 +1224,7 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, Locale locale) {
         return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
                 .stream()
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
@@ -1290,7 +1350,7 @@ public class OreSiService {
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 
-    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, String locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
+    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, Locale locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
         Application application = getApplication(nameOrId);
         return Optional.ofNullable(application)
                 .map(a -> a.getConfiguration())

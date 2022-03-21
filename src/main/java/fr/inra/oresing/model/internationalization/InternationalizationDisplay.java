@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.assertj.core.util.Strings;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,9 +17,9 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 public class InternationalizationDisplay {
-    Map<String, String> pattern;
+    Map<Locale, String> pattern;
 
-    public static ReferenceDatum getDisplays(Optional<Map<String, String>> displayPattern, Map<String, Internationalization> displayColumns, ReferenceDatum refValues) {
+    public static ReferenceDatum getDisplays(Optional<Map<Locale, String>> displayPattern, Map<String, Internationalization> displayColumns, ReferenceDatum refValues) {
         ReferenceDatum displays = new ReferenceDatum();
         displayPattern
                 .ifPresent(patterns -> {

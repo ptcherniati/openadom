@@ -3,12 +3,14 @@ package fr.inra.oresing.model;
 import fr.inra.oresing.checker.CheckerTarget;
 import lombok.Value;
 
+import java.util.Locale;
+
 @Value
 public class ReferenceColumn implements CheckerTarget, SomethingToBeStoredAsJsonInDatabase<String> {
     String column;
 
-    public static ReferenceColumn forDisplay(String locale) {
-        return new ReferenceColumn("__display_" + locale);
+    public static ReferenceColumn forDisplay(Locale locale) {
+        return new ReferenceColumn("__display_" + locale.toLanguageTag());
     }
 
     public String asString() {

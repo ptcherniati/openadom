@@ -1,7 +1,7 @@
 version: 0
 application:
   defaultLanguage: fr
-  internationalization:
+  internationalizationName:
     fr: SOERE mon SOERE avec dépôt
     en: SOERE my SOERE with repository
   name: MONSORE
@@ -331,7 +331,7 @@ dataTypes:
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent
-    internationalizationDisplay:
+    internationalizationDisplays:
       especes:
         pattern:
           fr: 'espèce :{esp_nom}'

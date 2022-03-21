@@ -348,6 +348,9 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
+        Assert.assertEquals(9, onlyError.getMessageParams().get("lineNumber"));
+        Assert.assertEquals(3, onlyError.getMessageParams().get("columnNumber"));
+        Assert.assertEquals("compositReference", onlyError.getMessageParams().get("unknownPropertyName"));
     }
 
     @Test
@@ -435,8 +438,8 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceInInternationalizationDisplayPatternInDatatype() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplay:\n" +
-                "      sites:", "internationalizationDisplay:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplays:\n" +
+                "      sites:", "internationalizationDisplays:\n" +
                 "      plateforme:");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());

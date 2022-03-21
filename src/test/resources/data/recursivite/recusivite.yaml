@@ -1,7 +1,7 @@
 version: 0
 application:
   defaultLanguage: fr
-  internationalization:
+  internationalizationName:
     fr: Récursivité
     en: recusivity
   name: recursivite

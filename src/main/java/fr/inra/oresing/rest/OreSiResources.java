@@ -249,7 +249,10 @@ public class OreSiResources {
 
         LinkedHashSet<String> orderedVariables = buildOrderedVariables(nameOrId, dataType);
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
-        String locale = downloadDatasetQuery!=null && downloadDatasetQuery.getLocale()!=null?downloadDatasetQuery.getLocale():LocaleContextHolder.getLocale().getLanguage();
+        Locale locale = Optional.ofNullable(downloadDatasetQuery)
+                .map(DownloadDatasetQuery::getLocale)
+                .map(Locale::new)
+                .orElseGet(LocaleContextHolder::getLocale);
         List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
@@ -312,8 +315,7 @@ public class OreSiResources {
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
-        String locale = downloadDatasetQuery!=null && downloadDatasetQuery.getLocale()!=null?downloadDatasetQuery.getLocale():LocaleContextHolder.getLocale().getLanguage();
-        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType, locale);
+        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType);
         return ResponseEntity.ok(result);
     }
 

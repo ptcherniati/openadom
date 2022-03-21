@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
 import lombok.Getter;
@@ -104,6 +105,7 @@ public class DownloadDatasetQuery {
                             );
                             getApplication().getConfiguration().getDataTypes().get(getDataType()).getAuthorization().getAuthorizationScopes().values()
                                     .stream()
+                                    .map(Configuration.AuthorizationScopeDescription::getVariableComponentKey)
                                     .forEach(vck -> variableComponentKeySet.add(
                                             new VariableComponentOrderBy(vck, Order.ASC)
                                     ));

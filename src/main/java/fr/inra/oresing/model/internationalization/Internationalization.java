@@ -4,8 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 
 @Getter
 @Setter
-public class Internationalization extends LinkedHashMap<String, String> {
+public class Internationalization extends LinkedHashMap<Locale, String> {
 }
