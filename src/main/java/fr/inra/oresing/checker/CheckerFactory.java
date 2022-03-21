@@ -57,7 +57,7 @@ public class CheckerFactory {
         Preconditions.checkArgument(app.getConfiguration().getReferences().containsKey(reference), "Pas de référence " + reference + " dans " + app);
         Configuration.ReferenceDescription referenceDescription = app.getConfiguration().getReferences().get(reference);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
-        addCheckersFromLineValidationDescriptions(app, referenceDescription.getValidations(), checkersBuilder, Type.REFERENCE.getParam()); //Configuration.DataTypeDescription dataTypeDescription,
+        addCheckersFromLineValidationDescriptions(app, referenceDescription.getValidations(), checkersBuilder); //Configuration.DataTypeDescription dataTypeDescription,
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {
             log.trace("pour " + app.getName() + ", " + reference + ", on validera avec " + lineCheckers);
@@ -81,7 +81,7 @@ public class CheckerFactory {
                         .ifPresent(checkersBuilder::add);
             }
         }
-        addCheckersFromLineValidationDescriptions(app, dataTypeDescription.getValidations(), checkersBuilder, Type.DATATYPE.getParam()); //Configuration.DataTypeDescription dataTypeDescription,
+        addCheckersFromLineValidationDescriptions(app, dataTypeDescription.getValidations(), checkersBuilder); //Configuration.DataTypeDescription dataTypeDescription,
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {
             log.trace("pour " + app.getName() + ", " + dataType + ", on validera avec " + lineCheckers);
@@ -89,7 +89,7 @@ public class CheckerFactory {
         return lineCheckers;
     }
 
-    private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder, String param) {
+    private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder) {
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
         DataRepository dataRepository = repository.getRepository(app).data();
         for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : lineValidationDescriptions.entrySet()) {
@@ -150,19 +150,5 @@ public class CheckerFactory {
         }
         Preconditions.checkState(lineChecker.getTarget().equals(target));
         return lineChecker;
-    }
-
-    enum Type {
-        REFERENCE(COLUMNS), DATATYPE(VARIABLE_COMPONENT_KEY);
-
-        private final String param;
-
-        Type(String requiredAttributeForCheckerOnOneVariableComponentLineChecker) {
-            this.param = requiredAttributeForCheckerOnOneVariableComponentLineChecker;
-        }
-
-        public String getParam() {
-            return param;
-        }
     }
 }
