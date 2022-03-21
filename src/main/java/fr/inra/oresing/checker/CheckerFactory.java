@@ -122,9 +122,7 @@ public class CheckerFactory {
 
     private CheckerOnOneVariableComponentLineChecker newChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target) {
         Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
-        LineTransformer transformer = Optional.ofNullable(configuration)
-                .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, target))
-                .orElseGet(transformerFactory::getNullTransformer);
+        LineTransformer transformer = transformerFactory.newTransformer(configuration, app, target);
         CheckerOnOneVariableComponentLineChecker lineChecker;
         switch (checkerDescription.getName()) {
             case "Date":

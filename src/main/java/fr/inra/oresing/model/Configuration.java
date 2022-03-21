@@ -25,9 +25,9 @@ import fr.inra.oresing.model.internationalization.InternationalizationReferenceM
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -93,11 +93,8 @@ public class Configuration {
             for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
                 CheckerDescription checker = validation.getValue().getChecker();
                 if (checker != null) {
-                    String refType = Optional.of(checker)
-                            .map(CheckerDescription::getParams)
-                            .map(CheckerConfigurationDescription::getRefType)
-                            .orElse(null);
-                    if ("Reference".equals(checker.getName()) && refType != null) {
+                    String refType = checker.getParams().getRefType();
+                    if ("Reference".equals(checker.getName()) && StringUtils.isNotEmpty(refType)) {
                         DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
                         dependencyNode.addDependance(node);
                     }
@@ -366,7 +363,7 @@ public class Configuration {
     @ToString
     public static class CheckerDescription {
         String name;
-        CheckerConfigurationDescription params;
+        CheckerConfigurationDescription params = new CheckerConfigurationDescription();
     }
 
     @Getter

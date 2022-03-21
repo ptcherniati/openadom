@@ -357,7 +357,7 @@ public class ApplicationConfigurationService {
                                 builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
                             }
                             Optional.ofNullable(timeScopeVariableComponentChecker)
-                                    .map(checkerDescription -> checkerDescription.getParams())
+                                    .map(Configuration.CheckerDescription::getParams)
                                     .map(Configuration.CheckerConfigurationDescription::getPattern)
                                     .ifPresent(pattern -> {
                                         if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
@@ -427,7 +427,7 @@ public class ApplicationConfigurationService {
                 if (variableComponentDescription != null) {
                     Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                     if ("Reference".equals(checkerDescription.getName())) {
-                        if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
+                        if (checkerDescription.getParams().getRefType() != null) {
                             String refType = checkerDescription.getParams().getRefType();
                             if (!references.contains(refType)) {
                                 builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
@@ -610,7 +610,7 @@ public class ApplicationConfigurationService {
                     }
                 }
                 if ("Reference".equals(checker.getName())) {
-                    if (checker.getParams() != null && checker.getParams().getRefType() != null) {
+                    if (checker.getParams().getRefType() != null) {
                         String refType = checker.getParams().getRefType();
                         if (!references.contains(refType)) {
                             builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
