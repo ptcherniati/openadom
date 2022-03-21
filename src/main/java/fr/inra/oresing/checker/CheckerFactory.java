@@ -104,7 +104,7 @@ public class CheckerFactory {
                     .map(transformationConfiguration -> transformerFactory.newTransformer(transformationConfiguration, app, variableComponentKey))
                     .orElseGet(transformerFactory::getNullTransformer);
             if ("Reference".equals(checkerDescription.getName())) {
-                variableComponentChecker = getCheckerOnReferenceChecker(app, dataType, locale, checkerDescription, variableComponentKey, transformer);
+                variableComponentChecker = getCheckerOnReferenceChecker(app, locale, checkerDescription, variableComponentKey, transformer);
             } else {
                 final Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
                 if ("Date".equals(checkerDescription.getName())) {
@@ -128,8 +128,7 @@ public class CheckerFactory {
         }
     }
 
-    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, Locale locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
-        CheckerOnOneVariableComponentLineChecker variableComponentChecker;
+    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, Locale locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
         String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
         ImmutableMap<Ltree, UUID> referenceValues;
@@ -142,7 +141,7 @@ public class CheckerFactory {
                             .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getUuid()))
             );
         }
-        variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams(), transformer);
+        CheckerOnOneVariableComponentLineChecker variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams(), transformer);
         return variableComponentChecker;
     }
 
