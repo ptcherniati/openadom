@@ -1,15 +1,9 @@
 package fr.inra.oresing.persistence;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -20,11 +14,8 @@ import org.springframework.util.MultiValueMap;
 
 import java.sql.PreparedStatement;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,24 +93,6 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         String query = String.format(sqlPattern, select);
         List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType)).stream().map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList())).collect(Collectors.toList());
         return result;
-    }
-
-    public ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, Locale locale) {
-        Function<ReferenceValue, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceValueToReferenceUuidAndDisplayFunction = result -> {
-            ReferenceDatum referenceDatum = result.getRefValues();
-            ReferenceColumn referenceColumnForDisplay = ReferenceColumn.forDisplay(locale);
-            String display;
-            if (referenceDatum.contains(referenceColumnForDisplay)) {
-                ReferenceColumnValue referenceColumnValueForDisplay = referenceDatum.get(referenceColumnForDisplay);
-                Preconditions.checkState(referenceColumnValueForDisplay instanceof ReferenceColumnSingleValue);
-                display = ((ReferenceColumnSingleValue) referenceColumnValueForDisplay).getValue();
-            } else {
-                display = null;
-            }
-            Map<String, String> values = referenceDatum.toJsonForFrontend();
-            return new ApplicationResult.Reference.ReferenceUUIDAndDisplay(display, result.getId(), values);
-        };
-        return findAllByReferenceType(referenceType).stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, referenceValueToReferenceUuidAndDisplayFunction));
     }
 
     public ImmutableMap<Ltree, UUID> getReferenceIdPerKeys(String referenceType) {
