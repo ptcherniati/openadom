@@ -128,6 +128,7 @@ public class Fixtures {
         return String.format("{\n" +
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
+                "      \"datatype\":\"monsore\",\n" +
                 "      \"requiredauthorizations\":{\n" +
                 "         \"projet\":\"projet_%1$s\",\n" +
                 "         \"localization\":\"%2$s.%3$s.%3$s__p1\"\n" +
@@ -156,6 +157,7 @@ public class Fixtures {
 
     public Map<String, String> getRecursiviteReferentielOrderFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_reduit-test.csv");
         return referentielFiles;
     }
@@ -180,6 +182,8 @@ public class Fixtures {
         referentielFiles.put("sites", "/data/acbb/sites.csv");
         referentielFiles.put("parcelles", "/data/acbb/parcelle.csv");
         referentielFiles.put("unites", "/data/acbb/unites.csv");
+        referentielFiles.put("modalites", "/data/acbb/modalites.csv");
+        referentielFiles.put("version_de_traitement", "/data/acbb/version_de_traitement.csv");
         return referentielFiles;
     }
 
@@ -400,86 +404,34 @@ public class Fixtures {
         return authCookie;
     }
 
-    public Map<String, String> getProReferentielFiles() {
+    public String getDuplicatedApplicationConfigurationResourceName() {
+        return "/data/duplication/duplication.yaml";
+    }
+
+    public Map<String, String> getDuplicatedReferentielFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("dispositifs", "/data/pros/dispositif_complet.csv");
-        referentielFiles.put("blocs", "/data/pros/bloc_complet.csv");
-        referentielFiles.put("parcelles_elementaires", "/data/pros/parcelle_complet.csv");
-        referentielFiles.put("placettes", "/data/pros/placette_complet.csv");
-        referentielFiles.put("traitements", "/data/pros/traitement_complet.csv");
-        referentielFiles.put("type_lieu", "/data/pros/type_lieu.csv");
-        referentielFiles.put("type_culture", "/data/pros/type_de_culture.csv");
-        referentielFiles.put("type_document", "/data/pros/type_de_document.csv");
-        referentielFiles.put("type_dispositif", "/data/pros/type_de_dispositif.csv");
-        referentielFiles.put("type_facteur", "/data/pros/type_de_facteur.csv");
-        referentielFiles.put("type_traitement", "/data/pros/type_de_traitement.csv");
-        referentielFiles.put("echelle_prelevement", "/data/pros/echelle_de_prelevement.csv");
+        referentielFiles.put("typezonewithoutduplication", "/data/duplication/typezone.csv");
+        referentielFiles.put("typezonewithduplication", "/data/duplication/typezoneduplique.csv");
+        referentielFiles.put("zonewithoutduplication", "/data/duplication/zone_etude.csv");
+        referentielFiles.put("zonewithduplication", "/data/duplication/zone_etude_dupliqué.csv");
+        referentielFiles.put("zonewithmissingparent", "/data/duplication/zone_etude_missing_parent.csv");
         return referentielFiles;
     }
 
-    public String getProApplicationConfigurationResourceName() {
-        return "/data/pros/pro.yaml";
-    }
-
-    public Cookie addApplicationPRO() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
-        try (InputStream configurationFile = getClass().getResourceAsStream(getProApplicationConfigurationResourceName())) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "pro.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros")
-                            .file(configuration)
-                            .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
-        }
-
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : getProReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data Prelevement
-        try (InputStream in = getClass().getResourceAsStream(getPrelevementProDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "donnees_prelevement_pro.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/donnees_prelevement_pro")
-                            .file(file)
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data PhysicoChimieSols
-        try (InputStream in = getClass().getResourceAsStream(getPhysicoChimieSolsProDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "physico_chimie_sols.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/pros/data/physico_chimie_sols")
-                            .file(file)
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        return authCookie;
-    }
-
-    public String getPrelevementProDataResourceName() {
-        return "/data/pros/donnees_prelevement_pro.csv";
-    }
-
-    public String getPhysicoChimieSolsProDataResourceName() {
-        return "/data/pros/physico_chimie_sols.csv";
+    public Map<String, String> getDuplicatedDataFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("data_without_duplicateds", "/data/duplication/data.csv");
+        return referentielFiles;
     }
 
     public Map<String, String> getOlaReferentielFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
-
-        referentielFiles.put("themes", "/data/olac/références/themes.csv");
-        referentielFiles.put("projets", "/data/olac/références/projets.csv");
-        referentielFiles.put("typeSites", "/data/olac/références/arborescences/types_de_site.csv");
-        referentielFiles.put("sites", "/data/olac/références/arborescences/sites.csv");
-        referentielFiles.put("typePlateformes", "/data/olac/références/arborescences/types_de_plateforme.csv");
-        referentielFiles.put("plateformes", "/data/olac/références/arborescences/plateformes.csv");
+        referentielFiles.put("themes", "/data/olac/themes.csv");
+        referentielFiles.put("projets", "/data/olac/projets.csv");
+        referentielFiles.put("typeSites", "/data/olac/types_de_site.csv");
+        referentielFiles.put("sites", "/data/olac/sites.csv");
+        referentielFiles.put("typePlateformes", "/data/olac/types_de_plateforme.csv");
+        referentielFiles.put("plateformes", "/data/olac/plateformes.csv");
         referentielFiles.put("valeurs_qualitatives", "/data/olac/valeurs_qualitatives.csv");
         return referentielFiles;
     }
@@ -620,6 +572,7 @@ public class Fixtures {
         referentielFiles.put("methodes", "/data/foret/metadata/measure/methods.csv");
         referentielFiles.put("methodes_references", "/data/foret/metadata/measure/references_des_methodes.csv");
         referentielFiles.put("methodes_periodes", "/data/foret/metadata/measure/periodes_d_application_des_methodes.csv");
+        referentielFiles.put("listes_infos_complementaires", "/data/foret/metadata/measure/listes_infos_complementaires.csv");
         referentielFiles.put("liste_valeur_ic", "/data/foret/metadata/measure/liste_de_valeurs_d_informations_complementaires.csv");
         referentielFiles.put("informations_complementaires", "/data/foret/metadata/measure/informations_complementaires.csv");
         referentielFiles.put("ic_site_theme_dataype_variable", "/data/foret/metadata/measure/informations_complementaires_par_site_theme_type_de_donnees_et_variable.csv");
@@ -647,103 +600,6 @@ public class Fixtures {
     public String getForetEssaiApplicationConfigurationResourceName() {
         return "/data/foret/foret_essai.yaml";
     }
-
-    public String getOlaEssaiApplicationConfigurationResourceName() {
-        return "/data/olac/références/olac_essai.yaml";
-    }
-
-    public Map<String, String> getOlaEssaiReferentielFiles() {
-        Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("thematics", "/data/olac/références/themes.csv");
-        referentielFiles.put("projects", "/data/olac/références/projets.csv");
-        referentielFiles.put("site_types", "/data/olac/références/arborescences/types_de_site.csv");
-        referentielFiles.put("sites", "/data/olac/références/arborescences/sites.csv");
-        referentielFiles.put("platform_types", "/data/olac/références/arborescences/types_de_plateforme.csv");
-        referentielFiles.put("platforms", "/data/olac/références/arborescences/plateformes.csv");
-        referentielFiles.put("tool_types", "/data/olac/références/type_d_outils.csv");
-        referentielFiles.put("tools", "/data/olac/références/outils.csv");
-        referentielFiles.put("files_type", "/data/olac/références/type_de_fichiers.csv");
-        referentielFiles.put("variable_norms", "/data/olac/références/normes_de_variables.csv");
-        referentielFiles.put("variable_groups", "/data/olac/références/groupes_de_variables.csv");
-        referentielFiles.put("variables", "/data/olac/références/variables.csv");
-        referentielFiles.put("units", "/data/olac/références/unites.csv");
-        referentielFiles.put("valeurs_qualitatives", "/data/olac/références/valeurs_qualitatives.csv");
-        referentielFiles.put("data_types", "/data/olac/références/types_de_donnees.csv");
-        referentielFiles.put("stade_développement_zoo", "/data/olac/références/stades_de_developpement_zoo.csv");
-        referentielFiles.put("niveau_taxon", "/data/olac/références/niveaux_taxon.csv");
-        referentielFiles.put("propriété_taxons", "/data/olac/références/proprietes_des_taxons.csv");
-        referentielFiles.put("taxon_zooplancton", "/data/olac/références/taxons_du_zooplancton.csv");
-        referentielFiles.put("variable_units_datatype", "/data/olac/références/variables_et_unites_par_types_de_donnees.csv");
-
-        // return -> ERROR - ON CONFLICT DO UPDATE command cannot affect row a second time
-        //referentielFiles.put("taxon_phytoplancton", "/data/olac/références/taxons_phytoplancton.csv");
-
-        // return -> ERROR - Ensure that no rows proposed for insertion within the same command have duplicate constrained values.
-        //referentielFiles.put("datatype_thematic_site_projet", "/data/olac/références/types_de_donnees_par_themes_de_sites_et_projet.csv");
-
-        // TODO - groovy site
-        //referentielFiles.put("prjet_sites", "/data/olac/références/projets_par_site.csv");
-        // referentielFiles.put("controle_cohérence", "/data/olac/références/controles_de_coherence.csv");
-        return referentielFiles;
-    }
-
-    /*
-    public String getOlaRepositoryParams(String fileName, String datatype) {
-        //fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv
-        final Pattern pattern = Pattern.compile("(.*)_" + datatype + "_(.*)_(.*).csv");
-        final Matcher matcher = pattern.matcher(fileName);
-        if(!matcher.matches()){
-            return null;
-        }
-        String zone_etude = matcher.group(1);
-        final String[] parent_site = zone_etude.split("-");
-        if(parent_site.length>1){
-            zone_etude = String.format("%1$s.%1$s__%2$s", parent_site[0], parent_site[1]);
-        }
-        final DateTimeFormatter formaterIn = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        final DateTimeFormatter formaterOut = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        final boolean isMonthly = datatype.matches(".*_m");
-        final String format = (isMonthly ? "01-" : "") + "%s";
-        String dateDebut =formaterOut.format(LocalDate.parse(String.format(format, matcher.group(2)), formaterIn).atStartOfDay(ZoneOffset.UTC))+" 00:00:00";
-        String dateFin =formaterOut.format(LocalDate.parse(String.format(format, matcher.group(3)), formaterIn).atTime(0,0).plus(1, isMonthly ? ChronoUnit.MONTHS:ChronoUnit.DAYS))+" 00:00:00";
-        return String.format("{\n" +
-                "   \"fileid\":null,\n" +
-                "   \"binaryfiledataset\":{\n" +
-                "      \"requiredauthorizations\":{\n" +
-                "         \"localization\":\"%1$s\"\n" +
-                "      },\n" +
-                "      \"from\":\"%2$s\",\n" +
-                "      \"to\":\"%3$s\"\n" +
-                "   },\n" +
-                "   \"topublish\":true\n" +
-                "}", zone_etude, dateDebut, dateFin);
-    }*/
-
-/*
-    public Map<String, String> getFluxMeteoOlaEssaiDataResourceName() {
-        Map<String, String> datas = new HashMap<>();
-        datas.putAll(Map.of(
-                "swc_j", "/data/foret/data/climatDuSol/journalier/fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv",
-                "swc_infraj", "/data/foret/data/climatDuSol/infraj/fougeres-fou_4_swc_infraj_01-01-2001_06-01-2001.csv"
-        ));
-        datas.putAll(Map.of(
-                "chambrefluxsol_infraj", "/data/foret/data/chambresAFlux/infraj/azerailles_chambrefluxsol_infraj_03-10-2013_05-10-2013.csv",
-                "chambrefluxsol_j", "/data/foret/data/chambresAFlux/journalier/azerailles_chambrefluxsol_j_01-05-2013_08-05-2013.csv",
-                "chambrefluxsol_m", "/data/foret/data/chambresAFlux/mensuel/azerailles_chambrefluxsol_m_06-2013_10-2013.csv"
-        ));
-        datas.putAll(Map.of(
-                "flux_sh", "/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2010_02-01-2010.csv",
-                "flux_j", "/data/foret/data/flux/journalier/hesse-hesse_1_flux_j_01-01-2008_05-01-2008.csv",
-                "flux_m", "/data/foret/data/flux/mensuel/hesse-hesse_1_flux_m_01-2008_03-2008.csv"
-        ));
-        datas.putAll(Map.of(
-                "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv",
-                "meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
-                "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"
-        ));
-        return datas;
-    }*/
 
     public Cookie addApplicationFORET() throws Exception {
         Cookie authCookie = addApplicationCreatorUser();
@@ -820,13 +676,46 @@ public class Fixtures {
         return datas;
     }
 
+    public void addApplicationRecursivity() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        String response;
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getRecursiviteReferentielOrderFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+        for (Map.Entry<String, String> e : getRecursiviteReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+    }
+
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
-        PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
+        //PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         OLAC("olac", ImmutableSet.of("condition_prelevements")),
         FORET("foret", ImmutableSet.of("flux_meteo_dataResult")),
-        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
+        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of()),
+        RECURSIVITY("recursivite", ImmutableSet.of());
 
         private final String name;
 

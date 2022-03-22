@@ -861,7 +861,6 @@ public class OreSiResourcesTest {
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
     }
-/*
     @Test
     public void addDuplicatedTest() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
@@ -942,9 +941,9 @@ public class OreSiResourcesTest {
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
                 .andReturn().getResponse().getContentAsString();
-*//*
+/*
 on test le dépôt d'un fichier récursif
- *//*
+ */
 
 
 //on charge le fichier de zone d'étude
@@ -1078,7 +1077,7 @@ on test le dépôt d'un fichier récursif
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
         // le nombre de ligne est inchangé
-        *//*try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             final String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -1086,8 +1085,8 @@ on test le dépôt d'un fichier récursif
                     )))
                 .andReturn().getResponse().getContentAsString();
             log.debug(response);
-        }*//*
-    }*/
+        }
+    }
 
     @Test
     public void addApplicationOLAC() throws Exception {
