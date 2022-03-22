@@ -401,7 +401,7 @@ public class OreSiService {
         final Map<String, String> referenceToColumnName = lineCheckers.stream()
                 .filter(ReferenceLineChecker.class::isInstance)
                 .map(ReferenceLineChecker.class::cast)
-                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) ((ReferenceLineChecker) lineCheckers.asList().get(0)).getTarget().getTarget()).getColumn()));
+                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) referenceLineChecker.getTarget().getTarget()).getColumn()));
         final Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey =
                 lineCheckers.stream()
                 .filter(ReferenceLineChecker.class::isInstance)
