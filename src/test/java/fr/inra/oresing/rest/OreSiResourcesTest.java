@@ -1081,7 +1081,7 @@ on test le dépôt d'un fichier récursif
             final String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
+                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(8
                     )))
                 .andReturn().getResponse().getContentAsString();
             log.debug(response);
