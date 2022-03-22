@@ -50,22 +50,42 @@
             <b-field
               v-else-if="column.display && indexColumn == 'extraction'"
               :field="indexColumn"
-              class="row"
-              style="margin-top: 6px"
+              class="row columns"
             >
-              <div class="columns">
+              <div class="column">
                 <b-icon
                   :icon="
                     (statesIcons && statesIcons[indexColumn] && statesIcons[indexColumn][index]) ||
                     'square'
                   "
-                  class="column"
                   size="is-medium"
                   type="is-primary"
                   @click.native="selectCheckbox($event, index, indexColumn, scope)"
                 />
-                <b-taginput
-                  v-if="
+                <div class="columns">
+                  <b-taginput
+                      v-if="
+                    states &&
+                    states[indexColumn] &&
+                    states[indexColumn][index] === 1 &&
+                    localAuthorizationsTree &&
+                    localAuthorizationsTree[indexColumn] &&
+                    localAuthorizationsTree[indexColumn][index]
+                  "
+                      v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
+                      :data="dataGroups"
+                      :open-on-focus="true"
+                      :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
+                      :value="dataGroups.id"
+                      autocomplete
+                      class="column"
+                      field="label"
+                      type="is-primary"
+                      @input.capture="selectCheckbox($event, index, indexColumn, scope)"
+                  >
+                  </b-taginput>
+                  <div
+                      v-if="
                     states &&
                     states[indexColumn] &&
                     states[indexColumn][index] == 1 &&
@@ -73,45 +93,24 @@
                     localAuthorizationsTree[indexColumn] &&
                     localAuthorizationsTree[indexColumn][index]
                   "
-                  v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
-                  :data="dataGroups"
-                  :open-on-focus="true"
-                  :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-                  :value="dataGroups.id"
-                  autocomplete
-                  class="column"
-                  field="label"
-                  type="is-primary"
-                  @input.capture="selectCheckbox($event, index, indexColumn, scope)"
-                >
-                </b-taginput>
-                <div
-                  v-if="
-                    states &&
-                    states[indexColumn] &&
-                    states[indexColumn][index] == 1 &&
-                    localAuthorizationsTree &&
-                    localAuthorizationsTree[indexColumn] &&
-                    localAuthorizationsTree[indexColumn][index]
-                  "
-                  class="column"
-                >
-                  <b-datepicker
-                    v-model="localAuthorizationsTree[indexColumn][index].from"
-                    :date-parser="parseDate"
-                    :placeholder="
+                      class="column"
+                  >
+                    <b-datepicker
+                        v-model="localAuthorizationsTree[indexColumn][index].from"
+                        :date-parser="parseDate"
+                        :placeholder="
                       $t('dataTypesRepository.placeholder-datepicker') +
                       ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
                     "
-                    editable
-                    icon="calendar"
-                    @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
-                    @input.capture="selectCheckbox($event, index, indexColumn, scope, 'from')"
-                  >
-                  </b-datepicker>
-                </div>
-                <div
-                  v-if="
+                        editable
+                        icon="calendar"
+                        @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
+                        @input.capture="selectCheckbox($event, index, indexColumn, scope, 'from')"
+                    >
+                    </b-datepicker>
+                  </div>
+                  <div
+                      v-if="
                     states &&
                     states[indexColumn] &&
                     states[indexColumn][index] == 1 &&
@@ -119,20 +118,21 @@
                     localAuthorizationsTree[indexColumn] &&
                     localAuthorizationsTree[indexColumn][index]
                   "
-                  class="column"
-                >
-                  <b-datepicker
-                    v-model="localAuthorizationsTree[indexColumn][index].to"
-                    :date-parser="parseDate"
-                    :placeholder="
+                      class="column"
+                  >
+                    <b-datepicker
+                        v-model="localAuthorizationsTree[indexColumn][index].to"
+                        :date-parser="parseDate"
+                        :placeholder="
                       $t('dataTypesRepository.placeholder-datepicker') +
                       ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
                     "
-                    editable
-                    icon="calendar"
-                    @input="selectCheckbox($event, index, indexColumn, scope, 'to')"
-                  >
-                  </b-datepicker>
+                        editable
+                        icon="calendar"
+                        @input="selectCheckbox($event, index, indexColumn, scope, 'to')"
+                    >
+                    </b-datepicker>
+                  </div>
                 </div>
               </div>
             </b-field>
@@ -663,5 +663,14 @@ p {
 }
 ul.rows {
   margin-bottom: 12px;
+}
+.row.columns {
+  margin-top: 0;
+  .column {
+    padding-top: 0;
+    .columns {
+      margin-top: 0;
+    }
+  }
 }
 </style>

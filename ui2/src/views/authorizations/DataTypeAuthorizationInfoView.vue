@@ -153,10 +153,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   columnsVisible = {
     label: { title: "Label", display: true },
     //dataGroups: {title: this.$t('dataTypeAuthorizations.data-groups'), display: true},
+    extraction: { title: "Extraction", display: true },
     admin: { title: "Admin", display: true },
     depot: { title: "Dépôt", display: true },
     publication: { title: "Publication", display: true },
-    extraction: { title: "Extraction", display: true },
   };
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;

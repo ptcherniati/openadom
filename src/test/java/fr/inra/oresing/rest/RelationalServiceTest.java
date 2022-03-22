@@ -47,13 +47,13 @@ public class RelationalServiceTest {
         fixtures.addApplicationOLAC();
         fixtures.addApplicationFORET();
         fixtures.addApplicationAcbb();
-        fixtures.addApplicationRecursivity();
+
     }
 
     @Test
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
-        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET, Fixtures.Application.RECURSIVITY);
+        ImmutableSet<Fixtures.Application> applications = ImmutableSet.of(Fixtures.Application.MONSORE, Fixtures.Application.ACBB, Fixtures.Application.OLAC, Fixtures.Application.FORET);
         for (Fixtures.Application application : applications) {
             String applicationName = application.getName();
             relationalService.createViews(applicationName, ViewStrategy.VIEW);

@@ -16,7 +16,7 @@
     <div class="rows">
       <div class="row">
         <div class="columns">
-          <div class="card column is-2">
+          <div class="column is-offset-10 is-2">
             <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
               {{ $t("dataTypeAuthorizations.add-auhtorization") }}
             </b-button>
