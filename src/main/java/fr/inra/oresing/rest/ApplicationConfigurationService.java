@@ -427,7 +427,7 @@ public class ApplicationConfigurationService {
                 if (variableComponentDescription != null) {
                     Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                     if ("Reference".equals(checkerDescription.getName())) {
-                        if (checkerDescription.getParams().getRefType() != null) {
+                        if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
                             String refType = checkerDescription.getParams().getRefType();
                             if (!references.contains(refType)) {
                                 builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
