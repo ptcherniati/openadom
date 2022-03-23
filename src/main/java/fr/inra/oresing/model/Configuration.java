@@ -381,7 +381,7 @@ public class Configuration {
         Set<String> columns;
         String duration;
         TransformationConfigurationDescription transformation = new TransformationConfigurationDescription();
-        boolean required;
+        boolean required = true;
         Multiplicity multiplicity = Multiplicity.ONE;
     }
 

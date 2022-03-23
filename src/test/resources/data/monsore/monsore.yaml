@@ -75,6 +75,7 @@ references:
           name: Reference
           params:
             refType: sites
+            required: false
             columns: [ zet_chemin_parent ]
     keyColumns: [zet_chemin_parent,zet_nom_key]
     internationalizationName:
