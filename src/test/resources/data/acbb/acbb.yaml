@@ -20,7 +20,7 @@ references:
           name: Reference
           params:
             refType: agroecosystemes
-            columns: Agroécosystème
+            columns: [ Agroécosystème ]
       checkDateMiseEnService:
         description: "validation de date"
         checker:
@@ -67,7 +67,7 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: date creation
+            columns: [ date creation ]
     keyColumns: [site,nom_du_bloc,répétition]
     columns:
       site:
@@ -112,7 +112,7 @@ references:
           name: Reference
           params:
             refType: modalites
-            columns: modalites
+            columns: [ modalites ]
             transformation:
               codify: true
             multiplicity: MANY

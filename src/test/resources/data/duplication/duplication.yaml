@@ -20,7 +20,7 @@ references:
           name: Reference
           params:
             refType: zones_etudes
-            columns: parent
+            columns: [ parent ]
             required: false
             transformation:
               codify: true

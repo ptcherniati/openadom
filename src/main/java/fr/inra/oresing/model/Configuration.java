@@ -1,6 +1,5 @@
 package fr.inra.oresing.model;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
@@ -27,7 +26,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Streams;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
@@ -139,7 +137,7 @@ public class Configuration {
             Set<ReferenceColumn> usedInTransformationColumns = validations.values().stream()
                     .map(LineValidationRuleDescription::getChecker)
                     .map(CheckerDescription::getParams)
-                    .map(CheckerConfigurationDescription::doGetColumnsAsCollection)
+                    .map(checkerConfigurationDescription -> checkerConfigurationDescription.getColumns())
                     .flatMap(Collection::stream)
                     .map(ReferenceColumn::new)
                     .collect(Collectors.toUnmodifiableSet());
@@ -380,18 +378,11 @@ public class Configuration {
         String pattern;
         String refType;
         GroovyConfiguration groovy;
-        String columns;
+        Set<String> columns;
         String duration;
         TransformationConfigurationDescription transformation = new TransformationConfigurationDescription();
         boolean required;
         Multiplicity multiplicity = Multiplicity.ONE;
-
-        public ImmutableSet<String> doGetColumnsAsCollection() {
-            if (StringUtils.isEmpty(getColumns())) {
-                return ImmutableSet.of();
-            }
-            return Streams.stream(Splitter.on(",").split(getColumns())).collect(ImmutableSet.toImmutableSet());
-        }
     }
 
     @Getter

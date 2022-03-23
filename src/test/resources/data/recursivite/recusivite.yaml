@@ -37,7 +37,7 @@ references:
             required: true
             transformation:
               codify: true
-            columns: nom du taxon déterminé
+            columns: [ nom du taxon déterminé ]
       nom du taxon superieur:
         description: "nom du taxon superieur"
         checker:
@@ -47,7 +47,7 @@ references:
             transformation:
               codify: true
             refType: taxon
-            columns: nom du taxon superieur
+            columns: [ nom du taxon superieur ]
     columns:
       nom du taxon déterminé:
       theme:

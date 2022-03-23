@@ -599,10 +599,10 @@ public class ApplicationConfigurationService {
                     compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
                 }
             } else if (variableComponentCheckers.contains(checker.getName())) {
-                if (checker.getParams().doGetColumnsAsCollection().isEmpty()) {
+                if (checker.getParams().getColumns().isEmpty()) {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 } else {
-                    ImmutableSet<String> columnsDeclaredInCheckerConfiguration = checker.getParams().doGetColumnsAsCollection();
+                    Set<String> columnsDeclaredInCheckerConfiguration = checker.getParams().getColumns();
                     Set<String> knownColumns = referenceDescription.getColumns().keySet();
                     ImmutableSet<String> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
                     if (false && !missingColumns.isEmpty()) {

@@ -38,7 +38,7 @@ references:
           name: Reference
           params:
             refType: types_de_zones_etudes
-            columns: type de site
+            columns: [ type de site ]
             required: true
             transformation:
               codify: true
@@ -48,7 +48,7 @@ references:
           name: Reference
           params:
             refType: zones_etudes
-            columns: parent
+            columns: [ parent ]
             required: false
             transformation:
               codify: true
@@ -58,14 +58,14 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: date début
+            columns: [ date début ]
       date fin:
         description: date de fin
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: date fin
+            columns: [ date fin ]
     internationalizationName:
       fr: Zones d'études
       en: Study areas
@@ -136,14 +136,14 @@ references:
           name: Reference
           params:
             refType: zones_etudes
-            columns: nom du site
+            columns: [ nom du site ]
       themeRef:
         description: référence au thème
         checker:
           name: Reference
           params:
             refType: themes
-            columns: nom du thème
+            columns: [ nom du thème ]
     internationalizationName:
       fr: Thèmes et types de données par zone d'étude
       en: Thematics and data types by study area
@@ -209,7 +209,7 @@ references:
           name: Reference
           params:
             refType: variables
-            columns: nom de la variable
+            columns: [ nom de la variable ]
             required: true
             transformation:
               codify: true
@@ -219,7 +219,7 @@ references:
           name: Reference
           params:
             refType: unites
-            columns: nom de l'unité
+            columns: [ nom de l'unité ]
             required: true
             transformation:
               codify: true
@@ -247,7 +247,7 @@ references:
           name: Reference
           params:
             refType: zones_etudes
-            columns: nom du site
+            columns: [ nom du site ]
             required: true
             transformation:
               codify: false
@@ -329,7 +329,7 @@ references:
           name: Reference
           params:
             refType: instruments
-            columns: code de l'instrument
+            columns: [ code de l'instrument ]
             required: true
             transformation:
               codify: true
@@ -339,7 +339,7 @@ references:
           name: Reference
           params:
             refType: reference
-            columns: doi de la référence
+            columns: [ doi de la référence ]
             required: true
             transformation:
               codify: true
@@ -364,7 +364,7 @@ references:
           name: Reference
           params:
             refType: instruments
-            columns: Code de l'instrument
+            columns: [ Code de l'instrument ]
             required: true
             transformation:
               codify: true
@@ -374,7 +374,7 @@ references:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            columns: theme_types_de_donnees_par_zone_etudes
+            columns: [ theme_types_de_donnees_par_zone_etudes ]
             transformation:
               groovy:
                 expression: >
@@ -394,7 +394,7 @@ references:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            columns: variables_par_types_de_donnees
+            columns: [ variables_par_types_de_donnees ]
             required: true
             transformation:
               groovy:
@@ -418,14 +418,14 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: Date de début
+            columns: [ Date de début ]
       date fin:
         description: date de fin
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: Date de fin
+            columns: [ Date de fin ]
     internationalizationName:
       fr: Périodes d'application des instruments
       en: Application periods of the instruments
@@ -471,7 +471,7 @@ references:
           name: Reference
           params:
             refType: methodes
-            columns: code de la méthode de calcul
+            columns: [ code de la méthode de calcul ]
             required: true
             transformation:
               codify: true
@@ -481,7 +481,7 @@ references:
           name: Reference
           params:
             refType: reference
-            columns: doi de la référence
+            columns: [ doi de la référence ]
             required: true
             transformation:
               codify: true
@@ -506,7 +506,7 @@ references:
           name: Reference
           params:
             refType: methodes
-            columns: Code de la méthode de calcul
+            columns: [ Code de la méthode de calcul ]
             required: true
             transformation:
               codify: true
@@ -516,7 +516,7 @@ references:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            columns: theme_types_de_donnees_par_zone_etudes
+            columns: [ theme_types_de_donnees_par_zone_etudes ]
             transformation:
               groovy:
                 expression: >
@@ -536,7 +536,7 @@ references:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            columns: variables_par_types_de_donnees
+            columns: [ variables_par_types_de_donnees ]
             required: true
             transformation:
               groovy:
@@ -560,14 +560,14 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: Date de début
+            columns: [ Date de début ]
       date fin:
         description: date de fin
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: Date de fin
+            columns: [ Date de fin ]
     internationalizationName:
       fr: Périodes d'application des méthodes
       en: Application periods of methods
@@ -618,7 +618,7 @@ references:
           name: Reference
           params:
             refType: listes_infos_complementaires
-            columns: nom de la liste
+            columns: [ nom de la liste ]
             transformation:
               codify: true
     keyColumns:
@@ -637,7 +637,7 @@ references:
           name: Reference
           params:
             refType: listes_infos_complementaires
-            columns: nom de la liste de valeurs d'informations complémentaires
+            columns: [ nom de la liste de valeurs d'informations complémentaires ]
             transformation:
               codify: true
             required: false
@@ -672,7 +672,7 @@ references:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            columns: theme_types_de_donnees_par_zone_etudes
+            columns: [ theme_types_de_donnees_par_zone_etudes ]
             transformation:
               groovy:
                 expression: >
@@ -692,7 +692,7 @@ references:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            columns: variables_par_types_de_donnees
+            columns: [ variables_par_types_de_donnees ]
             required: true
             transformation:
               groovy:

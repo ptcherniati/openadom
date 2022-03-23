@@ -111,7 +111,7 @@ public class CheckerFactory {
                 LineChecker lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
                 checkersBuilder.add(lineChecker);
             } else {
-                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = configurationDescription.doGetColumnsAsCollection().stream()
+                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = configurationDescription.getColumns().stream()
                         .map(ReferenceColumn::new)
                         .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
                         .collect(Collectors.toList());
