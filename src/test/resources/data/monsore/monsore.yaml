@@ -68,7 +68,7 @@ references:
           name: Reference
           params:
             refType: type_de_sites
-            columns: [ tze_type_nom ]
+        columns: [ tze_type_nom ]
       siteParentRef:
         description: "référence à la colonne parent"
         checker:
@@ -76,7 +76,7 @@ references:
           params:
             refType: sites
             required: false
-            columns: [ zet_chemin_parent ]
+        columns: [ zet_chemin_parent ]
     keyColumns: [zet_chemin_parent,zet_nom_key]
     internationalizationName:
       fr: Site
@@ -185,21 +185,21 @@ references:
           name: Reference
           params:
             refType: projet
-            columns: [ nom du projet ]
+        columns: [ nom du projet ]
       sitesRef:
         description: "référence au site"
         checker:
           name: Reference
           params:
             refType: sites
-            columns: [ nom du site ]
+        columns: [ nom du site ]
       themesRef:
         description: "référence au theme"
         checker:
           name: Reference
           params:
             refType: themes
-            columns: [ nom du thème ]
+        columns: [ nom du thème ]
 
       checkDatatype:
         description: "test"
@@ -297,14 +297,14 @@ references:
           name: Reference
           params:
             refType: variables
-            columns: [ nom de la variable ]
+        columns: [ nom de la variable ]
       uniteRef:
         description: "référence à l'unité'"
         checker:
           name: Reference
           params:
             refType: unites
-            columns: [ nom de l'unité ]
+        columns: [ nom de l'unité ]
       checkDatatype:
         description: "test"
         checker:

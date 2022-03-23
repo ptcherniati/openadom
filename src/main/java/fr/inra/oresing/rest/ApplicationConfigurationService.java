@@ -578,9 +578,9 @@ public class ApplicationConfigurationService {
     private void verifyValidationCheckersAreValids(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
-        for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
+        for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
-            Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
+            Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
             Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
             if (checker == null) {
                 continue;
@@ -599,10 +599,10 @@ public class ApplicationConfigurationService {
                     compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
                 }
             } else if (variableComponentCheckers.contains(checker.getName())) {
-                if (checker.getParams().getColumns().isEmpty()) {
+                if (lineValidationRuleDescription.getColumns().isEmpty()) {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 } else {
-                    Set<String> columnsDeclaredInCheckerConfiguration = checker.getParams().getColumns();
+                    Set<String> columnsDeclaredInCheckerConfiguration = lineValidationRuleDescription.getColumns();
                     Set<String> knownColumns = referenceDescription.getColumns().keySet();
                     ImmutableSet<String> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
                     if (false && !missingColumns.isEmpty()) {

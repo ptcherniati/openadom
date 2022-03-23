@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,7 +57,20 @@ public class CheckerFactory {
         Preconditions.checkArgument(app.getConfiguration().getReferences().containsKey(reference), "Pas de référence " + reference + " dans " + app);
         Configuration.ReferenceDescription referenceDescription = app.getConfiguration().getReferences().get(reference);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
-        addCheckersFromLineValidationDescriptions(app, referenceDescription.getValidations(), checkersBuilder); //Configuration.DataTypeDescription dataTypeDescription,
+        for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationEntry : referenceDescription.getValidations().entrySet()) {
+            Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationEntry.getValue();
+            Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
+            if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
+                LineChecker lineChecker = newLineChecker(app, lineValidationRuleDescription);
+                checkersBuilder.add(lineChecker);
+            } else {
+                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = lineValidationRuleDescription.getColumns().stream()
+                        .map(ReferenceColumn::new)
+                        .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
+                        .collect(Collectors.toList());
+                checkersBuilder.addAll(lineCheckers);
+            }
+        }
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {
             log.trace("pour " + app.getName() + ", " + reference + ", on validera avec " + lineCheckers);
@@ -82,43 +94,14 @@ public class CheckerFactory {
                         .ifPresent(checkersBuilder::add);
             }
         }
-        addCheckersFromLineValidationDescriptions(app, dataTypeDescription.getValidations(), checkersBuilder); //Configuration.DataTypeDescription dataTypeDescription,
+        dataTypeDescription.getValidations().values().stream()
+                .map(lineValidationRuleDescription -> newLineChecker(app, lineValidationRuleDescription))
+                .forEach(checkersBuilder::add);
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {
             log.trace("pour " + app.getName() + ", " + dataType + ", on validera avec " + lineCheckers);
         }
         return lineCheckers;
-    }
-
-    private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder) {
-        ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-        DataRepository dataRepository = repository.getRepository(app).data();
-        for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : lineValidationDescriptions.entrySet()) {
-            Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
-            Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
-            Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
-            if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
-                String expression = configurationDescription.getGroovy().getExpression();
-                Set<String> references = configurationDescription.getGroovy().getReferences();
-                Set<String> dataTypes = configurationDescription.getGroovy().getDatatypes();
-                ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
-                ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
-                ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
-                        .putAll(groovyContextForReferences)
-                        .putAll(groovyContextForDataTypes)
-                        .put("application", app)
-                        .build();
-                LineChecker lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
-                checkersBuilder.add(lineChecker);
-            } else {
-                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = configurationDescription.getColumns().stream()
-                        .map(ReferenceColumn::new)
-                        .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
-                        .collect(Collectors.toList());
-                checkersBuilder.addAll(lineCheckers);
-            }
-            checkersBuilder.build();
-        }
     }
 
     private CheckerOnOneVariableComponentLineChecker newChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target) {
@@ -152,6 +135,30 @@ public class CheckerFactory {
                 throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
         }
         Preconditions.checkState(lineChecker.getTarget().equals(target));
+        return lineChecker;
+    }
+
+    private LineChecker newLineChecker(Application app, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
+        Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
+        Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
+        LineChecker lineChecker;
+        if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
+            String expression = configurationDescription.getGroovy().getExpression();
+            Set<String> references = configurationDescription.getGroovy().getReferences();
+            Set<String> dataTypes = configurationDescription.getGroovy().getDatatypes();
+            ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
+            ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
+            DataRepository dataRepository = repository.getRepository(app).data();
+            ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
+            ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
+                    .putAll(groovyContextForReferences)
+                    .putAll(groovyContextForDataTypes)
+                    .put("application", app)
+                    .build();
+            lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
+        } else {
+            throw new IllegalArgumentException("checker " + checkerDescription.getName());
+        }
         return lineChecker;
     }
 }

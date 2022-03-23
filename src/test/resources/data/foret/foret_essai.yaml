@@ -34,21 +34,21 @@ references:
     validations:
       typeSitesRef:
         description: référence au type de site
+        columns: [ type de site ]
         checker:
           name: Reference
           params:
             refType: types_de_zones_etudes
-            columns: [ type de site ]
             required: true
             transformation:
               codify: true
       parent_ref:
         description: référence au parent
+        columns: [ parent ]
         checker:
           name: Reference
           params:
             refType: zones_etudes
-            columns: [ parent ]
             required: false
             transformation:
               codify: true
@@ -58,7 +58,7 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: [ date début ]
+        columns: [ date début ]
       date fin:
         description: date de fin
         checker:
@@ -66,7 +66,7 @@ references:
           params:
             pattern: dd/MM/yyyy
             required: false
-            columns: [ date fin ]
+        columns: [ date fin ]
     internationalizationName:
       fr: Zones d'études
       en: Study areas
@@ -133,18 +133,18 @@ references:
     validations:
       siteRef:
         description: référence au site
+        columns: [ nom du site ]
         checker:
           name: Reference
           params:
             refType: zones_etudes
-            columns: [ nom du site ]
       themeRef:
         description: référence au thème
+        columns: [ nom du thème ]
         checker:
           name: Reference
           params:
             refType: themes
-            columns: [ nom du thème ]
     internationalizationName:
       fr: Thèmes et types de données par zone d'étude
       en: Thematics and data types by study area
@@ -206,21 +206,21 @@ references:
     validations:
       variableRef:
         description: référence à la variable
+        columns: [ nom de la variable ]
         checker:
           name: Reference
           params:
             refType: variables
-            columns: [ nom de la variable ]
             required: true
             transformation:
               codify: true
       uniteRef:
         description: référence à l'unité'
+        columns: [ nom de l'unité ]
         checker:
           name: Reference
           params:
             refType: unites
-            columns: [ nom de l'unité ]
             required: true
             transformation:
               codify: true
@@ -244,11 +244,11 @@ references:
     validations:
       siteRef:
         description: référence au site
+        columns: [ nom du site ]
         checker:
           name: Reference
           params:
             refType: zones_etudes
-            columns: [ nom du site ]
             required: true
             transformation:
               codify: false
@@ -326,21 +326,21 @@ references:
     validations:
       instrumentRef:
         description: référence à l'instrument
+        columns: [ code de l'instrument ]
         checker:
           name: Reference
           params:
             refType: instruments
-            columns: [ code de l'instrument ]
             required: true
             transformation:
               codify: true
       DOIRef:
         description: référence à la référence
+        columns: [ doi de la référence ]
         checker:
           name: Reference
           params:
             refType: reference
-            columns: [ doi de la référence ]
             required: true
             transformation:
               codify: true
@@ -361,21 +361,21 @@ references:
     validations:
       instrumentRef:
         description: référence à l'instrument
+        columns: [ Code de l'instrument ]
         checker:
           name: Reference
           params:
             refType: instruments
-            columns: [ Code de l'instrument ]
             required: true
             transformation:
               codify: true
       checkSiteThemeDatatype:
         description: référence au siteThemeDatatype
+        columns: [ theme_types_de_donnees_par_zone_etudes ]
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            columns: [ theme_types_de_donnees_par_zone_etudes ]
             transformation:
               groovy:
                 expression: >
@@ -391,11 +391,11 @@ references:
                   - theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
         description: référence au DataypeVariableUnite
+        columns: [ variables_par_types_de_donnees ]
         checker:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            columns: [ variables_par_types_de_donnees ]
             required: true
             transformation:
               groovy:
@@ -419,14 +419,14 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: [ Date de début ]
+        columns: [ Date de début ]
       date fin:
         description: date de fin
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: [ Date de fin ]
+        columns: [ Date de fin ]
     internationalizationName:
       fr: Périodes d'application des instruments
       en: Application periods of the instruments
@@ -468,21 +468,21 @@ references:
     validations:
       instrumentRef:
         description: référence à la méthode
+        columns: [ code de la méthode de calcul ]
         checker:
           name: Reference
           params:
             refType: methodes
-            columns: [ code de la méthode de calcul ]
             required: true
             transformation:
               codify: true
       DOIRef:
         description: référence à la référence
+        columns: [ doi de la référence ]
         checker:
           name: Reference
           params:
             refType: reference
-            columns: [ doi de la référence ]
             required: true
             transformation:
               codify: true
@@ -503,21 +503,21 @@ references:
     validations:
       methodeRef:
         description: référence à la méthode
+        columns: [ Code de la méthode de calcul ]
         checker:
           name: Reference
           params:
             refType: methodes
-            columns: [ Code de la méthode de calcul ]
             required: true
             transformation:
               codify: true
       checkSiteThemeDatatype:
         description: référence au siteThemeDatatype
+        columns: [ theme_types_de_donnees_par_zone_etudes ]
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            columns: [ theme_types_de_donnees_par_zone_etudes ]
             transformation:
               groovy:
                 expression: >
@@ -533,11 +533,11 @@ references:
                   - theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
         description: référence au DataypeVariableUnite
+        columns: [ variables_par_types_de_donnees ]
         checker:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            columns: [ variables_par_types_de_donnees ]
             required: true
             transformation:
               groovy:
@@ -561,14 +561,14 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: [ Date de début ]
+        columns: [ Date de début ]
       date fin:
         description: date de fin
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: [ Date de fin ]
+        columns: [ Date de fin ]
     internationalizationName:
       fr: Périodes d'application des méthodes
       en: Application periods of methods
@@ -615,11 +615,11 @@ references:
     validations:
       listeRef:
         description: référence à la liste de valeurs d'informations complémentaires
+        columns: [ nom de la liste ]
         checker:
           name: Reference
           params:
             refType: listes_infos_complementaires
-            columns: [ nom de la liste ]
             transformation:
               codify: true
     keyColumns:
@@ -634,11 +634,11 @@ references:
     validations:
       methodeRef:
         description: référence à la liste de valeurs d'informations complémentaires
+        columns: [ nom de la liste de valeurs d'informations complémentaires ]
         checker:
           name: Reference
           params:
             refType: listes_infos_complementaires
-            columns: [ nom de la liste de valeurs d'informations complémentaires ]
             transformation:
               codify: true
             required: false
@@ -669,11 +669,11 @@ references:
     validations:
       checkSiteThemeDatatype:
         description: référence au siteThemeDatatype
+        columns: [ theme_types_de_donnees_par_zone_etudes ]
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            columns: [ theme_types_de_donnees_par_zone_etudes ]
             transformation:
               groovy:
                 expression: >
@@ -689,11 +689,11 @@ references:
                   - theme_types_de_donnees_par_zone_etudes
       checkDataypeVariableUnite:
         description: référence au DataypeVariableUnite
+        columns: [ variables_par_types_de_donnees ]
         checker:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            columns: [ variables_par_types_de_donnees ]
             required: true
             transformation:
               groovy:

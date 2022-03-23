@@ -131,21 +131,21 @@ Elle comporte une description et un checker (Reference, Integer, Float, RegularE
           name: Reference #Le checker à utiliser
           params: #liste de paramètres (dépend du checker choisi)
             refType: projet #pour le checker référence la donnée référencée
-            columns: [nom du projet] #liste des colonnes sur lequel s'applique le checker
+        columns: [nom du projet] #liste des colonnes sur lequel s'applique le checker
       sitesRef:
         description: "référence au site"
         checker:
           name: Reference
           params:
             refType: sites
-            columns: [nom du site]
+        columns: [nom du site]
       themesRef:
         description: "référence au theme"
         checker:
           name: Reference
           params:
             refType: themes
-            columns: [nom du thème]
+        columns: [nom du thème]
 
       checkDatatype:
         description: "test"
@@ -311,7 +311,7 @@ references:
           name: Reference
           params:
             refType: modalites
-            columns: [ modalites ]
+        columns: [ modalites ]
             codify: true
             multiplicity: MANY
 ```

@@ -87,9 +87,9 @@ public class Configuration {
 
     private void addDependencyNodesForReference(Map<String, DependencyNode> nodes, Map.Entry<String, ReferenceDescription> reference) {
         DependencyNode dependencyNode = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
-        LinkedHashMap<String, LineValidationRuleDescription> validations = reference.getValue().getValidations();
+        LinkedHashMap<String, LineValidationRuleWithColumnsDescription> validations = reference.getValue().getValidations();
         if (!CollectionUtils.isEmpty(validations)) {
-            for (Map.Entry<String, LineValidationRuleDescription> validation : validations.entrySet()) {
+            for (Map.Entry<String, LineValidationRuleWithColumnsDescription> validation : validations.entrySet()) {
                 CheckerDescription checker = validation.getValue().getChecker();
                 if (checker != null) {
                     String refType = checker.getParams().getRefType();
@@ -125,7 +125,7 @@ public class Configuration {
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ReferenceColumnDescription> columns = new LinkedHashMap<>();
         private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
-        private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+        private LinkedHashMap<String, LineValidationRuleWithColumnsDescription> validations = new LinkedHashMap<>();
 
         public ImmutableSet<ReferenceColumn> doGetStaticColumns() {
             return columns.keySet().stream()
@@ -135,9 +135,7 @@ public class Configuration {
 
         public ImmutableSet<ReferenceColumn> doGetComputedColumns() {
             Set<ReferenceColumn> usedInTransformationColumns = validations.values().stream()
-                    .map(LineValidationRuleDescription::getChecker)
-                    .map(CheckerDescription::getParams)
-                    .map(checkerConfigurationDescription -> checkerConfigurationDescription.getColumns())
+                    .map(LineValidationRuleWithColumnsDescription::getColumns)
                     .flatMap(Collection::stream)
                     .map(ReferenceColumn::new)
                     .collect(Collectors.toUnmodifiableSet());
@@ -232,6 +230,13 @@ public class Configuration {
     public static class LineValidationRuleDescription {
         String description;
         CheckerDescription checker;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class LineValidationRuleWithColumnsDescription extends LineValidationRuleDescription {
+        Set<String> columns;
     }
 
     @Getter
@@ -378,7 +383,6 @@ public class Configuration {
         String pattern;
         String refType;
         GroovyConfiguration groovy;
-        Set<String> columns;
         String duration;
         TransformationConfigurationDescription transformation = new TransformationConfigurationDescription();
         boolean required = true;
