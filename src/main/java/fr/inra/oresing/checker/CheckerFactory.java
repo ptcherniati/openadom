@@ -1,5 +1,6 @@
 package fr.inra.oresing.checker;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -121,7 +122,11 @@ public class CheckerFactory {
     }
 
     private CheckerOnOneVariableComponentLineChecker newChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target) {
-        Configuration.CheckerConfigurationDescription configuration = checkerDescription.getParams();
+        Configuration.CheckerConfigurationDescription configuration =
+                MoreObjects.firstNonNull(
+                        checkerDescription.getParams(),
+                        new Configuration.CheckerConfigurationDescription()
+                );
         LineTransformer transformer = transformerFactory.newTransformer(configuration, app, target);
         CheckerOnOneVariableComponentLineChecker lineChecker;
         switch (checkerDescription.getName()) {
