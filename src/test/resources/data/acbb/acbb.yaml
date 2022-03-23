@@ -113,7 +113,8 @@ references:
           params:
             refType: modalites
             columns: modalites
-            codify: true
+            transformation:
+              codify: true
             multiplicity: MANY
 compositeReferences:
   localizations:

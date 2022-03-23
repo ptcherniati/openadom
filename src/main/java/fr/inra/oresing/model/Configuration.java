@@ -22,6 +22,7 @@ import fr.inra.oresing.model.internationalization.InternationalizationImpl;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import fr.inra.oresing.model.internationalization.InternationalizationMapDisplayImpl;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
+import fr.inra.oresing.transformer.TransformationConfiguration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -381,7 +382,7 @@ public class Configuration {
         GroovyConfiguration groovy;
         String columns;
         String duration;
-        boolean codify;
+        TransformationConfigurationDescription transformation = new TransformationConfigurationDescription();
         boolean required;
         Multiplicity multiplicity = Multiplicity.ONE;
 
@@ -391,6 +392,14 @@ public class Configuration {
             }
             return Streams.stream(Splitter.on(",").split(getColumns())).collect(ImmutableSet.toImmutableSet());
         }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class TransformationConfigurationDescription implements TransformationConfiguration {
+        boolean codify;
+        GroovyConfiguration groovy;
     }
 
     @Getter

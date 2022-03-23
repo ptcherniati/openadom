@@ -7,7 +7,8 @@ validations:
         refType: types_de_zones_etudes
         columns: type de site
         required: true
-        codify: true
+        transformation:
+          codify: true
   parent_ref:
     description: référence au parent
     checker:
@@ -16,7 +17,8 @@ validations:
         refType: zones_etudes
         columns: parent
         required: false
-        codify: true
+        transformation:
+          codify: true
   date début:
     description: date de début
     checker:

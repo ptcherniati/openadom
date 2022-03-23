@@ -35,7 +35,8 @@ references:
           params:
             pattern: .*
             required: true
-            codify: true
+            transformation:
+              codify: true
             columns: nom du taxon déterminé
       nom du taxon superieur:
         description: "nom du taxon superieur"
@@ -43,7 +44,8 @@ references:
           name: Reference
           params:
             required: false
-            codify: true
+            transformation:
+              codify: true
             refType: taxon
             columns: nom du taxon superieur
     columns:

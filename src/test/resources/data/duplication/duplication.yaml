@@ -22,7 +22,8 @@ references:
             refType: zones_etudes
             columns: parent
             required: false
-            codify: true
+            transformation:
+              codify: true
     keyColumns: [nom]
     columns:
       nom:

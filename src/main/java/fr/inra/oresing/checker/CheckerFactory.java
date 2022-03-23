@@ -127,7 +127,7 @@ public class CheckerFactory {
                         checkerDescription.getParams(),
                         new Configuration.CheckerConfigurationDescription()
                 );
-        LineTransformer transformer = transformerFactory.newTransformer(configuration, app, target);
+        LineTransformer transformer = transformerFactory.newTransformer(configuration.getTransformation(), app, target);
         CheckerOnOneVariableComponentLineChecker lineChecker;
         switch (checkerDescription.getName()) {
             case "Date":

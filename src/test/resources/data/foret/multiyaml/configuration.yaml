@@ -29,7 +29,8 @@ dataTypes:
                   params:
                     refType: variables
                     required: true
-                    codify: true
+                    transformation:
+                      codify: true
               value:
                 checker:
                   name: Float
@@ -43,7 +44,8 @@ dataTypes:
                   params:
                     refType: unites
                     required: true
-                    codify: true
+                    transformation:
+                      codify: true
               profondeur:
                 defaultValue:
                   expression: return "${profondeur}"
@@ -86,30 +88,32 @@ dataTypes:
             checker:
               name: Reference
               params:
-                codify: true
+                transformation:
+                  codify: true
                 refType: zones_etudes
                 required: false
           zones_etudes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
-                codify: true
+                transformation:
+                  groovy: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references: zones_etudes
+                  codify: true
                 refType: zones_etudes
                 required: true
       informations:
@@ -121,14 +125,16 @@ dataTypes:
               name: Reference
               params:
                 refType: themes
-                codify: true
+                transformation:
+                  codify: true
           frequency:
             checker:
               name: RegularExpression
               params:
                 pattern: infrajournalier
                 required: true
-                codify: true
+                transformation:
+                  codify: true
           start date:
             checker:
               name: Date
@@ -260,7 +266,8 @@ dataTypes:
                   params:
                     refType: variables
                     required: true
-                    codify: true
+                    transformation:
+                      codify: true
               value:
                 checker:
                   name: Float
@@ -274,7 +281,8 @@ dataTypes:
                   params:
                     refType: unites
                     required: true
-                    codify: true
+                    transformation:
+                      codify: true
               profondeur:
                 defaultValue:
                   expression: return "${profondeur}"
@@ -317,30 +325,32 @@ dataTypes:
             checker:
               name: Reference
               params:
-                codify: true
+                transformation:
+                  codify: true
                 refType: zones_etudes
                 required: false
           zones_etudes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
-                codify: true
+                transformation:
+                  groovy: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references: zones_etudes
+                  codify: true
                 refType: zones_etudes
                 required: true
       informations:
@@ -352,14 +362,16 @@ dataTypes:
               name: Reference
               params:
                 refType: themes
-                codify: true
+                transformation:
+                  codify: true
           frequency:
             checker:
               name: RegularExpression
               params:
                 pattern: infrajournalier
                 required: true
-                codify: true
+                transformation:
+                  codify: true
           start date:
             checker:
               name: Date
@@ -492,7 +504,8 @@ dataTypes:
                   params:
                     refType: variables
                     required: true
-                    codify: true
+                    transformation:
+                      codify: true
               value:
                 checker:
                   name: Float
@@ -506,7 +519,8 @@ dataTypes:
                   params:
                     refType: unites
                     required: true
-                    codify: true
+                    transformation:
+                      codify: true
               profondeur:
                 defaultValue:
                   expression: return "${profondeur}"
@@ -549,30 +563,32 @@ dataTypes:
             checker:
               name: Reference
               params:
-                codify: true
+                transformation:
+                  codify: true
                 refType: zones_etudes
                 required: false
           zones_etudes:
             checker:
               name: Reference
               params:
-                groovy: >
-                  String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                  String nom = datumByVariableAndComponent.localization.zones_etudes;
-                  String hierarchicalKey = ""; 
-                  if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                  }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                  }
-                  
-                  return references
-                  .find{it.key.equals("zones_etudes")}.value
-                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-                references: zones_etudes
-                codify: true
+                transformation:
+                  groovy: >
+                    String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
+                    String nom = datumByVariableAndComponent.localization.zones_etudes;
+                    String hierarchicalKey = ""; 
+                    if ("".equals(nom)){
+                      hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    }else{
+                      parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
+                      nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                      hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                    }
+                    
+                    return references
+                    .find{it.key.equals("zones_etudes")}.value
+                    .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                  references: zones_etudes
+                  codify: true
                 refType: zones_etudes
                 required: true
       informations:
@@ -584,14 +600,16 @@ dataTypes:
               name: Reference
               params:
                 refType: themes
-                codify: true
+                transformation:
+                  codify: true
           frequency:
             checker:
               name: RegularExpression
               params:
                 pattern: infrajournalier
                 required: true
-                codify: true
+                transformation:
+                  codify: true
           start date:
             checker:
               name: Date

@@ -697,7 +697,7 @@ public class OreSiService {
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
-                        if (configuration.getGroovy() != null) {
+                        if (configuration.getTransformation().getGroovy() != null) {
                             datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
