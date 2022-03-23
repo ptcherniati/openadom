@@ -1386,16 +1386,24 @@ public class OreSiService {
         } else {
             repo.removeSynthesisByApplicationDatatypeAndVariable(application.getId(), dataType, variable);
         }
-        final String sql = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+        boolean hasChartDescription = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
                 .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
-                .filter(entry -> entry.getValue().getChartDescription() != null)
-                .map(entry -> entry.getValue().getChartDescription().toSQL(entry.getKey(), dataType))
-                .collect(Collectors.joining(", \n"));
+                .anyMatch(entry -> entry.getValue().getChartDescription() != null);
+        String sql;
+        if(hasChartDescription) {
+            sql = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+                    .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
+                    .filter(entry -> entry.getValue().getChartDescription() != null)
+                    .map(entry -> entry.getValue().getChartDescription().toSQL(entry.getKey(), dataType))
+                    .collect(Collectors.joining(", \n"));
+        }else {
+            sql = Configuration.Chart.toSQL(dataType);
+        }
         List<OreSiSynthesis> oreSiSynthesisList = new LinkedList<>();
-        final List<OreSiSynthesis> oreSiSynthesis  = repo.buildSynthesis(sql);
+        final List<OreSiSynthesis> oreSiSynthesis  = repo.buildSynthesis(sql, hasChartDescription);
         repo.storeAll(oreSiSynthesis.stream());
 
-        return oreSiSynthesis.stream().collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+        return !hasChartDescription?Map.of("__NO-CHART",oreSiSynthesis):oreSiSynthesis.stream().collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
     }
 
     public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType) {

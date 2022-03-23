@@ -111,7 +111,87 @@ public class DataSynthesisRepository extends JsonTableInApplicationSchemaReposit
             "                 requiredAuthorizations,\n" +
             "                 aggregation,\n" +
             "                 array_agg(tsrange(mindate,maxdate))" +
-            "           )::foret.oresisynthesis) as json\n" +
+            "           )::%1$s.oresisynthesis) as json\n" +
+            "from result\n" +
+            "group by application, \"datatype\", variable, requiredAuthorizations, aggregation";
+    public static final String BUILD_GENERIC_SYNTHESIS_SQL = " with\n" +
+            "    vars ( \"datatype\") as (\n" +
+            "         values  %2$s\n" +
+            "\n" +
+            "\n" +
+            "    ),\n" +
+            "    datas as (select application,\n" +
+            "                       \"datatype\",\n" +
+            "                       lower((\"authorization\").timescope)       mindate,\n" +
+            "                       upper((\"authorization\").timescope)       maxdate,\n" +
+            "                       (\"authorization\").requiredAuthorizations requiredAuthorizations,\n" +
+            "                       jsonb_object_agg(datavalues)             datavalues\n" +
+            "\tfrom %1$s.\"data\"\n" +
+            "                group by application, \"datatype\", (\"authorization\").requiredAuthorizations, (\"authorization\").timescope,\n" +
+            "                         rowid\n" +
+            " ),\n" +
+            "infos as (\n" +
+            " select application,\n" +
+            "        vars.\"datatype\",\n" +
+            "        mindate,\n" +
+            "        max(maxdate)\n" +
+            "        over (partition by \"application\", vars.\"datatype\",mindate )             maxdate,\n" +
+            "        requiredAuthorizations                                                                                                                           requiredAuthorizations,\n" +
+            "        dense_rank()\n" +
+            "        over (partition by \"application\", vars.\"datatype\"  order by mindate ) as \"range\",\n" +
+            "        true and ((mindate - lag(maxdate)\n" +
+            "                                         over (partition by application, vars.\"datatype\" order by mindate, maxdate) <\n" +
+            "                               maxdate - mindate))                                                                                                                                     as continuous\n" +
+            " from datas\n" +
+            "join vars on \"datas\".\"datatype\" = vars.\"datatype\"),\n" +
+            "infos_agg as (\n" +
+            "    select application,\n" +
+            "           \"datatype\",\n" +
+            "           requiredAuthorizations,\n" +
+            "           range,\n" +
+            "           mindate,\n" +
+            "           maxdate,\n" +
+            "           bool_and(continuous) continuous\n" +
+            "\n" +
+            "    from infos\n" +
+            "    group by application, \"datatype\", requiredAuthorizations, range, mindate, maxdate\n" +
+            "),\n" +
+            "    synthesis as (\n" +
+            "        select application,\n" +
+            "               \"datatype\",\n" +
+            "               requiredAuthorizations,\n" +
+            "               mindate,\n" +
+            "               maxdate,\n" +
+            "               sum(\n" +
+            "               case\n" +
+            "                   when continuous\n" +
+            "                       then 0\n" +
+            "                   else 1\n" +
+            "                   end\n" +
+            "                   )\n" +
+            "               over (partition by application, \"datatype\", requiredAuthorizations order by mindate) timerange\n" +
+            "        from infos_agg\n" +
+            "    ),\n" +
+            "    result as (\n" +
+            "        select\n" +
+            "            application,\n" +
+            "            \"datatype\",\n" +
+            "            null variable,\n" +
+            "            requiredAuthorizations,\n" +
+            "            null aggregation,\n" +
+            "            min(mindate) \"mindate\",\n" +
+            "            max(maxdate) \"maxdate\"\n" +
+            "        from synthesis\n" +
+            "        group by  application, \"datatype\", variable, requiredAuthorizations, aggregation, timerange)\n" +
+            "select\n" +
+            "        '%3$s' as \"@class\",\n" +
+            "    to_jsonb((gen_random_uuid(), now(),\n" +
+            "              application,\n" +
+            "              \"datatype\",\n" +
+            "              variable,\n" +
+            "              requiredAuthorizations,\n" +
+            "              aggregation,\n" +
+            "              array_agg(tsrange(mindate,maxdate))           )::%1$s.oresisynthesis) as json\n" +
             "from result\n" +
             "group by application, \"datatype\", variable, requiredAuthorizations, aggregation";
     public static final String SELECT_SYNTHESIS_BY_APPLICATION_AND_DATATYPE = "SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (" +
@@ -147,12 +227,12 @@ public class DataSynthesisRepository extends JsonTableInApplicationSchemaReposit
     }
 
 
-    public List<OreSiSynthesis> buildSynthesis(String varsSql) {
+    public List<OreSiSynthesis> buildSynthesis(String varsSql, boolean hasChartDescription) {
         if (Strings.isNullOrEmpty(varsSql)) {
             return new LinkedList<>();
         }
         String query = String.format(
-                BUILD_SYNTHESIS_SQL,
+                hasChartDescription?BUILD_SYNTHESIS_SQL:BUILD_GENERIC_SYNTHESIS_SQL,
                 getTable().getSchema().getSqlIdentifier(),
                 varsSql,
                 getEntityClass().getName(),

@@ -249,6 +249,9 @@ public class Configuration {
                 "\t   '%5$s',-- datatype\n" +
                 "\t   '%6$s'::interval -- gap\n" +
                 "   )\n";
+        public static String VAR_SQL_DEFAULT_TEMPLATE = " (\n" +
+                "\t   '%s' -- datatype\n" +
+                "   )\n";
         String value;
         VariableComponentKey aggregation = null;
         String unit = null;
@@ -264,6 +267,13 @@ public class Configuration {
                     value,
                     dataType,
                     gap == null ? "0" : gap
+            );
+            return sql;
+        }
+        public static String toSQL( String dataType) {
+            String sql = String.format(
+                    VAR_SQL_DEFAULT_TEMPLATE,
+                    dataType
             );
             return sql;
         }
