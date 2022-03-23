@@ -27,7 +27,7 @@ references:
           name: Date
           params:
             pattern : "dd/MM/yyyy"
-            columns  : "date mise en service du dispositif"
+            columns: [ "date mise en service du dispositif" ]
     columns:
       Agroécosystème:
       nom du site_key:
