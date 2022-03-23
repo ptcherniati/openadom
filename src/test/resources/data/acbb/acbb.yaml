@@ -154,10 +154,11 @@ dataTypes:
       parcelle:
         components:
           chemin:
-            defaultValue: >
-              String site = datumByVariableAndComponent.get("site").get("chemin");
-              String parcelle = datumByVariableAndComponent.get("parcelle").get("name");
-              return site+"."+site+"__"+parcelle;
+            defaultValue:
+              expression: >
+                String site = datumByVariableAndComponent.get("site").get("chemin");
+                String parcelle = datumByVariableAndComponent.get("parcelle").get("name");
+                return site+"."+site+"__"+parcelle;
             checker:
               name: Reference
               params:
@@ -178,7 +179,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"micromole_par_mole\""
+            defaultValue:
+              expression: "\"micromole_par_mole\""
             checker:
               name: Reference
               params:
@@ -197,7 +199,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"millimole_par_mole\""
+            defaultValue:
+              expression: "\"millimole_par_mole\""
             checker:
               name: Reference
               params:
@@ -216,7 +219,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pas_d_unite\""
+            defaultValue:
+              expression: "\"pas_d_unite\""
             checker:
               name: Reference
               params:
@@ -229,7 +233,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"micromole_par_mettre_carre_et_par_seconde\""
+            defaultValue:
+              expression: "\"micromole_par_mettre_carre_et_par_seconde\""
             checker:
               name: Reference
               params:
@@ -247,7 +252,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"watt_par_metre_carre\""
+            defaultValue:
+              expression: "\"watt_par_metre_carre\""
             checker:
               name: Reference
               params:
@@ -265,7 +271,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"watt_par_metre_carre\""
+            defaultValue:
+              expression: "\"watt_par_metre_carre\""
             checker:
               name: Reference
               params:
@@ -283,7 +290,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"kilogramme_par_metre_et_par_seconde\""
+            defaultValue:
+              expression: "\"kilogramme_par_metre_et_par_seconde\""
             checker:
               name: Reference
               params:
@@ -301,7 +309,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"metre_par_seconde\""
+            defaultValue:
+              expression: "\"metre_par_seconde\""
             checker:
               name: Reference
               params:
@@ -319,7 +328,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"micromole_par_mettre_carre_et_par_seconde\""
+            defaultValue:
+              expression: "\"micromole_par_mettre_carre_et_par_seconde\""
             checker:
               name: Reference
               params:
@@ -515,7 +525,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -548,7 +559,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -581,7 +593,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -614,7 +627,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -647,7 +661,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -680,7 +695,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -713,7 +729,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -746,7 +763,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -779,7 +797,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -812,7 +831,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -845,7 +865,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -878,7 +899,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -911,7 +933,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -944,7 +967,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -977,7 +1001,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -1010,7 +1035,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -1043,7 +1069,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -1526,8 +1553,9 @@ dataTypes:
               params:
                 pattern: HH:mm:ss
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
             checker:
               name: Date
               params:
@@ -1556,7 +1584,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:

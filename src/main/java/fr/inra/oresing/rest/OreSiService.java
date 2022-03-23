@@ -836,12 +836,12 @@ public class OreSiService {
         for (Map.Entry<VariableComponentKey, Expression<String>> entry : defaultValueExpressions.entrySet()) {
             VariableComponentKey variableComponentKey = entry.getKey();
             Expression<String> expression = entry.getValue();
-            Configuration.VariableComponentDescriptionConfiguration params = Optional.ofNullable(data)
+            Configuration.VariableComponentDefaultValueDescription params = Optional.ofNullable(data)
                     .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKey.getVariable()))
                     .map(columnDescription -> columnDescription.getComponents())
                     .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKey.getComponent()))
-                    .map(variableComponentDescription -> variableComponentDescription.getParams())
-                    .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
+                    .map(Configuration.VariableComponentDescription::getDefaultValue)
+                    .orElseGet(Configuration.VariableComponentDefaultValueDescription::new);
             Set<String> configurationReferences = params.getReferences();
             ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
             Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
@@ -1129,17 +1129,13 @@ public class OreSiService {
                 if (variableComponentsFromRepository.contains(variableComponentKey.getId())) {
                     continue;
                 }
-                Expression<String> defaultValueExpression;
-                if (componentDescription == null) {
-                    defaultValueExpression = CommonExpression.EMPTY_STRING;
-                } else {
-                    String defaultValue = componentDescription.getDefaultValue();
-                    if (StringUtils.isEmpty(defaultValue)) {
-                        defaultValueExpression = CommonExpression.EMPTY_STRING;
-                    } else {
-                        defaultValueExpression = StringGroovyExpression.forExpression(defaultValue);
-                    }
-                }
+                Expression<String> defaultValueExpression = Optional.ofNullable(componentDescription)
+                        .map(Configuration.VariableComponentDescription::getDefaultValue)
+                        .map(Configuration.VariableComponentDefaultValueDescription::getExpression)
+                        .filter(StringUtils::isNotEmpty)
+                        .map(StringGroovyExpression::forExpression)
+                        .map(x -> (Expression<String>) x)
+                        .orElse(CommonExpression.EMPTY_STRING);
                 defaultValueExpressionsBuilder.put(variableComponentKey, defaultValueExpression);
             }
         }

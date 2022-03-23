@@ -165,8 +165,9 @@ dataTypes:
       date:
         components:
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
             checker:
               name: Date
               params:

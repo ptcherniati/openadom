@@ -392,8 +392,9 @@ On décrit un format pour stocker les données sous la forment
         components:
           datetime:
             #calcul d'une valeur par défaut date+time avec une expression groovy
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
           day:
             checker:
               name: Date
@@ -747,7 +748,8 @@ On declare cette variable dans la section data
               params:
                 required: false
           unit:
-            defaultValue: return "percentage"
+            defaultValue:
+              expression: return "percentage"
             checker:
               name: Reference
               params:

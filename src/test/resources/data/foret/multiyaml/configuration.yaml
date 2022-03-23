@@ -22,7 +22,8 @@ dataTypes:
           ${variable}:
             components:
               variable:
-                defaultValue: return "GWD"
+                defaultValue:
+                  expression: return "GWD"
                 checker:
                   name: Reference
                   params:
@@ -35,7 +36,8 @@ dataTypes:
                   params:
                     required: false
               unit:
-                defaultValue: return "degre celcius"
+                defaultValue:
+                  expression: return "degre celcius"
                 checker:
                   name: Reference
                   params:
@@ -43,13 +45,15 @@ dataTypes:
                     required: true
                     codify: true
               profondeur:
-                defaultValue: return "${profondeur}"
+                defaultValue:
+                  expression: return "${profondeur}"
                 checker:
                   name: Float
                   params:
                     required: false
               repetition:
-                defaultValue: return "${répétition}"
+                defaultValue:
+                  expression: return "${répétition}"
                 checker:
                   name: Integer
                   params:
@@ -111,7 +115,8 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "climat du sol"
+            defaultValue:
+              expression: return "climat du sol"
             checker:
               name: Reference
               params:
@@ -158,8 +163,9 @@ dataTypes:
               params:
                 pattern: HH:mm
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
             checker:
               name: Date
               params:
@@ -247,7 +253,8 @@ dataTypes:
           ${variable}:
             components:
               variable:
-                defaultValue: return "SMP"
+                defaultValue:
+                  expression: return "SMP"
                 checker:
                   name: Reference
                   params:
@@ -260,7 +267,8 @@ dataTypes:
                   params:
                     required: false
               unit:
-                defaultValue: return "kilopascal"
+                defaultValue:
+                  expression: return "kilopascal"
                 checker:
                   name: Reference
                   params:
@@ -268,13 +276,15 @@ dataTypes:
                     required: true
                     codify: true
               profondeur:
-                defaultValue: return "${profondeur}"
+                defaultValue:
+                  expression: return "${profondeur}"
                 checker:
                   name: Float
                   params:
                     required: false
               repetition:
-                defaultValue: return "${répétition}"
+                defaultValue:
+                  expression: return "${répétition}"
                 checker:
                   name: Integer
                   params:
@@ -336,7 +346,8 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "climat du sol"
+            defaultValue:
+              expression: return "climat du sol"
             checker:
               name: Reference
               params:
@@ -383,8 +394,9 @@ dataTypes:
               params:
                 pattern: HH:mm
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
             checker:
               name: Date
               params:
@@ -473,7 +485,8 @@ dataTypes:
           ${variable}:
             components:
               variable:
-                defaultValue: return "GWD"
+                defaultValue:
+                  expression: return "GWD"
                 checker:
                   name: Reference
                   params:
@@ -486,7 +499,8 @@ dataTypes:
                   params:
                     required: false
               unit:
-                defaultValue: return "degre celcius"
+                defaultValue:
+                  expression: return "degre celcius"
                 checker:
                   name: Reference
                   params:
@@ -494,13 +508,15 @@ dataTypes:
                     required: true
                     codify: true
               profondeur:
-                defaultValue: return "${profondeur}"
+                defaultValue:
+                  expression: return "${profondeur}"
                 checker:
                   name: Float
                   params:
                     required: false
               repetition:
-                defaultValue: return "${répétition}"
+                defaultValue:
+                  expression: return "${répétition}"
                 checker:
                   name: Integer
                   params:
@@ -562,7 +578,8 @@ dataTypes:
       informations:
         components:
           thematic:
-            defaultValue: return "climat du sol"
+            defaultValue:
+              expression: return "climat du sol"
             checker:
               name: Reference
               params:
@@ -609,8 +626,9 @@ dataTypes:
               params:
                 pattern: HH:mm
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
             checker:
               name: Date
               params:

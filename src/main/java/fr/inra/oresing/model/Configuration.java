@@ -345,14 +345,14 @@ public class Configuration {
     public static class VariableComponentDescription {
         CheckerDescription checker;
         @Nullable
-        String defaultValue;
-        VariableComponentDescriptionConfiguration params;
+        VariableComponentDefaultValueDescription defaultValue;
     }
 
     @Getter
     @Setter
     @ToString
-    public static class VariableComponentDescriptionConfiguration implements GroovyDataInjectionConfiguration {
+    public static class VariableComponentDefaultValueDescription implements fr.inra.oresing.checker.GroovyConfiguration {
+        String expression;
         Set<String> references = new LinkedHashSet<>();
         Set<String> datatypes = new LinkedHashSet<>();
         boolean replace;
