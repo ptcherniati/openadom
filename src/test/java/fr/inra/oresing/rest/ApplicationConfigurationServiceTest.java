@@ -352,7 +352,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testInvalidFormat() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: pas_un_chiffre");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 3", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());

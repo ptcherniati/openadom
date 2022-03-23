@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.*;
@@ -315,18 +316,88 @@ public class OreSiService {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file, "");
-        Configuration conf = app.getConfiguration();
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
-        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
-        final ReferenceImporterContext referenceImporterContext = new ReferenceImporterContext(app.getId(), conf, refType, lineCheckers, storedReferences);
+        final ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(app, refType);
         ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
             @Override
             void storeAll(Stream<ReferenceValue> stream) {
-                referenceValueRepository.storeAll(stream);
+                final List<UUID> uuids = referenceValueRepository.storeAll(stream);
+                referenceValueRepository.updateConstraintForeignReferences(uuids);
             }
         };
         referenceImporter.doImport(file, fileId);
         return fileId;
+    }
+
+    private ReferenceImporterContext getReferenceImporterContext(Application app, String refType) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Configuration conf = app.getConfiguration();
+        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+
+        ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
+                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
+                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+
+        Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
+
+        Stream<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().entrySet().stream()
+                .map(entry -> {
+                    ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
+                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                    ColumnPresenceConstraint presenceConstraint = MoreObjects.firstNonNull(entry.getValue(), new Configuration.ReferenceColumnDescription()).getPresenceConstraint();
+                    ReferenceImporterContext.Column column;
+                    if (multiplicity == Multiplicity.ONE) {
+                        column = new ReferenceImporterContext.OneValueStaticColumn(referenceColumn, presenceConstraint);
+                    } else if (multiplicity == Multiplicity.MANY) {
+                        column = new ReferenceImporterContext.ManyValuesStaticColumn(referenceColumn, presenceConstraint);
+                    } else {
+                        throw new IllegalStateException("multiplicity = " + multiplicity);
+                    }
+                    return column;
+                });
+
+        Stream<ReferenceImporterContext.Column> dynamicColumns = referenceDescription.getDynamicColumns().entrySet().stream()
+                .flatMap(entry -> {
+                    ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
+                    Configuration.ReferenceDynamicColumnDescription value = entry.getValue();
+                    String reference = value.getReference();
+                    ReferenceColumn referenceColumnToLookForHeader = new ReferenceColumn(value.getReferenceColumnToLookForHeader());
+                    List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(reference);
+                    Stream<ReferenceImporterContext.Column> valuedDynamicColumns = allByReferenceType.stream()
+                            .map(referenceValue -> {
+                                ReferenceDatum referenceDatum = referenceValue.getRefValues();
+                                Ltree hierarchicalKey = referenceValue.getHierarchicalKey();
+                                ReferenceColumnSingleValue referenceColumnValue = (ReferenceColumnSingleValue) referenceDatum.get(referenceColumnToLookForHeader);
+                                String header = referenceColumnValue.getValue();
+                                String fullHeader = value.getHeaderPrefix() + header;
+                                ColumnPresenceConstraint presenceConstraint = value.getPresenceConstraint();
+                                return new ReferenceImporterContext.DynamicColumn(
+                                        referenceColumn,
+                                        fullHeader,
+                                        presenceConstraint,
+                                        hierarchicalKey,
+                                        Map.entry(reference, referenceValue.getId())
+                                );
+                            });
+                    return valuedDynamicColumns;
+                });
+
+        ImmutableMap<String, ReferenceImporterContext.Column> columns =
+                Stream.concat(staticColumns, dynamicColumns)
+                        .collect(ImmutableMap.toImmutableMap(
+                                ReferenceImporterContext.Column::getExpectedHeader,
+                                Function.identity()
+                        ));
+
+        final ReferenceImporterContext referenceImporterContext =
+                new ReferenceImporterContext(
+                        app.getId(),
+                        conf,
+                        refType,
+                        lineCheckers,
+                        columns
+                );
+        return referenceImporterContext;
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
@@ -449,9 +520,8 @@ public class OreSiService {
 
             Datum constantValues = new Datum();
             readPreHeader(formatDescription, constantValues, linesIterator);
-
             ImmutableList<String> columns = readHeaderRow(linesIterator);
-            readPostHeader(formatDescription, linesIterator);
+            readPostHeader(formatDescription, columns, constantValues, linesIterator);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
                     .map(buildCsvRecordToLineAsMapFn(columns))
@@ -460,7 +530,9 @@ public class OreSiService {
                     .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
 
-            repo.getRepository(app).data().storeAll(dataStream);
+            final DataRepository dataRepository = repo.getRepository(app).data();
+            final List<UUID> uuids = dataRepository.storeAll(dataStream);
+            dataRepository.updateConstraintForeigData(uuids);
             buildSynthesis(app.getName(), dataType);
         }
     }
@@ -787,7 +859,7 @@ public class OreSiService {
             ImmutableMultiset<String> actualHeaderColumns = line.stream()
                     .map(Map.Entry::getKey)
                     .collect(ImmutableMultiset.toImmutableMultiset());
-            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, actualHeaderColumns, headerLine);
+            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, expectedHeaderColumns, actualHeaderColumns, headerLine);
             Map<VariableComponentKey, String> record = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : line) {
                 String header = entry.getKey();
@@ -960,13 +1032,26 @@ public class OreSiService {
 
     /**
      * read some post header as example line, units, min and max values for each columns
-     *
-     * @param formatDescription
-     * @param linesIterator
      */
-    private void readPostHeader(Configuration.FormatDescription formatDescription, Iterator<CSVRecord> linesIterator) {
-        int lineToSkipAfterHeader = formatDescription.getFirstRowLine() - formatDescription.getHeaderLine() - 1;
-        Iterators.advance(linesIterator, lineToSkipAfterHeader);
+    private void readPostHeader(Configuration.FormatDescription formatDescription,  ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
+        ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
+                formatDescription.getConstants().stream()
+                        .collect(
+                                ImmutableSetMultimap.toImmutableSetMultimap(
+                                        Configuration.HeaderConstantDescription::getRowNumber,
+                                        Function.identity()
+                                )
+                        );
+        for (int lineNumber = formatDescription.getHeaderLine()+1; lineNumber < formatDescription.getFirstRowLine(); lineNumber++) {
+            CSVRecord row = linesIterator.next();
+            ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
+            constantDescriptions.forEach(constant -> {
+                int columnNumber = constant.getColumnNumber(headerRow);
+                String value = row.get(columnNumber - 1);
+                VariableComponentKey boundTo = constant.getBoundTo();
+                constantValues.put(boundTo, value);
+            });
+        }
     }
 
     private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription, Map<String, String> requiredAuthorizations) {
@@ -1151,30 +1236,32 @@ public class OreSiService {
     }
 
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
-        Configuration.ReferenceDescription referenceDescription = getApplication(applicationNameOrId)
-                .getConfiguration()
-                .getReferences()
-                .get(referenceType);
-        ImmutableMap<ReferenceColumn, Function<ReferenceDatum, String>> model = referenceDescription.getColumns().keySet().stream()
-                .map(ReferenceColumn::new)
-                .collect(ImmutableMap.toImmutableMap(Function.identity(), referenceColumn -> referenceDatum -> referenceDatum.get(referenceColumn).getAsContentForCsvCell()));
+        Application application = getApplication(applicationNameOrId);
+        ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(application, referenceType);
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
+        Stream<ImmutableList<String>> recordsStream = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
+                .map(ReferenceValue::getRefValues)
+                .map(referenceDatum -> {
+                    ImmutableList<String> rowAsRecord = referenceImporterContext.getExpectedHeaders().stream()
+                            .map(header -> referenceImporterContext.getCsvCellContent(referenceDatum, header))
+                            .collect(ImmutableList.toImmutableList());
+                    return rowAsRecord;
+                });
+        ImmutableSet<String> headers = referenceImporterContext.getExpectedHeaders();
         CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(referenceDescription.getSeparator())
+                .withDelimiter(referenceImporterContext.getCsvSeparator())
                 .withSkipHeaderRecord();
         StringWriter out = new StringWriter();
         try {
             CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-            csvPrinter.printRecord(model.keySet());
-            ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
-            List<ReferenceDatum> referenceData = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
-                    .map(ReferenceValue::getRefValues)
-                    .collect(Collectors.toUnmodifiableList());
-            for (ReferenceDatum referenceDatum : referenceData) {
-                ImmutableList<String> rowAsRecord = model.values().stream()
-                        .map(getCellContentFn -> getCellContentFn.apply(referenceDatum))
-                        .collect(ImmutableList.toImmutableList());
-                csvPrinter.printRecord(rowAsRecord);
-            }
+            csvPrinter.printRecord(headers);
+            recordsStream.forEach(record -> {
+                try {
+                    csvPrinter.printRecord(record);
+                } catch (IOException e) {
+                    throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+                }
+            });
         } catch (IOException e) {
             throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
         }

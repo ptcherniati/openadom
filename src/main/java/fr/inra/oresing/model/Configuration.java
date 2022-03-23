@@ -1,6 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.*;
@@ -100,8 +101,26 @@ public class Configuration {
     public static class ReferenceDescription {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
-        private LinkedHashMap<String, ColumnDescription> columns;
+        private LinkedHashMap<String, ReferenceColumnDescription> columns = new LinkedHashMap<>();
+        private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferenceColumnDescription {
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferenceDynamicColumnDescription {
+        private String headerPrefix = "";
+        private String reference;
+        private String referenceColumnToLookForHeader;
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
@@ -173,9 +192,18 @@ public class Configuration {
     public static class HeaderConstantDescription {
         int rowNumber;
         int columnNumber;
+        String headerName;
         VariableComponentKey boundTo;
         String exportHeader;
+
+        public int getColumnNumber(ImmutableList<String> headerRows) {
+            if (headerName != null && headerRows.contains(headerName)) {
+                return headerRows.indexOf(headerName) + 1;
+            }
+            return columnNumber;
+        }
     }
+
 
     @Getter
     @Setter

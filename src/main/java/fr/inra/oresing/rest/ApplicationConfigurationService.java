@@ -203,7 +203,7 @@ public class ApplicationConfigurationService {
             verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, variableOccurrencesInDataGroups);
 
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
-            verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, variables);
+            verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, dataType, variables);
             verifyChartDescription(builder, dataType, dataTypeDescription);
         }
         configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
@@ -305,8 +305,11 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables) {
-        for (Configuration.ColumnBindingDescription columnBindingDescription : dataTypeDescription.getFormat().getColumns()) {
+    private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, String dataType, Set<String> variables) {
+
+        final Configuration.FormatDescription format = dataTypeDescription.getFormat();
+        verifyFormatDescriptionIsValid(builder, format, dataType);
+        for (Configuration.ColumnBindingDescription columnBindingDescription : format.getColumns()) {
             VariableComponentKey boundTo = columnBindingDescription.getBoundTo();
             String variable = boundTo.getVariable();
             if (variables.contains(variable)) {
@@ -321,6 +324,38 @@ public class ApplicationConfigurationService {
                 builder.recordCsvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
             }
         }
+    }
+
+    private void verifyFormatDescriptionIsValid(ConfigurationParsingResult.Builder builder, Configuration.FormatDescription format, String dataType) {
+        format.getConstants()
+                .forEach(headerConstantDescription -> {
+                    final int columnNumber = headerConstantDescription.getColumnNumber();
+                    final String headerName = headerConstantDescription.getHeaderName();
+                    final int rowNumber = headerConstantDescription.getRowNumber();
+                    final int headerLine = format.getHeaderLine();
+                    if (rowNumber == headerLine) {
+                        builder.recordCsvSameHeaderLineAndFirstRowLineForConstantDescription(dataType);
+                    }
+                    final int firstRowLine = format.getFirstRowLine();
+                    if (rowNumber >= firstRowLine) {
+                        builder.recordCsvTooBigRowLineForConstantDescription(dataType);
+                    }
+                    if (rowNumber < 1) {
+                        builder.recordCsvTooLittleRowLineForConstantDescription(dataType);
+                    }
+                    if (rowNumber < headerLine && rowNumber < 1) {
+                        builder.recordCsvMissingRowLineForConstantDescription(dataType);
+                    } else if (rowNumber > headerLine && columnNumber < 1 && headerName == null) {
+                        builder.recordCsvMissingColumnNumberOrHeaderNameForConstantDescription(dataType);
+                    } else {
+                        final VariableComponentKey boundTo = headerConstantDescription.getBoundTo();
+                        if (boundTo == null) {
+                            builder.recordCsvMissingBoundToForConstantDescription(dataType);
+                        } else if (headerConstantDescription.getExportHeader() == null) {
+                            builder.recordCsvMissingExportHeaderNameForConstantDescription(dataType);
+                        }
+                    }
+                });
     }
 
     private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Set<String> variables, Multiset<String> variableOccurrencesInDataGroups) {

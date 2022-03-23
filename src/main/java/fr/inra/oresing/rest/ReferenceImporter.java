@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -43,13 +45,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -99,6 +99,7 @@ abstract class ReferenceImporter {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()));
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = csvRecordsStream.map(csvRecordToReferenceDatumFn);
@@ -114,14 +115,19 @@ abstract class ReferenceImporter {
                         boolean canSave = encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                         return canSave;
                     })
-                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId))
-                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
+                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId));
             storeAll(referenceValuesStream);
         }
 
         Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+    }
+
+    private void checkHeader(ImmutableList<String> columns, int headerLineNumber) {
+        ImmutableSet<String> expectedHeaders = referenceImporterContext.getExpectedHeaders();
+        ImmutableSet<String> mandatoryHeaders = referenceImporterContext.getMandatoryHeaders();
+        InvalidDatasetContentException.checkHeader(expectedHeaders, mandatoryHeaders, ImmutableMultiset.copyOf(columns), headerLineNumber);
     }
 
     /**
@@ -166,25 +172,13 @@ abstract class ReferenceImporter {
     private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
         Iterator<String> currentHeader = columns.iterator();
         ReferenceDatum referenceDatum = new ReferenceDatum();
+        SetMultimap<String, UUID> refsLinkedTo = HashMultimap.create();
         csvRecord.forEach(cellContent -> {
             String header = currentHeader.next();
-            ReferenceColumn referenceColumn = new ReferenceColumn(header);
-            Multiplicity multiplicity = referenceImporterContext.getMultiplicity(referenceColumn);
-            ReferenceColumnValue referenceColumnValue;
-            switch (multiplicity) {
-                case ONE:
-                    referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
-                    break;
-                case MANY:
-                    referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(cellContent);
-                    break;
-                default:
-                    throw new IllegalStateException("non géré " + multiplicity);
-            }
-            referenceDatum.put(referenceColumn, referenceColumnValue);
+            referenceImporterContext.pushValue(referenceDatum, header, cellContent, refsLinkedTo);
         });
         int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
-        return new RowWithReferenceDatum(lineNumber, referenceDatum);
+        return new RowWithReferenceDatum(lineNumber, referenceDatum, ImmutableSetMultimap.copyOf(refsLinkedTo));
     }
 
     /**
@@ -258,6 +252,7 @@ abstract class ReferenceImporter {
                     .collect(Collectors.toUnmodifiableList());
             allCheckerErrorsBuilder.addAll(checkerErrors);
         });
+        refsLinkedToBuilder.putAll(rowWithReferenceDatum.getRefsLinkedTo());
         ReferenceDatumAfterChecking referenceDatumAfterChecking =
                 new ReferenceDatumAfterChecking(
                         rowWithReferenceDatum.getLineNumber(),
@@ -289,18 +284,9 @@ abstract class ReferenceImporter {
 
         final ReferenceValue e = new ReferenceValue();
         final Ltree naturalKey = keysAndReferenceDatumAfterChecking.getNaturalKey();
-        recursionStrategy.getKnownId(naturalKey)
-                .ifPresent(e::setId);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
         referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
 
-        /**
-         * on remplace l'id par celle en base si elle existe
-         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
-         */
-
-        referenceImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
-                .ifPresent(e::setId);
         e.setBinaryFile(fileId);
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
@@ -340,6 +326,7 @@ abstract class ReferenceImporter {
     private static class RowWithReferenceDatum {
         int lineNumber;
         ReferenceDatum referenceDatum;
+        ImmutableSetMultimap<String, UUID> refsLinkedTo;
     }
 
     @Value
@@ -371,8 +358,6 @@ abstract class ReferenceImporter {
 
         Ltree getHierarchicalReference(Ltree naturalKey);
 
-        Optional<UUID> getKnownId(Ltree naturalKey);
-
         Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
 
     }
@@ -380,16 +365,6 @@ abstract class ReferenceImporter {
     private class WithRecursion implements RecursionStrategy {
 
         private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
-
-        private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
-
-        @Override
-        public Optional<UUID> getKnownId(Ltree naturalKey) {
-            if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
-                return Optional.of(afterPreloadReferenceUuids.get(naturalKey));
-            }
-            return Optional.empty();
-        }
 
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
@@ -425,7 +400,7 @@ abstract class ReferenceImporter {
             final ReferenceColumn columnToLookForParentKey = referenceImporterContext.getColumnToLookForParentKey();
             ReferenceLineChecker referenceLineChecker = referenceImporterContext.getReferenceLineChecker();
             final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
-            afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
+            final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>(beforePreloadReferenceUuids);
             ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
             List<RowWithReferenceDatum> collect = streamBeforePreloading
                     .peek(rowWithReferenceDatum -> {
@@ -447,7 +422,8 @@ abstract class ReferenceImporter {
                         missingParentReferences.removeAll(naturalKey);
                     })
                     .collect(Collectors.toList());
-            checkMissingParentReferencesIsEmpty(missingParentReferences);
+            Set<Ltree> knownReferences = afterPreloadReferenceUuids.keySet();
+            checkMissingParentReferencesIsEmpty(missingParentReferences, knownReferences);
             referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
             return collect.stream();
         }
@@ -457,13 +433,13 @@ abstract class ReferenceImporter {
          *
          * @param missingParentReferences pour chaque parent manquant, les lignes du CSV où il est mentionné
          */
-        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
+        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences, Set<Ltree> knownReferences) {
             List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
                     .map(entry -> {
                         Ltree missingParentReference = entry.getKey();
                         Integer lineNumber = entry.getValue();
                         ValidationCheckResult validationCheckResult =
-                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, afterPreloadReferenceUuids.keySet());
+                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, knownReferences);
                         return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
                     })
                     .collect(Collectors.toUnmodifiableList());
@@ -472,11 +448,6 @@ abstract class ReferenceImporter {
     }
 
     private class WithoutRecursion implements RecursionStrategy {
-
-        @Override
-        public Optional<UUID> getKnownId(Ltree naturalKey) {
-            return Optional.empty();
-        }
 
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
