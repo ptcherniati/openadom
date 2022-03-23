@@ -85,9 +85,8 @@ export default class DetailModalCard extends Vue {
   @Prop() applicationName;
   collapse = true;
   mounted() {
-    for(let i = 1; document.getElementsByClassName("btnCard").length-1; i++) {
+    for(let i = 1; i<=document.getElementsByClassName("btnCard").length-1; i++) {
       document.getElementsByClassName("btnCard").item(i).click();
-      console.log("coucou")
     }
   }
 }

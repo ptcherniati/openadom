@@ -44,7 +44,7 @@
             {{ refFile.name }}
           </span>
           <span class="file-name" v-else-if="onUploadCb">
-            {{ $t("validation.count-line") }}
+            {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
             {{ $t("validation.data-empty") }}
@@ -154,6 +154,7 @@ export default class CollapsibleTree extends Vue {
   @Prop() radioName;
   @Prop() repository;
   @Prop() repositoryRedirect;
+  @Prop( { default: 0 }) lineCount;
   @Prop({ default: null }) applicationTitle;
 
   displayChildren = false;
