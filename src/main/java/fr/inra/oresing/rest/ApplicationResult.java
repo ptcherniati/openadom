@@ -2,8 +2,11 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -17,6 +20,7 @@ public class ApplicationResult {
     InternationalizationMap internationalization;
     Map<String, Reference> references;
     Map<String, DataType> dataTypes;
+    List<ReferenceSynthesis> referenceSynthesis;
 
     @Value
     public static class Reference {
@@ -69,6 +73,16 @@ public class ApplicationResult {
                 String standardDeviation;
                 VariableComponentKey aggregation;
             }
+        }
+    }
+
+    @Setter
+    @Getter
+    public static class ReferenceSynthesis {
+        public String referenceType;
+        public int lineCount;
+
+        public ReferenceSynthesis() {
         }
     }
 }

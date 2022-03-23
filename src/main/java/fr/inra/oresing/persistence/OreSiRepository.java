@@ -55,8 +55,8 @@ public class OreSiRepository {
             return beanFactory.getBean(AuthorizationRepository.class, application);
         }
 
-        public SynthesisRepository synthesisRepository() {
-            return beanFactory.getBean(SynthesisRepository.class, application);
+        public DataSynthesisRepository synthesisRepository() {
+            return beanFactory.getBean(DataSynthesisRepository.class, application);
         }
     }
 }

@@ -1380,7 +1380,7 @@ public class OreSiService {
 
     public Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType, String variable) {
         Application application = getApplication(nameOrId);
-        final SynthesisRepository repo = this.repo.getRepository(application).synthesisRepository();
+        final DataSynthesisRepository repo = this.repo.getRepository(application).synthesisRepository();
         if (variable == null) {
             repo.removeSynthesisByApplicationDatatype(application.getId(), dataType);
         } else {
@@ -1408,6 +1408,10 @@ public class OreSiService {
         Application application = getApplication(nameOrId);
         return repo.getRepository(application).synthesisRepository().selectSynthesisDatatypeAndVariable(application.getId(), dataType, variable).stream()
                 .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+    }
+
+    public List<ApplicationResult.ReferenceSynthesis> getReferenceSynthesis(Application application) {
+        return repo.getRepository(application).referenceValue().buildReferenceSynthesis();
     }
 
     @Value

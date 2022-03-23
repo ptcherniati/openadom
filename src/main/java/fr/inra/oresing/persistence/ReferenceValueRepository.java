@@ -3,16 +3,12 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -123,6 +119,14 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     public ImmutableMap<Ltree, UUID> getReferenceIdPerKeys(String referenceType) {
         return findAllByReferenceType(referenceType).stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
+    }
+
+    public List<ApplicationResult.ReferenceSynthesis> buildReferenceSynthesis(){
+        String query = "select \n" +
+                "referencetype referenceType, count(*) lineCount \n" +
+                "from "+getTable().getSqlIdentifier()+"\n" +
+                "group by referencetype";
+        return getNamedParameterJdbcTemplate().query(query, ImmutableMap.of(), BeanPropertyRowMapper.newInstance(ApplicationResult.ReferenceSynthesis.class));
     }
 
     public void updateConstraintForeignReferences(List<UUID> uuids) {

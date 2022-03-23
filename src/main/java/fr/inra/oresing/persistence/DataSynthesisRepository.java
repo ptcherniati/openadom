@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class SynthesisRepository extends JsonTableInApplicationSchemaRepositoryTemplate<OreSiSynthesis> {
+public class DataSynthesisRepository extends JsonTableInApplicationSchemaRepositoryTemplate<OreSiSynthesis> {
     public static final String BUILD_SYNTHESIS_SQL = "with\n" +
             "     vars (agregation, variable, \"datatype\", gap) as (\n" +
             "         values  %2$s\n" +
@@ -137,7 +137,7 @@ public class SynthesisRepository extends JsonTableInApplicationSchemaRepositoryT
     public static final String SYNTHESIS_DELETE_BY_APPLICATION_DATATYPE_AND_VARIABLE = "DELETE FROM %s\n" +
             "  WHERE \"application\" = :application::uuid and \"datatype\" = :datatype and \"variable\" = :variable";
 
-    public SynthesisRepository(Application application) {
+    public DataSynthesisRepository(Application application) {
         super(application);
     }
 

@@ -102,6 +102,7 @@ public class OreSiResources {
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
+        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = service.getReferenceSynthesis(application);
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
         application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
             ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -142,7 +143,7 @@ public class OreSiResources {
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
             return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis);
         return ResponseEntity.ok(applicationResult);
     }
 
