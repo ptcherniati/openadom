@@ -42,9 +42,9 @@
         :closeCb="(newVal) => (openPanel = newVal)"
         :applicationName="applicationName"
       />
-      <b-modal v-model="openSynthesisDetailPanel" width="100rem">
+      <b-modal class="modalByAgrégation" v-model="openSynthesisDetailPanel" width="100rem">
         <DetailModalCard
-          v-show="openSynthesisDetailPanel"
+          :open="true"
           :options="currentOptions"
           :dataType="chosenDataType"
           :closeCb="(newVal) => (openSynthesisDetailPanel = newVal)"
@@ -120,6 +120,7 @@ export default class DataTypesManagementView extends Vue {
       this.downloadDataType(label)
     ),
   ];
+
   dataTypes = [];
   errorsMessages = [];
   openPanel = false;
@@ -132,9 +133,10 @@ export default class DataTypesManagementView extends Vue {
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => {},
-        () => this.$router.push("/applications")
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => {
+          },
+          () => this.$router.push("/applications")
       ),
     ];
 

@@ -37,9 +37,8 @@
                 role="button"
                 v-if="Object.values(option).length > 4"
                 style="text-align: center"
-                @click="loadSynthese(!collapse, Object.values(option), option.variable)"
               >
-                <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+                <b-icon class="btnCard" :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
               </a>
             </div>
           </template>
@@ -84,19 +83,11 @@ export default class DetailModalCard extends Vue {
   @Prop({ default: false }) options;
   @Prop() closeCb;
   @Prop() applicationName;
-  collapse = false;
-
-  loadSynthese(open, options, name) {
-    if (!this.collapse) {
-
-      var lambda = document.createElement("div");
-      lambda.id = name;
-      lambda.className = "collapse-content";
-      document.getElementById("collapse." + name).appendChild(lambda);
-      console.log(options);
-      return (this.collapse = open);
-    } else {
-      return (this.collapse = !open);
+  collapse = true;
+  mounted() {
+    for(let i = 1; document.getElementsByClassName("btnCard").length-1; i++) {
+      document.getElementsByClassName("btnCard").item(i).click();
+      console.log("coucou")
     }
   }
 }
