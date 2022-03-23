@@ -75,8 +75,8 @@ public class CheckerFactory {
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
-                Optional.ofNullable(variableComponentDescription.getChecker())
+                Optional.ofNullable(componentEntry.getValue())
+                        .map(Configuration.VariableComponentDescription::getChecker)
                         .map(checkerDescription -> newChecker(app, checkerDescription, variableComponentKey))
                         .ifPresent(checkersBuilder::add);
             }
