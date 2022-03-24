@@ -15,6 +15,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.sql.PreparedStatement;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,7 +39,14 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "\n" + "(id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile) \n" + "SELECT id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile \n" + "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", \n" + ":json::json) \n" + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" \n" + "DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, hierarchicalReference=EXCLUDED.hierarchicalReference, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile" + " RETURNING id";
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "\n" +
+                "(id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile) \n" +
+                "SELECT id, application, referenceType, hierarchicalKey, hierarchicalReference, naturalKey, refsLinkedTo, refValues, binaryFile \n" +
+                "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", \n" +
+                ":json::json) \n"
+                + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\" \n" +
+                "DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, hierarchicalReference=EXCLUDED.hierarchicalReference, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo, refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile"
+                + " RETURNING id";
     }
 
     @Override
@@ -57,8 +65,10 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
      */
     public List<ReferenceValue> findAllByReferenceType(String refType, MultiValueMap<String, String> params) {
         MultiValueMap<String, String> toto = new LinkedMultiValueMap<>();
-        String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
-        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType);
+        String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
+                + getTable().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
+        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("refType", refType);
 
         AtomicInteger i = new AtomicInteger();
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
@@ -66,12 +76,13 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
             String k = e.getKey();
             if (StringUtils.equalsAnyIgnoreCase("_row_id_", k)) {
                 String collect = e.getValue().stream().map(v -> {
-                    String arg = ":arg" + i.getAndIncrement();
-                    paramSource.addValue(arg, v);
-                    return String.format("'%s'::uuid", v);
-                }).collect(Collectors.joining(", "));
+                            String arg = ":arg" + i.getAndIncrement();
+                            paramSource.addValue(arg, v);
+                            return String.format("'%s'::uuid", v);
+                        })
+                        .collect(Collectors.joining(", "));
                 return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
-            } else if (StringUtils.equalsAnyIgnoreCase("any", k)) {
+            }else if (StringUtils.equalsAnyIgnoreCase("any", k)) {
                 return e.getValue().stream().map(v -> {
                     String arg = ":arg" + i.getAndIncrement();
                     paramSource.addValue(arg, v);
@@ -80,7 +91,9 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
             } else {
                 return e.getValue().stream().map(v -> "t.refvalues @> '{\"" + k + "\":\"" + v + "\"}'::jsonb");
             }
-        }).filter(k -> k != null).collect(Collectors.joining(" OR "));
+        })
+                .filter(k->k!=null).
+                collect(Collectors.joining(" OR "));
 
         if (StringUtils.isNotBlank(cond)) {
             cond = " AND (" + cond + ")";
@@ -90,12 +103,51 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return (List<ReferenceValue>) result;
     }
 
+    public Map<String, Map<String, String>> findDisplayByNaturalKey(String refType) {
+        String query = "select 'java.util.Map' as \"@class\" , jsonb_build_object(naturalkey, jsonb_agg(display)) json\n" +
+                "           from " + getTable().getSqlIdentifier() + ",\n" +
+                "lateral\n" +
+                "(select  jsonb_build_object(\n" +
+                "                trim('\"__display_' from\n" +
+                "                     jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").key')::text),\n" +
+                "                trim('\"' FROM jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").value')::text)\n" +
+                "            ) as display\n" +
+                "    )displays\n" +
+                "where referencetype = :refType\n" +
+                "group by naturalkey";
+        Map<String, Map<String, String>> displayForNaturalKey  = new HashMap<>();
+        List result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("refType", refType), getJsonRowMapper());
+        for (Object o : result) {
+            final Map<String, List<Map<String, String>>> o1 = (Map<String, List<Map<String, String>>>) o;
+            final Map<String, Map<String, String>> collect = o1.entrySet()
+                    .stream().collect(Collectors.toMap(
+                            e -> e.getKey(),
+                            e -> {
+                                Map<String, String> displayMap = new HashMap<>();
+                                for (Map<String, String> s : e.getValue()) {
+                                    displayMap.putAll(s);
+                                }
+                                return displayMap;
+                            }
+                    ));
+            displayForNaturalKey.putAll(collect);
+        }
+        return displayForNaturalKey;
+    }
+
     public List<List<String>> findReferenceValue(String refType, String column) {
         AtomicInteger ai = new AtomicInteger(0);
-        String select = Stream.of(column.split(",")).map(c -> String.format("refValues->>'%1$s' as \"%1$s" + ai.getAndIncrement() + "\"", c)).collect(Collectors.joining(", "));
-        String sqlPattern = " SELECT %s " + " FROM " + getTable().getSqlIdentifier() + " t" + " WHERE application=:applicationId::uuid AND referenceType=:refType";
+        String select = Stream.of(column.split(","))
+                .map(c -> String.format("refValues->>'%1$s' as \"%1$s"+ai.getAndIncrement()+"\"", c))
+                .collect(Collectors.joining(", "));
+        String sqlPattern = " SELECT %s "
+                + " FROM " + getTable().getSqlIdentifier() + " t"
+                + " WHERE application=:applicationId::uuid AND referenceType=:refType";
         String query = String.format(sqlPattern, select);
-        List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType)).stream().map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList())).collect(Collectors.toList());
+        List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType))
+                .stream()
+                .map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList()))
+                .collect(Collectors.toList());
         return result;
     }
 
@@ -111,7 +163,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
             } else {
                 display = null;
             }
-            Map<String, String> values = referenceDatum.toJsonForFrontend();
+            Map<String, Object> values = referenceDatum.toJsonForFrontend();
             return new ApplicationResult.Reference.ReferenceUUIDAndDisplay(display, result.getId(), values);
         };
         return findAllByReferenceType(referenceType).stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, referenceValueToReferenceUuidAndDisplayFunction));

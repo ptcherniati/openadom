@@ -1,9 +1,6 @@
 package fr.inra.oresing.rest;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
+import com.google.common.base.*;
 import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
@@ -29,7 +26,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
-import org.assertj.core.util.Strings;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
@@ -52,6 +48,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -332,6 +329,7 @@ public class OreSiService {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         Configuration conf = app.getConfiguration();
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
         ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
@@ -388,14 +386,36 @@ public class OreSiService {
                                 ReferenceImporterContext.Column::getExpectedHeader,
                                 Function.identity()
                         ));
-
+        final ReferenceImporterContext.Constants constants = new ReferenceImporterContext.Constants(
+                app.getId(),
+                conf,
+                refType,
+                repo.getRepository(app).referenceValue());
+    /*    final Set<Object> patternColumns = constants.getPatternColumns()
+                .map(pt -> pt.values())
+                .flatMap(Collection::stream)
+                .stream().collect(Collectors.toSet());*/
+        Set<String> patternColumns = constants.getPatternColumns()
+                .map(m->m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
+                .orElseGet(HashSet::new);
+        final Map<String, String> referenceToColumnName = lineCheckers.stream()
+                .filter(ReferenceLineChecker.class::isInstance)
+                .map(ReferenceLineChecker.class::cast)
+                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) referenceLineChecker.getTarget().getTarget()).getColumn()));
+        final Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey =
+                lineCheckers.stream()
+                .filter(ReferenceLineChecker.class::isInstance)
+                .map(ReferenceLineChecker.class::cast)
+                .map(ReferenceLineChecker::getRefType)
+                .filter(rt -> patternColumns.contains(rt))
+                .collect(Collectors.toMap(ref -> referenceToColumnName.getOrDefault(ref, ref), ref -> repo.getRepository(app).referenceValue().findDisplayByNaturalKey(ref)));
         final ReferenceImporterContext referenceImporterContext =
                 new ReferenceImporterContext(
-                        app.getId(),
-                        conf,
-                        refType,
+                        constants,
                         lineCheckers,
-                        columns
+                        storedReferences,
+                        columns,
+                        displayByReferenceAndNaturalKey
                 );
         return referenceImporterContext;
     }
@@ -1032,6 +1052,9 @@ public class OreSiService {
 
     /**
      * read some post header as example line, units, min and max values for each columns
+     *
+     * @param formatDescription
+     * @param linesIterator
      */
     private void readPostHeader(Configuration.FormatDescription formatDescription,  ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =

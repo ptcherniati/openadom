@@ -23,14 +23,10 @@ import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
 import lombok.AllArgsConstructor;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,51 +36,23 @@ import java.util.stream.Collectors;
  */
 @AllArgsConstructor
 public class ReferenceImporterContext {
-
     private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
-
-    /**
-     * Identifiant de l'application à laquelle le référentiel importé appartient
-     */
-    private final UUID applicationId;
-
-    /**
-     * La configuration de l'application qui contient le référentiel mais aussi les utilisations de ce référentiel
-     */
-    private final Configuration conf;
-
-    /**
-     * Le nom du référentiel
-     */
-    private final String refType;
-
+    private final Constants constants;
     /**
      * Tous les {@link LineChecker} qui s'appliquent sur chaque ligne à importer
      */
     private final ImmutableSet<LineChecker> lineCheckers;
-
+    /**
+     * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
+     */
+    private final ImmutableMap<Ltree, UUID> storedReferences;
     private final ImmutableMap<String, Column> columnsPerHeader;
+    Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey;
 
-    private Optional<InternationalizationReferenceMap> getInternationalizationReferenceMap() {
-        Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
-                .map(Configuration::getInternationalization)
-                .map(InternationalizationMap::getReferences)
-                .map(references -> references.getOrDefault(refType, null));
-        return internationalizationReferenceMap;
-    }
-
-    public Map<String, Internationalization> getDisplayColumns() {
-        Optional<InternationalizationReferenceMap> internationalizationReferenceMap = getInternationalizationReferenceMap();
-        return internationalizationReferenceMap
-                .map(InternationalizationReferenceMap::getInternationalizedColumns)
-                .orElseGet(HashMap::new);
-    }
-
-    public Optional<Map<String, String>> getDisplayPattern() {
-        Optional<InternationalizationReferenceMap> internationalizationReferenceMap = getInternationalizationReferenceMap();
-        return internationalizationReferenceMap
-                .map(InternationalizationReferenceMap::getInternationalizationDisplay)
-                .map(InternationalizationDisplay::getPattern);
+    public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
+        return this.displayByReferenceAndNaturalKey.getOrDefault(referencedColumn, new HashMap<>())
+                .getOrDefault(naturalKey, new HashMap<>())
+                .getOrDefault(locale, naturalKey);
     }
 
     /**
@@ -97,17 +65,12 @@ public class ReferenceImporterContext {
         return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
     }
 
-    private HierarchicalKeyFactory getHierarchicalKeyFactory() {
-        HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
-        return hierarchicalKeyFactory;
-    }
-
     public String getRefType() {
-        return refType;
+        return constants.getRefType();
     }
 
     public Ltree getRefTypeAsLabel() {
-        return Ltree.fromUnescapedString(refType);
+        return Ltree.fromUnescapedString(getRefType());
     }
 
     /**
@@ -115,6 +78,10 @@ public class ReferenceImporterContext {
      */
     public Ltree newHierarchicalKey(Ltree recursiveNaturalKey, ReferenceDatum referenceDatum) {
         return getHierarchicalKeyFactory().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
+    }
+
+    private HierarchicalKeyFactory getHierarchicalKeyFactory() {
+        return constants.getHierarchicalKeyFactory();
     }
 
     /**
@@ -135,12 +102,11 @@ public class ReferenceImporterContext {
     }
 
     private Configuration.ReferenceDescription getRef() {
-        Configuration.ReferenceDescription ref = conf.getReferences().get(refType);
-        return ref;
+        return constants.getRef();
     }
 
     private Optional<Configuration.CompositeReferenceComponentDescription> getRecursiveComponentDescription() {
-        return conf.getCompositeReferences().values().stream()
+        return constants.getConf().getCompositeReferences().values().stream()
                 .map(compositeReferenceDescription -> compositeReferenceDescription.getComponents().stream().filter(compositeReferenceComponentDescription -> getRefType().equals(compositeReferenceComponentDescription.getReference()) && compositeReferenceComponentDescription.getParentRecursiveKey() != null).findFirst().orElse(null))
                 .filter(e -> e != null)
                 .findFirst();
@@ -188,7 +154,11 @@ public class ReferenceImporterContext {
     }
 
     public UUID getApplicationId() {
-        return applicationId;
+        return constants.getApplicationId();
+    }
+
+    public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(Ltree hierarchicalKey) {
+        return Optional.ofNullable(storedReferences.get(hierarchicalKey));
     }
 
     public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent, SetMultimap<String, UUID> refsLinkedTo) {
@@ -210,6 +180,124 @@ public class ReferenceImporterContext {
     public String getCsvCellContent(ReferenceDatum referenceDatum, String header) {
         Column column = columnsPerHeader.get(header);
         return column.getCsvCellContent(referenceDatum);
+    }
+
+    public Optional<Map<String, String>> getDisplayPattern() {
+        return constants.getDisplayPattern();
+    }
+
+    public Map<String, Internationalization> getDisplayColumns() {
+        return constants.getDisplayColumns();
+    }
+
+    public static class Constants {
+        /**
+         * Identifiant de l'application à laquelle le référentiel importé appartient
+         */
+        private final UUID applicationId;
+        /**
+         * La configuration de l'application qui contient le référentiel mais aussi les utilisations de ce référentiel
+         */
+        private final Configuration conf;
+        /**
+         * Le nom du référentiel
+         */
+        private final String refType;
+        private final Optional<InternationalizationReferenceMap> internationalizationReferenceMap;
+        private final Map<String, Internationalization> displayColumns;
+        private final Optional<Map<String, String>> displayPattern;
+        private final HierarchicalKeyFactory hierarchicalKeyFactory;
+        private final Optional<Map<String, List<String>>> patternColumns;
+        private final Optional<Map<String, List<InternationalizationDisplay.PatternSection>>> patternSection;
+        Constants constants;
+
+        public Constants(UUID applicationId, Configuration conf, String refType, ReferenceValueRepository referenceValueRepository) {
+            this.applicationId = applicationId;
+            this.conf = conf;
+            this.refType = refType;
+            this.internationalizationReferenceMap = buildInternationalizationReferenceMap(conf, refType);
+            this.displayColumns = buildDisplayColumns();
+            this.displayPattern = buildDisplayPattern();
+            this.hierarchicalKeyFactory = buildHierarchicalKeyFactory();
+            this.patternColumns = this.buildPatternColumns();
+            this.patternSection = this.buildPatternSection();
+        }
+
+        public Configuration.ReferenceDescription getRef() {
+            return conf.getReferences().get(refType);
+        }
+
+        private Optional<InternationalizationReferenceMap> buildInternationalizationReferenceMap(Configuration conf, String refType) {
+            Optional<InternationalizationReferenceMap> internationalizationReferenceMap = Optional.ofNullable(conf)
+                    .map(Configuration::getInternationalization)
+                    .map(InternationalizationMap::getReferences)
+                    .map(references -> references.getOrDefault(refType, null));
+            return internationalizationReferenceMap;
+        }
+
+        private Map<String, Internationalization> buildDisplayColumns() {
+            return this.internationalizationReferenceMap
+                    .map(InternationalizationReferenceMap::getInternationalizedColumns)
+                    .orElseGet(HashMap::new);
+        }
+
+        private Optional<Map<String, String>> buildDisplayPattern() {
+            return this.internationalizationReferenceMap
+                    .map(InternationalizationReferenceMap::getInternationalizationDisplay)
+                    .map(InternationalizationDisplay::getPattern);
+        }
+
+
+        private HierarchicalKeyFactory buildHierarchicalKeyFactory() {
+            HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(conf, refType);
+            return hierarchicalKeyFactory;
+        }
+
+        private Optional<Map<String, List<InternationalizationDisplay.PatternSection>>> buildPatternSection() {
+            return displayPattern
+                    .map(dp -> dp.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, k -> InternationalizationDisplay.parsePattern(k.getValue()))));
+        }
+
+        private Optional<Map<String, List<String>>> buildPatternColumns() {
+            return displayPattern
+                    .map(dp -> dp.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, k -> InternationalizationDisplay.getPatternColumns(k.getValue()))));
+        }
+
+        public UUID getApplicationId() {
+            return applicationId;
+        }
+
+        public Configuration getConf() {
+            return conf;
+        }
+
+        public String getRefType() {
+            return refType;
+        }
+
+        public Optional<InternationalizationReferenceMap> getInternationalizationReferenceMap() {
+            return internationalizationReferenceMap;
+        }
+
+        public Map<String, Internationalization> getDisplayColumns() {
+            return displayColumns;
+        }
+
+        public Optional<Map<String, String>> getDisplayPattern() {
+            return displayPattern;
+        }
+
+        public HierarchicalKeyFactory getHierarchicalKeyFactory() {
+            return hierarchicalKeyFactory;
+        }
+
+        public Optional<Map<String, List<String>>> getPatternColumns() {
+            return patternColumns;
+        }
+
+        public Optional<Map<String, List<InternationalizationDisplay.PatternSection>>> getPatternSection() {
+            return patternSection;
+        }
     }
 
     /**

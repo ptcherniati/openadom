@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, Object>>, SomethingToBeSentToFrontend<Map<String, String>> {
+public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, Object>>, SomethingToBeSentToFrontend<Map<String, Object>> {
 
     private final Map<ReferenceColumn, ReferenceColumnValue> values;
 
@@ -108,10 +108,10 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext,
     }
 
     @Override
-    public Map<String, String> toJsonForFrontend() {
-        Map<String, String> map = new LinkedHashMap<>();
+    public Map<String, Object> toJsonForFrontend() {
+        Map<String, Object> map = new LinkedHashMap<>();
         for (Map.Entry<ReferenceColumn, ReferenceColumnValue> entry : values.entrySet()) {
-            String valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+            Object valueThatMayBeNull = Optional.ofNullable(entry.getValue())
                     .map(ReferenceColumnValue::toJsonForFrontend)
                     .orElse(null);
             map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
