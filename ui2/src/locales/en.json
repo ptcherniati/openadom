@@ -29,7 +29,10 @@
     "invalid-required": "Please fill the field",
     "invalid-application-name": "The name must only includes lowercase letters.",
     "invalid-application-name-length": "The name's length should be between 4 and 20 characters.",
-    "invalid-confirmed": "Fields don't match."
+    "invalid-confirmed": "Fields don't match.",
+    "data-empty": "No data",
+    "count-line": "Total line : ",
+    "modal-synthesis-variable-default": "Detail : "
   },
   "alert": {
     "cancel": "Cancel",
@@ -160,6 +163,12 @@
     "timerangeoutofinterval": "The date <code> {value} </code> is incompatible with the date range of the deposit. It must be between <code> {from} </code> and <code> {to} </code>. ",
     "badauthorizationscopeforrepository": "Authorization <code> {authorization} </code>) must be <code> {expectedValue} / code> and not <code> {givenValue} </code>",
     "overlappingpublishedversion": "There is a deposited version in the deposit dates have an overlapping period with the deposited version. <code> {overlapingFiles] </code>",
+    "unDeclaredValueForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, the value is not declared.<br /> Expected values ​​<code>{components}</code>",
+    "missingValueComponentForChart":"In the chart description of variable <code>{variable}</code> of data type <code>{dataType}</code>, value <code>{valueComponent}</code> is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
+    "missingAggregationVariableForChart":"In the chart description of variable <code>{variable}</code> of data type <code>{dataType}</code>, aggregation variable <code>{aggregationVariable}< /code> is not declared.<br /> Expected Values ​​<code>{variables}</code>",
+    "missingAggregationComponentForChart":"In the graph description of variable <code>{variable}</code> of data type <code>{dataType}</code>, component <code>{aggregationComponent}</code> of the aggregation variable <code>{aggregationVariable}</code> is not declared.<br /> Expected Values ​​<code>{components}</code>",
+    "missingStandardDeviationComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, the standard deviation <code> {standardDeviation}</ code> is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
+    "missingUnitComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, unit <code> {unit}</code > is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
     "duplicateLineInReference": "In the repository file {file}, line {lineNumber} has the same id {duplicateKey} as lines {otherLines}",
     "duplicateLineInDatatype": "In data file {file}, line {lineNumber} has the same identifier {duplicateKey} as lines {otherLines}",
     "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}",

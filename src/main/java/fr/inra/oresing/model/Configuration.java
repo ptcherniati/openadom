@@ -83,13 +83,14 @@ public class Configuration {
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
         if (!node.dependsOn.isEmpty()) {
             node.dependsOn
-                    .stream().filter(n ->!n.dependsOn.contains(node))
+                    .stream().filter(n -> !n.dependsOn.contains(node))
                     .forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
         }
         sortedReferences.put(node.value, references.get(node.value));
 
 
     }
+
     public enum MigrationStrategy {
         ADD_VARIABLE
     }
@@ -234,7 +235,48 @@ public class Configuration {
     @Setter
     @ToString
     public static class ColumnDescription {
+        Chart chartDescription;
         LinkedHashMap<String, VariableComponentDescription> components = new LinkedHashMap<>();
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class Chart {
+        public static String VAR_SQL_TEMPLATE =  "(\n" +
+                "\t   Array['%1$s','%2$s'],-- aggrégation\n" +
+                "\t   Array['%3$s','%4$s'], -- value\n" +
+                "\t   '%5$s',-- datatype\n" +
+                "\t   '%6$s'::interval -- gap\n" +
+                "   )\n";
+        public static String VAR_SQL_DEFAULT_TEMPLATE = " (\n" +
+                "\t   '%s' -- datatype\n" +
+                "   )\n";
+        String value;
+        VariableComponentKey aggregation = null;
+        String unit = null;
+        String gap = null;
+        String standardDeviation = null;
+
+        public String toSQL(String variableName, String dataType) {
+            String sql = String.format(
+                    VAR_SQL_TEMPLATE,
+                    aggregation == null ? "" : aggregation.getVariable(),
+                    aggregation == null ? "" : aggregation.getComponent(),
+                    variableName,
+                    value,
+                    dataType,
+                    gap == null ? "0" : gap
+            );
+            return sql;
+        }
+        public static String toSQL( String dataType) {
+            String sql = String.format(
+                    VAR_SQL_DEFAULT_TEMPLATE,
+                    dataType
+            );
+            return sql;
+        }
     }
 
     @Getter

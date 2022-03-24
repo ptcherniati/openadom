@@ -18,6 +18,8 @@
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
+        :applicationTitle="$t('titles.references-page')"
+        :lineCount = lineCount(ref)
       >
       </CollapsibleTree>
       <ReferencesDetailsPanel
@@ -26,22 +28,6 @@
         :reference="chosenRef"
         :closeCb="(newVal) => (openPanel = newVal)"
       />
-      <!--      <b-pagination
-        v-model="currentPage"
-        :per-page="params.limit"
-        :total="references.length"
-        role="navigation"
-        :aria-label="$t('menu.aria-pagination')"
-        :aria-current-label="$t('menu.aria-curent-page')"
-        :aria-next-label="$t('menu.aria-next-page')"
-        :aria-previous-label="$t('menu.aria-previous-page')"
-        order="is-centered"
-        range-after="3"
-        range-before="3"
-        :rounded="true"
-        style="padding-bottom: 20px"
-      >
-      </b-pagination>-->
     </div>
   </PageView>
 </template>
@@ -130,6 +116,13 @@ export default class ReferencesManagementView extends Vue {
     const ref = this.findReferenceByLabel(label);
     if (ref) {
       this.$router.push(`/applications/${this.applicationName}/references/${ref.id}`);
+    }
+  }
+  lineCount(ref) {
+    for (let i=0; i<=this.application.referenceSynthesis.length-1 ; i++) {
+      if (this.application.referenceSynthesis[i].referenceType === ref.label) {
+        return this.application.referenceSynthesis[i].lineCount;
+      }
     }
   }
 

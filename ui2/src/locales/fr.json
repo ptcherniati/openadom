@@ -29,7 +29,10 @@
     "invalid-required": "Merci de remplir le champ",
     "invalid-application-name": "Le nom ne doit comporter que des lettresminuscules .",
     "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères.",
-    "invalid-confirmed": "Les deux champs ne correspondent pas."
+    "invalid-confirmed": "Les deux champs ne correspondent pas.",
+    "data-empty": "Pas de données",
+    "count-line": "Total de lignes : ",
+    "modal-synthesis-variable-default": "Détail : "
   },
   "alert": {
     "cancel": "Annuler",
@@ -160,6 +163,12 @@
     "timerangeoutofinterval": "La date <code>{value}</code> est incompatible avec l'intervale de dates du dépôt. Elle doit être comprise entre <code>{from}</code> et <code>{to}</code>.",
     "badauthorizationscopeforrepository": "L'autorisation <code>{authorization}</code>) doit être <code>{expectedValue}/code> et non <code>{givenValue}</code>",
     "overlappingpublishedversion": "Il existe une version déposée dans les dates de dépôt ont une période chevauchante avec la version déposée. <code>{overlapingFiles]</code>",
+    "unDeclaredValueForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, la valeur n'est pas déclarée.<br />  Valeurs attendues <code>{components}</code>",
+    "missingValueComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, la valeur <code> {valueComponent}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
+    "missingAggregationVariableForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{variables}</code>",
+    "missingAggregationComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, le componsant <code> {aggregationComponent}</code> de la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{components}</code>",
+    "missingStandardDeviationComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'écart type  <code> {standardDeviation}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
+    "missingUnitComponentForChart":"Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, l'unité  <code> {unit}</code> n'est pas un composant déclaré.<br /> Valeurs attendues <code>{components}</code>",
     "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
     "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
     "missingParentLineInRecursiveReference": "Dans le fichier du référentiel {references} la valeur d'identifiant {missingReferencesKey} pour le    parent n'existe pas. Valeurs acceptées {knownReferences}",

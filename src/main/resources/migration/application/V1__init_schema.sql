@@ -64,9 +64,11 @@ BEGIN
                   into result
                   from unnest("authorizedArray") authorized
                   where ${requiredauthorizationscomparing}
-                  ((("authorized").datagroup= array[]::TEXT[]) or ((authorized).datagroup @> COALESCE(("authorization").datagroup, array[]::TEXT[])))
-                  and ((("authorized").timescope =  '(,)'::tsrange ) or (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
-        );
+                  ((("authorized").datagroup = array []::TEXT[]) or
+                   ((authorized).datagroup @> COALESCE(("authorization").datagroup, array []::TEXT[])))
+                      and ((("authorized").timescope = '(,)'::tsrange) or
+                           (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
+               );
     return result;
 END;
 $$ language 'plpgsql';
@@ -117,12 +119,29 @@ CREATE TABLE OreSiAuthorization
     authorizations jsonb
 );
 
+CREATE TABLE oresisynthesis
+(
+    id entityid NOT NULL,
+    updatedate dateornow,
+    application entityref,
+    datatype text COLLATE pg_catalog."default",
+    variable text COLLATE pg_catalog."default",
+    requiredauthorizations ${applicationSchema}.requiredauthorizations,
+    aggregation text COLLATE pg_catalog."default",
+    ranges tsrange[],
+    CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id),
+    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredauthorizations, aggregation)
+);
+CREATE INDEX by_datatype_index ON oresisynthesis(application, aggregation,  datatype);
+CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);
+
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Reference_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON OreSiAuthorization TO "superadmin" WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON OreSiSynthesis TO "superadmin" WITH GRANT OPTION;
 
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
@@ -130,6 +149,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Reference_Reference TO publi
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data_Reference TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiAuthorization TO public;
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiSynthesis TO public;
+
 
 --ALTER TABLE BinaryFile ENABLE ROW LEVEL SECURITY;
 --ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;

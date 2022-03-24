@@ -90,7 +90,8 @@ public class ApplicationConfigurationService {
             return internationalizationMap;
         }
     }
-    ConfigurationParsingResult unzipConfiguration(MultipartFile file){
+
+    ConfigurationParsingResult unzipConfiguration(MultipartFile file) {
         return null;
     }
 
@@ -203,10 +204,47 @@ public class ApplicationConfigurationService {
 
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
             verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, dataType, variables);
+            verifyChartDescription(builder, dataType, dataTypeDescription);
         }
         configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
 
         return builder.build(configuration);
+    }
+
+    private void verifyChartDescription(ConfigurationParsingResult.Builder builder, String datatype, Configuration.DataTypeDescription dataTypeDescription) {
+        dataTypeDescription.getData().entrySet()
+                .forEach(entry -> {
+                    final String variable = entry.getKey();
+                    final Configuration.Chart chartDescription = entry.getValue().getChartDescription();
+                    if (chartDescription != null) {
+                        final String valueComponent = chartDescription.getValue();
+                        final LinkedHashMap<String, Configuration.VariableComponentDescription> components = entry.getValue().getComponents();
+                        if (Strings.isNullOrEmpty(valueComponent)) {
+                            builder.recordUndeclaredValueForChart(datatype, variable, components.keySet());
+                        } else {
+                            if (!components.containsKey(valueComponent)) {
+                                builder.recordMissingValueComponentForChart(datatype, variable, valueComponent, components.keySet());
+                            }
+                            final VariableComponentKey aggregation = chartDescription.getAggregation();
+                            if (aggregation != null) {
+                                if (!dataTypeDescription.getData().containsKey(aggregation.getVariable())) {
+                                    builder.recordMissingAggregationVariableForChart(datatype, variable, aggregation, dataTypeDescription.getData().keySet());
+                                } else if (!dataTypeDescription.getData().get(aggregation.getVariable()).getComponents().containsKey(aggregation.getComponent())) {
+                                    builder.recordMissingAggregationComponentForChart(datatype, variable, aggregation, components.keySet());
+                                }
+
+                            }
+                            final String standardDeviation = chartDescription.getStandardDeviation();
+                            if (standardDeviation != null && !components.containsKey(standardDeviation)) {
+                                builder.recordMissingStandardDeviationComponentForChart(datatype, variable, standardDeviation, components.keySet());
+                            }
+                            final String unit = chartDescription.getUnit();
+                            if (standardDeviation != null && !components.containsKey(unit)) {
+                                builder.recordMissingUnitComponentForChart(datatype, variable, unit, components.keySet());
+                            }
+                        }
+                    }
+                });
     }
 
     private void verifyCompositeReferenceReferenceExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {
