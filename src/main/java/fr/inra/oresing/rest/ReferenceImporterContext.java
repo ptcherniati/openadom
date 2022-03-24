@@ -2,10 +2,22 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.SetMultimap;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.ColumnPresenceConstraint;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnIndexedValue;
+import fr.inra.oresing.model.ReferenceColumnMultipleValue;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
+import fr.inra.oresing.model.ReferenceColumnValue;
+import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
@@ -19,7 +31,7 @@ import java.util.stream.Collectors;
 
 /**
  * Toutes les informations nécessaires à l'import d'un référentiel donné.
- * <p>
+ *
  * C'est un objet immuable, toutes ces informations sont constantes tout au long de l'import;
  */
 @AllArgsConstructor

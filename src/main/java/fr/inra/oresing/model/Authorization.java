@@ -27,6 +27,22 @@ public class Authorization {
     public Authorization() {
     }
 
+    public static String timescopeToSQL(LocalDateTimeRange timeScope) {
+        return String.format("'%s'", timeScope.toSqlExpression());
+    }
+
+    public static String datagroupToSQL(List<String> dataGroup) {
+        return dataGroup.stream()
+                .map(dg -> String.format(String.format("'%s'", dg)))
+                .collect(Collectors.joining(",", "array[", "]::TEXT[]"));
+    }
+
+    public static String requiredAuthorizationsToSQL(List<String> attributes, Map<String, String> requiredauthorizations) {
+        return attributes.stream()
+                .map(attribute -> requiredauthorizations.getOrDefault(attribute, ""))
+                .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredauthorizations"));
+    }
+
     public void setIntervalDates(Map<String, LocalDate> dates) {
         LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
         this.timeScope = timeScope;
@@ -50,26 +66,21 @@ public class Authorization {
         return timeScope;
     }
 
-   public String toSQL(List<String> attributes) {
+    public String toSQL(List<String> requiredAuthorizationsAttributes) {
         List<String> sql = new LinkedList<>();
-       if (requiredauthorizations == null) {
-           return " ";
-       } else {
-           sql.add(attributes.stream()
-                   .map(attribute -> getRequiredauthorizations().getOrDefault(attribute, ""))
-                   .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredauthorizations"))
-           );
-       }
-       if(dataGroup != null){
-            sql.add(dataGroup.stream()
-                    .map(dg -> String.format(String.format("'%s'", dg)))
-                    .collect(Collectors.joining(",", "array[", "]::TEXT[]"))
+        if (requiredauthorizations == null) {
+            return " ";
+        } else {
+            sql.add(requiredAuthorizationsToSQL(requiredAuthorizationsAttributes, getRequiredauthorizations())
             );
-        }else{
-           sql.add("null::TEXT[]");
-       }
-        sql.add(String.format("'%s'", timeScope.toSqlExpression()));
+        }
+        if (dataGroup != null) {
+            sql.add(datagroupToSQL(dataGroup));
+        } else {
+            sql.add("null::TEXT[]");
+        }
+        sql.add(timescopeToSQL(timeScope));
         return sql.stream()
-                .collect(Collectors.joining(",", "(",")::%1$s.authorization"));
+                .collect(Collectors.joining(",", "(", ")::%1$s.authorization"));
     }
 }

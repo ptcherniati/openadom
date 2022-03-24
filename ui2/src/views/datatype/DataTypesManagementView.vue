@@ -13,13 +13,23 @@
         })
       }}
     </h1>
+
+    <AvailablityChart v-if="false" />
     <div>
       <CollapsibleTree
         v-for="data in dataTypes"
         :key="data.id"
-        :option="data"
+        :option="{
+          ...data,
+          synthesis: synthesis[data.id],
+          synthesisMinMax: synthesisMinMax[data.id],
+          withSynthesis: true,
+        }"
         :level="0"
         :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
+        :onClickLabelSynthesisDetailCb="
+          (event, option) => openDataTypeDetailSynthesisCb(event, option)
+        "
         :onUploadCb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
         :repository="data.repository"
         :repositoryRedirect="(label) => showRepository(label)"
@@ -32,6 +42,16 @@
         :closeCb="(newVal) => (openPanel = newVal)"
         :applicationName="applicationName"
       />
+      <b-modal class="modalByAgrégation" v-model="openSynthesisDetailPanel" width="100rem">
+        <DetailModalCard
+          :open="true"
+          :options="currentOptions"
+          :dataType="chosenDataType"
+          :closeCb="(newVal) => (openSynthesisDetailPanel = newVal)"
+          :applicationName="applicationName"
+        >
+        </DetailModalCard>
+      </b-modal>
     </div>
     <div v-if="errorsMessages.length">
       <div v-for="msg in errorsMessages" v-bind:key="msg">
@@ -53,6 +73,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
+import { SynthesisService } from "@/services/rest/SynthesisService";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
@@ -63,14 +84,24 @@ import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
+import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
+import DetailModalCard from "@/components/charts/DetailModalCard";
 
 @Component({
-  components: { CollapsibleTree, PageView, SubMenu, DataTypeDetailsPanel },
+  components: {
+    DetailModalCard,
+    CollapsibleTree,
+    PageView,
+    SubMenu,
+    DataTypeDetailsPanel,
+    AvailablityChart,
+  },
 })
 export default class DataTypesManagementView extends Vue {
   @Prop() applicationName;
 
   applicationService = ApplicationService.INSTANCE;
+  synthesisService = SynthesisService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
@@ -89,17 +120,23 @@ export default class DataTypesManagementView extends Vue {
       this.downloadDataType(label)
     ),
   ];
+
   dataTypes = [];
   errorsMessages = [];
   openPanel = false;
+  openSynthesisDetailPanel = false;
+  currentOptions = {};
   chosenDataType = null;
+  synthesis = {};
+  synthesisMinMax = {};
 
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => {},
-        () => this.$router.push("/applications")
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => {
+          },
+          () => this.$router.push("/applications")
       ),
     ];
 
@@ -120,9 +157,78 @@ export default class DataTypesManagementView extends Vue {
       this.dataTypes = Object.values(
         this.internationalisationService.localeDatatypeName(this.application)
       );
+      this.initSynthesis();
     } catch (error) {
       this.alertService.toastServerError();
     }
+  }
+  async initSynthesis() {
+    for (const datatype in this.application.dataTypes) {
+      let minmaxByDatatypes = [];
+      let synthesis = await this.synthesisService.getSynthesis(this.applicationName, datatype);
+      for (const variable in synthesis) {
+        let resultByAggregation = {
+          variable,
+          ranges: [],
+          minmax: [],
+        };
+        let rangesForVariable = synthesis[variable];
+        let minmaxByVariable = [];
+        for (const aggregationIndex in rangesForVariable) {
+          let aggregation = rangesForVariable[aggregationIndex].aggregation;
+          let unit = rangesForVariable[aggregationIndex].unit;
+          let ranges = rangesForVariable[aggregationIndex].ranges;
+          let minmax = ranges.reduce((acc, range) => {
+            resultByAggregation.ranges = [...resultByAggregation.ranges, range.range];
+            let min = acc[0];
+            let max = acc[0];
+            min = min ? (min <= range.range[0] ? min : range.range[0]) : range.range[0];
+            max = max ? (max >= range.range[1] ? max : range.range[1]) : range.range[1];
+            return [min, max];
+          }, []);
+          minmaxByVariable[0] = minmaxByVariable[0]
+            ? minmaxByVariable[0] < minmax[0]
+              ? minmaxByVariable[0]
+              : minmax[0]
+            : minmax[0];
+          minmaxByVariable[1] = minmaxByVariable[1]
+            ? minmaxByVariable[1] < minmax[1]
+              ? minmaxByVariable[1]
+              : minmax[1]
+            : minmax[1];
+
+          resultByAggregation[aggregation] = {
+            variable,
+            aggregation,
+            unit,
+            ranges,
+            minmax,
+          };
+        }
+        resultByAggregation.minmax = minmaxByVariable;
+        minmaxByDatatypes[0] = minmaxByDatatypes[0]
+          ? minmaxByDatatypes[0] < minmaxByVariable[0]
+            ? minmaxByDatatypes[0]
+            : minmaxByVariable[0]
+          : minmaxByVariable[0];
+        minmaxByDatatypes[1] = minmaxByDatatypes[1]
+          ? minmaxByDatatypes[1] < minmaxByVariable[1]
+            ? minmaxByDatatypes[1]
+            : minmaxByVariable[1]
+          : minmaxByVariable[1];
+        this.synthesis[datatype] = this.synthesis[datatype] || {};
+        this.synthesis[datatype].minmax = minmaxByDatatypes;
+        this.synthesis[datatype].ranges = this.synthesis[datatype].ranges || [];
+        this.synthesis[datatype].ranges = [
+          ...this.synthesis[datatype].ranges,
+          ...resultByAggregation.ranges,
+        ];
+        this.synthesis[datatype][variable] = resultByAggregation;
+      }
+      if (minmaxByDatatypes.length) this.synthesisMinMax[datatype] = minmaxByDatatypes;
+    }
+    this.synthesis = { ...this.synthesis };
+    this.synthesisMinMax = { ...this.synthesisMinMax };
   }
 
   consultDataType(label) {
@@ -135,6 +241,16 @@ export default class DataTypesManagementView extends Vue {
     this.openPanel =
       this.chosenDataType && this.chosenDataType.label === label ? !this.openPanel : true;
     this.chosenDataType = this.dataTypes.find((dt) => dt.label === label);
+  }
+
+  openDataTypeDetailSynthesisCb(event, option) {
+    event.stopPropagation();
+    this.currentOptions = { ...option };
+    this.openSynthesisDetailPanel =
+      this.chosenDataType && this.chosenDataType.label === option.label
+        ? !this.openSynthesisDetailPanel
+        : true;
+    this.chosenDataType = this.dataTypes.find((dt) => dt.label === option.label);
   }
 
   async uploadDataTypeCsv(label, file) {
