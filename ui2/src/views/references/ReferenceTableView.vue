@@ -34,10 +34,9 @@
               class="btnModal"
               type="is-primary"
               icon-left="external-link-square-alt"
-              @click="showModal(column.id)"rounded />
+              @click="showModal(props.row['nom du taxon déterminé'])" rounded />
             <b-modal
-              v-show="isSelectedName === column.id"
-              :id="column.id"
+              v-show="isSelectedName === props.row['nom du taxon déterminé']"
               v-model="isCardModalActive"
             >
               <div class="card">
@@ -47,8 +46,9 @@
                   </div>
                 </div>
                 <div class="card-content">
-                  <!-- TO DO à mettre en forme -->
-                  {{ props.row[column.id] }}
+                  <!-- TO DO à mettre en forme
+                  <b-table :data="data" :columns="columns"/> -->
+                  {{ props.row["propriétés de taxons"] }}
                 </div>
               </div>
             </b-modal>
