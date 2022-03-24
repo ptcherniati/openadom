@@ -5,7 +5,7 @@ application:
     fr: Récursivité
     en: recusivity
   name: recursivite
-  version: 1
+  version: 2
 compositeReferences:
   taxon:
     components:
@@ -53,16 +53,7 @@ references:
       nom du taxon superieur:
       code sandre du taxon:
       code sandre du taxon supérieur:
-      niveau incertitude de détermination:
-      Auteur de la description:
-      Année de la description:
-      Référence de la description:
-      Références relatives à ce taxon:
-      Synonyme ancien:
-      Synonyme récent:
-      Classe algale sensu Bourrelly:
-      Code Sandre:
-      Notes libres:
+      propriétés de taxons:
     dynamicColumns:
       propriétés de taxons:
         headerPrefix: "pt_"

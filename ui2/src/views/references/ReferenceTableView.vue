@@ -29,7 +29,31 @@
           :sticky="column.key"
           v-slot="props"
         >
-          <span v-if="column.id != '#'">
+          <span v-if="column.id === 'propriétés de taxons'">
+            <b-button
+              class="btnModal"
+              type="is-primary"
+              icon-left="external-link-square-alt"
+              @click="showModal(column.id)"rounded />
+            <b-modal
+              v-show="isSelectedName === column.id"
+              :id="column.id"
+              v-model="isCardModalActive"
+            >
+              <div class="card">
+                <div class="card-header">
+                  <div class="title card-header-title">
+                    <p field="name">{{ column.id }}</p>
+                  </div>
+                </div>
+                <div class="card-content">
+                  <!-- TO DO à mettre en forme -->
+                  {{ props.row[column.id] }}
+                </div>
+              </div>
+            </b-modal>
+          </span>
+          <span v-else-if="column.id !== '#'">
             {{ props.row[column.id] }}
           </span>
           <b-collapse v-else :open="false">
@@ -94,6 +118,15 @@ export default class ReferenceTableView extends Vue {
   tableValues = [];
   currentPage = 1;
   perPage = 15;
+  // show modal and cards
+  isSelectedName = "";
+  isCardModalActive = false;
+
+  showModal(name) {
+    this.isSelectedName = name;
+    this.isCardModalActive = true;
+    console.log(this.tableValues[0]);
+  }
 
   async created() {
     await this.init();
