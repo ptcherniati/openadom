@@ -31,7 +31,8 @@
     "invalid-application-name-length": "The name's length should be between 4 and 20 characters.",
     "invalid-confirmed": "Fields don't match.",
     "data-empty": "No data",
-    "count-line": "Total line : "
+    "count-line": "Total line : ",
+    "modal-synthesis-variable-default": "Detail : "
   },
   "alert": {
     "cancel": "Cancel",

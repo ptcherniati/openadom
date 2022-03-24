@@ -21,8 +21,11 @@
               v-show="key !== 'minmax' && key !== 'ranges'"
               style="margin: 0; cursor: auto"
             >
-              <p class="card-header-title column is-1" style="margin-left: 10px">
+              <p class="card-header-title column is-1" style="margin-left: 10px" v-if="key!==''">
                 {{ key }}
+              </p>
+              <p class="card-header-title column is-1" style="margin-left: 10px" v-else>
+                 {{ $t("validation.modal-synthesis-variable-default") }}
               </p>
               <availiblity-chart
                 class="column is-10"

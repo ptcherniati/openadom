@@ -43,7 +43,7 @@
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
-          <span class="file-name" v-else-if="onUploadCb">
+          <span class="file-name" v-else-if="lineCount>0">
             {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
@@ -81,7 +81,7 @@
           </span>
         </div>
       </div>
-      <div class="CollapsibleTree-buttons column">
+      <div class="CollapsibleTree-buttons column is-2">
         <div class="file button is-small is-info" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
@@ -90,22 +90,23 @@
             @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
             <span class="file-cta">
-              <b-icon class="file-icon" icon="upload" style="font-size: 0.75rem"></b-icon>
+              <b-icon icon="upload" style="font-size: 0.75rem"></b-icon>
             </span>
           </b-upload>
         </div>
-        <div class="column is-5" v-else>
+        <div v-else>
           <b-button
-            icon-left="archive"
             size="is-small"
             class="ml-1"
-            :label="$t('dataTypesManagement.manage-datasets')"
             @click="repositoryRedirect(option.label)"
             type="is-info"
           >
+            <span class="file-cta" style=" border-color: transparent; background-color: transparent">
+              <b-icon class="file-icon" icon="archive" style="font-size: 0.75rem; color: white"></b-icon>
+            </span>
           </b-button>
         </div>
-        <div class="column is-3" v-for="button in buttons" :key="button.id">
+        <div v-for="button in buttons" :key="button.id">
           <b-button
             :icon-left="button.iconName"
             size="is-small"

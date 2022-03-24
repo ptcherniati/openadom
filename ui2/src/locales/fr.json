@@ -31,7 +31,8 @@
     "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères.",
     "invalid-confirmed": "Les deux champs ne correspondent pas.",
     "data-empty": "Pas de données",
-    "count-line": "Total de lignes : "
+    "count-line": "Total de lignes : ",
+    "modal-synthesis-variable-default": "Détail : "
   },
   "alert": {
     "cancel": "Annuler",
