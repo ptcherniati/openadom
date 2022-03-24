@@ -3,6 +3,7 @@ package fr.inra.oresing.model.internationalization;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceColumnSingleValue;
 import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.rest.ReferenceImporterContext;
 import lombok.Getter;
 import lombok.Setter;
 import org.assertj.core.util.Strings;
@@ -18,7 +19,10 @@ import java.util.stream.Stream;
 public class InternationalizationDisplay {
     Map<String, String> pattern;
 
-    public static ReferenceDatum getDisplays(Optional<Map<String, String>> displayPattern, Map<String, Internationalization> displayColumns, ReferenceDatum refValues) {
+    public static ReferenceDatum getDisplays(ReferenceImporterContext referenceImporterContext, ReferenceDatum refValues) {
+        Optional<Map<String, String>> displayPattern =referenceImporterContext.getDisplayPattern();
+        Map<String, Internationalization> displayColumns = referenceImporterContext.getDisplayColumns();
+        String refType = referenceImporterContext.getRefType();
         ReferenceDatum displays = new ReferenceDatum();
         displayPattern
                 .ifPresent(patterns -> {
@@ -33,7 +37,7 @@ public class InternationalizationDisplay {
                                                                 if (displayColumns.containsKey(referencedColumn)) {
                                                                     referencedColumn = displayColumns.get(referencedColumn).getOrDefault(stringEntry.getKey(), referencedColumn);
                                                                 }
-                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn));
+                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn)).toValueString(referenceImporterContext, referencedColumn, stringEntry.getKey());
                                                             }
                                                             return internationalizedPattern;
                                                         }

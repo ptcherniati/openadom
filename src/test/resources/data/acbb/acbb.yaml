@@ -86,6 +86,14 @@ references:
       nom_fr:
       nom_en:
   modalites:
+    internationalizedColumns:
+      nom_fr:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_fr} ({code})'
+        en: '{nom_fr} ({code})'
     keyColumns: [code]
     columns:
       Variable de forcage:
@@ -96,6 +104,10 @@ references:
       description_en:
   version_de_traitement:
     keyColumns: [site, traitement]
+    internationalizationDisplay:
+      pattern:
+        fr: '{traitement} ({modalites})'
+        en: '{traitement} ({modalites})'
     columns:
       site:
       traitement:
@@ -130,6 +142,26 @@ dataTypes:
         component: chemin
       - variable: date
         component: datetime
+    validations:
+      check_CO2_value:
+        description: check value in range
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: >
+                String stringValue = datum.CO2.value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                }
+                    Float value = stringValue.equals("")?null:Float.parseFloat(stringValue);
+                Float minValue = datum.CO2.min_value.equals("")?null:Float.parseFloat(datum.CO2.min_value);
+                Float maxValue = datum.CO2.max_value.equals("")?null:Float.parseFloat(datum.CO2.max_value);
+                Boolean isValid = true;
+                isValid = minValue==null  || minValue<value;
+                isValid = isValid && (maxValue!=null || value<=maxValue);
+                return isValid
+
     data:
       site:
         components:
@@ -181,6 +213,12 @@ dataTypes:
               name: Reference
               params:
                 refType: unites
+          min_value:
+            checker:
+              name: Float
+          max_value:
+            checker:
+              name: Float
       H2O:
         components:
           value:
@@ -194,6 +232,12 @@ dataTypes:
               name: Reference
               params:
                 refType: unites
+          min_value:
+            checker:
+              name: Float
+          max_value:
+            checker:
+              name: Float
       ZL:
         components:
           value:
@@ -324,6 +368,30 @@ dataTypes:
             variable: parcelle
             component: name
           exportHeader: "Parcelle"
+        - rowNumber: 10
+          columnNumber: 3
+          boundTo:
+            variable: CO2
+            component: min_value
+          exportHeader: "CO2_min"
+        - rowNumber: 11
+          columnNumber: 3
+          boundTo:
+            variable: CO2
+            component: max_value
+          exportHeader: "CO2_max"
+        - rowNumber: 10
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: min_value
+          exportHeader: "H2O_min"
+        - rowNumber: 11
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: max_value
+          exportHeader: "H2O_max"
       headerLine: 8
       firstRowLine: 12
       columns:
@@ -412,15 +480,6 @@ dataTypes:
             - u*
             - Fc gf
   biomasse_production_teneur:
-    uniqueness:
-      - variable: parcelle
-        component: chemin
-      - variable: date de mesure
-        component: valeur
-      - variable: date ou num incrémental intervention
-        component: valeur
-      - variable: mav_nature
-        component: valeur
     data:
       parcelle:
         components:
@@ -1473,17 +1532,6 @@ dataTypes:
             - HUT
             - MOR
   SWC:
-    uniqueness:
-      - variable: Nom parcelle
-        component: chemin
-      - variable: Nom traitement
-        component: valeur
-      - variable: Date
-        component: datetime
-      - variable: contexte
-        component: profondeur
-      - variable: contexte
-        component: répétition
     data:
       Nom parcelle:
         components:
@@ -1509,7 +1557,7 @@ dataTypes:
                 pattern: HH:mm:ss
           datetime:
             defaultValue: >
-              return datumByVariableAndComponent.Date.day +" " +datumByVariableAndComponent.Date.time
+              return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
             checker:
               name: Date
               params:

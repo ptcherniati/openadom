@@ -14,6 +14,6 @@ public class GetReferenceResult {
         String hierarchicalKey;
         String hierarchicalReference;
         String naturalKey;
-        Map<String, String> values;
+        Map<String, Object> values;
     }
 }

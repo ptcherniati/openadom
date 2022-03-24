@@ -39,79 +39,6 @@ BEGIN
 END;
 $$ language 'plpgsql';*/
 
--- check les foreign key pour le colonne references de la table data
-
-CREATE OR REPLACE FUNCTION refs_check_for_datatype(aschema text, application UUID, refValues jsonb, dtype TEXT)
-    RETURNS BOOLEAN AS $$
-DECLARE
-    result TEXT;
-BEGIN
-    EXECUTE 'with agg as (
-   SELECT application."configuration"
-   ->''datatypes''
-   ->$4
-	->''data''
-	->jsonb_object_keys(
-		application."configuration"
-			->''datatypes''
-			->$4
-			->''data''
-	)
-	->''components''
-	->jsonb_object_keys(
-		application."configuration"->''datatypes''
-			->$4
-			->''data''
-			->jsonb_object_keys(
-						application."configuration"
-							->''datatypes''
-							->$4
-							->''data''
-					)
-			->''components'')
-	->''checker''
-	->''params''
-	->>''refType'' reftype,
-	$3
-	->jsonb_object_keys(
-		application."configuration"
-			->''datatypes''
-			->$4
-			->''data''
-		)
-	->jsonb_object_keys(
-		application."configuration"
-			->''datatypes''
-			->$4
-			->''data''
-			->jsonb_object_keys(
-				application."configuration"
-					->''datatypes''
-					->$4
-					->''data''
-					)
-			->''components''
-			) reference
-	FROM   application
-   where application.id = $2),
-    byref as (
-   select jsonb_build_object(reftype::TEXT, array_agg(distinct reference)) byref
-        from agg
-        where reftype is not null and reference is not null
-        group by reftype),
-    refvalues as (
-	select  jsonb_object_agg(byref) refvalues
-	from byref
-	group by $2)
-	SELECT count(id) = jsonb_count_items(refvalues.refvalues)
-	from refvalues, ' || aSchema || '.referencevalue
-	where application=$2::uuid and jsonb_build_object(referenceType, ARRAY[id]) <@ refvalues.refvalues
-	group by refvalues.refvalues;'
-   INTO result USING aschema, application, refValues, dtype;
-    return result;
-END;
-$$  LANGUAGE plpgsql;
-
 --check if all elements of oreSiUser array are users
 CREATE OR REPLACE FUNCTION checks_users(users uuid[])
     RETURNS BOOLEAN AS $$
@@ -123,18 +50,7 @@ BEGIN
 END;
 $$  LANGUAGE plpgsql;
 
--- check les foreign key pour le colonne references de la table data
 
-CREATE OR REPLACE FUNCTION refs_check_for_reference(aSchema text, application UUID, refValues jsonb)
-RETURNS BOOLEAN AS $$
-DECLARE
-    result TEXT;
-BEGIN
-    EXECUTE 'select count(id) = jsonb_count_items($2) from ' || aSchema || '.referencevalue where application=$1::uuid and jsonb_build_object(referenceType, ARRAY[id]) <@ $2 ' ||
-            '' INTO result USING application, refValues;
-    RETURN result;
-END;
-$$ language 'plpgsql';
 
 CREATE OR REPLACE FUNCTION name_check(application UUID, targetColumn TEXT, val TEXT)
 RETURNS BOOLEAN AS $$

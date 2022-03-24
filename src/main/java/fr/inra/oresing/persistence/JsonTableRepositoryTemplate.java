@@ -12,10 +12,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements InitializingBean {
@@ -49,8 +46,9 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         return Iterators.partition(stream.iterator(), 50);
     }
 
-    public void storeAll(Stream<T> stream) {
+    public List<UUID> storeAll(Stream<T> stream) {
         String query = getUpsertQuery();
+        List<UUID> uuids = new LinkedList<>();
         partition(stream).forEachRemaining(entities -> {
             entities.forEach(e -> {
                 if (e.getId() == null) {
@@ -58,9 +56,10 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
                 }
             });
             String json = getJsonRowMapper().toJson(entities);
-            List<UUID> result = namedParameterJdbcTemplate.queryForList(
-                    query, new MapSqlParameterSource("json", json), UUID.class);
+            uuids.addAll(namedParameterJdbcTemplate.queryForList(
+                    query, new MapSqlParameterSource("json", json), UUID.class));
         });
+        return uuids;
     }
 
     protected abstract String getUpsertQuery();

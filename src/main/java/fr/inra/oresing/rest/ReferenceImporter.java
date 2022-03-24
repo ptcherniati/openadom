@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -42,18 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -72,6 +63,10 @@ abstract class ReferenceImporter {
         } else {
             recursionStrategy = new WithoutRecursion();
         }
+    }
+
+    public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
+        return referenceImporterContext.getDisplayByReferenceAndNaturalKey(referencedColumn, naturalKey, locale);
     }
 
     /**
@@ -99,6 +94,7 @@ abstract class ReferenceImporter {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()));
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = csvRecordsStream.map(csvRecordToReferenceDatumFn);
@@ -122,6 +118,12 @@ abstract class ReferenceImporter {
         Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+    }
+
+    private void checkHeader(ImmutableList<String> columns, int headerLineNumber) {
+        ImmutableSet<String> expectedHeaders = referenceImporterContext.getExpectedHeaders();
+        ImmutableSet<String> mandatoryHeaders = referenceImporterContext.getMandatoryHeaders();
+        InvalidDatasetContentException.checkHeader(expectedHeaders, mandatoryHeaders, ImmutableMultiset.copyOf(columns), headerLineNumber);
     }
 
     /**
@@ -166,25 +168,13 @@ abstract class ReferenceImporter {
     private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
         Iterator<String> currentHeader = columns.iterator();
         ReferenceDatum referenceDatum = new ReferenceDatum();
+        SetMultimap<String, UUID> refsLinkedTo = HashMultimap.create();
         csvRecord.forEach(cellContent -> {
             String header = currentHeader.next();
-            ReferenceColumn referenceColumn = new ReferenceColumn(header);
-            Multiplicity multiplicity = referenceImporterContext.getMultiplicity(referenceColumn);
-            ReferenceColumnValue referenceColumnValue;
-            switch (multiplicity) {
-                case ONE:
-                    referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
-                    break;
-                case MANY:
-                    referenceColumnValue = ReferenceColumnMultipleValue.parseCsvCellContent(cellContent);
-                    break;
-                default:
-                    throw new IllegalStateException("non géré " + multiplicity);
-            }
-            referenceDatum.put(referenceColumn, referenceColumnValue);
+            referenceImporterContext.pushValue(referenceDatum, header, cellContent, refsLinkedTo);
         });
         int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
-        return new RowWithReferenceDatum(lineNumber, referenceDatum);
+        return new RowWithReferenceDatum(lineNumber, referenceDatum, ImmutableSetMultimap.copyOf(refsLinkedTo));
     }
 
     /**
@@ -258,6 +248,7 @@ abstract class ReferenceImporter {
                     .collect(Collectors.toUnmodifiableList());
             allCheckerErrorsBuilder.addAll(checkerErrors);
         });
+        refsLinkedToBuilder.putAll(rowWithReferenceDatum.getRefsLinkedTo());
         ReferenceDatumAfterChecking referenceDatumAfterChecking =
                 new ReferenceDatumAfterChecking(
                         rowWithReferenceDatum.getLineNumber(),
@@ -292,7 +283,7 @@ abstract class ReferenceImporter {
         recursionStrategy.getKnownId(naturalKey)
                 .ifPresent(e::setId);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
-        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
+        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext, referenceDatum));
 
         /**
          * on remplace l'id par celle en base si elle existe
@@ -340,6 +331,7 @@ abstract class ReferenceImporter {
     private static class RowWithReferenceDatum {
         int lineNumber;
         ReferenceDatum referenceDatum;
+        ImmutableSetMultimap<String, UUID> refsLinkedTo;
     }
 
     @Value

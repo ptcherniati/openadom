@@ -845,6 +845,13 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       TS:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: TS
+            component: profondeur
+          unit: "unit"
+          gap: '1 WEEK'
         components:
           variable:
             checker:
@@ -954,7 +961,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: TS
-            component: valeur
+            component: value
           exportHeader: "TS"
   smp_infraj:
     internationalizationName:
@@ -1080,6 +1087,13 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       SMP:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: SMP
+            component: profondeur
+          unit: "unit"
+          gap: '1 WEEK'
         components:
           variable:
             checker:
@@ -1189,7 +1203,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: SMP
-            component: valeur
+            component: value
           exportHeader: "SMP"
   gwd_infraj:
     internationalizationName:
@@ -1315,6 +1329,13 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       GWD:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: GWD
+            component: profondeur
+          unit: "unit"
+          gap: '1 WEEK'
         components:
           variable:
             checker:
@@ -1424,7 +1445,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: GWD
-            component: valeur
+            component: value
           exportHeader: "GWD"
   g_infraj:
     internationalizationName:
@@ -1550,6 +1571,13 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       G:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: G
+            component: profondeur
+          unit: "unit"
+          gap: '1 WEEK'
         components:
           variable:
             checker:
@@ -1659,7 +1687,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: G
-            component: valeur
+            component: value
           exportHeader: "G"
   swc_infraj:
     internationalizationName:
@@ -1785,6 +1813,13 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       SWC:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: SWC
+            component: profondeur
+          unit: "unit"
+          gap: '1 WEEK'
         components:
           variable:
             checker:
@@ -1894,7 +1929,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: SWC
-            component: valeur
+            component: value
           exportHeader: "SWC"
   ts_j:
     internationalizationName:
@@ -2007,6 +2042,13 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       TS:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: TS
+            component: profondeur
+          unit: "unit"
+          gap: '1 DAY'
         components:
           variable:
             checker:
@@ -2112,7 +2154,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: TS
-            component: valeur
+            component: value
           exportHeader: "TS"
   smp_j:
     internationalizationName:
@@ -2225,6 +2267,13 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       SMP:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: SMP
+            component: profondeur
+          unit: "unit"
+          gap: '1 DAY'
         components:
           variable:
             checker:
@@ -2330,7 +2379,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: SMP
-            component: valeur
+            component: value
           exportHeader: "SMP"
   gwd_j:
     internationalizationName:
@@ -2443,6 +2492,13 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       GWD:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: GWD
+            component: profondeur
+          unit: "unit"
+          gap: '1 DAY'
         components:
           variable:
             checker:
@@ -2548,7 +2604,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: GWD
-            component: valeur
+            component: value
           exportHeader: "GWD"
   g_j:
     internationalizationName:
@@ -2661,6 +2717,13 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       G:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: G
+            component: profondeur
+          unit: "unit"
+          gap: '1 DAY'
         components:
           variable:
             checker:
@@ -2766,7 +2829,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: G
-            component: valeur
+            component: value
           exportHeader: "G"
   swc_j:
     internationalizationName:
@@ -2879,6 +2942,12 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       SWC:
+        chartDescription:
+          value: value
+          aggregation:
+            variable: SWC
+            component: profondeur
+          unit: "unit"
         components:
           variable:
             checker:
@@ -2984,7 +3053,7 @@ dataTypes:
               exportHeader: "Profondeur"
           boundTo:
             variable: SWC
-            component: valeur
+            component: value
           exportHeader: "SWC"
   chambrefluxsol_infraj:
     internationalizationName:
@@ -3116,6 +3185,10 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       FCO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3136,6 +3209,10 @@ dataTypes:
                 required: true
                 codify: true
       FCH4:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3346,6 +3423,11 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       FCO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
+          standardDeviation: "standard_deviation"
         components:
           value:
             checker:
@@ -3381,6 +3463,11 @@ dataTypes:
                 required: true
                 codify: true
       Ta:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
+          standardDeviation: "standard_deviation"
         components:
           value:
             checker:
@@ -3594,6 +3681,11 @@ dataTypes:
               params:
                 pattern: MM/yyyy
       FCO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
+          standardDeviation: "standard_deviation"
         components:
           value:
             checker:
@@ -3810,6 +3902,10 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "30 MINUTES"
       CO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3825,6 +3921,10 @@ dataTypes:
                 required: true
                 codify: true
       H2O:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3840,6 +3940,10 @@ dataTypes:
                 required: true
                 codify: true
       ZL:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3855,6 +3959,10 @@ dataTypes:
                 required: true
                 codify: true
       FCO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3877,6 +3985,10 @@ dataTypes:
                 required: true
                 codify: true
       H:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3899,6 +4011,10 @@ dataTypes:
                 required: true
                 codify: true
       LE:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3921,6 +4037,10 @@ dataTypes:
                 required: true
                 codify: true
       T:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3943,6 +4063,10 @@ dataTypes:
                 required: true
                 codify: true
       u*:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3958,6 +4082,10 @@ dataTypes:
                 required: true
                 codify: true
       TR:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3973,6 +4101,10 @@ dataTypes:
                 required: true
                 codify: true
       Sb:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -3988,6 +4120,10 @@ dataTypes:
                 required: true
                 codify: true
       Sc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4003,6 +4139,10 @@ dataTypes:
                 required: true
                 codify: true
       Sw:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4018,6 +4158,10 @@ dataTypes:
                 required: true
                 codify: true
       Sa:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4033,6 +4177,10 @@ dataTypes:
                 required: true
                 codify: true
       FCO2_gf:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4282,6 +4430,10 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       CO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4297,6 +4449,10 @@ dataTypes:
                 required: true
                 codify: true
       H2O:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4312,6 +4468,10 @@ dataTypes:
                 required: true
                 codify: true
       ZL:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4327,6 +4487,10 @@ dataTypes:
                 required: true
                 codify: true
       FCO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4342,6 +4506,10 @@ dataTypes:
                 required: true
                 codify: true
       H:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4357,6 +4525,10 @@ dataTypes:
                 required: true
                 codify: true
       LE:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4372,6 +4544,10 @@ dataTypes:
                 required: true
                 codify: true
       T:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4387,6 +4563,10 @@ dataTypes:
                 required: true
                 codify: true
       u*:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4402,6 +4582,10 @@ dataTypes:
                 required: true
                 codify: true
       TR:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4417,6 +4601,10 @@ dataTypes:
                 required: true
                 codify: true
       Sb:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4432,6 +4620,10 @@ dataTypes:
                 required: true
                 codify: true
       Sc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4447,6 +4639,10 @@ dataTypes:
                 required: true
                 codify: true
       Sw:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4462,6 +4658,10 @@ dataTypes:
                 required: true
                 codify: true
       Sa:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4477,6 +4677,10 @@ dataTypes:
                 required: true
                 codify: true
       FCO2_gf:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -4706,6 +4910,10 @@ dataTypes:
               params:
                 pattern: MM/yyyy
       CO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4721,6 +4929,10 @@ dataTypes:
                 required: true
                 codify: true
       H2O:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4736,6 +4948,10 @@ dataTypes:
                 required: true
                 codify: true
       ZL:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4751,6 +4967,10 @@ dataTypes:
                 required: true
                 codify: true
       FCO2:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4766,6 +4986,10 @@ dataTypes:
                 required: true
                 codify: true
       H:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4781,6 +5005,10 @@ dataTypes:
                 required: true
                 codify: true
       LE:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4796,6 +5024,10 @@ dataTypes:
                 required: true
                 codify: true
       T:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4811,6 +5043,10 @@ dataTypes:
                 required: true
                 codify: true
       u*:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4826,6 +5062,10 @@ dataTypes:
                 required: true
                 codify: true
       TR:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4841,6 +5081,10 @@ dataTypes:
                 required: true
                 codify: true
       Sb:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4856,6 +5100,10 @@ dataTypes:
                 required: true
                 codify: true
       Sc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4871,6 +5119,10 @@ dataTypes:
                 required: true
                 codify: true
       Sw:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -4886,6 +5138,10 @@ dataTypes:
                 required: true
                 codify: true
       Sa:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -5149,6 +5405,10 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "30 MINUTES"
       P:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5164,6 +5424,10 @@ dataTypes:
                 required: true
                 codify: true
       Rg:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5179,6 +5443,10 @@ dataTypes:
                 required: true
                 codify: true
       Rr:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5194,6 +5462,10 @@ dataTypes:
                 required: true
                 codify: true
       LWin:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5209,6 +5481,10 @@ dataTypes:
                 required: true
                 codify: true
       LWout:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5224,6 +5500,10 @@ dataTypes:
                 required: true
                 codify: true
       Rn:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5239,6 +5519,10 @@ dataTypes:
                 required: true
                 codify: true
       Rd:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5254,6 +5538,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFD:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5269,6 +5557,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDd:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5284,6 +5576,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDr:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5299,6 +5595,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDbc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5314,6 +5614,10 @@ dataTypes:
                 required: true
                 codify: true
       APAR:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5329,6 +5633,10 @@ dataTypes:
                 required: true
                 codify: true
       Ta:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5344,6 +5652,10 @@ dataTypes:
                 required: true
                 codify: true
       Pa:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5359,6 +5671,10 @@ dataTypes:
                 required: true
                 codify: true
       Tc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5374,6 +5690,10 @@ dataTypes:
                 required: true
                 codify: true
       Tarbre:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5389,6 +5709,10 @@ dataTypes:
                 required: true
                 codify: true
       G:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5404,6 +5728,10 @@ dataTypes:
                 required: true
                 codify: true
       Rh:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5419,6 +5747,10 @@ dataTypes:
                 required: true
                 codify: true
       WD:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5434,6 +5766,10 @@ dataTypes:
                 required: true
                 codify: true
       WS:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5697,6 +6033,10 @@ dataTypes:
               params:
                 pattern: dd/MM/yyyy
       P:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5712,6 +6052,10 @@ dataTypes:
                 required: true
                 codify: true
       Rg:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5727,6 +6071,10 @@ dataTypes:
                 required: true
                 codify: true
       Rr:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5742,6 +6090,10 @@ dataTypes:
                 required: true
                 codify: true
       Lwin:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5757,6 +6109,10 @@ dataTypes:
                 required: true
                 codify: true
       Lwout:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5772,6 +6128,10 @@ dataTypes:
                 required: true
                 codify: true
       Rn:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5787,6 +6147,10 @@ dataTypes:
                 required: true
                 codify: true
       Rd:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5802,6 +6166,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFD:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5817,6 +6185,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDd:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5832,6 +6204,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDr:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5847,6 +6223,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDbc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5862,6 +6242,10 @@ dataTypes:
                 required: true
                 codify: true
       APAR:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5877,6 +6261,10 @@ dataTypes:
                 required: true
                 codify: true
       Ta:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5892,6 +6280,10 @@ dataTypes:
                 required: true
                 codify: true
       Pa:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5907,6 +6299,10 @@ dataTypes:
                 required: true
                 codify: true
       Tc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5922,6 +6318,10 @@ dataTypes:
                 required: true
                 codify: true
       Tarbre:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5937,6 +6337,10 @@ dataTypes:
                 required: true
                 codify: true
       G:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5952,6 +6356,10 @@ dataTypes:
                 required: true
                 codify: true
       Rh:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5967,6 +6375,10 @@ dataTypes:
                 required: true
                 codify: true
       WD:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -5982,6 +6394,10 @@ dataTypes:
                 required: true
                 codify: true
       WS:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 DAY'
         components:
           value:
             checker:
@@ -6241,6 +6657,10 @@ dataTypes:
               params:
                 pattern: MM/yyyy
       P:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6256,6 +6676,10 @@ dataTypes:
                 required: true
                 codify: true
       Rg:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6271,6 +6695,10 @@ dataTypes:
                 required: true
                 codify: true
       Rr:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6286,6 +6714,10 @@ dataTypes:
                 required: true
                 codify: true
       Lwin:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6301,6 +6733,10 @@ dataTypes:
                 required: true
                 codify: true
       Lwout:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6316,6 +6752,10 @@ dataTypes:
                 required: true
                 codify: true
       Rn:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6331,6 +6771,10 @@ dataTypes:
                 required: true
                 codify: true
       Rd:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6346,6 +6790,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFD:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6361,6 +6809,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDd:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6376,6 +6828,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDr:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6391,6 +6847,10 @@ dataTypes:
                 required: true
                 codify: true
       PPFDbc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6406,6 +6866,10 @@ dataTypes:
                 required: true
                 codify: true
       APAR:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6421,6 +6885,10 @@ dataTypes:
                 required: true
                 codify: true
       Ta:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6436,6 +6904,10 @@ dataTypes:
                 required: true
                 codify: true
       Pa:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6451,6 +6923,10 @@ dataTypes:
                 required: true
                 codify: true
       Tc:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6466,6 +6942,10 @@ dataTypes:
                 required: true
                 codify: true
       Tarbre:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6481,6 +6961,10 @@ dataTypes:
                 required: true
                 codify: true
       G:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6496,6 +6980,10 @@ dataTypes:
                 required: true
                 codify: true
       Rh:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6511,6 +6999,10 @@ dataTypes:
                 required: true
                 codify: true
       WD:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:
@@ -6526,6 +7018,10 @@ dataTypes:
                 required: true
                 codify: true
       WS:
+        chartDescription:
+          value: value
+          unit: "unit"
+          gap: '1 MONTH'
         components:
           value:
             checker:

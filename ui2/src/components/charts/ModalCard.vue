@@ -1,7 +1,6 @@
 <template>
-  <div :class="`SidePanel ${leftAlign ? 'left-align' : 'right-align'} ${innerOpen ? 'open' : ''}`">
+  <div class="modal-dialog-scrollable">
     <h1 class="title main-title">{{ title }}</h1>
-    <b-button class="SidePanel-close-button" icon-left="times" @click="innerOpen = false" />
     <slot></slot>
   </div>
 </template>
@@ -12,8 +11,7 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 @Component({
   components: {},
 })
-export default class SidePanel extends Vue {
-  @Prop({ default: false }) leftAlign;
+export default class ModalCard extends Vue {
   @Prop({ default: false }) open;
   @Prop({ default: "" }) title;
   @Prop() closeCb;
@@ -37,40 +35,22 @@ export default class SidePanel extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.SidePanel {
+.ModalCard {
   background-color: white;
   z-index: 1;
-  position: fixed;
-  height: 100%;
+  position: absolute;
+  height: auto;
   top: 0;
-  width: 33%;
-  padding: $container-padding-vert 2.5rem;
+  width: 100%;
   transition: transform 250ms;
-
-  .title {
-    color: $dark;
-  }
-
-  &.right-align {
-    right: 0;
-    transform: translateX(100%);
-    &.open {
-      transform: translateX(0);
-    }
-  }
-
-  &.left-align {
-    left: 0;
-    transform: translateX(-100%);
-    &.open {
-      transform: translateX(0);
-    }
-  }
 }
 
-.SidePanel-close-button {
+.ModalCard-close-button {
   position: absolute;
   top: 0;
   right: 0;
+}
+.animation-content.modal-content {
+  max-width: 1400px;
 }
 </style>

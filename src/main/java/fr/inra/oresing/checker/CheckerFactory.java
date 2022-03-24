@@ -9,7 +9,6 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -147,26 +146,6 @@ public class CheckerFactory {
         }
         variableComponentChecker = new ReferenceLineChecker(checkerTarget, refType, referenceValues, checkerDescription.getParams(), transformer);
         return variableComponentChecker;
-    }
-
-    private String getOrBuildDisplay(Application app, String refType, String dataType, String locale, Map.Entry<String, ApplicationResult.Reference.ReferenceUUIDAndDisplay> e) {
-        Optional<String> patternOpt = Optional.ofNullable(app)
-                .map(a -> app.getConfiguration())
-                .map(configuration -> configuration.getInternationalization())
-                .map(internationalizationMap -> internationalizationMap.getDataTypes())
-                .map(internationalizationDataTypeMap -> internationalizationDataTypeMap.get(dataType))
-                .map(internationalizationDataTypeMap -> internationalizationDataTypeMap.getInternationalizationDisplay())
-                .map(internationalizationDisplayMap -> internationalizationDisplayMap.get(refType))
-                .map(internationalizationDisplay1 -> internationalizationDisplay1.getPattern())
-                .map(patternMap -> patternMap.get(locale));
-        if(patternOpt.isPresent()){
-           String  pattern = patternOpt.get();
-            for (String column : InternationalizationDisplay.getPatternColumns(pattern)) {
-                pattern = pattern.replaceAll("\\{"+column+"\\}",e.getValue().getValues().get(column));
-            }
-            return pattern;
-        }
-        return e.getValue().getDisplay() == null ? e.getKey() : e.getValue().getDisplay();
     }
 
     private void addCheckersFromLineValidationDescriptions(Application app, LinkedHashMap<String, Configuration.LineValidationRuleDescription> lineValidationDescriptions, ImmutableSet.Builder<LineChecker> checkersBuilder, String param) {

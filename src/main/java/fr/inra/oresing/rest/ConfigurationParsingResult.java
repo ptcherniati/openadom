@@ -9,7 +9,10 @@ import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import lombok.Value;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 @Value
 public class ConfigurationParsingResult {
@@ -18,6 +21,10 @@ public class ConfigurationParsingResult {
 
     @Nullable
     Configuration result;
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public boolean isValid() {
         return getValidationCheckResults().stream().allMatch(ValidationCheckResult::isSuccess);
@@ -28,14 +35,10 @@ public class ConfigurationParsingResult {
         return result;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-    
     public static class Builder {
 
         private final List<ValidationCheckResult> validationCheckResults = new LinkedList<>();
-        
+
         public Builder recordError(String message) {
             return recordError(message, ImmutableMap.of());
         }
@@ -373,10 +376,107 @@ public class ConfigurationParsingResult {
             );
         }
 
+        public Builder recordUndeclaredValueForChart(String datatype, String variable, Set<String> components) {
+            return recordError("unDeclaredValueForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingValueComponentForChart(String datatype, String variable, String valueComponent, Set<String> components) {
+            return recordError("missingValueComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "valueComponent", valueComponent,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingAggregationVariableForChart(String datatype, String variable, VariableComponentKey aggregation, Set<String> variables) {
+            return recordError("missingAggregationVariableForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "aggregationVariable", aggregation.getVariable(),
+                    "aggregationComponent", aggregation.getComponent(),
+                    "dataType", datatype,
+                    "variables",variables
+            ));
+        }
+
+        public Builder recordMissingAggregationComponentForChart(String datatype, String variable, VariableComponentKey aggregation, Set<String> components) {
+            return recordError("missingAggregationComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "aggregationVariable", aggregation.getVariable(),
+                    "aggregationComponent", aggregation.getComponent(),
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingStandardDeviationComponentForChart(String datatype, String variable, String standardDeviation, Set<String> components) {
+            return recordError("missingStandardDeviationComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "standardDeviation",standardDeviation,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingUnitComponentForChart(String datatype, String variable, String unit, Set<String> components) {
+            return recordError("missingUnitComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "unit",unit,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
         public Builder recordMissingKeyColumnsForReference(String reference) {
             return recordError("missingKeyColumnsForReference", ImmutableMap.of(
                     "reference", reference)
             );
+        }
+
+        public Builder recordCsvSameHeaderLineAndFirstRowLineForConstantDescription(String dataType) {
+            return recordError("sameHeaderLineAndFirstRowLineForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public Builder recordCsvTooBigRowLineForConstantDescription(String dataType) {
+            return recordError("tooBigRowLineForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public Builder recordCsvTooLittleRowLineForConstantDescription(String dataType) {
+            return recordError("tooLittleRowLineForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public Builder recordCsvMissingRowLineForConstantDescription(String dataType) {
+            return recordError("missingRowLineForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public Builder recordCsvMissingColumnNumberOrHeaderNameForConstantDescription(String dataType) {
+            return recordError("missingColumnNumberOrHeaderNameForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public Builder recordCsvMissingBoundToForConstantDescription(String dataType) {
+            return recordError("missingBoundToForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public Builder recordCsvMissingExportHeaderNameForConstantDescription(String dataType) {
+            return recordError("missingExportHeaderNameForConstantDescription", ImmutableMap.of(
+                    "dataType", dataType
+            ));
         }
     }
 }

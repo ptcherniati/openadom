@@ -369,7 +369,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testInvalidFormat() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: pas_un_chiffre");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 3", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -470,6 +470,99 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
         Assert.assertTrue(((Set) onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
         Assert.assertTrue(((Set) onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
+    }
+
+    @Test
+    public void testUndeclaredValueForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("value: \"value\"", "value: null");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unDeclaredValueForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingValueComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("value: \"value\"", "value: \"nonvalue\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingValueComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("valueComponent")).equals("nonvalue"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingAggregationVariableForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("aggregation:\n" +
+                "            variable: Couleur des individus\n" +
+                "            component: value", "aggregation:\n" +
+                "            variable: pasdevariable\n" +
+                "            component: value");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingAggregationVariableForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationVariable")).equals("pasdevariable"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationComponent")).equals("value"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("variables")).equals(Set.of("date","localization","Couleur des individus","Nombre d'individus")));
+    }
+
+    @Test
+    public void testMissingAggregationComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("aggregation:\n" +
+                "            variable: Couleur des individus\n" +
+                "            component: value", "aggregation:\n" +
+                "            variable: Couleur des individus\n" +
+                "            component: pasdevalue");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingAggregationComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationVariable")).equals("Couleur des individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationComponent")).equals("pasdevalue"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingStandardDeviationComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("standardDeviation: \"standardDeviation\"", "standardDeviation: \"badstandardDeviation\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingStandardDeviationComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("standardDeviation")).equals("badstandardDeviation"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingUnitComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("unit: \"unit\"", "unit: \"badunit\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingUnitComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("unit")).equals("badunit"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testvalid(){
+        ConfigurationParsingResult configurationParsingResult = parseYaml("","");
+        Assert.assertTrue(configurationParsingResult.isValid());
     }
 
     @Test

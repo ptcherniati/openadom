@@ -151,6 +151,11 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
+        mockMvc.perform(get("/api/v1/applications/{appId}", appId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
 
         String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -310,6 +315,7 @@ public class OreSiResourcesTest {
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("10"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("141"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("143"));
         }
 
 //        // restitution de data json
@@ -387,6 +393,8 @@ public class OreSiResourcesTest {
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
     }
+
+
 
     @Test
     public void addApplicationMonsoreWithRepository() throws Exception {
@@ -1223,13 +1231,26 @@ on test le dépôt d'un fichier récursif
         }
 
         // ajout de data
-        for (Map.Entry<String, String> entry : fixtures.getFluxMeteoForetEssaiDataResourceName().entrySet()) {
+        for (Map.Entry<String, String> entry : fixtures.getForetEssaiDataResourceName().entrySet()) {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/" + entry.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+
+                if (entry.getKey().equals("swc_j")) {
+                    authenticationService.setRoleAdmin();
+                    final String responseForBuildSynthesis = mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .cookie(authCookie))
+                            .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
+                            .andReturn().getResponse().getContentAsString();
+                    final String responseForGetSynthesis = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .cookie(authCookie))
+                            .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
+                            .andExpect(jsonPath("$.SWC[*].aggregation", Matchers.containsInAnyOrder("10","120","160","200","250","30","55","80")))
+                            .andReturn().getResponse().getContentAsString();
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import fr.inra.oresing.OreSiTechnicalException;
@@ -157,6 +158,7 @@ public class Fixtures {
 
     public Map<String, String> getRecursiviteReferentielOrderFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_reduit-test.csv");
         return referentielFiles;
     }
@@ -638,42 +640,69 @@ public class Fixtures {
         return "/data/foret/flux_meteo_dataResult.csv";
     }
 
-    public Map<String, String> getFluxMeteoForetEssaiDataResourceName() {
-        Map<String, String> datas = new HashMap<>();
-        datas.putAll(Map.of(
-                "swc_j", "/data/foret/data/climatDuSol/journalier/fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv",
-                "swc_infraj", "/data/foret/data/climatDuSol/infraj/fougeres-fou_4_swc_infraj_01-01-2001_06-01-2001.csv"
-        ));
-        datas.putAll(Map.of(
-                "chambrefluxsol_infraj", "/data/foret/data/chambresAFlux/infraj/azerailles_chambrefluxsol_infraj_03-10-2013_05-10-2013.csv",
-                "chambrefluxsol_j", "/data/foret/data/chambresAFlux/journalier/azerailles_chambrefluxsol_j_01-05-2013_08-05-2013.csv",
-                "chambrefluxsol_m", "/data/foret/data/chambresAFlux/mensuel/azerailles_chambrefluxsol_m_06-2013_10-2013.csv"
-        ));
-        datas.putAll(Map.of(
-                "flux_sh", "/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2010_02-01-2010.csv",
-                "flux_j", "/data/foret/data/flux/journalier/hesse-hesse_1_flux_j_01-01-2008_05-01-2008.csv",
-                "flux_m", "/data/foret/data/flux/mensuel/hesse-hesse_1_flux_m_01-2008_03-2008.csv"
-        ));
-        datas.putAll(Map.of(
-                "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv",
-                "meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
-                "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"
-        ));
-        /*return Map.of(
-                "flux_j", "/data/foret/data/flux/journalier/hesse-hesse_1_flux_j_01-01-2008_05-01-2008.csv",
-                "flux_sh", "s/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2010_02-01-2010.csv",
-                "flux_sh", "/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2008_31-03-2008.csv"_31-12-2013.csv",
-                "flux_m", "/data/foret/data/flux/mensuel/hesse-hesse_1_flux_m_01-2008_03-2008.csv",
-                "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv"
-               "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-03-2008_31-03-2008.csv"
-               "meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_31-12-2009.csv",
-                "meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012,
-                "meteo_j","/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv",
-                "meteo_j","/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_31-03-2012.csv",
-                "meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv"",
-                "meteo_m", "/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_12-2013.csv"
-        );*/
-        return datas;
+    public Map<String, String> getForetEssaiDataResourceName() {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        return builder
+                .put("swc_j", "/data/foret/data/climatDuSol/journalier/fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv")
+                /*.put("swc_infraj", "/data/foret/data/climatDuSol/infraj/fougeres-fou_4_swc_infraj_01-01-2001_06-01-2001.csv")
+                .put("chambrefluxsol_infraj", "/data/foret/data/chambresAFlux/infraj/azerailles_chambrefluxsol_infraj_03-10-2013_05-10-2013.csv")
+                .put("chambrefluxsol_j", "/data/foret/data/chambresAFlux/journalier/azerailles_chambrefluxsol_j_01-05-2013_08-05-2013.csv")
+                .put("chambrefluxsol_m", "/data/foret/data/chambresAFlux/mensuel/azerailles_chambrefluxsol_m_06-2013_10-2013.csv")
+                .put("flux_sh", "/data/foret/data/flux/semi-horaire/hesse-hesse_1_flux_sh_01-01-2010_02-01-2010.csv")
+                .put("flux_j", "/data/foret/data/flux/journalier/hesse-hesse_1_flux_j_01-01-2008_05-01-2008.csv")
+                .put("flux_m", "/data/foret/data/flux/mensuel/hesse-hesse_1_flux_m_01-2008_03-2008.csv")
+                .put("meteo_sh", "/data/foret/data/meteo/semi-horaire/hesse-hesse_1_meteo_sh_01-01-2008_02-01-2008.csv")
+                .put("meteo_j", "/data/foret/data/meteo/journalier/hesse-hesse_1_meteo_j_01-01-2012_03-01-2012.csv")
+                .put("meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv")*/
+                .build();
+    }
+    public Map<String, Integer> getForetEssaiSynthesisSize() {
+        ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
+        return builder
+                .put("swc_j", 8)
+                .put("swc_infraj", 0)
+                .put("chambrefluxsol_infraj", 0)
+                .put("chambrefluxsol_j", 0)
+                .put("chambrefluxsol_m", 0)
+                .put("flux_sh", 0)
+                .put("flux_j", 0)
+                .put("flux_m", 0)
+                .put("meteo_sh", 0)
+                .put("meteo_j", 0)
+                .put("meteo_m", 0)
+                .build();
+    }
+
+    public void addApplicationRecursivity() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser();
+        try (InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        String response;
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : getRecursiviteReferentielOrderFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+        for (Map.Entry<String, String> e : getRecursiviteReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
     }
 
     enum Application {
@@ -682,7 +711,8 @@ public class Fixtures {
         //PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),
         OLAC("olac", ImmutableSet.of("condition_prelevements")),
         FORET("foret", ImmutableSet.of("flux_meteo_dataResult")),
-        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of());
+        FAKE_APP_FOR_MIGRATION("fakeapp", ImmutableSet.of()),
+        RECURSIVITY("recursivite", ImmutableSet.of());
 
         private final String name;
 

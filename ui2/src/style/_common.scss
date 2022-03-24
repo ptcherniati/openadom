@@ -42,7 +42,9 @@ a {
 .clickable {
   cursor: pointer;
 }
-
+.icon.is-small {
+  font-size: 0.75rem;
+}
 .link {
   cursor: pointer;
   &:hover {
@@ -180,4 +182,17 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 
 .textarea:not([rows]) {
   min-height: 4em;
+}
+
+// mise en forme modal card synthèse
+#ranges {
+  display: none;
+}
+#minmax {
+  display: none;
+}
+.modal {
+  .animation-content .modal-card {
+    margin: auto;
+  }
 }

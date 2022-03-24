@@ -189,11 +189,48 @@ public class ApplicationConfigurationService {
             verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, variableOccurrencesInDataGroups);
 
             verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
-            verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, variables);
+            verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, dataType, variables);
+            verifyChartDescription(builder, dataType, dataTypeDescription);
         }
         configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
 
         return builder.build(configuration);
+    }
+
+    private void verifyChartDescription(ConfigurationParsingResult.Builder builder, String datatype, Configuration.DataTypeDescription dataTypeDescription) {
+        dataTypeDescription.getData().entrySet()
+                .forEach(entry -> {
+                    final String variable = entry.getKey();
+                    final Configuration.Chart chartDescription = entry.getValue().getChartDescription();
+                    if (chartDescription != null) {
+                        final String valueComponent = chartDescription.getValue();
+                        final LinkedHashMap<String, Configuration.VariableComponentDescription> components = entry.getValue().getComponents();
+                        if (Strings.isNullOrEmpty(valueComponent)) {
+                            builder.recordUndeclaredValueForChart(datatype, variable, components.keySet());
+                        } else {
+                            if (!components.containsKey(valueComponent)) {
+                                builder.recordMissingValueComponentForChart(datatype, variable, valueComponent, components.keySet());
+                            }
+                            final VariableComponentKey aggregation = chartDescription.getAggregation();
+                            if (aggregation != null) {
+                                if (!dataTypeDescription.getData().containsKey(aggregation.getVariable())) {
+                                    builder.recordMissingAggregationVariableForChart(datatype, variable, aggregation, dataTypeDescription.getData().keySet());
+                                } else if (!dataTypeDescription.getData().get(aggregation.getVariable()).getComponents().containsKey(aggregation.getComponent())) {
+                                    builder.recordMissingAggregationComponentForChart(datatype, variable, aggregation, components.keySet());
+                                }
+
+                            }
+                            final String standardDeviation = chartDescription.getStandardDeviation();
+                            if (standardDeviation != null && !components.containsKey(standardDeviation)) {
+                                builder.recordMissingStandardDeviationComponentForChart(datatype, variable, standardDeviation, components.keySet());
+                            }
+                            final String unit = chartDescription.getUnit();
+                            if (standardDeviation != null && !components.containsKey(unit)) {
+                                builder.recordMissingUnitComponentForChart(datatype, variable, unit, components.keySet());
+                            }
+                        }
+                    }
+                });
     }
 
     private void verifyCompositeReferenceReferenceExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry) {
@@ -254,8 +291,11 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables) {
-        for (Configuration.ColumnBindingDescription columnBindingDescription : dataTypeDescription.getFormat().getColumns()) {
+    private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, String dataType, Set<String> variables) {
+
+        final Configuration.FormatDescription format = dataTypeDescription.getFormat();
+        verifyFormatDescriptionIsValid(builder, format, dataType);
+        for (Configuration.ColumnBindingDescription columnBindingDescription : format.getColumns()) {
             VariableComponentKey boundTo = columnBindingDescription.getBoundTo();
             String variable = boundTo.getVariable();
             if (variables.contains(variable)) {
@@ -270,6 +310,38 @@ public class ApplicationConfigurationService {
                 builder.recordCsvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
             }
         }
+    }
+
+    private void verifyFormatDescriptionIsValid(ConfigurationParsingResult.Builder builder, Configuration.FormatDescription format, String dataType) {
+        format.getConstants()
+                .forEach(headerConstantDescription -> {
+                    final int columnNumber = headerConstantDescription.getColumnNumber();
+                    final String headerName = headerConstantDescription.getHeaderName();
+                    final int rowNumber = headerConstantDescription.getRowNumber();
+                    final int headerLine = format.getHeaderLine();
+                    if (rowNumber == headerLine) {
+                        builder.recordCsvSameHeaderLineAndFirstRowLineForConstantDescription(dataType);
+                    }
+                    final int firstRowLine = format.getFirstRowLine();
+                    if (rowNumber >= firstRowLine) {
+                        builder.recordCsvTooBigRowLineForConstantDescription(dataType);
+                    }
+                    if (rowNumber < 1) {
+                        builder.recordCsvTooLittleRowLineForConstantDescription(dataType);
+                    }
+                    if (rowNumber < headerLine && rowNumber < 1) {
+                        builder.recordCsvMissingRowLineForConstantDescription(dataType);
+                    } else if (rowNumber > headerLine && columnNumber < 1 && headerName == null) {
+                        builder.recordCsvMissingColumnNumberOrHeaderNameForConstantDescription(dataType);
+                    } else {
+                        final VariableComponentKey boundTo = headerConstantDescription.getBoundTo();
+                        if (boundTo == null) {
+                            builder.recordCsvMissingBoundToForConstantDescription(dataType);
+                        } else if (headerConstantDescription.getExportHeader() == null) {
+                            builder.recordCsvMissingExportHeaderNameForConstantDescription(dataType);
+                        }
+                    }
+                });
     }
 
     private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Set<String> variables, Multiset<String> variableOccurrencesInDataGroups) {
