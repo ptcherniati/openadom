@@ -130,7 +130,7 @@ CREATE TABLE oresisynthesis
     aggregation text COLLATE pg_catalog."default",
     ranges tsrange[],
     CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id),
-    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredauthorizations, aggregation, ranges)
+    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredauthorizations, aggregation)
 );
 CREATE INDEX by_datatype_index ON oresisynthesis(application, aggregation,  datatype);
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);

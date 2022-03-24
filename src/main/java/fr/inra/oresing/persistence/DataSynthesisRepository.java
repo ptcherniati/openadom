@@ -176,9 +176,9 @@ public class DataSynthesisRepository extends JsonTableInApplicationSchemaReposit
             "        select\n" +
             "            application,\n" +
             "            \"datatype\",\n" +
-            "            null variable,\n" +
+            "            '' variable,\n" +
             "            requiredAuthorizations,\n" +
-            "            null aggregation,\n" +
+            "            '' aggregation,\n" +
             "            min(mindate) \"mindate\",\n" +
             "            max(maxdate) \"maxdate\"\n" +
             "        from synthesis\n" +
