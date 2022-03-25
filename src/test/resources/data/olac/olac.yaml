@@ -161,6 +161,15 @@ dataTypes:
       en: Collection condition
     repository:
       toto: test
+    uniqueness:
+      - variable: date
+        component: datetime
+      - variable: projet
+        component: value
+      - variable: site
+        component: nom du site
+      - variable: site
+        component: nom de la plateforme
     data:
       date:
         components:
@@ -335,6 +344,21 @@ dataTypes:
     internationalizationName:
       fr: Physico Chimie
       en: Chemical Physics
+    uniqueness:
+      - variable: date
+        component: day
+      - variable: projet
+        component: nom du projet
+      - variable: site
+        component: nom du site
+      - variable: plateforme
+        component: nom de la plateforme
+      - variable: outil
+        component: prélèvement
+      - variable: outil
+        component: mesure
+      - variable: profondeur
+        component: minimum
     data:
       date:
         components:
@@ -343,7 +367,6 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-          time:
       projet:
         components:
           nom du projet:
@@ -623,9 +646,29 @@ dataTypes:
     internationalizationName:
       fr: Données des sondes
       en: Probe data
+    uniqueness:
+      - variable: dates
+        component: datetime
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: mesure
+      - variable: variables
+        component: profondeur réelle observée
     data:
       dates:
         components:
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.dates.day +" " +datumByVariableAndComponent.dates.time
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm
           day:
             checker:
               name: Date
@@ -819,6 +862,19 @@ dataTypes:
             variable: variables
             component: turbidite
   phytoplancton_aggregated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
     data:
       dates:
         components:
@@ -827,7 +883,6 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-          time:
       projets:
         components:
           nom du projet:
@@ -922,6 +977,23 @@ dataTypes:
             variable: variables
             component: biovolume_algal
   phytoplancton__truncated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+      - variable: profondeurs
+        component: min
+      - variable: variables
+        component: nom du taxon déterminé
     data:
       dates:
         components:
@@ -930,7 +1002,6 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-          time:
       projets:
         components:
           nom du projet:
@@ -1078,6 +1149,25 @@ dataTypes:
             variable: variables
             component: nombre de champs comptés
   zooplancton__truncated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+      - variable: profondeurs
+        component: min
+      - variable: profondeurs
+        component: max
+      - variable: variables
+        component: nom du taxon déterminé
     data:
       dates:
         components:
@@ -1086,7 +1176,6 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-          time:
       projets:
         components:
           nom du projet:
@@ -1219,6 +1308,21 @@ dataTypes:
             variable: variables
             component: valeur
   zooplancton_biovolumes:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+      - variable: profondeurs
+        component: max
     data:
       dates:
         components:
@@ -1227,7 +1331,6 @@ dataTypes:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-          time:
       projets:
         components:
           nom du projet:

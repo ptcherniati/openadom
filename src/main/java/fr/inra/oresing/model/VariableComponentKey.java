@@ -20,4 +20,7 @@ public class VariableComponentKey {
     public String getId() {
         return variable + SEPARATOR + component;
     }
+    public String toSqlExtractPattern(){
+        return String.format("aggreg.datavalues #>> '{%s,%s}'%n",variable.replaceAll("'", "''"), component.replaceAll("'", "''"));
+    }
 }

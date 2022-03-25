@@ -44,18 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -74,6 +63,10 @@ abstract class ReferenceImporter {
         } else {
             recursionStrategy = new WithoutRecursion();
         }
+    }
+
+    public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
+        return referenceImporterContext.getDisplayByReferenceAndNaturalKey(referencedColumn, naturalKey, locale);
     }
 
     /**
@@ -290,7 +283,7 @@ abstract class ReferenceImporter {
         recursionStrategy.getKnownId(naturalKey)
                 .ifPresent(e::setId);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
-        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
+        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext, referenceDatum));
 
         /**
          * on remplace l'id par celle en base si elle existe

@@ -490,6 +490,32 @@ La partie validation peut être utilisée pour vérifier le contenu d'une colonn
 
 <span style="color: orange">*validations* est indenté de 2. </span>
 
+##### Déclaration des contraintes d'unicité
+Il s'agit de déclarer comment une ligne d'un fichier s'exprime de manière unique (contrainte d'unicité au sens de la base de données)
+
+Il ne peut y avoir qu'une seule contrainte d'unicité. Il suffit de déclarer la contrainte dans la section _uniqueness_, en listant la liste des _variable components_ qui composent la clef.
+
+Si un fichier possède des lignes en doublon avec lui-même il sera rejeté.
+
+Si une ligne possede la même clef qu'une ligne de la base de données, la ligne sera mise à jour.
+
+Les contraintes ne s'appliquent que pour les fichiers d'un même type de données.
+
+Exemple de déclaration de deux contraintes portant respectivement sur 3 et 2 valeurs.
+
+``` yaml
+dataTypes:
+  mon_datatype:
+    uniqueness:
+      - variable: projet
+        component: value
+      - variable: site
+        component: chemin
+      - variable: date
+        component: value
+
+``` 
+
 ##### *authorization* porte bien son nom c'est là qu'on définira les autorisations d'accès aux données :
 Authorization permet de définir des groupes de valeurs. Une ligne du fichier est découpée en autant de ligne que de 
 *dataGroups* et contient un *authorizationScope* et un *timeScope*.
@@ -585,6 +611,18 @@ ici le contenu de la première ligne deuxième colonne est lié au varaible/comp
 *firstRowLine* sera égale au numéro de la première ligne dans la quelle se trouvera les premières données.
 ``` yaml
       firstRowLine: 2
+```
+
+Si l'on veut faire référence à des lignes entre la ligne d'en-tête et la première ligne de données, on peut faire référence à la colonne par le nom de :l'en-tête de colonne plutôt que par le numméro de la colonne. En ce cas onn utilise le champs _headerName_.
+
+```yaml
+        - rowNumber: 11
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: max_value
+          exportHeader: "H2O_max"
+
 ```
 
 *columns* est la partie dans laquelle nous décrirons toutes les colonnes et leurs types de données que nous attendons 

@@ -1,6 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.*;
@@ -163,6 +164,7 @@ public class Configuration {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+        List<VariableComponentKey> uniqueness = new LinkedList<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
         LinkedHashMap<String, String> repository = null;
@@ -249,9 +251,18 @@ public class Configuration {
     public static class HeaderConstantDescription {
         int rowNumber;
         int columnNumber;
+        String headerName;
         VariableComponentKey boundTo;
         String exportHeader;
+
+        public int getColumnNumber(ImmutableList<String> headerRows) {
+            if (headerName != null && headerRows.contains(headerName)) {
+                return headerRows.indexOf(headerName) + 1;
+            }
+            return columnNumber;
+        }
     }
+
 
     @Getter
     @Setter
@@ -283,7 +294,48 @@ public class Configuration {
     @Setter
     @ToString
     public static class ColumnDescription {
+        Chart chartDescription;
         LinkedHashMap<String, VariableComponentDescription> components = new LinkedHashMap<>();
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class Chart {
+        public static String VAR_SQL_TEMPLATE =  "(\n" +
+                "\t   Array['%1$s','%2$s'],-- aggrégation\n" +
+                "\t   Array['%3$s','%4$s'], -- value\n" +
+                "\t   '%5$s',-- datatype\n" +
+                "\t   '%6$s'::interval -- gap\n" +
+                "   )\n";
+        public static String VAR_SQL_DEFAULT_TEMPLATE = " (\n" +
+                "\t   '%s' -- datatype\n" +
+                "   )\n";
+        String value;
+        VariableComponentKey aggregation = null;
+        String unit = null;
+        String gap = null;
+        String standardDeviation = null;
+
+        public String toSQL(String variableName, String dataType) {
+            String sql = String.format(
+                    VAR_SQL_TEMPLATE,
+                    aggregation == null ? "" : aggregation.getVariable(),
+                    aggregation == null ? "" : aggregation.getComponent(),
+                    variableName,
+                    value,
+                    dataType,
+                    gap == null ? "0" : gap
+            );
+            return sql;
+        }
+        public static String toSQL( String dataType) {
+            String sql = String.format(
+                    VAR_SQL_DEFAULT_TEMPLATE,
+                    dataType
+            );
+            return sql;
+        }
     }
 
     @Getter

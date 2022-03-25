@@ -24,6 +24,9 @@
         "aria-btn-signup": "Create an account button"
     },
     "validation":{
+        "count-line":"",
+        "data-empty":"",
+        "modal-synthesis-variable-default":"",
         "obligatoire":"Mandatory",
         "facultatif":"Optional",
         "invalid-required":"Please fill the field",
@@ -160,10 +163,24 @@
         "timerangeoutofinterval":"The date <code> {value} </code> is incompatible with the date range of the deposit. It must be between <code> {from} </code> and <code> {to} </code>. ",
         "badauthorizationscopeforrepository":"Authorization <code> {authorization} </code>) must be <code> {expectedValue} / code> and not <code> {givenValue} </code>",
         "overlappingpublishedversion":"There is a deposited version in the deposit dates have an overlapping period with the deposited version. <code> {overlapingFiles] </code>",
+        "unDeclaredValueForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, the value is not declared.<br /> Expected values ​​<code>{components}</code>",
+        "missingValueComponentForChart":"In the chart description of variable <code>{variable}</code> of data type <code>{dataType}</code>, value <code>{valueComponent}</code> is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
+        "missingAggregationVariableForChart":"In the chart description of variable <code>{variable}</code> of data type <code>{dataType}</code>, aggregation variable <code>{aggregationVariable}< /code> is not declared.<br /> Expected Values ​​<code>{variables}</code>",
+        "missingAggregationComponentForChart":"In the graph description of variable <code>{variable}</code> of data type <code>{dataType}</code>, component <code>{aggregationComponent}</code> of the aggregation variable <code>{aggregationVariable}</code> is not declared.<br /> Expected Values ​​<code>{components}</code>",
+        "missingStandardDeviationComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, the standard deviation <code> {standardDeviation}</ code> is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
+        "missingUnitComponentForChart":"In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, unit <code> {unit}</code > is not a declared component.<br /> Expected Values ​​<code>{components}</code>",
         "duplicateLineInReference": "In the repository file {file}, line {lineNumber} has the same id {duplicateKey} as lines {otherLines}",
         "duplicateLineInDatatype": "In data file {file}, line {lineNumber} has the same identifier {duplicateKey} as lines {otherLines}",
-        "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}"
-    },
+        "missingParentLineInRecursiveReference": "In repository file {references} the id value {missingReferencesKey} for parent does not exist. Accepted values ${knownReferences}",
+        "unknownUsedAsVariableComponentUniqueness": "In the description of data type {dataType} in the <I>uniqueness</i> section component variable descriptions {unknownUsedAsVariableComponentUniqueness} do not exist. Accepted values {availableVariableComponents}",
+        "tooBigRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the row number must be less than the data row.",
+        "tooLittleRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the row number must be positive.",
+        "missingRowLineForConstantDescription": "In the format->constant section of dataType {dataType} you must specify a line number.",
+        "recordCsvMissingColumnNumberOrHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify a row number or header name.",
+        "missingBoundToForConstantDescription": "In the format->constant section of the dataType {dataType} you must fill in the boundTo section.",
+        "missingExportHeaderNameForConstantDescription": "In the format->constant section of dataType {dataType} you must specify an exportHeaderName.",
+        "sameHeaderLineAndFirstRowLineForConstantDescription": "In the format->constant section of dataType {dataType} the header row must not be equal to the data row."
+   },
     "referencesManagement":{
         "actions":"Actions",
         "consult":"Consult",

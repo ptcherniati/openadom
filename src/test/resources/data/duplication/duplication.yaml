@@ -58,6 +58,11 @@ dataTypes:
               name: Reference
               params:
                 refType: zones_etudes
+    uniqueness:
+      - variable: Date
+        component: day
+      - variable: localization
+        component: zones_etudes
     format:
       headerLine: 1
       firstRowLine: 2

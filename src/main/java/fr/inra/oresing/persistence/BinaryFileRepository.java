@@ -32,6 +32,26 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return find("id = :id", parameters).stream().findFirst();
     }
 
+    public Optional<BinaryFile> findPublishedVersions(BinaryFileDataset binaryFileDataset) {
+        Preconditions.checkArgument(binaryFileDataset != null);
+        String query = String.format("SELECT '%s' as \"@class\", " +
+                        "to_jsonb(t) as json " +
+                        "FROM (select id, application, name, comment, size, params from %s  " +
+                        "WHERE application = :application::uuid\n" +
+                        "and (params->>'published' )::bool\n" +
+                        "and params->'binaryfiledataset'->'requiredauthorizations'= :requiredAuthorization::jsonb) t",
+                getEntityClass().getName(), getTable().getSqlIdentifier()
+        );
+        Optional<BinaryFile> result = getNamedParameterJdbcTemplate().query(
+                query,
+                new MapSqlParameterSource()
+                        .addValue("application", getApplication().getId())
+                        .addValue("requiredAuthorization",   getJsonRowMapper().toJson(binaryFileDataset.getRequiredauthorizations())),
+                getJsonRowMapper()
+        ).stream().findFirst();
+        return result;
+    }
+
     public Optional<BinaryFile> tryFindByIdWithData(UUID id) {
         Preconditions.checkArgument(id != null);
         String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (select id, application, name, comment, size, convert_from(data, 'UTF8') as \"data\", params from %s  WHERE id = :id) t", getEntityClass().getName(), getTable().getSqlIdentifier());
@@ -95,7 +115,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             }
         }
         if (overlap) {
-            where.add("params  #> '{\"binaryfiledataset\", \"datatype\"}' @@('$ == \""+datatype+"\"')");
+            where.add("params  #> '{\"binaryfiledataset\", \"datatype\"}' @@('$ == \"" + datatype + "\"')");
             where.add("params @@ ('$.published==true')");
             String t = "(tsrange(\n" +
                     "\tcoalesce((params #>> '{\"binaryfiledataset\", \"from\"}'), '-infinity')::timestamp,\n" +
@@ -105,7 +125,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                     "(tsrange(\n" +
                     "\tcoalesce((params #>> '{\"binaryfiledataset\", \"from\"}'), '-infinity')::timestamp,\n" +
                     "\tcoalesce((params #>> '{\"binaryfiledataset\", \"to\"}'), 'infinity')::timestamp\n" +
-                    "\t) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))\n" ;
+                    "\t) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))\n";
             where.add(t);
             mapSqlParameterSource.addValue("from", binaryFileDataset.getFrom());
             mapSqlParameterSource.addValue("to", binaryFileDataset.getTo());

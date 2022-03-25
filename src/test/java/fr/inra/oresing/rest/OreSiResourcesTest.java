@@ -13,6 +13,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
@@ -22,6 +23,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.SpringBootDependencyInjectionTestExecutionListener;
@@ -149,6 +151,11 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
+        mockMvc.perform(get("/api/v1/applications/{appId}", appId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
 
         String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -230,12 +237,12 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.rows").isArray())
-                    .andExpect(jsonPath("$.rows", Matchers.hasSize(306)))
+                    .andExpect(jsonPath("$.rows", Matchers.hasSize(272)))
                     //.andExpect(jsonPath("$.rows.value").value(list))
-                    .andExpect(jsonPath("$.totalRows", Is.is(306)))
-                    .andExpect(jsonPath("$.rows[*].values.date.value", Matchers.hasSize(306)))
-                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(306)))
-                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(306)))
+                    .andExpect(jsonPath("$.totalRows", Is.is(272)))
+                    .andExpect(jsonPath("$.rows[*].values.date.value", Matchers.hasSize(272)))
+                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(272)))
+                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(272)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualJson, 50));
         }
@@ -258,11 +265,11 @@ public class OreSiResourcesTest {
                             .param("downloadDatasetQuery", filter)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows", Matchers.hasSize(9)))
-                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == 'date:1984-01-01T00:00:00:01/01/1984')]", Matchers.hasSize(9)))
-                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(9)))
-                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(9)))
-                    .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.rows", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == 'date:1984-01-01T00:00:00:01/01/1984')]", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualJson, 50));
 
@@ -285,12 +292,14 @@ public class OreSiResourcesTest {
             Assert.assertEquals(expectedCsvToList.size(), actualCsvToList.size());
             actualCsvToList.forEach(expectedCsvToList::remove);
             Assert.assertTrue(expectedCsvToList.isEmpty());
-            Assert.assertEquals(306, StringUtils.countMatches(actualCsv, "/1984"));
+            Assert.assertEquals(272, StringUtils.countMatches(actualCsv, "/1984"));
         }
 
         try (InputStream in = getClass().getResourceAsStream(fixtures.getPemDataResourceName())) {
             String csv = IOUtils.toString(Objects.requireNonNull(in), StandardCharsets.UTF_8);
-            String invalidCsv = csv.replace("projet_manche", "projet_manch");
+            String invalidCsv = csv
+                    .replace("projet_manche", "projet_manch")
+                    .replace("projet_atlantique", "projet_atlantiqu");
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
@@ -299,10 +308,14 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
             Assert.assertTrue(response.contains("projet_manch"));
+            Assert.assertTrue(response.contains("projet_atlantiqu"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("41"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("42"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("43"));
+            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("10"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("141"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("143"));
-            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("310"));
         }
 
 //        // restitution de data json
@@ -380,6 +393,8 @@ public class OreSiResourcesTest {
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
     }
+
+
 
     @Test
     public void addApplicationMonsoreWithRepository() throws Exception {
@@ -537,8 +552,8 @@ public class OreSiResourcesTest {
         response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.totalRows").value(136))
-                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(136)))
+                .andExpect(jsonPath("$.totalRows").value(102))
+                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(102)))
                 .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
@@ -641,6 +656,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    @Category(ACBB_TEST.class)
     public void addApplicationAcbb() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
 
@@ -659,143 +675,13 @@ public class OreSiResourcesTest {
             JsonPath.parse(response).read("$.id");
         }
 
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getAcbbReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+        addReferences();
+        addDataFluxTours();
+        addDataBiomassProduction();
+        addDataSWC();
+    }
 
-                String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                JsonPath.parse(response).read("$.id");
-            }
-        }
-
-        String getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(authCookie))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-
-        GetReferenceResult refs = objectMapper.readValue(getReferenceResponse, GetReferenceResult.class);
-        Assert.assertEquals(103, refs.getReferenceValues().size());
-
-        // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getAcbbReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-
-                String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                JsonPath.parse(response).read("$.id");
-            }
-        }
-
-        getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(authCookie))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-
-        refs = objectMapper.readValue(getReferenceResponse, GetReferenceResult.class);
-        Assert.assertEquals(103, refs.getReferenceValues().size());
-
-        String getReferenceCsvResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles/csv")
-                        .cookie(authCookie)
-                        .accept(MediaType.TEXT_PLAIN))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        Assert.assertEquals(31, StringUtils.countMatches(getReferenceCsvResponse, "theix"));
-
-        // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-
-            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
-                            .file(file)
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(response, 50));
-        }
-
-        // restitution de data json
-        {
-//            String expectedJson = Resources.toString(getClass().getResource("/data/acbb/compare/export.json"), Charsets.UTF_8);
-            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
-                            .cookie(authCookie)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-//                    .andExpect(content().json(expectedJson))
-                    .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(actualJson, 50));
-            Assert.assertEquals(17568, StringUtils.countMatches(actualJson, "/2004"));
-            Assert.assertTrue(actualJson.contains("laqueuille.laqueuille__1"));
-        }
-
-        // restitution de data csv
-        {
-//            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
-            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
-                            .cookie(authCookie)
-                            .accept(MediaType.TEXT_PLAIN))
-                    .andExpect(status().isOk())
-//                    .andExpect(content().string(expectedCsv))
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualCsv, 50));
-            Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
-            Assert.assertTrue(actualCsv.contains("Parcelle"));
-            Assert.assertTrue(actualCsv.contains("laqueuille;1"));
-        }
-
-        // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(fixtures.getBiomasseProductionTeneurDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
-
-            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .file(file)
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(response, 50));
-        }
-
-        {
-            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .cookie(authCookie)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(actualJson, 50));
-            Assert.assertEquals(252, StringUtils.countMatches(actualJson, "prairie permanente"));
-        }
-
-        {
-            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .cookie(authCookie)
-                            .accept(MediaType.TEXT_PLAIN))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualCsv, 50));
-            Assert.assertEquals(252, StringUtils.countMatches(actualCsv, "prairie permanente"));
-        }
-
+    private void addDataSWC() throws Exception {
         try (InputStream in = fixtures.openSwcDataResourceName(true)) {
             MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
 
@@ -830,7 +716,125 @@ public class OreSiResourcesTest {
         }
     }
 
+    private void addDataBiomassProduction() throws Exception {
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(fixtures.getBiomasseProductionTeneurDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                            .file(file)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(response, 50));
+        }
+
+        {
+            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(actualJson, 50));
+            Assert.assertEquals(252, StringUtils.countMatches(actualJson, "prairie permanente"));
+        }
+
+        {
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                            .cookie(authCookie)
+                            .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
+            Assert.assertEquals(252, StringUtils.countMatches(actualCsv, "prairie permanente"));
+        }
+    }
+
+    private void addDataFluxTours() throws Exception {
+        // ajout de data
+        try (InputStream in = getClass().getResourceAsStream(fixtures.getFluxToursDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
+                            .file(file)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(response, 50));
+        }
+
+        // restitution de data json
+        {
+//            String expectedJson = Resources.toString(getClass().getResource("/data/acbb/compare/export.json"), Charsets.UTF_8);
+            String actualJson = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows[? (@.values.date.datetime =~ /.*\\/2004.*/i)]", Matchers.hasSize(17568)))
+                    .andExpect(jsonPath("$.rows[*].values.parcelle.chemin", Matchers.hasSize(17568)))
+//                    .andExpect(content().json(expectedJson))
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(actualJson, 50));
+        }
+
+        // restitution de data csv
+        {
+//            String expectedCsv = Resources.toString(getClass().getResource("/data/acbb/compare/export.csv"), Charsets.UTF_8);
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/acbb/data/flux_tours")
+                            .cookie(authCookie)
+                            .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().isOk())
+//                    .andExpect(content().string(expectedCsv))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(actualCsv, 50));
+            Assert.assertEquals(17568, StringUtils.countMatches(actualCsv, "/2004"));
+            Assert.assertTrue(actualCsv.contains("Parcelle"));
+            Assert.assertTrue(actualCsv.contains("laqueuille;1"));
+        }
+    }
+
+    private void addReferences() throws Exception {
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getAcbbReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
+
+        String getReferenceResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        final GetReferenceResult refs = objectMapper.readValue(getReferenceResponse, GetReferenceResult.class);
+        Assert.assertEquals(103, refs.getReferenceValues().size());
+
+        String getReferenceCsvResponse = mockMvc.perform(get("/api/v1/applications/acbb/references/parcelles/csv")
+                        .cookie(authCookie)
+                        .accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Assert.assertEquals(31, StringUtils.countMatches(getReferenceCsvResponse, "theix"));
+    }
+
     @Test
+    @Category(HAUTE_FREQUENCE_TEST.class)
     public void addApplicationHauteFrequence() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getHauteFrequenceApplicationConfigurationResourceName())) {
@@ -1038,7 +1042,7 @@ on test le dépôt d'un fichier récursif
             Assert.assertEquals("zones_etudes", messageParams.get("references"));
             Assert.assertEquals(3L, messageParams.get("lineNumber"));
             Assert.assertEquals("site3", messageParams.get("missingReferencesKey"));
-            Assert.assertTrue(Set.of("site3","site1.site2","site1","site2").containsAll((Set) messageParams.get("knownReferences")));
+            Assert.assertTrue(Set.of("site3", "site1.site2", "site1", "site2").containsAll((Set) messageParams.get("knownReferences")));
         }
 
         //il doit toujours y avoir le même nombre de ligne
@@ -1064,7 +1068,7 @@ on test le dépôt d'un fichier récursif
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
                     )))
-                .andReturn().getResponse().getContentAsString();
+                    .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
 
@@ -1072,21 +1076,48 @@ on test le dépôt d'un fichier récursif
 
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/data/dty")
+            final String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/data/dty")
                             .file(refFile)
                             .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+                    .andExpect(status().is2xxSuccessful())
+                    //.andExpect(jsonPath("$[0].validationCheckResult.messageParams.file", IsEqual.equalTo("dty"))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.failingRowContent", StringContains.containsString("1980-02-23")))
+                    .andReturn().getResponse().getContentAsString();
         }
         // le nombre de ligne est inchangé
-        /*try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             final String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
                     )))
-                .andReturn().getResponse().getContentAsString();
+                    .andReturn().getResponse().getContentAsString();
             log.debug(response);
-        }*/
+        }
+        //on teste un dépot de fichier de données avec lignes dupliquées
+        final String dataWithDuplicateds = fixtures.getDuplicatedDataFiles().get("data_with_duplicateds");
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithDuplicateds)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "data_with_duplicateds.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/data/dty")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$[0].validationCheckResult.message", IsEqual.equalTo("duplicatedLineInDatatype")))
+                    .andExpect(jsonPath("$[0].validationCheckResult.messageParams.duplicatedRows", CoreMatchers.hasItem(5)))
+                    .andExpect(jsonPath("$[0].validationCheckResult.messageParams.duplicatedRows", CoreMatchers.hasItem(6)))
+                    .andExpect(jsonPath("$[0].validationCheckResult.messageParams.uniquenessKey.Date_day", IsEqual.equalTo("24/02/1980")))
+                    .andExpect(jsonPath("$[0].validationCheckResult.messageParams.uniquenessKey.localization_zones_etudes", IsEqual.equalTo("site1")));
+
+        }
+        // le nombre de ligne est inchangé
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
+            final String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
+                    )))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+        }
     }
 
     @Test
@@ -1136,6 +1167,7 @@ on test le dépôt d'un fichier récursif
                             .file(refFile)
                             .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+
         }
 
         // ajout de data
@@ -1199,13 +1231,26 @@ on test le dépôt d'un fichier récursif
         }
 
         // ajout de data
-        for (Map.Entry<String, String> entry : fixtures.getFluxMeteoForetEssaiDataResourceName().entrySet()) {
+        for (Map.Entry<String, String> entry : fixtures.getForetEssaiDataResourceName().entrySet()) {
             try (InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
                 mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/" + entry.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+
+                if (entry.getKey().equals("swc_j")) {
+                    authenticationService.setRoleAdmin();
+                    final String responseForBuildSynthesis = mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .cookie(authCookie))
+                            .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
+                            .andReturn().getResponse().getContentAsString();
+                    final String responseForGetSynthesis = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .cookie(authCookie))
+                            .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
+                            .andExpect(jsonPath("$.SWC[*].aggregation", Matchers.containsInAnyOrder("10","120","160","200","250","30","55","80")))
+                            .andReturn().getResponse().getContentAsString();
+                }
             }
         }
     }

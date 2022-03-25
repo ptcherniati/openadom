@@ -66,7 +66,7 @@ public class ApplicationConfigurationServiceTest {
             byte[] bytes = in.readAllBytes();
             ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
             log.debug("résultat de la validation de " + resource + " = " + configurationParsingResult);
-            Assert.assertTrue(resource + " doit être reconnu comme un fichier valide",configurationParsingResult.isValid());
+            Assert.assertTrue(resource + " doit être reconnu comme un fichier valide", configurationParsingResult.isValid());
         } catch (IOException e) {
             throw new OreSiTechnicalException("ne peut pas lire le fichier de test " + resource, e);
         }
@@ -97,20 +97,37 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingReferenceForChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
         ValidationCheckResult missingReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "missingReferenceForChecker".equals(vcr.getMessage()));
         ValidationCheckResult authorizationScopeVariableComponentReftypeNull = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentReftypeNull".equals(vcr.getMessage()));
 
-        Assert.assertEquals(true, missingReferenceForChecker!=null);
-        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeNull!=null);
+        Assert.assertEquals(true, missingReferenceForChecker != null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeNull != null);
+    }
+
+    @Test
+    public void testMissingVariableComponentForUniqueness() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml(
+                "- variable: date\n" +
+                        "        component: day",
+                "- variable: date\n" +
+                        "        component: jour"
+        );
+        Assert.assertFalse(configurationParsingResult.isValid());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult missingVariableComponentForChecker = Iterables.find(validationCheckResults, vcr -> "unknownUsedAsVariableComponentUniqueness".equals(vcr.getMessage()));
+
+        final Set<String> unknownUsedAsVariableComponentUniqueness = (Set<String>) missingVariableComponentForChecker.getMessageParams().get("unknownUsedAsVariableComponentUniqueness");
+        Assert.assertEquals(true, unknownUsedAsVariableComponentUniqueness != null);
+        Assert.assertEquals(true, unknownUsedAsVariableComponentUniqueness.contains("date_jour"));
     }
 
     @Test
     public void testMissingInternationalizedColumn() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizedColumns:\n" +
-                "      nom du projet_key:","internationalizedColumns:\n" +
+                "      nom du projet_key:", "internationalizedColumns:\n" +
                 "      nom du projet_unknown:");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -120,14 +137,14 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceForChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites","refType: sitee");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites", "refType: sitee");
         Assert.assertFalse(configurationParsingResult.isValid());
         List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
         ValidationCheckResult unknownReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "unknownReferenceForChecker".equals(vcr.getMessage()));
         ValidationCheckResult authorizationScopeVariableComponentReftypeUnknown = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentReftypeUnknown".equals(vcr.getMessage()));
 
-        Assert.assertEquals(true, unknownReferenceForChecker!=null);
-        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeUnknown!=null);
+        Assert.assertEquals(true, unknownReferenceForChecker != null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeUnknown != null);
     }
 
     @Test
@@ -215,7 +232,7 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testVariableInMultipleDataGroup() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
-                "            - Couleur des individus","data:\n" +
+                "            - Couleur des individus", "data:\n" +
                 "            - localization\n" +
                 "            - Couleur des individus");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -227,7 +244,7 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testRecordInvalidKeyColumns() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("columns:\n" +
-                "      nom du projet_key:","columns:\n" +
+                "      nom du projet_key:", "columns:\n" +
                 "      nom du Projet_key:");
         Assert.assertFalse(configurationParsingResult.isValid());
         long count = configurationParsingResult.getValidationCheckResults()
@@ -243,7 +260,7 @@ public class ApplicationConfigurationServiceTest {
         ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
                 "      timeScope:\n" +
                 "        variable: date\n" +
-                "        component: day","component: site\n");
+                "        component: day", "component: site\n");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -254,7 +271,7 @@ public class ApplicationConfigurationServiceTest {
     public void testTimeScopeVariableComponentKeyMissingVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
-                "        component: day","timeScope:\n" +
+                "        component: day", "timeScope:\n" +
                 "        component: day");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -266,7 +283,7 @@ public class ApplicationConfigurationServiceTest {
     public void testTimeScopeVariableComponentKeyUnknownVariable() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
-                "        component: day","timeScope:\n" +
+                "        component: day", "timeScope:\n" +
                 "        variable: dates\n" +
                 "        component: day");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -279,7 +296,7 @@ public class ApplicationConfigurationServiceTest {
     public void testTimeVariableComponentKeyMissingComponent() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
-                "        component: day","timeScope:\n" +
+                "        component: day", "timeScope:\n" +
                 "        variable: date\n" +
                 "        component: ~");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -292,7 +309,7 @@ public class ApplicationConfigurationServiceTest {
     public void testTimeVariableComponentKeyUnknownComponent() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
                 "        variable: date\n" +
-                "        component: day","timeScope:\n" +
+                "        component: day", "timeScope:\n" +
                 "        variable: date\n" +
                 "        component: days");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -333,7 +350,7 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testTimeScopeVariableComponentPatternUnknown() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("params:\n" +
-                "                pattern: dd/MM/yyyy","params:\n" +
+                "                pattern: dd/MM/yyyy", "params:\n" +
                 "                pattern: dd/MM");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -343,7 +360,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnrecognizedProperty() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences","compositReference");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences", "compositReference");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -355,7 +372,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testInvalidFormat() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 2", "firstRowLine: pas_un_chiffre");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 3", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -412,8 +429,8 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult authorizationVariableComponentKeyUnknownComponent = Iterables.find(validationCheckResults, vcr -> "authorizationVariableComponentKeyUnknownComponent".equals(vcr.getMessage()));
         ValidationCheckResult csvBoundToUnknownVariableComponent = Iterables.find(validationCheckResults, vcr -> "csvBoundToUnknownVariableComponent".equals(vcr.getMessage()));
 
-        Assert.assertEquals(true, authorizationVariableComponentKeyUnknownComponent!=null);
-        Assert.assertEquals(true, csvBoundToUnknownVariableComponent!=null);
+        Assert.assertEquals(true, authorizationVariableComponentKeyUnknownComponent != null);
+        Assert.assertEquals(true, csvBoundToUnknownVariableComponent != null);
     }
 
     @Test
@@ -432,8 +449,8 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
     }
 
     @Test
@@ -454,8 +471,101 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("invalidInternationalizedColumns", onlyError.getMessage());
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("unknownUsedAsInternationalizedColumns")).contains("nom du site"));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("knownColumns")).contains("nom du site_fr"));
+    }
+
+    @Test
+    public void testUndeclaredValueForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("value: \"value\"", "value: null");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unDeclaredValueForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingValueComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("value: \"value\"", "value: \"nonvalue\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingValueComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("valueComponent")).equals("nonvalue"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingAggregationVariableForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("aggregation:\n" +
+                "            variable: Couleur des individus\n" +
+                "            component: value", "aggregation:\n" +
+                "            variable: pasdevariable\n" +
+                "            component: value");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingAggregationVariableForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationVariable")).equals("pasdevariable"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationComponent")).equals("value"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("variables")).equals(Set.of("date","localization","Couleur des individus","Nombre d'individus")));
+    }
+
+    @Test
+    public void testMissingAggregationComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("aggregation:\n" +
+                "            variable: Couleur des individus\n" +
+                "            component: value", "aggregation:\n" +
+                "            variable: Couleur des individus\n" +
+                "            component: pasdevalue");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingAggregationComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationVariable")).equals("Couleur des individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("aggregationComponent")).equals("pasdevalue"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingStandardDeviationComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("standardDeviation: \"standardDeviation\"", "standardDeviation: \"badstandardDeviation\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingStandardDeviationComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("standardDeviation")).equals("badstandardDeviation"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testMissingUnitComponentForChart() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("unit: \"unit\"", "unit: \"badunit\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingUnitComponentForChart", onlyError.getMessage());
+        Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
+        Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
+        Assert.assertTrue((onlyError.getMessageParams().get("unit")).equals("badunit"));
+        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+    }
+
+    @Test
+    public void testvalid(){
+        ConfigurationParsingResult configurationParsingResult = parseYaml("","");
+        Assert.assertTrue(configurationParsingResult.isValid());
     }
 
     @Test

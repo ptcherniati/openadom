@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Data;
 import fr.inra.oresing.rest.DownloadDatasetQuery;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,8 +31,9 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, \"authorization\", refsLinkedTo, dataValues, binaryFile) SELECT id, application, dataType, rowId, \"authorization\", refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, \"authorization\"=EXCLUDED.\"authorization\", refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
+        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, \"authorization\", uniqueness, refsLinkedTo, dataValues, binaryFile) \n" +
+                "SELECT id, application, dataType, rowId, \"authorization\", uniqueness,  refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
+                + " ON CONFLICT (dataType, datagroup, uniqueness) DO UPDATE SET id=EXCLUDED.id, updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, \"authorization\"=EXCLUDED.\"authorization\", refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
 
@@ -49,7 +52,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public int removeByFileId(UUID fileId) {
         String query = "DELETE FROM " + getTable().getSqlIdentifier() +
                 "\n  WHERE binaryfile = :binaryFile";
-        return getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("binaryFile", fileId));
+        final int binaryFile = getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("binaryFile", fileId));
+        return binaryFile;
     }
 
     public String getSqlToMergeData(DownloadDatasetQuery downloadDatasetQuery) {
@@ -81,5 +85,30 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .addValue("dataGroup", dataGroup);
         int count = getNamedParameterJdbcTemplate().update(sql, sqlParams);
         return count;
+    }
+
+    public List<Uniqueness> findStoredUniquenessForDatatype(Application application, String dataType) {
+        String query = "select 'fr.inra.oresing.persistence.Uniqueness' as \"@class\",uniqueness as json from  " + getTable().getSqlIdentifier()
+                + "  WHERE application = :applicationId::uuid AND dataType = :dataType";
+        MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("dataType", dataType);
+        return getNamedParameterJdbcTemplate().query(query, sqlParams, new JsonRowMapper<Uniqueness>());
+    }
+
+    public void updateConstraintForeigData(List<UUID> uuids) {
+        String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference WHERE dataId in (:ids)";
+        String insertSql = String.join(" "
+                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)"
+                , "with tuple as ("
+                , "  select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencedBy"
+                , "  from " + getTable().getSqlIdentifier() + ""
+                , ")"
+                , "select dataId, referencedBy from tuple"
+                , "where dataId in (:ids) and referencedBy is not null"
+                , "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING"
+        );
+        String sql = String.join(";", deleteSql, insertSql);
+        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE-1)
+                .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }
 }
