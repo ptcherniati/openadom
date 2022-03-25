@@ -99,7 +99,7 @@ npm:
   image: node:12-alpine
   stage: package
   script:
-    - cd ui2
+    - cd ui
     - npm ci
     - npm run build
   tags:
