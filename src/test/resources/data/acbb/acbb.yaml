@@ -135,6 +135,13 @@ compositeReferences:
         parentKeyColumn: "site"
 dataTypes:
   flux_tours:
+    uniqueness:
+      - variable: site
+        component: chemin
+      - variable: parcelle
+        component: chemin
+      - variable: date
+        component: datetime
     validations:
       check_CO2_value:
         description: check value in range
@@ -176,12 +183,23 @@ dataTypes:
                 refType: parcelles
       date:
         components:
+          datetime:
+            defaultValue: >
+              return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
           day:
             checker:
               name: Date
               params:
                 pattern: dd/MM/yyyy
           time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
       CO2:
         components:
           value:
@@ -444,7 +462,7 @@ dataTypes:
           component: chemin
       timeScope:
         variable: date
-        component: day
+        component: datetime
       dataGroups:
         all:
           label: "Toutes les données"

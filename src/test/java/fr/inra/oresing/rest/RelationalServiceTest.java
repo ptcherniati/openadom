@@ -63,7 +63,7 @@ public class RelationalServiceTest {
         {
 //            request.setRequestClient(applicationCreatorRequestClient);
             List<Map<String, Object>> viewContent = relationalService.readView("monsore", "pem", ViewStrategy.VIEW);
-            Assert.assertEquals(306, viewContent.size());
+            Assert.assertEquals(272, viewContent.size());
         }
 
         {

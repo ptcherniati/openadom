@@ -42,13 +42,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -483,6 +487,12 @@ public class OreSiService {
                 unPublishVersions(app, filesToStore, dataType);
             }
             return storedFile.getId();
+        } else if (params != null && params.getBinaryfiledataset() != null) {
+            BinaryFile publishedVersion = getPublishedVersion(params, app);
+            if (publishedVersion != null && publishedVersion.getParams().published) {
+                filesToStore.add(publishedVersion);
+                unPublishVersions(app, filesToStore, dataType);
+            }
         }
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
@@ -540,20 +550,32 @@ public class OreSiService {
 
             Datum constantValues = new Datum();
             readPreHeader(formatDescription, constantValues, linesIterator);
+
             ImmutableList<String> columns = readHeaderRow(linesIterator);
             readPostHeader(formatDescription, columns, constantValues, linesIterator);
+            UniquenessBuilder uniquenessBuilder = new UniquenessBuilder(app, dataType);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
                     .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
-                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
-
+                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
+            AtomicLong lines = new AtomicLong();
+            final Instant debut = Instant.now();
             final DataRepository dataRepository = repo.getRepository(app).data();
-            final List<UUID> uuids = dataRepository.storeAll(dataStream);
-            dataRepository.updateConstraintForeigData(uuids);
-            buildSynthesis(app.getName(), dataType);
+            dataRepository
+                    .storeAll(
+                            dataStream
+                                    .filter(Objects::nonNull)
+                                    .peek(k -> {
+                                        if (lines.incrementAndGet() % 1000 == 0) {
+                                            log.debug(String.format("%d %d", lines.get(), Duration.between(debut, Instant.now()).getSeconds()));
+                                        }
+                                    })
+                    );
+            errors.addAll(uniquenessBuilder.getErrors());
+            InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         }
     }
 
@@ -582,6 +604,11 @@ public class OreSiService {
                     });
         }
         return new LinkedList<>();
+    }
+
+    @Nullable
+    private BinaryFile getPublishedVersion(FileOrUUID params, Application app) {
+        return repo.getRepository(app).binaryFile().findPublishedVersions(params.getBinaryfiledataset()).orElse(null);
     }
 
     @Nullable
@@ -615,14 +642,15 @@ public class OreSiService {
      * @param app
      * @param dataType
      * @param fileId
+     * @param uniquenessBuilder
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, uniquenessBuilder, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
     }
 
     /**
@@ -631,6 +659,7 @@ public class OreSiService {
      * @param app
      * @param dataType
      * @param fileId
+     * @param uniquenessBuilder
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
@@ -640,7 +669,7 @@ public class OreSiService {
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
                                                                                String dataType,
                                                                                UUID fileId,
-                                                                               List<CsvRowValidationCheckResult> errors,
+                                                                               UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors,
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
                                                                                BinaryFileDataset binaryFileDataset) {
@@ -698,7 +727,10 @@ public class OreSiService {
             checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
-
+            final List<String> uniquenessValues = uniquenessBuilder.test(datum, rowWithData.getLineNumber());
+            if(uniquenessValues ==null) {
+                return Stream.of((Data) null);
+            };
             Stream<Data> dataStream = dataTypeDescription.getAuthorization().getDataGroups().entrySet().stream().map(entry -> {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
@@ -727,6 +759,7 @@ public class OreSiService {
                 e.setAuthorization(new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope));
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
+                e.setUniqueness(uniquenessValues);
                 e.setDataValues(toStore);
                 return e;
             });
@@ -1455,5 +1488,104 @@ public class OreSiService {
     private static class ParsedCsvRow {
         int lineNumber;
         List<Map.Entry<String, String>> columns;
+    }
+
+    protected class UniquenessBuilder {
+        final List<VariableComponentKey> uniquenessDescription;
+        final Map<UniquenessKeys, List<Integer>> uniquenessInFile = new TreeMap<>();
+        private String dataType;
+
+        public UniquenessBuilder(Application application, String dataType) {
+            this.uniquenessDescription = getUniquenessDescription(application, dataType);
+            this.dataType = dataType;
+        }
+
+        private List<VariableComponentKey> getUniquenessDescription(Application application, String dataType) {
+            final List<VariableComponentKey> uniqueness = application.getConfiguration().getDataTypes().get(dataType).getUniqueness();
+            if (uniqueness.isEmpty()) {
+                return application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+                        .flatMap(this::getVariableComponentKeys)
+                        .collect(Collectors.toList());
+            } else {
+                return uniqueness;
+            }
+        }
+
+        private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.ColumnDescription> entry) {
+            return entry.getValue().getComponents().keySet().stream()
+                    .map(componentName -> new VariableComponentKey(entry.getKey(), componentName));
+        }
+
+        public List<String> test(Datum datum, int lineNumber) {
+            UniquenessKeys uniquenessKeys = new UniquenessKeys(datum, uniquenessDescription);
+            uniquenessInFile.compute(uniquenessKeys, (k,v) -> v==null?new LinkedList<>():v)
+                    .add(lineNumber);
+            boolean isInError = uniquenessInFile.get(uniquenessKeys).size()>1;
+            return isInError?null:uniquenessKeys.getValues();
+        }
+
+        private CsvRowValidationCheckResult getErrorForEntry(Map.Entry<UniquenessKeys, List<Integer>> entry) {
+            return new CsvRowValidationCheckResult(
+                    DefaultValidationCheckResult.error(
+                            "duplicatedLineInDatatype",
+                            ImmutableMap.of(
+                                    "file", this.dataType,
+                                    "duplicatedRows", entry.getValue(),
+                                    "uniquenessKey", getUniquenessKey(entry.getKey())
+                            )
+                    ), entry.getValue().get(0));
+        }
+
+        public List<CsvRowValidationCheckResult> getErrors() {
+            return uniquenessInFile.entrySet().stream()
+                    .filter(entry -> entry.getValue().size() > 1)
+                    .map(this::getErrorForEntry)
+                    .collect(Collectors.toList());
+        }
+
+        public Map<String, String> getUniquenessKey(UniquenessKeys uniquenessKeys){
+            Map<String, String> uniquenessKeyMap = new HashMap<>();
+            for (int i = 0; i < uniquenessDescription.size(); i++) {
+                uniquenessKeyMap.put(uniquenessDescription.get(i).getId(), uniquenessKeys.getValues().get(i));
+            }
+            return uniquenessKeyMap;
+        }
+    }
+
+    class UniquenessKeys implements Comparable<UniquenessKeys> {
+        List<String> values = new LinkedList<>();
+        List<VariableComponentKey> uniquenessDescription;
+        public UniquenessKeys(Datum datum, List<VariableComponentKey> uniquenessDescription) {
+            this.uniquenessDescription = uniquenessDescription;
+            this.values = uniquenessDescription.stream()
+                    .map(variableComponentKey -> datum.get(variableComponentKey))
+                    .collect(Collectors.toList());
+        }
+
+        public List<String> getValues() {
+            return values;
+        }
+
+        public String getKey() {
+            return values.stream().collect(Collectors.joining());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            UniquenessKeys that = (UniquenessKeys) o;
+            return Objects.equals(getKey(), that.getKey());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(values);
+        }
+
+        @Override
+        public int compareTo(UniquenessKeys uniquenessKeys) {
+            return this.getKey().compareTo(uniquenessKeys.getKey());
+        }
     }
 }

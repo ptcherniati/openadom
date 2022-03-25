@@ -274,6 +274,14 @@ public class ConfigurationParsingResult {
             ));
         }
 
+        public Builder recordUnknownUsedAsVariableComponentUniqueness(String dataType, Set<String> unknownUsedAsVariableComponentUniqueness,Set<String>  availableVariableComponents) {
+            return recordError("unknownUsedAsVariableComponentUniqueness", ImmutableMap.of(
+                    "dataType", dataType,
+                    "unknownUsedAsVariableComponentUniqueness", unknownUsedAsVariableComponentUniqueness,
+                    "availableVariableComponents", availableVariableComponents
+            ));
+        }
+
         public Builder recordInvalidInternationalizedColumnsForDataType(String dataType, String reference, Set<String> unknownUsedAsKeyInternationalizedColumns, Set<String> knownColumns) {
             return recordError("invalidInternationalizedColumnsForDataType", ImmutableMap.of(
                     "dataType", dataType,

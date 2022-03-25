@@ -85,13 +85,16 @@ create table Data
     creationDate    DateOrNow,
     updateDate      DateOrNow,
     application     EntityRef REFERENCES Application (id),
-    dataType        TEXT CHECK (name_check(application, 'dataType', dataType)),
+    dataType        TEXT
+        constraint name_check CHECK (name_check(application, 'dataType', dataType)),
     rowId           TEXT                                                             NOT NULL,
     datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED NOT NULL,
     "authorization" ${applicationSchema}.authorization                               NOT NULL check (("authorization").datagroup[1] is not null),
     refsLinkedTo    jsonb ,
+    uniqueness      jsonb,
     dataValues      jsonb,
-    binaryFile      EntityRef REFERENCES BinaryFile (id)
+    binaryFile      EntityRef REFERENCES BinaryFile (id),
+    constraint refs_check_for_datatype_uniqueness unique (dataType, datagroup, uniqueness)
 );
 
 create table Data_Reference
@@ -101,8 +104,8 @@ create table Data_Reference
     CONSTRAINT "Data_Reference_PK" PRIMARY KEY (dataId, referencedBy)
 );
 
-CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo);
-CREATE INDEX data_refvalues_index ON Data USING gin (dataValues);
+CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo jsonb_path_ops);
+CREATE INDEX data_refvalues_index ON Data USING gin (dataValues jsonb_path_ops);
 
 ALTER TABLE Data
     ADD CONSTRAINT row_uniqueness UNIQUE (rowId, dataGroup);

@@ -152,6 +152,7 @@ public class Configuration {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+        List<VariableComponentKey> uniqueness = new LinkedList<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
         LinkedHashMap<String, String> repository = null;

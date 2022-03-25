@@ -18,9 +18,7 @@ import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.model.internationalization.Internationalization;
-import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
-import fr.inra.oresing.model.internationalization.InternationalizationMap;
+import fr.inra.oresing.model.internationalization.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -31,24 +29,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
 @Slf4j
 public class ApplicationConfigurationService {
-    public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
+    public static final List<String> INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
 
     Map<String, Map> getInternationalizedSections(Map<String, Object> toParse, List<IllegalArgumentException> exceptions) {
         Map<String, Map> parsedMap = new LinkedHashMap<>();
@@ -129,9 +117,6 @@ public class ApplicationConfigurationService {
             Map<String, Object> mappedObject = (Map<String, Object>) mapper.readValue(bytes, Object.class);
             List<IllegalArgumentException> exceptions = List.of();
             internationalizedSections = getInternationalizedSections(mappedObject, exceptions);
-            if (!exceptions.isEmpty()) {
-                return onMappingExceptions(exceptions);
-            }
             try {
                 configuration = mapper.convertValue(mappedObject, Configuration.class);
                 configuration.setInternationalization(mapper.convertValue(internationalizedSections, InternationalizationMap.class));
@@ -169,10 +154,10 @@ public class ApplicationConfigurationService {
         }
 
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
-            verifyReferenceKeyColumns(configuration, builder, referenceEntry);
+            verifyReferenceKeyColumns(builder, referenceEntry);
             verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
-            verifyValidationCheckersAreValids(configuration, builder, referenceEntry, references);
+            verifyValidationCheckersAreValids(builder, referenceEntry, references);
         }
 
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
@@ -181,7 +166,8 @@ public class ApplicationConfigurationService {
             verifyDatatypeCheckersExists(builder, dataTypeDescription, dataType);
             verifyDatatypeCheckerReferenceRefersToExistingReference(builder, references, dataType, dataTypeDescription);
             verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(builder, dataTypeDescription);
-            verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType, dataTypeDescription);
+            verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType);
+            verifyUniquenessComponentKeysInDatatype(dataType, dataTypeDescription, builder);
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
@@ -252,7 +238,7 @@ public class ApplicationConfigurationService {
         Configuration.CompositeReferenceDescription compositeReferenceDescription = compositeReferenceEntry.getValue();
         Set<String> expectingReferences = compositeReferenceDescription.getComponents()
                 .stream()
-                .map(crd -> crd.getReference())
+                .map(Configuration.CompositeReferenceComponentDescription::getReference)
                 .filter(ref -> {
                     if (ref == null) {
                         builder.recordMissingReferenceInCompositereference(compositeReferenceName);
@@ -387,9 +373,7 @@ public class ApplicationConfigurationService {
             builder.recordMissingAuthorizationScopeVariableComponentKey(dataType);
         } else {
             Configuration.DataTypeDescription dataTypeDescription = configuration.getDataTypes().get(dataType);
-            authorizationScopesVariableComponentKey.entrySet().stream().forEach(authorizationScopeVariableComponentKeyEntry -> {
-                String authorizationScopeName = authorizationScopeVariableComponentKeyEntry.getKey();
-                VariableComponentKey authorizationScopeVariableComponentKey = authorizationScopeVariableComponentKeyEntry.getValue();
+            authorizationScopesVariableComponentKey.forEach((authorizationScopeName, authorizationScopeVariableComponentKey) -> {
                 if (authorizationScopeVariableComponentKey.getVariable() == null) {
                     builder.recordAuthorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
                 } else {
@@ -410,8 +394,11 @@ public class ApplicationConfigurationService {
                                 if (authorizationScopeVariableComponentChecker == null || !"Reference".equals(authorizationScopeVariableComponentChecker.getName())) {
                                     builder.recordAuthorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
                                 }
-                                String refType = null;
-                                Configuration.CheckerConfigurationDescription checkerConfigurationDescription = authorizationScopeVariableComponentChecker.getParams();
+                                String refType;
+                                Configuration.CheckerConfigurationDescription checkerConfigurationDescription = null;
+                                if (authorizationScopeVariableComponentChecker != null) {
+                                    checkerConfigurationDescription = authorizationScopeVariableComponentChecker.getParams();
+                                }
                                 if (checkerConfigurationDescription == null) {
                                     builder.recordAuthorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
                                 } else {
@@ -420,9 +407,9 @@ public class ApplicationConfigurationService {
                                         builder.recordAuthorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
                                     } else {
                                         Set<String> compositesReferences = configuration.getCompositeReferences().values().stream()
-                                                .map(e -> e.getComponents())
+                                                .map(Configuration.CompositeReferenceDescription::getComponents)
                                                 .flatMap(List::stream)
-                                                .map(crd -> crd.getReference())
+                                                .map(Configuration.CompositeReferenceComponentDescription::getReference)
                                                 .collect(Collectors.toSet());
                                         if (!compositesReferences.contains(refType)) {
                                             builder.recordAuthorizationVariableComponentMustReferToCompositereference(dataType, authorizationScopeName, refType, compositesReferences);
@@ -459,7 +446,7 @@ public class ApplicationConfigurationService {
                                 builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
                             }
                             Optional.ofNullable(timeScopeVariableComponentChecker)
-                                    .map(checkerDescription -> checkerDescription.getParams())
+                                    .map(Configuration.CheckerDescription::getParams)
                                     .map(Configuration.CheckerConfigurationDescription::getPattern)
                                     .ifPresent(pattern -> {
                                         if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
@@ -543,7 +530,7 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyReferenceKeyColumns(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
+    private void verifyReferenceKeyColumns(ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
         List<String> keyColumns = referenceDescription.getKeyColumns();
@@ -562,55 +549,67 @@ public class ApplicationConfigurationService {
     private void verifyInternationalizedColumnsExistsForPattern(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
-        Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(configuration.getInternationalization())
-                .map(i -> i.getReferences())
-                .map(r -> r.getOrDefault(reference, null))
-                .map(im -> im.getInternationalizationDisplay())
-                .map(ic -> ic.getPattern())
-                .map(patterns -> patterns.values()
-                        .stream()
-                        .map(pattern -> InternationalizationDisplay.getPatternColumns(pattern))
-                        .flatMap(List::stream)
-                        .collect(Collectors.toSet())
-                )
-                .orElseGet(Set::of);
-        Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
-                .map(i -> i.getReferences())
-                .map(r -> r.getOrDefault(reference, null))
-                .map(im -> im.getInternationalizedColumns())
-                .map(ic -> {
-                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
-                    ic.values().stream()
-                            .forEach(v -> columns.addAll(v.values()));
-                    return columns;
-                })
-                .orElse(new HashSet<>());
+        Set<String> internationalizedColumnsForDisplay = Set.of();
+        InternationalizationMap internationalization = configuration.getInternationalization();
+        if (internationalization != null) {
+            Map<String, fr.inra.oresing.model.internationalization.InternationalizationReferenceMap> references = internationalization.getReferences();
+            if (references != null) {
+                fr.inra.oresing.model.internationalization.InternationalizationReferenceMap orDefault = references.getOrDefault(reference, null);
+                if (orDefault != null) {
+                    InternationalizationDisplay internationalizationDisplay = orDefault.getInternationalizationDisplay();
+                    if (internationalizationDisplay != null) {
+                        Map<String, String> patterns = internationalizationDisplay.getPattern();
+                        if (patterns != null) {
+                            internationalizedColumnsForDisplay = patterns.values()
+                                    .stream()
+                                    .map(InternationalizationDisplay::getPatternColumns)
+                                    .flatMap(List::stream)
+                                    .collect(Collectors.toSet());
+                        }
+                    }
+                }
+            }
+        }
+        Set<String> internationalizedColumns = getInternationalizedColumns(configuration, reference);
         Set<String> columns = Optional.ofNullable(referenceDescription)
-                .map(r -> r.getColumns())
+                .map(Configuration.ReferenceDescription::getColumns)
                 .map(c -> new LinkedHashSet(c.keySet()))
                 .orElseGet(LinkedHashSet::new);
         columns.addAll(internationalizedColumns);
 
 
-        ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
         ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
             builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
         }
     }
 
-    private void verifyInternationalizedColumnsExistsForPatternInDatatype(Configuration configuration, ConfigurationParsingResult.Builder builder, String dataType, Configuration.DataTypeDescription dataTypeDescription) {
+    private Set<String> getInternationalizedColumns(Configuration configuration, String reference) {
+        return Optional.ofNullable(configuration.getInternationalization())
+                .map(InternationalizationMap::getReferences)
+                .map(r -> r.getOrDefault(reference, null))
+                .map(InternationalizationReferenceMap::getInternationalizedColumns)
+                .map(ic -> {
+                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
+                    ic.values()
+                            .forEach(v -> columns.addAll(v.values()));
+                    return columns;
+                })
+                .orElse(new HashSet<>());
+    }
+
+    private void verifyInternationalizedColumnsExistsForPatternInDatatype(Configuration configuration, ConfigurationParsingResult.Builder builder, String dataType) {
         Map<String, InternationalizationDisplay> internationalizationDisplayMap = Optional.ofNullable(configuration.getInternationalization())
-                .map(i -> i.getDataTypes())
+                .map(InternationalizationMap::getDataTypes)
                 .map(r -> r.getOrDefault(dataType, null))
-                .map(im -> im.getInternationalizationDisplay())
+                .map(InternationalizationDataTypeMap::getInternationalizationDisplay)
                 .orElseGet(Map::of);
         for (Map.Entry<String, InternationalizationDisplay> internationalizationDisplayEntry : internationalizationDisplayMap.entrySet()) {
             Set<String> internationalizedColumnsForDisplay = Optional.ofNullable(internationalizationDisplayEntry.getValue())
-                    .map(ic -> ic.getPattern())
+                    .map(InternationalizationDisplay::getPattern)
                     .map(patterns -> patterns.values()
                             .stream()
-                            .map(pattern -> InternationalizationDisplay.getPatternColumns(pattern))
+                            .map(InternationalizationDisplay::getPatternColumns)
                             .flatMap(List::stream)
                             .collect(Collectors.toSet())
                     )
@@ -624,26 +623,15 @@ public class ApplicationConfigurationService {
             }
 
 
-            Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
-                    .map(i -> i.getReferences())
-                    .map(r -> r.getOrDefault(reference, null))
-                    .map(im -> im.getInternationalizedColumns())
-                    .map(ic -> {
-                        Set<String> columns = new LinkedHashSet<>(ic.keySet());
-                        ic.values().stream()
-                                .forEach(v -> columns.addAll(v.values()));
-                        return columns;
-                    })
-                    .orElse(new HashSet<>());
+            Set<String> internationalizedColumns = getInternationalizedColumns(configuration, reference);
             Configuration.ReferenceDescription referenceDescription = configuration.getReferences().getOrDefault(reference, null);
-            Set<String> columns = Optional.ofNullable(referenceDescription)
-                    .map(r -> r.getColumns())
+            LinkedHashSet columns = Optional.ofNullable(referenceDescription)
+                    .map(Configuration.ReferenceDescription::getColumns)
                     .map(c -> new LinkedHashSet(c.keySet()))
                     .orElseGet(LinkedHashSet::new);
             columns.addAll(internationalizedColumns);
 
 
-            ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
             ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
             if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
                 builder.recordInvalidInternationalizedColumnsForDataType(dataType, reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
@@ -651,23 +639,30 @@ public class ApplicationConfigurationService {
         }
     }
 
+    private void verifyUniquenessComponentKeysInDatatype(String dataType, Configuration.DataTypeDescription dataTypeDescription, ConfigurationParsingResult.Builder builder) {
+        final List<VariableComponentKey> uniqueness = dataTypeDescription.getUniqueness();
+        final Set<String> availableVariableComponents = dataTypeDescription.getData().entrySet().stream()
+                .flatMap(entry -> entry.getValue().getComponents().keySet().stream()
+                        .map(componentName -> new VariableComponentKey(entry.getKey(), componentName).getId()))
+                .collect(Collectors.<String>toSet());
+        Set<String> variableComponentsKeyInUniqueness = new HashSet<>();
+        for (VariableComponentKey variableComponentKey : uniqueness) {
+            String id = variableComponentKey.getId();
+            variableComponentsKeyInUniqueness.add(id);
+        }
+        ImmutableSet<String> unknownUsedAsVariableComponentUniqueness = Sets.difference(variableComponentsKeyInUniqueness, availableVariableComponents).immutableCopy();
+        if (!unknownUsedAsVariableComponentUniqueness.isEmpty()) {
+            builder.recordUnknownUsedAsVariableComponentUniqueness(dataType, unknownUsedAsVariableComponentUniqueness, availableVariableComponents);
+        }
+    }
+
     private void verifyInternationalizedColumnsExists(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
-        Set<String> internationalizedColumns = Optional.ofNullable(configuration.getInternationalization())
-                .map(i -> i.getReferences())
-                .map(r -> r.getOrDefault(reference, null))
-                .map(im -> im.getInternationalizedColumns())
-                .map(ic -> {
-                    Set<String> columns = new LinkedHashSet<>(ic.keySet());
-                    ic.values().stream()
-                            .forEach(v -> columns.addAll(v.values()));
-                    return columns;
-                })
-                .orElse(new HashSet<>());
+        Set<String> internationalizedColumns = getInternationalizedColumns(configuration, reference);
         Set<String> columns = Optional.ofNullable(referenceDescription)
-                .map(r -> r.getColumns())
-                .map(c -> c.keySet())
+                .map(Configuration.ReferenceDescription::getColumns)
+                .map(LinkedHashMap::keySet)
                 .orElse(new HashSet<>());
 
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
@@ -677,7 +672,7 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyValidationCheckersAreValids(Configuration configuration, ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
+    private void verifyValidationCheckersAreValids(ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
         for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
@@ -689,18 +684,19 @@ public class ApplicationConfigurationService {
             }
             ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
             String columns = checker.getParams().getColumns();
-            Set<String> groovyColumn = Optional.ofNullable(checker)
-                    .map(check->check.getParams())
-                    .filter(params->params.getGroovy() != null)
-                    .map(params-> MoreObjects.firstNonNull(params.getColumns(), ""))
-
-                    // autant mettre une collection dans le YAML directement
-                    .map(values-> values.split(","))
-                    .map(values-> Arrays.stream(values).collect(Collectors.toSet()))
-                    .orElse(Set.of());
+            // autant mettre une collection dans le YAML directement
+            Set<String> groovyColumn = Set.of();
+            Configuration.CheckerConfigurationDescription params = checker.getParams();
+            if (params != null && params.getGroovy() != null) {
+                String values = MoreObjects.firstNonNull(params.getColumns(), "");
+                if (values != null) {
+                    String[] split = values.split(",");
+                    groovyColumn = Arrays.stream(split).collect(Collectors.toSet());
+                }
+            }
 
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression =Optional.of(checker)
+                String expression = Optional.of(checker)
                         .map(Configuration.CheckerDescription::getParams)
                         .map(Configuration.CheckerConfigurationDescription::getGroovy)
                         .map(GroovyConfiguration::getExpression)
@@ -757,7 +753,7 @@ public class ApplicationConfigurationService {
 
     private ConfigurationParsingResult onMappingExceptions(List<IllegalArgumentException> exceptions) {
         ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
-        exceptions.stream()
+        exceptions
                 .forEach(exception -> {
                     if (exception.getCause() instanceof UnrecognizedPropertyException) {
                         UnrecognizedPropertyException e = (UnrecognizedPropertyException) exception.getCause();
@@ -806,5 +802,6 @@ public class ApplicationConfigurationService {
     private static class Versioned {
         int version;
     }
+
 
 }
