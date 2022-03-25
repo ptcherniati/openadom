@@ -5,8 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.*;
-import fr.inra.oresing.model.internationalization.Internationalization;
-import fr.inra.oresing.model.internationalization.InternationalizationMap;
+import fr.inra.oresing.model.internationalization.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,16 +14,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 @Getter
 @Setter
@@ -39,6 +29,14 @@ public class Configuration {
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
     private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
+
+    public InternationalizationMap getInternationalization() {
+        final InternationalizationMap internationalizationMap = new InternationalizationMap();
+        internationalizationMap.setApplication(Optional.ofNullable(application).map(ApplicationDescription::getInternationalization).orElse(null));
+        internationalizationMap.setDataTypes(Optional.ofNullable(dataTypes).map(DataTypeDescription::getInternationalization).orElse(null));
+        internationalizationMap.setReferences(Optional.ofNullable(references).map(ReferenceDescription::getInternationalization).orElse(null));
+        return internationalizationMap;
+    }
 
     public Optional<CompositeReferenceDescription> getCompositeReferencesUsing(String reference) {
         return getCompositeReferences().values().stream()
@@ -98,12 +96,26 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class ReferenceDescription {
+    public static class ReferenceDescription extends InternationalizationDisplayImpl {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
         private LinkedHashMap<String, ReferenceColumnDescription> columns = new LinkedHashMap<>();
         private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+
+        public static Map<String, InternationalizationReferenceMap>  getInternationalization(LinkedHashMap<String, ReferenceDescription> referenceDescriptionMap) {
+            Map<String, InternationalizationReferenceMap> internationalizationReferenceMap = new HashMap<>();
+            for (Map.Entry<String, ReferenceDescription> entry : referenceDescriptionMap.entrySet()) {
+                final String reference = entry.getKey();
+                final ReferenceDescription referenceDescription = entry.getValue();
+                final InternationalizationReferenceMap internationalizationReference = new InternationalizationReferenceMap();
+                internationalizationReference.setInternationalizationDisplay(referenceDescription.getInternationalizationDisplay());
+                internationalizationReference.setInternationalizationName(referenceDescription.getInternationalizationName());
+                internationalizationReference.setInternationalizedColumns(referenceDescription.getInternationalizedColumns());
+                internationalizationReferenceMap.put(reference, internationalizationReference);
+            }
+            return internationalizationReferenceMap;
+        }
     }
 
     @Getter
@@ -126,7 +138,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class CompositeReferenceDescription {
+    public static class CompositeReferenceDescription extends InternationalizationImpl {
         List<CompositeReferenceComponentDescription> components = new LinkedList<>();
 
         public boolean isDependentOfReference(String reference) {
@@ -139,7 +151,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class CompositeReferenceComponentDescription {
+    public static class CompositeReferenceComponentDescription extends InternationalizationImpl {
         String reference;
         String parentKeyColumn;
         String parentRecursiveKey;
@@ -148,7 +160,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class DataTypeDescription {
+    public static class DataTypeDescription extends InternationalizationMapDisplayImpl {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
         LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
@@ -156,6 +168,21 @@ public class Configuration {
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
         LinkedHashMap<String, String> repository = null;
+
+        public static Map<String, InternationalizationDataTypeMap> getInternationalization(LinkedHashMap<String, DataTypeDescription> dataTypeDescriptionMap) {
+            Map<String, InternationalizationDataTypeMap> internationalizationDataTypeMapMap = new HashMap<>();
+            for (Map.Entry<String, DataTypeDescription> entry : dataTypeDescriptionMap.entrySet()) {
+                final String datatype = entry.getKey();
+                final DataTypeDescription dataTypeDescription = entry.getValue();
+                final InternationalizationDataTypeMap internationalizationDataTypeMap = new InternationalizationDataTypeMap();
+                internationalizationDataTypeMap.setInternationalizationDisplay(dataTypeDescription.getInternationalizationDisplays());
+                internationalizationDataTypeMap.setInternationalizationName(dataTypeDescription.getInternationalizationName());
+                internationalizationDataTypeMap.setInternationalizedColumns(dataTypeDescription.getInternationalizedColumns());
+                internationalizationDataTypeMap.setAuthorization(Optional.ofNullable(dataTypeDescription.getAuthorization()).map(AuthorizationDescription::getInternationalization).orElse(null));
+                internationalizationDataTypeMapMap.put(datatype, internationalizationDataTypeMap);
+            }
+            return internationalizationDataTypeMapMap;
+        }
     }
 
     @Getter
@@ -171,8 +198,39 @@ public class Configuration {
     @ToString
     public static class AuthorizationDescription {
         VariableComponentKey timeScope;
-        LinkedHashMap<String, VariableComponentKey> authorizationScopes = new LinkedHashMap<>();
+        LinkedHashMap<String, AuthorizationScopeDescription> authorizationScopes = new LinkedHashMap<>();
         LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
+
+        public InternationalizationAuthorisationMap getInternationalization() {
+            final InternationalizationAuthorisationMap internationalizationAuthorisationMap = new InternationalizationAuthorisationMap();
+            Map<String, InternationalizationAuthorisationName> authorizationScopesLocalization = new HashMap<>();
+            for (Map.Entry<String, AuthorizationScopeDescription> entry : authorizationScopes.entrySet()) {
+                final InternationalizationAuthorisationName internationalizationAuthorisationName = new InternationalizationAuthorisationName();
+                internationalizationAuthorisationName.setInternationalizationName(entry.getValue().getInternationalizationName());
+                authorizationScopesLocalization.put(entry.getKey(), internationalizationAuthorisationName);
+            }
+            internationalizationAuthorisationMap.setAuthorizationScopes(authorizationScopesLocalization);
+            Map<String, InternationalizationAuthorisationName> datagroupsLocalization = new HashMap<>();
+            for (Map.Entry<String, DataGroupDescription> entry : dataGroups.entrySet()) {
+                final InternationalizationAuthorisationName internationalizationAuthorisationName = new InternationalizationAuthorisationName();
+                internationalizationAuthorisationName.setInternationalizationName(entry.getValue().getInternationalizationName());
+                datagroupsLocalization.put(entry.getKey(), internationalizationAuthorisationName);
+            }
+            internationalizationAuthorisationMap.setDataGroups(datagroupsLocalization);
+            return internationalizationAuthorisationMap;
+        }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class AuthorizationScopeDescription extends InternationalizationImpl {
+        String variable;
+        String component;
+
+        public VariableComponentKey getVariableComponentKey() {
+            return new VariableComponentKey(variable, component);
+        }
     }
 
     @Getter
@@ -347,7 +405,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class DataGroupDescription {
+    public static class DataGroupDescription extends InternationalizationImpl {
         Internationalization internationalizationName;
         String label;
         Set<String> data = new LinkedHashSet<>();
@@ -356,11 +414,16 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class ApplicationDescription {
+    public static class ApplicationDescription extends InternationalizationImpl {
         String name;
         int version;
-        String defaultLanguage;
-        Internationalization internationalization;
+        Locale defaultLanguage;
+
+        public InternationalizationApplicationMap getInternationalization() {
+            final InternationalizationApplicationMap internationalizationApplicationMap = new InternationalizationApplicationMap();
+            internationalizationApplicationMap.setInternationalizationName(getInternationalizationName());
+            return internationalizationApplicationMap;
+        }
     }
 
     @Getter

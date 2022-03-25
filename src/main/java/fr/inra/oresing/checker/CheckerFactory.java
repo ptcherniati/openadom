@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -72,7 +73,7 @@ public class CheckerFactory {
         return getLineCheckers(app, dataType, null);
     }
 
-    public ImmutableSet<LineChecker> getLineCheckers(Application app, String dataType, String locale) {
+    public ImmutableSet<LineChecker> getLineCheckers(Application app, String dataType, Locale locale) {
         Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
@@ -91,7 +92,7 @@ public class CheckerFactory {
         return lineCheckers;
     }
 
-    private void parseVariableComponentdescription(Application app, String dataType, String locale, ImmutableSet.Builder<LineChecker> checkersBuilder, String variable, Configuration.ColumnDescription variableDescription, Map.Entry<String, Configuration.VariableComponentDescription> componentEntry) {
+    private void parseVariableComponentdescription(Application app, String dataType, Locale locale, ImmutableSet.Builder<LineChecker> checkersBuilder, String variable, Configuration.ColumnDescription variableDescription, Map.Entry<String, Configuration.VariableComponentDescription> componentEntry) {
         String component = componentEntry.getKey();
         VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
         if (variableDescription.getComponents().get(component) == null) {
@@ -130,7 +131,7 @@ public class CheckerFactory {
         }
     }
 
-    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, String locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
+    private CheckerOnOneVariableComponentLineChecker getCheckerOnReferenceChecker(Application app, String dataType, Locale locale, Configuration.CheckerDescription checkerDescription, CheckerTarget checkerTarget, LineTransformer transformer) {
         CheckerOnOneVariableComponentLineChecker variableComponentChecker;
         String refType = checkerDescription.getParams().getRefType();
         ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();

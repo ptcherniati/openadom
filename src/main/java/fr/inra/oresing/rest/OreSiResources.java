@@ -262,7 +262,10 @@ public class OreSiResources {
 
         LinkedHashSet<String> orderedVariables = buildOrderedVariables(nameOrId, dataType);
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
-        String locale = downloadDatasetQuery != null && downloadDatasetQuery.getLocale() != null ? downloadDatasetQuery.getLocale() : LocaleContextHolder.getLocale().getLanguage();
+        Locale locale = Optional.ofNullable(downloadDatasetQuery)
+                .map(DownloadDatasetQuery::getLocale)
+                .map(Locale::new)
+                .orElseGet(LocaleContextHolder::getLocale);
         List<DataRow> list = service.findData(downloadDatasetQuery, nameOrId, dataType);
         ImmutableSet<String> variables = list.stream()
                 .limit(1)
@@ -340,7 +343,7 @@ public class OreSiResources {
 
     private FileOrUUID deserialiseFileOrUUIDQuery(String datatype, String params) {
         try {
-            FileOrUUID fileOrUUID = params != null && params != "undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
+            FileOrUUID fileOrUUID = params != null && params !="undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
             Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(fileOrUUID)
                     .map(fileOrUUID1 -> fileOrUUID.binaryfiledataset);
             if (
@@ -359,7 +362,7 @@ public class OreSiResources {
         try {
             BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
             Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(binaryFileDataset);
-            if (binaryFileDatasetOpt.map(binaryFileDataset1 -> binaryFileDataset1.getDatatype()).isEmpty()) {
+           if (binaryFileDatasetOpt.map(binaryFileDataset1 -> binaryFileDataset1.getDatatype()).isEmpty()) {
                 binaryFileDatasetOpt.ifPresent(binaryFileDataset1 -> binaryFileDataset1.setDatatype(datatype));
             }
             return binaryFileDataset;

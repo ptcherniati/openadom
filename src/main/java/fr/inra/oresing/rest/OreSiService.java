@@ -43,10 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -718,7 +715,8 @@ public class OreSiService {
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
             Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
-            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, variableComponentKey) -> {
+            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
+                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String requiredAuthorization = datum.get(variableComponentKey);
                 Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, requiredAuthorization);
@@ -1116,7 +1114,8 @@ public class OreSiService {
         List<String> variableComponentsFromRepository = new LinkedList<>();
         if (requiredAuthorizations != null) {
             for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
-                VariableComponentKey variableComponentKey = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
+                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String value = entry.getValue();
                 defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\"" + value + "\""));
                 variableComponentsFromRepository.add(variableComponentKey.getId());
@@ -1227,7 +1226,7 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, String locale) {
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, Locale locale) {
         return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
                 .stream()
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
@@ -1358,7 +1357,7 @@ public class OreSiService {
         return applicationConfigurationService.parseConfigurationBytes(file.getBytes());
     }
 
-    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, String locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
+    public Map<String, Map<String, Map<String, String>>> getEntitiesTranslation(String nameOrId, Locale locale, String datatype, Map<String, Map<String, LineChecker>> checkedFormatVariableComponents) {
         Application application = getApplication(nameOrId);
         return Optional.ofNullable(application)
                 .map(a -> a.getConfiguration())

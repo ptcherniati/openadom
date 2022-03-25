@@ -3,7 +3,12 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
+import fr.inra.oresing.model.ReferenceColumnValue;
+import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -17,6 +22,7 @@ import org.springframework.util.MultiValueMap;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -151,7 +157,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return result;
     }
 
-    public ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, String locale) {
+    public ImmutableMap<Ltree, ApplicationResult.Reference.ReferenceUUIDAndDisplay> getReferenceIdAndDisplayPerKeys(String referenceType, Locale locale) {
         Function<ReferenceValue, ApplicationResult.Reference.ReferenceUUIDAndDisplay> referenceValueToReferenceUuidAndDisplayFunction = result -> {
             ReferenceDatum referenceDatum = result.getRefValues();
             ReferenceColumn referenceColumnForDisplay = ReferenceColumn.forDisplay(locale);

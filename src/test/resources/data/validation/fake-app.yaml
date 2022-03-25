@@ -2,6 +2,9 @@ version: 0
 application:
   name: Sites
   version: 1
+  internationalizationName:
+    fr: Fausse application
+    en: Fake application
 compositeReferences:
   localizations:
     components:
@@ -89,7 +92,7 @@ dataTypes:
     internationalizationName:
       fr: Le site
       en: the good place
-    internationalizationDisplay:
+    internationalizationDisplays:
       sites:
           pattern:
             fr: 'le nom du site {nom du site_fr}'

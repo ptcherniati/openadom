@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -18,7 +17,10 @@ import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.model.internationalization.*;
+import fr.inra.oresing.model.internationalization.InternationalizationDataTypeMap;
+import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
+import fr.inra.oresing.model.internationalization.InternationalizationMap;
+import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -36,50 +38,10 @@ import java.util.stream.Stream;
 @Component
 @Slf4j
 public class ApplicationConfigurationService {
-    public static final List<String> INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
+    public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
 
-    Map<String, Map> getInternationalizedSections(Map<String, Object> toParse, List<IllegalArgumentException> exceptions) {
-        Map<String, Map> parsedMap = new LinkedHashMap<>();
-        Iterator<Map.Entry<String, Object>> iterator = toParse.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Object> entry = iterator.next();
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (INTERNATIONALIZED_FIELDS.contains(key)) {
-                value = formatSection((Map<String, Object>) value, exceptions);
-                parsedMap.put(key, (Map) value);
-                iterator.remove();
-            } else if (value instanceof Map) {
-                Map<String, Map> internationalizedSections = getInternationalizedSections((Map<String, Object>) value, exceptions);
-                if (!internationalizedSections.isEmpty()) {
-                    parsedMap.put(key, internationalizedSections);
-                }
-            }
-        }
-        return parsedMap;
-    }
 
-    private Object formatSection(Map<String, Object> value, List<IllegalArgumentException> exceptions) {
-        try {
-            return new ObjectMapper().convertValue(value, Internationalization.class);
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> internationalizationMap = new HashMap<>();
-            for (Map.Entry<String, Object> entry : value.entrySet()) {
-                try {
-                    internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), Internationalization.class));
-                } catch (IllegalArgumentException e2) {
-                    try {
-                        internationalizationMap.put(entry.getKey(), new ObjectMapper().convertValue(entry.getValue(), InternationalizationDisplay.class));
-                    } catch (IllegalArgumentException e3) {
-                        exceptions.add(e2);
-                    }
-                }
-            }
-            return internationalizationMap;
-        }
-    }
-
-    ConfigurationParsingResult unzipConfiguration(MultipartFile file) {
+    ConfigurationParsingResult unzipConfiguration(MultipartFile file){
         return null;
     }
 
@@ -114,23 +76,8 @@ public class ApplicationConfigurationService {
         Configuration configuration;
         try {
             YAMLMapper mapper = new YAMLMapper();
-            Map<String, Object> mappedObject = (Map<String, Object>) mapper.readValue(bytes, Object.class);
-            List<IllegalArgumentException> exceptions = List.of();
-            internationalizedSections = getInternationalizedSections(mappedObject, exceptions);
-            try {
-                configuration = mapper.convertValue(mappedObject, Configuration.class);
-                configuration.setInternationalization(mapper.convertValue(internationalizedSections, InternationalizationMap.class));
-            } catch (IllegalArgumentException e) {
-                if (e.getCause() instanceof UnrecognizedPropertyException) {
-                    throw (UnrecognizedPropertyException) e.getCause();
-                } else if (e.getCause() instanceof InvalidFormatException) {
-                    throw (InvalidFormatException) e.getCause();
-                } else if (e.getCause() instanceof JsonProcessingException) {
-                    throw (JsonProcessingException) e.getCause();
-                } else {
-                    throw e;
-                }
-            }
+            configuration = mapper.readValue(bytes, Configuration.class);
+
         } catch (UnrecognizedPropertyException e) {
             return onUnrecognizedPropertyException(e);
         } catch (InvalidFormatException e) {
@@ -154,10 +101,10 @@ public class ApplicationConfigurationService {
         }
 
         for (Map.Entry<String, Configuration.ReferenceDescription> referenceEntry : configuration.getReferences().entrySet()) {
-            verifyReferenceKeyColumns(builder, referenceEntry);
+            verifyReferenceKeyColumns( builder, referenceEntry);
             verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
-            verifyValidationCheckersAreValids(builder, referenceEntry, references);
+            verifyValidationCheckersAreValids( builder, referenceEntry, references);
         }
 
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
@@ -180,7 +127,7 @@ public class ApplicationConfigurationService {
                 VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
                 verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
 
-                LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
+                LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
                 verifyDatatypeAuthorizationScopeExistsAndIsValid(builder, dataType, configuration, variables, authorizationScopesVariableComponentKey);
                 requiredAuthorizationsAttributesBuilder.addAll(authorizationScopesVariableComponentKey.keySet());
             }
@@ -368,12 +315,15 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, VariableComponentKey> authorizationScopesVariableComponentKey) {
+    private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey) {
         if (authorizationScopesVariableComponentKey == null || authorizationScopesVariableComponentKey.isEmpty()) {
             builder.recordMissingAuthorizationScopeVariableComponentKey(dataType);
         } else {
             Configuration.DataTypeDescription dataTypeDescription = configuration.getDataTypes().get(dataType);
-            authorizationScopesVariableComponentKey.forEach((authorizationScopeName, authorizationScopeVariableComponentKey) -> {
+            authorizationScopesVariableComponentKey.entrySet().stream().forEach(authorizationScopeVariableComponentKeyEntry -> {
+                String authorizationScopeName = authorizationScopeVariableComponentKeyEntry.getKey();
+                Configuration.AuthorizationScopeDescription authorizationScopeDescription = authorizationScopeVariableComponentKeyEntry.getValue();
+                VariableComponentKey authorizationScopeVariableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 if (authorizationScopeVariableComponentKey.getVariable() == null) {
                     builder.recordAuthorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
                 } else {
@@ -554,11 +504,11 @@ public class ApplicationConfigurationService {
         if (internationalization != null) {
             Map<String, fr.inra.oresing.model.internationalization.InternationalizationReferenceMap> references = internationalization.getReferences();
             if (references != null) {
-                fr.inra.oresing.model.internationalization.InternationalizationReferenceMap orDefault = references.getOrDefault(reference, null);
-                if (orDefault != null) {
-                    InternationalizationDisplay internationalizationDisplay = orDefault.getInternationalizationDisplay();
+                fr.inra.oresing.model.internationalization.InternationalizationReferenceMap internationalizationReferenceMap = references.getOrDefault(reference, null);
+                if (internationalizationReferenceMap != null) {
+                    InternationalizationDisplay internationalizationDisplay = internationalizationReferenceMap.getInternationalizationDisplay();
                     if (internationalizationDisplay != null) {
-                        Map<String, String> patterns = internationalizationDisplay.getPattern();
+                        Map<Locale, String> patterns = internationalizationDisplay.getPattern();
                         if (patterns != null) {
                             internationalizedColumnsForDisplay = patterns.values()
                                     .stream()
@@ -802,6 +752,5 @@ public class ApplicationConfigurationService {
     private static class Versioned {
         int version;
     }
-
 
 }

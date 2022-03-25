@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.assertj.core.util.Strings;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,10 +18,10 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 public class InternationalizationDisplay {
-    Map<String, String> pattern;
+    Map<Locale, String> pattern;
 
     public static ReferenceDatum getDisplays(ReferenceImporterContext referenceImporterContext, ReferenceDatum refValues) {
-        Optional<Map<String, String>> displayPattern =referenceImporterContext.getDisplayPattern();
+        Optional<Map<Locale, String>> displayPattern =referenceImporterContext.getDisplayPattern();
         Map<String, Internationalization> displayColumns = referenceImporterContext.getDisplayColumns();
         String refType = referenceImporterContext.getRefType();
         ReferenceDatum displays = new ReferenceDatum();
@@ -37,7 +38,7 @@ public class InternationalizationDisplay {
                                                                 if (displayColumns.containsKey(referencedColumn)) {
                                                                     referencedColumn = displayColumns.get(referencedColumn).getOrDefault(stringEntry.getKey(), referencedColumn);
                                                                 }
-                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn)).toValueString(referenceImporterContext, referencedColumn, stringEntry.getKey());
+                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn));
                                                             }
                                                             return internationalizedPattern;
                                                         }

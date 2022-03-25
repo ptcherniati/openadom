@@ -2,22 +2,10 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.model.ColumnPresenceConstraint;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnIndexedValue;
-import fr.inra.oresing.model.ReferenceColumnMultipleValue;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
@@ -36,16 +24,19 @@ import java.util.stream.Collectors;
  */
 @AllArgsConstructor
 public class ReferenceImporterContext {
+
     private static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
     private final Constants constants;
     /**
      * Tous les {@link LineChecker} qui s'appliquent sur chaque ligne à importer
      */
     private final ImmutableSet<LineChecker> lineCheckers;
+
     /**
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
     private final ImmutableMap<Ltree, UUID> storedReferences;
+
     private final ImmutableMap<String, Column> columnsPerHeader;
     Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey;
 
@@ -182,7 +173,7 @@ public class ReferenceImporterContext {
         return column.getCsvCellContent(referenceDatum);
     }
 
-    public Optional<Map<String, String>> getDisplayPattern() {
+    public Optional<Map<Locale, String>> getDisplayPattern() {
         return constants.getDisplayPattern();
     }
 
@@ -205,10 +196,10 @@ public class ReferenceImporterContext {
         private final String refType;
         private final Optional<InternationalizationReferenceMap> internationalizationReferenceMap;
         private final Map<String, Internationalization> displayColumns;
-        private final Optional<Map<String, String>> displayPattern;
+        private final Optional<Map<Locale, String>> displayPattern;
         private final HierarchicalKeyFactory hierarchicalKeyFactory;
-        private final Optional<Map<String, List<String>>> patternColumns;
-        private final Optional<Map<String, List<InternationalizationDisplay.PatternSection>>> patternSection;
+        private final Optional<Map<Locale, List<String>>> patternColumns;
+        private final Optional<Map<Locale, List<InternationalizationDisplay.PatternSection>>> patternSection;
         Constants constants;
 
         public Constants(UUID applicationId, Configuration conf, String refType, ReferenceValueRepository referenceValueRepository) {
@@ -241,7 +232,7 @@ public class ReferenceImporterContext {
                     .orElseGet(HashMap::new);
         }
 
-        private Optional<Map<String, String>> buildDisplayPattern() {
+        private Optional<Map<Locale, String>> buildDisplayPattern() {
             return this.internationalizationReferenceMap
                     .map(InternationalizationReferenceMap::getInternationalizationDisplay)
                     .map(InternationalizationDisplay::getPattern);
@@ -253,12 +244,12 @@ public class ReferenceImporterContext {
             return hierarchicalKeyFactory;
         }
 
-        private Optional<Map<String, List<InternationalizationDisplay.PatternSection>>> buildPatternSection() {
+        private Optional<Map<Locale, List<InternationalizationDisplay.PatternSection>>> buildPatternSection() {
             return displayPattern
                     .map(dp -> dp.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, k -> InternationalizationDisplay.parsePattern(k.getValue()))));
         }
 
-        private Optional<Map<String, List<String>>> buildPatternColumns() {
+        private Optional<Map<Locale, List<String>>> buildPatternColumns() {
             return displayPattern
                     .map(dp -> dp.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, k -> InternationalizationDisplay.getPatternColumns(k.getValue()))));
         }
@@ -283,7 +274,7 @@ public class ReferenceImporterContext {
             return displayColumns;
         }
 
-        public Optional<Map<String, String>> getDisplayPattern() {
+        public Optional<Map<Locale, String>> getDisplayPattern() {
             return displayPattern;
         }
 
@@ -291,11 +282,11 @@ public class ReferenceImporterContext {
             return hierarchicalKeyFactory;
         }
 
-        public Optional<Map<String, List<String>>> getPatternColumns() {
+        public Optional<Map<Locale, List<String>>> getPatternColumns() {
             return patternColumns;
         }
 
-        public Optional<Map<String, List<InternationalizationDisplay.PatternSection>>> getPatternSection() {
+        public Optional<Map<Locale, List<InternationalizationDisplay.PatternSection>>> getPatternSection() {
             return patternSection;
         }
     }
