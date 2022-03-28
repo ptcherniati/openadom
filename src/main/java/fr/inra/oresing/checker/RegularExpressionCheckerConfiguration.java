@@ -8,5 +8,6 @@ public interface RegularExpressionCheckerConfiguration extends LineCheckerConfig
     /**
      * L'expression régulière à laquelle doit être conforme la valeur qui sera vérifiée.
      */
+
     String getPattern();
 }

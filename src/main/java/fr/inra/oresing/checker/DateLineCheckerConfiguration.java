@@ -1,5 +1,7 @@
 package fr.inra.oresing.checker;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Configuration pour un checker de type "Date"
  */
@@ -13,5 +15,6 @@ public interface DateLineCheckerConfiguration extends LineCheckerConfiguration {
     /**
      * La {@link fr.inra.oresing.model.Duration} pour cette donnée.
      */
+    @ApiModelProperty(notes = "the duration of the data value. Use sql pattern duration.", required = true, example = "1 MONTHS")
     String getDuration();
 }
