@@ -30,7 +30,6 @@ import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
-import fr.inra.oresing.groovy.CommonExpression;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
@@ -892,41 +891,13 @@ public class OreSiService {
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
     private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, String> requiredAuthorizations) {
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
-        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
-        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, requiredAuthorizations);
-        Map<String, Configuration.ColumnDescription> data = dataTypeDescription.getData();
-        Map<VariableComponentKey, Function<Datum, String>> defaultValueFns = new LinkedHashMap<>();
-        Set<VariableComponentKey> replaceEnabled = new LinkedHashSet<>();
-        for (Map.Entry<VariableComponentKey, Expression<String>> entry : defaultValueExpressions.entrySet()) {
-            VariableComponentKey variableComponentKey = entry.getKey();
-            Expression<String> expression = entry.getValue();
-            Configuration.VariableComponentDefaultValueDescription params = Optional.ofNullable(data)
-                    .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKey.getVariable()))
-                    .map(columnDescription -> columnDescription.getComponents())
-                    .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKey.getComponent()))
-                    .map(Configuration.VariableComponentDescription::getDefaultValue)
-                    .orElseGet(Configuration.VariableComponentDefaultValueDescription::new);
-            Set<String> configurationReferences = params.getReferences();
-            ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
-            Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
-            Function<Datum, String> computeDefaultValueFn = datum -> {
-                ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
-                        .putAll(contextForExpression)
-                        .putAll(datum.getEvaluationContext())
-                        .build();
-                String evaluate = expression.evaluate(evaluationContext);
-                return evaluate;
-            };
-            defaultValueFns.put(variableComponentKey, computeDefaultValueFn);
-            if (params.isReplace()) {
-                replaceEnabled.add(variableComponentKey);
-            }
-        }
+        ComputedValuesContext computedValuesContext = getComputedValuesContext(app, dataType, requiredAuthorizations);
+        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns = computedValuesContext.getDefaultValueFns();
+        ImmutableSet<VariableComponentKey> replaceEnabled = computedValuesContext.getReplaceEnabled();
         return rowWithData -> {
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>();
             Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap<>(rowWithData.getDatum().asMap());
-            defaultValueFns.entrySet().stream()
+            defaultValueFns.entrySet()
                     .forEach(variableComponentKeyExpressionEntry -> {
                         VariableComponentKey variableComponentKey = variableComponentKeyExpressionEntry.getKey();
                         Function<Datum, String> computeDefaultValueFn = variableComponentKeyExpressionEntry.getValue();
@@ -1174,17 +1145,19 @@ public class OreSiService {
         }
     }
 
-    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription, Map<String, String> requiredAuthorizations) {
-        ImmutableMap.Builder<VariableComponentKey, Expression<String>> defaultValueExpressionsBuilder = ImmutableMap.builder();
-
-        List<String> variableComponentsFromRepository = new LinkedList<>();
+    private ComputedValuesContext getComputedValuesContext(Application app, String dataType, Map<String, String> requiredAuthorizations) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
+        ImmutableMap.Builder<VariableComponentKey, Function<Datum, String>> defaultValueFns = ImmutableMap.builder();
+        ImmutableSet.Builder<VariableComponentKey> replaceEnabledBuilder = ImmutableSet.builder();
+        Set<VariableComponentKey> variableComponentsFromRepository = new LinkedHashSet<>();
         if (requiredAuthorizations != null) {
             for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
                 Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
                 VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String value = entry.getValue();
-                defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\"" + value + "\""));
-                variableComponentsFromRepository.add(variableComponentKey.getId());
+                defaultValueFns.put(variableComponentKey, datum -> value);
+                variableComponentsFromRepository.add(variableComponentKey);
             }
         }
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
@@ -1194,24 +1167,37 @@ public class OreSiService {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentDescription componentDescription = componentEntry.getValue();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                if (variableComponentsFromRepository.contains(variableComponentKey.getId())) {
+                if (variableComponentsFromRepository.contains(variableComponentKey)) {
                     continue;
                 }
-                Expression<String> defaultValueExpression = Optional.ofNullable(componentDescription)
+                Configuration.VariableComponentDefaultValueDescription params = Optional.ofNullable(componentDescription)
                         .map(Configuration.VariableComponentDescription::getDefaultValue)
-                        .map(Configuration.VariableComponentDefaultValueDescription::getExpression)
-                        .filter(StringUtils::isNotEmpty)
-                        .map(StringGroovyExpression::forExpression)
-                        .map(x -> (Expression<String>) x)
-                        .orElse(CommonExpression.EMPTY_STRING);
-                defaultValueExpressionsBuilder.put(variableComponentKey, defaultValueExpression);
+                        .orElseGet(Configuration.VariableComponentDefaultValueDescription::new);
+                Expression<String> defaultValueExpression = StringGroovyExpression.forExpression(params.getExpression());
+                Set<String> configurationReferences = params.getReferences();
+                ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+                Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
+                Function<Datum, String> computeDefaultValueFn = datum -> {
+                    ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
+                            .putAll(contextForExpression)
+                            .putAll(datum.getEvaluationContext())
+                            .build();
+                    String evaluate = defaultValueExpression.evaluate(evaluationContext);
+                    return evaluate;
+                };
+                defaultValueFns.put(variableComponentKey, computeDefaultValueFn);
+                if (params.isReplace()) {
+                    replaceEnabledBuilder.add(variableComponentKey);
+                }
             }
         }
-        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
-        if (log.isDebugEnabled()) {
-            //log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
-        }
-        return defaultValueExpressions;
+        return new ComputedValuesContext(defaultValueFns.build(), replaceEnabledBuilder.build());
+    }
+
+    @Value
+    private static class ComputedValuesContext {
+        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns;
+        ImmutableSet<VariableComponentKey> replaceEnabled;
     }
 
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
