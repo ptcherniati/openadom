@@ -44,13 +44,19 @@
                 'is-success': valid,
               }"
             >
-              <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
+              <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip"
+                        @input="loadingFile"
+              >
                 <span class="file-cta">
                   <b-icon class="file-icon" icon="upload"></b-icon>
                   <span class="file-label">{{ $t("applications.chose-config") }}</span>
                 </span>
                 <span class="file-name" v-if="applicationConfig.file">
                   {{ applicationConfig.file.name }}
+                </span>
+                <span class="file-name" v-if="currentYaml.application">
+                  Version : {{ currentYaml.application.version }}
+                  Name : {{ currentYaml.application.name }}
                 </span>
               </b-upload>
             </b-field>
@@ -99,6 +105,9 @@ import { ApplicationService } from "@/services/rest/ApplicationService";
 import { AlertService } from "@/services/AlertService";
 import { ErrorsService } from "@/services/ErrorsService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
+import JSYaml from "js-yaml";
+var JSZip = require("jszip");
+
 
 @Component({
   components: { PageView, ValidationObserver, ValidationProvider },
@@ -111,7 +120,9 @@ export default class ApplicationCreationView extends Vue {
   applicationConfig = new ApplicationConfig();
   errorsMessages = [];
   comment = "";
-
+  currentYaml="";
+  completeFile = {};
+  JSZip = new JSZip();
   async createApplication() {
     this.errorsMessages = [];
     try {
@@ -155,6 +166,76 @@ export default class ApplicationCreationView extends Vue {
       );
     } else {
       this.alertService.toastServerError(error);
+    }
+  }
+  loadingFile(inputfile){
+    var zip = this.JSZip;
+    if(inputfile.type=="application/zip"){
+      zip.loadAsync(inputfile);
+      zip.loadAsync( inputfile /* = file blob */)
+          .then(zipFiles=>this.compile(zipFiles ));
+    }else {
+      inputfile.text().then(this.readFile)
+    }
+  }
+
+  compile(zipFiles){
+    this.currentYaml = {};
+    for (const filePath in zipFiles.files) {
+      this.readNode(filePath, zipFiles.files[filePath])
+    }
+  }
+  readNode(filePath, unzippedFile) {
+    var name = unzippedFile.name
+    if (name.match('.*.yaml')) {
+      this.JSZip.file(name).async('blob').then(node => this.addZipNode(node, name));
+    }
+  }
+  readBlob(file, name){
+    var split = name.split('/');
+    try {
+      var yaml = JSYaml.load(file);
+      var obj = split
+          .reverse()
+          .map(s=>s.replace('.yaml', ''))
+          .reduce((acc, pathName)=>{
+            var obj = {};
+            obj[pathName] = acc
+            return "configuration.yaml"==name?acc:obj
+          }, yaml)
+      this.mergeDeep(obj, this.currentYaml)
+      this.currentYaml = obj
+    }catch (e) {
+      console.log(e)
+    }
+  }
+  isObject(item) {
+    return (item && typeof item === 'object' && !Array.isArray(item));
+  }
+  mergeDeep(target, ...sources) {
+    if (!sources.length) return target;
+    const source = sources.shift();
+
+    if (this.isObject(target) && this.isObject(source)) {
+      for (const key in source) {
+        if (this.isObject(source[key])) {
+          if (!target[key]) Object.assign(target, {[key]: {}});
+          this.mergeDeep(target[key], source[key]);
+        } else {
+          Object.assign(target, {[key]: source[key]});
+        }
+      }
+    }
+  }
+  addZipNode( blob,  name){
+        blob.text().then((file)=>this.readBlob(file, name));
+  }
+  readFile(file){
+    try {
+      var yaml = JSYaml.load(file)
+      this.currentYaml = yaml
+    }    catch (e) {
+      console.log( e);
     }
   }
 }
