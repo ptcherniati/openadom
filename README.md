@@ -50,6 +50,11 @@ mvn spring-boot:run
 
 Si cela n'a pas déjà été fait, installer les dépendances du frontend
 
+on se place dans le dossier ui
+```bash
+cd ui
+```
+puis on récupère les sources
 ```bash
 npm ci
 ```

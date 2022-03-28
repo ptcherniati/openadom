@@ -274,6 +274,14 @@ public class ConfigurationParsingResult {
             ));
         }
 
+        public Builder recordUnknownUsedAsVariableComponentUniqueness(String dataType, Set<String> unknownUsedAsVariableComponentUniqueness,Set<String>  availableVariableComponents) {
+            return recordError("unknownUsedAsVariableComponentUniqueness", ImmutableMap.of(
+                    "dataType", dataType,
+                    "unknownUsedAsVariableComponentUniqueness", unknownUsedAsVariableComponentUniqueness,
+                    "availableVariableComponents", availableVariableComponents
+            ));
+        }
+
         public Builder recordInvalidInternationalizedColumnsForDataType(String dataType, String reference, Set<String> unknownUsedAsKeyInternationalizedColumns, Set<String> knownColumns) {
             return recordError("invalidInternationalizedColumnsForDataType", ImmutableMap.of(
                     "dataType", dataType,
@@ -366,6 +374,61 @@ public class ConfigurationParsingResult {
                     "reference", reference,
                     "references", references)
             );
+        }
+
+        public Builder recordUndeclaredValueForChart(String datatype, String variable, Set<String> components) {
+            return recordError("unDeclaredValueForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingValueComponentForChart(String datatype, String variable, String valueComponent, Set<String> components) {
+            return recordError("missingValueComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "valueComponent", valueComponent,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingAggregationVariableForChart(String datatype, String variable, VariableComponentKey aggregation, Set<String> variables) {
+            return recordError("missingAggregationVariableForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "aggregationVariable", aggregation.getVariable(),
+                    "aggregationComponent", aggregation.getComponent(),
+                    "dataType", datatype,
+                    "variables",variables
+            ));
+        }
+
+        public Builder recordMissingAggregationComponentForChart(String datatype, String variable, VariableComponentKey aggregation, Set<String> components) {
+            return recordError("missingAggregationComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "aggregationVariable", aggregation.getVariable(),
+                    "aggregationComponent", aggregation.getComponent(),
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingStandardDeviationComponentForChart(String datatype, String variable, String standardDeviation, Set<String> components) {
+            return recordError("missingStandardDeviationComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "standardDeviation",standardDeviation,
+                    "dataType", datatype,
+                    "components", components
+            ));
+        }
+
+        public Builder recordMissingUnitComponentForChart(String datatype, String variable, String unit, Set<String> components) {
+            return recordError("missingUnitComponentForChart", ImmutableMap.of(
+                    "variable", variable,
+                    "unit",unit,
+                    "dataType", datatype,
+                    "components", components
+            ));
         }
 
         public Builder recordMissingKeyColumnsForReference(String reference) {

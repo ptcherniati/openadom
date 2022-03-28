@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
@@ -48,10 +49,12 @@ import fr.inra.oresing.model.ReferenceColumnValue;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.DataSynthesisRepository;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
@@ -89,6 +92,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -105,9 +110,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -388,6 +396,7 @@ public class OreSiService {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         Configuration conf = app.getConfiguration();
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
+        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
         ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
@@ -444,14 +453,36 @@ public class OreSiService {
                                 ReferenceImporterContext.Column::getExpectedHeader,
                                 Function.identity()
                         ));
-
+        final ReferenceImporterContext.Constants constants = new ReferenceImporterContext.Constants(
+                app.getId(),
+                conf,
+                refType,
+                repo.getRepository(app).referenceValue());
+    /*    final Set<Object> patternColumns = constants.getPatternColumns()
+                .map(pt -> pt.values())
+                .flatMap(Collection::stream)
+                .stream().collect(Collectors.toSet());*/
+        Set<String> patternColumns = constants.getPatternColumns()
+                .map(m->m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
+                .orElseGet(HashSet::new);
+        final Map<String, String> referenceToColumnName = lineCheckers.stream()
+                .filter(ReferenceLineChecker.class::isInstance)
+                .map(ReferenceLineChecker.class::cast)
+                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) referenceLineChecker.getTarget()).getColumn()));
+        final Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey =
+                lineCheckers.stream()
+                .filter(ReferenceLineChecker.class::isInstance)
+                .map(ReferenceLineChecker.class::cast)
+                .map(ReferenceLineChecker::getRefType)
+                .filter(rt -> patternColumns.contains(rt))
+                .collect(Collectors.toMap(ref -> referenceToColumnName.getOrDefault(ref, ref), ref -> repo.getRepository(app).referenceValue().findDisplayByNaturalKey(ref)));
         final ReferenceImporterContext referenceImporterContext =
                 new ReferenceImporterContext(
-                        app.getId(),
-                        conf,
-                        refType,
+                        constants,
                         lineCheckers,
-                        columns
+                        storedReferences,
+                        columns,
+                        displayByReferenceAndNaturalKey
                 );
         return referenceImporterContext;
     }
@@ -516,9 +547,15 @@ public class OreSiService {
             if (storedFile.getParams() != null && storedFile.getParams().published) {
                 storedFile.getParams().published = false;
                 filesToStore.add(storedFile);
-                unPublishVersions(app, filesToStore);
+                unPublishVersions(app, filesToStore, dataType);
             }
             return storedFile.getId();
+        } else if (params != null && params.getBinaryfiledataset() != null) {
+            BinaryFile publishedVersion = getPublishedVersion(params, app);
+            if (publishedVersion != null && publishedVersion.getParams().published) {
+                filesToStore.add(publishedVersion);
+                unPublishVersions(app, filesToStore, dataType);
+            }
         }
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
@@ -527,7 +564,7 @@ public class OreSiService {
         publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
-        unPublishVersions(app, filesToStore);
+        unPublishVersions(app, filesToStore, dataType);
         storePublishedVersion(app, filesToStore, storedFile);
         filesToStore.stream()
                 .forEach(repo.getRepository(app.getId()).binaryFile()::store);
@@ -547,13 +584,17 @@ public class OreSiService {
         }
     }
 
-    private void unPublishVersions(Application app, Set<BinaryFile> filesToStore) {
+    private void unPublishVersions(Application app, Set<BinaryFile> filesToStore, String dataType) {
         filesToStore.stream()
                 .forEach(f -> {
                     repo.getRepository(app).data().removeByFileId(f.getId());
                     f.getParams().published = false;
                     repo.getRepository(app).binaryFile().store(f);
+                    buildSynthesis(app.getName(), dataType);
                 });
+        if(dataType!=null){
+            buildSynthesis(app.getName(), dataType);
+        }
     }
 
     private void publishVersion(String dataType,
@@ -572,19 +613,32 @@ public class OreSiService {
 
             Datum constantValues = new Datum();
             readPreHeader(formatDescription, constantValues, linesIterator);
+
             ImmutableList<String> columns = readHeaderRow(linesIterator);
             readPostHeader(formatDescription, columns, constantValues, linesIterator);
+            UniquenessBuilder uniquenessBuilder = new UniquenessBuilder(app, dataType);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
                     .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
-                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), errors, binaryFileDataset));
-
+                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
+            AtomicLong lines = new AtomicLong();
+            final Instant debut = Instant.now();
             final DataRepository dataRepository = repo.getRepository(app).data();
-            final List<UUID> uuids = dataRepository.storeAll(dataStream);
-            dataRepository.updateConstraintForeigData(uuids);
+            dataRepository
+                    .storeAll(
+                            dataStream
+                                    .filter(Objects::nonNull)
+                                    .peek(k -> {
+                                        if (lines.incrementAndGet() % 1000 == 0) {
+                                            log.debug(String.format("%d %d", lines.get(), Duration.between(debut, Instant.now()).getSeconds()));
+                                        }
+                                    })
+                    );
+            errors.addAll(uniquenessBuilder.getErrors());
+            InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         }
     }
 
@@ -613,6 +667,11 @@ public class OreSiService {
                     });
         }
         return new LinkedList<>();
+    }
+
+    @Nullable
+    private BinaryFile getPublishedVersion(FileOrUUID params, Application app) {
+        return repo.getRepository(app).binaryFile().findPublishedVersions(params.getBinaryfiledataset()).orElse(null);
     }
 
     @Nullable
@@ -646,14 +705,15 @@ public class OreSiService {
      * @param app
      * @param dataType
      * @param fileId
+     * @param uniquenessBuilder
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        return buildRowWithDataStreamFunction(app, dataType, fileId, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, uniquenessBuilder, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
     }
 
     /**
@@ -662,6 +722,7 @@ public class OreSiService {
      * @param app
      * @param dataType
      * @param fileId
+     * @param uniquenessBuilder
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
@@ -671,7 +732,7 @@ public class OreSiService {
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
                                                                                String dataType,
                                                                                UUID fileId,
-                                                                               List<CsvRowValidationCheckResult> errors,
+                                                                               UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors,
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
                                                                                BinaryFileDataset binaryFileDataset) {
@@ -730,7 +791,10 @@ public class OreSiService {
             checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
-
+            final List<String> uniquenessValues = uniquenessBuilder.test(datum, rowWithData.getLineNumber());
+            if(uniquenessValues ==null) {
+                return Stream.of((Data) null);
+            };
             Stream<Data> dataStream = dataTypeDescription.getAuthorization().getDataGroups().entrySet().stream().map(entry -> {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
@@ -759,6 +823,7 @@ public class OreSiService {
                 e.setAuthorization(new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope));
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
+                e.setUniqueness(uniquenessValues);
                 e.setDataValues(toStore);
                 return e;
             });
@@ -1084,6 +1149,9 @@ public class OreSiService {
 
     /**
      * read some post header as example line, units, min and max values for each columns
+     *
+     * @param formatDescription
+     * @param linesIterator
      */
     private void readPostHeader(Configuration.FormatDescription formatDescription,  ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
@@ -1146,7 +1214,7 @@ public class OreSiService {
         return defaultValueExpressions;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
         Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
@@ -1331,7 +1399,12 @@ public class OreSiService {
             Application app = getApplication(binaryFile.getApplication().toString());
             unPublishVersions(
                     app,
-                    Set.of(binaryFile)
+                    Set.of(binaryFile),
+                    Optional.of(binaryFile)
+                            .map(BinaryFile::getParams)
+                            .map(BinaryFileInfos::getBinaryFiledataset)
+                            .map(BinaryFileDataset::getDatatype)
+                            .orElse(null)
             );
         }
         boolean deleted = repo.getRepository(name).binaryFile().delete(id);
@@ -1408,6 +1481,64 @@ public class OreSiService {
                 .orElseGet(HashMap::new);
     }
 
+    public int deleteSynthesis(String nameOrId, String dataType, String variable) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().removeSynthesisByApplicationDatatypeAndVariable(application.getId(), dataType, variable);
+    }
+
+    public int deleteSynthesis(String nameOrId, String dataType) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().removeSynthesisByApplicationDatatype(application.getId(), dataType);
+    }
+
+    public Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType) {
+        return buildSynthesis(nameOrId, dataType, null);
+    }
+
+    public Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType, String variable) {
+        Application application = getApplication(nameOrId);
+        final DataSynthesisRepository repo = this.repo.getRepository(application).synthesisRepository();
+        if (variable == null) {
+            repo.removeSynthesisByApplicationDatatype(application.getId(), dataType);
+        } else {
+            repo.removeSynthesisByApplicationDatatypeAndVariable(application.getId(), dataType, variable);
+        }
+        boolean hasChartDescription = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+                .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
+                .anyMatch(entry -> entry.getValue().getChartDescription() != null);
+        String sql;
+        if(hasChartDescription) {
+            sql = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+                    .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
+                    .filter(entry -> entry.getValue().getChartDescription() != null)
+                    .map(entry -> entry.getValue().getChartDescription().toSQL(entry.getKey(), dataType))
+                    .collect(Collectors.joining(", \n"));
+        }else {
+            sql = Configuration.Chart.toSQL(dataType);
+        }
+        List<OreSiSynthesis> oreSiSynthesisList = new LinkedList<>();
+        final List<OreSiSynthesis> oreSiSynthesis  = repo.buildSynthesis(sql, hasChartDescription);
+        repo.storeAll(oreSiSynthesis.stream());
+
+        return !hasChartDescription?Map.of("__NO-CHART",oreSiSynthesis):oreSiSynthesis.stream().collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+    }
+
+    public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().selectSynthesisDatatype(application.getId(), dataType).stream()
+                .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+    }
+
+    public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType, String variable) {
+        Application application = getApplication(nameOrId);
+        return repo.getRepository(application).synthesisRepository().selectSynthesisDatatypeAndVariable(application.getId(), dataType, variable).stream()
+                .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+    }
+
+    public List<ApplicationResult.ReferenceSynthesis> getReferenceSynthesis(Application application) {
+        return repo.getRepository(application).referenceValue().buildReferenceSynthesis();
+    }
+
     @Value
     private static class RowWithData {
         int lineNumber;
@@ -1418,5 +1549,104 @@ public class OreSiService {
     private static class ParsedCsvRow {
         int lineNumber;
         List<Map.Entry<String, String>> columns;
+    }
+
+    protected class UniquenessBuilder {
+        final List<VariableComponentKey> uniquenessDescription;
+        final Map<UniquenessKeys, List<Integer>> uniquenessInFile = new TreeMap<>();
+        private String dataType;
+
+        public UniquenessBuilder(Application application, String dataType) {
+            this.uniquenessDescription = getUniquenessDescription(application, dataType);
+            this.dataType = dataType;
+        }
+
+        private List<VariableComponentKey> getUniquenessDescription(Application application, String dataType) {
+            final List<VariableComponentKey> uniqueness = application.getConfiguration().getDataTypes().get(dataType).getUniqueness();
+            if (uniqueness.isEmpty()) {
+                return application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
+                        .flatMap(this::getVariableComponentKeys)
+                        .collect(Collectors.toList());
+            } else {
+                return uniqueness;
+            }
+        }
+
+        private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.ColumnDescription> entry) {
+            return entry.getValue().getComponents().keySet().stream()
+                    .map(componentName -> new VariableComponentKey(entry.getKey(), componentName));
+        }
+
+        public List<String> test(Datum datum, int lineNumber) {
+            UniquenessKeys uniquenessKeys = new UniquenessKeys(datum, uniquenessDescription);
+            uniquenessInFile.compute(uniquenessKeys, (k,v) -> v==null?new LinkedList<>():v)
+                    .add(lineNumber);
+            boolean isInError = uniquenessInFile.get(uniquenessKeys).size()>1;
+            return isInError?null:uniquenessKeys.getValues();
+        }
+
+        private CsvRowValidationCheckResult getErrorForEntry(Map.Entry<UniquenessKeys, List<Integer>> entry) {
+            return new CsvRowValidationCheckResult(
+                    DefaultValidationCheckResult.error(
+                            "duplicatedLineInDatatype",
+                            ImmutableMap.of(
+                                    "file", this.dataType,
+                                    "duplicatedRows", entry.getValue(),
+                                    "uniquenessKey", getUniquenessKey(entry.getKey())
+                            )
+                    ), entry.getValue().get(0));
+        }
+
+        public List<CsvRowValidationCheckResult> getErrors() {
+            return uniquenessInFile.entrySet().stream()
+                    .filter(entry -> entry.getValue().size() > 1)
+                    .map(this::getErrorForEntry)
+                    .collect(Collectors.toList());
+        }
+
+        public Map<String, String> getUniquenessKey(UniquenessKeys uniquenessKeys){
+            Map<String, String> uniquenessKeyMap = new HashMap<>();
+            for (int i = 0; i < uniquenessDescription.size(); i++) {
+                uniquenessKeyMap.put(uniquenessDescription.get(i).getId(), uniquenessKeys.getValues().get(i));
+            }
+            return uniquenessKeyMap;
+        }
+    }
+
+    class UniquenessKeys implements Comparable<UniquenessKeys> {
+        List<String> values = new LinkedList<>();
+        List<VariableComponentKey> uniquenessDescription;
+        public UniquenessKeys(Datum datum, List<VariableComponentKey> uniquenessDescription) {
+            this.uniquenessDescription = uniquenessDescription;
+            this.values = uniquenessDescription.stream()
+                    .map(variableComponentKey -> datum.get(variableComponentKey))
+                    .collect(Collectors.toList());
+        }
+
+        public List<String> getValues() {
+            return values;
+        }
+
+        public String getKey() {
+            return values.stream().collect(Collectors.joining());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            UniquenessKeys that = (UniquenessKeys) o;
+            return Objects.equals(getKey(), that.getKey());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(values);
+        }
+
+        @Override
+        public int compareTo(UniquenessKeys uniquenessKeys) {
+            return this.getKey().compareTo(uniquenessKeys.getKey());
+        }
     }
 }

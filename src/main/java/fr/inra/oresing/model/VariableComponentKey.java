@@ -31,4 +31,8 @@ public class VariableComponentKey implements CheckerTarget {
     public CheckerTargetType getType() {
         return CheckerTargetType.PARAM_VARIABLE_COMPONENT_KEY;
     }
+
+    public String toSqlExtractPattern(){
+        return String.format("aggreg.datavalues #>> '{%s,%s}'%n",variable.replaceAll("'", "''"), component.replaceAll("'", "''"));
+    }
 }

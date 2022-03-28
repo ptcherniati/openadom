@@ -83,6 +83,10 @@ references:
       description du site_en:
       code sandre du Plan d'eau:
       code sandre de la Masse d'eau plan d'eau:
+  units:
+    keyColumns: [name]
+    columns:
+      name:
 dataTypes:
   site:
     internationalizationName:
@@ -104,6 +108,7 @@ dataTypes:
           label: "Données qualitatives"
           data:
             - Couleur des individus
+            - Nombre d'individus
       authorizationScopes:
         localization:
           variable: localization
@@ -111,6 +116,13 @@ dataTypes:
       timeScope:
         variable: date
         component: day
+    uniqueness:
+      - variable: date
+        component: day
+      - variable: date
+        component: time
+      - variable: localization
+        component: site
     data:
       date:
         components:
@@ -139,8 +151,26 @@ dataTypes:
       Couleur des individus:
         components:
           value:
+      Nombre d'individus:
+        chartDescription:
+          value: "value"
+          aggregation:
+            variable: Couleur des individus
+            component: value
+          unit: "unit"
+          standardDeviation: "standardDeviation"
+        components:
+          value:
+          unit:
+            checker:
+              name: Reference
+              params:
+                refType: units
+                transformation:
+                  codify: true
+          standardDeviation:
     validations:
-      exempldeDeRegleDeValidation:
+      exempledeDeRegleDeValidation:
         description: "Juste un exemple"
         checker:
           name: GroovyExpression
@@ -178,3 +208,11 @@ dataTypes:
           boundTo:
             variable: Couleur des individus
             component: value
+        - header: "Nombre d'individus valeur"
+          boundTo:
+            variable: Nombre d'individus
+            component: value
+        - header: "Nombre d'individus ecart type"
+          boundTo:
+            variable: Nombre d'individus
+            component: standardDeviation

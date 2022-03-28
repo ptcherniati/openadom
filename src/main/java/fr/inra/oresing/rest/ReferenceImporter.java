@@ -44,16 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -72,6 +63,10 @@ abstract class ReferenceImporter {
         } else {
             recursionStrategy = new WithoutRecursion();
         }
+    }
+
+    public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
+        return referenceImporterContext.getDisplayByReferenceAndNaturalKey(referencedColumn, naturalKey, locale);
     }
 
     /**
@@ -115,7 +110,8 @@ abstract class ReferenceImporter {
                         boolean canSave = encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                         return canSave;
                     })
-                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId));
+                    .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId))
+                    .sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
             storeAll(referenceValuesStream);
         }
 
@@ -284,9 +280,18 @@ abstract class ReferenceImporter {
 
         final ReferenceValue e = new ReferenceValue();
         final Ltree naturalKey = keysAndReferenceDatumAfterChecking.getNaturalKey();
+        recursionStrategy.getKnownId(naturalKey)
+                .ifPresent(e::setId);
         final Ltree hierarchicalReference = recursionStrategy.getHierarchicalReference(naturalKey);
-        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext.getDisplayPattern(), referenceImporterContext.getDisplayColumns(), referenceDatum));
+        referenceDatum.putAll(InternationalizationDisplay.getDisplays(referenceImporterContext, referenceDatum));
 
+        /**
+         * on remplace l'id par celle en base si elle existe
+         * a noter que pour les references récursives on récupère l'id depuis  referenceLineChecker.getReferenceValues() ce qui revient au même
+         */
+
+        referenceImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
+                .ifPresent(e::setId);
         e.setBinaryFile(fileId);
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
@@ -358,6 +363,8 @@ abstract class ReferenceImporter {
 
         Ltree getHierarchicalReference(Ltree naturalKey);
 
+        Optional<UUID> getKnownId(Ltree naturalKey);
+
         Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
 
     }
@@ -365,6 +372,16 @@ abstract class ReferenceImporter {
     private class WithRecursion implements RecursionStrategy {
 
         private final Map<Ltree, Ltree> parentReferenceMap = new LinkedHashMap<>();
+
+        private final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>();
+
+        @Override
+        public Optional<UUID> getKnownId(Ltree naturalKey) {
+            if (afterPreloadReferenceUuids.containsKey(naturalKey)) {
+                return Optional.of(afterPreloadReferenceUuids.get(naturalKey));
+            }
+            return Optional.empty();
+        }
 
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {
@@ -400,7 +417,7 @@ abstract class ReferenceImporter {
             final ReferenceColumn columnToLookForParentKey = referenceImporterContext.getColumnToLookForParentKey();
             ReferenceLineChecker referenceLineChecker = referenceImporterContext.getReferenceLineChecker();
             final ImmutableMap<Ltree, UUID> beforePreloadReferenceUuids = referenceLineChecker.getReferenceValues();
-            final Map<Ltree, UUID> afterPreloadReferenceUuids = new LinkedHashMap<>(beforePreloadReferenceUuids);
+            afterPreloadReferenceUuids.putAll(beforePreloadReferenceUuids);
             ListMultimap<Ltree, Integer> missingParentReferences = LinkedListMultimap.create();
             List<RowWithReferenceDatum> collect = streamBeforePreloading
                     .peek(rowWithReferenceDatum -> {
@@ -422,8 +439,7 @@ abstract class ReferenceImporter {
                         missingParentReferences.removeAll(naturalKey);
                     })
                     .collect(Collectors.toList());
-            Set<Ltree> knownReferences = afterPreloadReferenceUuids.keySet();
-            checkMissingParentReferencesIsEmpty(missingParentReferences, knownReferences);
+            checkMissingParentReferencesIsEmpty(missingParentReferences);
             referenceLineChecker.setReferenceValues(ImmutableMap.copyOf(afterPreloadReferenceUuids));
             return collect.stream();
         }
@@ -433,13 +449,13 @@ abstract class ReferenceImporter {
          *
          * @param missingParentReferences pour chaque parent manquant, les lignes du CSV où il est mentionné
          */
-        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences, Set<Ltree> knownReferences) {
+        private void checkMissingParentReferencesIsEmpty(ListMultimap<Ltree, Integer> missingParentReferences) {
             List<CsvRowValidationCheckResult> rowErrors = missingParentReferences.entries().stream()
                     .map(entry -> {
                         Ltree missingParentReference = entry.getKey();
                         Integer lineNumber = entry.getValue();
                         ValidationCheckResult validationCheckResult =
-                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, knownReferences);
+                                new MissingParentLineValidationCheckResult(lineNumber, referenceImporterContext.getRefType(), missingParentReference, afterPreloadReferenceUuids.keySet());
                         return new CsvRowValidationCheckResult(validationCheckResult, lineNumber);
                     })
                     .collect(Collectors.toUnmodifiableList());
@@ -448,6 +464,11 @@ abstract class ReferenceImporter {
     }
 
     private class WithoutRecursion implements RecursionStrategy {
+
+        @Override
+        public Optional<UUID> getKnownId(Ltree naturalKey) {
+            return Optional.empty();
+        }
 
         @Override
         public Ltree getHierarchicalKey(Ltree naturalKey, ReferenceDatum referenceDatum) {

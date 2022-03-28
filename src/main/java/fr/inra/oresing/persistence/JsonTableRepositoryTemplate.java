@@ -10,11 +10,14 @@ import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements InitializingBean {
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @Autowired
     private JsonRowMapper<T> jsonRowMapper;
@@ -115,5 +118,9 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
         List<T> result = namedParameterJdbcTemplate.query(query, sqlParameterSource, getJsonRowMapper());
         return result;
+    }
+
+    public void flush() {
+        transactionTemplate.getTransactionManager().getTransaction(transactionTemplate).flush();
     }
 }

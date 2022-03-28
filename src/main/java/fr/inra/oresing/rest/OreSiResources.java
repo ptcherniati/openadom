@@ -6,6 +6,7 @@ import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.assertj.core.util.Strings;
@@ -26,6 +27,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -100,6 +102,7 @@ public class OreSiResources {
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
+        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = service.getReferenceSynthesis(application);
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
         application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
             ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -118,19 +121,29 @@ public class OreSiResources {
         Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
             Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
             Set<String> children = childrenPerReferences.get(reference);
-            return new ApplicationResult.Reference(reference, reference,  children, columns);
+            return new ApplicationResult.Reference(reference, reference, children, columns);
         });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
                 Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
                     return new ApplicationResult.DataType.Variable.Component(component, component);
                 });
-                return new ApplicationResult.DataType.Variable(variable, variable, components);
+                Configuration.Chart chartDescription = variableDescription.getChartDescription();
+                ApplicationResult.DataType.Variable.Chart chartDescriptionResult = null;
+                if (chartDescription != null) {
+                    VariableComponentKey aggregation = chartDescription.getAggregation();
+                    String value = chartDescription.getValue();
+                    String gap = chartDescription.getGap();
+                    String unit = chartDescription.getUnit();
+                    String standardDeviation = chartDescription.getStandardDeviation();
+                    chartDescriptionResult = new ApplicationResult.DataType.Variable.Chart(value, unit, gap, standardDeviation, aggregation);
+                }
+                return new ApplicationResult.DataType.Variable(variable, variable, components, chartDescriptionResult);
             });
             Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
-            return new ApplicationResult.DataType(dataType, dataType,  variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
+            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -274,7 +287,7 @@ public class OreSiResources {
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
         Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale, dataType, checkedFormatVariableComponents);
-         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
     }
 
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {
@@ -315,7 +328,8 @@ public class OreSiResources {
             @PathVariable("dataType") String dataType,
             @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
-        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType);
+        String locale = downloadDatasetQuery != null && downloadDatasetQuery.getLocale() != null ? downloadDatasetQuery.getLocale() : LocaleContextHolder.getLocale().getLanguage();
+        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType, locale);
         return ResponseEntity.ok(result);
     }
 
@@ -372,6 +386,62 @@ public class OreSiResources {
             List<CsvRowValidationCheckResult> errors = e.getErrors();
             return ResponseEntity.badRequest().body(errors);
         }
+    }
+
+    @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") String nameOrId,
+                                          @PathVariable("dataType") String dataType) throws IOException {
+        try {
+            Map<String, List<OreSiSynthesis>> synthesis = service.getSynthesis(nameOrId, dataType);
+            String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s", nameOrId, dataType), Charset.defaultCharset());
+            final Map<String, List<SynthesisResult>> synthesisResults = synthesis.entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                                    e -> e.getKey(),
+                                    e -> e.getValue().stream().collect(
+                                            Collectors.mapping(SynthesisResult::new, Collectors.toList())
+                                    )
+                            )
+                    );
+            return ResponseEntity.created(URI.create(uri)).body(synthesisResults);
+        } catch (InvalidDatasetContentException e) {
+            List<CsvRowValidationCheckResult> errors = e.getErrors();
+            return ResponseEntity.badRequest().body(errors);
+        }
+    }
+
+    @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") String nameOrId,
+                                          @PathVariable("dataType") String dataType,
+                                          @PathVariable("variable") String variable) throws IOException {
+        try {
+            Map<String, List<OreSiSynthesis>> synthesis = service.getSynthesis(nameOrId, dataType, variable);
+            String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s/%s", nameOrId, dataType, variable), Charset.defaultCharset());
+            return ResponseEntity.created(URI.create(uri)).body(synthesis);
+        } catch (InvalidDatasetContentException e) {
+            List<CsvRowValidationCheckResult> errors = e.getErrors();
+            return ResponseEntity.badRequest().body(errors);
+        }
+    }
+
+    @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") String nameOrId,
+                                           @PathVariable("dataType") String dataType,
+                                           @PathVariable("variable") String variable) throws IOException {
+        try {
+            Map<String, List<OreSiSynthesis>> synthesis = service.buildSynthesis(nameOrId, dataType, variable);
+            String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s%s", nameOrId, dataType, variable != null ? "/" + variable : ""), Charset.defaultCharset());
+            return ResponseEntity.created(URI.create(uri)).body(synthesis);
+        } catch (InvalidDatasetContentException e) {
+            List<CsvRowValidationCheckResult> errors = e.getErrors();
+            return ResponseEntity.badRequest().body(errors);
+        }
+    }
+
+    @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") String nameOrId,
+                                           @PathVariable("dataType") String dataType) throws IOException {
+        return buidSynthesis(nameOrId, dataType, null);
     }
 
 
