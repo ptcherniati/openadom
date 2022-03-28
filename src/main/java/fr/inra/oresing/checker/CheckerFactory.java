@@ -85,7 +85,7 @@ public class CheckerFactory {
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
+            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.doGetAllComponentDescriptions().entrySet()) {
                 String component = componentEntry.getKey();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
                 Optional.ofNullable(componentEntry.getValue())

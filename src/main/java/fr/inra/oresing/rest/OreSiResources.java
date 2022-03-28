@@ -125,7 +125,7 @@ public class OreSiResources {
         });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
-                Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
+                Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.doGetAllComponentDescriptions(), (component, componentDescription) -> {
                     return new ApplicationResult.DataType.Variable.Component(component, component);
                 });
                 Configuration.Chart chartDescription = variableDescription.getChartDescription();

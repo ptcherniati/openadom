@@ -364,19 +364,7 @@ dataTypes:
                 refType: projet
       site:
         components:
-          bassin:
-            defaultValue:
-              expression: >
-                return references.get("sites")
-                .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
-                .getHierarchicalKey();
-              references:
-                - sites
-              replace: true
-            checker:
-              name: Reference
-              params:
-                refType: sites
+          bassin: null
           plateforme: null
           chemin:
             defaultValue:
@@ -385,6 +373,19 @@ dataTypes:
                 .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin"))
                 &&
                 it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
+                .getHierarchicalKey();
+              references:
+                - sites
+            checker:
+              name: Reference
+              params:
+                refType: sites
+        computedComponents:
+          site_bassin:
+            computation:
+              expression: >
+                return references.get("sites")
+                .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
                 .getHierarchicalKey();
               references:
                 - sites

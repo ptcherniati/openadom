@@ -1146,9 +1146,8 @@ public class OreSiService {
     }
 
     private ComputedValuesContext getComputedValuesContext(Application app, String dataType, Map<String, String> requiredAuthorizations) {
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
-        ImmutableMap.Builder<VariableComponentKey, Function<Datum, String>> defaultValueFns = ImmutableMap.builder();
+        ImmutableMap.Builder<VariableComponentKey, Function<Datum, String>> defaultValueFnsBuilder = ImmutableMap.builder();
         ImmutableSet.Builder<VariableComponentKey> replaceEnabledBuilder = ImmutableSet.builder();
         Set<VariableComponentKey> variableComponentsFromRepository = new LinkedHashSet<>();
         if (requiredAuthorizations != null) {
@@ -1156,42 +1155,58 @@ public class OreSiService {
                 Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
                 VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String value = entry.getValue();
-                defaultValueFns.put(variableComponentKey, datum -> value);
+                defaultValueFnsBuilder.put(variableComponentKey, datum -> value);
                 variableComponentsFromRepository.add(variableComponentKey);
             }
         }
         for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             Configuration.ColumnDescription variableDescription = variableEntry.getValue();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
+            for (Map.Entry<String, Configuration.VariableComponentWithDefaultValueDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
-                Configuration.VariableComponentDescription componentDescription = componentEntry.getValue();
+                Configuration.VariableComponentWithDefaultValueDescription componentDescription = componentEntry.getValue();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
                 if (variableComponentsFromRepository.contains(variableComponentKey)) {
                     continue;
                 }
-                Configuration.VariableComponentDefaultValueDescription params = Optional.ofNullable(componentDescription)
-                        .map(Configuration.VariableComponentDescription::getDefaultValue)
-                        .orElseGet(Configuration.VariableComponentDefaultValueDescription::new);
-                Expression<String> defaultValueExpression = StringGroovyExpression.forExpression(params.getExpression());
-                Set<String> configurationReferences = params.getReferences();
-                ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
-                Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
-                Function<Datum, String> computeDefaultValueFn = datum -> {
-                    ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
-                            .putAll(contextForExpression)
-                            .putAll(datum.getEvaluationContext())
-                            .build();
-                    String evaluate = defaultValueExpression.evaluate(evaluationContext);
-                    return evaluate;
-                };
-                defaultValueFns.put(variableComponentKey, computeDefaultValueFn);
-                if (params.isReplace()) {
-                    replaceEnabledBuilder.add(variableComponentKey);
+                Optional.ofNullable(componentDescription)
+                        .map(Configuration.VariableComponentWithDefaultValueDescription::getDefaultValue)
+                        .map(defaultValueConfiguration -> getEvaluateGroovyWithContextFunction(app, defaultValueConfiguration))
+                        .ifPresent(computeDefaultValueFn -> defaultValueFnsBuilder.put(variableComponentKey, computeDefaultValueFn));
+            }
+            for (Map.Entry<String, Configuration.ComputedVariableComponentDescription> computedComponentEntry : variableDescription.getComputedComponents().entrySet()) {
+                String component = computedComponentEntry.getKey();
+                Configuration.ComputedVariableComponentDescription componentDescription = computedComponentEntry.getValue();
+                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                if (variableComponentsFromRepository.contains(variableComponentKey)) {
+                    continue;
                 }
+                Configuration.GroovyConfiguration computation = Optional.ofNullable(componentDescription)
+                        .map(Configuration.ComputedVariableComponentDescription::getComputation)
+                        .orElseThrow();
+                Function<Datum, String> computeDefaultValueFn = getEvaluateGroovyWithContextFunction(app, computation);
+                defaultValueFnsBuilder.put(variableComponentKey, computeDefaultValueFn);
+                replaceEnabledBuilder.add(variableComponentKey);
             }
         }
-        return new ComputedValuesContext(defaultValueFns.build(), replaceEnabledBuilder.build());
+        return new ComputedValuesContext(defaultValueFnsBuilder.build(), replaceEnabledBuilder.build());
+    }
+
+    private Function<Datum, String> getEvaluateGroovyWithContextFunction(Application app, Configuration.GroovyConfiguration computation) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Expression<String> defaultValueExpression = StringGroovyExpression.forExpression(computation.getExpression());
+        Set<String> configurationReferences = computation.getReferences();
+        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+        Preconditions.checkState(computation.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
+        Function<Datum, String> computeDefaultValueFn = datum -> {
+            ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
+                    .putAll(contextForExpression)
+                    .putAll(datum.getEvaluationContext())
+                    .build();
+            String evaluate = defaultValueExpression.evaluate(evaluationContext);
+            return evaluate;
+        };
+        return computeDefaultValueFn;
     }
 
     @Value
@@ -1559,7 +1574,7 @@ public class OreSiService {
         }
 
         private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.ColumnDescription> entry) {
-            return entry.getValue().getComponents().keySet().stream()
+            return entry.getValue().doGetAllComponents().stream()
                     .map(componentName -> new VariableComponentKey(entry.getKey(), componentName));
         }
 

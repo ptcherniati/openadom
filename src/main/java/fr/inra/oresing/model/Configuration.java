@@ -342,7 +342,23 @@ public class Configuration {
     @ToString
     public static class ColumnDescription {
         Chart chartDescription;
-        LinkedHashMap<String, VariableComponentDescription> components = new LinkedHashMap<>();
+        LinkedHashMap<String, VariableComponentWithDefaultValueDescription> components = new LinkedHashMap<>();
+        LinkedHashMap<String, ComputedVariableComponentDescription> computedComponents = new LinkedHashMap<>();
+
+        public Set<String> doGetAllComponents() {
+            return doGetAllComponentDescriptions().keySet();
+        }
+
+        public Map<String, VariableComponentDescription> doGetAllComponentDescriptions() {
+            Map<String, VariableComponentDescription> allComponentDescriptions = new LinkedHashMap<>();
+            allComponentDescriptions.putAll(components);
+            allComponentDescriptions.putAll(computedComponents);
+            return allComponentDescriptions;
+        }
+
+        public boolean hasComponent(String component) {
+            return doGetAllComponents().contains(component);
+        }
     }
 
     @Getter
@@ -387,21 +403,23 @@ public class Configuration {
 
     @Getter
     @Setter
-    @ToString
-    public static class VariableComponentDescription {
+    public abstract static class VariableComponentDescription {
         CheckerDescription checker;
-        @Nullable
-        VariableComponentDefaultValueDescription defaultValue;
     }
 
     @Getter
     @Setter
     @ToString
-    public static class VariableComponentDefaultValueDescription implements fr.inra.oresing.checker.GroovyConfiguration {
-        String expression;
-        Set<String> references = new LinkedHashSet<>();
-        Set<String> datatypes = new LinkedHashSet<>();
-        boolean replace;
+    public static class VariableComponentWithDefaultValueDescription extends VariableComponentDescription {
+        @Nullable
+        GroovyConfiguration defaultValue;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ComputedVariableComponentDescription extends VariableComponentDescription {
+        GroovyConfiguration computation;
     }
 
     @Getter

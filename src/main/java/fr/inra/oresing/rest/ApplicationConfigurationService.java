@@ -158,7 +158,7 @@ public class ApplicationConfigurationService {
                     final Configuration.Chart chartDescription = entry.getValue().getChartDescription();
                     if (chartDescription != null) {
                         final String valueComponent = chartDescription.getValue();
-                        final LinkedHashMap<String, Configuration.VariableComponentDescription> components = entry.getValue().getComponents();
+                        final Map<String, Configuration.VariableComponentDescription> components = entry.getValue().doGetAllComponentDescriptions();
                         if (Strings.isNullOrEmpty(valueComponent)) {
                             builder.recordUndeclaredValueForChart(datatype, variable, components.keySet());
                         } else {
@@ -169,7 +169,7 @@ public class ApplicationConfigurationService {
                             if (aggregation != null) {
                                 if (!dataTypeDescription.getData().containsKey(aggregation.getVariable())) {
                                     builder.recordMissingAggregationVariableForChart(datatype, variable, aggregation, dataTypeDescription.getData().keySet());
-                                } else if (!dataTypeDescription.getData().get(aggregation.getVariable()).getComponents().containsKey(aggregation.getComponent())) {
+                                } else if (!dataTypeDescription.getData().get(aggregation.getVariable()).hasComponent(aggregation.getComponent())) {
                                     builder.recordMissingAggregationComponentForChart(datatype, variable, aggregation, components.keySet());
                                 }
 
@@ -340,14 +340,14 @@ public class ApplicationConfigurationService {
                         builder.recordAuthorizationScopeVariableComponentKeyUnknownVariable(authorizationScopeVariableComponentKey, variables);
                     } else {
                         String component = authorizationScopeVariableComponentKey.getComponent();
-                        LinkedHashMap<String, Configuration.VariableComponentDescription> componentsInDescription = variableInDescription.getComponents();
+                        Map<String, Configuration.VariableComponentDescription> componentsInDescription = variableInDescription.doGetAllComponentDescriptions();
                         if (component == null) {
                             builder.recordAuthorizationVariableComponentKeyMissingComponent(dataType, authorizationScopeName, variable, componentsInDescription.keySet());
                         } else {
                             if (!componentsInDescription.containsKey(component)) {
                                 builder.recordAuthorizationVariableComponentKeyUnknownComponent(authorizationScopeVariableComponentKey, componentsInDescription.keySet());
                             } else {
-                                Configuration.CheckerDescription authorizationScopeVariableComponentChecker = dataTypeDescription.getData().get(variable).getComponents().get(authorizationScopeVariableComponentKey.getComponent()).getChecker();
+                                Configuration.CheckerDescription authorizationScopeVariableComponentChecker = dataTypeDescription.getData().get(variable).doGetAllComponentDescriptions().get(authorizationScopeVariableComponentKey.getComponent()).getChecker();
                                 if (authorizationScopeVariableComponentChecker == null || !"Reference".equals(authorizationScopeVariableComponentChecker.getName())) {
                                     builder.recordAuthorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
                                 }
@@ -393,12 +393,12 @@ public class ApplicationConfigurationService {
                     builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
                 } else {
                     if (timeScopeVariableComponentKey.getComponent() == null) {
-                        builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                        builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
                     } else {
-                        if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().containsKey(timeScopeVariableComponentKey.getComponent())) {
-                            builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().keySet());
+                        if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).hasComponent(timeScopeVariableComponentKey.getComponent())) {
+                            builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
                         } else {
-                            Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).getComponents().get(timeScopeVariableComponentKey.getComponent()).getChecker();
+                            Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponentDescriptions().get(timeScopeVariableComponentKey.getComponent()).getChecker();
                             if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
                                 builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
                             }
@@ -421,7 +421,7 @@ public class ApplicationConfigurationService {
         for (Map.Entry<String, Configuration.ColumnDescription> columnDescriptionEntry : dataTypeDescription.getData().entrySet()) {
             Configuration.ColumnDescription columnDescription = columnDescriptionEntry.getValue();
             String variable = columnDescriptionEntry.getKey();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> variableComponentDescriptionEntry : columnDescription.getComponents().entrySet()) {
+            for (Map.Entry<String, Configuration.VariableComponentDescription> variableComponentDescriptionEntry : columnDescription.doGetAllComponentDescriptions().entrySet()) {
                 Configuration.VariableComponentDescription variableComponentDescription = variableComponentDescriptionEntry.getValue();
                 if (variableComponentDescription == null) {
                     continue;
@@ -467,7 +467,7 @@ public class ApplicationConfigurationService {
         for (Map.Entry<String, Configuration.ColumnDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
             String datum = dataEntry.getKey();
             Configuration.ColumnDescription datumDescription = dataEntry.getValue();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : datumDescription.getComponents().entrySet()) {
+            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : datumDescription.doGetAllComponentDescriptions().entrySet()) {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
                 if (variableComponentDescription != null) {
@@ -599,7 +599,7 @@ public class ApplicationConfigurationService {
     private void verifyUniquenessComponentKeysInDatatype(String dataType, Configuration.DataTypeDescription dataTypeDescription, ConfigurationParsingResult.Builder builder) {
         final List<VariableComponentKey> uniqueness = dataTypeDescription.getUniqueness();
         final Set<String> availableVariableComponents = dataTypeDescription.getData().entrySet().stream()
-                .flatMap(entry -> entry.getValue().getComponents().keySet().stream()
+                .flatMap(entry -> entry.getValue().doGetAllComponents().stream()
                         .map(componentName -> new VariableComponentKey(entry.getKey(), componentName).getId()))
                 .collect(Collectors.<String>toSet());
         Set<String> variableComponentsKeyInUniqueness = new HashSet<>();
