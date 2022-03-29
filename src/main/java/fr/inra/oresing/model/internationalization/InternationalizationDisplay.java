@@ -4,6 +4,7 @@ import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceColumnSingleValue;
 import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.rest.ReferenceImporterContext;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.assertj.core.util.Strings;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 public class InternationalizationDisplay {
+    @ApiModelProperty(notes = "pattern in differents locales, used to display a reference when referred to",required = false)
     Map<Locale, String> pattern;
 
     public static ReferenceDatum getDisplays(ReferenceImporterContext referenceImporterContext, ReferenceDatum refValues) {
