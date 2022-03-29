@@ -68,7 +68,7 @@ export class InternationalisationService extends Fetcher {
       return application;
     }
     application.localName = this.localeApplicationName(
-      internationalization?.application?.internationalization,
+      internationalization?.application?.internationalizationName,
       application.name
     );
     return application;
