@@ -408,7 +408,7 @@ public class OreSiService {
                 .map(entry -> {
                     ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
                     Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
-                    ColumnPresenceConstraint presenceConstraint = MoreObjects.firstNonNull(entry.getValue(), new Configuration.ReferenceColumnDescription()).getPresenceConstraint();
+                    ColumnPresenceConstraint presenceConstraint = MoreObjects.firstNonNull(entry.getValue(), new Configuration.ReferenceStaticColumnDescription()).getPresenceConstraint();
                     ReferenceImporterContext.Column column;
                     if (multiplicity == Multiplicity.ONE) {
                         column = new ReferenceImporterContext.OneValueStaticColumn(referenceColumn, presenceConstraint);

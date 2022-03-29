@@ -123,7 +123,7 @@ public class Configuration {
     public static class ReferenceDescription extends InternationalizationDisplayImpl {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
-        private LinkedHashMap<String, ReferenceColumnDescription> columns = new LinkedHashMap<>();
+        private LinkedHashMap<String, ReferenceStaticColumnDescription> columns = new LinkedHashMap<>();
         private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, LineValidationRuleWithColumnsDescription> validations = new LinkedHashMap<>();
 
@@ -160,19 +160,23 @@ public class Configuration {
 
     @Getter
     @Setter
-    @ToString
-    public static class ReferenceColumnDescription {
+    public static abstract class ReferenceColumnDescription {
         private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
     @Setter
     @ToString
-    public static class ReferenceDynamicColumnDescription {
+    public static class ReferenceStaticColumnDescription extends ReferenceColumnDescription {
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferenceDynamicColumnDescription extends ReferenceColumnDescription {
         private String headerPrefix = "";
         private String reference;
         private String referenceColumnToLookForHeader;
-        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
