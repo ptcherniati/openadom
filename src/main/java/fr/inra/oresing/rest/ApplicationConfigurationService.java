@@ -222,7 +222,7 @@ public class ApplicationConfigurationService {
                 String reference = component.getReference();
                 if (parentKeyColumn == null) {
                     builder.recordRequiredParentKeyColumnInCompositeReferenceForReference(compositeReferenceName, reference, previousReference);
-                } else if (!configuration.getReferences().get(reference).getColumns().containsKey(parentKeyColumn)) {
+                } else if (!configuration.getReferences().get(reference).hasStaticColumn(parentKeyColumn)) {
                     builder.recordMissingParentColumnForReferenceInCompositeReferenceFor(compositeReferenceName, reference, parentKeyColumn);
                 }
             }
@@ -239,7 +239,7 @@ public class ApplicationConfigurationService {
                 continue;
             }
             String parentRecursiveKey = component.getParentRecursiveKey();
-            if (parentRecursiveKey != null && !configuration.getReferences().get(reference).getColumns().containsKey(parentRecursiveKey)) {
+            if (parentRecursiveKey != null && !configuration.getReferences().get(reference).hasStaticColumn(parentRecursiveKey)) {
                 builder.recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentRecursiveKey);
             }
         }
@@ -494,7 +494,7 @@ public class ApplicationConfigurationService {
         if (keyColumns.isEmpty()) {
             builder.recordMissingKeyColumnsForReference(reference);
         } else {
-            Set<String> columns = referenceDescription.getColumns().keySet();
+            Set<String> columns = referenceDescription.doGetStaticColumns();
             ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
             ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
             if (!unknownUsedAsKeyElementColumns.isEmpty()) {
@@ -529,7 +529,7 @@ public class ApplicationConfigurationService {
         }
         Set<String> internationalizedColumns = getInternationalizedColumns(configuration, reference);
         Set<String> columns = Optional.ofNullable(referenceDescription)
-                .map(Configuration.ReferenceDescription::getColumns)
+                .map(Configuration.ReferenceDescription::doGetStaticColumnDescriptions)
                 .map(c -> new LinkedHashSet(c.keySet()))
                 .orElseGet(LinkedHashSet::new);
         columns.addAll(internationalizedColumns);
@@ -583,7 +583,7 @@ public class ApplicationConfigurationService {
             Set<String> internationalizedColumns = getInternationalizedColumns(configuration, reference);
             Configuration.ReferenceDescription referenceDescription = configuration.getReferences().getOrDefault(reference, null);
             LinkedHashSet columns = Optional.ofNullable(referenceDescription)
-                    .map(Configuration.ReferenceDescription::getColumns)
+                    .map(Configuration.ReferenceDescription::doGetStaticColumnDescriptions)
                     .map(c -> new LinkedHashSet(c.keySet()))
                     .orElseGet(LinkedHashSet::new);
             columns.addAll(internationalizedColumns);
@@ -618,8 +618,8 @@ public class ApplicationConfigurationService {
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
         Set<String> internationalizedColumns = getInternationalizedColumns(configuration, reference);
         Set<String> columns = Optional.ofNullable(referenceDescription)
-                .map(Configuration.ReferenceDescription::getColumns)
-                .map(LinkedHashMap::keySet)
+                .map(Configuration.ReferenceDescription::doGetStaticColumnDescriptions)
+                .map(Map::keySet)
                 .orElse(new HashSet<>());
 
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
@@ -657,9 +657,9 @@ public class ApplicationConfigurationService {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 } else {
                     Set<String> columnsDeclaredInCheckerConfiguration = lineValidationRuleDescription.getColumns();
-                    Set<String> knownColumns = referenceDescription.getColumns().keySet();
+                    Set<String> knownColumns = referenceDescription.doGetAllColumns();
                     ImmutableSet<String> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
-                    if (false && !missingColumns.isEmpty()) {
+                    if (!missingColumns.isEmpty()) {
                         builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, knownColumns, checker.getName(), missingColumns, reference);
                     }
                 }

@@ -281,7 +281,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 String foreignKeyColumnName = getTechnicalIdColumnName(variableComponentKey);
                 String alias = getAliasForColumnName(variableComponentKey);
 
-                application.getConfiguration().getReferences().get(referenceType).getColumns().keySet().stream()
+                application.getConfiguration().getReferences().get(referenceType).doGetStaticColumns().stream()
                         .map(referenceColumn -> alias + "." + quoteSqlIdentifier(referenceColumn) + " as " + getColumnName("ref", variableComponentKey.getVariable(), variableComponentKey.getComponent(), referenceColumn))
                         .forEach(selectClauseReferenceElements::add);
                 fromClauseJoinElements.add("left outer join " + quotedViewName + " " + alias + " on " + dataTableName + "." + foreignKeyColumnName + "::uuid = " + alias + "." + quoteSqlIdentifier(referenceType + "_id") + "::uuid");
@@ -343,7 +343,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .map(ReferenceLineChecker.class::cast)
                     .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
 
-            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = referenceDescription.getColumns().keySet().stream()
+            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = referenceDescription.doGetStaticColumns().stream()
                     .map(ReferenceColumn::new)
                     .collect(ImmutableSetMultimap.toImmutableSetMultimap(referenceColumn -> declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE), Function.identity()));
 

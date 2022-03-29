@@ -57,6 +57,15 @@ public class CheckerFactory {
         Preconditions.checkArgument(app.getConfiguration().getReferences().containsKey(reference), "Pas de référence " + reference + " dans " + app);
         Configuration.ReferenceDescription referenceDescription = app.getConfiguration().getReferences().get(reference);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
+        for (Map.Entry<String, Configuration.ReferenceStaticColumnDescription> variableEntry : referenceDescription.doGetStaticColumnDescriptions().entrySet()) {
+            String column = variableEntry.getKey();
+            ReferenceColumn referenceColumn = new ReferenceColumn(column);
+            Configuration.ReferenceStaticColumnDescription variableDescription = variableEntry.getValue();
+            Optional.ofNullable(variableEntry.getValue())
+                    .map(Configuration.ReferenceStaticColumnDescription::getChecker)
+                    .map(checkerDescription -> newChecker(app, checkerDescription, referenceColumn))
+                    .ifPresent(checkersBuilder::add);
+        }
         for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationEntry : referenceDescription.getValidations().entrySet()) {
             Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationEntry.getValue();
             Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();

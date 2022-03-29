@@ -358,6 +358,45 @@ references:
       code de l'instrument: null
       doi de la référence: null
   instruments_periodes:
+    computedColumns:
+      theme_types_de_donnees_par_zone_etudes:
+        computation:
+          expression: >
+            String[] tab = datum.get("Nom du Thème-Type de
+            données-Variable").split("-"); String site = tab[0].strip();
+            String theme = tab[1].strip(); String datatype = tab[2].strip();
+            return references["theme_types_de_donnees_par_zone_etudes"]
+            .findAll {it.refValues["nom du site"].equals(site)} .findAll
+            {it.refValues["nom du thème"].equals(theme)} .find
+            {it.refValues["nom du type de données"].equals(datatype)}
+            .naturalKey
+          references:
+            - theme_types_de_donnees_par_zone_etudes
+        checker:
+          name: Reference
+          params:
+            refType: theme_types_de_donnees_par_zone_etudes
+      variables_par_types_de_donnees:
+        computation:
+          expression: >
+            String[] tab = datum.get("Nom du Thème-Type de
+            données-Variable").split("-"); String datatype =
+            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            tab[2].strip()); String variable =
+            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            tab[3].strip()); return
+            references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                    .findAll {it.refValues["nom de la variable"].equals(variable)}
+                    .find {it.refValues["nom du type de données"].equals(datatype)}
+              .naturalKey
+          references:
+            - variables_par_types_de_donnees
+        checker:
+          name: Reference
+          params:
+            refType: variables_par_types_de_donnees
+            transformation:
+              codify: true
     validations:
       instrumentRef:
         description: référence à l'instrument
@@ -369,64 +408,6 @@ references:
             required: true
             transformation:
               codify: true
-      checkSiteThemeDatatype:
-        description: référence au siteThemeDatatype
-        columns: [ theme_types_de_donnees_par_zone_etudes ]
-        checker:
-          name: Reference
-          params:
-            refType: theme_types_de_donnees_par_zone_etudes
-            transformation:
-              groovy:
-                expression: >
-                  String[] tab = datum.get("Nom du Thème-Type de
-                  données-Variable").split("-"); String site = tab[0].strip();
-                  String theme = tab[1].strip(); String datatype = tab[2].strip();
-                  return references["theme_types_de_donnees_par_zone_etudes"]
-                  .findAll {it.refValues["nom du site"].equals(site)} .findAll
-                  {it.refValues["nom du thème"].equals(theme)} .find
-                  {it.refValues["nom du type de données"].equals(datatype)}
-                  .naturalKey
-                references:
-                  - theme_types_de_donnees_par_zone_etudes
-      checkDataypeVariableUnite:
-        description: référence au DataypeVariableUnite
-        columns: [ variables_par_types_de_donnees ]
-        checker:
-          name: Reference
-          params:
-            refType: variables_par_types_de_donnees
-            required: true
-            transformation:
-              groovy:
-                expression: >
-                  String[] tab = datum.get("Nom du Thème-Type de
-                  données-Variable").split("-"); String datatype =
-                  fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-                  tab[2].strip()); String variable =
-                  fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-                  tab[3].strip()); return
-                  references.find{it.key.equals("variables_par_types_de_donnees")}.value
-                          .findAll {it.refValues["nom de la variable"].equals(variable)}
-                          .find {it.refValues["nom du type de données"].equals(datatype)}
-                    .naturalKey
-                references:
-                  - variables_par_types_de_donnees
-              codify: true
-      date début:
-        description: date de début
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-        columns: [ Date de début ]
-      date fin:
-        description: date de fin
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-        columns: [ Date de fin ]
     internationalizationName:
       fr: Périodes d'application des instruments
       en: Application periods of the instruments
@@ -439,8 +420,16 @@ references:
     columns:
       Nom du Thème-Type de données-Variable: null
       Code de l'instrument: null
-      Date de début: null
-      Date de fin: null
+      Date de début:
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+      Date de fin:
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
   methodes:
     internationalizationName:
       fr: Méthodes
@@ -500,6 +489,46 @@ references:
       code de la méthode de calcul: null
       doi de la référence: null
   methodes_periodes:
+    computedColumns:
+      theme_types_de_donnees_par_zone_etudes:
+        computation:
+          expression: >
+            String[] tab = datum.get("Nom du Thème-Type de
+            données-Variable").split("-"); String site = tab[0].strip();
+            String theme = tab[1].strip(); String datatype = tab[2].strip();
+            return references["theme_types_de_donnees_par_zone_etudes"]
+            .findAll {it.refValues["nom du site"].equals(site)} .findAll
+            {it.refValues["nom du thème"].equals(theme)} .find
+            {it.refValues["nom du type de données"].equals(datatype)}
+            .naturalKey
+          references:
+            - theme_types_de_donnees_par_zone_etudes
+        checker:
+          name: Reference
+          params:
+            refType: theme_types_de_donnees_par_zone_etudes
+      variables_par_types_de_donnees:
+        computation:
+          expression: >
+            String[] tab = datum.get("Nom du Thème-Type de
+            données-Variable").split("-"); String datatype =
+            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            tab[2].strip()); String variable =
+            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            tab[3].strip()); return
+            references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                    .findAll {it.refValues["nom de la variable"].equals(variable)}
+                    .find {it.refValues["nom du type de données"].equals(datatype)}
+              .naturalKey
+          references:
+            - variables_par_types_de_donnees
+        checker:
+          name: Reference
+          params:
+            refType: variables_par_types_de_donnees
+            required: true
+            transformation:
+              codify: true
     validations:
       methodeRef:
         description: référence à la méthode
@@ -511,64 +540,13 @@ references:
             required: true
             transformation:
               codify: true
-      checkSiteThemeDatatype:
-        description: référence au siteThemeDatatype
-        columns: [ theme_types_de_donnees_par_zone_etudes ]
-        checker:
-          name: Reference
-          params:
-            refType: theme_types_de_donnees_par_zone_etudes
-            transformation:
-              groovy:
-                expression: >
-                  String[] tab = datum.get("Nom du Thème-Type de
-                  données-Variable").split("-"); String site = tab[0].strip();
-                  String theme = tab[1].strip(); String datatype = tab[2].strip();
-                  return references["theme_types_de_donnees_par_zone_etudes"]
-                  .findAll {it.refValues["nom du site"].equals(site)} .findAll
-                  {it.refValues["nom du thème"].equals(theme)} .find
-                  {it.refValues["nom du type de données"].equals(datatype)}
-                  .naturalKey
-                references:
-                  - theme_types_de_donnees_par_zone_etudes
-      checkDataypeVariableUnite:
-        description: référence au DataypeVariableUnite
-        columns: [ variables_par_types_de_donnees ]
-        checker:
-          name: Reference
-          params:
-            refType: variables_par_types_de_donnees
-            required: true
-            transformation:
-              groovy:
-                expression: >
-                  String[] tab = datum.get("Nom du Thème-Type de
-                  données-Variable").split("-"); String datatype =
-                  fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-                  tab[2].strip()); String variable =
-                  fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-                  tab[3].strip()); return
-                  references.find{it.key.equals("variables_par_types_de_donnees")}.value
-                          .findAll {it.refValues["nom de la variable"].equals(variable)}
-                          .find {it.refValues["nom du type de données"].equals(datatype)}
-                    .naturalKey
-                references:
-                  - variables_par_types_de_donnees
-              codify: true
-      date début:
-        description: date de début
+      dates:
+        description: Les dates sont des jours
+        columns: [ Date de début, Date de fin ]
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-        columns: [ Date de début ]
-      date fin:
-        description: date de fin
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-        columns: [ Date de fin ]
     internationalizationName:
       fr: Périodes d'application des méthodes
       en: Application periods of methods
@@ -666,50 +644,44 @@ references:
       description de l'information complémentaire_en: null
       nom de la liste de valeurs d'informations complémentaires: null
   ic_site_theme_dataype_variable:
-    validations:
-      checkSiteThemeDatatype:
-        description: référence au siteThemeDatatype
-        columns: [ theme_types_de_donnees_par_zone_etudes ]
+    computedColumns:
+      theme_types_de_donnees_par_zone_etudes:
+        computation:
+          expression: >
+            String[] tab = datum.get("Nom du Thème-Type de
+            données-Variable").split("-"); String site = tab[0].strip();
+            String theme = tab[1].strip(); String datatype = tab[2].strip();
+            return references["theme_types_de_donnees_par_zone_etudes"]
+            .findAll {it.refValues["nom du site"].equals(site)} .findAll
+            {it.refValues["nom du thème"].equals(theme)} .find
+            {it.refValues["nom du type de données"].equals(datatype)}
+            .naturalKey
+          references:
+            - theme_types_de_donnees_par_zone_etudes
         checker:
           name: Reference
           params:
             refType: theme_types_de_donnees_par_zone_etudes
-            transformation:
-              groovy:
-                expression: >
-                  String[] tab = datum.get("Nom du Thème-Type de
-                  données-Variable").split("-"); String site = tab[0].strip();
-                  String theme = tab[1].strip(); String datatype = tab[2].strip();
-                  return references["theme_types_de_donnees_par_zone_etudes"]
-                  .findAll {it.refValues["nom du site"].equals(site)} .findAll
-                  {it.refValues["nom du thème"].equals(theme)} .find
-                  {it.refValues["nom du type de données"].equals(datatype)}
-                  .naturalKey
-                references:
-                  - theme_types_de_donnees_par_zone_etudes
-      checkDataypeVariableUnite:
-        description: référence au DataypeVariableUnite
-        columns: [ variables_par_types_de_donnees ]
+      variables_par_types_de_donnees:
+        computation:
+          expression: >
+            String[] tab = datum.get("Nom du Thème-Type de
+            données-Variable").split("-"); String datatype =
+            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            tab[2].strip()); String variable =
+            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            tab[3].strip()); return
+            references.find{it.key.equals("variables_par_types_de_donnees")}.value
+                    .findAll {it.refValues["nom de la variable"].equals(variable)}
+                    .find {it.refValues["nom du type de données"].equals(datatype)}
+              .naturalKey
+          references:
+            - variables_par_types_de_donnees
         checker:
           name: Reference
           params:
             refType: variables_par_types_de_donnees
-            required: true
             transformation:
-              groovy:
-                expression: >
-                  String[] tab = datum.get("Nom du Thème-Type de
-                  données-Variable").split("-"); String datatype =
-                  fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-                  tab[2].strip()); String variable =
-                  fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
-                  tab[3].strip()); return
-                  references.find{it.key.equals("variables_par_types_de_donnees")}.value
-                          .findAll {it.refValues["nom de la variable"].equals(variable)}
-                          .find {it.refValues["nom du type de données"].equals(datatype)}
-                    .naturalKey
-                references:
-                  - variables_par_types_de_donnees
               codify: true
     internationalizationName:
       fr: >-

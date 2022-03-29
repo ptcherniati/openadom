@@ -123,14 +123,39 @@ public class Configuration {
     public static class ReferenceDescription extends InternationalizationDisplayImpl {
         private char separator = ';';
         private List<String> keyColumns = new LinkedList<>();
-        private LinkedHashMap<String, ReferenceStaticColumnDescription> columns = new LinkedHashMap<>();
+        private LinkedHashMap<String, ReferenceStaticNotComputedColumnDescription> columns = new LinkedHashMap<>();
+        private LinkedHashMap<String, ReferenceStaticComputedColumnDescription> computedColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
         private LinkedHashMap<String, LineValidationRuleWithColumnsDescription> validations = new LinkedHashMap<>();
 
-        public ImmutableSet<ReferenceColumn> doGetStaticColumns() {
-            return columns.keySet().stream()
-                    .map(ReferenceColumn::new).
-                    collect(ImmutableSet.toImmutableSet());
+        public Set<String> doGetAllColumns() {
+            return doGetAllColumnDescriptions().keySet();
+        }
+
+        public Set<String> doGetStaticColumns() {
+            return doGetStaticColumnDescriptions().keySet();
+        }
+
+        public Map<String, ReferenceColumnDescription> doGetAllColumnDescriptions() {
+            Map<String, ReferenceColumnDescription> allColumnDescriptions = new LinkedHashMap<>();
+            allColumnDescriptions.putAll(doGetStaticColumnDescriptions());
+            allColumnDescriptions.putAll(dynamicColumns);
+            return allColumnDescriptions;
+        }
+
+        public Map<String, ReferenceStaticColumnDescription> doGetStaticColumnDescriptions() {
+            Map<String, ReferenceStaticColumnDescription> staticColumnDescriptions = new LinkedHashMap<>();
+            staticColumnDescriptions.putAll(columns);
+            staticColumnDescriptions.putAll(computedColumns);
+            return staticColumnDescriptions;
+        }
+
+        public boolean hasStaticColumn(String column) {
+            return doGetStaticColumns().contains(column);
+        }
+
+        public boolean hasColumn(String column) {
+            return doGetAllColumns().contains(column);
         }
 
         public ImmutableSet<ReferenceColumn> doGetComputedColumns() {
@@ -161,13 +186,28 @@ public class Configuration {
     @Getter
     @Setter
     public static abstract class ReferenceColumnDescription {
-        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
+        ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
+    }
+
+    @Getter
+    @Setter
+    public static abstract class ReferenceStaticColumnDescription extends ReferenceColumnDescription {
+        CheckerDescription checker;
     }
 
     @Getter
     @Setter
     @ToString
-    public static class ReferenceStaticColumnDescription extends ReferenceColumnDescription {
+    public static class ReferenceStaticNotComputedColumnDescription extends ReferenceStaticColumnDescription {
+        @Nullable
+        GroovyConfiguration defaultValue;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class ReferenceStaticComputedColumnDescription extends ReferenceStaticColumnDescription {
+        GroovyConfiguration computation;
     }
 
     @Getter

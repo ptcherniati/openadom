@@ -20,6 +20,7 @@ import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.model.ComputedValueUsage;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.ReferenceColumnMultipleValue;
 import fr.inra.oresing.model.ReferenceColumnSingleValue;
@@ -44,7 +45,18 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -97,7 +109,9 @@ abstract class ReferenceImporter {
             checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()));
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
-            final Stream<RowWithReferenceDatum> recordStreamBeforePreloading = csvRecordsStream.map(csvRecordToReferenceDatumFn);
+            final Stream<RowWithReferenceDatum> recordStreamBeforePreloading =
+                    csvRecordsStream.map(csvRecordToReferenceDatumFn)
+                            .map(this::computeComputedColumns);
             final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
                     .map(this::check)
@@ -118,6 +132,28 @@ abstract class ReferenceImporter {
         Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+    }
+
+    private RowWithReferenceDatum computeComputedColumns(RowWithReferenceDatum rowWithReferenceDatum) {
+        ReferenceDatum rowWithDefaults = new ReferenceDatum();
+        ReferenceDatum rowWithValues = ReferenceDatum.copyOf(rowWithReferenceDatum.getReferenceDatum());
+        referenceImporterContext.getColumns().stream()
+                .filter(column -> column.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
+                .forEach(column -> {
+                    ReferenceColumn referenceColumn = column.getReferenceColumn();
+                    Optional<ReferenceColumnValue> evaluate = column.computeValue(rowWithReferenceDatum.getReferenceDatum());
+                    evaluate.ifPresent(presentEvaluate -> {
+                        if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_VALUE) {
+                            rowWithValues.put(referenceColumn, presentEvaluate);
+                        } else if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE){
+                            rowWithDefaults.put(referenceColumn, presentEvaluate);
+                        } else {
+                            throw new IllegalArgumentException("on ne sait comment utiliser la valeur calculée de " + referenceColumn + " → " + column.getComputedValueUsage());
+                        }
+                    });
+        });
+        rowWithDefaults.putAll(rowWithValues);
+        return new RowWithReferenceDatum(rowWithReferenceDatum.getLineNumber(), rowWithDefaults, rowWithReferenceDatum.getRefsLinkedTo());
     }
 
     private void checkHeader(ImmutableList<String> columns, int headerLineNumber) {

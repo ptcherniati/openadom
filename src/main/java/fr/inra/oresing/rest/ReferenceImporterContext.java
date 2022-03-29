@@ -15,6 +15,7 @@ import fr.inra.oresing.persistence.ReferenceValueRepository;
 import lombok.AllArgsConstructor;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +38,8 @@ public class ReferenceImporterContext {
      */
     private final ImmutableMap<Ltree, UUID> storedReferences;
 
-    private final ImmutableMap<String, Column> columnsPerHeader;
+    private final ImmutableSet<Column> columns;
+
     Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey;
 
     public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
@@ -152,24 +154,42 @@ public class ReferenceImporterContext {
         return Optional.ofNullable(storedReferences.get(hierarchicalKey));
     }
 
+    /**
+     * @deprecated ne devrait pas être exposé
+     */
+    @Deprecated
+    public ImmutableSet<Column> getColumns() {
+        return columns;
+    }
+
+    private ImmutableMap<String, Column> getExpectedColumnsPerHeaders() {
+        ImmutableMap<String, ReferenceImporterContext.Column> expectedColumnsPerHeaders = columns.stream()
+                .filter(Column::isExpected)
+                .collect(ImmutableMap.toImmutableMap(
+                        ReferenceImporterContext.Column::getExpectedHeader,
+                        Function.identity()
+                ));
+        return expectedColumnsPerHeaders;
+    }
+
     public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent, SetMultimap<String, UUID> refsLinkedTo) {
-        Column column = columnsPerHeader.get(header);
+        Column column = getExpectedColumnsPerHeaders().get(header);
         column.pushValue(cellContent, referenceDatum, refsLinkedTo);
     }
 
     public ImmutableSet<String> getExpectedHeaders() {
-        return columnsPerHeader.keySet();
+        return getExpectedColumnsPerHeaders().keySet();
     }
 
     public ImmutableSet<String> getMandatoryHeaders() {
-        return columnsPerHeader.values().stream()
+        return getExpectedColumnsPerHeaders().values().stream()
                 .filter(Column::isMandatory)
                 .map(Column::getExpectedHeader)
                 .collect(ImmutableSet.toImmutableSet());
     }
 
     public String getCsvCellContent(ReferenceDatum referenceDatum, String header) {
-        Column column = columnsPerHeader.get(header);
+        Column column = getExpectedColumnsPerHeaders().get(header);
         return column.getCsvCellContent(referenceDatum);
     }
 
@@ -401,20 +421,17 @@ public class ReferenceImporterContext {
 
     public abstract static class Column {
 
-        private final String expectedHeader;
-
         private final ReferenceColumn referenceColumn;
 
         private final ColumnPresenceConstraint presenceConstraint;
 
-        public Column(ReferenceColumn referenceColumn, String expectedHeader, ColumnPresenceConstraint presenceConstraint) {
+        public Column(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
             this.referenceColumn = referenceColumn;
-            this.expectedHeader = expectedHeader;
             this.presenceConstraint = presenceConstraint;
         }
 
         public boolean canHandle(String header) {
-            return expectedHeader.equals(header);
+            return isExpected() && getExpectedHeader().equals(header);
         }
 
         abstract void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo);
@@ -425,9 +442,7 @@ public class ReferenceImporterContext {
             return referenceColumn;
         }
 
-        public String getExpectedHeader() {
-            return expectedHeader;
-        }
+        abstract String getExpectedHeader();
 
         public ColumnPresenceConstraint getPresenceConstraint() {
             return presenceConstraint;
@@ -436,12 +451,20 @@ public class ReferenceImporterContext {
         public boolean isMandatory() {
             return getPresenceConstraint().isMandatory();
         }
+
+        public boolean isExpected() {
+            return getPresenceConstraint().isExpected();
+        }
+
+        abstract Optional<ReferenceColumnValue> computeValue(ReferenceDatum referenceDatum);
+
+        abstract ComputedValueUsage getComputedValueUsage();
     }
 
-    public static class OneValueStaticColumn extends Column {
+    public static abstract class OneValueStaticColumn extends Column {
 
         public OneValueStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
-            super(referenceColumn, referenceColumn.getColumn(), presenceConstraint);
+            super(referenceColumn, presenceConstraint);
         }
 
         @Override
@@ -457,12 +480,12 @@ public class ReferenceImporterContext {
         }
     }
 
-    public static class ManyValuesStaticColumn extends Column {
+    public static abstract class ManyValuesStaticColumn extends Column {
 
         private static final String CSV_CELL_SEPARATOR = ",";
 
         public ManyValuesStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
-            super(referenceColumn, referenceColumn.getColumn(), presenceConstraint);
+            super(referenceColumn, presenceConstraint);
         }
 
         @Override
@@ -484,7 +507,7 @@ public class ReferenceImporterContext {
         }
     }
 
-    public static class DynamicColumn extends Column {
+    public static abstract class DynamicColumn extends Column {
 
         /**
          * Les colonnes dynamiques sont représentées sous forme de Map dont la clé est la clé hiérarchique correspondant au référentiel qui décrit cette colonne dynamique
@@ -496,8 +519,8 @@ public class ReferenceImporterContext {
          */
         private final Map.Entry<String, UUID> refsLinkedToEntryToAdd;
 
-        public DynamicColumn(ReferenceColumn referenceColumn, String expectedHeader, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, UUID> refsLinkedToEntryToAdd) {
-            super(referenceColumn, expectedHeader, presenceConstraint);
+        public DynamicColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, UUID> refsLinkedToEntryToAdd) {
+            super(referenceColumn, presenceConstraint);
             this.expectedHierarchicalKey = expectedHierarchicalKey;
             this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
         }
