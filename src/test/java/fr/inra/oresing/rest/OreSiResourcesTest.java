@@ -285,9 +285,9 @@ public class OreSiResourcesTest {
                     //     .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualCsv, 50));
-            List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r+\n"))
+            List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r?\n"))
                     .collect(Collectors.toList());
-            List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r+\n"))
+            List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r?\n"))
                     .collect(Collectors.toList());
             Assert.assertEquals(expectedCsvToList.size(), actualCsvToList.size());
             actualCsvToList.forEach(expectedCsvToList::remove);
