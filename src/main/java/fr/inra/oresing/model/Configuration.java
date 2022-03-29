@@ -369,10 +369,15 @@ public class Configuration {
         public static String VAR_SQL_DEFAULT_TEMPLATE = " (\n" +
                 "\t   '%s' -- datatype\n" +
                 "   )\n";
+        @ApiModelProperty(notes = "The component contening value", required = true)
         String value;
+        @ApiModelProperty(notes = "A variable component for aggregate values", required = false)
         VariableComponentKey aggregation = null;
+        @ApiModelProperty(notes = "A variable component for unit", required = false)
         String unit = null;
+        @ApiModelProperty(notes = "An sql expression for max gap between consecutives values", required = false)
         String gap = null;
+        @ApiModelProperty(notes = "A component for standardDeviation", required = false)
         String standardDeviation = null;
 
         public String toSQL(String variableName, String dataType) {
@@ -488,8 +493,6 @@ public class Configuration {
     @Setter
     @ToString
     public static class DataGroupDescription extends InternationalizationImpl {
-        @ApiModelProperty(notes = "The description of internationalization of the datagroup", required = false)
-        Internationalization internationalizationName;
         @ApiModelProperty(notes = "The name of the datagroup", required = true, example = "localizations")
         String label;
         @ApiModelProperty(notes = "The list of variable in this datagroup", required = true)
