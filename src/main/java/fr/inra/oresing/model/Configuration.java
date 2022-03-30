@@ -52,27 +52,27 @@ public class Configuration {
     @ApiModelProperty(notes = "The set of requiredAuthorization of data.authorization section. Fill by aplication", required = false, hidden = true)
     private List<String> requiredAuthorizationsAttributes;
 
-    @ApiModelProperty(notes = "The version number of the yaml schema used to read the deposited yaml",required = true, example = "1")
+    @ApiModelProperty(notes = "The version number of the yaml schema used to read the deposited yaml", required = true, example = "1")
     private int version;
 
     @ApiModelProperty(notes = "The internationalization description from other sections. Fill by application", required = false, hidden = true)
     private InternationalizationMap internationalization;
 
-    @ApiModelProperty(notes = "A comment about this yaml",required = false, example = "Adding sites section")
+    @ApiModelProperty(notes = "A comment about this yaml", required = false, example = "Adding sites section")
     private String comment;
 
-    @ApiModelProperty(notes = "An Application description",required = true)
+    @ApiModelProperty(notes = "An Application description", required = true)
     private ApplicationDescription application;
 
-    @ApiModelProperty(notes = "A list of references indexed by name. A reference is used to describe other references or data..",required = true)
+    @ApiModelProperty(notes = "A list of references indexed by name. A reference is used to describe other references or data..", required = true)
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
 
     @ApiModelProperty(notes = "A composite reference allows you to link references according to an ''is in'' link. For example between a city and country reference.\n" +
-           "You can define several composite references, and a composite reference can contain only one reference or contain a recursion.\n" +
-           "All references used in a datatype.authorization.authorizationscope section must be composite.",required = true)
+            "You can define several composite references, and a composite reference can contain only one reference or contain a recursion.\n" +
+            "All references used in a datatype.authorization.authorizationscope section must be composite.", required = true)
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
 
-    @ApiModelProperty(notes = "A data type describes a set of data representing a cohesive set of measurements or observations. (values can be stored in one csv file format).",required = false)
+    @ApiModelProperty(notes = "A data type describes a set of data representing a cohesive set of measurements or observations. (values can be stored in one csv file format).", required = false)
     private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
 
     public InternationalizationMap getInternationalization() {
@@ -198,7 +198,7 @@ public class Configuration {
             return computedColumns;
         }
 
-        public static Map<String, InternationalizationReferenceMap>  getInternationalization(LinkedHashMap<String, ReferenceDescription> referenceDescriptionMap) {
+        public static Map<String, InternationalizationReferenceMap> getInternationalization(LinkedHashMap<String, ReferenceDescription> referenceDescriptionMap) {
             Map<String, InternationalizationReferenceMap> internationalizationReferenceMap = new HashMap<>();
             for (Map.Entry<String, ReferenceDescription> entry : referenceDescriptionMap.entrySet()) {
                 final String reference = entry.getKey();
@@ -560,7 +560,7 @@ public class Configuration {
     @Setter
     @ToString
     public static class Chart {
-        public static String VAR_SQL_TEMPLATE =  "(\n" +
+        public static String VAR_SQL_TEMPLATE = "(\n" +
                 "\t   Array['%1$s','%2$s'],-- aggrégation\n" +
                 "\t   Array['%3$s','%4$s'], -- value\n" +
                 "\t   '%5$s',-- datatype\n" +
@@ -597,7 +597,8 @@ public class Configuration {
             );
             return sql;
         }
-        public static String toSQL( String dataType) {
+
+        public static String toSQL(String dataType) {
             String sql = String.format(
                     VAR_SQL_DEFAULT_TEMPLATE,
                     dataType
@@ -674,7 +675,7 @@ public class Configuration {
         @ApiModelProperty(notes = "If true the value can't be null", required = false, example = "true", allowableValues = "true,false")
         boolean required = true;
 
-        @ApiModelProperty(notes = "If MANY the value is a list of references for Reference checker", required = false, example ="MANY", allowableValues = "MANY,ONE")
+        @ApiModelProperty(notes = "If MANY the value is a list of references for Reference checker", required = false, example = "MANY", allowableValues = "MANY,ONE")
         Multiplicity multiplicity = Multiplicity.ONE;
     }
 
