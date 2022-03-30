@@ -803,16 +803,8 @@ dataTypes:
                 required: true
                 transformation:
                   codify: true
-          start date:
-            checker:
-              name: Date
-              params:
-                pattern: dd/MM/yyyy
-          end date:
-            checker:
-              name: Date
-              params:
-                pattern: dd/MM/yyyy
+          start date: null
+          end date: null
           comment: null
           profondeur max:
             checker:
@@ -887,6 +879,26 @@ dataTypes:
               name: Integer
               params:
                 required: true
+    validations:
+      controle du format des dates en jours:
+        variableComponents:
+          - variable: informations
+            component: start date
+          - variable: informations
+            component: end date
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+      controle de la chronologie:
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: >
+                Date start = DateUtils.parseDate(datum.get("informations").get("start date"), "dd/MM/yyyy");
+                Date end = DateUtils.parseDate(datum.get("informations").get("end date"), "dd/MM/yyyy");
+                return start.before(end);
     format:
       constants:
         - rowNumber: 1

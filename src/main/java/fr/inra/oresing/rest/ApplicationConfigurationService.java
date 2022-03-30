@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApplicationConfigurationService {
     public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
+    private static final ImmutableSet<String> CHECKER_ON_TARGET_NAMES = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
 
 
     ConfigurationParsingResult unzipConfiguration(MultipartFile file){
@@ -441,8 +442,8 @@ public class ApplicationConfigurationService {
     }
 
     private void verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription) {
-        for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : dataTypeDescription.getValidations().entrySet()) {
-            Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
+        for (Map.Entry<String, Configuration.LineValidationRuleWithVariableComponentsDescription> validationEntry : dataTypeDescription.getValidations().entrySet()) {
+            Configuration.LineValidationRuleWithVariableComponentsDescription lineValidationRuleDescription = validationEntry.getValue();
             String lineValidationRuleKey = validationEntry.getKey();
             Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
@@ -457,6 +458,8 @@ public class ApplicationConfigurationService {
                     Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
                     compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(lineValidationRuleKey, expression, compilationError));
                 }
+            } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
+                // TODO
             } else {
                 builder.recordUnknownCheckerName(lineValidationRuleKey, checker.getName());
             }
@@ -639,7 +642,6 @@ public class ApplicationConfigurationService {
             if (checker == null) {
                 continue;
             }
-            ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
             if (GroovyLineChecker.NAME.equals(checker.getName())) {
                 String expression = Optional.of(checker)
                         .map(Configuration.CheckerDescription::getParams)
@@ -652,7 +654,7 @@ public class ApplicationConfigurationService {
                     Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
                     compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
                 }
-            } else if (variableComponentCheckers.contains(checker.getName())) {
+            } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
                 if (lineValidationRuleDescription.getColumns().isEmpty()) {
                     builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
                 } else {
@@ -674,7 +676,7 @@ public class ApplicationConfigurationService {
                     }
                 }
             } else {
-                builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checker.getName(), variableComponentCheckers);
+                builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checker.getName(), CHECKER_ON_TARGET_NAMES);
             }
         }
     }

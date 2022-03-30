@@ -66,20 +66,8 @@ public class CheckerFactory {
                     .map(checkerDescription -> newChecker(app, checkerDescription, referenceColumn))
                     .ifPresent(checkersBuilder::add);
         }
-        for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationEntry : referenceDescription.getValidations().entrySet()) {
-            Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationEntry.getValue();
-            Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
-            if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
-                LineChecker lineChecker = newLineChecker(app, lineValidationRuleDescription);
-                checkersBuilder.add(lineChecker);
-            } else {
-                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = lineValidationRuleDescription.getColumns().stream()
-                        .map(ReferenceColumn::new)
-                        .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
-                        .collect(Collectors.toList());
-                checkersBuilder.addAll(lineCheckers);
-            }
-        }
+        ImmutableMap<String, Configuration.LineValidationRuleDescription> validations = ImmutableMap.copyOf(referenceDescription.getValidations());
+        checkersBuilder.addAll(validationRulesToLineCheckers(app, validations));
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {
             log.trace("pour " + app.getName() + ", " + reference + ", on validera avec " + lineCheckers);
@@ -103,9 +91,8 @@ public class CheckerFactory {
                         .ifPresent(checkersBuilder::add);
             }
         }
-        dataTypeDescription.getValidations().values().stream()
-                .map(lineValidationRuleDescription -> newLineChecker(app, lineValidationRuleDescription))
-                .forEach(checkersBuilder::add);
+        ImmutableMap<String, Configuration.LineValidationRuleDescription> validations = ImmutableMap.copyOf(dataTypeDescription.getValidations());
+        checkersBuilder.addAll(validationRulesToLineCheckers(app, validations));
         ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
         if (log.isTraceEnabled()) {
             log.trace("pour " + app.getName() + ", " + dataType + ", on validera avec " + lineCheckers);
@@ -169,5 +156,23 @@ public class CheckerFactory {
             throw new IllegalArgumentException("checker " + checkerDescription.getName());
         }
         return lineChecker;
+    }
+
+    private ImmutableSet<LineChecker> validationRulesToLineCheckers(Application app, ImmutableMap<String, Configuration.LineValidationRuleDescription> validations) {
+        ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
+        for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : validations.entrySet()) {
+            Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
+            Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
+            if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
+                LineChecker lineChecker = newLineChecker(app, lineValidationRuleDescription);
+                checkersBuilder.add(lineChecker);
+            } else {
+                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = lineValidationRuleDescription.doGetCheckerTargets().stream()
+                        .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
+                        .collect(Collectors.toList());
+                checkersBuilder.addAll(lineCheckers);
+            }
+        }
+        return checkersBuilder.build();
     }
 }

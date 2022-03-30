@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.Sets;
+import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.checker.DateLineCheckerConfiguration;
 import fr.inra.oresing.checker.FloatCheckerConfiguration;
 import fr.inra.oresing.checker.GroovyLineCheckerConfiguration;
@@ -247,7 +248,7 @@ public class Configuration {
     public static class DataTypeDescription extends InternationalizationMapDisplayImpl {
         FormatDescription format;
         LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
-        LinkedHashMap<String, LineValidationRuleDescription> validations = new LinkedHashMap<>();
+        LinkedHashMap<String, LineValidationRuleWithVariableComponentsDescription> validations = new LinkedHashMap<>();
         List<VariableComponentKey> uniqueness = new LinkedList<>();
         TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
         AuthorizationDescription authorization;
@@ -271,10 +272,10 @@ public class Configuration {
 
     @Getter
     @Setter
-    @ToString
-    public static class LineValidationRuleDescription {
+    public static abstract class LineValidationRuleDescription {
         String description;
         CheckerDescription checker;
+        public abstract Set<CheckerTarget> doGetCheckerTargets();
     }
 
     @Getter
@@ -282,6 +283,25 @@ public class Configuration {
     @ToString
     public static class LineValidationRuleWithColumnsDescription extends LineValidationRuleDescription {
         Set<String> columns;
+
+        @Override
+        public Set<CheckerTarget> doGetCheckerTargets() {
+            return columns.stream()
+                    .map(ReferenceColumn::new)
+                    .collect(Collectors.toUnmodifiableSet());
+        }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class LineValidationRuleWithVariableComponentsDescription extends LineValidationRuleDescription {
+        Set<VariableComponentKey> variableComponents;
+
+        @Override
+        public Set<CheckerTarget> doGetCheckerTargets() {
+            return Set.copyOf(variableComponents);
+        }
     }
 
     @Getter
