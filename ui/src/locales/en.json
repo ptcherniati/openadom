@@ -24,9 +24,9 @@
         "aria-btn-signup": "Create an account button"
     },
     "validation":{
-        "count-line":"",
-        "data-empty":"",
-        "modal-synthesis-variable-default":"",
+        "count-line":"Total rows : ",
+        "data-empty":"Data empty",
+        "modal-synthesis-variable-default":"Description : ",
         "obligatoire":"Mandatory",
         "facultatif":"Optional",
         "invalid-required":"Please fill the field",
