@@ -1,9 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Sets;
 import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.checker.DateLineCheckerConfiguration;
 import fr.inra.oresing.checker.FloatCheckerConfiguration;
@@ -30,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -182,20 +179,6 @@ public class Configuration {
 
         public boolean hasStaticColumn(String column) {
             return doGetStaticColumns().contains(column);
-        }
-
-        public boolean hasColumn(String column) {
-            return doGetAllColumns().contains(column);
-        }
-
-        public ImmutableSet<ReferenceColumn> doGetComputedColumns() {
-            Set<ReferenceColumn> usedInTransformationColumns = validations.values().stream()
-                    .map(LineValidationRuleWithColumnsDescription::getColumns)
-                    .flatMap(Collection::stream)
-                    .map(ReferenceColumn::new)
-                    .collect(Collectors.toUnmodifiableSet());
-            ImmutableSet<ReferenceColumn> computedColumns = Sets.difference(usedInTransformationColumns, doGetStaticColumns()).immutableCopy();
-            return computedColumns;
         }
 
         public static Map<String, InternationalizationReferenceMap> getInternationalization(LinkedHashMap<String, ReferenceDescription> referenceDescriptionMap) {
