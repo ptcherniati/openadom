@@ -40,8 +40,7 @@ public class InternationalizationDisplay {
                                                                 if (displayColumns.containsKey(referencedColumn)) {
                                                                     referencedColumn = displayColumns.get(referencedColumn).getOrDefault(stringEntry.getKey(), referencedColumn);
                                                                 }
-                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn));
-                                                            }
+                                                                internationalizedPattern += refValues.get(new ReferenceColumn(referencedColumn)).toValueString(referenceImporterContext, referencedColumn, stringEntry.getKey().getDisplayName());                                                            }
                                                             return internationalizedPattern;
                                                         }
                                                 )
