@@ -425,9 +425,12 @@ public class ReferenceImporterContext {
 
         private final ColumnPresenceConstraint presenceConstraint;
 
-        public Column(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
+        private final ComputedValueUsage computedValueUsage;
+
+        public Column(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, ComputedValueUsage computedValueUsage) {
             this.referenceColumn = referenceColumn;
             this.presenceConstraint = presenceConstraint;
+            this.computedValueUsage = computedValueUsage;
         }
 
         public boolean canHandle(String header) {
@@ -458,13 +461,15 @@ public class ReferenceImporterContext {
 
         abstract Optional<ReferenceColumnValue> computeValue(ReferenceDatum referenceDatum);
 
-        abstract ComputedValueUsage getComputedValueUsage();
+        public ComputedValueUsage getComputedValueUsage() {
+            return computedValueUsage;
+        }
     }
 
     public static abstract class OneValueStaticColumn extends Column {
 
-        public OneValueStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
-            super(referenceColumn, presenceConstraint);
+        public OneValueStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, ComputedValueUsage computedValueUsage) {
+            super(referenceColumn, presenceConstraint, computedValueUsage);
         }
 
         @Override
@@ -484,8 +489,8 @@ public class ReferenceImporterContext {
 
         private static final String CSV_CELL_SEPARATOR = ",";
 
-        public ManyValuesStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint) {
-            super(referenceColumn, presenceConstraint);
+        public ManyValuesStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, ComputedValueUsage computedValueUsage) {
+            super(referenceColumn, presenceConstraint, computedValueUsage);
         }
 
         @Override
@@ -519,8 +524,8 @@ public class ReferenceImporterContext {
          */
         private final Map.Entry<String, UUID> refsLinkedToEntryToAdd;
 
-        public DynamicColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, UUID> refsLinkedToEntryToAdd) {
-            super(referenceColumn, presenceConstraint);
+        public DynamicColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, UUID> refsLinkedToEntryToAdd, ComputedValueUsage computedValueUsage) {
+            super(referenceColumn, presenceConstraint, computedValueUsage);
             this.expectedHierarchicalKey = expectedHierarchicalKey;
             this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
         }
