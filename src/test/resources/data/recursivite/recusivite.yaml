@@ -29,7 +29,8 @@ references:
     keyColumns: [nom du taxon déterminé]
     validations:
       nom du taxon déterminé:
-        description: "nom du taxon déterminé"
+        internationalizationName:
+          fr: "nom du taxon déterminé"
         checker:
           name: RegularExpression
           params:
@@ -39,7 +40,8 @@ references:
               codify: true
         columns: [ nom du taxon déterminé ]
       nom du taxon superieur:
-        description: "nom du taxon superieur"
+        internationalizationName:
+          fr: "nom du taxon superieur"
         checker:
           name: Reference
           params:

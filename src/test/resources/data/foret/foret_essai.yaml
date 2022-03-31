@@ -33,7 +33,8 @@ references:
   zones_etudes:
     validations:
       typeSitesRef:
-        description: référence au type de site
+        internationalizationName:
+          fr: référence au type de site
         columns: [ type de site ]
         checker:
           name: Reference
@@ -43,7 +44,8 @@ references:
             transformation:
               codify: true
       parent_ref:
-        description: référence au parent
+        internationalizationName:
+          fr: référence au parent
         columns: [ parent ]
         checker:
           name: Reference
@@ -53,14 +55,16 @@ references:
             transformation:
               codify: true
       date début:
-        description: date de début
+        internationalizationName:
+          fr: date de début
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
         columns: [ date début ]
       date fin:
-        description: date de fin
+        internationalizationName:
+          fr: date de fin
         checker:
           name: Date
           params:
@@ -132,14 +136,16 @@ references:
   theme_types_de_donnees_par_zone_etudes:
     validations:
       siteRef:
-        description: référence au site
+        internationalizationName:
+          fr: référence au site
         columns: [ nom du site ]
         checker:
           name: Reference
           params:
             refType: zones_etudes
       themeRef:
-        description: référence au thème
+        internationalizationName:
+          fr: référence au thème
         columns: [ nom du thème ]
         checker:
           name: Reference
@@ -205,7 +211,8 @@ references:
   variables_par_types_de_donnees:
     validations:
       variableRef:
-        description: référence à la variable
+        internationalizationName:
+          fr: référence à la variable
         columns: [ nom de la variable ]
         checker:
           name: Reference
@@ -215,7 +222,8 @@ references:
             transformation:
               codify: true
       uniteRef:
-        description: référence à l'unité'
+        internationalizationName:
+          fr: référence à l'unité'
         columns: [ nom de l'unité ]
         checker:
           name: Reference
@@ -243,7 +251,8 @@ references:
   traitements:
     validations:
       siteRef:
-        description: référence au site
+        internationalizationName:
+          fr: référence au site
         columns: [ nom du site ]
         checker:
           name: Reference
@@ -325,7 +334,8 @@ references:
   instruments_references:
     validations:
       instrumentRef:
-        description: référence à l'instrument
+        internationalizationName:
+          fr: référence à l'instrument
         columns: [ code de l'instrument ]
         checker:
           name: Reference
@@ -335,7 +345,8 @@ references:
             transformation:
               codify: true
       DOIRef:
-        description: référence à la référence
+        internationalizationName:
+          fr: référence à la référence
         columns: [ doi de la référence ]
         checker:
           name: Reference
@@ -399,7 +410,8 @@ references:
               codify: true
     validations:
       instrumentRef:
-        description: référence à l'instrument
+        internationalizationName:
+          fr: référence à l'instrument
         columns: [ Code de l'instrument ]
         checker:
           name: Reference
@@ -456,7 +468,8 @@ references:
   methodes_references:
     validations:
       instrumentRef:
-        description: référence à la méthode
+        internationalizationName:
+          fr: référence à la méthode
         columns: [ code de la méthode de calcul ]
         checker:
           name: Reference
@@ -466,7 +479,8 @@ references:
             transformation:
               codify: true
       DOIRef:
-        description: référence à la référence
+        internationalizationName:
+          fr: référence à la référence
         columns: [ doi de la référence ]
         checker:
           name: Reference
@@ -531,7 +545,8 @@ references:
               codify: true
     validations:
       methodeRef:
-        description: référence à la méthode
+        internationalizationName:
+          fr: référence à la méthode
         columns: [ Code de la méthode de calcul ]
         checker:
           name: Reference
@@ -541,7 +556,8 @@ references:
             transformation:
               codify: true
       dates:
-        description: Les dates sont des jours
+        internationalizationName:
+          fr: Les dates sont des jours
         columns: [ Date de début, Date de fin ]
         checker:
           name: Date
@@ -592,7 +608,8 @@ references:
         en: '{libellé d''une valeur_fr}'
     validations:
       listeRef:
-        description: référence à la liste de valeurs d'informations complémentaires
+        internationalizationName:
+          fr: référence à la liste de valeurs d'informations complémentaires
         columns: [ nom de la liste ]
         checker:
           name: Reference
@@ -611,7 +628,8 @@ references:
   informations_complementaires:
     validations:
       methodeRef:
-        description: référence à la liste de valeurs d'informations complémentaires
+        internationalizationName:
+          fr: référence à la liste de valeurs d'informations complémentaires
         columns: [ nom de la liste de valeurs d'informations complémentaires ]
         checker:
           name: Reference
@@ -714,7 +732,8 @@ references:
       - nom
     columns:
       nom: null
-      description: null
+      internationalizationName:
+        fr: null
 dataTypes:
   ts_infraj:
     internationalizationName:

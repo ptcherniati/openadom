@@ -15,7 +15,8 @@ references:
   zones_etudes:
     validations:
       parent_ref:
-        description: référence au parent
+        internationalizationName:
+          fr: référence au parent
         columns: [ parent ]
         checker:
           name: Reference

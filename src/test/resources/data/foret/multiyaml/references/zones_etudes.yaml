@@ -1,6 +1,7 @@
 validations:
   typeSitesRef:
-    description: référence au type de site
+    internationalizationName:
+      fr: référence au type de site
     checker:
       name: Reference
       params:
@@ -10,7 +11,8 @@ validations:
         transformation:
           codify: true
   parent_ref:
-    description: référence au parent
+    internationalizationName:
+      fr: référence au parent
     checker:
       name: Reference
       params:
@@ -20,14 +22,16 @@ validations:
         transformation:
           codify: true
   date début:
-    description: date de début
+    internationalizationName:
+      fr: date de début
     checker:
       name: Date
       params:
         pattern: dd/MM/yyyy
         columns: date début
   date fin:
-    description: date de fin
+    internationalizationName:
+      fr: date de fin
     checker:
       name: Date
       params:

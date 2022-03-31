@@ -171,7 +171,8 @@ dataTypes:
           standardDeviation:
     validations:
       exempledeDeRegleDeValidation:
-        description: "Juste un exemple"
+        internationalizationName:
+          fr: "Juste un exemple"
         checker:
           name: GroovyExpression
           params:

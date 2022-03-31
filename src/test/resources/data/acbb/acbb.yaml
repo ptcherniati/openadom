@@ -15,14 +15,16 @@ references:
     keyColumns: [nom du site_key]
     validations:
       agroecosystemRef:
-        description: "référence à l'agroécosystème"
+        internationalizationName:
+          fr: "référence à l'agroécosystème"
         checker:
           name: Reference
           params:
             refType: agroecosystemes
         columns: [ Agroécosystème ]
       checkDateMiseEnService:
-        description: "validation de date"
+        internationalizationName:
+          fr: "validation de date"
         checker:
           name: Date
           params:
@@ -62,7 +64,8 @@ references:
   blocs:
     validations:
       creationDate:
-        description: "date de création"
+        internationalizationName:
+          fr: "date de création"
         checker:
           name: Date
           params:
@@ -119,7 +122,8 @@ references:
       modalites:
     validations:
       modalitesRef:
-        description: "référence aux modalités"
+        internationalizationName:
+          fr: "référence aux modalités"
         columns: [ modalites ]
         checker:
           name: Reference
@@ -145,7 +149,8 @@ dataTypes:
         component: datetime
     validations:
       check_CO2_value:
-        description: check value in range
+        internationalizationName:
+          fr: check value in range
         checker:
           name: GroovyExpression
           params:
@@ -1623,7 +1628,8 @@ dataTypes:
                 refType: unites
     validations:
       swcQualityEnumeration:
-        description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        internationalizationName:
+          fr: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
         checker:
           name: GroovyExpression
           params:

@@ -1,6 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.checker.DateLineCheckerConfiguration;
@@ -10,6 +11,7 @@ import fr.inra.oresing.checker.IntegerCheckerConfiguration;
 import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
 import fr.inra.oresing.checker.RegularExpressionCheckerConfiguration;
+import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationApplicationMap;
 import fr.inra.oresing.model.internationalization.InternationalizationAuthorisationMap;
 import fr.inra.oresing.model.internationalization.InternationalizationAuthorisationName;
@@ -190,6 +192,9 @@ public class Configuration {
                 internationalizationReference.setInternationalizationDisplay(referenceDescription.getInternationalizationDisplay());
                 internationalizationReference.setInternationalizationName(referenceDescription.getInternationalizationName());
                 internationalizationReference.setInternationalizedColumns(referenceDescription.getInternationalizedColumns());
+                Map<String, Internationalization> internationalizedValidations =
+                        Maps.transformValues(referenceDescription.getValidations(), InternationalizationImpl::getInternationalizationName);
+                internationalizationReference.setInternationalizedValidations(internationalizedValidations);
                 internationalizationReferenceMap.put(reference, internationalizationReference);
             }
             return internationalizationReferenceMap;
@@ -312,6 +317,9 @@ public class Configuration {
                 internationalizationDataTypeMap.setInternationalizationName(dataTypeDescription.getInternationalizationName());
                 internationalizationDataTypeMap.setInternationalizedColumns(dataTypeDescription.getInternationalizedColumns());
                 internationalizationDataTypeMap.setAuthorization(Optional.ofNullable(dataTypeDescription.getAuthorization()).map(AuthorizationDescription::getInternationalization).orElse(null));
+                Map<String, Internationalization> internationalizedValidations =
+                        Maps.transformValues(dataTypeDescription.getValidations(), InternationalizationImpl::getInternationalizationName);
+                internationalizationDataTypeMap.setInternationalizedValidations(internationalizedValidations);
                 internationalizationDataTypeMapMap.put(datatype, internationalizationDataTypeMap);
             }
             return internationalizationDataTypeMapMap;
@@ -320,10 +328,7 @@ public class Configuration {
 
     @Getter
     @Setter
-    public static abstract class LineValidationRuleDescription {
-
-        @ApiModelProperty(notes = "A description of the validation. If the validation fail: this message will be shown to the user so one can fix the imported file", required = false)
-        String description;
+    public static abstract class LineValidationRuleDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "The checker to apply to ensure that the rule is respected", required = true)
         CheckerDescription checker;

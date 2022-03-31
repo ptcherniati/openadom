@@ -63,14 +63,16 @@ references:
   sites:
     validations:
       typeSitesRef:
-        description: référence au type de site
+        internationalizationName:
+          fr: référence au type de site
         checker:
           name: Reference
           params:
             refType: type_de_sites
         columns: [ tze_type_nom ]
       siteParentRef:
-        description: référence à la colonne parent
+        internationalizationName:
+          fr: référence à la colonne parent
         checker:
           name: Reference
           params:
@@ -185,28 +187,32 @@ references:
           {nom du thème}, data type name : {nom du type de données}
     validations:
       projetRef:
-        description: référence au projet
+        internationalizationName:
+          fr: référence au projet
         checker:
           name: Reference
           params:
             refType: projet
         columns: [ nom du projet ]
       sitesRef:
-        description: référence au site
+        internationalizationName:
+          fr: référence au site
         checker:
           name: Reference
           params:
             refType: sites
         columns: [ nom du site ]
       themesRef:
-        description: référence au theme
+        internationalizationName:
+          fr: référence au theme
         checker:
           name: Reference
           params:
             refType: themes
         columns: [ nom du thème ]
       checkDatatype:
-        description: test
+        internationalizationName:
+          fr: test
         checker:
           name: GroovyExpression
           params:
@@ -301,21 +307,24 @@ references:
   variables_et_unites_par_types_de_donnees:
     validations:
       variableRef:
-        description: référence à la variable
+        internationalizationName:
+          fr: référence à la variable
         checker:
           name: Reference
           params:
             refType: variables
         columns: [ nom de la variable ]
       uniteRef:
-        description: référence à l'unité'
+        internationalizationName:
+          fr: référence à l'unité'
         checker:
           name: Reference
           params:
             refType: unites
         columns: [ nom de l'unité ]
       checkDatatype:
-        description: test
+        internationalizationName:
+          fr: test
         checker:
           name: GroovyExpression
           params:
@@ -442,7 +451,8 @@ dataTypes:
                 required: null
     validations:
       unitOfColor:
-        description: vérifie l'unité de la couleur des individus
+        internationalizationName:
+          fr: vérifie l'unité de la couleur des individus
         checker:
           name: GroovyExpression
           params:
@@ -459,7 +469,8 @@ dataTypes:
               references:
                 - variables_et_unites_par_types_de_donnees
       unitOfIndividus:
-        description: vérifie l'unité du nombre d'individus
+        internationalizationName:
+          fr: vérifie l'unité du nombre d'individus
         checker:
           name: GroovyExpression
           params:
