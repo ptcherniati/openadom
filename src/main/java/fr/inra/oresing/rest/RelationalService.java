@@ -252,7 +252,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
     private ImmutableSet<VariableComponentKey> getVariableComponentKeys(Configuration.DataTypeDescription dataTypeDescription) {
         Set<VariableComponentKey> references = new LinkedHashSet<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.VariableDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
             for (String component : variableEntry.getValue().doGetAllComponents()) {
                 references.add(new VariableComponentKey(variable, component));

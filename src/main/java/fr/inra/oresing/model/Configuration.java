@@ -285,7 +285,7 @@ public class Configuration {
         FormatDescription format;
 
         @ApiModelProperty(notes = "This section describes the data model, splitting each line of data in variable/components", required = true)
-        LinkedHashMap<String, ColumnDescription> data = new LinkedHashMap<>();
+        LinkedHashMap<String, VariableDescription> data = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "Some validations rules that will be checked at import. It will allow to make sure a line we import is consistent.", required = true)
         LinkedHashMap<String, LineValidationRuleWithVariableComponentsDescription> validations = new LinkedHashMap<>();
@@ -512,7 +512,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class ColumnDescription {
+    public static class VariableDescription {
 
         @ApiModelProperty(notes = "A description to create disponibilité charts", required = false)
         Chart chartDescription;

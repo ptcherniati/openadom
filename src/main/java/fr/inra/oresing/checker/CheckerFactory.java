@@ -79,9 +79,9 @@ public class CheckerFactory {
         Preconditions.checkArgument(app.getConfiguration().getDataTypes().containsKey(dataType), "Pas de type de données " + dataType + " dans " + app);
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.VariableDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
-            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
+            Configuration.VariableDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.doGetAllComponentDescriptions().entrySet()) {
                 String component = componentEntry.getKey();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);

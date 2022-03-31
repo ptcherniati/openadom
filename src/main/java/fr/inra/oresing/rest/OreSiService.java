@@ -1051,9 +1051,9 @@ public class OreSiService {
                 variableComponentsFromRepository.add(variableComponentKey);
             }
         }
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.VariableDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
-            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
+            Configuration.VariableDescription variableDescription = variableEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentWithDefaultValueDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentWithDefaultValueDescription componentDescription = componentEntry.getValue();
@@ -1427,7 +1427,7 @@ public class OreSiService {
             }
         }
 
-        private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.ColumnDescription> entry) {
+        private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.VariableDescription> entry) {
             return entry.getValue().doGetAllComponents().stream()
                     .map(componentName -> new VariableComponentKey(entry.getKey(), componentName));
         }

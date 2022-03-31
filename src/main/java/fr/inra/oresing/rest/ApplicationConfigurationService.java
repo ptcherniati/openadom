@@ -336,7 +336,7 @@ public class ApplicationConfigurationService {
                     builder.recordAuthorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
                 } else {
                     String variable = authorizationScopeVariableComponentKey.getVariable();
-                    Configuration.ColumnDescription variableInDescription = dataTypeDescription.getData().get(variable);
+                    Configuration.VariableDescription variableInDescription = dataTypeDescription.getData().get(variable);
                     if (!dataTypeDescription.getData().containsKey(variable)) {
                         builder.recordAuthorizationScopeVariableComponentKeyUnknownVariable(authorizationScopeVariableComponentKey, variables);
                     } else {
@@ -419,10 +419,10 @@ public class ApplicationConfigurationService {
     }
 
     private void verifyDatatypeCheckersExists(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, String dataType) {
-        for (Map.Entry<String, Configuration.ColumnDescription> columnDescriptionEntry : dataTypeDescription.getData().entrySet()) {
-            Configuration.ColumnDescription columnDescription = columnDescriptionEntry.getValue();
+        for (Map.Entry<String, Configuration.VariableDescription> columnDescriptionEntry : dataTypeDescription.getData().entrySet()) {
+            Configuration.VariableDescription variableDescription = columnDescriptionEntry.getValue();
             String variable = columnDescriptionEntry.getKey();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> variableComponentDescriptionEntry : columnDescription.doGetAllComponentDescriptions().entrySet()) {
+            for (Map.Entry<String, Configuration.VariableComponentDescription> variableComponentDescriptionEntry : variableDescription.doGetAllComponentDescriptions().entrySet()) {
                 Configuration.VariableComponentDescription variableComponentDescription = variableComponentDescriptionEntry.getValue();
                 if (variableComponentDescription == null) {
                     continue;
@@ -467,9 +467,9 @@ public class ApplicationConfigurationService {
     }
 
     private void verifyDatatypeCheckerReferenceRefersToExistingReference(ConfigurationParsingResult.Builder builder, Set<String> references, String dataType, Configuration.DataTypeDescription dataTypeDescription) {
-        for (Map.Entry<String, Configuration.ColumnDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.VariableDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
             String datum = dataEntry.getKey();
-            Configuration.ColumnDescription datumDescription = dataEntry.getValue();
+            Configuration.VariableDescription datumDescription = dataEntry.getValue();
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : datumDescription.doGetAllComponentDescriptions().entrySet()) {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
