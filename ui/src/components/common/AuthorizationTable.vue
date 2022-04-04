@@ -16,18 +16,18 @@
             <a
               v-if="
                 column.display &&
-                indexColumn == 'label' &&
+                indexColumn === 'label' &&
                 (!scope.isLeaf || remainingOption.length)
               "
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
               :field="indexColumn"
-              @click="indexColumn == 'label' && toggle(index)"
+              @click="indexColumn === 'label' && toggle(index)"
               >{{ localName(scope) }}</a
             >
             <p
               v-else-if="
                 column.display &&
-                indexColumn == 'label' &&
+                indexColumn === 'label' &&
                 !(!scope.isLeaf || remainingOption.length)
               "
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
@@ -36,7 +36,11 @@
               {{ localName(scope) }}
             </p>
 
-            <b-field v-else-if="column.display && indexColumn != 'extraction'" :field="indexColumn">
+            <b-field
+              v-else-if="column.display && indexColumn !== 'extraction'"
+              :field="indexColumn"
+              class="column"
+            >
               <b-icon
                 :icon="
                   (statesIcons && statesIcons[indexColumn] && statesIcons[indexColumn][index]) ||
@@ -48,91 +52,92 @@
               />
             </b-field>
             <b-field
-              v-else-if="column.display && indexColumn == 'extraction'"
+              v-else-if="column.display && indexColumn === 'extraction'"
               :field="indexColumn"
-              class="row"
+              class="columns "
               style="margin-top: 6px"
             >
-              <div class="columns">
+              <div class="column">
                 <b-icon
                   :icon="
                     (statesIcons && statesIcons[indexColumn] && statesIcons[indexColumn][index]) ||
                     'square'
                   "
-                  class="column"
                   size="is-medium"
                   type="is-primary"
                   @click.native="selectCheckbox($event, index, indexColumn, scope)"
                 />
-                <b-taginput
-                  v-if="
-                    states &&
-                    states[indexColumn] &&
-                    states[indexColumn][index] == 1 &&
-                    localAuthorizationsTree &&
-                    localAuthorizationsTree[indexColumn] &&
-                    localAuthorizationsTree[indexColumn][index]
-                  "
-                  v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
-                  :data="dataGroups"
-                  :open-on-focus="true"
-                  :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-                  :value="dataGroups.id"
-                  autocomplete
-                  class="column"
-                  field="label"
-                  type="is-primary"
-                  @input.capture="selectCheckbox($event, index, indexColumn, scope)"
-                >
-                </b-taginput>
-                <div
-                  v-if="
-                    states &&
-                    states[indexColumn] &&
-                    states[indexColumn][index] == 1 &&
-                    localAuthorizationsTree &&
-                    localAuthorizationsTree[indexColumn] &&
-                    localAuthorizationsTree[indexColumn][index]
-                  "
-                  class="column"
-                >
-                  <b-datepicker
-                    v-model="localAuthorizationsTree[indexColumn][index].from"
-                    :date-parser="parseDate"
-                    :placeholder="
-                      $t('dataTypesRepository.placeholder-datepicker') +
-                      ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                <div class="columns">
+                  <b-taginput
+                    v-if="
+                      states &&
+                      states[indexColumn] &&
+                      states[indexColumn][index] === 1 &&
+                      localAuthorizationsTree &&
+                      localAuthorizationsTree[indexColumn] &&
+                      localAuthorizationsTree[indexColumn][index]
                     "
-                    editable
-                    icon="calendar"
-                    @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
-                    @input.capture="selectCheckbox($event, index, indexColumn, scope, 'from')"
+                    v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
+                    :data="dataGroups"
+                    :open-on-focus="true"
+                    :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
+                    :value="dataGroups.id"
+                    autocomplete
+                    class="column"
+                    field="label"
+                    type="is-primary"
+                    @input.capture="selectCheckbox($event, index, indexColumn, scope)"
                   >
-                  </b-datepicker>
-                </div>
-                <div
-                  v-if="
-                    states &&
-                    states[indexColumn] &&
-                    states[indexColumn][index] == 1 &&
-                    localAuthorizationsTree &&
-                    localAuthorizationsTree[indexColumn] &&
-                    localAuthorizationsTree[indexColumn][index]
-                  "
-                  class="column"
-                >
-                  <b-datepicker
-                    v-model="localAuthorizationsTree[indexColumn][index].to"
-                    :date-parser="parseDate"
-                    :placeholder="
-                      $t('dataTypesRepository.placeholder-datepicker') +
-                      ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                  </b-taginput>
+                  <div
+                    v-if="
+                      states &&
+                      states[indexColumn] &&
+                      states[indexColumn][index] === 1 &&
+                      localAuthorizationsTree &&
+                      localAuthorizationsTree[indexColumn] &&
+                      localAuthorizationsTree[indexColumn][index]
                     "
-                    editable
-                    icon="calendar"
-                    @input="selectCheckbox($event, index, indexColumn, scope, 'to')"
+                    class="column"
                   >
-                  </b-datepicker>
+                    <b-datepicker
+                      v-model="localAuthorizationsTree[indexColumn][index].from"
+                      :date-parser="parseDate"
+                      :placeholder="
+                        $t('dataTypesRepository.placeholder-datepicker') +
+                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                      "
+                      editable
+                      icon="calendar"
+                      @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
+                      @input.capture="selectCheckbox($event, index, indexColumn, scope, 'from')"
+                    >
+                    </b-datepicker>
+                  </div>
+                  <div
+                    v-if="
+                      states &&
+                      states[indexColumn] &&
+                      states[indexColumn][index] === 1 &&
+                      localAuthorizationsTree &&
+                      localAuthorizationsTree[indexColumn] &&
+                      localAuthorizationsTree[indexColumn][index]
+                    "
+                    class="column"
+                  >
+                    <b-datepicker
+                      v-model="localAuthorizationsTree[indexColumn][index].to"
+                      :date-parser="parseDate"
+                      :placeholder="
+                        $t('dataTypesRepository.placeholder-datepicker') +
+                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                      "
+                      editable
+                      icon="calendar"
+                      @input="selectCheckbox($event, index, indexColumn, scope, 'to')"
+                    >
+                    </b-datepicker>
+                  </div>
                 </div>
               </div>
             </b-field>
@@ -204,7 +209,7 @@ export default class AuthorizationTable extends Vue {
       if (scope) {
         var requiredAuthorizationForIndex = requiredAuthorization[scope] || "";
         requiredAuthorizationForIndex =
-          requiredAuthorizationForIndex + (requiredAuthorizationForIndex == "" ? "" : ".") + index;
+          requiredAuthorizationForIndex + (requiredAuthorizationForIndex === "" ? "" : ".") + index;
         requiredAuthorization[this.authorizationScopes[0].id] = requiredAuthorizationForIndex;
       }
       requiredAuthorizationByIndex[index] = requiredAuthorization;
@@ -222,7 +227,7 @@ export default class AuthorizationTable extends Vue {
     this.initStates();
     this.initOpen();
     this.$children
-      .filter((child) => child.name == "AuthorizationTable")
+      .filter((child) => child.name === "AuthorizationTable")
       .forEach((child) => child.updateAuthorizationTree());
   }
 
@@ -269,7 +274,7 @@ export default class AuthorizationTable extends Vue {
     var states = {};
     var statesIcons = {};
     for (var index in this.columnsVisible) {
-      if ("label" == index) {
+      if ("label" === index) {
         continue;
       }
       states[index] = {};
@@ -315,8 +320,8 @@ export default class AuthorizationTable extends Vue {
     statesIcons[type][reference] = this.STATES[value];
     this.states = states;
     this.statesIcons = statesIcons;
-    if (value == -1) return;
-    if (this.remainingOption.length == 0 && this.authReference[reference].isLeaf) {
+    if (value === -1) return;
+    if (this.remainingOption.length === 0 && this.authReference[reference].isLeaf) {
       return;
     }
     if (updateChildren) {
@@ -332,7 +337,7 @@ export default class AuthorizationTable extends Vue {
   }
 
   getChildAuthorizationTable() {
-    return this.$children.filter((child) => child.name == "AuthorizationTable");
+    return this.$children.filter((child) => child.name === "AuthorizationTable");
   }
 
   parseDate(date) {
@@ -420,7 +425,7 @@ export default class AuthorizationTable extends Vue {
   emitAddAuthorization(event, index) {
     let localAuthorizationsTree = this.localAuthorizationsTree;
     var isEqual = event.isEqual;
-    if (isEqual.state == 1) {
+    if (isEqual.state === 1) {
       localAuthorizationsTree = localAuthorizationsTree || {};
       localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.indexColumn] || {};
       localAuthorizationsTree[event.indexColumn][index] =
@@ -428,7 +433,7 @@ export default class AuthorizationTable extends Vue {
       isEqual.auth.requiredAuthorization = this.requiredAuthorizationByindex[index];
       localAuthorizationsTree[event.indexColumn][index] = isEqual.auth;
       isEqual = this.buildState(event.indexColumn, index);
-    } else if (isEqual.state == -1) {
+    } else if (isEqual.state === -1) {
       localAuthorizationsTree = localAuthorizationsTree || {};
       localAuthorizationsTree[event.indexColumn] = localAuthorizationsTree[event.indexColumn] || {};
       localAuthorizationsTree[event.indexColumn][index] =
@@ -500,7 +505,7 @@ export default class AuthorizationTable extends Vue {
       //cliock sur checkbox
       this.states[indexColumn] || this.initStates();
       var states, state;
-      if (actualState == 1) {
+      if (actualState === 1) {
         //je supprime l'authorization et eventuellement son contenant
         delete localAuthorizationsTree?.[indexColumn]?.[index];
         if (
@@ -537,7 +542,7 @@ export default class AuthorizationTable extends Vue {
       eventType = event ? "add-authorization" : "delete-authorization";
       localAuthorizationsTree[indexColumn][index][fromOrTo] = event;
     }
-    if (this.EXTRACTION == indexColumn) {
+    if (this.EXTRACTION === indexColumn) {
       if (event instanceof Array) {
         //c'est un datagroup
         state = event.length ? 1 : 0;
@@ -595,7 +600,7 @@ export default class AuthorizationTable extends Vue {
     var localAuthorizationsTree = { ...this.localAuthorizationsTree };
     if (
       !localAuthorizationsTree[indexColumn] ||
-      Object.keys(localAuthorizationsTree[indexColumn]).length == 0
+      Object.keys(localAuthorizationsTree[indexColumn]).length === 0
     ) {
       isEqual.equal = true;
       isEqual.state = 0;
@@ -609,9 +614,9 @@ export default class AuthorizationTable extends Vue {
         if (isEqual.auth) {
           isEqual.equal =
             auth &&
-            JSON.stringify(isEqual.auth.dataGroups) == JSON.stringify(auth.dataGroups) &&
-            isEqual.auth.from?.toString() == auth.from?.toString() &&
-            isEqual.auth.to?.toString() == auth.to?.toString();
+            JSON.stringify(isEqual.auth.dataGroups) === JSON.stringify(auth.dataGroups) &&
+            isEqual.auth.from?.toString() === auth.from?.toString() &&
+            isEqual.auth.to?.toString() === auth.to?.toString();
         }
       }
     }
@@ -661,7 +666,7 @@ p {
 ::marker {
   color: transparent;
 }
-ul.rows {
-  margin-bottom: 12px;
+.column{
+  padding: 6px;
 }
 </style>

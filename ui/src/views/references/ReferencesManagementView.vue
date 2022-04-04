@@ -19,7 +19,7 @@
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
         :applicationTitle="$t('titles.references-page')"
-        :lineCount = lineCount(ref)
+        :lineCount="lineCount(ref)"
       >
       </CollapsibleTree>
       <ReferencesDetailsPanel
@@ -119,7 +119,7 @@ export default class ReferencesManagementView extends Vue {
     }
   }
   lineCount(ref) {
-    for (let i=0; i<=this.application.referenceSynthesis.length-1 ; i++) {
+    for (let i = 0; i <= this.application.referenceSynthesis.length - 1; i++) {
       if (this.application.referenceSynthesis[i].referenceType === ref.label) {
         return this.application.referenceSynthesis[i].lineCount;
       }

@@ -43,7 +43,7 @@
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
-          <span class="file-name" v-else-if="lineCount>0">
+          <span class="file-name" v-else-if="lineCount > 0">
             {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
@@ -101,8 +101,12 @@
             @click="repositoryRedirect(option.label)"
             type="is-info"
           >
-            <span class="file-cta" style=" border-color: transparent; background-color: transparent">
-              <b-icon class="file-icon" icon="archive" style="font-size: 0.75rem; color: white"></b-icon>
+            <span class="file-cta" style="border-color: transparent; background-color: transparent">
+              <b-icon
+                class="file-icon"
+                icon="archive"
+                style="font-size: 0.75rem; color: white"
+              ></b-icon>
             </span>
           </b-button>
         </div>
@@ -155,7 +159,7 @@ export default class CollapsibleTree extends Vue {
   @Prop() radioName;
   @Prop() repository;
   @Prop() repositoryRedirect;
-  @Prop( { default: 0 }) lineCount;
+  @Prop({ default: 0 }) lineCount;
   @Prop({ default: null }) applicationTitle;
 
   displayChildren = false;

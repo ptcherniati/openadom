@@ -21,11 +21,11 @@
               v-show="key !== 'minmax' && key !== 'ranges'"
               style="margin: 0; cursor: auto"
             >
-              <p class="card-header-title column is-1" style="margin-left: 10px" v-if="key!==''">
+              <p class="card-header-title column is-1" style="margin-left: 10px" v-if="key !== ''">
                 {{ key }}
               </p>
               <p class="card-header-title column is-1" style="margin-left: 10px" v-else>
-                 {{ $t("validation.modal-synthesis-variable-default") }}
+                {{ $t("validation.modal-synthesis-variable-default") }}
               </p>
               <availiblity-chart
                 class="column is-10"
@@ -41,7 +41,8 @@
                 v-if="Object.values(option).length > 4"
                 style="text-align: center"
               >
-                <b-icon class="btnCard" :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+                <b-icon class="btnCard" :icon="props.open ? 'chevron-down' : 'chevron-up'">
+                </b-icon>
               </a>
             </div>
           </template>
@@ -88,7 +89,7 @@ export default class DetailModalCard extends Vue {
   @Prop() applicationName;
   collapse = true;
   mounted() {
-    for(let i = 1; i<=document.getElementsByClassName("btnCard").length-1; i++) {
+    for (let i = 1; i <= document.getElementsByClassName("btnCard").length - 1; i++) {
       document.getElementsByClassName("btnCard").item(i).click();
     }
   }
