@@ -76,7 +76,6 @@ const ERRORS = {
   overlappingpublishedversion: (params) => i18n.t("errors.overlappingpublishedversion", params),
   patternNotMatched: (params) => i18n.t("errors.patternNotMatched", params),
   patternNotMatchedWithColumn: (params) => i18n.t("errors.patternNotMatchedWithColumn", params),
-  recordCsvMissingColumnNumberOrHeaderNameForConstantDescription: (params) => i18n.t("errors.recordCsvMissingColumnNumberOrHeaderNameForConstantDescription", params),
   requiredParentKeyColumnInCompositeReferenceForReference: (params) => i18n.t("errors.requiredParentKeyColumnInCompositeReferenceForReference", params),
   requiredReferenceInCompositeReferenceForParentKeyColumn: (params) => i18n.t("errors.requiredReferenceInCompositeReferenceForParentKeyColumn", params),
   requiredValue: (params) => i18n.t("errors.requiredValue", params),
