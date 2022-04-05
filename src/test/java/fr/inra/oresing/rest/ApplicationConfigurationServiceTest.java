@@ -157,12 +157,12 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownReferenceInCompositereference() {
+    public void testUnknownReferenceInCompositeReference() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: typeDeSites");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownReferenceInCompositereference", onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceInCompositeReference", onlyError.getMessage());
     }
 
     @Test

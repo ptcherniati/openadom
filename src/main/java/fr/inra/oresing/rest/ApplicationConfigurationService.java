@@ -67,7 +67,7 @@ public class ApplicationConfigurationService {
     ConfigurationParsingResult parseConfigurationBytes(byte[] bytes) {
         if (bytes.length == 0) {
             return ConfigurationParsingResult.builder()
-                    .recordEmptyFile()
+                    .emptyFile()
                     .build();
         }
         Map<String, Map> internationalizedSections = new HashMap<>();
@@ -79,7 +79,7 @@ public class ApplicationConfigurationService {
             int expectedVersion = 0;
             if (actualVersion != expectedVersion) {
                 return ConfigurationParsingResult.builder()
-                        .recordUnsupportedVersion(actualVersion, expectedVersion)
+                        .unsupportedVersion(actualVersion, expectedVersion)
                         .build();
             }
         } catch (UnrecognizedPropertyException e) {
@@ -172,27 +172,27 @@ public class ApplicationConfigurationService {
                         final String valueComponent = chartDescription.getValue();
                         final Map<String, Configuration.VariableComponentDescription> components = entry.getValue().doGetAllComponentDescriptions();
                         if (Strings.isNullOrEmpty(valueComponent)) {
-                            builder.recordUndeclaredValueForChart(datatype, variable, components.keySet());
+                            builder.unDeclaredValueForChart(datatype, variable, components.keySet());
                         } else {
                             if (!components.containsKey(valueComponent)) {
-                                builder.recordMissingValueComponentForChart(datatype, variable, valueComponent, components.keySet());
+                                builder.missingValueComponentForChart(datatype, variable, valueComponent, components.keySet());
                             }
                             final VariableComponentKey aggregation = chartDescription.getAggregation();
                             if (aggregation != null) {
                                 if (!dataTypeDescription.getData().containsKey(aggregation.getVariable())) {
-                                    builder.recordMissingAggregationVariableForChart(datatype, variable, aggregation, dataTypeDescription.getData().keySet());
+                                    builder.missingAggregationVariableForChart(datatype, variable, aggregation, dataTypeDescription.getData().keySet());
                                 } else if (!dataTypeDescription.getData().get(aggregation.getVariable()).hasComponent(aggregation.getComponent())) {
-                                    builder.recordMissingAggregationComponentForChart(datatype, variable, aggregation, components.keySet());
+                                    builder.missingAggregationComponentForChart(datatype, variable, aggregation, components.keySet());
                                 }
 
                             }
                             final String standardDeviation = chartDescription.getStandardDeviation();
                             if (standardDeviation != null && !components.containsKey(standardDeviation)) {
-                                builder.recordMissingStandardDeviationComponentForChart(datatype, variable, standardDeviation, components.keySet());
+                                builder.missingStandardDeviationComponentForChart(datatype, variable, standardDeviation, components.keySet());
                             }
                             final String unit = chartDescription.getUnit();
                             if (standardDeviation != null && !components.containsKey(unit)) {
-                                builder.recordMissingUnitComponentForChart(datatype, variable, unit, components.keySet());
+                                builder.missingUnitComponentForChart(datatype, variable, unit, components.keySet());
                             }
                         }
                     }
@@ -207,7 +207,7 @@ public class ApplicationConfigurationService {
                 .map(Configuration.CompositeReferenceComponentDescription::getReference)
                 .filter(ref -> {
                     if (ref == null) {
-                        builder.recordMissingReferenceInCompositereference(compositeReferenceName);
+                        builder.missingReferenceInCompositereference(compositeReferenceName);
                     }
                     return ref != null;
                 })
@@ -215,7 +215,7 @@ public class ApplicationConfigurationService {
         Set<String> existingReferences = configuration.getReferences().keySet();
         ImmutableSet<String> unknownReferences = Sets.difference(expectingReferences, existingReferences).immutableCopy();
         if (!unknownReferences.isEmpty()) {
-            builder.recordUnknownReferenceInCompositeReference(compositeReferenceName, unknownReferences, existingReferences);
+            builder.unknownReferenceInCompositeReference(compositeReferenceName, unknownReferences, existingReferences);
         }
     }
 
@@ -229,13 +229,13 @@ public class ApplicationConfigurationService {
             }
             String parentKeyColumn = component.getParentKeyColumn();
             if (previousReference == null && parentKeyColumn != null) {
-                builder.recordRequiredReferenceInCompositeReferenceForParentKeyColumn(compositeReferenceName, parentKeyColumn);
+                builder.requiredReferenceInCompositeReferenceForParentKeyColumn(compositeReferenceName, parentKeyColumn);
             } else if (previousReference != null) {
                 String reference = component.getReference();
                 if (parentKeyColumn == null) {
-                    builder.recordRequiredParentKeyColumnInCompositeReferenceForReference(compositeReferenceName, reference, previousReference);
+                    builder.requiredParentKeyColumnInCompositeReferenceForReference(compositeReferenceName, reference, previousReference);
                 } else if (!configuration.getReferences().get(reference).hasStaticColumn(parentKeyColumn)) {
-                    builder.recordMissingParentColumnForReferenceInCompositeReferenceFor(compositeReferenceName, reference, parentKeyColumn);
+                    builder.missingParentColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentKeyColumn);
                 }
             }
             previousReference = component.getReference();
@@ -252,7 +252,7 @@ public class ApplicationConfigurationService {
             }
             String parentRecursiveKey = component.getParentRecursiveKey();
             if (parentRecursiveKey != null && !configuration.getReferences().get(reference).hasStaticColumn(parentRecursiveKey)) {
-                builder.recordMissingParentRecursiveKeyColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentRecursiveKey);
+                builder.missingParentRecursiveKeyColumnForReferenceInCompositeReference(compositeReferenceName, reference, parentRecursiveKey);
             }
         }
     }
@@ -270,10 +270,10 @@ public class ApplicationConfigurationService {
                 if (components.contains(component)) {
                     // OK
                 } else {
-                    builder.recordCsvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, components);
+                    builder.csvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, components);
                 }
             } else {
-                builder.recordCsvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
+                builder.csvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);
             }
         }
     }
@@ -286,25 +286,25 @@ public class ApplicationConfigurationService {
                     final int rowNumber = headerConstantDescription.getRowNumber();
                     final int headerLine = format.getHeaderLine();
                     if (rowNumber == headerLine) {
-                        builder.recordCsvSameHeaderLineAndFirstRowLineForConstantDescription(dataType);
+                        builder.sameHeaderLineAndFirstRowLineForConstantDescription(dataType);
                     }
                     final int firstRowLine = format.getFirstRowLine();
                     if (rowNumber >= firstRowLine) {
-                        builder.recordCsvTooBigRowLineForConstantDescription(dataType);
+                        builder.tooBigRowLineForConstantDescription(dataType);
                     }
                     if (rowNumber < 1) {
-                        builder.recordCsvTooLittleRowLineForConstantDescription(dataType);
+                        builder.tooLittleRowLineForConstantDescription(dataType);
                     }
                     if (rowNumber < headerLine && rowNumber < 1) {
-                        builder.recordCsvMissingRowLineForConstantDescription(dataType);
+                        builder.missingRowLineForConstantDescription(dataType);
                     } else if (rowNumber > headerLine && columnNumber < 1 && headerName == null) {
-                        builder.recordCsvMissingColumnNumberOrHeaderNameForConstantDescription(dataType);
+                        builder.missingColumnNumberOrHeaderNameForConstantDescription(dataType);
                     } else {
                         final VariableComponentKey boundTo = headerConstantDescription.getBoundTo();
                         if (boundTo == null) {
-                            builder.recordCsvMissingBoundToForConstantDescription(dataType);
+                            builder.missingBoundToForConstantDescription(dataType);
                         } else if (headerConstantDescription.getExportHeader() == null) {
-                            builder.recordCsvMissingExportHeaderNameForConstantDescription(dataType);
+                            builder.missingExportHeaderNameForConstantDescription(dataType);
                         }
                     }
                 });
@@ -314,9 +314,9 @@ public class ApplicationConfigurationService {
         variables.forEach(variable -> {
             int count = variableOccurrencesInDataGroups.count(variable);
             if (count == 0) {
-                builder.recordUndeclaredDataGroupForVariable(variable);
+                builder.undeclaredDataGroupForVariable(variable);
             } else if (count > 1) {
-                builder.recordVariableInMultipleDataGroup(variable);
+                builder.variableInMultipleDataGroup(variable);
             }
         });
     }
@@ -329,14 +329,14 @@ public class ApplicationConfigurationService {
             variableOccurrencesInDataGroups.addAll(dataGroupVariables);
             ImmutableSet<String> unknownVariables = Sets.difference(dataGroupVariables, variables).immutableCopy();
             if (!unknownVariables.isEmpty()) {
-                builder.recordUnknownVariablesInDataGroup(dataGroup, unknownVariables, variables);
+                builder.unknownVariablesInDataGroup(dataGroup, unknownVariables, variables);
             }
         }
     }
 
     private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey) {
         if (authorizationScopesVariableComponentKey == null || authorizationScopesVariableComponentKey.isEmpty()) {
-            builder.recordMissingAuthorizationScopeVariableComponentKey(dataType);
+            builder.missingAuthorizationScopeVariableComponentKey(dataType);
         } else {
             Configuration.DataTypeDescription dataTypeDescription = configuration.getDataTypes().get(dataType);
             authorizationScopesVariableComponentKey.entrySet().stream().forEach(authorizationScopeVariableComponentKeyEntry -> {
@@ -344,24 +344,24 @@ public class ApplicationConfigurationService {
                 Configuration.AuthorizationScopeDescription authorizationScopeDescription = authorizationScopeVariableComponentKeyEntry.getValue();
                 VariableComponentKey authorizationScopeVariableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 if (authorizationScopeVariableComponentKey.getVariable() == null) {
-                    builder.recordAuthorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
+                    builder.authorizationScopeVariableComponentKeyMissingVariable(dataType, authorizationScopeName, variables);
                 } else {
                     String variable = authorizationScopeVariableComponentKey.getVariable();
                     Configuration.VariableDescription variableInDescription = dataTypeDescription.getData().get(variable);
                     if (!dataTypeDescription.getData().containsKey(variable)) {
-                        builder.recordAuthorizationScopeVariableComponentKeyUnknownVariable(authorizationScopeVariableComponentKey, variables);
+                        builder.authorizationScopeVariableComponentKeyUnknownVariable(authorizationScopeVariableComponentKey, variables);
                     } else {
                         String component = authorizationScopeVariableComponentKey.getComponent();
                         Map<String, Configuration.VariableComponentDescription> componentsInDescription = variableInDescription.doGetAllComponentDescriptions();
                         if (component == null) {
-                            builder.recordAuthorizationVariableComponentKeyMissingComponent(dataType, authorizationScopeName, variable, componentsInDescription.keySet());
+                            builder.authorizationVariableComponentKeyMissingComponent(dataType, authorizationScopeName, variable, componentsInDescription.keySet());
                         } else {
                             if (!componentsInDescription.containsKey(component)) {
-                                builder.recordAuthorizationVariableComponentKeyUnknownComponent(authorizationScopeVariableComponentKey, componentsInDescription.keySet());
+                                builder.authorizationVariableComponentKeyUnknownComponent(authorizationScopeVariableComponentKey, componentsInDescription.keySet());
                             } else {
                                 Configuration.CheckerDescription authorizationScopeVariableComponentChecker = dataTypeDescription.getData().get(variable).doGetAllComponentDescriptions().get(authorizationScopeVariableComponentKey.getComponent()).getChecker();
                                 if (authorizationScopeVariableComponentChecker == null || !"Reference".equals(authorizationScopeVariableComponentChecker.getName())) {
-                                    builder.recordAuthorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
+                                    builder.authorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
                                 }
                                 String refType;
                                 Configuration.CheckerConfigurationDescription checkerConfigurationDescription = null;
@@ -369,11 +369,11 @@ public class ApplicationConfigurationService {
                                     checkerConfigurationDescription = authorizationScopeVariableComponentChecker.getParams();
                                 }
                                 if (checkerConfigurationDescription == null) {
-                                    builder.recordAuthorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
+                                    builder.authorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
                                 } else {
                                     refType = checkerConfigurationDescription.getRefType();
                                     if (refType == null || !configuration.getReferences().containsKey(refType)) {
-                                        builder.recordAuthorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
+                                        builder.authorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
                                     } else {
                                         Set<String> compositesReferences = configuration.getCompositeReferences().values().stream()
                                                 .map(Configuration.CompositeReferenceDescription::getComponents)
@@ -381,7 +381,7 @@ public class ApplicationConfigurationService {
                                                 .map(Configuration.CompositeReferenceComponentDescription::getReference)
                                                 .collect(Collectors.toSet());
                                         if (!compositesReferences.contains(refType)) {
-                                            builder.recordAuthorizationVariableComponentMustReferToCompositereference(dataType, authorizationScopeName, refType, compositesReferences);
+                                            builder.authorizationScopeVariableComponentReftypeUnknown(dataType, authorizationScopeName, refType, compositesReferences);
                                         }
                                     }
                                 }
@@ -396,30 +396,30 @@ public class ApplicationConfigurationService {
 
     private void verifyDatatypeTimeScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables, VariableComponentKey timeScopeVariableComponentKey) {
         if (timeScopeVariableComponentKey == null) {
-            builder.recordMissingTimeScopeVariableComponentKey(dataType);
+            builder.missingTimeScopeVariableComponentKey(dataType);
         } else {
             if (timeScopeVariableComponentKey.getVariable() == null) {
-                builder.recordTimeScopeVariableComponentKeyMissingVariable(dataType, variables);
+                builder.timeScopeVariableComponentKeyMissingVariable(dataType, variables);
             } else {
                 if (!dataTypeDescription.getData().containsKey(timeScopeVariableComponentKey.getVariable())) {
-                    builder.recordTimeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
+                    builder.timeScopeVariableComponentKeyUnknownVariable(timeScopeVariableComponentKey, variables);
                 } else {
                     if (timeScopeVariableComponentKey.getComponent() == null) {
-                        builder.recordTimeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
+                        builder.timeVariableComponentKeyMissingComponent(dataType, timeScopeVariableComponentKey.getVariable(), dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
                     } else {
                         if (!dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).hasComponent(timeScopeVariableComponentKey.getComponent())) {
-                            builder.recordTimeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
+                            builder.timeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
                         } else {
                             Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponentDescriptions().get(timeScopeVariableComponentKey.getComponent()).getChecker();
                             if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
-                                builder.recordTimeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
+                                builder.timeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
                             }
                             Optional.ofNullable(timeScopeVariableComponentChecker)
                                     .map(Configuration.CheckerDescription::getParams)
                                     .map(Configuration.CheckerConfigurationDescription::getPattern)
                                     .ifPresent(pattern -> {
                                         if (!LocalDateTimeRange.getKnownPatterns().contains(pattern)) {
-                                            builder.recordTimeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
+                                            builder.timeScopeVariableComponentPatternUnknown(timeScopeVariableComponentKey, pattern, LocalDateTimeRange.getKnownPatterns());
                                         }
                                     });
                         }
@@ -443,8 +443,8 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void recordUnknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
-                builder.recordUnknownCheckerNameForVariableComponentCheckerInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, checkerOnTargetNames);
+            public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
+                builder.unknownCheckerNameForVariableComponentCheckerInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, checkerOnTargetNames);
             }
 
             @Override
@@ -458,12 +458,12 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void recordMissingRequiredExpression(String validationRuleDescriptionEntryKey) {
+            public void missingRequiredExpression(String validationRuleDescriptionEntryKey) {
                 builder.missingRequiredExpressionForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType);
             }
 
             @Override
-            public void recordIllegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
+            public void illegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
                 builder.illegalGroovyExpressionForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, expression, compilationError);
             }
 
@@ -483,8 +483,8 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
-                builder.recordUnknownCheckerNameForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, allCheckerNames);
+            public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
+                builder.unknownCheckerNameForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, allCheckerNames);
             }
 
             @Override
@@ -540,7 +540,7 @@ public class ApplicationConfigurationService {
                             @Override
                             public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
                                 // OK
-                                builder.recordUnknownCheckerNameForVariableComponentChecker(dataType, datum, component, checkerName, knownCheckerNames);
+                                builder.unknownCheckerNameForVariableComponent(dataType, datum, component, checkerName, knownCheckerNames);
                             }
 
                             @Override
@@ -599,7 +599,7 @@ public class ApplicationConfigurationService {
 
                         @Override
                         public void invalidPatternForDateChecker(String pattern) {
-                            builder.invalidPatternForForReferenceColumnDateChecker(referenceToValidate, column, pattern);
+                            builder.invalidPatternForReferenceColumnDateChecker(referenceToValidate, column, pattern);
                         }
 
                         @Override
@@ -674,13 +674,13 @@ public class ApplicationConfigurationService {
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
         List<String> keyColumns = referenceDescription.getKeyColumns();
         if (keyColumns.isEmpty()) {
-            builder.recordMissingKeyColumnsForReference(reference);
+            builder.missingKeyColumnsForReference(reference);
         } else {
             Set<String> columns = referenceDescription.doGetStaticColumns();
             ImmutableSet<String> keyColumnsSet = ImmutableSet.copyOf(keyColumns);
             ImmutableSet<String> unknownUsedAsKeyElementColumns = Sets.difference(keyColumnsSet, columns).immutableCopy();
             if (!unknownUsedAsKeyElementColumns.isEmpty()) {
-                builder.recordInvalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
+                builder.invalidKeyColumns(reference, unknownUsedAsKeyElementColumns, columns);
             }
         }
     }
@@ -719,7 +719,7 @@ public class ApplicationConfigurationService {
 
         ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
-            builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+            builder.invalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
         }
     }
 
@@ -757,7 +757,7 @@ public class ApplicationConfigurationService {
             Map<String, Configuration.ReferenceDescription> references = Optional.ofNullable(configuration.getReferences())
                     .orElse(new LinkedHashMap<>());
             if (!references.containsKey(reference)) {
-                builder.recordUnknownReferenceInDatatypeReferenceDisplay(dataType, reference, references.keySet());
+                builder.unknownReferenceInDatatypeReferenceDisplay(dataType, reference, references.keySet());
                 return;
             }
 
@@ -773,7 +773,7 @@ public class ApplicationConfigurationService {
 
             ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsForDisplay, columns).immutableCopy();
             if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
-                builder.recordInvalidInternationalizedColumnsForDataType(dataType, reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+                builder.invalidInternationalizedColumnsForDataType(dataType, reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
             }
         }
     }
@@ -791,7 +791,7 @@ public class ApplicationConfigurationService {
         }
         ImmutableSet<String> unknownUsedAsVariableComponentUniqueness = Sets.difference(variableComponentsKeyInUniqueness, availableVariableComponents).immutableCopy();
         if (!unknownUsedAsVariableComponentUniqueness.isEmpty()) {
-            builder.recordUnknownUsedAsVariableComponentUniqueness(dataType, unknownUsedAsVariableComponentUniqueness, availableVariableComponents);
+            builder.unknownUsedAsVariableComponentUniqueness(dataType, unknownUsedAsVariableComponentUniqueness, availableVariableComponents);
         }
     }
 
@@ -807,7 +807,7 @@ public class ApplicationConfigurationService {
         ImmutableSet<String> internationalizedColumnsSet = ImmutableSet.copyOf(internationalizedColumns);
         ImmutableSet<String> unknownUsedAsInternationalizedColumnsSetColumns = Sets.difference(internationalizedColumnsSet, columns).immutableCopy();
         if (!unknownUsedAsInternationalizedColumnsSetColumns.isEmpty()) {
-            builder.recordInvalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
+            builder.invalidInternationalizedColumns(reference, unknownUsedAsInternationalizedColumnsSetColumns, columns);
         }
     }
 
@@ -829,9 +829,9 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void recordUnknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
+            public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
                 // OK
-                builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checkerName, checkerOnTargetNames);
+                builder.unknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checkerName, checkerOnTargetNames);
             }
 
             @Override
@@ -847,13 +847,13 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void recordMissingRequiredExpression(String validationRuleDescriptionEntryKey) {
+            public void missingRequiredExpression(String validationRuleDescriptionEntryKey) {
                 // OK
                 builder.missingRequiredExpressionForValidationRuleInReference(validationRuleDescriptionEntryKey, reference);
             }
 
             @Override
-            public void recordIllegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
+            public void illegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
                 // OK
                 builder.illegalGroovyExpressionForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, expression, compilationError);
             }
@@ -875,9 +875,9 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
+            public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
                 // OK
-                builder.recordUnknownCheckerNameForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, allCheckerNames);
+                builder.unknownCheckerNameForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, allCheckerNames);
             }
 
             @Override
@@ -908,21 +908,21 @@ public class ApplicationConfigurationService {
 
         Set<CheckerTarget> getAcceptableCheckerTargets();
 
-        void recordMissingRequiredExpression(String validationRuleDescriptionEntryKey);
+        void missingRequiredExpression(String validationRuleDescriptionEntryKey);
 
-        void recordIllegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError);
+        void illegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError);
 
         void missingParamColumnReferenceForChecker(String validationRuleDescriptionEntryKey);
 
         void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns);
 
-        void recordUnknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String name, ImmutableSet<String> checkerOnTargetNames);
+        void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String name, ImmutableSet<String> checkerOnTargetNames);
 
         void unknownReferenceForChecker(String validationRuleDescriptionEntryKey, String refType, Set<String> references);
 
         void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references);
 
-        void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames);
+        void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames);
 
         void invalidPatternForDateChecker(String validationRuleDescriptionEntryKey, String pattern);
 
@@ -940,10 +940,10 @@ public class ApplicationConfigurationService {
                     .map(GroovyConfiguration::getExpression)
                     .orElse(null);
             if (StringUtils.isBlank(expression)) {
-                builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
+                builder.missingRequiredExpression(validationRuleDescriptionEntryKey);
             } else {
                 Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
-                compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
+                compileResult.ifPresent(compilationError -> builder.illegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
             }
         } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
             if (lineValidationRuleDescription.doGetCheckerTargets().isEmpty()) {
@@ -974,7 +974,7 @@ public class ApplicationConfigurationService {
 
                 @Override
                 public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames) {
-                    builder.recordUnknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
+                    builder.unknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
                 }
 
                 @Override
@@ -993,7 +993,7 @@ public class ApplicationConfigurationService {
                 }
             }, checker);
         } else {
-            builder.recordUnknownCheckerNameForValidationRule(validationRuleDescriptionEntryKey, checker.getName(), ALL_CHECKER_NAMES);
+            builder.unknownCheckerNameForValidationRule(validationRuleDescriptionEntryKey, checker.getName(), ALL_CHECKER_NAMES);
         }
     }
 
@@ -1016,14 +1016,14 @@ public class ApplicationConfigurationService {
                         int columnNumber = e.getLocation().getColumnNr();
                         String unknownPropertyName = e.getPropertyName();
                         Collection<String> knownProperties = (Collection) e.getKnownPropertyIds();
-                        builder.recordUnrecognizedProperty(lineNumber, columnNumber, unknownPropertyName, knownProperties);
+                        builder.unrecognizedProperty(lineNumber, columnNumber, unknownPropertyName, knownProperties);
                     } else if (exception.getCause() instanceof InvalidFormatException) {
                         InvalidFormatException e = (InvalidFormatException) exception.getCause();
                         int lineNumber = e.getLocation().getLineNr();
                         int columnNumber = e.getLocation().getColumnNr();
                         String value = e.getValue().toString();
                         String targetTypeName = e.getTargetType().getName();
-                        builder.recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName);
+                        builder.invalidFormat(lineNumber, columnNumber, value, targetTypeName);
                     } else {
                         builder.unknownIllegalException(exception.getCause().getLocalizedMessage());
                     }
@@ -1037,7 +1037,7 @@ public class ApplicationConfigurationService {
         String unknownPropertyName = e.getPropertyName();
         Collection<String> knownProperties = (Collection) e.getKnownPropertyIds();
         return ConfigurationParsingResult.builder()
-                .recordUnrecognizedProperty(lineNumber, columnNumber, unknownPropertyName, knownProperties)
+                .unrecognizedProperty(lineNumber, columnNumber, unknownPropertyName, knownProperties)
                 .build();
     }
 
@@ -1047,7 +1047,7 @@ public class ApplicationConfigurationService {
         String value = e.getValue().toString();
         String targetTypeName = e.getTargetType().getName();
         return ConfigurationParsingResult.builder()
-                .recordInvalidFormat(lineNumber, columnNumber, value, targetTypeName)
+                .invalidFormat(lineNumber, columnNumber, value, targetTypeName)
                 .build();
     }
 
