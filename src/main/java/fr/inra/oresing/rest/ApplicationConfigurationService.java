@@ -137,11 +137,12 @@ public class ApplicationConfigurationService {
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
-            if (authorization == null) {
-                /**
-                 * to decomment if authorization section is required
-                 */
-                //builder.missingAuthorizationsForDatatype(dataType);
+
+            // FIXME
+            boolean authorizationSectionIsRequired = false;
+
+            if (authorizationSectionIsRequired && authorization == null) {
+                builder.missingAuthorizationForDatatype(dataType);
             } else {
                 VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
                 verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
