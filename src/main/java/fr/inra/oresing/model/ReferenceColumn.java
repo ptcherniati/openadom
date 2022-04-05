@@ -31,4 +31,9 @@ public class ReferenceColumn implements CheckerTarget, SomethingToBeStoredAsJson
     public CheckerTargetType getType() {
         return CheckerTargetType.PARAM_COLUMN;
     }
+
+    @Override
+    public String toHumanReadableString() {
+        return column;
+    }
 }

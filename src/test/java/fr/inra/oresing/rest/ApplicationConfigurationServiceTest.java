@@ -385,7 +385,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("missingRequiredExpression", onlyError.getMessage());
+        Assert.assertEquals("missingRequiredExpressionForValidationRuleInDataType", onlyError.getMessage());
     }
 
     @Test
@@ -394,7 +394,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("illegalGroovyExpression", onlyError.getMessage());
+        Assert.assertEquals("illegalGroovyExpressionForValidationRuleInDataType", onlyError.getMessage());
     }
 
     @Test
@@ -403,7 +403,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownCheckerName", onlyError.getMessage());
+        Assert.assertEquals("unknownCheckerNameForValidationRuleInDataType", onlyError.getMessage());
     }
 
     @Test

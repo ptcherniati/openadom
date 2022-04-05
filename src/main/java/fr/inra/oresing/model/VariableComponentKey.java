@@ -32,6 +32,11 @@ public class VariableComponentKey implements CheckerTarget {
         return CheckerTargetType.PARAM_VARIABLE_COMPONENT_KEY;
     }
 
+    @Override
+    public String toHumanReadableString() {
+        return String.format("%s/%s", variable, component);
+    }
+
     public String toSqlExtractPattern(){
         return String.format("aggreg.datavalues #>> '{%s,%s}'%n",variable.replaceAll("'", "''"), component.replaceAll("'", "''"));
     }

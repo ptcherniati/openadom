@@ -10,6 +10,8 @@ public interface CheckerTarget {
     @Deprecated
     CheckerTargetType getType();
 
+    String toHumanReadableString();
+
     enum CheckerTargetType {
         PARAM_VARIABLE_COMPONENT_KEY("variableComponentKey"),PARAM_COLUMN("column");
 

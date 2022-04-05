@@ -11,11 +11,13 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.checker.GroovyConfiguration;
 import fr.inra.oresing.checker.GroovyLineChecker;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationDataTypeMap;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
@@ -46,8 +48,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApplicationConfigurationService {
     public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
-    private static final ImmutableSet<String> CHECKER_ON_TARGET_NAMES = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
 
+    private static final ImmutableSet<String> CHECKER_ON_TARGET_NAMES =
+            ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
+
+    private static final ImmutableSet<String> ALL_CHECKER_NAMES = ImmutableSet.<String>builder()
+            .addAll(CHECKER_ON_TARGET_NAMES)
+            .add(GroovyLineChecker.NAME)
+            .build();
 
     ConfigurationParsingResult unzipConfiguration(MultipartFile file){
         return null;
@@ -112,15 +120,15 @@ public class ApplicationConfigurationService {
             verifyReferenceKeyColumns( builder, referenceEntry);
             verifyInternationalizedColumnsExists(configuration, builder, referenceEntry);
             verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
-            verifyValidationCheckersAreValids( builder, referenceEntry, references);
+            verifyReferenceColumnsDeclarations(builder, referenceEntry, references);
+            verifyReferenceValidationRules(builder, referenceEntry, references);
         }
 
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
             String dataType = entry.getKey();
             Configuration.DataTypeDescription dataTypeDescription = entry.getValue();
-            verifyDatatypeCheckersExists(builder, dataTypeDescription, dataType);
-            verifyDatatypeCheckerReferenceRefersToExistingReference(builder, references, dataType, dataTypeDescription);
-            verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(builder, dataTypeDescription);
+            verifyDataTypeVariableComponentDeclarations(builder, references, dataType, dataTypeDescription);
+            verifyDataTypeValidationRules(builder, dataType, dataTypeDescription, references);
             verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType);
             verifyUniquenessComponentKeysInDatatype(dataType, dataTypeDescription, builder);
 
@@ -418,55 +426,72 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyDatatypeCheckersExists(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, String dataType) {
-        for (Map.Entry<String, Configuration.VariableDescription> columnDescriptionEntry : dataTypeDescription.getData().entrySet()) {
-            Configuration.VariableDescription variableDescription = columnDescriptionEntry.getValue();
-            String variable = columnDescriptionEntry.getKey();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> variableComponentDescriptionEntry : variableDescription.doGetAllComponentDescriptions().entrySet()) {
-                Configuration.VariableComponentDescription variableComponentDescription = variableComponentDescriptionEntry.getValue();
-                if (variableComponentDescription == null) {
-                    continue;
-                }
-                String component = variableComponentDescriptionEntry.getKey();
-                Configuration.CheckerDescription checker = variableComponentDescription.getChecker();
-                if (checker == null) {
-                    continue;
-                }
-                ImmutableSet<String> variableComponentCheckers = ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
+    private void verifyDataTypeValidationRules(ConfigurationParsingResult.Builder builder, final String dataType, Configuration.DataTypeDescription dataTypeDescription, final Set<String> references) {
+        LineValidationRuleDescriptionValidationContext lineValidationRuleDescriptionValidationContext = new LineValidationRuleDescriptionValidationContext() {
 
-                if (!variableComponentCheckers.contains(checker.getName())) {
-                    builder.recordUnknownCheckerNameForVariableComponentChecker(dataType, variable, component, checker.getName(), variableComponentCheckers);
-                }
+            @Override
+            public Set<String> getReferences() {
+                return references;
             }
+
+            @Override
+            public Set<CheckerTarget> getAcceptableCheckerTargets() {
+                return ImmutableSet.copyOf(dataTypeDescription.doGetAllVariableComponents());
+            }
+
+            @Override
+            public void recordUnknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
+                builder.recordUnknownCheckerNameForVariableComponentCheckerInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, checkerOnTargetNames);
+            }
+
+            @Override
+            public void unknownReferenceForChecker(String validationRuleDescriptionEntryKey, String refType, Set<String> references) {
+                builder.unknownReferenceForCheckerInDataType(validationRuleDescriptionEntryKey, dataType, refType, references);
+            }
+
+            @Override
+            public void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references) {
+                builder.missingReferenceForCheckerInDataType(validationRuleDescriptionEntryKey, dataType, references);
+            }
+
+            @Override
+            public void recordMissingRequiredExpression(String validationRuleDescriptionEntryKey) {
+                builder.missingRequiredExpressionForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType);
+            }
+
+            @Override
+            public void recordIllegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
+                builder.illegalGroovyExpressionForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, expression, compilationError);
+            }
+
+            @Override
+            public void missingParamColumnReferenceForChecker(String validationRuleDescriptionEntryKey) {
+                builder.missingParamColumnReferenceForCheckerInDataType(validationRuleDescriptionEntryKey, dataType);
+            }
+
+            @Override
+            public void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns) {
+                builder.missingColumnReferenceForCheckerInDataType(
+                        validationRuleDescriptionEntryKey,
+                        knownColumns.stream().map(CheckerTarget::toHumanReadableString).collect(ImmutableSet.toImmutableSet()),
+                        checkerName,
+                        missingColumns.stream().map(CheckerTarget::toHumanReadableString).collect(ImmutableSet.toImmutableSet()),
+                        dataType);
+            }
+
+            @Override
+            public void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
+                builder.recordUnknownCheckerNameForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, allCheckerNames);
+            }
+        };
+        for (Map.Entry<String, Configuration.LineValidationRuleWithVariableComponentsDescription> validationRuleDescriptionEntry : dataTypeDescription.getValidations().entrySet()) {
+            String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
+            Configuration.LineValidationRuleWithVariableComponentsDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
+            verifyLineValidationRuleDescription(lineValidationRuleDescriptionValidationContext, validationRuleDescriptionEntryKey, lineValidationRuleDescription);
         }
     }
 
-    private void verifyDatatypeCheckerGroovyExpressionExistsAndCanCompile(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription) {
-        for (Map.Entry<String, Configuration.LineValidationRuleWithVariableComponentsDescription> validationEntry : dataTypeDescription.getValidations().entrySet()) {
-            Configuration.LineValidationRuleWithVariableComponentsDescription lineValidationRuleDescription = validationEntry.getValue();
-            String lineValidationRuleKey = validationEntry.getKey();
-            Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
-            if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = Optional.of(checker)
-                        .map(Configuration.CheckerDescription::getParams)
-                        .map(Configuration.CheckerConfigurationDescription::getGroovy)
-                        .map(GroovyConfiguration::getExpression)
-                        .orElse(null);
-                if (StringUtils.isBlank(expression)) {
-                    builder.recordMissingRequiredExpression(lineValidationRuleKey);
-                } else {
-                    Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
-                    compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(lineValidationRuleKey, expression, compilationError));
-                }
-            } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
-                // TODO
-            } else {
-                builder.recordUnknownCheckerName(lineValidationRuleKey, checker.getName());
-            }
-        }
-    }
-
-    private void verifyDatatypeCheckerReferenceRefersToExistingReference(ConfigurationParsingResult.Builder builder, Set<String> references, String dataType, Configuration.DataTypeDescription dataTypeDescription) {
+    private void verifyDataTypeVariableComponentDeclarations(ConfigurationParsingResult.Builder builder, Set<String> references, String dataType, Configuration.DataTypeDescription dataTypeDescription) {
         for (Map.Entry<String, Configuration.VariableDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
             String datum = dataEntry.getKey();
             Configuration.VariableDescription datumDescription = dataEntry.getValue();
@@ -475,18 +500,100 @@ public class ApplicationConfigurationService {
                 Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
                 if (variableComponentDescription != null) {
                     Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
-                    if ("Reference".equals(checkerDescription.getName())) {
-                        if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
-                            String refType = checkerDescription.getParams().getRefType();
-                            if (!references.contains(refType)) {
+                    if (checkerDescription != null) {
+                        verifyCheckerOnOneTarget(new CheckerOnOneTargetValidationContext() {
+                            @Override
+                            public Set<String> getReferences() {
+                                return references;
+                            }
+
+                            @Override
+                            public void unknownReferenceForChecker(String refType, Set<String> references) {
+                                // OK
                                 builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
                             }
-                        } else {
-                            builder.missingReferenceForChecker(dataType, datum, component, references);
-                        }
+
+                            @Override
+                            public void missingReferenceForChecker(Set<String> references) {
+                                // OK
+                                builder.missingReferenceForChecker(dataType, datum, component, references);
+                            }
+
+                            @Override
+                            public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
+                                // OK
+                                builder.recordUnknownCheckerNameForVariableComponentChecker(dataType, datum, component, checkerName, knownCheckerNames);
+                            }
+                        }, checkerDescription);
                     }
                 }
             }
+        }
+    }
+
+    private void verifyReferenceColumnsDeclarations(ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
+        String referenceToValidate = referenceEntry.getKey();
+        Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+        for (Map.Entry<String, Configuration.ReferenceStaticColumnDescription> columnEntry : referenceDescription.doGetStaticColumnDescriptions().entrySet()) {
+            String column = columnEntry.getKey();
+            Configuration.ReferenceStaticColumnDescription referenceStaticColumnDescription = columnEntry.getValue();
+            if (referenceStaticColumnDescription != null) {
+                Configuration.CheckerDescription checkerDescription = referenceStaticColumnDescription.getChecker();
+                if (checkerDescription != null) {
+                    verifyCheckerOnOneTarget(new CheckerOnOneTargetValidationContext() {
+                        @Override
+                        public Set<String> getReferences() {
+                            return references;
+                        }
+
+                        @Override
+                        public void unknownReferenceForChecker(String refType, Set<String> knownReferences) {
+                            // OK
+                            builder.unknownReferenceForCheckerInReferenceColumn(referenceToValidate, column, refType, knownReferences);
+                        }
+
+                        @Override
+                        public void missingReferenceForChecker(Set<String> knownReferences) {
+                            // OK
+                            builder.missingReferenceForCheckerInReferenceColumn(referenceToValidate, column, knownReferences);
+                        }
+
+                        @Override
+                        public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
+                            // OK
+                            builder.unknownCheckerNameInReferenceColumn(referenceToValidate, column, checkerName, knownCheckerNames);
+                        }
+                    }, checkerDescription);
+                }
+            }
+        }
+    }
+
+    private interface CheckerOnOneTargetValidationContext {
+
+        Set<String> getReferences();
+
+        void unknownReferenceForChecker(String refType, Set<String> references);
+
+        void missingReferenceForChecker(Set<String> references);
+
+        void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames);
+    }
+
+    private void verifyCheckerOnOneTarget(CheckerOnOneTargetValidationContext builder, Configuration.CheckerDescription checkerDescription) {
+        if (CHECKER_ON_TARGET_NAMES.contains(checkerDescription.getName())) {
+            if ("Reference".equals(checkerDescription.getName())) {
+                if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
+                    String refType = checkerDescription.getParams().getRefType();
+                    if (!builder.getReferences().contains(refType)) {
+                        builder.unknownReferenceForChecker(refType, builder.getReferences());
+                    }
+                } else {
+                    builder.missingReferenceForChecker(builder.getReferences());
+                }
+            }
+        } else {
+            builder.unknownCheckerOnOneTargetName(checkerDescription.getName(), CHECKER_ON_TARGET_NAMES);
         }
     }
 
@@ -632,52 +739,153 @@ public class ApplicationConfigurationService {
         }
     }
 
-    private void verifyValidationCheckersAreValids(ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
+    private void verifyReferenceValidationRules(ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Set<String> references) {
         String reference = referenceEntry.getKey();
         Configuration.ReferenceDescription referenceDescription = referenceEntry.getValue();
+        LineValidationRuleDescriptionValidationContext lineValidationRuleDescriptionValidationContext = new LineValidationRuleDescriptionValidationContext() {
+
+            @Override
+            public Set<String> getReferences() {
+                return references;
+            }
+
+            @Override
+            public Set<CheckerTarget> getAcceptableCheckerTargets() {
+                return referenceDescription.doGetStaticColumns().stream()
+                        .map(ReferenceColumn::new)
+                        .collect(ImmutableSet.toImmutableSet());
+            }
+
+            @Override
+            public void recordUnknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
+                // OK
+                builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checkerName, checkerOnTargetNames);
+            }
+
+            @Override
+            public void unknownReferenceForChecker(String validationRuleDescriptionEntryKey, String refType, Set<String> references) {
+                // OK
+                builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
+            }
+
+            @Override
+            public void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references) {
+                // OK
+                builder.missingReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, references);
+            }
+
+            @Override
+            public void recordMissingRequiredExpression(String validationRuleDescriptionEntryKey) {
+                // OK
+                builder.missingRequiredExpressionForValidationRuleInReference(validationRuleDescriptionEntryKey, reference);
+            }
+
+            @Override
+            public void recordIllegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
+                // OK
+                builder.illegalGroovyExpressionForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, expression, compilationError);
+            }
+
+            @Override
+            public void missingParamColumnReferenceForChecker(String validationRuleDescriptionEntryKey) {
+                // OK
+                builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
+            }
+
+            @Override
+            public void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns) {
+                builder.missingColumnReferenceForCheckerInReference(
+                        validationRuleDescriptionEntryKey,
+                        knownColumns.stream().map(CheckerTarget::toHumanReadableString).collect(ImmutableSet.toImmutableSet()),
+                        checkerName,
+                        missingColumns.stream().map(CheckerTarget::toHumanReadableString).collect(ImmutableSet.toImmutableSet()),
+                        reference);
+            }
+
+            @Override
+            public void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
+                // OK
+                builder.recordUnknownCheckerNameForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, allCheckerNames);
+            }
+        };
         for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
             Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
-            Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
-            if (checker == null) {
-                continue;
-            }
-            if (GroovyLineChecker.NAME.equals(checker.getName())) {
-                String expression = Optional.of(checker)
-                        .map(Configuration.CheckerDescription::getParams)
-                        .map(Configuration.CheckerConfigurationDescription::getGroovy)
-                        .map(GroovyConfiguration::getExpression)
-                        .orElse(null);
-                if (StringUtils.isBlank(expression)) {
-                    builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
-                } else {
-                    Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
-                    compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
-                }
-            } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
-                if (lineValidationRuleDescription.getColumns().isEmpty()) {
-                    builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
-                } else {
-                    Set<String> columnsDeclaredInCheckerConfiguration = lineValidationRuleDescription.getColumns();
-                    Set<String> knownColumns = referenceDescription.doGetAllColumns();
-                    ImmutableSet<String> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
-                    if (!missingColumns.isEmpty()) {
-                        builder.missingColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, knownColumns, checker.getName(), missingColumns, reference);
-                    }
-                }
-                if ("Reference".equals(checker.getName())) {
-                    if (checker.getParams().getRefType() != null) {
-                        String refType = checker.getParams().getRefType();
-                        if (!references.contains(refType)) {
-                            builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
-                        }
-                    } else {
-                        builder.missingReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, references);
-                    }
-                }
+            verifyLineValidationRuleDescription(lineValidationRuleDescriptionValidationContext, validationRuleDescriptionEntryKey, lineValidationRuleDescription);
+        }
+    }
+
+    private interface LineValidationRuleDescriptionValidationContext {
+
+        Set<String> getReferences();
+
+        Set<CheckerTarget> getAcceptableCheckerTargets();
+
+        void recordMissingRequiredExpression(String validationRuleDescriptionEntryKey);
+
+        void recordIllegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError);
+
+        void missingParamColumnReferenceForChecker(String validationRuleDescriptionEntryKey);
+
+        void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns);
+
+        void recordUnknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String name, ImmutableSet<String> checkerOnTargetNames);
+
+        void unknownReferenceForChecker(String validationRuleDescriptionEntryKey, String refType, Set<String> references);
+
+        void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references);
+
+        void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames);
+    }
+
+    private void verifyLineValidationRuleDescription(LineValidationRuleDescriptionValidationContext builder, String validationRuleDescriptionEntryKey, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
+        Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
+        if (GroovyLineChecker.NAME.equals(checker.getName())) {
+            String expression = Optional.of(checker)
+                    .map(Configuration.CheckerDescription::getParams)
+                    .map(Configuration.CheckerConfigurationDescription::getGroovy)
+                    .map(GroovyConfiguration::getExpression)
+                    .orElse(null);
+            if (StringUtils.isBlank(expression)) {
+                builder.recordMissingRequiredExpression(validationRuleDescriptionEntryKey);
             } else {
-                builder.recordUnknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checker.getName(), CHECKER_ON_TARGET_NAMES);
+                Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
+                compileResult.ifPresent(compilationError -> builder.recordIllegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
             }
+        } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
+            if (lineValidationRuleDescription.doGetCheckerTargets().isEmpty()) {
+                builder.missingParamColumnReferenceForChecker(validationRuleDescriptionEntryKey);
+            } else {
+                Set<CheckerTarget> columnsDeclaredInCheckerConfiguration = lineValidationRuleDescription.doGetCheckerTargets();
+                Set<CheckerTarget> knownColumns = builder.getAcceptableCheckerTargets();
+                ImmutableSet<CheckerTarget> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
+                if (!missingColumns.isEmpty()) {
+                    builder.missingColumnReferenceForChecker(validationRuleDescriptionEntryKey, checker.getName(), knownColumns, missingColumns);
+                }
+            }
+            verifyCheckerOnOneTarget(new CheckerOnOneTargetValidationContext() {
+                @Override
+                public Set<String> getReferences() {
+                    return builder.getReferences();
+                }
+
+                @Override
+                public void unknownReferenceForChecker(String refType, Set<String> references) {
+                    builder.unknownReferenceForChecker(validationRuleDescriptionEntryKey, refType, references);
+                }
+
+                @Override
+                public void missingReferenceForChecker(Set<String> references) {
+                    builder.missingReferenceForChecker(validationRuleDescriptionEntryKey, references);
+                }
+
+                @Override
+                public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames) {
+                    builder.recordUnknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
+                }
+            }, checker);
+        } else {
+            builder.recordUnknownCheckerNameForValidationRule(validationRuleDescriptionEntryKey, checker.getName(), ALL_CHECKER_NAMES);
         }
     }
 

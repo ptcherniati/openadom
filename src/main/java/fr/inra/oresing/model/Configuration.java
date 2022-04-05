@@ -1,6 +1,7 @@
 package fr.inra.oresing.model;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.CheckerTarget;
@@ -323,6 +324,15 @@ public class Configuration {
                 internationalizationDataTypeMapMap.put(datatype, internationalizationDataTypeMap);
             }
             return internationalizationDataTypeMapMap;
+        }
+
+        public ImmutableSet<VariableComponentKey> doGetAllVariableComponents() {
+            return getData().entrySet().stream().flatMap(
+                    variableEntry -> {
+                        String variable = variableEntry.getKey();
+                        return variableEntry.getValue().doGetAllComponents().stream()
+                                .map(component -> new VariableComponentKey(variable, component));
+            }).collect(ImmutableSet.toImmutableSet());
         }
     }
 

@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -203,7 +202,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String dataAfterDataGroupsMergingQuery = repository.getRepository(application).data().getSqlToMergeData(DownloadDatasetQuery.buildDownloadDatasetQuery(null, appId.toString(), dataType, application));
             String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
-            for (VariableComponentKey variableComponentKey : getVariableComponentKeys(dataTypeDescription)) {
+            for (VariableComponentKey variableComponentKey : dataTypeDescription.doGetAllVariableComponents()) {
                 String variable = variableComponentKey.getVariable();
                 String component = variableComponentKey.getComponent();
                 String escapedVariableName = StringUtils.replace(variable, "'", "''");
@@ -250,17 +249,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
         return views;
     }
 
-    private ImmutableSet<VariableComponentKey> getVariableComponentKeys(Configuration.DataTypeDescription dataTypeDescription) {
-        Set<VariableComponentKey> references = new LinkedHashSet<>();
-        for (Map.Entry<String, Configuration.VariableDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
-            String variable = variableEntry.getKey();
-            for (String component : variableEntry.getValue().doGetAllComponents()) {
-                references.add(new VariableComponentKey(variable, component));
-            }
-        }
-        return ImmutableSet.copyOf(references);
-    }
-
     private List<ViewCreationCommand> getDenormalizedViewsForDataTypes(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
         List<ViewCreationCommand> views = new LinkedList<>();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
@@ -289,7 +277,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
 
-            getVariableComponentKeys(dataTypeDescription).stream()
+            dataTypeDescription.doGetAllVariableComponents().stream()
                     .map(this::getColumnName)
                     .map(columnName -> dataTableName + "." + columnName)
                     .forEach(selectClauseElements::add);

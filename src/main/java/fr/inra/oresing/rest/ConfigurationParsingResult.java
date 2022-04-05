@@ -80,6 +80,13 @@ public class ConfigurationParsingResult {
                     "references", references));
         }
 
+        public Builder missingReferenceForCheckerInDataType(String validationKey, String dataType, Set<String> references)  {
+            return recordError("missingReferenceForCheckerInDataType", ImmutableMap.of(
+                    "validationKey", validationKey,
+                    "dataType", dataType,
+                    "references", references));
+        }
+
         public Builder missingReferenceForChecker(String dataType, String datum, String component, Set<String> references) {
             return recordError("missingReferenceForChecker", ImmutableMap.of("dataType", dataType,
                     "datum", datum,
@@ -92,6 +99,14 @@ public class ConfigurationParsingResult {
                     "validationKey", validationKey,
                     "refType", refType,
                     "reference", reference,
+                    "references", references));
+        }
+
+        public Builder unknownReferenceForCheckerInDataType(String validationKey, String dataType, String refType, Set<String> references) {
+            return recordError("unknownReferenceForCheckerInDataType", ImmutableMap.of(
+                    "validationKey", validationKey,
+                    "refType", refType,
+                    "dataType", dataType,
                     "references", references));
         }
 
@@ -210,34 +225,63 @@ public class ConfigurationParsingResult {
             ));
         }
 
-        public Builder recordMissingRequiredExpression(String lineValidationRuleKey) {
-            return recordError("missingRequiredExpression", ImmutableMap.of(
-                    "lineValidationRuleKey", lineValidationRuleKey
+        public Builder missingRequiredExpressionForValidationRuleInDataType(String lineValidationRuleKey, String dataType) {
+            return recordError("missingRequiredExpressionForValidationRuleInDataType", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey,
+                    "dataType", dataType
             ));
         }
 
-        public Builder recordIllegalGroovyExpression(String lineValidationRuleKey, String expression, GroovyExpression.CompilationError compilationError) {
-            return recordError("illegalGroovyExpression", ImmutableMap.of(
+        public Builder missingRequiredExpressionForValidationRuleInReference(String lineValidationRuleKey, String reference) {
+            return recordError("missingRequiredExpressionForValidationRuleInReference", ImmutableMap.of(
                     "lineValidationRuleKey", lineValidationRuleKey,
+                    "reference", reference
+            ));
+        }
+
+        public Builder illegalGroovyExpressionForValidationRuleInDataType(String lineValidationRuleKey, String dataType, String expression, GroovyExpression.CompilationError compilationError) {
+            return recordError("illegalGroovyExpressionForValidationRuleInDataType", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey,
+                    "dataType", dataType,
                     "expression", expression,
                     "compilationError", compilationError
             ));
         }
 
-        public Builder recordUnknownCheckerName(String lineValidationRuleKey, String checkerName) {
-            return recordError("unknownCheckerName", ImmutableMap.of(
+        public Builder illegalGroovyExpressionForValidationRuleInReference(String lineValidationRuleKey, String reference, String expression, GroovyExpression.CompilationError compilationError) {
+            return recordError("illegalGroovyExpressionForValidationRuleInReference", ImmutableMap.of(
                     "lineValidationRuleKey", lineValidationRuleKey,
+                    "reference", reference,
+                    "expression", expression,
+                    "compilationError", compilationError
+            ));
+        }
+
+        public Builder recordUnknownCheckerNameForValidationRuleInReference(String lineValidationRuleKey, String reference, String checkerName, ImmutableSet<String> allCheckerNames) {
+            return recordError("unknownCheckerNameForValidationRuleInReference", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey,
+                    "reference", reference,
+                    "allCheckerNames", allCheckerNames,
                     "checkerName", checkerName
             ));
         }
 
-        public Builder recordUnknownCheckerNameForVariableComponentChecker(String dataType, String variable, String component, String checkerName, ImmutableSet<String> variableComponentCheckers) {
+        public Builder recordUnknownCheckerNameForValidationRuleInDataType(String lineValidationRuleKey, String dataType, String checkerName, ImmutableSet<String> allCheckerNames) {
+            return recordError("unknownCheckerNameForValidationRuleInDataType", ImmutableMap.of(
+                    "lineValidationRuleKey", lineValidationRuleKey,
+                    "dataType", dataType,
+                    "allCheckerNames", allCheckerNames,
+                    "checkerName", checkerName
+            ));
+        }
+
+        public Builder recordUnknownCheckerNameForVariableComponentChecker(String dataType, String variable, String component, String checkerName, ImmutableSet<String> knownCheckerNames) {
             return recordError("unknownCheckerNameForVariableComponent", ImmutableMap.of(
                     "datatype", dataType,
                     "variable", variable,
                     "component", component,
                     "checkerName", checkerName,
-                    "knownsCheckers", variableComponentCheckers
+                    "knownCheckerNames", knownCheckerNames
             ));
         }
 
@@ -301,18 +345,44 @@ public class ConfigurationParsingResult {
             ));
         }
 
-        public Builder recordUnknownCheckerNameForVariableComponentCheckerInReference(String validationRuleDescriptionEntryKey, String reference, String name, ImmutableSet<String> variableComponentCheckers) {
+        public Builder missingColumnReferenceForCheckerInDataType(String validationRuleDescriptionEntryKey, Set<String> knownVariableComponents, String name, ImmutableSet<String> missingVariableComponents, String dataType) {
+            return recordError("missingColumnReferenceForCheckerInDataType", ImmutableMap.of(
+                    "dataType", dataType,
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "knownVariableComponents", knownVariableComponents,
+                    "checkerName", name,
+                    "missingVariableComponents", missingVariableComponents
+            ));
+        }
+
+        public Builder recordUnknownCheckerNameForVariableComponentCheckerInReference(String validationRuleDescriptionEntryKey, String reference, String name, ImmutableSet<String> checkerOnTargetNames) {
             return recordError("unknownCheckerNameForVariableComponentCheckerInReference", ImmutableMap.of(
                     "reference", reference,
                     "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
                     "name", name,
-                    "variableComponentCheckers", variableComponentCheckers
+                    "checkerOnTargetNames", checkerOnTargetNames
+            ));
+        }
+
+        public Builder recordUnknownCheckerNameForVariableComponentCheckerInDataType(String validationRuleDescriptionEntryKey, String dataType, String name, ImmutableSet<String> checkerOnTargetNames) {
+            return recordError("unknownCheckerNameForVariableComponentCheckerInDataType", ImmutableMap.of(
+                    "dataType", dataType,
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "name", name,
+                    "checkerOnTargetNames", checkerOnTargetNames
             ));
         }
 
         public Builder missingParamColumnReferenceForCheckerInReference(String validationRuleDescriptionEntryKey, String reference) {
             return recordError("missingParamColumnReferenceForCheckerInReference", ImmutableMap.of(
                     "reference", reference,
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey
+            ));
+        }
+
+        public Builder missingParamColumnReferenceForCheckerInDataType(String validationRuleDescriptionEntryKey, String dataType) {
+            return recordError("missingParamColumnReferenceForCheckerInDataType", ImmutableMap.of(
+                    "dataType", dataType,
                     "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey
             ));
         }
@@ -476,6 +546,32 @@ public class ConfigurationParsingResult {
         public Builder recordCsvMissingExportHeaderNameForConstantDescription(String dataType) {
             return recordError("missingExportHeaderNameForConstantDescription", ImmutableMap.of(
                     "dataType", dataType
+            ));
+        }
+
+        public Builder unknownReferenceForCheckerInReferenceColumn(String referenceToValidate, String column, String refType, Set<String> knownReferences) {
+            return recordError("unknownReferenceForCheckerInReferenceColumn", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "refType", refType,
+                    "knownReferences", knownReferences
+            ));
+        }
+
+        public Builder missingReferenceForCheckerInReferenceColumn(String referenceToValidate, String column, Set<String> knownReferences) {
+            return recordError("missingReferenceForCheckerInReferenceColumn", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "knownReferences", knownReferences
+            ));
+        }
+
+        public Builder unknownCheckerNameInReferenceColumn(String referenceToValidate, String column, String checkerName, ImmutableSet<String> knownCheckerNames) {
+            return recordError("unknownCheckerNameInReferenceColumn", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "checkerName", checkerName,
+                    "knownCheckerNames", knownCheckerNames
             ));
         }
     }
