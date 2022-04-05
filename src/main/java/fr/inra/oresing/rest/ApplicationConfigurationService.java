@@ -36,7 +36,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -50,7 +49,6 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class ApplicationConfigurationService {
-    public static final List INTERNATIONALIZED_FIELDS = List.of("internationalization", "internationalizationName", "internationalizedColumns", "internationalizationDisplay");
 
     private static final ImmutableSet<String> CHECKER_ON_TARGET_NAMES =
             ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
@@ -70,7 +68,6 @@ public class ApplicationConfigurationService {
                     .emptyFile()
                     .build();
         }
-        Map<String, Map> internationalizedSections = new HashMap<>();
         try {
             YAMLMapper mapper = new YAMLMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -1005,31 +1002,6 @@ public class ApplicationConfigurationService {
         return ConfigurationParsingResult.builder()
                 .recordUnableToParseYaml(e.getMessage())
                 .build();
-    }
-
-    private ConfigurationParsingResult onMappingExceptions(List<IllegalArgumentException> exceptions) {
-        ConfigurationParsingResult.Builder builder = ConfigurationParsingResult.builder();
-        exceptions
-                .forEach(exception -> {
-                    if (exception.getCause() instanceof UnrecognizedPropertyException) {
-                        UnrecognizedPropertyException e = (UnrecognizedPropertyException) exception.getCause();
-                        int lineNumber = e.getLocation().getLineNr();
-                        int columnNumber = e.getLocation().getColumnNr();
-                        String unknownPropertyName = e.getPropertyName();
-                        Collection<String> knownProperties = (Collection) e.getKnownPropertyIds();
-                        builder.unrecognizedProperty(lineNumber, columnNumber, unknownPropertyName, knownProperties);
-                    } else if (exception.getCause() instanceof InvalidFormatException) {
-                        InvalidFormatException e = (InvalidFormatException) exception.getCause();
-                        int lineNumber = e.getLocation().getLineNr();
-                        int columnNumber = e.getLocation().getColumnNr();
-                        String value = e.getValue().toString();
-                        String targetTypeName = e.getTargetType().getName();
-                        builder.invalidFormat(lineNumber, columnNumber, value, targetTypeName);
-                    } else {
-                        builder.unknownIllegalException(exception.getCause().getLocalizedMessage());
-                    }
-                });
-        return builder.build();
     }
 
     private ConfigurationParsingResult onUnrecognizedPropertyException(UnrecognizedPropertyException e) {
