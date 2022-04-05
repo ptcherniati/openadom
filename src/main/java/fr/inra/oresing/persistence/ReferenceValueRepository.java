@@ -144,7 +144,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     public List<List<String>> findReferenceValue(String refType, String column) {
         AtomicInteger ai = new AtomicInteger(0);
         String select = Stream.of(column.split(","))
-                .map(c -> String.format("refValues->>'%1$s' as \"%1$s"+ai.getAndIncrement()+"\"", c))
+                .map(c -> String.format("refValues->>'%1$s' as \"%1$s"+ai.getAndIncrement()+"\"", new StringBuilder(), c, false))
                 .collect(Collectors.joining(", "));
         String sqlPattern = " SELECT %s "
                 + " FROM " + getTable().getSqlIdentifier() + " t"
