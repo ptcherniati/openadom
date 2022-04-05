@@ -13,10 +13,9 @@ export class DataService extends Fetcher {
     });
   }
 
-  async getDataTypesCsv(applicationName, dataTypeId, offset, limit) {
-    return this.downloadFile(`applications/${applicationName}/data/${dataTypeId}/csv`, {
-      offset: offset,
-      limit: limit,
+  async getDataTypesCsv(applicationName, dataTypeId, params) {
+    return this.get(`applications/${applicationName}/data/${dataTypeId}/csv`, {
+      downloadDatasetQuery: JSON.stringify(params),
     });
   }
 

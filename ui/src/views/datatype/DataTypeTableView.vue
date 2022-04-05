@@ -424,6 +424,14 @@
         @change="changePage"
       >
       </b-pagination>
+      <div class="buttons" style="margin-top: 16px">
+        <b-button
+          type="is-primary"
+          @click="downloadResultSearch"
+          style="margin-bottom: 15px; float: right"
+          >Télécharger</b-button
+        >
+      </div>
     </div>
   </PageView>
 </template>
@@ -762,6 +770,31 @@ export default class DataTypeTableView extends Vue {
     this.initDatatype();
     this.showFilter = false;
   }
+
+  async downloadResultSearch(){
+    let csvContent = "data:text/csv;charset=utf-8,";
+    this.params.variableComponentFilters = [];
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      if (this.variableSearch[i]) {
+        this.params.variableComponentFilters.push(this.variableSearch[i]);
+      }
+    }
+    let param = {...this.params, offset: 0, limit: 42, dataType: this.dataTypeId, applicationNameOrId: this.applicationName}
+    let result  = await this.dataService.getDataTypesCsv(
+      this.applicationName,
+      this.dataTypeId,
+      param
+    );
+    console.log(result, csvContent);
+    //result.then((text=>csvContent+=text))
+    //csvContent += result;
+    const data = encodeURI(result);
+    const link = document.createElement("a");
+    link.setAttribute("href", data);
+    link.setAttribute("download", "export.csv");
+    link.click();
+  }
+
   clearSearch() {
     for (var i = 0; i < this.variableSearch.length; i++) {
       this.params.variableComponentFilters = [];
