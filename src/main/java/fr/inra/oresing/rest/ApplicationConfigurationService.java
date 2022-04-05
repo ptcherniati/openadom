@@ -12,10 +12,13 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.CheckerTarget;
+import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.GroovyConfiguration;
 import fr.inra.oresing.checker.GroovyLineChecker;
+import fr.inra.oresing.checker.RegularExpressionChecker;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.Duration;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
@@ -483,6 +486,21 @@ public class ApplicationConfigurationService {
             public void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
                 builder.recordUnknownCheckerNameForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, allCheckerNames);
             }
+
+            @Override
+            public void invalidPatternForDateChecker(String validationRuleDescriptionEntryKey, String pattern) {
+                builder.invalidPatternForDateCheckerForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, pattern);
+            }
+
+            @Override
+            public void invalidDurationForDateChecker(String validationRuleDescriptionEntryKey, String duration) {
+                builder.invalidDurationForDateCheckerForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, duration);
+            }
+
+            @Override
+            public void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern) {
+                builder.invalidPatternForRegularExpressionCheckerForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, pattern);
+            }
         };
         for (Map.Entry<String, Configuration.LineValidationRuleWithVariableComponentsDescription> validationRuleDescriptionEntry : dataTypeDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
@@ -524,6 +542,21 @@ public class ApplicationConfigurationService {
                                 // OK
                                 builder.recordUnknownCheckerNameForVariableComponentChecker(dataType, datum, component, checkerName, knownCheckerNames);
                             }
+
+                            @Override
+                            public void invalidPatternForDateChecker(String pattern) {
+                                builder.invalidPatternForVariableComponentDateChecker(dataType, datum, component, pattern);
+                            }
+
+                            @Override
+                            public void invalidDurationForDateChecker(String duration) {
+                                builder.invalidDurationForVariableComponentDateChecker(dataType, datum, component, duration);
+                            }
+
+                            @Override
+                            public void invalidPatternForRegularExpressionChecker(String pattern) {
+                                builder.invalidPatternForVariableComponentRegularExpressionChecker(dataType, datum, component, pattern);
+                            }
                         }, checkerDescription);
                     }
                 }
@@ -563,6 +596,21 @@ public class ApplicationConfigurationService {
                             // OK
                             builder.unknownCheckerNameInReferenceColumn(referenceToValidate, column, checkerName, knownCheckerNames);
                         }
+
+                        @Override
+                        public void invalidPatternForDateChecker(String pattern) {
+                            builder.invalidPatternForForReferenceColumnDateChecker(referenceToValidate, column, pattern);
+                        }
+
+                        @Override
+                        public void invalidDurationForDateChecker(String duration) {
+                            builder.invalidDurationForReferenceColumnDateChecker(referenceToValidate, column, duration);
+                        }
+
+                        @Override
+                        public void invalidPatternForRegularExpressionChecker(String pattern) {
+                            builder.invalidPatternForReferenceColumnRegularExpressionChecker(referenceToValidate, column, pattern);
+                        }
                     }, checkerDescription);
                 }
             }
@@ -578,11 +626,18 @@ public class ApplicationConfigurationService {
         void missingReferenceForChecker(Set<String> references);
 
         void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames);
+
+        void invalidPatternForDateChecker(String pattern);
+
+        void invalidDurationForDateChecker(String duration);
+
+        void invalidPatternForRegularExpressionChecker(String pattern);
     }
 
     private void verifyCheckerOnOneTarget(CheckerOnOneTargetValidationContext builder, Configuration.CheckerDescription checkerDescription) {
-        if (CHECKER_ON_TARGET_NAMES.contains(checkerDescription.getName())) {
-            if ("Reference".equals(checkerDescription.getName())) {
+        String checkerName = checkerDescription.getName();
+        if (CHECKER_ON_TARGET_NAMES.contains(checkerName)) {
+            if ("Reference".equals(checkerName)) {
                 if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
                     String refType = checkerDescription.getParams().getRefType();
                     if (!builder.getReferences().contains(refType)) {
@@ -591,9 +646,26 @@ public class ApplicationConfigurationService {
                 } else {
                     builder.missingReferenceForChecker(builder.getReferences());
                 }
+            } else if ("Date".equals(checkerName)) {
+                String datePattern = checkerDescription.getParams().getPattern();
+                if (DateLineChecker.isValidPattern(datePattern)) {
+                    String duration = checkerDescription.getParams().getDuration();
+                    if (StringUtils.isBlank(duration)) {
+                        // OK, champs facultatif
+                    } else if (!Duration.isValid(duration)) {
+                        builder.invalidDurationForDateChecker(duration);
+                    }
+                } else {
+                    builder.invalidPatternForDateChecker(datePattern);
+                }
+            } else if ("RegularExpression".equals(checkerName)) {
+                String regularExpressionPattern = checkerDescription.getParams().getPattern();
+                if (!RegularExpressionChecker.isValid(regularExpressionPattern)) {
+                    builder.invalidPatternForRegularExpressionChecker(regularExpressionPattern);
+                }
             }
         } else {
-            builder.unknownCheckerOnOneTargetName(checkerDescription.getName(), CHECKER_ON_TARGET_NAMES);
+            builder.unknownCheckerOnOneTargetName(checkerName, CHECKER_ON_TARGET_NAMES);
         }
     }
 
@@ -807,6 +879,21 @@ public class ApplicationConfigurationService {
                 // OK
                 builder.recordUnknownCheckerNameForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, allCheckerNames);
             }
+
+            @Override
+            public void invalidPatternForDateChecker(String validationRuleDescriptionEntryKey, String pattern) {
+                builder.invalidPatternForDateCheckerForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, pattern);
+            }
+
+            @Override
+            public void invalidDurationForDateChecker(String validationRuleDescriptionEntryKey, String duration) {
+                builder.invalidDurationForDateCheckerForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, duration);
+            }
+
+            @Override
+            public void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern) {
+                builder.invalidPatternForRegularExpressionCheckerForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, pattern);
+            }
         };
         for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
@@ -836,6 +923,12 @@ public class ApplicationConfigurationService {
         void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references);
 
         void recordUnknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames);
+
+        void invalidPatternForDateChecker(String validationRuleDescriptionEntryKey, String pattern);
+
+        void invalidDurationForDateChecker(String validationRuleDescriptionEntryKey, String duration);
+
+        void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern);
     }
 
     private void verifyLineValidationRuleDescription(LineValidationRuleDescriptionValidationContext builder, String validationRuleDescriptionEntryKey, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
@@ -882,6 +975,21 @@ public class ApplicationConfigurationService {
                 @Override
                 public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames) {
                     builder.recordUnknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
+                }
+
+                @Override
+                public void invalidPatternForDateChecker(String pattern) {
+                    builder.invalidPatternForDateChecker(validationRuleDescriptionEntryKey, pattern);
+                }
+
+                @Override
+                public void invalidDurationForDateChecker(String duration) {
+                    builder.invalidDurationForDateChecker(validationRuleDescriptionEntryKey, duration);
+                }
+
+                @Override
+                public void invalidPatternForRegularExpressionChecker(String pattern) {
+                    builder.invalidPatternForRegularExpressionChecker(validationRuleDescriptionEntryKey, pattern);
                 }
             }, checker);
         } else {

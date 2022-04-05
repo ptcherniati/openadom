@@ -574,5 +574,104 @@ public class ConfigurationParsingResult {
                     "knownCheckerNames", knownCheckerNames
             ));
         }
+
+        public Builder invalidPatternForVariableComponentDateChecker(String dataType, String variable, String component, String pattern) {
+            return recordError("invalidPatternForVariableComponentDateChecker", ImmutableMap.of(
+                    "dataType", dataType,
+                    "variable", variable,
+                    "component", component,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidPatternForForReferenceColumnDateChecker(String referenceToValidate, String column, String pattern) {
+            return recordError("invalidPatternForForVariableComponentDateChecker", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidPatternForDateCheckerForValidationRuleInDataType(String validationRuleDescriptionEntryKey, String dataType, String pattern) {
+            return recordError("invalidPatternForDateCheckerForValidationRuleInDataType", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "dataType", dataType,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidPatternForDateCheckerForValidationRuleInReference(String validationRuleDescriptionEntryKey, String reference, String pattern) {
+            return recordError("invalidPatternForDateCheckerForValidationRuleInReference", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "reference", reference,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidDurationForVariableComponentDateChecker(String dataType, String variable, String component, String duration) {
+            return recordError("invalidDurationForVariableComponentDateChecker", ImmutableMap.of(
+                    "dataType", dataType,
+                    "variable", variable,
+                    "component", component,
+                    "duration", duration
+            ));
+        }
+
+        public Builder invalidDurationForReferenceColumnDateChecker(String referenceToValidate, String column, String duration) {
+            return recordError("invalidDurationForReferenceColumnDateChecker", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "duration", duration
+            ));
+        }
+
+        public Builder invalidDurationForDateCheckerForValidationRuleInDataType(String validationRuleDescriptionEntryKey, String dataType, String duration) {
+            return recordError("invalidDurationForDateCheckerForValidationRuleInDataType", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "dataType", dataType,
+                    "duration", duration
+            ));
+        }
+
+        public Builder invalidDurationForDateCheckerForValidationRuleInReference(String validationRuleDescriptionEntryKey, String reference, String duration) {
+            return recordError("invalidDurationForDateCheckerForValidationRuleInReference", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "reference", reference,
+                    "duration", duration
+            ));
+        }
+        
+        public Builder invalidPatternForVariableComponentRegularExpressionChecker(String dataType, String variable, String component, String pattern) {
+            return recordError("invalidPatternForVariableComponentRegularExpressionChecker", ImmutableMap.of(
+                    "dataType", dataType,
+                    "variable", variable,
+                    "component", component,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidPatternForReferenceColumnRegularExpressionChecker(String referenceToValidate, String column, String pattern) {
+            return recordError("invalidPatternForReferenceColumnRegularExpressionChecker", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidPatternForRegularExpressionCheckerForValidationRuleInDataType(String validationRuleDescriptionEntryKey, String dataType, String pattern) {
+            return recordError("invalidPatternForRegularExpressionCheckerForValidationRuleInDataType", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "dataType", dataType,
+                    "pattern", pattern
+            ));
+        }
+
+        public Builder invalidPatternForRegularExpressionCheckerForValidationRuleInReference(String validationRuleDescriptionEntryKey, String reference, String pattern) {
+            return recordError("invalidPatternForRegularExpressionCheckerForValidationRuleInReference", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "reference", reference,
+                    "pattern", pattern
+            ));
+        }
     }
 }

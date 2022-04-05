@@ -2,13 +2,15 @@ package fr.inra.oresing.checker;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class RegularExpressionChecker implements CheckerOnOneVariableComponentLineChecker<RegularExpressionCheckerConfiguration> {
 
@@ -20,6 +22,18 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
     private final CheckerTarget target;
     private final RegularExpressionCheckerConfiguration configuration;
 
+    public static boolean isValid(String pattern) {
+        if (StringUtils.isBlank(pattern)) {
+            return false;
+        }
+        try {
+            compile(pattern);
+            return true;
+        } catch (PatternSyntaxException e) {
+            return false;
+        }
+    }
+
     public CheckerTarget getTarget(){
         return this.target;
     }
@@ -28,8 +42,12 @@ public class RegularExpressionChecker implements CheckerOnOneVariableComponentLi
         this.configuration = configuration;
         this.target = target;
         this.patternString = patternString;
-        predicate = Pattern.compile(patternString).asMatchPredicate();
+        this.predicate = compile(patternString).asMatchPredicate();
         this.transformer = transformer;
+    }
+
+    private static Pattern compile(String patternString) {
+        return Pattern.compile(patternString);
     }
 
     @Override

@@ -6,6 +6,7 @@ import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -18,6 +19,22 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     private final DateLineCheckerConfiguration configuration;
     @JsonIgnore
     private final LineTransformer transformer;
+
+    public static boolean isValidPattern(String pattern) {
+        if (StringUtils.isBlank(pattern)) {
+            return false;
+        }
+        try {
+            newDateTimeFormatter(pattern);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private static DateTimeFormatter newDateTimeFormatter(String pattern) {
+        return DateTimeFormatter.ofPattern(pattern);
+    }
 
     public CheckerTarget getTarget(){
         return this.target;
@@ -33,7 +50,7 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public DateLineChecker(CheckerTarget target, String pattern, DateLineCheckerConfiguration configuration, LineTransformer transformer) {
         this.configuration = configuration;
         this.target = target;
-        this.dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
+        this.dateTimeFormatter = newDateTimeFormatter(pattern);
         this.pattern = pattern;
         this.transformer = transformer;
     }
