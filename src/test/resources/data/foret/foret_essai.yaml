@@ -732,8 +732,7 @@ references:
       - nom
     columns:
       nom: null
-      internationalizationName:
-        fr: null
+      description: null
 dataTypes:
   ts_infraj:
     internationalizationName:
