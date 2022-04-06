@@ -396,8 +396,7 @@ On décrit un format pour stocker les données sous la forment
           datetime:
             #calcul d'une valeur par défaut date+time avec une expression groovy
             defaultValue:
-              expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+              expression: return datum.date.day + " " + datum.date.time + ":00"
           day:
             checker:
               name: Date

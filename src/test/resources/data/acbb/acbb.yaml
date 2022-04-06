@@ -181,8 +181,8 @@ dataTypes:
           chemin:
             defaultValue:
               expression: >
-                String site = datumByVariableAndComponent.get("site").get("chemin");
-                String parcelle = datumByVariableAndComponent.get("parcelle").get("name");
+                String site = datum.site.chemin;
+                String parcelle = datum.parcelle.name;
                 return site+"."+site+"__"+parcelle;
             checker:
               name: Reference
@@ -192,7 +192,7 @@ dataTypes:
         components:
           datetime:
             defaultValue:
-              expression: return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
+              expression: return datum.date.day +" " +datum.date.time
             checker:
               name: Date
               params:
@@ -1591,7 +1591,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
+                return datum.Date.day +" " +datum.Date.time
             checker:
               name: Date
               params:

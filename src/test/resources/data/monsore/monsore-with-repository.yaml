@@ -379,9 +379,9 @@ dataTypes:
             defaultValue:
               expression: >
                 return references.get("sites")
-                .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin"))
+                .find{it.getRefValues().get("zet_chemin_parent").equals(datum.site.bassin)
                 &&
-                it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
+                it.getRefValues().get("zet_nom_key").equals(datum.site.plateforme)}
                 .getHierarchicalKey();
               references:
                 - sites
@@ -394,7 +394,7 @@ dataTypes:
             computation:
               expression: >
                 return references.get("sites")
-                .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
+                .find{it.getNaturalKey().equals(datum.site.bassin)}
                 .getHierarchicalKey();
               references:
                 - sites

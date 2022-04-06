@@ -62,7 +62,7 @@ dataTypes:
         components:
           datetime:
             defaultValue:
-              expression: return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
+              expression: return datum.date.day +" " +datum.date.time
             checker:
               name: Date
               params:

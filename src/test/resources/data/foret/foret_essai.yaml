@@ -783,8 +783,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -849,7 +849,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -1046,8 +1046,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -1120,7 +1120,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -1297,8 +1297,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -1371,7 +1371,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -1548,8 +1548,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -1622,7 +1622,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -1799,8 +1799,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -1873,7 +1873,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -2050,8 +2050,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -2283,8 +2283,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -2516,8 +2516,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -2749,8 +2749,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -2982,8 +2982,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -3215,8 +3215,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -3295,7 +3295,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -3480,8 +3480,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -3748,8 +3748,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -3976,8 +3976,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -4040,7 +4040,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -4555,8 +4555,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -5068,8 +5068,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -5583,8 +5583,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -5647,7 +5647,7 @@ dataTypes:
           datetime:
             defaultValue:
               expression: >
-                return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -6270,8 +6270,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
@@ -6939,8 +6939,8 @@ dataTypes:
                 transformation:
                   groovy:
                     expression: >
-                      String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                      String nom = datumByVariableAndComponent.localization.zones_etudes;
+                      String parent = datum.localization.zones_etudes_parent;
+                      String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
                         hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
