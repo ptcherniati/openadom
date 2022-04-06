@@ -661,7 +661,7 @@ public class Configuration {
         @ApiModelProperty(notes = "the name of the reference for Reference checker", required = false, example = "units")
         String refType;
 
-        @ApiModelProperty(notes = "A groovy expression for Reference checker, GroovyChecker", required = false)
+        @ApiModelProperty(notes = "A groovy expression to check for the GroovyExpression checker", required = false)
         GroovyConfiguration groovy;
 
         String duration;
