@@ -132,6 +132,7 @@
       :radioName="radioName"
       @optionChecked="onInnerOptionChecked"
       :applicationTitle="applicationTitle"
+      :lineCount = child.lineCountChild
     />
   </div>
 </template>
@@ -166,7 +167,6 @@ export default class CollapsibleTree extends Vue {
   onInnerOptionChecked(value) {
     this.$emit("optionChecked", value);
   }
-
   stopPropagation(event) {
     event.stopPropagation();
   }

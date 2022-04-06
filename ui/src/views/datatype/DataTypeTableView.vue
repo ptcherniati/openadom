@@ -253,7 +253,7 @@
                   {{ variable.id }}
                 </p>
                 <a class="card-header-icon">
-                  <b-icon :icon="props.open ? 'sort-down' : 'sort-up'"> </b-icon>
+                  <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"> </b-icon>
                 </a>
               </div>
             </template>
