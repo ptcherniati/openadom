@@ -13,9 +13,21 @@ public enum ColumnPresenceConstraint {
     /**
      * Facultatif, la colonne peut être absente du fichier CSV.
      */
-    OPTIONAL;
+    OPTIONAL,
+
+    /**
+     * La colonne doit être absente, c'est une donnée calculée.
+     */
+    ABSENT;
 
     public boolean isMandatory() {
         return MANDATORY == this;
+    }
+
+    /**
+     * Si une colonne est attendue dans le fichier CSV
+     */
+    public boolean isExpected() {
+        return ABSENT != this;
     }
 }

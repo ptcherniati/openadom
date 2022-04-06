@@ -2,7 +2,6 @@ package fr.inra.oresing.checker;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
@@ -48,7 +47,7 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
             validationCheckResult = ReferenceValidationCheckResult.success(target, rawValue, valueAsLtree, referenceValues.get(valueAsLtree));
         } else {
             validationCheckResult = ReferenceValidationCheckResult.error(target, rawValue, getTarget().getInternationalizedKey("invalidReference"), ImmutableMap.of(
-                    "target", target.getTarget(),
+                    "target", target,
                     "referenceValues", referenceValues,
                     "refType", reference,
                     "value", rawValue));

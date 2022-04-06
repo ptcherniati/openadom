@@ -15,19 +15,21 @@ references:
     keyColumns: [nom du site_key]
     validations:
       agroecosystemRef:
-        description: "référence à l'agroécosystème"
+        internationalizationName:
+          fr: "référence à l'agroécosystème"
         checker:
           name: Reference
           params:
             refType: agroecosystemes
-            columns: Agroécosystème
+        columns: [ Agroécosystème ]
       checkDateMiseEnService:
-        description: "validation de date"
+        internationalizationName:
+          fr: "validation de date"
         checker:
           name: Date
           params:
             pattern : "dd/MM/yyyy"
-            columns  : "date mise en service du dispositif"
+        columns: [ "date mise en service du dispositif" ]
     columns:
       Agroécosystème:
       nom du site_key:
@@ -62,12 +64,13 @@ references:
   blocs:
     validations:
       creationDate:
-        description: "date de création"
+        internationalizationName:
+          fr: "date de création"
         checker:
           name: Date
           params:
             pattern: dd/MM/yyyy
-            columns: date creation
+        columns: [ date creation ]
     keyColumns: [site,nom_du_bloc,répétition]
     columns:
       site:
@@ -119,13 +122,15 @@ references:
       modalites:
     validations:
       modalitesRef:
-        description: "référence aux modalités"
+        internationalizationName:
+          fr: "référence aux modalités"
+        columns: [ modalites ]
         checker:
           name: Reference
           params:
             refType: modalites
-            columns: modalites
-            codify: true
+            transformation:
+              codify: true
             multiplicity: MANY
 compositeReferences:
   localizations:
@@ -144,7 +149,8 @@ dataTypes:
         component: datetime
     validations:
       check_CO2_value:
-        description: check value in range
+        internationalizationName:
+          fr: check value in range
         checker:
           name: GroovyExpression
           params:
@@ -173,10 +179,11 @@ dataTypes:
       parcelle:
         components:
           chemin:
-            defaultValue: >
-              String site = datumByVariableAndComponent.get("site").get("chemin");
-              String parcelle = datumByVariableAndComponent.get("parcelle").get("name");
-              return site+"."+site+"__"+parcelle;
+            defaultValue:
+              expression: >
+                String site = datumByVariableAndComponent.get("site").get("chemin");
+                String parcelle = datumByVariableAndComponent.get("parcelle").get("name");
+                return site+"."+site+"__"+parcelle;
             checker:
               name: Reference
               params:
@@ -184,8 +191,8 @@ dataTypes:
       date:
         components:
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
+            defaultValue:
+              expression: return datumByVariableAndComponent.date.day +" " +datumByVariableAndComponent.date.time
             checker:
               name: Date
               params:
@@ -208,7 +215,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"micromole_par_mole\""
+            defaultValue:
+              expression: "\"micromole_par_mole\""
             checker:
               name: Reference
               params:
@@ -227,7 +235,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"millimole_par_mole\""
+            defaultValue:
+              expression: "\"millimole_par_mole\""
             checker:
               name: Reference
               params:
@@ -246,7 +255,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pas_d_unite\""
+            defaultValue:
+              expression: "\"pas_d_unite\""
             checker:
               name: Reference
               params:
@@ -259,7 +269,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"micromole_par_mettre_carre_et_par_seconde\""
+            defaultValue:
+              expression: "\"micromole_par_mettre_carre_et_par_seconde\""
             checker:
               name: Reference
               params:
@@ -277,7 +288,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"watt_par_metre_carre\""
+            defaultValue:
+              expression: "\"watt_par_metre_carre\""
             checker:
               name: Reference
               params:
@@ -295,7 +307,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"watt_par_metre_carre\""
+            defaultValue:
+              expression: "\"watt_par_metre_carre\""
             checker:
               name: Reference
               params:
@@ -313,7 +326,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"kilogramme_par_metre_et_par_seconde\""
+            defaultValue:
+              expression: "\"kilogramme_par_metre_et_par_seconde\""
             checker:
               name: Reference
               params:
@@ -331,7 +345,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"metre_par_seconde\""
+            defaultValue:
+              expression: "\"metre_par_seconde\""
             checker:
               name: Reference
               params:
@@ -349,7 +364,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"micromole_par_mettre_carre_et_par_seconde\""
+            defaultValue:
+              expression: "\"micromole_par_mettre_carre_et_par_seconde\""
             checker:
               name: Reference
               params:
@@ -545,7 +561,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -578,7 +595,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -611,7 +629,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -644,7 +663,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -677,7 +697,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -710,7 +731,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -743,7 +765,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -776,7 +799,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -809,7 +833,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -842,7 +867,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -875,7 +901,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -908,7 +935,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -941,7 +969,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"gramme_par_kilo\""
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
             checker:
               name: Reference
               params:
@@ -974,7 +1003,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"milligramme_par_kilogramme\""
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
             checker:
               name: Reference
               params:
@@ -1007,7 +1037,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -1040,7 +1071,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -1073,7 +1105,8 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
@@ -1556,8 +1589,9 @@ dataTypes:
               params:
                 pattern: HH:mm:ss
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
+            defaultValue:
+              expression: >
+                return datumByVariableAndComponent.get("Date").get("day") +" " +datumByVariableAndComponent.get("Date").get("time")
             checker:
               name: Date
               params:
@@ -1586,14 +1620,16 @@ dataTypes:
               params:
                 required: false
           unite:
-            defaultValue: "\"pourcentage\""
+            defaultValue:
+              expression: "\"pourcentage\""
             checker:
               name: Reference
               params:
                 refType: unites
     validations:
       swcQualityEnumeration:
-        description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        internationalizationName:
+          fr: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
         checker:
           name: GroovyExpression
           params:
