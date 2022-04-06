@@ -431,7 +431,7 @@ public class ApplicationConfigurationService {
         LineValidationRuleDescriptionValidationContext lineValidationRuleDescriptionValidationContext = new LineValidationRuleDescriptionValidationContext() {
 
             @Override
-            public Set<String> getReferences() {
+            public Set<String> getReferenceCheckerRefTypeParameterValidValues() {
                 return references;
             }
 
@@ -522,9 +522,9 @@ public class ApplicationConfigurationService {
                 if (variableComponentDescription != null) {
                     Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                     if (checkerDescription != null) {
-                        verifyCheckerOnOneTarget(new CheckerOnOneTargetValidationContext() {
+                        CheckerOnOneTargetValidationContext validationContext = new CheckerOnOneTargetValidationContext() {
                             @Override
-                            public Set<String> getReferences() {
+                            public Set<String> getReferenceCheckerRefTypeParameterValidValues() {
                                 return references;
                             }
 
@@ -562,7 +562,8 @@ public class ApplicationConfigurationService {
                             public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
                                 builder.illegalCheckerConfigurationParameterForVariableComponentChecker(dataType, datum, component, checkerName, parameterName);
                             }
-                        }, checkerDescription);
+                        };
+                        verifyCheckerOnOneTarget(validationContext, checkerDescription);
                     }
                 }
             }
@@ -578,9 +579,9 @@ public class ApplicationConfigurationService {
             if (referenceStaticColumnDescription != null) {
                 Configuration.CheckerDescription checkerDescription = referenceStaticColumnDescription.getChecker();
                 if (checkerDescription != null) {
-                    verifyCheckerOnOneTarget(new CheckerOnOneTargetValidationContext() {
+                    CheckerOnOneTargetValidationContext validationContext = new CheckerOnOneTargetValidationContext() {
                         @Override
-                        public Set<String> getReferences() {
+                        public Set<String> getReferenceCheckerRefTypeParameterValidValues() {
                             return references;
                         }
 
@@ -618,15 +619,22 @@ public class ApplicationConfigurationService {
                         public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
                             builder.illegalCheckerConfigurationParameterForReferenceColumnChecker(referenceToValidate, column, checkerName, parameterName);
                         }
-                    }, checkerDescription);
+                    };
+                    verifyCheckerOnOneTarget(validationContext, checkerDescription);
                 }
             }
         }
     }
 
+    /**
+     * Pour lancer une validation d'un `checker` déclaré directement sur une donnée (colonne ou variable/composant).
+     */
     private interface CheckerOnOneTargetValidationContext {
 
-        Set<String> getReferences();
+        /**
+         * Si un checker de type 'Reference' est déclaré, l'ensemble des référentiels qui peuvent être utilisé
+         */
+        Set<String> getReferenceCheckerRefTypeParameterValidValues();
 
         void unknownReferenceForChecker(String refType, Set<String> references);
 
@@ -648,11 +656,11 @@ public class ApplicationConfigurationService {
         if ("Reference".equals(checkerName)) {
             if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
                 String refType = checkerDescription.getParams().getRefType();
-                if (!builder.getReferences().contains(refType)) {
-                    builder.unknownReferenceForChecker(refType, builder.getReferences());
+                if (!builder.getReferenceCheckerRefTypeParameterValidValues().contains(refType)) {
+                    builder.unknownReferenceForChecker(refType, builder.getReferenceCheckerRefTypeParameterValidValues());
                 }
             } else {
-                builder.missingReferenceForChecker(builder.getReferences());
+                builder.missingReferenceForChecker(builder.getReferenceCheckerRefTypeParameterValidValues());
             }
             verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("refType"));
         } else if ("Date".equals(checkerName)) {
@@ -847,7 +855,7 @@ public class ApplicationConfigurationService {
         LineValidationRuleDescriptionValidationContext lineValidationRuleDescriptionValidationContext = new LineValidationRuleDescriptionValidationContext() {
 
             @Override
-            public Set<String> getReferences() {
+            public Set<String> getReferenceCheckerRefTypeParameterValidValues() {
                 return references;
             }
 
@@ -930,10 +938,19 @@ public class ApplicationConfigurationService {
         }
     }
 
+    /**
+     * Contexte qu'il faut passer pour vérifier qu'une règle de validation dans le YAML est correcte.
+     */
     private interface LineValidationRuleDescriptionValidationContext {
 
-        Set<String> getReferences();
+        /**
+         * Si un checker de type 'Reference' est déclaré, l'ensemble des référentiels qui peuvent être utilisé
+         */
+        Set<String> getReferenceCheckerRefTypeParameterValidValues();
 
+        /**
+         * Si le YAML exprime une règle de validation, l'ensemble des données qu'on peut accepter dans la configuration pour passer ce checker
+         */
         Set<CheckerTarget> getAcceptableCheckerTargets();
 
         void missingRequiredExpression(String validationRuleDescriptionEntryKey);
@@ -961,7 +978,14 @@ public class ApplicationConfigurationService {
         void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName);
     }
 
-    private void verifyLineValidationRuleDescription(LineValidationRuleDescriptionValidationContext builder, String validationRuleDescriptionEntryKey, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
+    /**
+     * Vérifie une règle de validation exprimée dans le YAML.
+     *
+     * @param validationContext à fournir selon qu'on soit de valider une règle qui soit déclarée dans un référentiel ou un type de données
+     * @param validationRuleDescriptionEntryKey le nom de la règle à valider
+     * @param lineValidationRuleDescription la configuration de la règle à valider
+     */
+    private void verifyLineValidationRuleDescription(LineValidationRuleDescriptionValidationContext validationContext, String validationRuleDescriptionEntryKey, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
         Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
         if (GroovyLineChecker.NAME.equals(checker.getName())) {
             String expression = Optional.of(checker)
@@ -970,65 +994,66 @@ public class ApplicationConfigurationService {
                     .map(GroovyConfiguration::getExpression)
                     .orElse(null);
             if (StringUtils.isBlank(expression)) {
-                builder.missingRequiredExpression(validationRuleDescriptionEntryKey);
+                validationContext.missingRequiredExpression(validationRuleDescriptionEntryKey);
             } else {
                 Optional<GroovyExpression.CompilationError> compileResult = GroovyLineChecker.validateExpression(expression);
-                compileResult.ifPresent(compilationError -> builder.illegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
+                compileResult.ifPresent(compilationError -> validationContext.illegalGroovyExpression(validationRuleDescriptionEntryKey, expression, compilationError));
             }
         } else if (CHECKER_ON_TARGET_NAMES.contains(checker.getName())) {
             if (lineValidationRuleDescription.doGetCheckerTargets().isEmpty()) {
-                builder.missingParamColumnReferenceForChecker(validationRuleDescriptionEntryKey);
+                validationContext.missingParamColumnReferenceForChecker(validationRuleDescriptionEntryKey);
             } else {
                 Set<CheckerTarget> columnsDeclaredInCheckerConfiguration = lineValidationRuleDescription.doGetCheckerTargets();
-                Set<CheckerTarget> knownColumns = builder.getAcceptableCheckerTargets();
+                Set<CheckerTarget> knownColumns = validationContext.getAcceptableCheckerTargets();
                 ImmutableSet<CheckerTarget> missingColumns = Sets.difference(columnsDeclaredInCheckerConfiguration, knownColumns).immutableCopy();
                 if (!missingColumns.isEmpty()) {
-                    builder.missingColumnReferenceForChecker(validationRuleDescriptionEntryKey, checker.getName(), knownColumns, missingColumns);
+                    validationContext.missingColumnReferenceForChecker(validationRuleDescriptionEntryKey, checker.getName(), knownColumns, missingColumns);
                 }
             }
-            verifyCheckerOnOneTarget(new CheckerOnOneTargetValidationContext() {
+            CheckerOnOneTargetValidationContext checkerOnOneTargetValidationContext = new CheckerOnOneTargetValidationContext() {
                 @Override
-                public Set<String> getReferences() {
-                    return builder.getReferences();
+                public Set<String> getReferenceCheckerRefTypeParameterValidValues() {
+                    return validationContext.getReferenceCheckerRefTypeParameterValidValues();
                 }
 
                 @Override
                 public void unknownReferenceForChecker(String refType, Set<String> references) {
-                    builder.unknownReferenceForChecker(validationRuleDescriptionEntryKey, refType, references);
+                    validationContext.unknownReferenceForChecker(validationRuleDescriptionEntryKey, refType, references);
                 }
 
                 @Override
                 public void missingReferenceForChecker(Set<String> references) {
-                    builder.missingReferenceForChecker(validationRuleDescriptionEntryKey, references);
+                    validationContext.missingReferenceForChecker(validationRuleDescriptionEntryKey, references);
                 }
 
                 @Override
                 public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames) {
-                    builder.unknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
+                    validationContext.unknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
                 }
 
                 @Override
                 public void invalidPatternForDateChecker(String pattern) {
-                    builder.invalidPatternForDateChecker(validationRuleDescriptionEntryKey, pattern);
+                    validationContext.invalidPatternForDateChecker(validationRuleDescriptionEntryKey, pattern);
                 }
 
                 @Override
                 public void invalidDurationForDateChecker(String duration) {
-                    builder.invalidDurationForDateChecker(validationRuleDescriptionEntryKey, duration);
+                    validationContext.invalidDurationForDateChecker(validationRuleDescriptionEntryKey, duration);
                 }
 
                 @Override
                 public void invalidPatternForRegularExpressionChecker(String pattern) {
-                    builder.invalidPatternForRegularExpressionChecker(validationRuleDescriptionEntryKey, pattern);
+                    validationContext.invalidPatternForRegularExpressionChecker(validationRuleDescriptionEntryKey, pattern);
                 }
 
                 @Override
                 public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
-                    builder.illegalCheckerConfigurationParameter(validationRuleDescriptionEntryKey, checkerName, parameterName);
+                    validationContext.illegalCheckerConfigurationParameter(validationRuleDescriptionEntryKey, checkerName, parameterName);
                 }
-            }, checker);
+            };
+            verifyCheckerOnOneTarget(checkerOnOneTargetValidationContext, checker);
         } else {
-            builder.unknownCheckerNameForValidationRule(validationRuleDescriptionEntryKey, checker.getName(), ALL_CHECKER_NAMES);
+            validationContext.unknownCheckerNameForValidationRule(validationRuleDescriptionEntryKey, checker.getName(), ALL_CHECKER_NAMES);
         }
     }
 
