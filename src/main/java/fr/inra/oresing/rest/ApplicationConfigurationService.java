@@ -525,19 +525,16 @@ public class ApplicationConfigurationService {
 
                             @Override
                             public void unknownReferenceForChecker(String refType, Set<String> references) {
-                                // OK
                                 builder.unknownReferenceForChecker(dataType, datum, component, refType, references);
                             }
 
                             @Override
                             public void missingReferenceForChecker(Set<String> references) {
-                                // OK
                                 builder.missingReferenceForChecker(dataType, datum, component, references);
                             }
 
                             @Override
                             public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
-                                // OK
                                 builder.unknownCheckerNameForVariableComponent(dataType, datum, component, checkerName, knownCheckerNames);
                             }
 
@@ -579,19 +576,16 @@ public class ApplicationConfigurationService {
 
                         @Override
                         public void unknownReferenceForChecker(String refType, Set<String> knownReferences) {
-                            // OK
                             builder.unknownReferenceForCheckerInReferenceColumn(referenceToValidate, column, refType, knownReferences);
                         }
 
                         @Override
                         public void missingReferenceForChecker(Set<String> knownReferences) {
-                            // OK
                             builder.missingReferenceForCheckerInReferenceColumn(referenceToValidate, column, knownReferences);
                         }
 
                         @Override
                         public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
-                            // OK
                             builder.unknownCheckerNameInReferenceColumn(referenceToValidate, column, checkerName, knownCheckerNames);
                         }
 
@@ -828,37 +822,31 @@ public class ApplicationConfigurationService {
 
             @Override
             public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
-                // OK
                 builder.unknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checkerName, checkerOnTargetNames);
             }
 
             @Override
             public void unknownReferenceForChecker(String validationRuleDescriptionEntryKey, String refType, Set<String> references) {
-                // OK
                 builder.unknownReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, refType, references);
             }
 
             @Override
             public void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references) {
-                // OK
                 builder.missingReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference, references);
             }
 
             @Override
             public void missingRequiredExpression(String validationRuleDescriptionEntryKey) {
-                // OK
                 builder.missingRequiredExpressionForValidationRuleInReference(validationRuleDescriptionEntryKey, reference);
             }
 
             @Override
             public void illegalGroovyExpression(String validationRuleDescriptionEntryKey, String expression, GroovyExpression.CompilationError compilationError) {
-                // OK
                 builder.illegalGroovyExpressionForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, expression, compilationError);
             }
 
             @Override
             public void missingParamColumnReferenceForChecker(String validationRuleDescriptionEntryKey) {
-                // OK
                 builder.missingParamColumnReferenceForCheckerInReference(validationRuleDescriptionEntryKey, reference);
             }
 
@@ -874,7 +862,6 @@ public class ApplicationConfigurationService {
 
             @Override
             public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
-                // OK
                 builder.unknownCheckerNameForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, allCheckerNames);
             }
 
