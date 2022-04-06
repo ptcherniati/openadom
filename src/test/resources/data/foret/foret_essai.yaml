@@ -392,9 +392,9 @@ references:
           expression: >
             String[] tab = datum.get("Nom du Thème-Type de
             données-Variable").split("-"); String datatype =
-            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            fr.inra.oresing.persistence.Ltree.escapeToLabel(
             tab[2].strip()); String variable =
-            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            fr.inra.oresing.persistence.Ltree.escapeToLabel(
             tab[3].strip()); return
             references.find{it.key.equals("variables_par_types_de_donnees")}.value
                     .findAll {it.refValues["nom de la variable"].equals(variable)}
@@ -526,9 +526,9 @@ references:
           expression: >
             String[] tab = datum.get("Nom du Thème-Type de
             données-Variable").split("-"); String datatype =
-            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            fr.inra.oresing.persistence.Ltree.escapeToLabel(
             tab[2].strip()); String variable =
-            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            fr.inra.oresing.persistence.Ltree.escapeToLabel(
             tab[3].strip()); return
             references.find{it.key.equals("variables_par_types_de_donnees")}.value
                     .findAll {it.refValues["nom de la variable"].equals(variable)}
@@ -685,9 +685,9 @@ references:
           expression: >
             String[] tab = datum.get("Nom du Thème-Type de
             données-Variable").split("-"); String datatype =
-            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            fr.inra.oresing.persistence.Ltree.escapeToLabel(
             tab[2].strip()); String variable =
-            fr.inra.oresing.rest.OreSiService.escapeKeyComponent(
+            fr.inra.oresing.persistence.Ltree.escapeToLabel(
             tab[3].strip()); return
             references.find{it.key.equals("variables_par_types_de_donnees")}.value
                     .findAll {it.refValues["nom de la variable"].equals(variable)}
@@ -787,10 +787,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -1050,10 +1050,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -1301,10 +1301,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -1552,10 +1552,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -1803,10 +1803,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -2054,10 +2054,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -2287,10 +2287,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -2520,10 +2520,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -2753,10 +2753,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -2986,10 +2986,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -3219,10 +3219,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -3484,10 +3484,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -3752,10 +3752,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -3980,10 +3980,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -4559,10 +4559,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -5072,10 +5072,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -5587,10 +5587,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -6274,10 +6274,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       
@@ -6943,10 +6943,10 @@ dataTypes:
                       String nom = datum.localization.zones_etudes;
                       String hierarchicalKey = ""; 
                       if ("".equals(nom)){
-                        hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                        hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                       }else{
-                        parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                        nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                        parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                        nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                         hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                       }
                       

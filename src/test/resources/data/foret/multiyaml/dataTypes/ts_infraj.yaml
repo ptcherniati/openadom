@@ -99,10 +99,10 @@
                   String nom = datum.localization.zones_etudes;
                   String hierarchicalKey = ""; 
                   if ("".equals(nom)){
-                    hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
+                    hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
                   }else{
-                    parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                    nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
+                    parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                    nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
                     hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
                   }
                   
