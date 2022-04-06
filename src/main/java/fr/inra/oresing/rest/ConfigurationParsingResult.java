@@ -673,5 +673,42 @@ public class ConfigurationParsingResult {
                     "pattern", pattern
             ));
         }
+
+        public void illegalCheckerConfigurationParameterForValidationRuleInDataType(String validationRuleDescriptionEntryKey, String dataType, String checkerName, String parameterName) {
+            recordError("illegalCheckerConfigurationParameterForValidationRuleInDataType", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "dataType", dataType,
+                    "checkerName", checkerName,
+                    "parameterName", parameterName
+            ));
+        }
+
+        public void illegalCheckerConfigurationParameterForValidationRuleInReference(String validationRuleDescriptionEntryKey, String referenceToValidate, String checkerName, String parameterName) {
+            recordError("illegalCheckerConfigurationParameterForValidationRuleInReference", ImmutableMap.of(
+                    "validationRuleDescriptionEntryKey", validationRuleDescriptionEntryKey,
+                    "referenceToValidate", referenceToValidate,
+                    "checkerName", checkerName,
+                    "parameterName", parameterName
+            ));
+        }
+
+        public void illegalCheckerConfigurationParameterForVariableComponentChecker(String dataType, String datum, String component, String checkerName, String parameterName) {
+            recordError("illegalCheckerConfigurationParameterForVariableComponentChecker", ImmutableMap.of(
+                    "dataType", dataType,
+                    "datum", datum,
+                    "component", component,
+                    "checkerName", checkerName,
+                    "parameterName", parameterName
+            ));
+        }
+
+        public void illegalCheckerConfigurationParameterForReferenceColumnChecker(String referenceToValidate, String column, String checkerName, String parameterName) {
+            recordError("illegalCheckerConfigurationParameterForReferenceColumnChecker", ImmutableMap.of(
+                    "referenceToValidate", referenceToValidate,
+                    "column", column,
+                    "checkerName", checkerName,
+                    "parameterName", parameterName
+            ));
+        }
     }
 }

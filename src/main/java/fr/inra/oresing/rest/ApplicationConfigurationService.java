@@ -499,6 +499,11 @@ public class ApplicationConfigurationService {
             public void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern) {
                 builder.invalidPatternForRegularExpressionCheckerForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, pattern);
             }
+
+            @Override
+            public void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName) {
+                builder.illegalCheckerConfigurationParameterForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, parameterName);
+            }
         };
         for (Map.Entry<String, Configuration.LineValidationRuleWithVariableComponentsDescription> validationRuleDescriptionEntry : dataTypeDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
@@ -552,6 +557,11 @@ public class ApplicationConfigurationService {
                             public void invalidPatternForRegularExpressionChecker(String pattern) {
                                 builder.invalidPatternForVariableComponentRegularExpressionChecker(dataType, datum, component, pattern);
                             }
+
+                            @Override
+                            public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
+                                builder.illegalCheckerConfigurationParameterForVariableComponentChecker(dataType, datum, component, checkerName, parameterName);
+                            }
                         }, checkerDescription);
                     }
                 }
@@ -603,6 +613,11 @@ public class ApplicationConfigurationService {
                         public void invalidPatternForRegularExpressionChecker(String pattern) {
                             builder.invalidPatternForReferenceColumnRegularExpressionChecker(referenceToValidate, column, pattern);
                         }
+
+                        @Override
+                        public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
+                            builder.illegalCheckerConfigurationParameterForReferenceColumnChecker(referenceToValidate, column, checkerName, parameterName);
+                        }
                     }, checkerDescription);
                 }
             }
@@ -624,40 +639,63 @@ public class ApplicationConfigurationService {
         void invalidDurationForDateChecker(String duration);
 
         void invalidPatternForRegularExpressionChecker(String pattern);
+
+        void illegalCheckerConfigurationParameter(String checkerName, String parameterName);
     }
 
     private void verifyCheckerOnOneTarget(CheckerOnOneTargetValidationContext builder, Configuration.CheckerDescription checkerDescription) {
         String checkerName = checkerDescription.getName();
-        if (CHECKER_ON_TARGET_NAMES.contains(checkerName)) {
-            if ("Reference".equals(checkerName)) {
-                if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
-                    String refType = checkerDescription.getParams().getRefType();
-                    if (!builder.getReferences().contains(refType)) {
-                        builder.unknownReferenceForChecker(refType, builder.getReferences());
-                    }
-                } else {
-                    builder.missingReferenceForChecker(builder.getReferences());
+        if ("Reference".equals(checkerName)) {
+            if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
+                String refType = checkerDescription.getParams().getRefType();
+                if (!builder.getReferences().contains(refType)) {
+                    builder.unknownReferenceForChecker(refType, builder.getReferences());
                 }
-            } else if ("Date".equals(checkerName)) {
-                String datePattern = checkerDescription.getParams().getPattern();
-                if (DateLineChecker.isValidPattern(datePattern)) {
-                    String duration = checkerDescription.getParams().getDuration();
-                    if (StringUtils.isBlank(duration)) {
-                        // OK, champs facultatif
-                    } else if (!Duration.isValid(duration)) {
-                        builder.invalidDurationForDateChecker(duration);
-                    }
-                } else {
-                    builder.invalidPatternForDateChecker(datePattern);
-                }
-            } else if ("RegularExpression".equals(checkerName)) {
-                String regularExpressionPattern = checkerDescription.getParams().getPattern();
-                if (!RegularExpressionChecker.isValid(regularExpressionPattern)) {
-                    builder.invalidPatternForRegularExpressionChecker(regularExpressionPattern);
-                }
+            } else {
+                builder.missingReferenceForChecker(builder.getReferences());
             }
+            verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("refType"));
+        } else if ("Date".equals(checkerName)) {
+            String datePattern = checkerDescription.getParams().getPattern();
+            if (DateLineChecker.isValidPattern(datePattern)) {
+                String duration = checkerDescription.getParams().getDuration();
+                if (StringUtils.isBlank(duration)) {
+                    // OK, champs facultatif
+                } else if (!Duration.isValid(duration)) {
+                    builder.invalidDurationForDateChecker(duration);
+                }
+            } else {
+                builder.invalidPatternForDateChecker(datePattern);
+            }
+            verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("pattern", "duration"));
+        } else if ("RegularExpression".equals(checkerName)) {
+            String regularExpressionPattern = checkerDescription.getParams().getPattern();
+            if (!RegularExpressionChecker.isValid(regularExpressionPattern)) {
+                builder.invalidPatternForRegularExpressionChecker(regularExpressionPattern);
+            }
+            verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("pattern"));
+        } else if (Set.of("Integer", "Float").contains(checkerName)) {
+            verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of());
         } else {
             builder.unknownCheckerOnOneTargetName(checkerName, CHECKER_ON_TARGET_NAMES);
+        }
+    }
+
+    private void verifyCheckerDescriptionParameters(CheckerOnOneTargetValidationContext builder, Configuration.CheckerDescription checkerDescription, Set<String> allowedParameterNames) {
+        Configuration.CheckerConfigurationDescription params = checkerDescription.getParams();
+        if (params != null) {
+            if (!allowedParameterNames.contains("groovy") && params.getGroovy() != null) {
+                builder.illegalCheckerConfigurationParameter(checkerDescription.getName(), "groovy");
+            }
+            if (!allowedParameterNames.contains("pattern") && params.getPattern() != null) {
+                builder.illegalCheckerConfigurationParameter(checkerDescription.getName(), "pattern");
+            }
+            if (!allowedParameterNames.contains("refType") && params.getRefType() != null) {
+                builder.illegalCheckerConfigurationParameter(checkerDescription.getName(), "refType");
+            }
+            if (!allowedParameterNames.contains("duration") && params.getDuration() != null) {
+                builder.illegalCheckerConfigurationParameter(checkerDescription.getName(), "duration");
+            }
         }
     }
 
@@ -879,6 +917,11 @@ public class ApplicationConfigurationService {
             public void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern) {
                 builder.invalidPatternForRegularExpressionCheckerForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, pattern);
             }
+
+            @Override
+            public void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName) {
+                builder.illegalCheckerConfigurationParameterForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, parameterName);
+            }
         };
         for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
@@ -914,6 +957,8 @@ public class ApplicationConfigurationService {
         void invalidDurationForDateChecker(String validationRuleDescriptionEntryKey, String duration);
 
         void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern);
+
+        void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName);
     }
 
     private void verifyLineValidationRuleDescription(LineValidationRuleDescriptionValidationContext builder, String validationRuleDescriptionEntryKey, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
@@ -975,6 +1020,11 @@ public class ApplicationConfigurationService {
                 @Override
                 public void invalidPatternForRegularExpressionChecker(String pattern) {
                     builder.invalidPatternForRegularExpressionChecker(validationRuleDescriptionEntryKey, pattern);
+                }
+
+                @Override
+                public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
+                    builder.illegalCheckerConfigurationParameter(validationRuleDescriptionEntryKey, checkerName, parameterName);
                 }
             }, checker);
         } else {
