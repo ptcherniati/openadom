@@ -17,7 +17,7 @@ public interface TransformOneLineElementTransformer extends LineTransformer {
 
     @Override
     default Datum transform(Datum datum) {
-        VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
+        VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget();
         String value = datum.get(variableComponentKey);
         String transformedValue = transform(datum, value);
         Datum transformedDatum = Datum.copyOf(datum);
@@ -27,7 +27,7 @@ public interface TransformOneLineElementTransformer extends LineTransformer {
 
     @Override
     default ReferenceDatum transform(ReferenceDatum referenceDatum) {
-        ReferenceColumn referenceColumn = (ReferenceColumn) getTarget().getTarget();
+        ReferenceColumn referenceColumn = (ReferenceColumn) getTarget();
         ReferenceColumnValue referenceColumnValue;
         if (referenceDatum.contains(referenceColumn)) {
             referenceColumnValue = referenceDatum.get(referenceColumn);

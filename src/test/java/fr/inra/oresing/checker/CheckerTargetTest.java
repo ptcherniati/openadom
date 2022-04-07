@@ -9,18 +9,18 @@ public class CheckerTargetTest {
     @Test
     public void testBuildColumnChecker(){
         ReferenceColumn referenceColumn = new ReferenceColumn("bonjour");
-        CheckerTarget checkerTarget= CheckerTarget.getInstance(referenceColumn,null, null);
+        CheckerTarget checkerTarget= referenceColumn;
         Assert.assertEquals(CheckerTarget.CheckerTargetType.PARAM_COLUMN, checkerTarget.getType());
-        Assert.assertEquals(referenceColumn, checkerTarget.getTarget());
+        Assert.assertEquals(referenceColumn, checkerTarget);
         String key = checkerTarget.getInternationalizedKey("key");
         Assert.assertEquals("keyWithColumn", key);
     }
     @Test
     public void testBuildVariableComponentChecker(){
         VariableComponentKey variableComponentKey = new VariableComponentKey("Variable", "component");
-        CheckerTarget checkerTarget= CheckerTarget.getInstance( variableComponentKey, null, null);
+        CheckerTarget checkerTarget= variableComponentKey;
         Assert.assertEquals(CheckerTarget.CheckerTargetType.PARAM_VARIABLE_COMPONENT_KEY, checkerTarget.getType());
-        Assert.assertEquals(variableComponentKey, checkerTarget.getTarget());
+        Assert.assertEquals(variableComponentKey, checkerTarget);
         String key = checkerTarget.getInternationalizedKey("key");
         Assert.assertEquals("key", key);
     }

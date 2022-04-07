@@ -29,23 +29,27 @@ references:
     keyColumns: [nom du taxon déterminé]
     validations:
       nom du taxon déterminé:
-        description: "nom du taxon déterminé"
+        internationalizationName:
+          fr: "nom du taxon déterminé"
         checker:
           name: RegularExpression
           params:
             pattern: .*
             required: true
-            codify: true
-            columns: nom du taxon déterminé
+            transformation:
+              codify: true
+        columns: [ nom du taxon déterminé ]
       nom du taxon superieur:
-        description: "nom du taxon superieur"
+        internationalizationName:
+          fr: "nom du taxon superieur"
         checker:
           name: Reference
           params:
             required: false
-            codify: true
+            transformation:
+              codify: true
             refType: taxon
-            columns: nom du taxon superieur
+        columns: [ nom du taxon superieur ]
     columns:
       nom du taxon déterminé:
       theme:

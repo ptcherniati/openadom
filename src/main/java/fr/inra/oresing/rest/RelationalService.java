@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -186,7 +185,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             ImmutableMap<VariableComponentKey, CheckerOnOneVariableComponentLineChecker> checkerPerVariableComponentKeys = checkerFactory.getLineCheckers(application, dataType).stream()
                     .filter(lineChecker -> lineChecker instanceof CheckerOnOneVariableComponentLineChecker)
                     .map(lineChecker -> (CheckerOnOneVariableComponentLineChecker) lineChecker)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget().getTarget(), Function.identity()));
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget(), Function.identity()));
             Map<VariableComponentKey, ReferenceLineChecker> referenceCheckers =
                     Maps.transformValues(
                             Maps.filterValues(checkerPerVariableComponentKeys, checker -> checker instanceof ReferenceLineChecker),
@@ -203,7 +202,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             String dataAfterDataGroupsMergingQuery = repository.getRepository(application).data().getSqlToMergeData(DownloadDatasetQuery.buildDownloadDatasetQuery(null, appId.toString(), dataType, application));
             String withClause = "WITH " + dataTableName + " AS (" + dataAfterDataGroupsMergingQuery + ")";
 
-            for (VariableComponentKey variableComponentKey : getVariableComponentKeys(dataTypeDescription)) {
+            for (VariableComponentKey variableComponentKey : dataTypeDescription.doGetAllVariableComponents()) {
                 String variable = variableComponentKey.getVariable();
                 String component = variableComponentKey.getComponent();
                 String escapedVariableName = StringUtils.replace(variable, "'", "''");
@@ -250,17 +249,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
         return views;
     }
 
-    private ImmutableSet<VariableComponentKey> getVariableComponentKeys(Configuration.DataTypeDescription dataTypeDescription) {
-        Set<VariableComponentKey> references = new LinkedHashSet<>();
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
-            String variable = variableEntry.getKey();
-            for (String component : variableEntry.getValue().getComponents().keySet()) {
-                references.add(new VariableComponentKey(variable, component));
-            }
-        }
-        return ImmutableSet.copyOf(references);
-    }
-
     private List<ViewCreationCommand> getDenormalizedViewsForDataTypes(SqlSchemaForRelationalViewsForApplication sqlSchema, Application application) {
         List<ViewCreationCommand> views = new LinkedList<>();
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : application.getConfiguration().getDataTypes().entrySet()) {
@@ -275,13 +263,13 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             for (ReferenceLineChecker referenceChecker : referenceCheckers.values()) {
                 String referenceType = referenceChecker.getRefType();  // especes
-                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceChecker.getTarget().getTarget();
+                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceChecker.getTarget();
                 String quotedViewName = sqlSchema.forReferenceType(referenceType).getSqlIdentifier();
 
                 String foreignKeyColumnName = getTechnicalIdColumnName(variableComponentKey);
                 String alias = getAliasForColumnName(variableComponentKey);
 
-                application.getConfiguration().getReferences().get(referenceType).getColumns().keySet().stream()
+                application.getConfiguration().getReferences().get(referenceType).doGetStaticColumns().stream()
                         .map(referenceColumn -> alias + "." + quoteSqlIdentifier(referenceColumn) + " as " + getColumnName("ref", variableComponentKey.getVariable(), variableComponentKey.getComponent(), referenceColumn))
                         .forEach(selectClauseReferenceElements::add);
                 fromClauseJoinElements.add("left outer join " + quotedViewName + " " + alias + " on " + dataTableName + "." + foreignKeyColumnName + "::uuid = " + alias + "." + quoteSqlIdentifier(referenceType + "_id") + "::uuid");
@@ -289,7 +277,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
             Set<String> selectClauseElements = new LinkedHashSet<>(selectClauseReferenceElements);
 
-            getVariableComponentKeys(dataTypeDescription).stream()
+            dataTypeDescription.doGetAllVariableComponents().stream()
                     .map(this::getColumnName)
                     .map(columnName -> dataTableName + "." + columnName)
                     .forEach(selectClauseElements::add);
@@ -336,14 +324,14 @@ public class RelationalService implements InitializingBean, DisposableBean {
             ImmutableMap<ReferenceColumn, SqlPrimitiveType> sqlTypePerColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
                     .filter(CheckerOnOneVariableComponentLineChecker.class::isInstance)
                     .map(CheckerOnOneVariableComponentLineChecker.class::cast)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), CheckerOnOneVariableComponentLineChecker::getSqlType));
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget(), CheckerOnOneVariableComponentLineChecker::getSqlType));
 
             ImmutableMap<ReferenceColumn, Multiplicity> declaredMultiplicityPerReferenceColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceType).stream()
                     .filter(ReferenceLineChecker.class::isInstance)
                     .map(ReferenceLineChecker.class::cast)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+                    .collect(ImmutableMap.toImmutableMap(rlc -> (ReferenceColumn) rlc.getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
 
-            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = referenceDescription.getColumns().keySet().stream()
+            ImmutableSetMultimap<Multiplicity, ReferenceColumn> allReferenceColumnsPerMultiplicity = referenceDescription.doGetStaticColumns().stream()
                     .map(ReferenceColumn::new)
                     .collect(ImmutableSetMultimap.toImmutableSetMultimap(referenceColumn -> declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE), Function.identity()));
 

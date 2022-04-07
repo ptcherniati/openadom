@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.checker.CheckerTarget;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
@@ -159,7 +158,7 @@ public class DownloadDatasetQuery {
         } else if (vck.intervalValues != null && List.of("date", "time", "datetime").contains(vck.type)) {
             if (!Strings.isNullOrEmpty(vck.intervalValues.from) || !Strings.isNullOrEmpty(vck.intervalValues.to)) {
                 DateLineChecker dateLineChecker = new DateLineChecker(
-                        CheckerTarget.getInstance(vck.variableComponentKey, null, null),
+                        vck.variableComponentKey,
                         vck.format, null, null);
                 filters.add(
                         String.format(
