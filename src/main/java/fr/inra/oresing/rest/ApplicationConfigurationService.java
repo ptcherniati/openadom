@@ -135,10 +135,7 @@ public class ApplicationConfigurationService {
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
 
-            // FIXME
-            boolean authorizationSectionIsRequired = false;
-
-            if (authorizationSectionIsRequired && authorization == null) {
+            if (authorization == null) {
                 builder.missingAuthorizationForDatatype(dataType);
             } else {
                 VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
