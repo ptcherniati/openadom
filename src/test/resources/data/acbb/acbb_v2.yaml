@@ -844,7 +844,8 @@ dataTypes:
           qualité:
     validations:
       swcQualityEnumeration:
-        description: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        internationalizationName:
+          fr: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
         checker:
           name: GroovyExpression
           params:

@@ -19,6 +19,11 @@ public class Duration {
             this.temporalUnit = ChronoUnit.valueOf(matcher.group(2).toUpperCase());
         }
     }
+
+    public static boolean isValid(String duration) {
+        return PATTERN.matcher(duration).matches();
+    }
+
     LocalDateTimeRange getLocalDateTimeRange(LocalDateTime date){
         return LocalDateTimeRange.between(LocalDateTime.from(date), date.plus(amount, temporalUnit));
     }

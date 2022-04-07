@@ -6,6 +6,7 @@ import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.transformer.TransformationConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -98,9 +99,8 @@ public class GroovyLineCheckerTest {
 
     private GroovyLineCheckerConfiguration getConfiguration(String expression) {
         return new GroovyLineCheckerConfiguration() {
-
             @Override
-            public boolean isCodify() {
+            public TransformationConfiguration getTransformation() {
                 throw new UnsupportedOperationException("doublure de test");
             }
 

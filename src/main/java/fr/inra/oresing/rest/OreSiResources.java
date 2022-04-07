@@ -119,13 +119,13 @@ public class OreSiResources {
             });
         });
         Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
-            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.getColumns(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
+            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
             Set<String> children = childrenPerReferences.get(reference);
             return new ApplicationResult.Reference(reference, reference, children, columns);
         });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
-                Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.getComponents(), (component, componentDescription) -> {
+                Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.doGetAllComponentDescriptions(), (component, componentDescription) -> {
                     return new ApplicationResult.DataType.Variable.Component(component, component);
                 });
                 Configuration.Chart chartDescription = variableDescription.getChartDescription();
@@ -285,7 +285,7 @@ public class OreSiResources {
                 })
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
-        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType, locale);
+        Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
         Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale, dataType, checkedFormatVariableComponents);
         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
     }
