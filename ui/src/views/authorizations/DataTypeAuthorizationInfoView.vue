@@ -16,7 +16,7 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-      <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users">
+      <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users" class="columns">
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
           :message="errors[0]"
@@ -24,7 +24,7 @@
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          class="mb-4"
+          class="column mb-4"
         >
           <b-select
             v-model="usersToAuthorize"
@@ -45,7 +45,7 @@
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          class="mb-4"
+          class="column mb-4"
         >
           <b-input v-model="name" />
         </b-field>
