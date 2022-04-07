@@ -67,16 +67,16 @@
                   type="is-primary"
                   @click.native="selectCheckbox($event, index, indexColumn, scope)"
                 />
-                <div class="columns">
-                  <b-taginput
-                    v-if="
+                <div class="columns"
+                     v-if="
                       states &&
                       states[indexColumn] &&
                       states[indexColumn][index] === 1 &&
                       localAuthorizationsTree &&
                       localAuthorizationsTree[indexColumn] &&
                       localAuthorizationsTree[indexColumn][index]
-                    "
+                ">
+                  <b-taginput
                     v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
                     :data="dataGroups"
                     :open-on-focus="true"
@@ -86,20 +86,10 @@
                     class="column"
                     field="label"
                     type="is-primary"
-                    @input.capture="selectCheckbox($event, index, indexColumn, scope)"
+                    @input="selectCheckbox($event, index, indexColumn, scope)"
                   >
                   </b-taginput>
-                  <div
-                    v-if="
-                      states &&
-                      states[indexColumn] &&
-                      states[indexColumn][index] === 1 &&
-                      localAuthorizationsTree &&
-                      localAuthorizationsTree[indexColumn] &&
-                      localAuthorizationsTree[indexColumn][index]
-                    "
-                    class="column"
-                  >
+                  <div class="column">
                     <b-datepicker
                       v-model="localAuthorizationsTree[indexColumn][index].from"
                       :date-parser="parseDate"
@@ -110,21 +100,11 @@
                       editable
                       icon="calendar"
                       @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
-                      @input.capture="selectCheckbox($event, index, indexColumn, scope, 'from')"
+                      @input="selectCheckbox($event, index, indexColumn, scope, 'from')"
                     >
                     </b-datepicker>
                   </div>
-                  <div
-                    v-if="
-                      states &&
-                      states[indexColumn] &&
-                      states[indexColumn][index] === 1 &&
-                      localAuthorizationsTree &&
-                      localAuthorizationsTree[indexColumn] &&
-                      localAuthorizationsTree[indexColumn][index]
-                    "
-                    class="column"
-                  >
+                  <div class="column" >
                     <b-datepicker
                       v-model="localAuthorizationsTree[indexColumn][index].to"
                       :date-parser="parseDate"
@@ -535,7 +515,6 @@ export default class AuthorizationTable extends Vue {
       state = event.length ? 1 : 0;
       eventType = event.length ? "add-authorization" : "delete-authorization";
       localAuthorizationsTree[indexColumn][index].dataGroups = event;
-
       // si indeterminate alors je ne supprime les enfants que
     } else if (event instanceof Date) {
       state = event ? 1 : 0;
@@ -548,8 +527,7 @@ export default class AuthorizationTable extends Vue {
         state = event.length ? 1 : 0;
         eventType = event.length ? "add-authorization" : "delete-authorization";
         localAuthorizationsTree[indexColumn][index].dataGroups = event;
-
-        // si indeterminate alors je ne supprime les enfants que
+        // si indeterminate alors je ne supprime que les enfants
       } else if (event instanceof Date) {
         //c'est une date
         state = event ? 1 : 0;
