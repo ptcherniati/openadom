@@ -42,13 +42,15 @@
               <div class="card">
                 <div class="card-header">
                   <div class="title card-header-title">
-                    <p field="name">{{ props.row[column.id] }}</p>
+                    <p field="name">Propriétés de {{ props.row[column.id] }}</p>
                   </div>
                 </div>
                 <div class="card-content">
-                  {{ props.row['propriétés de taxons'] }}
-                  <!-- TO DO à mettre en forme
-                  <b-table :data="data" :columns="columns"/> -->
+                  <ul>
+                    <li v-for="item in taxonTbl.proprietes_taxon" :key="item.code_sandre">
+                      {{ item }}
+                    </li>
+                  </ul>
                 </div>
               </div>
             </b-modal>
@@ -123,11 +125,16 @@ export default class ReferenceTableView extends Vue {
   isSelectedName = "";
   isCardModalActive = false;
   nameColumn = 'nom du taxon déterminé';
+  taxonTbl = [];
 
   showModal(name) {
     this.isSelectedName = name;
     this.isCardModalActive = true;
-    console.log(this.tableValues[0]);
+    for(let i =0; i<this.tableValues.length; i++) {
+      if (this.tableValues[i][this.nameColumn] === name) {
+        this.taxonTbl = this.tableValues[i];
+      }
+    }
   }
 
   async created() {
