@@ -12,32 +12,56 @@
 
     <div v-if="reference && columns">
       <b-table
-        :data="tableValues"
-        :striped="true"
-        :isFocusable="true"
-        :isHoverable="true"
-        :sticky-header="true"
-        height="100%"
-        style="padding-bottom: 20px; position: relative; z-index: 1"
+          :data="tableValues"
+          :striped="true"
+          :isFocusable="true"
+          :isHoverable="true"
+          :sticky-header="true"
+          height="100%"
+          style="padding-bottom: 20px; position: relative;z-index: 1;"
       >
         <b-table-column
-          v-for="column in columns"
-          :key="column.id"
-          :field="column.id"
-          :label="column.title"
-          sortable
-          :sticky="column.key"
-          v-slot="props"
+            v-for="column in columns"
+            :key="column.id"
+            :field="column.id"
+            :label="column.title"
+            sortable
+            :sticky="column.key"
+            v-slot="props"
         >
-          <span v-if="column.id != '#'">
+          <span v-if="column.id === 'nom du taxon déterminé'">
+            <a @click="showModal(props.row[column.id])">
+              {{ props.row[column.id] }}</a
+            >
+            <b-modal
+                v-show="isSelectedName === props.row[column.id]"
+                v-model="isCardModalActive"
+                width = 70%
+                data-backdrop="static"
+            >
+              <div class="card">
+                <div class="card-header">
+                  <div class="title card-header-title">
+                    <p field="name">{{ props.row[column.id] }}</p>
+                  </div>
+                </div>
+                <div class="card-content">
+                  {{ props.row['propriétés de taxons'] }}
+                  <!-- TO DO à mettre en forme
+                  <b-table :data="data" :columns="columns"/> -->
+                </div>
+              </div>
+            </b-modal>
+          </span>
+          <span v-else-if="column.id !== '#'">
             {{ props.row[column.id] }}
           </span>
           <b-collapse v-else :open="false">
             <template #trigger>
               <b-button
-                :label="'' + (tableValues.indexOf(props.row) + 1)"
-                type="is-small"
-                aria-controls="contentIdForA11y1"
+                  :label="'' + (tableValues.indexOf(props.row) + 1)"
+                  type="is-small"
+                  aria-controls="contentIdForA11y1"
               />
             </template>
             {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
@@ -94,6 +118,17 @@ export default class ReferenceTableView extends Vue {
   tableValues = [];
   currentPage = 1;
   perPage = 15;
+
+  // show modal and cards
+  isSelectedName = "";
+  isCardModalActive = false;
+  nameColumn = 'nom du taxon déterminé';
+
+  showModal(name) {
+    this.isSelectedName = name;
+    this.isCardModalActive = true;
+    console.log(this.tableValues[0]);
+  }
 
   async created() {
     await this.init();
