@@ -5,9 +5,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.ReferenceLineCheckerDisplay;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -286,8 +289,23 @@ public class OreSiResources {
                 .collect(ImmutableSet.toImmutableSet());
         Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         Map<String, Map<String, LineChecker>> checkedFormatVariableComponents = service.getcheckedFormatVariableComponents(nameOrId, dataType);
-        Map<String, Map<String, Map<String, String>>> entitiesTranslation = service.getEntitiesTranslation(nameOrId, locale, dataType, checkedFormatVariableComponents);
-        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents, entitiesTranslation));
+        final Set<String> listOfDataIds = list.stream()
+                .map(DataRow::getRowId)
+                .collect(Collectors.toSet());
+        Map<Ltree, List<ReferenceValue>> requiredreferencesValues = service.getReferenceDisplaysById(service.getApplication(nameOrId), listOfDataIds);
+        for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName()).entrySet()) {
+            String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
+            ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
+            for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
+
+                final ReferenceValue referenceValue =  requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
+                        .stream()
+                        .findFirst().orElse(null);
+                checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName())
+                        .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
+            }
+        }
+        return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
     }
 
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {

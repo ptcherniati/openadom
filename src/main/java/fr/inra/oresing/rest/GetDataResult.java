@@ -1,8 +1,6 @@
 package fr.inra.oresing.rest;
 
-import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
 import lombok.Value;
 
@@ -16,5 +14,4 @@ public class GetDataResult {
     List<DataRow> rows;
     Long totalRows;
     Map<String, Map<String, LineChecker>> checkedFormatVariableComponents;
-    Map<String, Map<String, Map<String, String>>>  entitiesTranslations;
 }
