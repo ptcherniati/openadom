@@ -206,3 +206,7 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 .liste {
   background-color: rgb(239, 239, 239);
 }
+.b-table .table td.is-sticky{
+  position: initial;
+  z-index: 0;
+}
