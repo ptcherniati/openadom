@@ -45,7 +45,7 @@ export class Fetcher {
     return this._handleResponse(response);
   }
 
-  async get(url, params = {}) {
+  async get(url, params = {}, isText) {
     const path = new URL(url, config.API_URL);
 
     Object.entries(params).forEach(([name, value]) => {
@@ -67,7 +67,7 @@ export class Fetcher {
       },
     });
 
-    return this._handleResponse(response);
+    return this._handleResponse(response, isText);
   }
 
   async delete(url, data) {
@@ -91,9 +91,9 @@ export class Fetcher {
     return Promise.reject({ status: response.status });
   }
 
-  async _handleResponse(response) {
+  async _handleResponse(response, isText) {
     try {
-      const text = await response.json();
+      const text = await isText?response.text():response.json();
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
         return Promise.resolve(text);
       }
@@ -107,9 +107,19 @@ export class Fetcher {
     return Promise.reject({ httpResponseCode: response.status });
   }
 
-  async downloadFile(urlPath) {
+  async showFile(urlPath) {
     const url = new URL(`${config.API_URL}${urlPath}`);
     window.open(url, "_blank");
+  }
+
+  async downloadFile(urlPath) {
+    const url = new URL(`${config.API_URL}${urlPath}`);
+    console.log(url)
+    const link = document.createElement("a");
+    link.href=url;
+    link.type='application/octet-stream'
+    link.download = "export.csv"
+    link.click();
   }
 
   notifyCrendentialsLost() {
