@@ -146,10 +146,18 @@ export default class ReferencesManagementView extends Vue {
     }
   }
 
-  downloadReference(label) {
+  async downloadReference(label) {
     const reference = this.findReferenceByLabel(label);
     if (reference) {
-      this.referenceService.getReferenceCsv(this.applicationName, reference.id);
+      let csv = await this.referenceService.getReferenceCsv(this.applicationName, reference.id);
+      console.log(csv)
+      var hiddenElement = document.createElement('a');
+      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+
+      //provide the name for the CSV file to be downloaded
+      hiddenElement.download = 'export.csv';
+      hiddenElement.click();
+      return false;
     }
   }
 

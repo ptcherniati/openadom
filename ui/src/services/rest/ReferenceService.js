@@ -16,7 +16,7 @@ export class ReferenceService extends Fetcher {
   }
 
   async getReferenceCsv(applicationName, referenceId) {
-    return this.downloadFile(`applications/${applicationName}/references/${referenceId}/csv`);
+    return this.get(`applications/${applicationName}/references/${referenceId}/csv`, {}, true);
   }
 
   async createReference(applicationName, referenceId, refFile) {

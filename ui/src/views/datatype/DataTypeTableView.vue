@@ -424,6 +424,14 @@
         @change="changePage"
       >
       </b-pagination>
+      <div class="buttons" style="margin-top: 16px">
+        <b-button
+          type="is-primary"
+          @click.prevent="downloadResultSearch"
+          style="margin-bottom: 15px; float: right"
+          >Télécharger</b-button
+        >
+      </div>
     </div>
   </PageView>
 </template>
@@ -768,6 +776,29 @@ export default class DataTypeTableView extends Vue {
     this.initDatatype();
     this.showFilter = false;
   }
+
+  async downloadResultSearch(){
+    this.params.variableComponentFilters = [];
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      if (this.variableSearch[i]) {
+        this.params.variableComponentFilters.push(this.variableSearch[i]);
+      }
+    }
+    let param = {...this.params, offset: 0, limit: 42, dataType: this.dataTypeId, applicationNameOrId: this.applicationName}
+    let csv = await this.dataService.getDataTypesCsv(
+      this.applicationName,
+      this.dataTypeId,
+      param
+    );
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+
+    //provide the name for the CSV file to be downloaded
+    hiddenElement.download = 'export.csv';
+    hiddenElement.click();
+    return false;
+  }
+
   clearSearch() {
     for (var i = 0; i < this.variableSearch.length; i++) {
       this.params.variableComponentFilters = [];
@@ -786,8 +817,8 @@ export default class DataTypeTableView extends Vue {
     var value = row[variable][component];
     var lang = '__display_'+localStorage.getItem('lang')
     if (this.referenceLineCheckers[key]) {
-      if (this.referenceLineCheckers[key].referenceValue && this.referenceLineCheckers[key].referenceValue.refValues ) {
-        var display = this.referenceLineCheckers[key].referenceValue.refValues.evaluationContext.datum[lang];
+      if (this.referenceLineCheckers[key].referenceValues && this.referenceLineCheckers[key].referenceValues.refValues ) {
+        var display = this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum[lang];
         return display ? display : value;
       }
     }

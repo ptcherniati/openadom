@@ -329,7 +329,7 @@ public class OreSiResources {
     /**
      * export as CSV
      */
-    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/csv", produces = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
     public ResponseEntity<String> getAllDataCsvForce(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,

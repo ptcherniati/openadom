@@ -88,6 +88,7 @@ import { InternationalisationService } from "@/services/InternationalisationServ
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
 import DetailModalCard from "@/components/charts/DetailModalCard";
+import {DownloadDatasetQuery} from "@/model/application/DownloadDatasetQuery";
 
 @Component({
   components: {
@@ -264,8 +265,20 @@ export default class DataTypesManagementView extends Vue {
     }
   }
 
-  async downloadDataType(event, label) {
-    this.dataService.getDataTypesCsv(this.applicationName, label);
+  async downloadDataType(event) {
+    let param = new DownloadDatasetQuery(this.application, this.applicationName, event)
+    console.log('download',new DownloadDatasetQuery(),  event)
+    let csv = await this.dataService.getDataTypesCsv(
+        this.applicationName,
+        event,
+        param);
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+
+    //provide the name for the CSV file to be downloaded
+    hiddenElement.download = 'export.csv';
+    hiddenElement.click();
+    return false;
   }
 
   checkMessageErrors(error) {
