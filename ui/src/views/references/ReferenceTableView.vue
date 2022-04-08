@@ -18,7 +18,7 @@
         :isHoverable="true"
         :sticky-header="true"
         height="100%"
-        style="padding-bottom: 20px"
+        style="padding-bottom: 20px; position: relative; z-index: 1"
       >
         <b-table-column
           v-for="column in columns"

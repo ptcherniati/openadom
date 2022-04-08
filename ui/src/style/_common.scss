@@ -199,3 +199,8 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
     margin: auto;
   }
 }
+
+.b-table .table td.is-sticky{
+  position: initial;
+  z-index: 0;
+}
