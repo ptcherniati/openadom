@@ -11,10 +11,12 @@
     </h1>
     <div>
       <CollapsibleTree
-        v-for="ref in references"
+        class="liste"
+        v-for="(ref, i) in references"
         :key="ref.id"
         :option="ref"
         :level="0"
+        :id="i+1"
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
@@ -122,6 +124,24 @@ export default class ReferencesManagementView extends Vue {
     for (let i = 0; i <= this.application.referenceSynthesis.length - 1; i++) {
       if (this.application.referenceSynthesis[i].referenceType === ref.label) {
         return this.application.referenceSynthesis[i].lineCount;
+      } else {
+        for (let n=0; n<ref.children.length; n++) {
+          if( this.application.referenceSynthesis[i].referenceType === ref.children[n].label) {
+            ref.children[n] = {
+              ...ref.children[n],
+              lineCountChild : this.application.referenceSynthesis[i].lineCount,
+            };
+          } else {
+            for (let j=0; j<ref.children[n].children.length; j++) {
+              if( this.application.referenceSynthesis[i].referenceType === ref.children[n].children[j].label) {
+                ref.children[n].children[j] = {
+                  ...ref.children[n].children[j],
+                  lineCountChild : this.application.referenceSynthesis[i].lineCount,
+                };
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -149,3 +169,9 @@ export default class ReferencesManagementView extends Vue {
   }
 }
 </script>
+<style lang="scss" scoped>
+.liste {
+  margin-bottom: 10px;
+  border: 1px solid white;
+}
+</style>

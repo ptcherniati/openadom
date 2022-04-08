@@ -518,7 +518,7 @@ public class OreSiService {
             AtomicLong lines = new AtomicLong();
             final Instant debut = Instant.now();
             final DataRepository dataRepository = repo.getRepository(app).data();
-            dataRepository
+            final List<UUID> uuids = dataRepository
                     .storeAll(
                             dataStream
                                     .filter(Objects::nonNull)
@@ -528,6 +528,7 @@ public class OreSiService {
                                         }
                                     })
                     );
+            dataRepository.updateConstraintForeigData(uuids);
             errors.addAll(uniquenessBuilder.getErrors());
             InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         }
@@ -1392,6 +1393,10 @@ public class OreSiService {
 
     public List<ApplicationResult.ReferenceSynthesis> getReferenceSynthesis(Application application) {
         return repo.getRepository(application).referenceValue().buildReferenceSynthesis();
+    }
+
+    public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Application application, Set<String> listOfDataIds) {
+        return repo.getRepository(application).referenceValue(). getReferenceDisplaysById(listOfDataIds);
     }
 
     @Value
