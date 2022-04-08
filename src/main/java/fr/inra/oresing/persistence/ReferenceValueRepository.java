@@ -196,14 +196,17 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                 .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }
 
-    public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Set<String> listOfDataIds) {
+    public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Set<String> listOfIds) {
+        if(listOfIds.isEmpty()){
+            return new HashMap<>();
+        }
        String sql =  "SELECT  DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(r) as json \n" +
                 "from "+getSchema().getSqlIdentifier()+".data_reference dr\n" +
                 "join "+getSchema().getSqlIdentifier()+".\"data\" d on dr.dataid = d.id\n" +
                 "join "+getTable().getSqlIdentifier()+" r on dr.referencedby = r.id\n"+
                 "where d.rowid in (:list)";
         final List<ReferenceValue> list = getNamedParameterJdbcTemplate()
-                .query(sql, new MapSqlParameterSource().addValue("list", listOfDataIds), getJsonRowMapper());
+                .query(sql, new MapSqlParameterSource().addValue("list", listOfIds), getJsonRowMapper());
         final Map<Ltree, List<ReferenceValue>> referencesValuesMap = list.stream()
                 .collect(Collectors.groupingBy(
                                 ReferenceValue::getNaturalKey
