@@ -1,10 +1,10 @@
 <template>
-  <div style="margin-bottom: 10px; border: 1px solid white">
+  <div>
     <div
       :class="`columns CollapsibleTree-header ${
         option.children && option.children.length !== 0 ? 'clickable' : ''
       } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
-      :style="`background-color:rgba(240, 245, 245, ${1 - level / 2})`"
+      :style="`margin:0px;`"
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
@@ -196,13 +196,15 @@ $row-height: 40px;
   align-items: center;
   padding: 0.75rem;
 }
+.CollapsibleTree-header.clickable {
+  border-bottom: 0.35rem solid white;
+}
 .CollapsibleTree-header {
   display: flex;
   align-items: center;
   height: $row-height;
   padding: 0.75rem;
   justify-content: space-between;
-  margin: -7px;
 
   .file-icon {
     margin-right: 0;

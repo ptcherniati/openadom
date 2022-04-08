@@ -17,7 +17,8 @@
     <AvailablityChart v-if="false" />
     <div>
       <CollapsibleTree
-        v-for="data in dataTypes"
+        v-for="(data,i) in dataTypes"
+        :id="i+1"
         :key="data.id"
         :option="{
           ...data,

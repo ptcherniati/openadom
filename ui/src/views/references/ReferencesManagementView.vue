@@ -11,10 +11,12 @@
     </h1>
     <div>
       <CollapsibleTree
-        v-for="ref in references"
+        class="liste"
+        v-for="(ref, i) in references"
         :key="ref.id"
         :option="ref"
         :level="0"
+        :id="i+1"
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
@@ -167,3 +169,9 @@ export default class ReferencesManagementView extends Vue {
   }
 }
 </script>
+<style lang="scss" scoped>
+.liste {
+  margin-bottom: 10px;
+  border: 1px solid white;
+}
+</style>
