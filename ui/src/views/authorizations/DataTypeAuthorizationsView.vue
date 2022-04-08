@@ -16,7 +16,7 @@
     <div class="rows">
       <div class="row">
         <div class="columns">
-          <div class="card column is-2">
+          <div class="column is-offset-10 is-2">
             <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
               {{ $t("dataTypeAuthorizations.add-auhtorization") }}
             </b-button>
@@ -25,7 +25,6 @@
       </div>
 
       <b-table
-        v-if="authorizations"
         :data="authorizations"
         :isFocusable="true"
         :isHoverable="true"
@@ -36,16 +35,6 @@
         class="row"
         height="100%"
       >
-        <!--b-table-column
-            v-slot="props"
-            :label="$t('dataTypeAuthorizations.user')"
-            b-table-column
-            field="user"
-            sortable
-        >
-          {{ props.row.user }}
-        </b-table-column-->
-
         <b-table-column
           v-slot="props"
           :label="$t('dataTypeAuthorizations.name')"
@@ -75,12 +64,12 @@
         </b-table-column>
         <b-table-column v-slot="props" :label="$t('dataTypeAuthorizations.actions')" b-table-column>
           <b-button
-            icon-left="trash-alt"
+            icon-left="times-circle"
             size="is-small"
-            type="is-danger"
+            type="is-danger is-light"
             @click="revoke(props.row.id)"
+            style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
           >
-            {{ $t("dataTypeAuthorizations.revoke") }}
           </b-button>
         </b-table-column>
       </b-table>

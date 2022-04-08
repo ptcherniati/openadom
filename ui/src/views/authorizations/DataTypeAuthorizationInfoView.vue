@@ -16,7 +16,7 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-      <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users">
+      <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users" class="columns">
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
           :message="errors[0]"
@@ -24,7 +24,7 @@
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          class="mb-4"
+          class="column mb-4"
         >
           <b-select
             v-model="usersToAuthorize"
@@ -45,7 +45,7 @@
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          class="mb-4"
+          class="column mb-4"
         >
           <b-input v-model="name" />
         </b-field>
@@ -57,6 +57,7 @@
         :authorizations-tree="authorizationsTree"
         :columnsVisible="columnsVisible"
         :dataGroups="dataGroups"
+        :authorizations-to-save="authorizationsToSave"
         :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
         :required-authorizations="{}"
         class="rows"
@@ -153,10 +154,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   columnsVisible = {
     label: { title: "Label", display: true },
     //dataGroups: {title: this.$t('dataTypeAuthorizations.data-groups'), display: true},
+    extraction: { title: "Extraction", display: true },
     admin: { title: "Admin", display: true },
     depot: { title: "Dépôt", display: true },
     publication: { title: "Publication", display: true },
-    extraction: { title: "Extraction", display: true },
   };
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
@@ -435,7 +436,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   extractAuthorizations(authorizationTree) {
     var authorizationArray = [];
-    if (!authorizationTree || Object.keys(authorizationTree).length == 0) {
+    if (!authorizationTree || Object.keys(authorizationTree).length === 0) {
       return authorizationArray;
     }
     for (const key in authorizationTree) {
