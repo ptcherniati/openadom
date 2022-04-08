@@ -17,6 +17,7 @@
     <AvailablityChart v-if="false" />
     <div>
       <CollapsibleTree
+        class="liste"
         v-for="(data,i) in dataTypes"
         :id="i+1"
         :key="data.id"
@@ -292,5 +293,9 @@ export default class DataTypesManagementView extends Vue {
     width: calc(100% - 3em - 4rem);
     overflow-wrap: break-word;
   }
+}
+.liste {
+  margin-bottom: 10px;
+  border: 1px solid white;
 }
 </style>
