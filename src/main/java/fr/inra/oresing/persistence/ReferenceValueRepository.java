@@ -3,12 +3,7 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.rest.ApplicationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -20,11 +15,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.sql.PreparedStatement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -79,26 +70,26 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         AtomicInteger i = new AtomicInteger();
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
-            String k = e.getKey();
-            if (StringUtils.equalsAnyIgnoreCase("_row_id_", k)) {
-                String collect = e.getValue().stream().map(v -> {
+                    String k = e.getKey();
+                    if (StringUtils.equalsAnyIgnoreCase("_row_id_", k)) {
+                        String collect = e.getValue().stream().map(v -> {
+                                    String arg = ":arg" + i.getAndIncrement();
+                                    paramSource.addValue(arg, v);
+                                    return String.format("'%s'::uuid", v);
+                                })
+                                .collect(Collectors.joining(", "));
+                        return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
+                    } else if (StringUtils.equalsAnyIgnoreCase("any", k)) {
+                        return e.getValue().stream().map(v -> {
                             String arg = ":arg" + i.getAndIncrement();
                             paramSource.addValue(arg, v);
-                            return String.format("'%s'::uuid", v);
-                        })
-                        .collect(Collectors.joining(", "));
-                return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
-            }else if (StringUtils.equalsAnyIgnoreCase("any", k)) {
-                return e.getValue().stream().map(v -> {
-                    String arg = ":arg" + i.getAndIncrement();
-                    paramSource.addValue(arg, v);
-                    return "kv.value=" + arg;
-                });
-            } else {
-                return e.getValue().stream().map(v -> "t.refvalues @> '{\"" + k + "\":\"" + v + "\"}'::jsonb");
-            }
-        })
-                .filter(k->k!=null).
+                            return "kv.value=" + arg;
+                        });
+                    } else {
+                        return e.getValue().stream().map(v -> "t.refvalues @> '{\"" + k + "\":\"" + v + "\"}'::jsonb");
+                    }
+                })
+                .filter(k -> k != null).
                 collect(Collectors.joining(" OR "));
 
         if (StringUtils.isNotBlank(cond)) {
@@ -121,7 +112,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                 "    )displays\n" +
                 "where referencetype = :refType\n" +
                 "group by naturalkey";
-        Map<String, Map<String, String>> displayForNaturalKey  = new HashMap<>();
+        Map<String, Map<String, String>> displayForNaturalKey = new HashMap<>();
         List result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("refType", refType), getJsonRowMapper());
         for (Object o : result) {
             final Map<String, List<Map<String, String>>> o1 = (Map<String, List<Map<String, String>>>) o;
@@ -143,14 +134,18 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
 
     public List<List<String>> findReferenceValue(String refType, String column) {
         AtomicInteger ai = new AtomicInteger(0);
+        final MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType);
         String select = Stream.of(column.split(","))
-                .map(c -> String.format("refValues->>'%1$s' as \"%1$s"+ai.getAndIncrement()+"\"", c))
+                .map(c -> {
+                    mapSqlParameterSource.addValue("v" + ai.get(), c);
+                    return "refValues->>:v" + ai.get() + " as \"%1$s" + ai.getAndIncrement() + "\"";
+                })
                 .collect(Collectors.joining(", "));
         String sqlPattern = " SELECT %s "
                 + " FROM " + getTable().getSqlIdentifier() + " t"
                 + " WHERE application=:applicationId::uuid AND referenceType=:refType";
         String query = String.format(sqlPattern, select);
-        List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType))
+        List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, mapSqlParameterSource)
                 .stream()
                 .map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList()))
                 .collect(Collectors.toList());
@@ -179,10 +174,10 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         return findAllByReferenceType(referenceType).stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
     }
 
-    public List<ApplicationResult.ReferenceSynthesis> buildReferenceSynthesis(){
+    public List<ApplicationResult.ReferenceSynthesis> buildReferenceSynthesis() {
         String query = "select \n" +
                 "referencetype referenceType, count(*) lineCount \n" +
-                "from "+getTable().getSqlIdentifier()+"\n" +
+                "from " + getTable().getSqlIdentifier() + "\n" +
                 "group by referencetype";
         return getNamedParameterJdbcTemplate().query(query, ImmutableMap.of(), BeanPropertyRowMapper.newInstance(ApplicationResult.ReferenceSynthesis.class));
     }
@@ -196,8 +191,33 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                 , "where id in (:ids)"
                 , "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING"
         );
-        String sql = String.join(";", insertSql, deleteSql);
+        String sql = String.join(";", deleteSql, insertSql);
         Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE - 1)
                 .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
+    }
+
+    public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Set<String> listOfIds) {
+        if(listOfIds.isEmpty()){
+            return new HashMap<>();
+        }
+       String sql =  "SELECT  DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(r) as json \n" +
+                "from "+getSchema().getSqlIdentifier()+".data_reference dr\n" +
+                "join "+getSchema().getSqlIdentifier()+".\"data\" d on dr.dataid = d.id\n" +
+                "join "+getTable().getSqlIdentifier()+" r on dr.referencedby = r.id\n"+
+                "where d.rowid in (:list)";
+        final List<ReferenceValue> list = getNamedParameterJdbcTemplate()
+                .query(sql, new MapSqlParameterSource().addValue("list", listOfIds), getJsonRowMapper());
+        final Map<Ltree, List<ReferenceValue>> referencesValuesMap = list.stream()
+                .collect(Collectors.groupingBy(
+                                ReferenceValue::getNaturalKey
+                        )
+                );
+        referencesValuesMap.putAll(list.stream()
+                .collect(Collectors.groupingBy(
+                                ReferenceValue::getHierarchicalKey
+                        )
+                )
+        );
+        return referencesValuesMap;
     }
 }

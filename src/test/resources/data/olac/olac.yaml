@@ -174,8 +174,9 @@ dataTypes:
       date:
         components:
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: >
+                return datum.date.day +" " +datum.date.time+ ":00"
             checker:
               name: Date
               params:
@@ -663,8 +664,8 @@ dataTypes:
       dates:
         components:
           datetime:
-            defaultValue: >
-              return datumByVariableAndComponent.dates.day +" " +datumByVariableAndComponent.dates.time
+            defaultValue:
+              expression: return datum.dates.day +" " +datum.dates.time
             checker:
               name: Date
               params:

@@ -49,13 +49,21 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -285,9 +293,9 @@ public class OreSiResourcesTest {
                     //     .andExpect(content().string(expectedCsv))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualCsv, 50));
-            List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r+\n"))
+            List<String> actualCsvToList = Arrays.stream(actualCsv.split("\r?\n"))
                     .collect(Collectors.toList());
-            List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r+\n"))
+            List<String> expectedCsvToList = Arrays.stream(expectedCsv.split("\r?\n"))
                     .collect(Collectors.toList());
             Assert.assertEquals(expectedCsvToList.size(), actualCsvToList.size());
             actualCsvToList.forEach(expectedCsvToList::remove);

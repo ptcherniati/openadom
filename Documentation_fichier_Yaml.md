@@ -131,21 +131,21 @@ Elle comporte une description et un checker (Reference, Integer, Float, RegularE
           name: Reference #Le checker à utiliser
           params: #liste de paramètres (dépend du checker choisi)
             refType: projet #pour le checker référence la donnée référencée
-            columns: nom du projet #liste des colonnes sur lequel s'applique le checker
+        columns: [nom du projet] #liste des colonnes sur lequel s'applique le checker
       sitesRef:
         description: "référence au site"
         checker:
           name: Reference
           params:
             refType: sites
-            columns: nom du site
+        columns: [nom du site]
       themesRef:
         description: "référence au theme"
         checker:
           name: Reference
           params:
             refType: themes
-            columns: nom du thème
+        columns: [nom du thème]
 
       checkDatatype:
         description: "test"
@@ -164,16 +164,19 @@ Elle comporte une description et un checker (Reference, Integer, Float, RegularE
 | columns | X | X | X |  | X | La colonne dans laquelle on prend la valeur | 
 | refTypes | X | |  |  |  | Le référentiels de jointure | 
 | pattern |  | |  |  | X | Le pattern pour une expression régulière | 
-| codify | X | X | X |  | X | Le contenu de la colonne est codifié | 
 | required | X | X | X |  | X | Le contenu de la colonne ne peut être vide | 
-| groovy |  | |  | X |  | une section pour le traitement d'une expression groovy | 
 | replace |  | |  | X |  | l'expression groovy renvoie un résultat au lieu d'un booléen | 
 
 
 La section groovy accepte trois paramètres
-expression : une expression groovy (pour le checker GroovyExpression doit renvoyer true. Ou remplace la valeur actuelle pour les autres checkers)
+expression : une expression groovy (pour le checker GroovyExpression doit renvoyer true si la valeur est valide)
 references : une liste de référentiels pour lesquels on veut disposer des valeurs dans l'expression
 datatypes : une liste de datatypes pour lesquels on veut disposer des valeurs dans l'expression
+transformation: la configuration de la transformation à appliquer avant le contrôle 
+
+Cette transformation peut être configurée avec
+- codify : la valeur sera alors échappée pour être transformée en clé naturelle
+- groovy : permet de déclarer une transformation de la valeur avec une expression Groovy (qui doit retourner une chaîne de caractère)
 
 
 Pour les checkers GroovyExpression, on récupère dans le script des informations :
@@ -308,7 +311,7 @@ references:
           name: Reference
           params:
             refType: modalites
-            columns: modalites
+        columns: [ modalites ]
             codify: true
             multiplicity: MANY
 ```
@@ -392,8 +395,8 @@ On décrit un format pour stocker les données sous la forment
         components:
           datetime:
             #calcul d'une valeur par défaut date+time avec une expression groovy
-            defaultValue: >
-              return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+            defaultValue:
+              expression: return datum.date.day + " " + datum.date.time + ":00"
           day:
             checker:
               name: Date
@@ -441,8 +444,8 @@ Les *variables/components* sont passés dans la map *datum*. On récupère la va
           name: GroovyExpression
           params:
           	groovy:
-	            expression: >
-	              Set.of("", "0", "1", "2").contains(datum.get("SWC").get("qualité"))
+	          expression: >
+	            Set.of("", "0", "1", "2").contains(datum.get("SWC").get("qualité"))
 ```
 
 Cette formulation vérifie que la valeur du component qualité de la variable SWC est vide ou égale à 0,1 ou 2
@@ -471,18 +474,18 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
         checker:
           name: GroovyExpression
           params:
-          groovy:
-            expression: >
-	            String datatype= "piegeage_en_montee"
-	            String variable= "Nombre d'individus"
-	            String codeVariable= "nombre_d_individus"
-	            String component= "unit"
-	              return referencesValues.get("variables_et_unites_par_types_de_donnees")
-	              .findAll{it.get("nom du type de données").equals(datatype)}
-	              .find{it.get("nom de la variable").equals(codeVariable)}
-	              .get("nom de l'unité").equals(datum.variable.component);
-            references: 
-            	- variables_et_unites_par_types_de_donnees
+            groovy:
+              expression: >
+  	            String datatype= "piegeage_en_montee"
+  	            String variable= "Nombre d'individus"
+  	            String codeVariable= "nombre_d_individus"
+  	            String component= "unit"
+  	              return referencesValues.get("variables_et_unites_par_types_de_donnees")
+  	              .findAll{it.get("nom du type de données").equals(datatype)}
+  	              .find{it.get("nom de la variable").equals(codeVariable)}
+  	              .get("nom de l'unité").equals(datum.variable.component);
+              references: 
+              	- variables_et_unites_par_types_de_donnees
 ``` 
 Des valeurs peuvent être définies dans l'expression.
 
@@ -773,7 +776,8 @@ On declare cette variable dans la section data
               params:
                 required: false
           unit:
-            defaultValue: return "percentage"
+            defaultValue:
+              expression: return "percentage"
             checker:
               name: Reference
               params:

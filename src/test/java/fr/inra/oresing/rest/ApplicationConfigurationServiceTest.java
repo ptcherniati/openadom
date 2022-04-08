@@ -157,12 +157,12 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownReferenceInCompositereference() {
+    public void testUnknownReferenceInCompositeReference() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: typeDeSites");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownReferenceInCompositereference", onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceInCompositeReference", onlyError.getMessage());
     }
 
     @Test
@@ -385,7 +385,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("missingRequiredExpression", onlyError.getMessage());
+        Assert.assertEquals("missingRequiredExpressionForValidationRuleInDataType", onlyError.getMessage());
     }
 
     @Test
@@ -394,7 +394,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("illegalGroovyExpression", onlyError.getMessage());
+        Assert.assertEquals("illegalGroovyExpressionForValidationRuleInDataType", onlyError.getMessage());
     }
 
     @Test
@@ -403,7 +403,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownCheckerName", onlyError.getMessage());
+        Assert.assertEquals("unknownCheckerNameForValidationRuleInDataType", onlyError.getMessage());
     }
 
     @Test
@@ -576,5 +576,28 @@ public class ApplicationConfigurationServiceTest {
         log.debug(onlyError.getMessage());
         Assert.assertEquals("missingKeyColumnsForReference", onlyError.getMessage());
         Assert.assertEquals("projets", onlyError.getMessageParams().get("reference"));
+    }
+
+    @Test
+    public void testIllegalCheckerConfigurationParameterForVariableComponentChecker() {
+        String toReplace = "checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: dd/MM/yyyy";
+        String replacement = "checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: dd/MM/yyyy\n" +
+                "                refType: peu_importe_refType_n_a_pas_de_sens";
+        ConfigurationParsingResult configurationParsingResult = parseYaml(toReplace, replacement);
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("illegalCheckerConfigurationParameterForVariableComponentChecker", onlyError.getMessage());
+        Assert.assertEquals("site", onlyError.getMessageParams().get("dataType"));
+        Assert.assertEquals("date", onlyError.getMessageParams().get("datum"));
+        Assert.assertEquals("day", onlyError.getMessageParams().get("component"));
+        Assert.assertEquals("Date", onlyError.getMessageParams().get("checkerName"));
+        Assert.assertEquals("refType", onlyError.getMessageParams().get("parameterName"));
     }
 }

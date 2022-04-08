@@ -1,23 +1,68 @@
 package fr.inra.oresing.rest;
 
-import com.google.common.base.*;
-import com.google.common.collect.*;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.*;
-import fr.inra.oresing.groovy.CommonExpression;
+import fr.inra.oresing.checker.CheckerFactory;
+import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.checker.FloatChecker;
+import fr.inra.oresing.checker.IntegerChecker;
+import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.checker.LineChecker;
+import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.model.BinaryFile;
+import fr.inra.oresing.model.BinaryFileDataset;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.Data;
+import fr.inra.oresing.model.Datum;
+import fr.inra.oresing.model.LocalDateTimeRange;
+import fr.inra.oresing.model.ReferenceColumn;
+import fr.inra.oresing.model.ReferenceColumnSingleValue;
+import fr.inra.oresing.model.ReferenceColumnValue;
+import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.DataSynthesisRepository;
+import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
-import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -43,12 +88,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Duration;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -72,9 +133,6 @@ public class OreSiService {
     private AuthenticationService authenticationService;
 
     @Autowired
-    private TransformerFactory transformerFactory;
-
-    @Autowired
     private CheckerFactory checkerFactory;
 
     @Autowired
@@ -94,6 +152,9 @@ public class OreSiService {
 
     @Autowired
     private GroovyContextHelper groovyContextHelper;
+
+    @Autowired
+    private ReferenceService referenceService;
 
     /**
      * @deprecated utiliser directement {@link Ltree#escapeToLabel(String)}
@@ -311,114 +372,10 @@ public class OreSiService {
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         authenticationService.setRoleForClient();
         UUID fileId = storeFile(app, file, "");
-        final ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(app, refType);
-        ReferenceImporter referenceImporter = new ReferenceImporter(referenceImporterContext) {
-            @Override
-            void storeAll(Stream<ReferenceValue> stream) {
-                final List<UUID> uuids = referenceValueRepository.storeAll(stream);
-                referenceValueRepository.updateConstraintForeignReferences(uuids);
-            }
-        };
-        referenceImporter.doImport(file, fileId);
+        referenceService.addReference(app, refType, file, fileId);
         return fileId;
-    }
-
-    private ReferenceImporterContext getReferenceImporterContext(Application app, String refType) {
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
-        Configuration conf = app.getConfiguration();
-        ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
-        final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
-
-        ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
-                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget().getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
-
-        Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
-
-        Stream<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().entrySet().stream()
-                .map(entry -> {
-                    ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
-                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
-                    ColumnPresenceConstraint presenceConstraint = MoreObjects.firstNonNull(entry.getValue(), new Configuration.ReferenceColumnDescription()).getPresenceConstraint();
-                    ReferenceImporterContext.Column column;
-                    if (multiplicity == Multiplicity.ONE) {
-                        column = new ReferenceImporterContext.OneValueStaticColumn(referenceColumn, presenceConstraint);
-                    } else if (multiplicity == Multiplicity.MANY) {
-                        column = new ReferenceImporterContext.ManyValuesStaticColumn(referenceColumn, presenceConstraint);
-                    } else {
-                        throw new IllegalStateException("multiplicity = " + multiplicity);
-                    }
-                    return column;
-                });
-
-        Stream<ReferenceImporterContext.Column> dynamicColumns = referenceDescription.getDynamicColumns().entrySet().stream()
-                .flatMap(entry -> {
-                    ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
-                    Configuration.ReferenceDynamicColumnDescription value = entry.getValue();
-                    String reference = value.getReference();
-                    ReferenceColumn referenceColumnToLookForHeader = new ReferenceColumn(value.getReferenceColumnToLookForHeader());
-                    List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(reference);
-                    Stream<ReferenceImporterContext.Column> valuedDynamicColumns = allByReferenceType.stream()
-                            .map(referenceValue -> {
-                                ReferenceDatum referenceDatum = referenceValue.getRefValues();
-                                Ltree hierarchicalKey = referenceValue.getHierarchicalKey();
-                                ReferenceColumnSingleValue referenceColumnValue = (ReferenceColumnSingleValue) referenceDatum.get(referenceColumnToLookForHeader);
-                                String header = referenceColumnValue.getValue();
-                                String fullHeader = value.getHeaderPrefix() + header;
-                                ColumnPresenceConstraint presenceConstraint = value.getPresenceConstraint();
-                                return new ReferenceImporterContext.DynamicColumn(
-                                        referenceColumn,
-                                        fullHeader,
-                                        presenceConstraint,
-                                        hierarchicalKey,
-                                        Map.entry(reference, referenceValue.getId())
-                                );
-                            });
-                    return valuedDynamicColumns;
-                });
-
-        ImmutableMap<String, ReferenceImporterContext.Column> columns =
-                Stream.concat(staticColumns, dynamicColumns)
-                        .collect(ImmutableMap.toImmutableMap(
-                                ReferenceImporterContext.Column::getExpectedHeader,
-                                Function.identity()
-                        ));
-        final ReferenceImporterContext.Constants constants = new ReferenceImporterContext.Constants(
-                app.getId(),
-                conf,
-                refType,
-                repo.getRepository(app).referenceValue());
-    /*    final Set<Object> patternColumns = constants.getPatternColumns()
-                .map(pt -> pt.values())
-                .flatMap(Collection::stream)
-                .stream().collect(Collectors.toSet());*/
-        Set<String> patternColumns = constants.getPatternColumns()
-                .map(m->m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
-                .orElseGet(HashSet::new);
-        final Map<String, String> referenceToColumnName = lineCheckers.stream()
-                .filter(ReferenceLineChecker.class::isInstance)
-                .map(ReferenceLineChecker.class::cast)
-                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) referenceLineChecker.getTarget().getTarget()).getColumn()));
-        final Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey =
-                lineCheckers.stream()
-                .filter(ReferenceLineChecker.class::isInstance)
-                .map(ReferenceLineChecker.class::cast)
-                .map(ReferenceLineChecker::getRefType)
-                .filter(rt -> patternColumns.contains(rt))
-                .collect(Collectors.toMap(ref -> referenceToColumnName.getOrDefault(ref, ref), ref -> repo.getRepository(app).referenceValue().findDisplayByNaturalKey(ref)));
-        final ReferenceImporterContext referenceImporterContext =
-                new ReferenceImporterContext(
-                        constants,
-                        lineCheckers,
-                        storedReferences,
-                        columns,
-                        displayByReferenceAndNaturalKey
-                );
-        return referenceImporterContext;
     }
 
     HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(Application application, String lowestLevelReference) {
@@ -561,7 +518,7 @@ public class OreSiService {
             AtomicLong lines = new AtomicLong();
             final Instant debut = Instant.now();
             final DataRepository dataRepository = repo.getRepository(app).data();
-            dataRepository
+            final List<UUID> uuids = dataRepository
                     .storeAll(
                             dataStream
                                     .filter(Objects::nonNull)
@@ -571,6 +528,7 @@ public class OreSiService {
                                         }
                                     })
                     );
+            dataRepository.updateConstraintForeigData(uuids);
             errors.addAll(uniquenessBuilder.getErrors());
             InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         }
@@ -673,7 +631,7 @@ public class OreSiService {
         DateLineChecker timeScopeDateLineChecker = lineCheckers.stream()
                 .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                 .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getTarget().getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
+                .filter(dateLineChecker -> dateLineChecker.getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
                 .collect(MoreCollectors.onlyElement());
 
 
@@ -687,16 +645,16 @@ public class OreSiService {
                 ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget().getTarget();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
                         dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
                     }
                     if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                         ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
-                        if (configuration.getGroovy() != null) {
-                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget().getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
+                        if (configuration.getTransformation().getGroovy() != null) {
+                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
                         }
                         ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget().getTarget();
+                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
                         UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                         refsLinkedTo.put(variableComponentKey, referenceId);
                     }
@@ -826,41 +784,13 @@ public class OreSiService {
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
     private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, String> requiredAuthorizations) {
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
-        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
-        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = getDefaultValueExpressions(dataTypeDescription, requiredAuthorizations);
-        Map<String, Configuration.ColumnDescription> data = dataTypeDescription.getData();
-        Map<VariableComponentKey, Function<Datum, String>> defaultValueFns = new LinkedHashMap<>();
-        Set<VariableComponentKey> replaceEnabled = new LinkedHashSet<>();
-        for (Map.Entry<VariableComponentKey, Expression<String>> entry : defaultValueExpressions.entrySet()) {
-            VariableComponentKey variableComponentKey = entry.getKey();
-            Expression<String> expression = entry.getValue();
-            Configuration.VariableComponentDescriptionConfiguration params = Optional.ofNullable(data)
-                    .map(columnDescriptionLinkedHashMap -> columnDescriptionLinkedHashMap.get(variableComponentKey.getVariable()))
-                    .map(columnDescription -> columnDescription.getComponents())
-                    .map(variableComponentDescriptionLinkedHashMap -> variableComponentDescriptionLinkedHashMap.get(variableComponentKey.getComponent()))
-                    .map(variableComponentDescription -> variableComponentDescription.getParams())
-                    .orElseGet(Configuration.VariableComponentDescriptionConfiguration::new);
-            Set<String> configurationReferences = params.getReferences();
-            ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
-            Preconditions.checkState(params.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
-            Function<Datum, String> computeDefaultValueFn = datum -> {
-                ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
-                        .putAll(contextForExpression)
-                        .putAll(datum.getEvaluationContext())
-                        .build();
-                String evaluate = expression.evaluate(evaluationContext);
-                return evaluate;
-            };
-            defaultValueFns.put(variableComponentKey, computeDefaultValueFn);
-            if (params.isReplace()) {
-                replaceEnabled.add(variableComponentKey);
-            }
-        }
+        ComputedValuesContext computedValuesContext = getComputedValuesContext(app, dataType, requiredAuthorizations);
+        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns = computedValuesContext.getDefaultValueFns();
+        ImmutableSet<VariableComponentKey> replaceEnabled = computedValuesContext.getReplaceEnabled();
         return rowWithData -> {
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>();
             Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap<>(rowWithData.getDatum().asMap());
-            defaultValueFns.entrySet().stream()
+            defaultValueFns.entrySet()
                     .forEach(variableComponentKeyExpressionEntry -> {
                         VariableComponentKey variableComponentKey = variableComponentKeyExpressionEntry.getKey();
                         Function<Datum, String> computeDefaultValueFn = variableComponentKeyExpressionEntry.getValue();
@@ -1108,48 +1038,74 @@ public class OreSiService {
         }
     }
 
-    private ImmutableMap<VariableComponentKey, Expression<String>> getDefaultValueExpressions(Configuration.DataTypeDescription dataTypeDescription, Map<String, String> requiredAuthorizations) {
-        ImmutableMap.Builder<VariableComponentKey, Expression<String>> defaultValueExpressionsBuilder = ImmutableMap.builder();
-
-        List<String> variableComponentsFromRepository = new LinkedList<>();
+    private ComputedValuesContext getComputedValuesContext(Application app, String dataType, Map<String, String> requiredAuthorizations) {
+        Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
+        ImmutableMap.Builder<VariableComponentKey, Function<Datum, String>> defaultValueFnsBuilder = ImmutableMap.builder();
+        ImmutableSet.Builder<VariableComponentKey> replaceEnabledBuilder = ImmutableSet.builder();
+        Set<VariableComponentKey> variableComponentsFromRepository = new LinkedHashSet<>();
         if (requiredAuthorizations != null) {
             for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
                 Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
                 VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String value = entry.getValue();
-                defaultValueExpressionsBuilder.put(variableComponentKey, StringGroovyExpression.forExpression("\"" + value + "\""));
-                variableComponentsFromRepository.add(variableComponentKey.getId());
+                defaultValueFnsBuilder.put(variableComponentKey, datum -> value);
+                variableComponentsFromRepository.add(variableComponentKey);
             }
         }
-        for (Map.Entry<String, Configuration.ColumnDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
+        for (Map.Entry<String, Configuration.VariableDescription> variableEntry : dataTypeDescription.getData().entrySet()) {
             String variable = variableEntry.getKey();
-            Configuration.ColumnDescription variableDescription = variableEntry.getValue();
-            for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.getComponents().entrySet()) {
+            Configuration.VariableDescription variableDescription = variableEntry.getValue();
+            for (Map.Entry<String, Configuration.VariableComponentWithDefaultValueDescription> componentEntry : variableDescription.getComponents().entrySet()) {
                 String component = componentEntry.getKey();
-                Configuration.VariableComponentDescription componentDescription = componentEntry.getValue();
+                Configuration.VariableComponentWithDefaultValueDescription componentDescription = componentEntry.getValue();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                if (variableComponentsFromRepository.contains(variableComponentKey.getId())) {
+                if (variableComponentsFromRepository.contains(variableComponentKey)) {
                     continue;
                 }
-                Expression<String> defaultValueExpression;
-                if (componentDescription == null) {
-                    defaultValueExpression = CommonExpression.EMPTY_STRING;
-                } else {
-                    String defaultValue = componentDescription.getDefaultValue();
-                    if (StringUtils.isEmpty(defaultValue)) {
-                        defaultValueExpression = CommonExpression.EMPTY_STRING;
-                    } else {
-                        defaultValueExpression = StringGroovyExpression.forExpression(defaultValue);
-                    }
+                Optional.ofNullable(componentDescription)
+                        .map(Configuration.VariableComponentWithDefaultValueDescription::getDefaultValue)
+                        .map(defaultValueConfiguration -> getEvaluateGroovyWithContextFunction(app, defaultValueConfiguration))
+                        .ifPresent(computeDefaultValueFn -> defaultValueFnsBuilder.put(variableComponentKey, computeDefaultValueFn));
+            }
+            for (Map.Entry<String, Configuration.ComputedVariableComponentDescription> computedComponentEntry : variableDescription.getComputedComponents().entrySet()) {
+                String component = computedComponentEntry.getKey();
+                Configuration.ComputedVariableComponentDescription componentDescription = computedComponentEntry.getValue();
+                VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                if (variableComponentsFromRepository.contains(variableComponentKey)) {
+                    continue;
                 }
-                defaultValueExpressionsBuilder.put(variableComponentKey, defaultValueExpression);
+                Configuration.GroovyConfiguration computation = Optional.ofNullable(componentDescription)
+                        .map(Configuration.ComputedVariableComponentDescription::getComputation)
+                        .orElseThrow();
+                Function<Datum, String> computeDefaultValueFn = getEvaluateGroovyWithContextFunction(app, computation);
+                defaultValueFnsBuilder.put(variableComponentKey, computeDefaultValueFn);
+                replaceEnabledBuilder.add(variableComponentKey);
             }
         }
-        ImmutableMap<VariableComponentKey, Expression<String>> defaultValueExpressions = defaultValueExpressionsBuilder.build();
-        if (log.isDebugEnabled()) {
-            //log.debug("expressions des valeurs par défaut détectées pour " + dataTypeDescription + " = " + defaultValueExpressions);
-        }
-        return defaultValueExpressions;
+        return new ComputedValuesContext(defaultValueFnsBuilder.build(), replaceEnabledBuilder.build());
+    }
+
+    private Function<Datum, String> getEvaluateGroovyWithContextFunction(Application app, Configuration.GroovyConfiguration computation) {
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
+        Expression<String> defaultValueExpression = StringGroovyExpression.forExpression(computation.getExpression());
+        Set<String> configurationReferences = computation.getReferences();
+        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+        Preconditions.checkState(computation.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
+        Function<Datum, String> computeDefaultValueFn = datum -> {
+            ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
+                    .putAll(contextForExpression)
+                    .putAll(datum.getEvaluationContext())
+                    .build();
+            String evaluate = defaultValueExpression.evaluate(evaluationContext);
+            return evaluate;
+        };
+        return computeDefaultValueFn;
+    }
+
+    @Value
+    private static class ComputedValuesContext {
+        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns;
+        ImmutableSet<VariableComponentKey> replaceEnabled;
     }
 
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
@@ -1169,7 +1125,7 @@ public class OreSiService {
         List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
                 .filter(ch -> ch instanceof DateLineChecker)
                 .map(ch -> (DateLineChecker) ch)
-                .map(ch -> ((VariableComponentKey) ch.getTarget().getTarget()).getId())
+                .map(ch -> ((VariableComponentKey) ch.getTarget()).getId())
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
             columns = allColumns;
@@ -1226,8 +1182,8 @@ public class OreSiService {
                 .build();
     }
 
-    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType, Locale locale) {
-        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType, locale)
+    public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
+        return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
                 .stream()
                 .filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
                 .collect(
@@ -1237,13 +1193,13 @@ public class OreSiService {
                                         c -> {
                                             VariableComponentKey vc;
                                             if (c instanceof DateLineChecker) {
-                                                vc = (VariableComponentKey) ((DateLineChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((DateLineChecker) c).getTarget();
                                             } else if (c instanceof IntegerChecker) {
-                                                vc = (VariableComponentKey) ((IntegerChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((IntegerChecker) c).getTarget();
                                             } else if (c instanceof FloatChecker) {
-                                                vc = (VariableComponentKey) ((FloatChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((FloatChecker) c).getTarget();
                                             } else {
-                                                vc = (VariableComponentKey) ((ReferenceLineChecker) c).getTarget().getTarget();
+                                                vc = (VariableComponentKey) ((ReferenceLineChecker) c).getTarget();
                                             }
                                             return vc.getId();
                                         },
@@ -1278,50 +1234,12 @@ public class OreSiService {
         return repo.application().tryFindApplication(nameOrId);
     }
 
-    /**
-     * @param nameOrId l'id de l'application
-     * @param refType  le type du referenciel
-     * @param params   les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
-     * @return la liste qui satisfont aux criteres
-     */
     public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {
-        authenticationService.setRoleForClient();
-        List<ReferenceValue> list = repo.getRepository(nameOrId).referenceValue().findAllByReferenceType(refType, params);
-        return list;
+        return referenceService.findReference(nameOrId, refType, params);
     }
 
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
-        Application application = getApplication(applicationNameOrId);
-        ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(application, referenceType);
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
-        Stream<ImmutableList<String>> recordsStream = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
-                .map(ReferenceValue::getRefValues)
-                .map(referenceDatum -> {
-                    ImmutableList<String> rowAsRecord = referenceImporterContext.getExpectedHeaders().stream()
-                            .map(header -> referenceImporterContext.getCsvCellContent(referenceDatum, header))
-                            .collect(ImmutableList.toImmutableList());
-                    return rowAsRecord;
-                });
-        ImmutableSet<String> headers = referenceImporterContext.getExpectedHeaders();
-        CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(referenceImporterContext.getCsvSeparator())
-                .withSkipHeaderRecord();
-        StringWriter out = new StringWriter();
-        try {
-            CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-            csvPrinter.printRecord(headers);
-            recordsStream.forEach(record -> {
-                try {
-                    csvPrinter.printRecord(record);
-                } catch (IOException e) {
-                    throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
-                }
-            });
-        } catch (IOException e) {
-            throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
-        }
-        String csv = out.toString();
-        return csv;
+        return referenceService.getReferenceValuesCsv(applicationNameOrId, referenceType, params);
     }
 
     public Optional<BinaryFile> getFile(String name, UUID id) {
@@ -1477,6 +1395,10 @@ public class OreSiService {
         return repo.getRepository(application).referenceValue().buildReferenceSynthesis();
     }
 
+    public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Application application, Set<String> listOfDataIds) {
+        return repo.getRepository(application).referenceValue(). getReferenceDisplaysById(listOfDataIds);
+    }
+
     @Value
     private static class RowWithData {
         int lineNumber;
@@ -1510,8 +1432,8 @@ public class OreSiService {
             }
         }
 
-        private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.ColumnDescription> entry) {
-            return entry.getValue().getComponents().keySet().stream()
+        private Stream<VariableComponentKey> getVariableComponentKeys(Map.Entry<String, Configuration.VariableDescription> entry) {
+            return entry.getValue().doGetAllComponents().stream()
                     .map(componentName -> new VariableComponentKey(entry.getKey(), componentName));
         }
 

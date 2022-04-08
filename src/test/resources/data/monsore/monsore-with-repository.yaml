@@ -63,19 +63,21 @@ references:
   sites:
     validations:
       typeSitesRef:
-        description: référence au type de site
+        internationalizationName:
+          fr: référence au type de site
         checker:
           name: Reference
           params:
             refType: type_de_sites
-            columns: tze_type_nom
+        columns: [ tze_type_nom ]
       siteParentRef:
-        description: référence à la colonne parent
+        internationalizationName:
+          fr: référence à la colonne parent
         checker:
           name: Reference
           params:
             refType: sites
-            columns: zet_chemin_parent
+        columns: [ zet_chemin_parent ]
     keyColumns:
       - zet_chemin_parent
       - zet_nom_key
@@ -185,28 +187,32 @@ references:
           {nom du thème}, data type name : {nom du type de données}
     validations:
       projetRef:
-        description: référence au projet
+        internationalizationName:
+          fr: référence au projet
         checker:
           name: Reference
           params:
             refType: projet
-            columns: nom du projet
+        columns: [ nom du projet ]
       sitesRef:
-        description: référence au site
+        internationalizationName:
+          fr: référence au site
         checker:
           name: Reference
           params:
             refType: sites
-            columns: nom du site
+        columns: [ nom du site ]
       themesRef:
-        description: référence au theme
+        internationalizationName:
+          fr: référence au theme
         checker:
           name: Reference
           params:
             refType: themes
-            columns: nom du thème
+        columns: [ nom du thème ]
       checkDatatype:
-        description: test
+        internationalizationName:
+          fr: test
         checker:
           name: GroovyExpression
           params:
@@ -301,21 +307,24 @@ references:
   variables_et_unites_par_types_de_donnees:
     validations:
       variableRef:
-        description: référence à la variable
+        internationalizationName:
+          fr: référence à la variable
         checker:
           name: Reference
           params:
             refType: variables
-            columns: nom de la variable
+        columns: [ nom de la variable ]
       uniteRef:
-        description: référence à l'unité'
+        internationalizationName:
+          fr: référence à l'unité'
         checker:
           name: Reference
           params:
             refType: unites
-            columns: nom de l'unité
+        columns: [ nom de l'unité ]
       checkDatatype:
-        description: test
+        internationalizationName:
+          fr: test
         checker:
           name: GroovyExpression
           params:
@@ -364,30 +373,31 @@ dataTypes:
                 refType: projet
       site:
         components:
-          bassin:
-            params:
+          bassin: null
+          plateforme: null
+          chemin:
+            defaultValue:
+              expression: >
+                return references.get("sites")
+                .find{it.getRefValues().get("zet_chemin_parent").equals(datum.site.bassin)
+                &&
+                it.getRefValues().get("zet_nom_key").equals(datum.site.plateforme)}
+                .getHierarchicalKey();
               references:
                 - sites
-              replace: true
-            defaultValue: >
-              return references.get("sites")
-              .find{it.getNaturalKey().equals(datumByVariableAndComponent.get("site").get("bassin"))}
-              .getHierarchicalKey();
             checker:
               name: Reference
               params:
                 refType: sites
-          plateforme: null
-          chemin:
-            params:
+        computedComponents:
+          site_bassin:
+            computation:
+              expression: >
+                return references.get("sites")
+                .find{it.getNaturalKey().equals(datum.site.bassin)}
+                .getHierarchicalKey();
               references:
                 - sites
-            defaultValue: >
-              return references.get("sites")
-              .find{it.getRefValues().get("zet_chemin_parent").equals(datumByVariableAndComponent.get("site").get("bassin"))
-              &&
-              it.getRefValues().get("zet_nom_key").equals(datumByVariableAndComponent.get("site").get("plateforme"))}
-              .getHierarchicalKey();
             checker:
               name: Reference
               params:
@@ -415,7 +425,8 @@ dataTypes:
               params:
                 refType: valeurs_qualitatives
           unit:
-            defaultValue: return "sans_unite"
+            defaultValue:
+              expression: return "sans_unite"
             checker:
               name: Reference
               params:
@@ -424,13 +435,15 @@ dataTypes:
       Nombre d'individus:
         components:
           value:
-            defaultValue: return 0
+            defaultValue:
+              expression: return 0
             checker:
               name: Integer
               params:
                 required: null
           unit:
-            defaultValue: return "sans_unite"
+            defaultValue:
+              expression: return "sans_unite"
             checker:
               name: Reference
               params:
@@ -438,7 +451,8 @@ dataTypes:
                 required: null
     validations:
       unitOfColor:
-        description: vérifie l'unité de la couleur des individus
+        internationalizationName:
+          fr: vérifie l'unité de la couleur des individus
         checker:
           name: GroovyExpression
           params:
@@ -455,7 +469,8 @@ dataTypes:
               references:
                 - variables_et_unites_par_types_de_donnees
       unitOfIndividus:
-        description: vérifie l'unité du nombre d'individus
+        internationalizationName:
+          fr: vérifie l'unité du nombre d'individus
         checker:
           name: GroovyExpression
           params:

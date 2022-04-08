@@ -19,34 +19,40 @@
         ${variable}:
           components:
             variable:
-              defaultValue: return "SMP"
+              defaultValue:
+                expression: return "SMP"
               checker:
                 name: Reference
                 params:
                   refType: variables
                   required: true
-                  codify: true
+                  transformation:
+                    codify: true
             value:
               checker:
                 name: Float
                 params:
                   required: false
             unit:
-              defaultValue: return "kilopascal"
+              defaultValue:
+                expression: return "kilopascal"
               checker:
                 name: Reference
                 params:
                   refType: unites
                   required: true
-                  codify: true
+                  transformation:
+                    codify: true
             profondeur:
-              defaultValue: return "${profondeur}"
+              defaultValue:
+                expression: return "${profondeur}"
               checker:
                 name: Float
                 params:
                   required: false
             repetition:
-              defaultValue: return "${répétition}"
+              defaultValue:
+                expression: return "${répétition}"
               checker:
                 name: Integer
                 params:
@@ -79,48 +85,53 @@
           checker:
             name: Reference
             params:
-              codify: true
+              transformation:
+                codify: true
               refType: zones_etudes
               required: false
         zones_etudes:
           checker:
             name: Reference
             params:
-              groovy: >
-                String parent = datumByVariableAndComponent.localization.zones_etudes_parent;
-                String nom = datumByVariableAndComponent.localization.zones_etudes;
-                String hierarchicalKey = ""; 
-                if ("".equals(nom)){
-                  hierarchicalKey = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent);
-                }else{
-                  parent = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(parent)
-                  nom = fr.inra.oresing.rest.OreSiService.escapeKeyComponent(nom)
-                  hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
-                }
-                
-                return references
-                .find{it.key.equals("zones_etudes")}.value
-                .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
-              references: zones_etudes
-              codify: true
+              transformation:
+                groovy: >
+                  String parent = datum.localization.zones_etudes_parent;
+                  String nom = datum.localization.zones_etudes;
+                  String hierarchicalKey = ""; 
+                  if ("".equals(nom)){
+                    hierarchicalKey = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent);
+                  }else{
+                    parent = fr.inra.oresing.persistence.Ltree.escapeToLabel(parent)
+                    nom = fr.inra.oresing.persistence.Ltree.escapeToLabel(nom)
+                    hierarchicalKey = String.format("%s.%s__%s", parent, parent, nom)
+                  }
+                  
+                  return references
+                  .find{it.key.equals("zones_etudes")}.value
+                  .find {it.hierarchicalKey.equals(hierarchicalKey)} .hierarchicalKey
+                references: zones_etudes
+                codify: true
               refType: zones_etudes
               required: true
     informations:
       components:
         thematic:
-          defaultValue: return "climat du sol"
+          defaultValue:
+            expression: return "climat du sol"
           checker:
             name: Reference
             params:
               refType: themes
-              codify: true
+              transformation:
+                codify: true
         frequency:
           checker:
             name: RegularExpression
             params:
               pattern: infrajournalier
               required: true
-              codify: true
+              transformation:
+                codify: true
         start date:
           checker:
             name: Date
@@ -155,8 +166,9 @@
             params:
               pattern: HH:mm
         datetime:
-          defaultValue: >
-            return datumByVariableAndComponent.get("date").get("day") +" " +datumByVariableAndComponent.get("date").get("time")+ ":00"
+          defaultValue:
+            expression: >
+              return datum.date.day +" " +datum.date.time+ ":00"
           checker:
             name: Date
             params:

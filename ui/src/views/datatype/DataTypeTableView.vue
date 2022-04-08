@@ -253,7 +253,7 @@
                   {{ variable.id }}
                 </p>
                 <a class="card-header-icon">
-                  <b-icon :icon="props.open ? 'sort-down' : 'sort-up'"> </b-icon>
+                  <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"> </b-icon>
                 </a>
               </div>
             </template>
@@ -554,6 +554,7 @@ export default class DataTypeTableView extends Vue {
       this.params
     );
     this.referenceLineCheckers = dataTypes.checkedFormatVariableComponents.ReferenceLineChecker;
+
     this.translations = dataTypes.entitiesTranslations;
     this.data;
     this.refsLinkedTo = dataTypes.rows.reduce((acc, d) => {
@@ -612,26 +613,31 @@ export default class DataTypeTableView extends Vue {
   }
 
   getTranslation(row, component) {
-    let reference = component.checker.refType;
-    let translations = this.translations?.[reference];
-    console.log(translations);
     let translation = row[component.variable][component.component];
     return translation;
   }
   async getReferenceValues(row, component) {
     const rowId = this.getRefsLinkedToId(row, component);
-    const variable = component.checker.refType;
+    const refType = component.checker.referenceLineChecker.refType;
+    const key = component.key;
     if (!this.loadedReferences[rowId]) {
-      let params = { _row_id_: [rowId] };
-      if (!variable) {
-        params.any = true;
+      let refvalues;
+      if (this.referenceLineCheckers[key]){
+        refvalues = this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum
       }
-      const reference = await this.referenceService.getReferenceValues(
-        this.applicationName,
-        variable,
-        params
-      );
-      const data = Object.entries(reference.referenceValues[0].values)
+      if (!refvalues){
+        let params = { _row_id_: [rowId] };
+        if (!refType) {
+          params.any = true;
+        }
+        const reference = await this.referenceService.getReferenceValues(
+            this.applicationName,
+            refType,
+            params
+        );
+        refvalues = reference.referenceValues[0].values
+      }
+      const data = Object.entries(refvalues)
         .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
         .reduce((acc, entry) => {
           acc.push(entry);
@@ -651,7 +657,7 @@ export default class DataTypeTableView extends Vue {
           },
         ],
         active: true,
-        reference: variable,
+        reference: refType,
       };
       this.loadedReferences = {
         ...this.loadedReferences,
@@ -811,9 +817,10 @@ export default class DataTypeTableView extends Vue {
   getDisplay(row, variable, component) {
     var key = variable + "_" + component;
     var value = row[variable][component];
+    var lang = '__display_'+localStorage.getItem('lang')
     if (this.referenceLineCheckers[key]) {
-      if (this.referenceLineCheckers[key].display) {
-        var display = this.referenceLineCheckers[key].display[value];
+      if (this.referenceLineCheckers[key].referenceValue && this.referenceLineCheckers[key].referenceValue.refValues ) {
+        var display = this.referenceLineCheckers[key].referenceValue.refValues.evaluationContext.datum[lang];
         return display ? display : value;
       }
     }

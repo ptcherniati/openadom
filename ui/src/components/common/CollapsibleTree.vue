@@ -1,10 +1,10 @@
 <template>
-  <div style="margin-bottom: 10px; border: 1px solid white">
+  <div>
     <div
       :class="`columns CollapsibleTree-header ${
         option.children && option.children.length !== 0 ? 'clickable' : ''
       } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
-      :style="`background-color:rgba(240, 245, 245, ${1 - level / 2})`"
+      :style="`margin:0px;`"
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
@@ -43,7 +43,7 @@
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
-          <span class="file-name" v-else-if="lineCount>0">
+          <span class="file-name" v-else-if="lineCount > 0">
             {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
@@ -101,8 +101,12 @@
             @click="repositoryRedirect(option.label)"
             type="is-info"
           >
-            <span class="file-cta" style=" border-color: transparent; background-color: transparent">
-              <b-icon class="file-icon" icon="archive" style="font-size: 0.75rem; color: white"></b-icon>
+            <span class="file-cta" style="border-color: transparent; background-color: transparent">
+              <b-icon
+                class="file-icon"
+                icon="archive"
+                style="font-size: 0.75rem; color: white"
+              ></b-icon>
             </span>
           </b-button>
         </div>
@@ -132,6 +136,7 @@
       :radioName="radioName"
       @optionChecked="onInnerOptionChecked"
       :applicationTitle="applicationTitle"
+      :lineCount = child.lineCountChild
     />
   </div>
 </template>
@@ -155,7 +160,7 @@ export default class CollapsibleTree extends Vue {
   @Prop() radioName;
   @Prop() repository;
   @Prop() repositoryRedirect;
-  @Prop( { default: 0 }) lineCount;
+  @Prop({ default: 0 }) lineCount;
   @Prop({ default: null }) applicationTitle;
 
   displayChildren = false;
@@ -166,7 +171,6 @@ export default class CollapsibleTree extends Vue {
   onInnerOptionChecked(value) {
     this.$emit("optionChecked", value);
   }
-
   stopPropagation(event) {
     event.stopPropagation();
   }
@@ -196,13 +200,15 @@ $row-height: 40px;
   align-items: center;
   padding: 0.75rem;
 }
+.CollapsibleTree-header.clickable {
+  border-bottom: 0.35rem solid white;
+}
 .CollapsibleTree-header {
   display: flex;
   align-items: center;
   height: $row-height;
   padding: 0.75rem;
   justify-content: space-between;
-  margin: -7px;
 
   .file-icon {
     margin-right: 0;

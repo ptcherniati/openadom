@@ -33,7 +33,7 @@ public class FloatChecker implements CheckerOnOneVariableComponentLineChecker<Fl
         } catch (NumberFormatException e) {
             validationCheckResult = DefaultValidationCheckResult.error(
                     getTarget().getInternationalizedKey("invalidFloat"), ImmutableMap.of(
-                            "target", target.getTarget(),
+                            "target", target,
                             "value", value));
         }
         return validationCheckResult;

@@ -12,4 +12,5 @@ public class  InternationalizationDataTypeMap {
     Map<String, Internationalization> internationalizedColumns;
     InternationalizationAuthorisationMap authorization;
     Map<String, InternationalizationDisplay> internationalizationDisplay;
+    Map<String, Internationalization> internationalizedValidations;
 }

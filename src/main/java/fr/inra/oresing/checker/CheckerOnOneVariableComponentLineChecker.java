@@ -23,13 +23,13 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
 
     default ValidationCheckResult check(Datum datum) {
         Datum transformedDatum = getTransformer().transform(datum);
-        VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget().getTarget();
+        VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget();
         String value = transformedDatum.get(variableComponentKey);
         ValidationCheckResult validationCheckResult;
         if (Strings.isNullOrEmpty(value)) {
             if (getConfiguration().isRequired()) {
                 CheckerTarget target = getTarget();
-                validationCheckResult = DefaultValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target.getTarget()));
+                validationCheckResult = DefaultValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target));
             } else {
                 validationCheckResult = DefaultValidationCheckResult.success();
             }
@@ -42,7 +42,7 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
     @Override
     default Set<ValidationCheckResult> checkReference(ReferenceDatum referenceDatum) {
         ReferenceDatum transformedReferenceDatum = getTransformer().transform(referenceDatum);
-        final ReferenceColumn column = (ReferenceColumn) getTarget().getTarget();
+        final ReferenceColumn column = (ReferenceColumn) getTarget();
         final Collection<String> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
         final Set<ValidationCheckResult> validationCheckResults = valuesToCheck.stream()
                 .map(this::checkRequiredThenCheck)
@@ -55,7 +55,7 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
         if (Strings.isNullOrEmpty(value)) {
             if (getConfiguration().isRequired()) {
                 CheckerTarget target = getTarget();
-                validationCheckResult = DefaultValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target.getTarget()));
+                validationCheckResult = DefaultValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target));
             } else {
                 validationCheckResult = DefaultValidationCheckResult.success();
             }

@@ -15,14 +15,16 @@ references:
   zones_etudes:
     validations:
       parent_ref:
-        description: référence au parent
+        internationalizationName:
+          fr: référence au parent
+        columns: [ parent ]
         checker:
           name: Reference
           params:
             refType: zones_etudes
-            columns: parent
             required: false
-            codify: true
+            transformation:
+              codify: true
     keyColumns: [nom]
     columns:
       nom:
