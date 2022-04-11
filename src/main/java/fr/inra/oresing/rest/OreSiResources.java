@@ -92,7 +92,7 @@ public class OreSiResources {
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam(name = "comment",defaultValue = "") String comment,
+    public ResponseEntity<?> createApplication(@PathVariable("name") String name, @RequestParam(name = "comment", defaultValue = "") String comment,
                                                @RequestParam("file") MultipartFile file) throws IOException, BadApplicationConfigurationException {
         if (INVALID_APPLICATION_NAME_PREDICATE.test(name)) {
             return ResponseEntity.badRequest().body("'" + name + "' n’est pas un nom d'application valide, seules les lettres minuscules sont acceptées");
@@ -298,11 +298,13 @@ public class OreSiResources {
             ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
             for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
 
-                final ReferenceValue referenceValue =  requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
+                final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
                         .stream()
                         .findFirst().orElse(null);
-                checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName())
-                        .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
+                if (referenceValue != null) {
+                    checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName())
+                            .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
+                }
             }
         }
         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
@@ -361,7 +363,7 @@ public class OreSiResources {
 
     private FileOrUUID deserialiseFileOrUUIDQuery(String datatype, String params) {
         try {
-            FileOrUUID fileOrUUID = params != null && params !="undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
+            FileOrUUID fileOrUUID = params != null && params != "undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
             Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(fileOrUUID)
                     .map(fileOrUUID1 -> fileOrUUID.binaryfiledataset);
             if (
@@ -380,7 +382,7 @@ public class OreSiResources {
         try {
             BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
             Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(binaryFileDataset);
-           if (binaryFileDatasetOpt.map(binaryFileDataset1 -> binaryFileDataset1.getDatatype()).isEmpty()) {
+            if (binaryFileDatasetOpt.map(binaryFileDataset1 -> binaryFileDataset1.getDatatype()).isEmpty()) {
                 binaryFileDatasetOpt.ifPresent(binaryFileDataset1 -> binaryFileDataset1.setDatatype(datatype));
             }
             return binaryFileDataset;

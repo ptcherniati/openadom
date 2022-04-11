@@ -13,6 +13,11 @@ public class ReferenceLineCheckerDisplay implements LineChecker {
     ReferenceLineChecker referenceLineChecker;
     ReferenceValue referenceValues;
 
+    public ReferenceLineCheckerDisplay(ReferenceLineChecker referenceLineChecker, ReferenceValue referenceValues) {
+        this.referenceLineChecker = referenceLineChecker;
+        this.referenceValues = referenceValues;
+    }
+
     @Override
     public ValidationCheckResult check(Datum values) {
         return null;
