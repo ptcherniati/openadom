@@ -49,21 +49,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -597,7 +589,7 @@ public class OreSiResourcesTest {
 
         URL resource = getClass().getResource(fixtures.getRecursivityApplicationConfigurationResourceName());
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+            MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
             authenticationService.addUserRightCreateApplication(userId);
 
@@ -609,6 +601,15 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             JsonPath.parse(response).read("$.id");
+
+
+            response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))
+                   .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
+                     .andReturn().getResponse().getContentAsString();
+            log.debug(response);
         }
 
         String response;

@@ -123,8 +123,16 @@ public class OreSiResources {
         });
         Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
             Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
+            Map<String, ApplicationResult.Reference.DynamicColumn> dynamicColumns = Maps.transformEntries(referenceDescription.getDynamicColumns(), (dynamicColumnName, dynamicColumnDescription) ->
+                    new ApplicationResult.Reference.DynamicColumn(
+                            dynamicColumnName,
+                            dynamicColumnName,
+                            dynamicColumnDescription.getHeaderPrefix(),
+                            dynamicColumnDescription.getReference(),
+                            dynamicColumnDescription.getReferenceColumnToLookForHeader(),
+                            dynamicColumnDescription.getPresenceConstraint().isMandatory()));
             Set<String> children = childrenPerReferences.get(reference);
-            return new ApplicationResult.Reference(reference, reference, children, columns);
+            return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns);
         });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
