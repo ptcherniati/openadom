@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApplicationConfigurationService {
 
+    public static final String OTHERS_DATAGROUPS = "_others_";
     private static final ImmutableSet<String> CHECKER_ON_TARGET_NAMES =
             ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
-
     private static final ImmutableSet<String> ALL_CHECKER_NAMES = ImmutableSet.<String>builder()
             .addAll(CHECKER_ON_TARGET_NAMES)
             .add(GroovyLineChecker.NAME)
@@ -120,7 +120,9 @@ public class ApplicationConfigurationService {
             Set<String> variables = dataTypeDescription.getData().keySet();
 
             if (authorization == null) {
-                builder.missingAuthorizationForDatatype(dataType);
+                //builder.missingAuthorizationForDatatype(dataType);
+//                authorization = Configuration.AuthorizationDescription.DEFAULT_INSTANCE;
+//                dataTypeDescription.setAuthorization(authorization);
             } else {
                 VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
                 verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
@@ -128,14 +130,14 @@ public class ApplicationConfigurationService {
                 LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey = authorization.getAuthorizationScopes();
                 verifyDatatypeAuthorizationScopeExistsAndIsValid(builder, dataType, configuration, variables, authorizationScopesVariableComponentKey);
                 requiredAuthorizationsAttributesBuilder.addAll(authorizationScopesVariableComponentKey.keySet());
+
+                Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
+                verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, variableOccurrencesInDataGroups);
+
+                verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
+                verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, dataType, variables);
+                verifyChartDescription(builder, dataType, dataTypeDescription);
             }
-
-            Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
-            verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, variableOccurrencesInDataGroups);
-
-            verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
-            verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, dataType, variables);
-            verifyChartDescription(builder, dataType, dataTypeDescription);
         }
         configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
 
@@ -301,7 +303,17 @@ public class ApplicationConfigurationService {
     }
 
     private void verifyDatatypeDataGroupsContainsExistingVariables(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables, Multiset<String> variableOccurrencesInDataGroups) {
-        for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : dataTypeDescription.getAuthorization().getDataGroups().entrySet()) {
+        final LinkedHashMap<String, Configuration.DataGroupDescription> dataGroups = dataTypeDescription.getAuthorization().getDataGroups();
+        if (dataGroups.isEmpty()) {
+            final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
+            for (String variable : variables) {
+                dataGroupDescription.getData().add(variable);
+            }
+            dataGroups.put(OTHERS_DATAGROUPS, dataGroupDescription);
+            variableOccurrencesInDataGroups.addAll(variables);
+            return;
+        }
+        for (Map.Entry<String, Configuration.DataGroupDescription> dataGroupEntry : dataGroups.entrySet()) {
             String dataGroup = dataGroupEntry.getKey();
             Configuration.DataGroupDescription dataGroupDescription = dataGroupEntry.getValue();
             Set<String> dataGroupVariables = dataGroupDescription.getData();
@@ -372,7 +384,7 @@ public class ApplicationConfigurationService {
                                                 final Configuration.CompositeReferenceComponentDescription compositeReferenceComponentDescription = new Configuration.CompositeReferenceComponentDescription();
                                                 compositeReferenceComponentDescription.setReference(refType);
                                                 compositeReferenceDescription.setComponents(List.of(compositeReferenceComponentDescription));
-                                                compositeReferences.put(key, compositeReferenceDescription );
+                                                compositeReferences.put(key, compositeReferenceDescription);
                                                 //builder.authorizationScopeVariableComponentReftypeUnknown(dataType, authorizationScopeName, refType, compositesReferences);
                                             }
                                         }

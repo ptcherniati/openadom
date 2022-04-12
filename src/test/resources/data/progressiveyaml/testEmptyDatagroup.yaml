@@ -1,0 +1,75 @@
+version: 0
+
+application:
+  name: Application de test
+  version: 1
+
+references:
+  agroécosystème:
+    keyColumns: [ nom ]
+    columns:
+      nom:
+  sites:
+    keyColumns: [ nom du site ]
+    columns:
+      Agroécosystème:
+      nom du site:
+  parcelles:
+    keyColumns: [ site, nom de la parcelle ]
+    columns:
+      site:
+      nom de la parcelle:
+
+dataTypes:
+  date_de_visite:
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      localisation:
+        components:
+          agroecosysteme:
+            checker:
+              name: Reference
+              params:
+                refType: agroécosystème
+      relevant:
+        components:
+          numero:
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: relevant
+            component: numero
+          exportHeader: relevant_number
+      headerLine: 2
+      firstRowLine: 3
+      columns:
+        - header: date
+          boundTo:
+            variable: date
+            component: day
+        - header: heure
+          boundTo:
+            variable: date
+            component: time
+        - header: agroecosysteme
+          boundTo:
+            variable: localisation
+            component: agroecosysteme
+
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: localisation
+          component: agroecosysteme
+      timeScope:
+        variable: date
+        component: day

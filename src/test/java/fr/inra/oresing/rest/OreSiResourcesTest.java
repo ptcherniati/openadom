@@ -593,9 +593,48 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    public void testProgressiveYamlWithoutAuthorization() throws Exception {
+
+        URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("yamlWithoutAuthorization"));
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            String result =  mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    //.andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+        }
+        progressiveYamlAddReferencesAndData();
+    }
+
+    @Test
+    public void testProgressiveYamlWitEmptyDatagroup() throws Exception {
+
+        URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("yamlWithEmptyDatagroup"));
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            String result =  mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    //.andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        progressiveYamlAddReferencesAndData();
+    }
+
+    @Test
     public void tesProgressiveYamlWithNoReference() throws Exception {
 
-        URL resource = getClass().getResource(fixtures.getProgressiveYamlWithNoReferenceForAuthorizationScopeApplicationConfigurationResourceName());
+        URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("testAuthorizationScopeWithoutReference"));
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
@@ -621,7 +660,7 @@ public class OreSiResourcesTest {
     @Test
     public void tesProgressiveYaml() throws Exception {
 
-        URL resource = getClass().getResource(fixtures.getProgressiveYamlWithReferenceAndNoHierarchicalReferenceForAuthorizationScopeApplicationConfigurationResourceName());
+        URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("testAuthorizationScopeWithReferenceAndNoHierarchicalReference"));
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
@@ -635,6 +674,10 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
         }
 
+        progressiveYamlAddReferencesAndData();
+    }
+
+    private void progressiveYamlAddReferencesAndData() throws Exception {
         String response;
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getProgressiveYamlReferentielFiles().entrySet()) {

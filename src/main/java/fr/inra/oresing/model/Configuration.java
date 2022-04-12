@@ -383,6 +383,7 @@ public class Configuration {
     @Setter
     @ToString
     public static class AuthorizationDescription {
+        public static AuthorizationDescription DEFAULT_INSTANCE=new AuthorizationDescription();
 
         @ApiModelProperty(notes = "The variable component that identifies the time scope of the line (must be a variable/component with a checker of type 'Date')", required = true)
         VariableComponentKey timeScope;
