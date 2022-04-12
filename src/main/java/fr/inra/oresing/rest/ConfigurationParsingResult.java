@@ -9,10 +9,7 @@ import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import lombok.Value;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Value
 public class ConfigurationParsingResult {
@@ -708,6 +705,15 @@ public class ConfigurationParsingResult {
                     "column", column,
                     "checkerName", checkerName,
                     "parameterName", parameterName
+            ));
+        }
+
+        public void authorizationScopeMissingReferenceCheckerForAuthorizationScope(Map.Entry<String, Configuration.AuthorizationScopeDescription> authorizationScopeVariableComponentKeyEntry, String dataType) {
+            recordError("authorizationScopeMissingReferenceCheckerForAuthorizationScope", ImmutableMap.of(
+                    "authorizationScopeName", authorizationScopeVariableComponentKeyEntry.getKey(),
+                    "variable", authorizationScopeVariableComponentKeyEntry.getValue().getVariable(),
+                    "component", authorizationScopeVariableComponentKeyEntry.getValue().getComponent(),
+                    "dataType",dataType
             ));
         }
     }
