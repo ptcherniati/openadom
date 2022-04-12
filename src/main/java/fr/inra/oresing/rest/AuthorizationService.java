@@ -67,7 +67,6 @@ public class AuthorizationService {
     public OreSiRightOnApplicationRole createRoleForAuthorization(CreateAuthorizationRequest previousAuthorization, OreSiAuthorization modifiedAuthorization) {
         UUID created = modifiedAuthorization.getId();
         Application application = repository.application().findApplication(previousAuthorization.getApplicationNameOrId());
-        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, created);
         db.createRole(oreSiRightOnApplicationRole);
         return oreSiRightOnApplicationRole;
@@ -75,12 +74,8 @@ public class AuthorizationService {
 
 
     public OreSiAuthorization addAuthorization(CreateAuthorizationRequest authorizations) {
-        Set<OreSiUserRole> usersRole = authorizations.getUsersId().stream()
-                .map(authenticationService::getUserRole)
-                .collect(Collectors.toSet());
         Application application = repository.application().findApplication(authorizations.getApplicationNameOrId());
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
-        OreSiRightOnApplicationRole oreSiRightOnApplicationRole;
         OreSiAuthorization entity = authorizations.getUuid() == null ?
                 new OreSiAuthorization()
                 : authorizationRepository.findById(authorizations.getUuid());
@@ -108,7 +103,7 @@ public class AuthorizationService {
         entity.setApplication(application.getId());
         entity.setDataType(dataType);
         entity.setAuthorizations(authorizations.getAuthorizations());
-        UUID storedUUID = authorizationRepository.store(entity);
+        authorizationRepository.store(entity);
         return entity;
     }
 
