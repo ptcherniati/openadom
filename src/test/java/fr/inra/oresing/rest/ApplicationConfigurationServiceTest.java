@@ -600,4 +600,22 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("Date", onlyError.getMessageParams().get("checkerName"));
         Assert.assertEquals("refType", onlyError.getMessageParams().get("parameterName"));
     }
+
+    @Test
+    public void testauthorizationScopeMissingReferenceCheckerForAuthorizationScope() {
+        String toReplace = "checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sites";
+        String replacement = "";
+        ConfigurationParsingResult configurationParsingResult = parseYaml(toReplace, replacement);
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("authorizationScopeMissingReferenceCheckerForAuthorizationScope", onlyError.getMessage());
+        Assert.assertEquals("localization", onlyError.getMessageParams().get("authorizationScopeName"));
+        Assert.assertEquals("site", onlyError.getMessageParams().get("dataType"));
+        Assert.assertEquals("localization", onlyError.getMessageParams().get("variable"));
+        Assert.assertEquals("site", onlyError.getMessageParams().get("component"));
+    }
 }

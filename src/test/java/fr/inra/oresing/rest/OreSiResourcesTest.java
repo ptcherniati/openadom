@@ -593,6 +593,79 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    public void tesProgressiveYamlWithNoReference() throws Exception {
+
+        URL resource = getClass().getResource(fixtures.getProgressiveYamlWithNoReferenceForAuthorizationScopeApplicationConfigurationResourceName());
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            BadApplicationConfigurationException exception = (BadApplicationConfigurationException) mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().is4xxClientError())
+                    //.andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResolvedException();
+            final ValidationCheckResult validationCheckResult = exception.getConfigurationParsingResult().getValidationCheckResults()
+                    .get(0);
+            Assert.assertEquals("authorizationScopeMissingReferenceCheckerForAuthorizationScope", validationCheckResult.getMessage());
+            final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
+           Assert.assertEquals("localization", messageParams.get("authorizationScopeName"));
+           Assert.assertEquals("date_de_visite", messageParams.get("dataType"));
+           Assert.assertEquals("agroecosysteme", messageParams.get("component"));
+           Assert.assertEquals("localisation", messageParams.get("variable"));
+        }
+    }
+
+    @Test
+    public void tesProgressiveYaml() throws Exception {
+
+        URL resource = getClass().getResource(fixtures.getProgressiveYamlWithReferenceAndNoHierarchicalReferenceForAuthorizationScopeApplicationConfigurationResourceName());
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+        }
+
+        String response;
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getProgressiveYamlReferentielFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
+        for (Map.Entry<String, String> e : fixtures.getProgressiveYamlDataFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive/data/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.fileId", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+            }
+        }
+    }
+
+    @Test
     public void testRecursivity() throws Exception {
 
         URL resource = getClass().getResource(fixtures.getRecursivityApplicationConfigurationResourceName());

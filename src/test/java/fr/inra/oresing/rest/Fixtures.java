@@ -152,6 +152,28 @@ public class Fixtures {
                 "   }", plateforme, projet, site);
     }
 
+    public String getProgressiveYamlWithNoReferenceForAuthorizationScopeApplicationConfigurationResourceName() {
+        return "/data/progressiveyaml/testAuthorizationScopeWithoutReference.yaml";
+    }
+
+    public String getProgressiveYamlWithReferenceAndNoHierarchicalReferenceForAuthorizationScopeApplicationConfigurationResourceName() {
+        return "/data/progressiveyaml/testAuthorizationScopeWithReferenceAndNoHierarchicalReference.yaml";
+    }
+
+    public Map<String, String> getProgressiveYamlReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("agroécosystème", "/data/progressiveyaml/references/agroecosystem.csv");
+        referentielFiles.put("sites", "/data/progressiveyaml/references/sites.csv");
+        referentielFiles.put("parcelles", "/data/progressiveyaml/references/parcelles.csv");
+        return referentielFiles;
+    }
+
+    public Map<String, String> getProgressiveYamlDataFiles() {
+        Map<String, String> dataFiles = new LinkedHashMap<>();
+        dataFiles.put("date_de_visite", "/data/progressiveyaml/data/date_de_visite.csv");
+        return dataFiles;
+    }
+
     public String getRecursivityApplicationConfigurationResourceName() {
         return "/data/recursivite/recusivite.yaml";
     }

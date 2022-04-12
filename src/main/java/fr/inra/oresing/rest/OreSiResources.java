@@ -293,16 +293,19 @@ public class OreSiResources {
                 .map(DataRow::getRowId)
                 .collect(Collectors.toSet());
         Map<Ltree, List<ReferenceValue>> requiredreferencesValues = service.getReferenceDisplaysById(service.getApplication(nameOrId), listOfDataIds);
-        for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName()).entrySet()) {
-            String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
-            ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
-            for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
+        final Map<String, LineChecker> referenceLineCheckers = checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName());
+        if(referenceLineCheckers==null) {
+            //TODO on est dans le cas ou aucun checker reference n'est décrit : authorizationscope  n'est pas un referentiel
+        }else {
+            for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
+                String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
+                ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
+                for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
 
-                final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
-                        .stream()
-                        .findFirst().orElse(null);
-                if (referenceValue != null) {
-                    checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName())
+                    final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
+                            .stream()
+                            .findFirst().orElse(null);
+                    referenceLineCheckers
                             .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
                 }
             }
