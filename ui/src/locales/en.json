@@ -218,6 +218,7 @@
         "data":"Data"
     },
     "dataTypesManagement": {
+        "no_authorization": "No authorization management for {localName}",
         "data-types": "Data types",
         "consult-authorization": "Consult authorizations",
         "réinitialiser": "Reset",
