@@ -386,7 +386,6 @@
                             <testSourceDirectory>src/test</testSourceDirectory>
                             <testFailureIgnore>false</testFailureIgnore>
                             <includes>
-                                <include>fr/inra/oresing/rest/AuthorizationResourcesTest.java</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -405,9 +404,7 @@
                             <reuseForks>false</reuseForks>
                             <testSourceDirectory>src/test</testSourceDirectory>
                             <testFailureIgnore>false</testFailureIgnore>
-                            <includes>
-                                <include>fr/inra/oresing/rest/OreSiResourcesTest.java</include>
-                            </includes>
+                            <groups>fr.inra.oresing.rest.OTHERS_TEST</groups>
                         </configuration>
                     </plugin>
                 </plugins>
