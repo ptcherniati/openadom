@@ -49,21 +49,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -73,7 +65,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestExecutionListeners({SpringBootDependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
-public class OreSiResourcesTest {
+public class OTHERS_TEST {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -103,7 +95,6 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Category(OTHERS_TEST.class)
     public void addApplicationMonsore() throws Exception {
         String appId;
 
@@ -406,7 +397,6 @@ public class OreSiResourcesTest {
 
 
     @Test
-    @Category(OTHERS_TEST.class)
     public void addApplicationMonsoreWithRepository() throws Exception {
         URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
         String oirFilesUUID;
@@ -950,7 +940,6 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Category(OTHERS_TEST.class)
     public void addDuplicatedTest() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getDuplicatedApplicationConfigurationResourceName())) {
@@ -1205,7 +1194,6 @@ on test le dépôt d'un fichier récursif
     }
 
     @Test
-    @Category(OTHERS_TEST.class)
     public void addApplicationOLAC() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getOlaApplicationConfigurationResourceName())) {
@@ -1293,7 +1281,6 @@ on test le dépôt d'un fichier récursif
     }
 
     @Test
-    @Category(OTHERS_TEST.class)
     public void addApplicationFORET_essai() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetEssaiApplicationConfigurationResourceName())) {
@@ -1342,7 +1329,6 @@ on test le dépôt d'un fichier récursif
     }
 
     @Test
-    @Category(OTHERS_TEST.class)
     public void addApplicationFORET() throws Exception {
         authenticationService.addUserRightCreateApplication(userId);
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetApplicationConfigurationResourceName())) {
