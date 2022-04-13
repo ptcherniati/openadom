@@ -95,7 +95,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getNamedParameterJdbcTemplate().query(query, sqlParams, new JsonRowMapper<Uniqueness>());
     }
 
-    public void updateConstraintForeigData(List<UUID> uuids) {
+    public void updateConstraintForeignData(List<UUID> uuids) {
         String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference WHERE dataId in (:ids)";
         String insertSql = String.join(" "
                 , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)"

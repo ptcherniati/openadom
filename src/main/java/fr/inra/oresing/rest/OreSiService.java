@@ -4,60 +4,16 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.DateLineChecker;
-import fr.inra.oresing.checker.FloatChecker;
-import fr.inra.oresing.checker.IntegerChecker;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.Authorization;
-import fr.inra.oresing.model.BinaryFile;
-import fr.inra.oresing.model.BinaryFileDataset;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.Data;
-import fr.inra.oresing.model.Datum;
-import fr.inra.oresing.model.LocalDateTimeRange;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
-import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.DataSynthesisRepository;
-import fr.inra.oresing.persistence.Ltree;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.persistence.SqlPolicy;
-import fr.inra.oresing.persistence.SqlSchema;
-import fr.inra.oresing.persistence.SqlSchemaForApplication;
-import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
@@ -88,28 +44,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -483,7 +421,7 @@ public class OreSiService {
                     repo.getRepository(app).binaryFile().store(f);
                     buildSynthesis(app.getName(), dataType);
                 });
-        if(dataType!=null){
+        if (dataType != null) {
             buildSynthesis(app.getName(), dataType);
         }
     }
@@ -528,7 +466,7 @@ public class OreSiService {
                                         }
                                     })
                     );
-            dataRepository.updateConstraintForeigData(uuids);
+            dataRepository.updateConstraintForeignData(uuids);
             errors.addAll(uniquenessBuilder.getErrors());
             InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         }
@@ -628,12 +566,16 @@ public class OreSiService {
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
                                                                                BinaryFileDataset binaryFileDataset) {
-        DateLineChecker timeScopeDateLineChecker = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof DateLineChecker)
-                .map(lineChecker -> (DateLineChecker) lineChecker)
-                .filter(dateLineChecker -> dateLineChecker.getTarget().equals(dataTypeDescription.getAuthorization().getTimeScope()))
-                .collect(MoreCollectors.onlyElement());
+        final Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
+        final boolean haveAuthorizations = authorization != null;
 
+        final DateLineChecker timeScopeDateLineChecker = haveAuthorizations?
+                lineCheckers.stream()
+                    .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                    .map(lineChecker -> (DateLineChecker) lineChecker)
+                    .filter(dateLineChecker -> dateLineChecker.getTarget().equals(authorization.getTimeScope()))
+                    .collect(MoreCollectors.onlyElement())
+                :null;
 
         return rowWithData -> {
             Datum datum = Datum.copyOf(rowWithData.getDatum());
@@ -668,25 +610,41 @@ public class OreSiService {
                 errors.addAll(rowErrors);
                 return Stream.empty();
             }
+            LocalDateTimeRange timeScope;
+            if (timeScopeDateLineChecker!=null) {
+                String timeScopeValue = datum.get(authorization.getTimeScope());
+                timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
+            } else {
+                timeScope = LocalDateTimeRange.always();
+            }
 
-            String timeScopeValue = datum.get(dataTypeDescription.getAuthorization().getTimeScope());
-            LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
-
-            Map<String, Ltree> requiredAuthorizations = new LinkedHashMap<>();
-            dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
-                VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
-                String requiredAuthorization = datum.get(variableComponentKey);
+            Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
+            if(haveAuthorizations) {
+                authorization.getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
+                    VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
+                    String requiredAuthorization = datum.get(variableComponentKey);
+                    Ltree.checkSyntax(requiredAuthorization);
                 requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorization));
-            });
+                });
+            }
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
             checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
             final List<String> uniquenessValues = uniquenessBuilder.test(datum, rowWithData.getLineNumber());
-            if(uniquenessValues ==null) {
+            if (uniquenessValues == null) {
                 return Stream.of((Data) null);
-            };
-            Stream<Data> dataStream = dataTypeDescription.getAuthorization().getDataGroups().entrySet().stream().map(entry -> {
+            }
+            LinkedHashMap<String, Configuration.DataGroupDescription> dataGroups;
+            if(!haveAuthorizations){
+                dataGroups=new LinkedHashMap<>();
+                final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
+                dataGroupDescription.setData(dataTypeDescription.getData().keySet());
+                dataGroups.put("_default_", dataGroupDescription);
+            }else{
+                dataGroups= authorization.getDataGroups();
+            }
+            Stream<Data> dataStream = dataGroups.entrySet().stream().map(entry -> {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
 
@@ -1016,7 +974,7 @@ public class OreSiService {
      * @param formatDescription
      * @param linesIterator
      */
-    private void readPostHeader(Configuration.FormatDescription formatDescription,  ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
+    private void readPostHeader(Configuration.FormatDescription formatDescription, ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
                 formatDescription.getConstants().stream()
                         .collect(
@@ -1025,7 +983,7 @@ public class OreSiService {
                                         Function.identity()
                                 )
                         );
-        for (int lineNumber = formatDescription.getHeaderLine()+1; lineNumber < formatDescription.getFirstRowLine(); lineNumber++) {
+        for (int lineNumber = formatDescription.getHeaderLine() + 1; lineNumber < formatDescription.getFirstRowLine(); lineNumber++) {
             CSVRecord row = linesIterator.next();
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
@@ -1099,12 +1057,6 @@ public class OreSiService {
             return evaluate;
         };
         return computeDefaultValueFn;
-    }
-
-    @Value
-    private static class ComputedValuesContext {
-        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns;
-        ImmutableSet<VariableComponentKey> replaceEnabled;
     }
 
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
@@ -1362,20 +1314,20 @@ public class OreSiService {
                 .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
                 .anyMatch(entry -> entry.getValue().getChartDescription() != null);
         String sql;
-        if(hasChartDescription) {
+        if (hasChartDescription) {
             sql = application.getConfiguration().getDataTypes().get(dataType).getData().entrySet().stream()
                     .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
                     .filter(entry -> entry.getValue().getChartDescription() != null)
                     .map(entry -> entry.getValue().getChartDescription().toSQL(entry.getKey(), dataType))
                     .collect(Collectors.joining(", \n"));
-        }else {
+        } else {
             sql = Configuration.Chart.toSQL(dataType);
         }
         List<OreSiSynthesis> oreSiSynthesisList = new LinkedList<>();
-        final List<OreSiSynthesis> oreSiSynthesis  = repo.buildSynthesis(sql, hasChartDescription);
+        final List<OreSiSynthesis> oreSiSynthesis = repo.buildSynthesis(sql, hasChartDescription);
         repo.storeAll(oreSiSynthesis.stream());
 
-        return !hasChartDescription?Map.of("__NO-CHART",oreSiSynthesis):oreSiSynthesis.stream().collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+        return !hasChartDescription ? Map.of("__NO-CHART", oreSiSynthesis) : oreSiSynthesis.stream().collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
     }
 
     public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType) {
@@ -1395,7 +1347,13 @@ public class OreSiService {
     }
 
     public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Application application, Set<String> listOfDataIds) {
-        return repo.getRepository(application).referenceValue(). getReferenceDisplaysById(listOfDataIds);
+        return repo.getRepository(application).referenceValue().getReferenceDisplaysById(listOfDataIds);
+    }
+
+    @Value
+    private static class ComputedValuesContext {
+        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns;
+        ImmutableSet<VariableComponentKey> replaceEnabled;
     }
 
     @Value
@@ -1438,10 +1396,10 @@ public class OreSiService {
 
         public List<String> test(Datum datum, int lineNumber) {
             UniquenessKeys uniquenessKeys = new UniquenessKeys(datum, uniquenessDescription);
-            uniquenessInFile.compute(uniquenessKeys, (k,v) -> v==null?new LinkedList<>():v)
+            uniquenessInFile.compute(uniquenessKeys, (k, v) -> v == null ? new LinkedList<>() : v)
                     .add(lineNumber);
-            boolean isInError = uniquenessInFile.get(uniquenessKeys).size()>1;
-            return isInError?null:uniquenessKeys.getValues();
+            boolean isInError = uniquenessInFile.get(uniquenessKeys).size() > 1;
+            return isInError ? null : uniquenessKeys.getValues();
         }
 
         private CsvRowValidationCheckResult getErrorForEntry(Map.Entry<UniquenessKeys, List<Integer>> entry) {
@@ -1463,7 +1421,7 @@ public class OreSiService {
                     .collect(Collectors.toList());
         }
 
-        public Map<String, String> getUniquenessKey(UniquenessKeys uniquenessKeys){
+        public Map<String, String> getUniquenessKey(UniquenessKeys uniquenessKeys) {
             Map<String, String> uniquenessKeyMap = new HashMap<>();
             for (int i = 0; i < uniquenessDescription.size(); i++) {
                 uniquenessKeyMap.put(uniquenessDescription.get(i).getId(), uniquenessKeys.getValues().get(i));
@@ -1475,6 +1433,7 @@ public class OreSiService {
     class UniquenessKeys implements Comparable<UniquenessKeys> {
         List<String> values = new LinkedList<>();
         List<VariableComponentKey> uniquenessDescription;
+
         public UniquenessKeys(Datum datum, List<VariableComponentKey> uniquenessDescription) {
             this.uniquenessDescription = uniquenessDescription;
             this.values = uniquenessDescription.stream()

@@ -152,12 +152,13 @@ public class Fixtures {
                 "   }", plateforme, projet, site);
     }
 
-    public String getProgressiveYamlWithNoReferenceForAuthorizationScopeApplicationConfigurationResourceName() {
-        return "/data/progressiveyaml/testAuthorizationScopeWithoutReference.yaml";
-    }
-
-    public String getProgressiveYamlWithReferenceAndNoHierarchicalReferenceForAuthorizationScopeApplicationConfigurationResourceName() {
-        return "/data/progressiveyaml/testAuthorizationScopeWithReferenceAndNoHierarchicalReference.yaml";
+    public Map<String, String> getProgressiveYaml() {
+        Map<String, String> yamls = new LinkedHashMap<>();
+        yamls.put("testAuthorizationScopeWithoutReference", "/data/progressiveyaml/testAuthorizationScopeWithoutReference.yaml");
+        yamls.put("testAuthorizationScopeWithReferenceAndNoHierarchicalReference", "/data/progressiveyaml/testAuthorizationScopeWithReferenceAndNoHierarchicalReference.yaml");
+        yamls.put("yamlWithEmptyDatagroup", "/data/progressiveyaml/testEmptyDatagroup.yaml");
+        yamls.put("yamlWithoutAuthorization", "/data/progressiveyaml/noAuthorization.yaml");
+        return yamls;
     }
 
     public Map<String, String> getProgressiveYamlReferentielFiles() {
@@ -678,6 +679,7 @@ public class Fixtures {
                 .put("meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv")*/
                 .build();
     }
+
     public Map<String, Integer> getForetEssaiSynthesisSize() {
         ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
         return builder

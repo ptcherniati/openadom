@@ -96,12 +96,13 @@ export class InternationalisationService extends Fetcher {
     if (application.internationalization != null) {
       let applicationDataTypes = application.internationalization.dataTypes;
       for (let applicationDataType in applicationDataTypes) {
+            localStorage.getItem(LOCAL_STORAGE_LANG)
         application.dataTypes[applicationDataType] = {
           ...application.dataTypes[applicationDataType],
           localName:
             applicationDataTypes[applicationDataType].internationalizationName?.[
               localStorage.getItem(LOCAL_STORAGE_LANG)
-            ],
+            ]||applicationDataType,
         };
       }
     } else {

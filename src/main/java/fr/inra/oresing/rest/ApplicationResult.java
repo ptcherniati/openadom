@@ -51,6 +51,7 @@ public class ApplicationResult {
         String label;
         Map<String, Variable> variables;
         Map<String, String> repository;
+        boolean hasAuthorizations;
 
         @Value
         public static class Variable {
