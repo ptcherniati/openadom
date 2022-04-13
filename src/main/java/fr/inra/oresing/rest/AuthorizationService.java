@@ -1,12 +1,31 @@
 package fr.inra.oresing.rest;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.model.*;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Authorization;
+import fr.inra.oresing.model.Configuration;
+import fr.inra.oresing.model.OreSiAuthorization;
+import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.AuthorizationRepository;
+import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.persistence.OperationType;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
-import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +34,14 @@ import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -169,6 +195,7 @@ public class AuthorizationService {
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
         if (oreSiAuthorization.getAuthorizations().keySet().contains(OperationType.publication)) {
+            // je pige pas
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             SqlPolicy publishPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
             db.dropPolicy(publishPolicy);
@@ -187,6 +214,7 @@ public class AuthorizationService {
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType) {
         Application application = repository.application().findApplication(applicationNameOrId);
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
         ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findByDataType(dataType).stream()
                 .map(this::toGetAuthorizationResult)
                 .collect(ImmutableSet.toImmutableSet());
@@ -238,7 +266,7 @@ public class AuthorizationService {
                 } else {
                     toDay = null;
                 }
-                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), authorization.getRequiredauthorizations(), fromDay, toDay));
+                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), Maps.transformValues(authorization.getRequiredauthorizations(), Ltree::getSql), fromDay, toDay));
             }
             transformedAuthorizations.put(operationTypeListEntry.getKey(), authorizationsParsed);
         }

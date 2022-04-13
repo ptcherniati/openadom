@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.rest.OreSiService;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +18,7 @@ public class BinaryFileDataset {
         return new BinaryFileDataset();
     }
     private String datatype;
-    private Map<String, String> requiredauthorizations = new HashMap<>();
+    private Map<String, Ltree> requiredauthorizations = new HashMap<>();
     private String from;
     private String to;
     private String comment;
@@ -25,7 +26,7 @@ public class BinaryFileDataset {
     @Override
     public String toString() {
         String authorizationsString = requiredauthorizations.entrySet().stream()
-                .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue()))
+                .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue().getSql()))
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",
                 authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(from)),

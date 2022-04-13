@@ -672,12 +672,11 @@ public class OreSiService {
             String timeScopeValue = datum.get(dataTypeDescription.getAuthorization().getTimeScope());
             LocalDateTimeRange timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
 
-            Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
+            Map<String, Ltree> requiredAuthorizations = new LinkedHashMap<>();
             dataTypeDescription.getAuthorization().getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
                 VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                 String requiredAuthorization = datum.get(variableComponentKey);
-                Ltree.checkSyntax(requiredAuthorization);
-                requiredAuthorizations.put(authorizationScope, requiredAuthorization);
+                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorization));
             });
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
             checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
@@ -751,7 +750,7 @@ public class OreSiService {
     }
 
 
-    private void checkRequiredAuthorizationInDatasetRange(Map<String, String> requiredAuthorizations,
+    private void checkRequiredAuthorizationInDatasetRange(Map<String, Ltree> requiredAuthorizations,
                                                           List<CsvRowValidationCheckResult> errors,
                                                           BinaryFileDataset binaryFileDataset,
                                                           int rowNumber) {
@@ -783,7 +782,7 @@ public class OreSiService {
      * <p>
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, String> requiredAuthorizations) {
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, Ltree> requiredAuthorizations) {
         ComputedValuesContext computedValuesContext = getComputedValuesContext(app, dataType, requiredAuthorizations);
         ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns = computedValuesContext.getDefaultValueFns();
         ImmutableSet<VariableComponentKey> replaceEnabled = computedValuesContext.getReplaceEnabled();
@@ -1038,17 +1037,17 @@ public class OreSiService {
         }
     }
 
-    private ComputedValuesContext getComputedValuesContext(Application app, String dataType, Map<String, String> requiredAuthorizations) {
+    private ComputedValuesContext getComputedValuesContext(Application app, String dataType, Map<String, Ltree> requiredAuthorizations) {
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         ImmutableMap.Builder<VariableComponentKey, Function<Datum, String>> defaultValueFnsBuilder = ImmutableMap.builder();
         ImmutableSet.Builder<VariableComponentKey> replaceEnabledBuilder = ImmutableSet.builder();
         Set<VariableComponentKey> variableComponentsFromRepository = new LinkedHashSet<>();
         if (requiredAuthorizations != null) {
-            for (Map.Entry<String, String> entry : requiredAuthorizations.entrySet()) {
+            for (Map.Entry<String, Ltree> entry : requiredAuthorizations.entrySet()) {
                 Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
                 VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
-                String value = entry.getValue();
-                defaultValueFnsBuilder.put(variableComponentKey, datum -> value);
+                Ltree value = entry.getValue();
+                defaultValueFnsBuilder.put(variableComponentKey, datum -> value.getSql());
                 variableComponentsFromRepository.add(variableComponentKey);
             }
         }

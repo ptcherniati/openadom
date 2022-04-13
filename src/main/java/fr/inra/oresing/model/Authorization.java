@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import fr.inra.oresing.persistence.Ltree;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,9 +17,9 @@ import java.util.stream.Collectors;
 public class Authorization {
     LocalDateTimeRange timeScope;
     private List<String> dataGroup;
-    private Map<String, String> requiredauthorizations;
+    private Map<String, Ltree> requiredauthorizations;
 
-    public Authorization(List<String> dataGroup, Map<String, String> requiredauthorizations, LocalDateTimeRange timeScope) {
+    public Authorization(List<String> dataGroup, Map<String, Ltree> requiredauthorizations, LocalDateTimeRange timeScope) {
         this.dataGroup = dataGroup;
         this.requiredauthorizations = requiredauthorizations;
         this.timeScope = timeScope;
@@ -37,9 +38,10 @@ public class Authorization {
                 .collect(Collectors.joining(",", "array[", "]::TEXT[]"));
     }
 
-    public static String requiredAuthorizationsToSQL(List<String> attributes, Map<String, String> requiredauthorizations) {
+    public static String requiredAuthorizationsToSQL(List<String> attributes, Map<String, Ltree> requiredauthorizations) {
         return attributes.stream()
-                .map(attribute -> requiredauthorizations.getOrDefault(attribute, ""))
+                .map(attribute -> requiredauthorizations.getOrDefault(attribute, Ltree.empty()))
+                .map(Ltree::getSql)
                 .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredauthorizations"));
     }
 
