@@ -618,7 +618,7 @@ public class OreSiService {
                 timeScope = LocalDateTimeRange.always();
             }
 
-            Map<String, String> requiredAuthorizations = new LinkedHashMap<>();
+            Map<String, Ltree> requiredAuthorizations = new LinkedHashMap<>();
             if(haveAuthorizations) {
                 authorization.getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
                     VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();

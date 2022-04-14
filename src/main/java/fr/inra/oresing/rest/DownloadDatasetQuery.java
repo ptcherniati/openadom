@@ -98,17 +98,23 @@ public class DownloadDatasetQuery {
         String orderBy = Optional.ofNullable(variableComponentOrderBy)
                 .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(() -> {
-                            variableComponentKeySet.add(
-                                    new VariableComponentOrderBy(
-                                            getApplication().getConfiguration().getDataTypes().get(getDataType()).getAuthorization().getTimeScope(),
-                                            Order.ASC)
-                            );
-                            getApplication().getConfiguration().getDataTypes().get(getDataType()).getAuthorization().getAuthorizationScopes().values()
-                                    .stream()
-                                    .map(Configuration.AuthorizationScopeDescription::getVariableComponentKey)
-                                    .forEach(vck -> variableComponentKeySet.add(
-                                            new VariableComponentOrderBy(vck, Order.ASC)
-                                    ));
+
+                            final Configuration.AuthorizationDescription authorization = getApplication().getConfiguration().getDataTypes().get(getDataType()).getAuthorization();
+                            if(authorization!=null && authorization.getTimeScope()!=null) {
+                                variableComponentKeySet.add(
+                                        new VariableComponentOrderBy(
+                                                authorization.getTimeScope(),
+                                                Order.ASC)
+                                );
+                            }
+                            if(authorization!=null) {
+                                authorization.getAuthorizationScopes().values()
+                                        .stream()
+                                        .map(Configuration.AuthorizationScopeDescription::getVariableComponentKey)
+                                        .forEach(vck -> variableComponentKeySet.add(
+                                                new VariableComponentOrderBy(vck, Order.ASC)
+                                        ));
+                            }
                             return variableComponentKeySet;
                         }
                 ).stream()

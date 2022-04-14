@@ -183,7 +183,7 @@ export default class AuthorizationTable extends Vue {
     var requiredAuthorizationByIndex = {};
     var remainingScopes = this.remainingScopes || {};
     for (const index in this.authReference) {
-      remainingScopes[index] = this.getNextScope(this.authReference?.[index]);
+      remainingScopes[index] = this.getNextScope(this.authReference[index]);
       var requiredAuthorization = { ...(this.requiredAuthorizations || {}) };
       let scope = this.getScope();
       if (scope) {

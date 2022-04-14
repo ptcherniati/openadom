@@ -124,6 +124,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() applicationName;
   @Prop() authorizationId;
 
+  __DEFAULT__ = '__DEFAULT__';
   referenceService = ReferenceService.INSTANCE;
   references = {};
   authorizationService = AuthorizationService.INSTANCE;
@@ -231,7 +232,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         this.applicationName,
         this.dataTypeId
       );
-      this.authorizations = this.configuration.authorization.authorizationScopes;
+      this.authorizations = this.configuration?.authorization?.authorizationScopes || [];
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
         this.dataTypeId
@@ -283,6 +284,24 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           ret[key]?.authorizationScope
         );
         remainingAuthorizations[key] = partition;
+      }
+      if (!remainingAuthorizations.length){
+        remainingAuthorizations = [
+          {
+            '__DEFAULT__' : {
+                  'authorizationScope': {
+                    id: '__DEFAULT__',
+                    localName: "root"
+                  },
+                  'completeLocalName': '__.__',
+                  'currentPath': '__.__',
+                  'isLeaf': true,
+                  'localName': '__.__fr',
+                  'reference': {},
+                  'referenceValues': {}
+                }
+          }
+        ]
       }
       this.authReferences = remainingAuthorizations;
     } catch (error) {
@@ -431,7 +450,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       authorizationsToSave[type] = this.extractAuthorizations(event.authorizationsTree[type]);
     }
     this.authorizationsToSave = { ...authorizationsToSave };
-    console.log(JSON.stringify(this.authorizationsToSave));
   }
 
   extractAuthorizations(authorizationTree) {

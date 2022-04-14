@@ -317,18 +317,24 @@ public class OreSiResources {
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {
         Configuration.AuthorizationDescription authorization = service.getApplication(nameOrId).getConfiguration().getDataTypes().get(dataType).getAuthorization();
         LinkedHashSet<String> orderedVariableComponents = new LinkedHashSet<String>();
-        orderedVariableComponents.add(authorization.getTimeScope().getVariable());
-        authorization.getAuthorizationScopes().values()
-                .stream()
-                .filter(vc -> !orderedVariableComponents.contains(vc.getVariable()))
-                .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
-        authorization.getDataGroups()
-                .values()
-                .stream()
-                .map(dg -> dg.getData())
-                .flatMap(Set::stream)
-                .filter(vc -> !orderedVariableComponents.contains(vc))
-                .forEach(vc -> orderedVariableComponents.add(vc));
+        if(authorization!=null && authorization.getTimeScope()!=null) {
+            orderedVariableComponents.add(authorization.getTimeScope().getVariable());
+        }
+        if(authorization!=null && authorization.getAuthorizationScopes()!=null) {
+            authorization.getAuthorizationScopes().values()
+                    .stream()
+                    .filter(vc -> !orderedVariableComponents.contains(vc.getVariable()))
+                    .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
+        }
+        if(authorization!=null && authorization.getDataGroups()!=null) {
+            authorization.getDataGroups()
+                    .values()
+                    .stream()
+                    .map(dg -> dg.getData())
+                    .flatMap(Set::stream)
+                    .filter(vc -> !orderedVariableComponents.contains(vc))
+                    .forEach(vc -> orderedVariableComponents.add(vc));
+        }
         return orderedVariableComponents;
     }
 

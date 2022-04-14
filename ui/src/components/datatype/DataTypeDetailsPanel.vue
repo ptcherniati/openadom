@@ -6,10 +6,9 @@
     :closeCb="closeCb"
   >
     <div class="Panel-buttons">
-      <b-button type="is-dark" icon-left="key" @click="consultAuthorization" v-if="dataType && dataType.hasAuthorizations">{{
+      <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{
         $t("dataTypesManagement.consult-authorization")
       }}</b-button>
-      <div v-else>{{$t('dataTypesManagement.no_authorization',  dataType)}}</div>
     </div>
   </SidePanel>
 </template>

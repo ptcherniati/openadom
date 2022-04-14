@@ -4,9 +4,7 @@ import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import lombok.Value;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Value
@@ -23,9 +21,13 @@ public class SynthesisResult {
         this.variable = synthesis.getVariable();
         this.requiredauthorizations = synthesis.getRequiredauthorizations();
         this.aggregation = synthesis.getAggregation();
-        this.ranges = synthesis.getRanges().stream()
-                .map(LocalDateTimeRangeResult::new)
-                .collect(Collectors.toList());
+        this.ranges = Optional.of(synthesis)
+                .map(OreSiSynthesis::getRanges)
+                .map(ranges->ranges.stream()
+                        .map(LocalDateTimeRangeResult::new)
+                        .collect(Collectors.toList())
+                )
+                .orElseGet(LinkedList::new);
     }
 
     @Value
@@ -33,7 +35,10 @@ public class SynthesisResult {
         List<String> range;
 
         public LocalDateTimeRangeResult(LocalDateTimeRange range) {
-            this.range = List.of(range.getRange().lowerEndpoint().toString(), range.getRange().upperEndpoint().toString());
+            this.range = List.of(
+                    range.getRange().hasLowerBound()?range.getRange().lowerEndpoint().toString():"",
+                    range.getRange().hasUpperBound()?range.getRange().upperEndpoint().toString():""
+                    );
         }
     }
 }

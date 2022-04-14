@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.util.NestedServletException;
@@ -49,21 +50,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -92,10 +86,12 @@ public class OreSiResourcesTest {
     private Cookie authCookie;
 
     private UUID userId;
+    private CreateUserResult lambdaUser;
 
     @Before
     public void createUser() throws Exception {
         userId = authenticationService.createUser("poussin", "xxxxxxxx").getUserId();
+        lambdaUser = authenticationService.createUser("lambda", "xxxxxxxx");
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "poussin")
                         .param("password", "xxxxxxxx"))
@@ -594,6 +590,11 @@ public class OreSiResourcesTest {
         }
     }
 
+    /**
+     * This is a case where a datatype has no authorization section.
+     * The only authorizations that can be put on are on none or all values.
+     * @throws Exception
+     */
     @Test
     public void testProgressiveYamlWithoutAuthorization() throws Exception {
 
@@ -607,10 +608,88 @@ public class OreSiResourcesTest {
                             .file(configuration)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
-                    //.andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
         }
         progressiveYamlAddReferencesAndData();
+
+        String lambdaUserId = lambdaUser.getUserId().toString();
+        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login" , "lambda")
+                        .param("password" , "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+
+
+        {
+            String response = mockMvc.perform(get("/api/v1/applications")
+                    .cookie(authReaderCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés" , response.contains("progressive"));
+        }
+
+        {
+            mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite")
+                            .cookie(authReaderCookie)
+                            .accept(MediaType.TEXT_PLAIN))
+                    .andExpect(status().is4xxClientError());
+        }
+
+        {
+           /* final Authorization authorization = new Authorization(List.of(), Map.of(), new LocalDateTimeRange());
+            final CreateAuthorizationRequest createAuthorizationRequest = new CreateAuthorizationRequest(
+                    null,
+                    "progressiveName",
+                    Set.of(lambdaUserId),
+                    "progressive",
+                    "date_de_visite",
+                    Map.of(OperationType.extraction,List.of(authorization))
+            );
+             String json =new ObjectMapper().writeValueAsString(createAuthorizationRequest);
+*/            String json = "{\n" +
+                    "   \"usersId\":[\""+lambdaUserId+"\"],\n" +
+                    "   \"applicationNameOrId\":\"progressive\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur progressive\",\n" +
+                    "   \"dataType\":\"date_de_visite\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredauthorizations\":{},\n" +
+                    "         \"dataGroup\":[],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":null,\n" +
+                    "            \"toDay\":null\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
+
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/progressive/dataType/date_de_visite/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie)
+                    .content(json);
+            String response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+        }
+
+        {
+            String response = mockMvc.perform(get("/api/v1/applications")
+                    .cookie(authReaderCookie)
+            ).andReturn().getResponse().getContentAsString();
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste" , response.contains("progressive"));
+        }
+
+        {
+            String json = mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite")
+                            .cookie(authReaderCookie)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.rows[*].values.relevant.numero").value(hasItemInArray(equalTo("125")), String[].class))
+                    .andReturn().getResponse().getContentAsString();
+        }
+
     }
 
     @Test
@@ -660,7 +739,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    public void tesProgressiveYaml() throws Exception {
+    public void testProgressiveWithReferenceAndNoHierarchicalReferenceYaml() throws Exception {
 
         URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("testAuthorizationScopeWithReferenceAndNoHierarchicalReference"));
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
