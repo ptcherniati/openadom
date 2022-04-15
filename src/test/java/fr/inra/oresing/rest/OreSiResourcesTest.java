@@ -867,9 +867,9 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))
-                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
-                    .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+                   .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
+                     .andReturn().getResponse().getContentAsString();
+
         }
 
         String response;
