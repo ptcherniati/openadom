@@ -58,7 +58,8 @@ public class ApplicationConfigurationServiceTest {
         });
 
         Assert.assertFalse(service.parseConfigurationBytes("vers: 0".getBytes(StandardCharsets.UTF_8)).isValid());
-        Assert.assertFalse(service.parseConfigurationBytes("version: 1".getBytes(StandardCharsets.UTF_8)).isValid());
+        Assert.assertTrue(service.parseConfigurationBytes("version: 1".getBytes(StandardCharsets.UTF_8)).isValid());
+        Assert.assertFalse(service.parseConfigurationBytes("version: 2".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("::".getBytes(StandardCharsets.UTF_8)).isValid());
     }
 

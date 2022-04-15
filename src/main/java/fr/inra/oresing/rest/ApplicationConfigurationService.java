@@ -57,7 +57,7 @@ public class ApplicationConfigurationService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             Versioned versioned = mapper.readValue(bytes, Versioned.class);
             int actualVersion = versioned.getVersion();
-            int expectedVersion = 0;
+            int expectedVersion = 1;
             if (actualVersion != expectedVersion) {
                 return ConfigurationParsingResult.builder()
                         .unsupportedVersion(actualVersion, expectedVersion)

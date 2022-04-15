@@ -23,7 +23,7 @@ Soit version actuelle du site qui est 0 actuellement.
 
 
 ``` yaml
-version: 0
+version: 1
 ```
 
 ```
@@ -838,7 +838,7 @@ Dans le zip le contenu de la section  <section><sous_section><sous_sous_section>
 Au premier niveau il est possible de placer un fichier configuration.yaml qui servira de base à la génération du yaml.
 A défaut de se fichier on utilisera comme base 
 ```yaml
-version: 0
+version: 1
 ```
 
 voici un example du contenu du zip :

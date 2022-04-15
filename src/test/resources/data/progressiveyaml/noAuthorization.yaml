@@ -1,4 +1,4 @@
-version: 0
+version: 1
 
 application:
   name: Application de test no authorization
