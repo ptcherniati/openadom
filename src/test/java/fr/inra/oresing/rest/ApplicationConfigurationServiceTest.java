@@ -7,6 +7,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,6 +257,10 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
+    @Ignore
+    /**
+     *  on peut omettre le timescope
+     */
     public void testMissingTimeScopeVariableComponentKey() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
                 "      timeScope:\n" +
