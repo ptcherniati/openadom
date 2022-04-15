@@ -151,8 +151,9 @@ public class OreSiResources {
                 }
                 return new ApplicationResult.DataType.Variable(variable, variable, components, chartDescriptionResult);
             });
-            Map<String, String> repository = application.getConfiguration().getDataTypes().get(dataType).getRepository();
-            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null));
+            Map<String, String> repository = dataTypeDescription.getRepository();
+            final boolean hasAuthorizations = dataTypeDescription.getAuthorization() != null;
+            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null), hasAuthorizations);
         });
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis);
         return ResponseEntity.ok(applicationResult);
@@ -301,16 +302,19 @@ public class OreSiResources {
                 .map(DataRow::getRowId)
                 .collect(Collectors.toSet());
         Map<Ltree, List<ReferenceValue>> requiredreferencesValues = service.getReferenceDisplaysById(service.getApplication(nameOrId), listOfDataIds);
-        for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName()).entrySet()) {
-            String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
-            ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
-            for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
+        final Map<String, LineChecker> referenceLineCheckers = checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName());
+        if(referenceLineCheckers==null) {
+            //TODO on est dans le cas ou aucun checker reference n'est décrit : authorizationscope  n'est pas un referentiel
+        }else {
+            for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
+                String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
+                ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
+                for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
 
-                final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
-                        .stream()
-                        .findFirst().orElse(null);
-                if (referenceValue != null) {
-                    checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName())
+                    final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
+                            .stream()
+                            .findFirst().orElse(null);
+                    referenceLineCheckers
                             .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
                 }
             }
@@ -321,18 +325,24 @@ public class OreSiResources {
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {
         Configuration.AuthorizationDescription authorization = service.getApplication(nameOrId).getConfiguration().getDataTypes().get(dataType).getAuthorization();
         LinkedHashSet<String> orderedVariableComponents = new LinkedHashSet<String>();
-        orderedVariableComponents.add(authorization.getTimeScope().getVariable());
-        authorization.getAuthorizationScopes().values()
-                .stream()
-                .filter(vc -> !orderedVariableComponents.contains(vc.getVariable()))
-                .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
-        authorization.getDataGroups()
-                .values()
-                .stream()
-                .map(dg -> dg.getData())
-                .flatMap(Set::stream)
-                .filter(vc -> !orderedVariableComponents.contains(vc))
-                .forEach(vc -> orderedVariableComponents.add(vc));
+        if(authorization!=null && authorization.getTimeScope()!=null) {
+            orderedVariableComponents.add(authorization.getTimeScope().getVariable());
+        }
+        if(authorization!=null && authorization.getAuthorizationScopes()!=null) {
+            authorization.getAuthorizationScopes().values()
+                    .stream()
+                    .filter(vc -> !orderedVariableComponents.contains(vc.getVariable()))
+                    .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
+        }
+        if(authorization!=null && authorization.getDataGroups()!=null) {
+            authorization.getDataGroups()
+                    .values()
+                    .stream()
+                    .map(dg -> dg.getData())
+                    .flatMap(Set::stream)
+                    .filter(vc -> !orderedVariableComponents.contains(vc))
+                    .forEach(vc -> orderedVariableComponents.add(vc));
+        }
         return orderedVariableComponents;
     }
 

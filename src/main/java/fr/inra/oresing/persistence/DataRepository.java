@@ -33,7 +33,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     protected String getUpsertQuery() {
         return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, dataType, rowId, \"authorization\", uniqueness, refsLinkedTo, dataValues, binaryFile) \n" +
                 "SELECT id, application, dataType, rowId, \"authorization\", uniqueness,  refsLinkedTo, dataValues, binaryFile FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (dataType, datagroup, uniqueness) DO UPDATE SET id=EXCLUDED.id, updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, \"authorization\"=EXCLUDED.\"authorization\", refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
+                + " ON CONFLICT (dataType, datagroup, uniqueness) DO UPDATE SET updateDate=current_timestamp, application=EXCLUDED.application, dataType=EXCLUDED.dataType, rowId=EXCLUDED.rowId, \"authorization\"=EXCLUDED.\"authorization\", refsLinkedTo=EXCLUDED.refsLinkedTo, dataValues=EXCLUDED.dataValues, binaryFile=EXCLUDED.binaryFile"
                 + " RETURNING id";
     }
 
@@ -95,7 +95,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getNamedParameterJdbcTemplate().query(query, sqlParams, new JsonRowMapper<Uniqueness>());
     }
 
-    public void updateConstraintForeigData(List<UUID> uuids) {
+    public void updateConstraintForeignData(List<UUID> uuids) {
         String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference WHERE dataId in (:ids)";
         String insertSql = String.join(" "
                 , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)"

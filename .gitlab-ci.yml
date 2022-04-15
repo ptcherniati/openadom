@@ -60,6 +60,12 @@ maven_test_rest_2:
   script: mvn --batch-mode clean test -Ptest_rest_2
   tags:
     - docker
+maven_test_rest_others:
+  image: maven:3.6.3-openjdk-11
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_others
+  tags:
+    - docker
 maven_test_checker:
   image: maven:3.6.3-openjdk-11
   stage: test

@@ -207,7 +207,7 @@ public class Configuration {
     public static abstract class ReferenceColumnDescription {
 
         @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues = "MANDATORY,OPTIONAL")
-        ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
@@ -216,7 +216,7 @@ public class Configuration {
 
         @ApiModelProperty(notes = "Define a checker to apply for this column on each line of the CSV at import", required = false)
         @Nullable
-        CheckerDescription checker;
+        private CheckerDescription checker;
     }
 
     @Getter
@@ -226,7 +226,7 @@ public class Configuration {
 
         @ApiModelProperty(notes = "Define a default value for this column: it will be computed if the CSV contains an empty cell", required = false)
         @Nullable
-        GroovyConfiguration defaultValue;
+        private GroovyConfiguration defaultValue;
     }
 
     @Getter
@@ -235,7 +235,7 @@ public class Configuration {
     public static class ReferenceStaticComputedColumnDescription extends ReferenceStaticColumnDescription {
 
         @ApiModelProperty(notes = "Explain how to compute the value for this column given other columns", required = false)
-        GroovyConfiguration computation;
+        private GroovyConfiguration computation;
     }
 
     @Getter
@@ -258,7 +258,7 @@ public class Configuration {
     @ToString
     public static class CompositeReferenceDescription extends InternationalizationImpl {
         @ApiModelProperty(notes = "A 'composite reference' is a hierarchy of references from largest entity to the smallest", required = false)
-        List<CompositeReferenceComponentDescription> components = new LinkedList<>();
+        private List<CompositeReferenceComponentDescription> components = new LinkedList<>();
 
         public boolean isDependentOfReference(String reference) {
             return components.stream()
@@ -273,13 +273,13 @@ public class Configuration {
     public static class CompositeReferenceComponentDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "A reference composing the composite reference", required = true, example = "types_sites")
-        String reference;
+        private String reference;
 
         @ApiModelProperty(notes = "The column of 'reference' where we can find the natural key the find the parent for this line", required = false, example = "name")
-        String parentKeyColumn;
+        private String parentKeyColumn;
 
         @ApiModelProperty(notes = "For recursive composite reference: the reference column that contains parent key", required = false, example = "parent_key")
-        String parentRecursiveKey;
+        private String parentRecursiveKey;
     }
 
     @Getter
@@ -288,25 +288,25 @@ public class Configuration {
     public static class DataTypeDescription extends InternationalizationMapDisplayImpl {
 
         @ApiModelProperty(notes = "This section describes a binding between a file and the data", required = true)
-        FormatDescription format;
+        private FormatDescription format;
 
         @ApiModelProperty(notes = "This section describes the data model, splitting each line of data in variable/components", required = true)
-        LinkedHashMap<String, VariableDescription> data = new LinkedHashMap<>();
+        private LinkedHashMap<String, VariableDescription> data = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "Some validations rules that will be checked at import. It will allow to make sure a line we import is consistent.", required = true)
-        LinkedHashMap<String, LineValidationRuleWithVariableComponentsDescription> validations = new LinkedHashMap<>();
+        private LinkedHashMap<String, LineValidationRuleWithVariableComponentsDescription> validations = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "This section defines the variable/components that compose the natural key of a line", required = false)
-        List<VariableComponentKey> uniqueness = new LinkedList<>();
+        private List<VariableComponentKey> uniqueness = new LinkedList<>();
 
         @ApiModelProperty(notes = "This section defines how to migrate the data when a new version of yaml is registered", required = false)
-        TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
+        private TreeMap<Integer, List<MigrationDescription>> migrations = new TreeMap<>();
 
         @ApiModelProperty(notes = "This section defines the autorization model for this dataType, how we define who can access what", required = true)
-        AuthorizationDescription authorization;
+        private AuthorizationDescription authorization;
 
         @ApiModelProperty(notes = "If this section exists, the data file will be store on a repository tree", required = false)
-        LinkedHashMap<String, String> repository = null;
+        private LinkedHashMap<String, String> repository = null;
 
         public static Map<String, InternationalizationDataTypeMap> getInternationalization(LinkedHashMap<String, DataTypeDescription> dataTypeDescriptionMap) {
             Map<String, InternationalizationDataTypeMap> internationalizationDataTypeMapMap = new HashMap<>();
@@ -341,7 +341,7 @@ public class Configuration {
     public static abstract class LineValidationRuleDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "The checker to apply to ensure that the rule is respected", required = true)
-        CheckerDescription checker;
+        private CheckerDescription checker;
 
         /**
          * Si le checker est un {@link fr.inra.oresing.checker.CheckerOnOneVariableComponentLineChecker}, les {@link CheckerTarget} sur lesquelles il s'applique
@@ -355,7 +355,7 @@ public class Configuration {
     public static class LineValidationRuleWithColumnsDescription extends LineValidationRuleDescription {
 
         @ApiModelProperty(notes = "The set of columns to check", required = false)
-        Set<String> columns;
+        private Set<String> columns;
 
         @Override
         public Set<CheckerTarget> doGetCheckerTargets() {
@@ -371,7 +371,7 @@ public class Configuration {
     public static class LineValidationRuleWithVariableComponentsDescription extends LineValidationRuleDescription {
 
         @ApiModelProperty(notes = "The set of variable/components to check", required = false, hidden = true)
-        Set<VariableComponentKey> variableComponents;
+        private Set<VariableComponentKey> variableComponents;
 
         @Override
         public Set<CheckerTarget> doGetCheckerTargets() {
@@ -383,15 +383,16 @@ public class Configuration {
     @Setter
     @ToString
     public static class AuthorizationDescription {
+        public static AuthorizationDescription DEFAULT_INSTANCE=new AuthorizationDescription();
 
         @ApiModelProperty(notes = "The variable component that identifies the time scope of the line (must be a variable/component with a checker of type 'Date')", required = true)
-        VariableComponentKey timeScope;
+        private VariableComponentKey timeScope;
 
         @ApiModelProperty(notes = "A list of authorization scopes. An authorization scope is for example the location, the project, or both.", required = true)
-        LinkedHashMap<String, AuthorizationScopeDescription> authorizationScopes = new LinkedHashMap<>();
+        private LinkedHashMap<String, AuthorizationScopeDescription> authorizationScopes = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "The list of 'data groups'. Each data group contains variables. People will be given a right on one or more data-group.", required = true)
-        LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
+        private LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
 
         public InternationalizationAuthorisationMap getInternationalization() {
             final InternationalizationAuthorisationMap internationalizationAuthorisationMap = new InternationalizationAuthorisationMap();
@@ -419,10 +420,10 @@ public class Configuration {
     public static class AuthorizationScopeDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "This autorization scope is defined by a variable/component, this is the variable name", required = true, example = "localization")
-        String variable;
+        private String variable;
 
         @ApiModelProperty(notes = "This autorization scope is defined by a variable/component, this is the component name", required = true, example = "zone")
-        String component;
+        private String component;
 
         public VariableComponentKey getVariableComponentKey() {
             return new VariableComponentKey(variable, component);
@@ -459,19 +460,19 @@ public class Configuration {
     public static class HeaderConstantDescription {
 
         @ApiModelProperty(notes = "The row where is the constant value", required = true, example = "1")
-        int rowNumber;
+        private int rowNumber;
 
         @ApiModelProperty(notes = "The column where is the constant value. If empty, 'headerName' must be provided", required = false, example = "2")
-        int columnNumber;
+        private int columnNumber;
 
         @ApiModelProperty(notes = "The header column name of column where is the constant value. If empty, 'columnNumber' must be provided", required = false, example = "CO2")
-        String headerName;
+        private String headerName;
 
         @ApiModelProperty(notes = "The variable/component to bound to", required = true)
-        VariableComponentKey boundTo;
+        private VariableComponentKey boundTo;
 
         @ApiModelProperty(notes = "The export header name", required = true, example = "CO2_unit")
-        String exportHeader;
+        private String exportHeader;
 
         public int getColumnNumber(ImmutableList<String> headerRows) {
             if (headerName != null && headerRows.contains(headerName)) {
@@ -488,10 +489,10 @@ public class Configuration {
     public static class ColumnBindingDescription {
 
         @ApiModelProperty(notes = "The header name of column that contains the value to bind", required = true, example = "CO2")
-        String header;
+        private String header;
 
         @ApiModelProperty(notes = "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component", required = true)
-        VariableComponentKey boundTo;
+        private VariableComponentKey boundTo;
     }
 
     @Getter
@@ -500,16 +501,16 @@ public class Configuration {
     public static class RepeatedColumnBindingDescription {
 
         @ApiModelProperty(notes = "The regexp pattern to find repeated columns to bind", required = true, example = "(.*)_([0-9]*)_([0-9]*)")
-        String headerPattern;
+        private String headerPattern;
 
         @ApiModelProperty(notes = "The export header (for value) of these columns", required = true, example = "SMP")
-        String exportHeader;
+        private String exportHeader;
 
         @ApiModelProperty(notes = "How bind the result of regexp parenthesis. $1 to first pattern, $2 is the second ...", required = false)
-        List<HeaderPatternToken> tokens = new LinkedList<>();
+        private List<HeaderPatternToken> tokens = new LinkedList<>();
 
         @ApiModelProperty(notes = "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component", required = true)
-        VariableComponentKey boundTo;
+        private VariableComponentKey boundTo;
     }
 
     @Getter
@@ -518,10 +519,10 @@ public class Configuration {
     public static class HeaderPatternToken {
 
         @ApiModelProperty(notes = "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component", required = true)
-        VariableComponentKey boundTo;
+        private VariableComponentKey boundTo;
 
         @ApiModelProperty(notes = "When this data will be exported as CSV, the header of the column that will contain the value", required = true, example = "profondeur")
-        String exportHeader;
+        private String exportHeader;
     }
 
     @Getter
@@ -530,13 +531,13 @@ public class Configuration {
     public static class VariableDescription {
 
         @ApiModelProperty(notes = "A description to create disponibilité charts", required = false)
-        Chart chartDescription;
+        private Chart chartDescription;
 
         @ApiModelProperty(notes = "The list of components for this variable", required = true)
-        LinkedHashMap<String, VariableComponentWithDefaultValueDescription> components = new LinkedHashMap<>();
+        private LinkedHashMap<String, VariableComponentWithDefaultValueDescription> components = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "The list of computed components for this variable", required = true)
-        LinkedHashMap<String, ComputedVariableComponentDescription> computedComponents = new LinkedHashMap<>();
+        private LinkedHashMap<String, ComputedVariableComponentDescription> computedComponents = new LinkedHashMap<>();
 
         public Set<String> doGetAllComponents() {
             return doGetAllComponentDescriptions().keySet();
@@ -569,19 +570,19 @@ public class Configuration {
                 "   )\n";
 
         @ApiModelProperty(notes = "The component containing value", required = true)
-        String value;
+        private String value;
 
         @ApiModelProperty(notes = "A variable component for aggregate values", required = false)
-        VariableComponentKey aggregation = null;
+        private VariableComponentKey aggregation = null;
 
         @ApiModelProperty(notes = "A variable/component for unit", required = false)
-        String unit = null;
+        private String unit = null;
 
         @ApiModelProperty(notes = "An sql expression for max gap between consecutive values", required = false)
-        String gap = null;
+        private String gap = null;
 
         @ApiModelProperty(notes = "A component for standardDeviation", required = false)
-        String standardDeviation = null;
+        private String standardDeviation = null;
 
         public String toSQL(String variableName, String dataType) {
             String sql = String.format(
@@ -610,7 +611,7 @@ public class Configuration {
     public abstract static class VariableComponentDescription {
 
         @ApiModelProperty(notes = "A checker description", required = false)
-        CheckerDescription checker;
+        private CheckerDescription checker;
     }
 
     @Getter
@@ -620,7 +621,7 @@ public class Configuration {
 
         @ApiModelProperty(notes = "A default value if the cell in the imported CSV is empty", required = false)
         @Nullable
-        GroovyConfiguration defaultValue;
+        private GroovyConfiguration defaultValue;
     }
 
     @Getter
@@ -629,7 +630,7 @@ public class Configuration {
     public static class ComputedVariableComponentDescription extends VariableComponentDescription {
 
         @ApiModelProperty(notes = "Explain how to compute the value for this computed component given other columns", required = false)
-        GroovyConfiguration computation;
+        private GroovyConfiguration computation;
     }
 
     @Getter
@@ -638,10 +639,10 @@ public class Configuration {
     public static class CheckerDescription {
 
         @ApiModelProperty(notes = "The name of the checker that must be used", required = true)
-        String name;
+        private String name;
 
         @ApiModelProperty(notes = "The params of the checker to configure it. Required for some checkers", required = false)
-        CheckerConfigurationDescription params = new CheckerConfigurationDescription();
+        private CheckerConfigurationDescription params = new CheckerConfigurationDescription();
     }
 
     @Getter
@@ -656,25 +657,25 @@ public class Configuration {
             GroovyLineCheckerConfiguration {
 
         @ApiModelProperty(notes = "The pattern of a regular expression for RegularExpression checker\nthe pattern of a date for Date checker", required = false, example = "dd/MM/yyyy")
-        String pattern;
+        private String pattern;
 
         @ApiModelProperty(notes = "the name of the reference for Reference checker", required = false, example = "units")
-        String refType;
+        private String refType;
 
         @ApiModelProperty(notes = "A groovy expression to check for the GroovyExpression checker", required = false)
-        GroovyConfiguration groovy;
+        private GroovyConfiguration groovy;
 
-        String duration;
+        private String duration;
 
         @ApiModelProperty(notes = "How to transform the value before checking it", required = false)
         @Nullable
-        TransformationConfigurationDescription transformation = new TransformationConfigurationDescription();
+        private TransformationConfigurationDescription transformation = new TransformationConfigurationDescription();
 
         @ApiModelProperty(notes = "If true the value can't be null", required = false, example = "true", allowableValues = "true,false")
-        boolean required = true;
+        private boolean required = true;
 
         @ApiModelProperty(notes = "If MANY the value is a list of references for Reference checker", required = false, example = "MANY", allowableValues = "MANY,ONE")
-        Multiplicity multiplicity = Multiplicity.ONE;
+        private Multiplicity multiplicity = Multiplicity.ONE;
     }
 
     @Getter
@@ -683,10 +684,10 @@ public class Configuration {
     public static class TransformationConfigurationDescription implements TransformationConfiguration {
 
         @ApiModelProperty(notes = "If true, codifies the column value. The value will be escaped to a format suitable for a naturel key. Will be applied after 'groovy' expression if both are active.", required = false, example = "true", allowableValues = "true,false")
-        boolean codify;
+        private boolean codify;
 
         @ApiModelProperty(notes = "A groovy expression to transform the value before the checker checks it", required = false)
-        GroovyConfiguration groovy;
+        private GroovyConfiguration groovy;
     }
 
     @Getter
@@ -700,13 +701,13 @@ public class Configuration {
                 "                  .collect{it.substring(0, 1)}\n" +
                 "                  .join(); " +
                 "                return application.dataType.contains(dataType);")
-        String expression;
+        private String expression;
 
         @ApiModelProperty(notes = "The list of references values in database to add to groovy context", required = false)
-        Set<String> references = new LinkedHashSet<>();
+        private Set<String> references = new LinkedHashSet<>();
 
         @ApiModelProperty(notes = "The list of data types values in database to add to groovy context", required = false)
-        Set<String> datatypes = new LinkedHashSet<>();
+        private Set<String> datatypes = new LinkedHashSet<>();
     }
 
     @Getter
@@ -715,10 +716,10 @@ public class Configuration {
     public static class DataGroupDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "The name of the data group", required = true, example = "localizations")
-        String label;
+        private String label;
 
         @ApiModelProperty(notes = "The list of variables in this data group", required = true)
-        Set<String> data = new LinkedHashSet<>();
+        private Set<String> data = new LinkedHashSet<>();
     }
 
     @Getter
@@ -727,13 +728,13 @@ public class Configuration {
     public static class ApplicationDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "The unique name of the application", required = true, example = "ACBB")
-        String name;
+        private String name;
 
         @ApiModelProperty(notes = "The version incremental version number of this yaml description of this application", required = true, example = "1")
-        int version;
+        private int version;
 
         @ApiModelProperty(notes = "The default language if none is provided", required = false, example = "fr")
-        Locale defaultLanguage;
+        private Locale defaultLanguage;
 
         public InternationalizationApplicationMap getInternationalization() {
             final InternationalizationApplicationMap internationalizationApplicationMap = new InternationalizationApplicationMap();
@@ -748,16 +749,16 @@ public class Configuration {
     public static class MigrationDescription {
 
         @ApiModelProperty(notes = "The migration strategy", required = true, example = "ADD_VARIABLE", allowableValues = "ADD_VARIABLE")
-        MigrationStrategy strategy;
+        private MigrationStrategy strategy;
 
         @ApiModelProperty(notes = "A data group name", required = true, example = "variables")
-        String dataGroup;
+        private String dataGroup;
 
         @ApiModelProperty(notes = "A variable in this data group", required = true, example = "CO2")
-        String variable;
+        private String variable;
 
         @ApiModelProperty(notes = "A list of component migration description for this variable", required = true)
-        Map<String, AddVariableMigrationDescription> components = new LinkedHashMap<>();
+        private Map<String, AddVariableMigrationDescription> components = new LinkedHashMap<>();
     }
 
     @Getter
@@ -766,7 +767,7 @@ public class Configuration {
     public static class AddVariableMigrationDescription {
 
         @ApiModelProperty(notes = "The value by default if the variable component is empty after migration", required = true, example = "-9999")
-        String defaultValue;
+        private String defaultValue;
     }
 
     class DependencyNode {

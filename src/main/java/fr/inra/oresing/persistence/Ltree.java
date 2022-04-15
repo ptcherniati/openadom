@@ -31,6 +31,8 @@ public class Ltree {
 
     private static final Pattern VALID_LABEL_REGEX = Pattern.compile("[a-zA-Z0-9_]+");
 
+    private static final Ltree EMPTY_LTREE_SINGLETON = new Ltree("");
+
     String sql;
 
     private Ltree(String sql) {
@@ -113,5 +115,14 @@ public class Ltree {
 
     public static void checkSyntax(String sql) {
         Splitter.on(SEPARATOR).split(sql).forEach(Ltree::checkLabelSyntax);
+    }
+
+    public static Ltree empty() {
+        return EMPTY_LTREE_SINGLETON;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }

@@ -152,6 +152,29 @@ public class Fixtures {
                 "   }", plateforme, projet, site);
     }
 
+    public Map<String, String> getProgressiveYaml() {
+        Map<String, String> yamls = new LinkedHashMap<>();
+        yamls.put("testAuthorizationScopeWithoutReference", "/data/progressiveyaml/testAuthorizationScopeWithoutReference.yaml");
+        yamls.put("testAuthorizationScopeWithReferenceAndNoHierarchicalReference", "/data/progressiveyaml/testAuthorizationScopeWithReferenceAndNoHierarchicalReference.yaml");
+        yamls.put("yamlWithEmptyDatagroup", "/data/progressiveyaml/testEmptyDatagroup.yaml");
+        yamls.put("yamlWithoutAuthorization", "/data/progressiveyaml/noAuthorization.yaml");
+        return yamls;
+    }
+
+    public Map<String, String> getProgressiveYamlReferentielFiles() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("agroécosystème", "/data/progressiveyaml/references/agroecosystem.csv");
+        referentielFiles.put("sites", "/data/progressiveyaml/references/sites.csv");
+        referentielFiles.put("parcelles", "/data/progressiveyaml/references/parcelles.csv");
+        return referentielFiles;
+    }
+
+    public Map<String, String> getProgressiveYamlDataFiles() {
+        Map<String, String> dataFiles = new LinkedHashMap<>();
+        dataFiles.put("date_de_visite", "/data/progressiveyaml/data/date_de_visite.csv");
+        return dataFiles;
+    }
+
     public String getRecursivityApplicationConfigurationResourceName() {
         return "/data/recursivite/recusivite.yaml";
     }
@@ -656,6 +679,7 @@ public class Fixtures {
                 .put("meteo_m", "/data/foret/data/meteo/mensuel/hesse-hesse_1_meteo_m_01-2012_03-2012.csv")*/
                 .build();
     }
+
     public Map<String, Integer> getForetEssaiSynthesisSize() {
         ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
         return builder

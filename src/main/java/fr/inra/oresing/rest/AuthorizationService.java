@@ -6,7 +6,6 @@ import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
-import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,16 +47,16 @@ public class AuthorizationService {
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, modifiedAuthorization.getId());
         db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.readerOn(application));
         addOrRemoveAuthorizationForUsers(previousUsers, newUsers, oreSiRightOnApplicationRole);
-        if (modifiedAuthorization.getAuthorizations().keySet().contains(OperationType.publication)) {
+        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             SqlPolicy publishPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
             db.createPolicy(publishPolicy);
         }
-        if (modifiedAuthorization.getAuthorizations().keySet().contains(OperationType.extraction)) {
+        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.extraction)) {
             SqlPolicy extractPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, SqlPolicy.Statement.SELECT);
             db.createPolicy(extractPolicy);
         }
-        if (modifiedAuthorization.getAuthorizations().keySet().contains(OperationType.delete)) {
+        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             SqlPolicy extractPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, SqlPolicy.Statement.DELETE);
             db.createPolicy(extractPolicy);
@@ -67,7 +66,6 @@ public class AuthorizationService {
     public OreSiRightOnApplicationRole createRoleForAuthorization(CreateAuthorizationRequest previousAuthorization, OreSiAuthorization modifiedAuthorization) {
         UUID created = modifiedAuthorization.getId();
         Application application = repository.application().findApplication(previousAuthorization.getApplicationNameOrId());
-        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, created);
         db.createRole(oreSiRightOnApplicationRole);
         return oreSiRightOnApplicationRole;
@@ -75,12 +73,8 @@ public class AuthorizationService {
 
 
     public OreSiAuthorization addAuthorization(CreateAuthorizationRequest authorizations) {
-        Set<OreSiUserRole> usersRole = authorizations.getUsersId().stream()
-                .map(authenticationService::getUserRole)
-                .collect(Collectors.toSet());
         Application application = repository.application().findApplication(authorizations.getApplicationNameOrId());
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
-        OreSiRightOnApplicationRole oreSiRightOnApplicationRole;
         OreSiAuthorization entity = authorizations.getUuid() == null ?
                 new OreSiAuthorization()
                 : authorizationRepository.findById(authorizations.getUuid());
@@ -97,7 +91,10 @@ public class AuthorizationService {
                     authByType.forEach(authorization -> {
                         authorization.getDataGroup()
                                 .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
-                        Set<String> labels = authorizationDescription.getAuthorizationScopes().keySet();
+                        Set<String> labels =Optional.ofNullable( authorizationDescription)
+                                .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
+                                .map(Map::keySet)
+                                .orElseGet(Set::of);
                         Preconditions.checkArgument(
                                 labels.containsAll(authorization.getRequiredauthorizations().keySet())
                         );
@@ -108,7 +105,7 @@ public class AuthorizationService {
         entity.setApplication(application.getId());
         entity.setDataType(dataType);
         entity.setAuthorizations(authorizations.getAuthorizations());
-        UUID storedUUID = authorizationRepository.store(entity);
+        authorizationRepository.store(entity);
         return entity;
     }
 
@@ -125,7 +122,7 @@ public class AuthorizationService {
     }
 
 
-    private SqlPolicy toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, SqlPolicy.Statement statement){
+    private SqlPolicy toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, SqlPolicy.Statement statement) {
         Set<String> usingExpressionElements = new LinkedHashSet<>();
         Application application = repository.application().findApplication(authorization.getApplication());
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
@@ -173,16 +170,16 @@ public class AuthorizationService {
         UUID authorizationId = revokeAuthorizationRequest.getAuthorizationId();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
-        if (oreSiAuthorization.getAuthorizations().keySet().contains(OperationType.publication)) {
+        if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             SqlPolicy publishPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
             db.dropPolicy(publishPolicy);
         }
-        if (oreSiAuthorization.getAuthorizations().keySet().contains(OperationType.extraction)) {
+        if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.extraction)) {
             SqlPolicy extractPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, SqlPolicy.Statement.SELECT);
             db.dropPolicy(extractPolicy);
         }
-        if (oreSiAuthorization.getAuthorizations().keySet().contains(OperationType.delete)) {
+        if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
             SqlPolicy extractPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.delete, SqlPolicy.Statement.DELETE);
             db.dropPolicy(extractPolicy);
         }
@@ -192,6 +189,7 @@ public class AuthorizationService {
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType) {
         Application application = repository.application().findApplication(applicationNameOrId);
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
         ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findByDataType(dataType).stream()
                 .map(this::toGetAuthorizationResult)
                 .collect(ImmutableSet.toImmutableSet());
@@ -243,7 +241,7 @@ public class AuthorizationService {
                 } else {
                     toDay = null;
                 }
-                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), authorization.getRequiredauthorizations(), fromDay, toDay));
+                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), Maps.transformValues(authorization.getRequiredauthorizations(), Ltree::getSql), fromDay, toDay));
             }
             transformedAuthorizations.put(operationTypeListEntry.getKey(), authorizationsParsed);
         }
@@ -261,9 +259,14 @@ public class AuthorizationService {
     }
 
     private ImmutableSortedSet<GetGrantableResult.DataGroup> getDataGroups(Application application, String dataType) {
-        ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = application.getConfiguration().getDataTypes().get(dataType).getAuthorization().getDataGroups().entrySet().stream()
-                .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)));
+        ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = ImmutableSortedSet.of();
+        Optional.of(application.getConfiguration().getDataTypes().get(dataType))
+                .map(Configuration.DataTypeDescription::getAuthorization)
+                .map(Configuration.AuthorizationDescription::getDataGroups)
+                .map(dg -> dg.entrySet().stream()
+                    .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId))))
+                        .orElseGet(ImmutableSortedSet::of);
         return dataGroups;
     }
 
@@ -277,9 +280,12 @@ public class AuthorizationService {
 
     private ImmutableSortedSet<GetGrantableResult.AuthorizationScope> getAuthorizationScopes(Application application, String dataType) {
         ImmutableMap<VariableComponentKey, ReferenceLineChecker> referenceLineCheckers = checkerFactory.getReferenceLineCheckers(application, dataType);
-        Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
-        ImmutableSortedSet<GetGrantableResult.AuthorizationScope> authorizationScopes = authorizationDescription.getAuthorizationScopes().entrySet().stream()
-                .map(authorizationScopeEntry -> {
+        return Optional.of(application.getConfiguration().getDataTypes().get(dataType))
+                .map(Configuration.DataTypeDescription::getAuthorization)
+                .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
+                .map(authorizationScopes-> authorizationScopes.entrySet().stream()
+                        .map(
+                        authorizationScopeEntry -> {
                     String variable = authorizationScopeEntry.getValue().getVariable();
                     String component = authorizationScopeEntry.getValue().getComponent();
                     VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
@@ -291,9 +297,10 @@ public class AuthorizationService {
                             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
                     String authorizationScopeId = authorizationScopeEntry.getKey();
                     return new GetGrantableResult.AuthorizationScope(authorizationScopeId, authorizationScopeId, rootOptions);
-                })
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope::getId)));
-        return authorizationScopes;
+                    })
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope::getId)))
+                )
+                .orElseGet(ImmutableSortedSet::of);
     }
 
     private GetGrantableResult.AuthorizationScope.Option toOption(HierarchicalReferenceAsTree tree, ReferenceValue referenceValue) {

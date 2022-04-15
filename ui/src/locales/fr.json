@@ -111,6 +111,7 @@
         "emptyHeader": "Le fichier contient un en-tête de colonne vide",
         "headerColumnPatternNotMatching": "Erreur dans le format de l'en-tête de colonne. Format à respecter : <code>{expectedHeaderColumnPattern}</code><br/>En-tête actuel : <code>{actualHeaderColumn}</code>",
         "illegalCheckerConfigurationParameterForReferenceColumnChecker": "Pour le référentiel <code>{referenceToValidate}</code> et la colonne <code>{column}</code>, un contrôle <code>{checkerName}</code> est utilisé mais il n'accepte pas de paramètre <code>{parameterName}</code>",
+        "authorizationScopeMissingReferenceCheckerForAuthorizationScope": "Dans le type de données {dataType}, vous définissez un <i>authorisationScope</i> {authorizationScopeName} qui fais référence au <i>component</i>  {component} de la <i>variable</i>  {variable} . Afin de pouvoir fournir une liste de valeurs sur lesquelles portera l'authorisation, vous devez définir un  <i>checker</i>  de type  <i>Reference</i>   au <i>variableComponent</i> .",
         "illegalCheckerConfigurationParameterForValidationRuleInDataType": "Pour le type de données <code>{dataType}</code> et la règle de validation <code>{validationRuleDescriptionEntryKey}</code>, un contrôle <code>{checkerName}</code> est utilisé mais il n'accepte pas de paramètre <code>{parameterName}</code>",
         "illegalCheckerConfigurationParameterForValidationRuleInReference": "Pour le référentiel <code>{referenceToValidate}</code> et la règle de validation <code>{validationRuleDescriptionEntryKey}</code>, un contrôle <code>{checkerName}</code> est utilisé mais il n'accepte pas de paramètre <code>{parameterName}</code>",
         "illegalCheckerConfigurationParameterForVariableComponentChecker": "Pour le type de données <code>{dataType}</code>, le composant <code>{component}</code> de la variable <code>{datum}</code>, un contrôle <code>{checkerName}</code> est utilisé mais il n'accepte pas de paramètre <code>{parameterName}</code>",
@@ -217,6 +218,7 @@
         "data": "Données"
     },
     "dataTypesManagement": {
+        "no_authorization": "Pas de gestion des autorisations pour {localName}",
         "data-types": "Type de données",
         "consult-authorization": "Consulter les autorisations",
         "réinitialiser": "Réinitialiser",
