@@ -1,7 +1,7 @@
 version: 0
 
 application:
-  name: Application de test
+  name: Application de test authorizationscope with reference not in compositereference
   version: 1
 
 references:
