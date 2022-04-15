@@ -12,44 +12,42 @@
 
     <div v-if="reference && columns">
       <b-table
-          :data="tableValues"
-          :striped="true"
-          :isFocusable="true"
-          :isHoverable="true"
-          :sticky-header="true"
-          height="100%"
-          style="padding-bottom: 20px; position: relative;z-index: 1;"
+        :data="tableValues"
+        :striped="true"
+        :isFocusable="true"
+        :isHoverable="true"
+        :sticky-header="true"
+        height="100%"
+        style="padding-bottom: 20px; position: relative; z-index: 1"
       >
         <b-table-column
-            v-for="column in columns"
-            :key="column.id"
-            :field="column.id"
-            :label="column.title"
-            sortable
-            :sticky="column.key"
-            v-slot="props"
+          v-for="column in columns"
+          :key="column.id"
+          :field="column.id"
+          :label="column.title"
+          sortable
+          :sticky="column.key"
+          v-slot="props"
         >
-          <span v-if="column.id === 'nom du taxon déterminé'">
-            <a @click="showModal(props.row[column.id])">
-              {{ props.row[column.id] }}</a
-            >
+          <span v-if="info(column.id)">
+            <b-button
+                size="is-small"
+                type="is-dark"
+                v-if="showBtnTablDynamicColumn(props.row[column.id])"
+                @click="showModal(props.row[column.id])"
+                icon-left="info"
+                rounded
+                style="height: inherit"
+            ></b-button>
+            <p v-else></p>
             <b-modal
-                v-show="isSelectedName === props.row[column.id]"
-                v-model="isCardModalActive"
-                width = 70%
-                data-backdrop="static"
+              v-model="isCardModalActive"
+              width="70%"
             >
               <div class="card">
-                <div class="card-header">
-                  <div class="title card-header-title">
-                    <p field="name">Propriétés de {{ props.row[column.id] }}</p>
-                  </div>
-                </div>
                 <div class="card-content">
                   <ul>
-                    <li v-for="item in taxonTbl.proprietes_taxon" :key="item.code_sandre">
-                      {{ item }}
-                    </li>
+                    <li v-for="modalObj in modalArrayObj" :key="modalObj.id">{{ modalObj }}</li>
                   </ul>
                 </div>
               </div>
@@ -61,9 +59,9 @@
           <b-collapse v-else :open="false">
             <template #trigger>
               <b-button
-                  :label="'' + (tableValues.indexOf(props.row) + 1)"
-                  type="is-small"
-                  aria-controls="contentIdForA11y1"
+                :label="'' + (tableValues.indexOf(props.row) + 1)"
+                type="is-small"
+                aria-controls="contentIdForA11y1"
               />
             </template>
             {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
@@ -122,19 +120,27 @@ export default class ReferenceTableView extends Vue {
   perPage = 15;
 
   // show modal and cards
-  isSelectedName = "";
   isCardModalActive = false;
-  nameColumn = 'nom du taxon déterminé';
-  taxonTbl = [];
+  modalArrayObj = [];
 
-  showModal(name) {
-    this.isSelectedName = name;
+  showModal(tablDynamicColumn) {
     this.isCardModalActive = true;
-    for(let i =0; i<this.tableValues.length; i++) {
-      if (this.tableValues[i][this.nameColumn] === name) {
-        this.taxonTbl = this.tableValues[i];
-      }
+    this.modalArrayObj = Object.entries(tablDynamicColumn).filter(a=>a[1]).map(function(a){let obj = {}; obj[a[0]]=a[1]; return obj});
+    console.log(this.modalArrayObj);
+    return this.modalArrayObj;
+  }
+  info(column) {
+    let dynamicColumn = Object.entries(this.reference.dynamicColumns).filter(a=>a[1]);
+    for (let i = 0; i< dynamicColumn.length; i++) {
+      if(dynamicColumn[i][0] === column)
+        return true;
     }
+    return false;
+  }
+
+  showBtnTablDynamicColumn(tablDynamicColumn) {
+    let showModal = Object.entries(tablDynamicColumn).filter(a=>a[1]).map(function(a){let obj = {}; obj[a[0]]=a[1]; return obj});
+    return showModal.length !== 0;
   }
 
   async created() {
@@ -195,7 +201,15 @@ export default class ReferenceTableView extends Vue {
           if (c1.title < c2.title) {
             return -1;
           }
-
+          if (c1.title > c2.title) {
+            return 1;
+          }
+          return 0;
+        }),
+        ...Object.values(this.reference.dynamicColumns).sort((c1, c2) => {
+          if (c1.title < c2.title) {
+            return -1;
+          }
           if (c1.title > c2.title) {
             return 1;
           }
@@ -203,7 +217,6 @@ export default class ReferenceTableView extends Vue {
         }),
       ];
     }
-
     if (this.referenceValues) {
       this.tableValues = Object.values(this.referenceValues).map((refValue) => refValue.values);
     }

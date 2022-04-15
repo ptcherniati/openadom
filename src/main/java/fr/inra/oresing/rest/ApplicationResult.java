@@ -28,6 +28,7 @@ public class ApplicationResult {
         String label;
         Set<String> children;
         Map<String, Column> columns;
+        Map<String, DynamicColumn> dynamicColumns;
 
         @Value
         public static class Column {
@@ -35,6 +36,16 @@ public class ApplicationResult {
             String title;
             boolean key;
             String linkedTo;
+        }
+
+        @Value
+        public static class DynamicColumn {
+            String id;
+            String title;
+            String headerPrefix;
+            String reference;
+            String referenceColumnToLookForHeader;
+            boolean presenceConstraint;
         }
 
         @Value

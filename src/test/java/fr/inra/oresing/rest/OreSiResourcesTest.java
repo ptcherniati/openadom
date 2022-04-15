@@ -794,7 +794,7 @@ public class OreSiResourcesTest {
 
         URL resource = getClass().getResource(fixtures.getRecursivityApplicationConfigurationResourceName());
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
-            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+            MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
             authenticationService.addUserRightCreateApplication(userId);
 
@@ -806,6 +806,15 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             JsonPath.parse(response).read("$.id");
+
+
+            response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))
+                   .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
+                     .andReturn().getResponse().getContentAsString();
+            log.debug(response);
         }
 
         String response;
