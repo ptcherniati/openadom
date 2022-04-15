@@ -157,8 +157,8 @@ public class OreSiResourcesTest {
             }
         }
         mockMvc.perform(get("/api/v1/applications/{appId}", appId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .cookie(authCookie))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(authCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
 
@@ -400,7 +400,6 @@ public class OreSiResourcesTest {
     }
 
 
-
     @Test
     @Category(OTHERS_TEST.class)
     public void addApplicationMonsoreWithRepository() throws Exception {
@@ -593,6 +592,7 @@ public class OreSiResourcesTest {
     /**
      * This is a case where a datatype has no authorization section.
      * The only authorizations that can be put on are on none or all values.
+     *
      * @throws Exception
      */
     @Test
@@ -604,18 +604,19 @@ public class OreSiResourcesTest {
             //définition de l'application
             authenticationService.addUserRightCreateApplication(userId);
 
-            String result =  mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+            String result = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
         }
-        progressiveYamlAddReferencesAndData();
+        //pas de referentiels
+        progressiveYamlAddData();
 
         String lambdaUserId = lambdaUser.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login" , "lambda")
-                        .param("password" , "xxxxxxxx"))
+                        .param("login", "lambda")
+                        .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
 
@@ -623,7 +624,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés" , response.contains("progressive"));
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("progressive"));
         }
 
         {
@@ -644,8 +645,9 @@ public class OreSiResourcesTest {
                     Map.of(OperationType.extraction,List.of(authorization))
             );
              String json =new ObjectMapper().writeValueAsString(createAuthorizationRequest);
-*/            String json = "{\n" +
-                    "   \"usersId\":[\""+lambdaUserId+"\"],\n" +
+*/
+            String json = "{\n" +
+                    "   \"usersId\":[\"" + lambdaUserId + "\"],\n" +
                     "   \"applicationNameOrId\":\"progressive\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur progressive\",\n" +
@@ -678,7 +680,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste" , response.contains("progressive"));
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("progressive"));
         }
 
         {
@@ -693,7 +695,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    public void testProgressiveYamlWitEmptyDatagroup() throws Exception {
+    public void testProgressiveYamlWithEmptyDatagroup() throws Exception {
 
         URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("yamlWithEmptyDatagroup"));
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
@@ -701,7 +703,7 @@ public class OreSiResourcesTest {
             //définition de l'application
             authenticationService.addUserRightCreateApplication(userId);
 
-            String result =  mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+            String result = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -709,11 +711,17 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
         }
 
-        progressiveYamlAddReferencesAndData();
+        progressiveYamlAddReferences();
+        progressiveYamlAddData();
     }
 
+    /**
+     * Test that a localisationScope referes to a variable component with checker references
+     *
+     * @throws Exception
+     */
     @Test
-    public void tesProgressiveYamlWithNoReference() throws Exception {
+    public void testProgressiveYamlWithNoReference() throws Exception {
 
         URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("testAuthorizationScopeWithoutReference"));
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
@@ -731,13 +739,56 @@ public class OreSiResourcesTest {
                     .get(0);
             Assert.assertEquals("authorizationScopeMissingReferenceCheckerForAuthorizationScope", validationCheckResult.getMessage());
             final Map<String, Object> messageParams = validationCheckResult.getMessageParams();
-           Assert.assertEquals("localization", messageParams.get("authorizationScopeName"));
-           Assert.assertEquals("date_de_visite", messageParams.get("dataType"));
-           Assert.assertEquals("agroecosysteme", messageParams.get("component"));
-           Assert.assertEquals("localisation", messageParams.get("variable"));
+            Assert.assertEquals("localization", messageParams.get("authorizationScopeName"));
+            Assert.assertEquals("date_de_visite", messageParams.get("dataType"));
+            Assert.assertEquals("agroecosysteme", messageParams.get("component"));
+            Assert.assertEquals("localisation", messageParams.get("variable"));
         }
     }
 
+    @Test
+    public void testProgressiveYamlWithoutAuthorizationScope() throws Exception {
+
+        URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("testProgressiveYamlWithoutAuthorizationScope"));
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            final ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+
+            //pas de référentiel
+            progressiveYamlAddData();
+        }
+    }
+
+    @Test
+    public void testProgressiveYamlWithoutTimescopeScope() throws Exception {
+
+        URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("testProgressiveYamlWithoutTimescopeScope"));
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
+            //définition de l'application
+            authenticationService.addUserRightCreateApplication(userId);
+
+            final ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+
+            progressiveYamlAddReferences();
+            progressiveYamlAddData();
+        }
+    }
+
+    /**
+     * A localizationScope that refers to a component variable that is not declared as a composite reference
+     *
+     * @throws Exception
+     */
     @Test
     public void testProgressiveWithReferenceAndNoHierarchicalReferenceYaml() throws Exception {
 
@@ -754,11 +805,11 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
         }
-
-        progressiveYamlAddReferencesAndData();
+        progressiveYamlAddReferences();
+        progressiveYamlAddData();
     }
 
-    private void progressiveYamlAddReferencesAndData() throws Exception {
+    private void progressiveYamlAddReferences() throws Exception {
         String response;
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getProgressiveYamlReferentielFiles().entrySet()) {
@@ -775,6 +826,10 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
+    }
+
+    private void progressiveYamlAddData() throws Exception {
+        String response;
         for (Map.Entry<String, String> e : fixtures.getProgressiveYamlDataFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
@@ -812,8 +867,8 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))
-                   .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
-                     .andReturn().getResponse().getContentAsString();
+                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
+                    .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
 
@@ -1465,7 +1520,7 @@ on test le dépôt d'un fichier récursif
                     final String responseForGetSynthesis = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
                                     .cookie(authCookie))
                             .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
-                            .andExpect(jsonPath("$.SWC[*].aggregation", Matchers.containsInAnyOrder("10","120","160","200","250","30","55","80")))
+                            .andExpect(jsonPath("$.SWC[*].aggregation", Matchers.containsInAnyOrder("10", "120", "160", "200", "250", "30", "55", "80")))
                             .andReturn().getResponse().getContentAsString();
                 }
             }

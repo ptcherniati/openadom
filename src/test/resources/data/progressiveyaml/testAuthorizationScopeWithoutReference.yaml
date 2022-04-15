@@ -1,7 +1,7 @@
 version: 0
 
 application:
-  name: Application de test
+  name: Application de test authorizationscope withoutreference
   version: 1
 
 references:

@@ -569,7 +569,7 @@ public class OreSiService {
         final Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
         final boolean haveAuthorizations = authorization != null;
 
-        final DateLineChecker timeScopeDateLineChecker = haveAuthorizations?
+        final DateLineChecker timeScopeDateLineChecker = haveAuthorizations && authorization.getTimeScope()!=null?
                 lineCheckers.stream()
                     .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                     .map(lineChecker -> (DateLineChecker) lineChecker)

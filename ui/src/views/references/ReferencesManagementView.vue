@@ -16,7 +16,7 @@
         :key="ref.id"
         :option="ref"
         :level="0"
-        :id="i+1"
+        :id="i + 1"
         :onClickLabelCb="(event, label) => openRefDetails(event, label)"
         :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
@@ -125,18 +125,21 @@ export default class ReferencesManagementView extends Vue {
       if (this.application.referenceSynthesis[i].referenceType === ref.label) {
         return this.application.referenceSynthesis[i].lineCount;
       } else {
-        for (let n=0; n<ref.children.length; n++) {
-          if( this.application.referenceSynthesis[i].referenceType === ref.children[n].label) {
+        for (let n = 0; n < ref.children.length; n++) {
+          if (this.application.referenceSynthesis[i].referenceType === ref.children[n].label) {
             ref.children[n] = {
               ...ref.children[n],
-              lineCountChild : this.application.referenceSynthesis[i].lineCount,
+              lineCountChild: this.application.referenceSynthesis[i].lineCount,
             };
           } else {
-            for (let j=0; j<ref.children[n].children.length; j++) {
-              if( this.application.referenceSynthesis[i].referenceType === ref.children[n].children[j].label) {
+            for (let j = 0; j < ref.children[n].children.length; j++) {
+              if (
+                this.application.referenceSynthesis[i].referenceType ===
+                ref.children[n].children[j].label
+              ) {
                 ref.children[n].children[j] = {
                   ...ref.children[n].children[j],
-                  lineCountChild : this.application.referenceSynthesis[i].lineCount,
+                  lineCountChild: this.application.referenceSynthesis[i].lineCount,
                 };
               }
             }
@@ -150,12 +153,12 @@ export default class ReferencesManagementView extends Vue {
     const reference = this.findReferenceByLabel(label);
     if (reference) {
       let csv = await this.referenceService.getReferenceCsv(this.applicationName, reference.id);
-      console.log(csv)
-      var hiddenElement = document.createElement('a');
-      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+      console.log(csv);
+      var hiddenElement = document.createElement("a");
+      hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
 
       //provide the name for the CSV file to be downloaded
-      hiddenElement.download = 'export.csv';
+      hiddenElement.download = "export.csv";
       hiddenElement.click();
       return false;
     }

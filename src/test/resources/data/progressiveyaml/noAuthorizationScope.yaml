@@ -1,7 +1,7 @@
 version: 0
 
 application:
-  name: Application de test no authorization
+  name: Application de test no authorizationscope
   version: 1
 
 dataTypes:
@@ -18,10 +18,6 @@ dataTypes:
       localisation:
         components:
           agroecosysteme:
-#            checker:
-#              name: Reference
-#              params:
-#                refType: agroécosystème
       relevant:
         components:
           numero:
@@ -49,11 +45,14 @@ dataTypes:
             variable: localisation
             component: agroecosysteme
 
-#    authorization:
-#      authorizationScopes:
-#        localization:
-#          variable: localisation
-#          component: agroecosysteme
-#      timeScope:
-#        variable: date
-#        component: day
+    authorization:
+      timeScope:
+        variable: date
+        component: day
+      dataGroups:
+        all:
+          label: "Tout"
+          data:
+            - date
+            - localisation
+            - relevant
