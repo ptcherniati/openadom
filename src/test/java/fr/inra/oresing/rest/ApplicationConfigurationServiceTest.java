@@ -151,7 +151,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnsupportedVersion() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("version: 0", "version: -1");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("version: 1", "version: -1");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
