@@ -259,14 +259,15 @@ public class AuthorizationService {
     }
 
     private ImmutableSortedSet<GetGrantableResult.DataGroup> getDataGroups(Application application, String dataType) {
-        ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = ImmutableSortedSet.of();
+        ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups =
         Optional.of(application.getConfiguration().getDataTypes().get(dataType))
                 .map(Configuration.DataTypeDescription::getAuthorization)
                 .map(Configuration.AuthorizationDescription::getDataGroups)
                 .map(dg -> dg.entrySet().stream()
                     .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId))))
-                        .orElseGet(ImmutableSortedSet::of);
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)) )
+                )
+                .orElseGet(ImmutableSortedSet::of);
         return dataGroups;
     }
 
