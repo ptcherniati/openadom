@@ -1,0 +1,3609 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Api Rest pour le stockage et la restitution de fichier CSV",
+    "version": "1.0",
+    "title": "ore-si-ng",
+    "termsOfService": "https://inra.fr",
+    "license": {
+      "name": "LICENSE",
+      "url": "https://www.gnu.org/licenses/lgpl.html"
+    }
+  },
+  "host": "localhost:8081",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "authentication-resources",
+      "description": "Authentication Resources"
+    },
+    {
+      "name": "authorization-resources",
+      "description": "Authorization Resources"
+    },
+    {
+      "name": "ore-si-resources",
+      "description": "Ore Si Resources"
+    }
+  ],
+  "paths": {
+    "/api/v1/applications": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getApplications",
+        "operationId": "getApplicationsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Application"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getApplication",
+        "operationId": "getApplicationUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ApplicationResult"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/configuration": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getConfiguration",
+        "operationId": "getConfigurationUsingGET",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "changeConfiguration",
+        "operationId": "changeConfigurationUsingPOST",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "comment",
+            "in": "query",
+            "description": "comment",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "file",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/data": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "listDataType",
+        "operationId": "listDataTypeUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/data/{dataType}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getAllDataJson",
+        "operationId": "getAllDataJsonUsingGET",
+        "produces": [
+          "application/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "downloadDatasetQuery",
+            "in": "query",
+            "description": "downloadDatasetQuery",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/GetDataResult"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "createData",
+        "operationId": "createDataUsingPOST",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "file",
+            "required": false,
+            "type": "file"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "params",
+            "in": "query",
+            "description": "params",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/data/{dataType}/csv": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getAllDataCsvForce",
+        "operationId": "getAllDataCsvForceUsingGET",
+        "produces": [
+          "application/octet-stream",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "downloadDatasetQuery",
+            "in": "query",
+            "description": "downloadDatasetQuery",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/dataType/{dataType}/authorization": {
+      "get": {
+        "tags": [
+          "authorization-resources"
+        ],
+        "summary": "getAuthorizations",
+        "operationId": "getAuthorizationsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GetAuthorizationResult"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "authorization-resources"
+        ],
+        "summary": "addAuthorization",
+        "operationId": "addAuthorizationUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "authorization",
+            "description": "authorization",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateAuthorizationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}": {
+      "get": {
+        "tags": [
+          "authorization-resources"
+        ],
+        "summary": "getAuthorization",
+        "operationId": "getAuthorizationUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "authorizationId",
+            "in": "path",
+            "description": "authorizationId",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/GetAuthorizationResult"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "authorization-resources"
+        ],
+        "summary": "revokeAuthorization",
+        "operationId": "revokeAuthorizationUsingDELETE",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "authorizationId",
+            "in": "path",
+            "description": "authorizationId",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/dataType/{dataType}/grantable": {
+      "get": {
+        "tags": [
+          "authorization-resources"
+        ],
+        "summary": "getGrantable",
+        "operationId": "getGrantableUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/GetGrantableResult"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/filesOnRepository/{dataType}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getFilesOnRepository",
+        "operationId": "getFilesOnRepositoryUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repositoryId",
+            "in": "query",
+            "description": "repositoryId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/BinaryFile"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/references": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "listNameReferences",
+        "operationId": "listNameReferencesUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/references/{refType}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "listReferences",
+        "operationId": "listReferencesUsingGET_1",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "params",
+            "in": "query",
+            "description": "params",
+            "required": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "refType",
+            "in": "path",
+            "description": "refType",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/GetReferenceResult"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "createReference",
+        "operationId": "createReferenceUsingPOST",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "file",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "refType",
+            "in": "path",
+            "description": "refType",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/references/{refType}/csv": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "listReferencesCsv",
+        "operationId": "listReferencesCsvUsingGET",
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "params",
+            "in": "query",
+            "description": "params",
+            "required": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "refType",
+            "in": "path",
+            "description": "refType",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/references/{refType}/{column}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "listReferences",
+        "operationId": "listReferencesUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "column",
+            "in": "path",
+            "description": "column",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "refType",
+            "in": "path",
+            "description": "refType",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/synthesis/{dataType}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getSynthesis",
+        "operationId": "getSynthesisUsingGET_1",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "buidSynthesis",
+        "operationId": "buidSynthesisUsingPUT_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{nameOrId}/synthesis/{dataType}/{variable}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getSynthesis",
+        "operationId": "getSynthesisUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "variable",
+            "in": "path",
+            "description": "variable",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "buidSynthesis",
+        "operationId": "buidSynthesisUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "path",
+            "description": "dataType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nameOrId",
+            "in": "path",
+            "description": "nameOrId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "variable",
+            "in": "path",
+            "description": "variable",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{name}": {
+      "post": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "createApplication",
+        "operationId": "createApplicationUsingPOST",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "comment",
+            "in": "query",
+            "description": "comment",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "file",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/applications/{name}/file/{id}": {
+      "get": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "getFile",
+        "operationId": "getFileUsingGET",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "removeFile",
+        "operationId": "removeFileUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "description": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/login": {
+      "post": {
+        "tags": [
+          "authentication-resources"
+        ],
+        "summary": "login",
+        "operationId": "loginUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "login",
+            "in": "query",
+            "description": "login",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "description": "password",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/LoginResult"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/logout": {
+      "delete": {
+        "tags": [
+          "authentication-resources"
+        ],
+        "summary": "logout",
+        "operationId": "logoutUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ResponseEntity"
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "tags": [
+          "authentication-resources"
+        ],
+        "summary": "createUser",
+        "operationId": "createUserUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "login",
+            "in": "query",
+            "description": "login",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "description": "password",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/v1/validate-configuration": {
+      "post": {
+        "tags": [
+          "ore-si-resources"
+        ],
+        "summary": "validateConfiguration",
+        "operationId": "validateConfigurationUsingPOST",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "file",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ConfigurationParsingResult"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "definitions": {
+    "AddVariableMigrationDescription": {
+      "type": "object",
+      "required": [
+        "defaultValue"
+      ],
+      "properties": {
+        "defaultValue": {
+          "type": "string",
+          "example": -9999,
+          "description": "The value by default if the variable component is empty after migration"
+        }
+      },
+      "title": "AddVariableMigrationDescription"
+    },
+    "Application": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "configFile": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "configuration": {
+          "$ref": "#/definitions/Configuration"
+        },
+        "creationDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataType": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "referenceType": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "Application"
+    },
+    "ApplicationDescription": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "defaultLanguage": {
+          "example": "fr",
+          "description": "The default language if none is provided",
+          "$ref": "#/definitions/Locale"
+        },
+        "internationalization": {
+          "$ref": "#/definitions/InternationalizationApplicationMap"
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "example": "ACBB",
+          "description": "The unique name of the application"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32",
+          "example": 1,
+          "description": "The version incremental version number of this yaml description of this application"
+        }
+      },
+      "title": "ApplicationDescription"
+    },
+    "ApplicationResult": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "dataTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/DataType"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "internationalization": {
+          "$ref": "#/definitions/InternationalizationMap"
+        },
+        "name": {
+          "type": "string"
+        },
+        "referenceSynthesis": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceSynthesis"
+          }
+        },
+        "references": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Reference"
+          }
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "title": "ApplicationResult"
+    },
+    "Authorization": {
+      "type": "object",
+      "properties": {
+        "dataGroup": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "intervalDates": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/LocalDate"
+          }
+        },
+        "requiredauthorizations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Ltree"
+          }
+        },
+        "timeScope": {
+          "$ref": "#/definitions/LocalDateTimeRange"
+        }
+      },
+      "title": "Authorization"
+    },
+    "AuthorizationDescription": {
+      "type": "object",
+      "required": [
+        "authorizationScopes",
+        "dataGroups",
+        "timeScope"
+      ],
+      "properties": {
+        "authorizationScopes": {
+          "type": "object",
+          "description": "A list of authorization scopes. An authorization scope is for example the location, the project, or both.",
+          "additionalProperties": {
+            "$ref": "#/definitions/AuthorizationScopeDescription"
+          }
+        },
+        "dataGroups": {
+          "type": "object",
+          "description": "The list of 'data groups'. Each data group contains variables. People will be given a right on one or more data-group.",
+          "additionalProperties": {
+            "$ref": "#/definitions/DataGroupDescription"
+          }
+        },
+        "internationalization": {
+          "$ref": "#/definitions/InternationalizationAuthorisationMap"
+        },
+        "timeScope": {
+          "description": "The variable component that identifies the time scope of the line (must be a variable/component with a checker of type 'Date')",
+          "$ref": "#/definitions/VariableComponentKey"
+        }
+      },
+      "title": "AuthorizationDescription"
+    },
+    "AuthorizationParsed": {
+      "type": "object",
+      "properties": {
+        "dataGroup": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fromDay": {
+          "type": "string",
+          "format": "date"
+        },
+        "requiredauthorizations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "toDay": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "title": "AuthorizationParsed"
+    },
+    "AuthorizationScope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Option"
+          }
+        }
+      },
+      "title": "AuthorizationScope"
+    },
+    "AuthorizationScopeDescription": {
+      "type": "object",
+      "required": [
+        "component",
+        "variable"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "example": "zone",
+          "description": "This autorization scope is defined by a variable/component, this is the component name"
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "variable": {
+          "type": "string",
+          "example": "localization",
+          "description": "This autorization scope is defined by a variable/component, this is the variable name"
+        },
+        "variableComponentKey": {
+          "$ref": "#/definitions/VariableComponentKey"
+        }
+      },
+      "title": "AuthorizationScopeDescription"
+    },
+    "BinaryFile": {
+      "type": "object",
+      "properties": {
+        "application": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "creationDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/BinaryFileInfos"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "BinaryFile"
+    },
+    "BinaryFileDataset": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "requiredauthorizations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Ltree"
+          }
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "title": "BinaryFileDataset"
+    },
+    "BinaryFileInfos": {
+      "type": "object",
+      "properties": {
+        "binaryFiledataset": {
+          "$ref": "#/definitions/BinaryFileDataset"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "createdate": {
+          "type": "string"
+        },
+        "createuser": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "publisheddate": {
+          "type": "string"
+        },
+        "publisheduser": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "title": "BinaryFileInfos"
+    },
+    "Character": {
+      "type": "object",
+      "title": "Character"
+    },
+    "Chart": {
+      "type": "object",
+      "properties": {
+        "aggregation": {
+          "$ref": "#/definitions/VariableComponentKey"
+        },
+        "gap": {
+          "type": "string"
+        },
+        "standardDeviation": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "Chart"
+    },
+    "CheckerConfigurationDescription": {
+      "type": "object",
+      "required": [
+        "duration"
+      ],
+      "properties": {
+        "duration": {
+          "type": "string",
+          "example": "1 MONTHS",
+          "description": "the duration of the data value. Use sql pattern duration."
+        },
+        "groovy": {
+          "description": "A groovy expression to check for the GroovyExpression checker",
+          "$ref": "#/definitions/GroovyConfiguration"
+        },
+        "multiplicity": {
+          "type": "string",
+          "example": "MANY",
+          "description": "If MANY the value is a list of references for Reference checker",
+          "enum": [
+            "MANY",
+            "ONE"
+          ]
+        },
+        "pattern": {
+          "type": "string",
+          "example": "dd/MM/yyyy",
+          "description": "The pattern of a regular expression for RegularExpression checker\nthe pattern of a date for Date checker"
+        },
+        "refType": {
+          "type": "string",
+          "example": "units",
+          "description": "the name of the reference for Reference checker"
+        },
+        "required": {
+          "type": "boolean",
+          "example": true,
+          "description": "If true the value can't be null"
+        },
+        "transformation": {
+          "description": "How to transform the value before checking it",
+          "$ref": "#/definitions/TransformationConfigurationDescription"
+        }
+      },
+      "title": "CheckerConfigurationDescription"
+    },
+    "CheckerDescription": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the checker that must be used"
+        },
+        "params": {
+          "description": "The params of the checker to configure it. Required for some checkers",
+          "$ref": "#/definitions/CheckerConfigurationDescription"
+        }
+      },
+      "title": "CheckerDescription"
+    },
+    "Column": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "boolean"
+        },
+        "linkedTo": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "title": "Column"
+    },
+    "ColumnBindingDescription": {
+      "type": "object",
+      "required": [
+        "boundTo",
+        "header"
+      ],
+      "properties": {
+        "boundTo": {
+          "description": "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component",
+          "$ref": "#/definitions/VariableComponentKey"
+        },
+        "header": {
+          "type": "string",
+          "example": "CO2",
+          "description": "The header name of column that contains the value to bind"
+        }
+      },
+      "title": "ColumnBindingDescription"
+    },
+    "Component": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "title": "Component"
+    },
+    "CompositeReferenceComponentDescription": {
+      "type": "object",
+      "required": [
+        "reference"
+      ],
+      "properties": {
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "parentKeyColumn": {
+          "type": "string",
+          "example": "name",
+          "description": "The column of 'reference' where we can find the natural key the find the parent for this line"
+        },
+        "parentRecursiveKey": {
+          "type": "string",
+          "example": "parent_key",
+          "description": "For recursive composite reference: the reference column that contains parent key"
+        },
+        "reference": {
+          "type": "string",
+          "example": "types_sites",
+          "description": "A reference composing the composite reference"
+        }
+      },
+      "title": "CompositeReferenceComponentDescription"
+    },
+    "CompositeReferenceDescription": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "description": "A 'composite reference' is a hierarchy of references from largest entity to the smallest",
+          "items": {
+            "$ref": "#/definitions/CompositeReferenceComponentDescription"
+          }
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "CompositeReferenceDescription"
+    },
+    "ComputedVariableComponentDescription": {
+      "type": "object",
+      "properties": {
+        "checker": {
+          "description": "A checker description",
+          "$ref": "#/definitions/CheckerDescription"
+        },
+        "computation": {
+          "description": "Explain how to compute the value for this computed component given other columns",
+          "$ref": "#/definitions/GroovyConfiguration"
+        }
+      },
+      "title": "ComputedVariableComponentDescription"
+    },
+    "Configuration": {
+      "type": "object",
+      "required": [
+        "application",
+        "compositeReferences",
+        "references",
+        "version"
+      ],
+      "properties": {
+        "application": {
+          "description": "An Application description",
+          "$ref": "#/definitions/ApplicationDescription"
+        },
+        "comment": {
+          "type": "string",
+          "example": "Adding sites section",
+          "description": "A comment about this yaml"
+        },
+        "compositeReferences": {
+          "type": "object",
+          "description": "A composite reference allows you to link references according to an ''is in'' link. For example between a city and country reference.\nYou can define several composite references, and a composite reference can contain only one reference or contain a recursion.\nAll references used in a datatype.authorization.authorizationscope section must be composite.",
+          "additionalProperties": {
+            "$ref": "#/definitions/CompositeReferenceDescription"
+          }
+        },
+        "dataTypes": {
+          "type": "object",
+          "description": "A data type describes a set of data representing a cohesive set of measurements or observations. (values can be stored in one csv file format).",
+          "additionalProperties": {
+            "$ref": "#/definitions/DataTypeDescription"
+          }
+        },
+        "references": {
+          "type": "object",
+          "description": "A list of references indexed by name. A reference is used to describe other references or data..",
+          "additionalProperties": {
+            "$ref": "#/definitions/ReferenceDescription"
+          }
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32",
+          "example": 1,
+          "description": "The version number of the yaml schema used to read the deposited yaml"
+        }
+      },
+      "title": "Configuration"
+    },
+    "ConfigurationParsingResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/Configuration"
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "validationCheckResults": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ValidationCheckResult"
+          }
+        }
+      },
+      "title": "ConfigurationParsingResult"
+    },
+    "CreateAuthorizationRequest": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "usersId": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "applicationNameOrId": {
+          "type": "string"
+        },
+        "dataType": {
+          "type": "string"
+        },
+        "authorizations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Authorization"
+            }
+          }
+        }
+      },
+      "title": "CreateAuthorizationRequest"
+    },
+    "DataGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "title": "DataGroup"
+    },
+    "DataGroupDescription": {
+      "type": "object",
+      "required": [
+        "data",
+        "label"
+      ],
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "The list of variables in this data group",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "label": {
+          "type": "string",
+          "example": "localizations",
+          "description": "The name of the data group"
+        }
+      },
+      "title": "DataGroupDescription"
+    },
+    "DataRow": {
+      "type": "object",
+      "properties": {
+        "refsLinkedTo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "rowId": {
+          "type": "string"
+        },
+        "rowNumber": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "totalRows": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "DataRow"
+    },
+    "DataType": {
+      "type": "object",
+      "properties": {
+        "hasAuthorizations": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "variables": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Variable"
+          }
+        }
+      },
+      "title": "DataType"
+    },
+    "DataTypeDescription": {
+      "type": "object",
+      "required": [
+        "authorization",
+        "data",
+        "format",
+        "validations"
+      ],
+      "properties": {
+        "authorization": {
+          "description": "This section defines the autorization model for this dataType, how we define who can access what",
+          "$ref": "#/definitions/AuthorizationDescription"
+        },
+        "data": {
+          "type": "object",
+          "description": "This section describes the data model, splitting each line of data in variable/components",
+          "additionalProperties": {
+            "$ref": "#/definitions/VariableDescription"
+          }
+        },
+        "format": {
+          "description": "This section describes a binding between a file and the data",
+          "$ref": "#/definitions/FormatDescription"
+        },
+        "internationalizationDisplays": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/InternationalizationDisplay"
+          }
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "migrations": {
+          "type": "object",
+          "description": "This section defines how to migrate the data when a new version of yaml is registered",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/MigrationDescription"
+            }
+          }
+        },
+        "repository": {
+          "type": "object",
+          "description": "If this section exists, the data file will be store on a repository tree",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "uniqueness": {
+          "type": "array",
+          "description": "This section defines the variable/components that compose the natural key of a line",
+          "items": {
+            "$ref": "#/definitions/VariableComponentKey"
+          }
+        },
+        "validations": {
+          "type": "object",
+          "description": "Some validations rules that will be checked at import. It will allow to make sure a line we import is consistent.",
+          "additionalProperties": {
+            "$ref": "#/definitions/LineValidationRuleWithVariableComponentsDescription"
+          }
+        }
+      },
+      "title": "DataTypeDescription"
+    },
+    "DynamicColumn": {
+      "type": "object",
+      "properties": {
+        "headerPrefix": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "presenceConstraint": {
+          "type": "boolean"
+        },
+        "reference": {
+          "type": "string"
+        },
+        "referenceColumnToLookForHeader": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "title": "DynamicColumn"
+    },
+    "FormatDescription": {
+      "type": "object",
+      "required": [
+        "columns",
+        "firstRowLine",
+        "headerLine"
+      ],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "description": "The description for binding columns content to variable/components",
+          "items": {
+            "$ref": "#/definitions/ColumnBindingDescription"
+          }
+        },
+        "constants": {
+          "type": "array",
+          "description": "The description of some values in header to bind to variable component",
+          "items": {
+            "$ref": "#/definitions/HeaderConstantDescription"
+          }
+        },
+        "firstRowLine": {
+          "type": "integer",
+          "format": "int32",
+          "example": 2,
+          "description": "The number of the line that contain the first row of data"
+        },
+        "headerLine": {
+          "type": "integer",
+          "format": "int32",
+          "example": 1,
+          "description": "The line with columns names"
+        },
+        "repeatedColumns": {
+          "type": "array",
+          "description": "The description of repeated colulmns patterns and their binding to variable/components",
+          "items": {
+            "$ref": "#/definitions/RepeatedColumnBindingDescription"
+          }
+        },
+        "separator": {
+          "type": "string",
+          "example": ";",
+          "description": "The CSV separator"
+        }
+      },
+      "title": "FormatDescription"
+    },
+    "GetAuthorizationResult": {
+      "type": "object",
+      "properties": {
+        "application": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "authorizations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/AuthorizationParsed"
+            }
+          }
+        },
+        "dataType": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OreSiUser"
+          }
+        }
+      },
+      "title": "GetAuthorizationResult"
+    },
+    "GetDataResult": {
+      "type": "object",
+      "properties": {
+        "checkedFormatVariableComponents": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/definitions/LineChecker"
+            }
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataRow"
+          }
+        },
+        "totalRows": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "GetDataResult"
+    },
+    "GetGrantableResult": {
+      "type": "object",
+      "properties": {
+        "authorizationScopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AuthorizationScope"
+          }
+        },
+        "dataGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataGroup"
+          }
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/User"
+          }
+        }
+      },
+      "title": "GetGrantableResult"
+    },
+    "GetReferenceResult": {
+      "type": "object",
+      "properties": {
+        "referenceValues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceValue"
+          }
+        }
+      },
+      "title": "GetReferenceResult"
+    },
+    "GroovyConfiguration": {
+      "type": "object",
+      "properties": {
+        "datatypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expression": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "GroovyConfiguration"
+    },
+    "HeaderConstantDescription": {
+      "type": "object",
+      "required": [
+        "boundTo",
+        "exportHeader",
+        "rowNumber"
+      ],
+      "properties": {
+        "boundTo": {
+          "description": "The variable/component to bound to",
+          "$ref": "#/definitions/VariableComponentKey"
+        },
+        "columnNumber": {
+          "type": "integer",
+          "format": "int32",
+          "example": 2,
+          "description": "The column where is the constant value. If empty, 'headerName' must be provided"
+        },
+        "exportHeader": {
+          "type": "string",
+          "example": "CO2_unit",
+          "description": "The export header name"
+        },
+        "headerName": {
+          "type": "string",
+          "example": "CO2",
+          "description": "The header column name of column where is the constant value. If empty, 'columnNumber' must be provided"
+        },
+        "rowNumber": {
+          "type": "integer",
+          "format": "int32",
+          "example": 1,
+          "description": "The row where is the constant value"
+        }
+      },
+      "title": "HeaderConstantDescription"
+    },
+    "HeaderPatternToken": {
+      "type": "object",
+      "required": [
+        "boundTo",
+        "exportHeader"
+      ],
+      "properties": {
+        "boundTo": {
+          "description": "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component",
+          "$ref": "#/definitions/VariableComponentKey"
+        },
+        "exportHeader": {
+          "type": "string",
+          "example": "profondeur",
+          "description": "When this data will be exported as CSV, the header of the column that will contain the value"
+        }
+      },
+      "title": "HeaderPatternToken"
+    },
+    "Internationalization": {
+      "type": "object",
+      "title": "Internationalization",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "InternationalizationApplicationMap": {
+      "type": "object",
+      "properties": {
+        "internationalizationName": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "InternationalizationApplicationMap"
+    },
+    "InternationalizationAuthorisationMap": {
+      "type": "object",
+      "properties": {
+        "authorizationScopes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/InternationalizationAuthorisationName"
+          }
+        },
+        "dataGroups": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/InternationalizationAuthorisationName"
+          }
+        }
+      },
+      "title": "InternationalizationAuthorisationMap"
+    },
+    "InternationalizationAuthorisationName": {
+      "type": "object",
+      "properties": {
+        "internationalizationName": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "InternationalizationAuthorisationName"
+    },
+    "InternationalizationDataTypeMap": {
+      "type": "object",
+      "properties": {
+        "authorization": {
+          "$ref": "#/definitions/InternationalizationAuthorisationMap"
+        },
+        "internationalizationDisplay": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/InternationalizationDisplay"
+          }
+        },
+        "internationalizationName": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "internationalizedValidations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "InternationalizationDataTypeMap"
+    },
+    "InternationalizationDisplay": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "object",
+          "description": "pattern in differents locales, used to display a reference when referred to",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "InternationalizationDisplay"
+    },
+    "InternationalizationMap": {
+      "type": "object",
+      "properties": {
+        "application": {
+          "description": "The internationalization description from section Application",
+          "$ref": "#/definitions/InternationalizationApplicationMap"
+        },
+        "dataTypes": {
+          "type": "object",
+          "description": "The internationalization description from section dataTypes",
+          "additionalProperties": {
+            "$ref": "#/definitions/InternationalizationDataTypeMap"
+          }
+        },
+        "references": {
+          "type": "object",
+          "description": "The internationalization description from section references",
+          "additionalProperties": {
+            "$ref": "#/definitions/InternationalizationReferenceMap"
+          }
+        }
+      },
+      "title": "InternationalizationMap"
+    },
+    "InternationalizationReferenceMap": {
+      "type": "object",
+      "properties": {
+        "internationalizationDisplay": {
+          "$ref": "#/definitions/InternationalizationDisplay"
+        },
+        "internationalizationName": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "internationalizedValidations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "InternationalizationReferenceMap"
+    },
+    "LineChecker": {
+      "type": "object",
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/LineCheckerConfiguration"
+        }
+      },
+      "title": "LineChecker"
+    },
+    "LineCheckerConfiguration": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "transformation": {
+          "$ref": "#/definitions/TransformationConfiguration"
+        }
+      },
+      "title": "LineCheckerConfiguration"
+    },
+    "LineValidationRuleWithColumnsDescription": {
+      "type": "object",
+      "required": [
+        "checker"
+      ],
+      "properties": {
+        "checker": {
+          "description": "The checker to apply to ensure that the rule is respected",
+          "$ref": "#/definitions/CheckerDescription"
+        },
+        "columns": {
+          "type": "array",
+          "description": "The set of columns to check",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "LineValidationRuleWithColumnsDescription"
+    },
+    "LineValidationRuleWithVariableComponentsDescription": {
+      "type": "object",
+      "required": [
+        "checker"
+      ],
+      "properties": {
+        "checker": {
+          "description": "The checker to apply to ensure that the rule is respected",
+          "$ref": "#/definitions/CheckerDescription"
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "title": "LineValidationRuleWithVariableComponentsDescription"
+    },
+    "LocalDateTimeRange": {
+      "type": "object",
+      "properties": {
+        "range": {
+          "$ref": "#/definitions/Range«LocalDateTime»"
+        }
+      },
+      "title": "LocalDateTimeRange"
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Character"
+          }
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unicodeLocaleKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variant": {
+          "type": "string"
+        }
+      },
+      "title": "Locale"
+    },
+    "LoginResult": {
+      "type": "object",
+      "properties": {
+        "authorizedForApplicationCreation": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "login": {
+          "type": "string"
+        }
+      },
+      "title": "LoginResult"
+    },
+    "Ltree": {
+      "type": "object",
+      "properties": {
+        "sql": {
+          "type": "string"
+        }
+      },
+      "title": "Ltree"
+    },
+    "Map«string,LineChecker»": {
+      "type": "object",
+      "title": "Map«string,LineChecker»",
+      "additionalProperties": {
+        "$ref": "#/definitions/LineChecker"
+      }
+    },
+    "Map«string,string»": {
+      "type": "object",
+      "title": "Map«string,string»",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "Map«string,uuid»": {
+      "type": "object",
+      "title": "Map«string,uuid»",
+      "additionalProperties": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "MigrationDescription": {
+      "type": "object",
+      "required": [
+        "components",
+        "dataGroup",
+        "strategy",
+        "variable"
+      ],
+      "properties": {
+        "components": {
+          "type": "object",
+          "description": "A list of component migration description for this variable",
+          "additionalProperties": {
+            "$ref": "#/definitions/AddVariableMigrationDescription"
+          }
+        },
+        "dataGroup": {
+          "type": "string",
+          "example": "variables",
+          "description": "A data group name"
+        },
+        "strategy": {
+          "type": "string",
+          "example": "ADD_VARIABLE",
+          "description": "The migration strategy",
+          "enum": [
+            "ADD_VARIABLE"
+          ]
+        },
+        "variable": {
+          "type": "string",
+          "example": "CO2",
+          "description": "A variable in this data group"
+        }
+      },
+      "title": "MigrationDescription"
+    },
+    "Option": {
+      "type": "object",
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Option"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "title": "Option"
+    },
+    "OreSiUser": {
+      "type": "object",
+      "properties": {
+        "creationDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "login": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "updateDate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "OreSiUser"
+    },
+    "Range«LocalDateTime»": {
+      "type": "object",
+      "properties": {
+        "empty": {
+          "type": "boolean"
+        }
+      },
+      "title": "Range«LocalDateTime»"
+    },
+    "Reference": {
+      "type": "object",
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "columns": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Column"
+          }
+        },
+        "dynamicColumns": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/DynamicColumn"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "title": "Reference"
+    },
+    "ReferenceDescription": {
+      "type": "object",
+      "required": [
+        "columns",
+        "dynamicColumns",
+        "keyColumns"
+      ],
+      "properties": {
+        "columns": {
+          "type": "object",
+          "description": "The list of columns descriptions.",
+          "additionalProperties": {
+            "$ref": "#/definitions/ReferenceStaticNotComputedColumnDescription"
+          }
+        },
+        "computedColumns": {
+          "type": "object",
+          "description": "The list of computed columns descriptions. Computed columns are not provided in the CSV but computed line by line when importing.",
+          "additionalProperties": {
+            "$ref": "#/definitions/ReferenceStaticComputedColumnDescription"
+          }
+        },
+        "dynamicColumns": {
+          "type": "object",
+          "description": "The list of dynamic columns descriptions. Dynamic columns names refers to an other reference.",
+          "additionalProperties": {
+            "$ref": "#/definitions/ReferenceDynamicColumnDescription"
+          }
+        },
+        "internationalizationDisplay": {
+          "$ref": "#/definitions/InternationalizationDisplay"
+        },
+        "internationalizationName": {
+          "type": "object",
+          "description": "How to translate this name in differents locales",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "internationalizedColumns": {
+          "type": "object",
+          "description": "Some columns used as key and the reference to translation in other columns",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "keyColumns": {
+          "type": "array",
+          "description": "The list of columns composing the natural key of a row.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "separator": {
+          "type": "string",
+          "description": "The separator in csv files"
+        },
+        "validations": {
+          "type": "object",
+          "description": "The list of validations to perform on this reference.",
+          "additionalProperties": {
+            "$ref": "#/definitions/LineValidationRuleWithColumnsDescription"
+          }
+        }
+      },
+      "title": "ReferenceDescription"
+    },
+    "ReferenceDynamicColumnDescription": {
+      "type": "object",
+      "required": [
+        "headerPrefix",
+        "presenceConstraint",
+        "reference",
+        "referenceColumnToLookForHeader"
+      ],
+      "properties": {
+        "headerPrefix": {
+          "type": "string",
+          "example": "rt_",
+          "description": "The header prefix. All columns that starts with this prefix use this description"
+        },
+        "presenceConstraint": {
+          "type": "string",
+          "example": "MANDATORY",
+          "description": "If the column is mandatory or not",
+          "enum": [
+            "MANDATORY",
+            "OPTIONAL"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "example": "proprietes_taxon",
+          "description": "The reference that contains the column names"
+        },
+        "referenceColumnToLookForHeader": {
+          "type": "string",
+          "example": "name",
+          "description": "The column in 'reference' that contains the column names"
+        }
+      },
+      "title": "ReferenceDynamicColumnDescription"
+    },
+    "ReferenceStaticComputedColumnDescription": {
+      "type": "object",
+      "required": [
+        "presenceConstraint"
+      ],
+      "properties": {
+        "checker": {
+          "description": "Define a checker to apply for this column on each line of the CSV at import",
+          "$ref": "#/definitions/CheckerDescription"
+        },
+        "computation": {
+          "description": "Explain how to compute the value for this column given other columns",
+          "$ref": "#/definitions/GroovyConfiguration"
+        },
+        "presenceConstraint": {
+          "type": "string",
+          "example": "MANDATORY",
+          "description": "If the column is mandatory or not",
+          "enum": [
+            "MANDATORY",
+            "OPTIONAL"
+          ]
+        }
+      },
+      "title": "ReferenceStaticComputedColumnDescription"
+    },
+    "ReferenceStaticNotComputedColumnDescription": {
+      "type": "object",
+      "required": [
+        "presenceConstraint"
+      ],
+      "properties": {
+        "checker": {
+          "description": "Define a checker to apply for this column on each line of the CSV at import",
+          "$ref": "#/definitions/CheckerDescription"
+        },
+        "defaultValue": {
+          "description": "Define a default value for this column: it will be computed if the CSV contains an empty cell",
+          "$ref": "#/definitions/GroovyConfiguration"
+        },
+        "presenceConstraint": {
+          "type": "string",
+          "example": "MANDATORY",
+          "description": "If the column is mandatory or not",
+          "enum": [
+            "MANDATORY",
+            "OPTIONAL"
+          ]
+        }
+      },
+      "title": "ReferenceStaticNotComputedColumnDescription"
+    },
+    "ReferenceSynthesis": {
+      "type": "object",
+      "properties": {
+        "lineCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceType": {
+          "type": "string"
+        }
+      },
+      "title": "ReferenceSynthesis"
+    },
+    "ReferenceValue": {
+      "type": "object",
+      "properties": {
+        "hierarchicalKey": {
+          "type": "string"
+        },
+        "hierarchicalReference": {
+          "type": "string"
+        },
+        "naturalKey": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object"
+        }
+      },
+      "title": "ReferenceValue"
+    },
+    "RepeatedColumnBindingDescription": {
+      "type": "object",
+      "required": [
+        "boundTo",
+        "exportHeader",
+        "headerPattern"
+      ],
+      "properties": {
+        "boundTo": {
+          "description": "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component",
+          "$ref": "#/definitions/VariableComponentKey"
+        },
+        "exportHeader": {
+          "type": "string",
+          "example": "SMP",
+          "description": "The export header (for value) of these columns"
+        },
+        "headerPattern": {
+          "type": "string",
+          "example": "(.*)_([0-9]*)_([0-9]*)",
+          "description": "The regexp pattern to find repeated columns to bind"
+        },
+        "tokens": {
+          "type": "array",
+          "description": "How bind the result of regexp parenthesis. $1 to first pattern, $2 is the second ...",
+          "items": {
+            "$ref": "#/definitions/HeaderPatternToken"
+          }
+        }
+      },
+      "title": "RepeatedColumnBindingDescription"
+    },
+    "ResponseEntity": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object"
+        },
+        "statusCode": {
+          "type": "string",
+          "enum": [
+            "100 CONTINUE",
+            "101 SWITCHING_PROTOCOLS",
+            "102 PROCESSING",
+            "103 CHECKPOINT",
+            "200 OK",
+            "201 CREATED",
+            "202 ACCEPTED",
+            "203 NON_AUTHORITATIVE_INFORMATION",
+            "204 NO_CONTENT",
+            "205 RESET_CONTENT",
+            "206 PARTIAL_CONTENT",
+            "207 MULTI_STATUS",
+            "208 ALREADY_REPORTED",
+            "226 IM_USED",
+            "300 MULTIPLE_CHOICES",
+            "301 MOVED_PERMANENTLY",
+            "302 FOUND",
+            "302 MOVED_TEMPORARILY",
+            "303 SEE_OTHER",
+            "304 NOT_MODIFIED",
+            "305 USE_PROXY",
+            "307 TEMPORARY_REDIRECT",
+            "308 PERMANENT_REDIRECT",
+            "400 BAD_REQUEST",
+            "401 UNAUTHORIZED",
+            "402 PAYMENT_REQUIRED",
+            "403 FORBIDDEN",
+            "404 NOT_FOUND",
+            "405 METHOD_NOT_ALLOWED",
+            "406 NOT_ACCEPTABLE",
+            "407 PROXY_AUTHENTICATION_REQUIRED",
+            "408 REQUEST_TIMEOUT",
+            "409 CONFLICT",
+            "410 GONE",
+            "411 LENGTH_REQUIRED",
+            "412 PRECONDITION_FAILED",
+            "413 PAYLOAD_TOO_LARGE",
+            "413 REQUEST_ENTITY_TOO_LARGE",
+            "414 URI_TOO_LONG",
+            "414 REQUEST_URI_TOO_LONG",
+            "415 UNSUPPORTED_MEDIA_TYPE",
+            "416 REQUESTED_RANGE_NOT_SATISFIABLE",
+            "417 EXPECTATION_FAILED",
+            "418 I_AM_A_TEAPOT",
+            "419 INSUFFICIENT_SPACE_ON_RESOURCE",
+            "420 METHOD_FAILURE",
+            "421 DESTINATION_LOCKED",
+            "422 UNPROCESSABLE_ENTITY",
+            "423 LOCKED",
+            "424 FAILED_DEPENDENCY",
+            "426 UPGRADE_REQUIRED",
+            "428 PRECONDITION_REQUIRED",
+            "429 TOO_MANY_REQUESTS",
+            "431 REQUEST_HEADER_FIELDS_TOO_LARGE",
+            "451 UNAVAILABLE_FOR_LEGAL_REASONS",
+            "500 INTERNAL_SERVER_ERROR",
+            "501 NOT_IMPLEMENTED",
+            "502 BAD_GATEWAY",
+            "503 SERVICE_UNAVAILABLE",
+            "504 GATEWAY_TIMEOUT",
+            "505 HTTP_VERSION_NOT_SUPPORTED",
+            "506 VARIANT_ALSO_NEGOTIATES",
+            "507 INSUFFICIENT_STORAGE",
+            "508 LOOP_DETECTED",
+            "509 BANDWIDTH_LIMIT_EXCEEDED",
+            "510 NOT_EXTENDED",
+            "511 NETWORK_AUTHENTICATION_REQUIRED"
+          ]
+        },
+        "statusCodeValue": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ResponseEntity"
+    },
+    "TransformationConfiguration": {
+      "type": "object",
+      "properties": {
+        "codify": {
+          "type": "boolean"
+        },
+        "groovy": {
+          "$ref": "#/definitions/GroovyConfiguration"
+        }
+      },
+      "title": "TransformationConfiguration"
+    },
+    "TransformationConfigurationDescription": {
+      "type": "object",
+      "properties": {
+        "codify": {
+          "type": "boolean",
+          "example": true,
+          "description": "If true, codifies the column value. The value will be escaped to a format suitable for a naturel key. Will be applied after 'groovy' expression if both are active."
+        },
+        "groovy": {
+          "description": "A groovy expression to transform the value before the checker checks it",
+          "$ref": "#/definitions/GroovyConfiguration"
+        }
+      },
+      "title": "TransformationConfigurationDescription"
+    },
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "title": "User"
+    },
+    "ValidationCheckResult": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "boolean"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "SUCCESS",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "messageParams": {
+          "type": "object"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "title": "ValidationCheckResult"
+    },
+    "Variable": {
+      "type": "object",
+      "properties": {
+        "chartDescription": {
+          "$ref": "#/definitions/Chart"
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Component"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "title": "Variable"
+    },
+    "VariableComponentKey": {
+      "type": "object",
+      "properties": {
+        "component": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "variableComponentKey",
+            "column"
+          ]
+        },
+        "variable": {
+          "type": "string"
+        }
+      },
+      "title": "VariableComponentKey"
+    },
+    "VariableComponentWithDefaultValueDescription": {
+      "type": "object",
+      "properties": {
+        "checker": {
+          "description": "A checker description",
+          "$ref": "#/definitions/CheckerDescription"
+        },
+        "defaultValue": {
+          "description": "A default value if the cell in the imported CSV is empty",
+          "$ref": "#/definitions/GroovyConfiguration"
+        }
+      },
+      "title": "VariableComponentWithDefaultValueDescription"
+    },
+    "VariableDescription": {
+      "type": "object",
+      "required": [
+        "components",
+        "computedComponents"
+      ],
+      "properties": {
+        "chartDescription": {
+          "description": "A description to create disponibilité charts",
+          "$ref": "#/definitions/Chart"
+        },
+        "components": {
+          "type": "object",
+          "description": "The list of components for this variable",
+          "additionalProperties": {
+            "$ref": "#/definitions/VariableComponentWithDefaultValueDescription"
+          }
+        },
+        "computedComponents": {
+          "type": "object",
+          "description": "The list of computed components for this variable",
+          "additionalProperties": {
+            "$ref": "#/definitions/ComputedVariableComponentDescription"
+          }
+        }
+      },
+      "title": "VariableDescription"
+    }
+  }
+}
