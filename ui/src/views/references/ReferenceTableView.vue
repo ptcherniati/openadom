@@ -19,7 +19,27 @@
         :sticky-header="true"
         height="100%"
         style="padding-bottom: 20px; position: relative; z-index: 1"
+        paginated
+        :current-page="currentPage"
+        :per-page="perPage"
       >
+        <template #pagination>
+          <b-pagination
+              v-model="currentPage"
+              :current-page.sync="currentPage"
+              :per-page="perPage"
+              :total="tableValues.length"
+              role="navigation"
+              :aria-label="$t('menu.aria-pagination')"
+              :aria-current-label="$t('menu.aria-curent-page')"
+              :aria-next-label="$t('menu.aria-next-page')"
+              :aria-previous-label="$t('menu.aria-previous-page')"
+              order="is-centered"
+              range-after="3"
+              range-before="3"
+              :rounded="true"
+         />
+       </template>
         <b-table-column
           v-for="column in columns"
           :key="column.id"
@@ -35,17 +55,17 @@
               type="is-dark"
               v-if="showBtnTablDynamicColumn(props.row[column.id])"
               @click="showModal(props.row[column.id])"
-              icon-left="info"
+              icon-left="eye"
               rounded
               style="height: inherit"
             ></b-button>
             <p v-else></p>
-            <b-modal v-model="isCardModalActive" width="70%">
+            <b-modal v-model="isCardModalActive" class="modalCardRef" width="70%">
               <div class="card">
                 <div class="card-header">
                   <div class="title card-header-title">
                     <p field="name" style="font-size: 1.5rem">
-                      {{ column.id }}
+                      {{ column.title }}
                     </p>
                   </div>
                 </div>
@@ -73,22 +93,6 @@
           </b-collapse>
         </b-table-column>
       </b-table>
-      <b-pagination
-        v-if="perPage <= tableValues.length"
-        v-model="currentPage"
-        :per-page="perPage"
-        :total="tableValues.length"
-        role="navigation"
-        :aria-label="$t('menu.aria-pagination')"
-        :aria-current-label="$t('menu.aria-curent-page')"
-        :aria-next-label="$t('menu.aria-next-page')"
-        :aria-previous-label="$t('menu.aria-previous-page')"
-        order="is-centered"
-        range-after="3"
-        range-before="3"
-        :rounded="true"
-      >
-      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -122,7 +126,7 @@ export default class ReferenceTableView extends Vue {
   referenceValues = [];
   tableValues = [];
   currentPage = 1;
-  perPage = 15;
+  perPage = 10;
 
   // show modal and cards
   isCardModalActive = false;
@@ -144,7 +148,8 @@ export default class ReferenceTableView extends Vue {
       for (let j = 0; j < this.modalArrayObj.length; j++) {
         let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
         if (this.modalArrayObj[j][hierarchicalKey]) {
-          let column = this.referencesDynamic.referenceValues[i].values[this.display];
+          let column = this.referencesDynamic.referenceValues[i].values[this.display] ?
+              this.referencesDynamic.referenceValues[i].values[this.display] : hierarchicalKey ;
           let value = this.modalArrayObj[j][hierarchicalKey];
           this.modalArrayObj[j] = { ...this.modalArrayObj[j], column: column, value: value };
         }
@@ -174,7 +179,7 @@ export default class ReferenceTableView extends Vue {
 
   async created() {
     await this.init();
-    this.setInitialVariables();
+    await this.setInitialVariables();
   }
 
   async init() {
@@ -193,6 +198,7 @@ export default class ReferenceTableView extends Vue {
         this.applicationName,
         this.refId
       );
+      console.log(this.application);
       if (references) {
         this.referenceValues = references.referenceValues;
       }
