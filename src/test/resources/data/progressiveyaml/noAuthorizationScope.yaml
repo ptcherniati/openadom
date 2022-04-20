@@ -1,24 +1,8 @@
 version: 1
 
 application:
-  name: Application de test authorizationscope with reference not in compositereference
+  name: Application de test no authorizationscope
   version: 1
-
-references:
-  agroécosystème:
-    keyColumns: [ nom ]
-    columns:
-      nom:
-  sites:
-    keyColumns: [ nom du site ]
-    columns:
-      Agroécosystème:
-      nom du site:
-  parcelles:
-    keyColumns: [ site, nom de la parcelle ]
-    columns:
-      site:
-      nom de la parcelle:
 
 dataTypes:
   date_de_visite:
@@ -34,10 +18,6 @@ dataTypes:
       localisation:
         components:
           agroecosysteme:
-            checker:
-              name: Reference
-              params:
-                refType: agroécosystème
       relevant:
         components:
           numero:
@@ -66,10 +46,6 @@ dataTypes:
             component: agroecosysteme
 
     authorization:
-      authorizationScopes:
-        localization:
-          variable: localisation
-          component: agroecosysteme
       timeScope:
         variable: date
         component: day

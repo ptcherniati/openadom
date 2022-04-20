@@ -1,7 +1,7 @@
-version: 0
+version: 1
 
 application:
-  name: Application de test
+  name: Application de test no datagroup
   version: 1
 
 references:

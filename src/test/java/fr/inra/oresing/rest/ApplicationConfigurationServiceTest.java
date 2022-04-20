@@ -7,6 +7,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,8 @@ public class ApplicationConfigurationServiceTest {
         });
 
         Assert.assertFalse(service.parseConfigurationBytes("vers: 0".getBytes(StandardCharsets.UTF_8)).isValid());
-        Assert.assertFalse(service.parseConfigurationBytes("version: 1".getBytes(StandardCharsets.UTF_8)).isValid());
+        Assert.assertTrue(service.parseConfigurationBytes("version: 1".getBytes(StandardCharsets.UTF_8)).isValid());
+        Assert.assertFalse(service.parseConfigurationBytes("version: 2".getBytes(StandardCharsets.UTF_8)).isValid());
         Assert.assertFalse(service.parseConfigurationBytes("::".getBytes(StandardCharsets.UTF_8)).isValid());
     }
 
@@ -149,7 +151,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnsupportedVersion() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("version: 0", "version: -1");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("version: 1", "version: -1");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -256,6 +258,10 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
+    @Ignore
+    /**
+     *  on peut omettre le timescope
+     */
     public void testMissingTimeScopeVariableComponentKey() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
                 "      timeScope:\n" +

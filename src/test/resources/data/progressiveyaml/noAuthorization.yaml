@@ -1,24 +1,8 @@
-version: 0
+version: 1
 
 application:
-  name: Application de test
+  name: Application de test no authorization
   version: 1
-
-references:
-  agroécosystème:
-    keyColumns: [ nom ]
-    columns:
-      nom:
-  sites:
-    keyColumns: [ nom du site ]
-    columns:
-      Agroécosystème:
-      nom du site:
-  parcelles:
-    keyColumns: [ site, nom de la parcelle ]
-    columns:
-      site:
-      nom de la parcelle:
 
 dataTypes:
   date_de_visite:

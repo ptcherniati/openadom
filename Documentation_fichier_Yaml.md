@@ -1,4 +1,118 @@
-# Aide fichier Yaml
+# Introduction
+
+Ce document permet d'aider un gestionnaire de SI à décrire son domaine dans un fichier de configuration qui, une fois déposé dans l'application, génèrera une base de données et les outils permettant de l'alimenter et de la consulter.
+
+Chaque fichier de configuration déposé génèrera une schéma dédié dans la base de données.
+
+## Préalable
+Avant de débuter l'écriture du fichier de configuration, il faut travailler à définir le modèle des données que vous voulez traiter dans la base de données.
+
+Vous avez en votre possession un certain nombre de fichiers (format csv) contenant les données. Un fichier de données respecte un certain format. En particulier les en-têtes de colonnes doivent être fixés, et le contenu sous un en-tête a un format déterminé (date, valeur flottante, entier, texte..).
+
+Chaque format de fichier correspond à ce que l'on appelera un type de données. Il regroupe plusieurs variables correspondant à une thématique, un pas de temps, une structuration des données... communs.
+
+Chaque ligne peut être identifiée par sous-ensemble de colonnes ce qui permet de mettre à jour une données.
+
+Chaque ligne porte sur une ou plusieurs colonnes une information de temporalité.
+
+Chaque ligne porte aussi sur une ou plusieurs colonnes des informations sur le contexte d'acquisition des variables des autres colonnes.
+
+On peut vouloir aussi faire figurer dans la base de données certaines informations non présentes dans le fichier de données.
+
+- des informations liées aux variables que l'on fournit sous la forme de fichier de réferentiels (description de site, description de méthodes, description d'unités, description d'outils...)
+- des informations constantes ne dépendant pas du fichier (par exemple l'unité de la variable)
+- des informations constantes pour l'ensemble du fichier (par exemple le site correspondant aux valeurs du fichier). C'est informations pouvant être décrite dans un cartouche, avant l'en-tête de colonne ou juste sous l'en-tête de colonne (valeur minimum ou maximum)
+- des informations calculées à partir d'informations du fichier, d'informations des référentiels déjà déposés ou même des données déjà publiées.
+
+### exemple
+supposons que l'on ait un fichier de données météorologiques
+
+
+
+```csv
+Région;Val de Loire;;;
+Période;06/2004;;;
+Date de mesure:Site;Précipitation;Température moyenne;Température minimale;Température maximale
+01/06/2004;Os1;30;20;10;24
+07/06/2004;Os1;2;22;14;27
+07/06/2004;Os2;0;21;9;28
+```
+- La temporalité est portée par la colonne "Date de mesure"
+- Le contexte est portée par l'information du cartouche d'en-tête "Région" et la colonne "Site".
+- On identifie 4 variables:
+  - date au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). Cette variable n'a qu'une seule composante "day". On note que les moyenne sont calculées à la journée.
+  - localization qui fait référence à un site de la colonne "Site", avec deux composantes (site et region)
+  - precipitation qui correspond à la pluviométrie de la colonne "Précipitation" avec deux composantes (value,unit=mm)
+  - temperature qui se référe aux colonnes "Température moyenne", "Température minimale" et "Température maximale" avec 4 composantes (value,min,max,unit=°C)
+
+Du coup on peut aussi définir des référentiels pour préciser ses informations
+
+__region.csv__
+```csv
+code ISO 3166-2;nom
+FR-ARA	Auvergne-Rhône-Alpes
+FR-BFC	Bourgogne-Franche-Comté
+FR-BRE	Bretagne
+FR-CVL	Centre-Val de Loire
+FR-COR	Corse
+FR-GES	Grand Est
+FR-HDF	Hauts-de-France
+FR-IDF	Île-de-France
+FR-NOR	Normandie
+FR-NAQ	Nouvelle-Aquitaine
+FR-OCC	Occitanie
+FR-PDL	Pays de la Loire
+FR-PAC	Provence-Alpes-Côte d'Azur
+```
+
+__site.csv__
+```csv
+nom:Date de création;region
+Os1;01/01/2000;FR-CVL
+Os2;01/01/2000;FR-CVL
+```
+Les sites font référence aux régions.
+
+__unite.csv__
+```csv
+nom;nom_fr;nom_en;code
+temperature;Température;Temperature;°C
+precipitation;Précipitation;Precipitation;mm
+```
+Le fait de dire que l'unité d'une donnée fait référence au référentiel unite signifie:
+- que l'unité doit être présente dans ce référentiel,
+- que l'on ne pourra pas supprimer une unité du référentiel si on y a fait référence.
+
+On aurait pu rajouter des responsables de site et de région, des descriptions des variables, des intervales de valeurs...
+
+Ainsi nous avons pu faire une analyse de notre domaine et le format des fichiers qui s'y rapportent. Nous pouvons commencer l'écriture du fichier de configuration.
+
+### Vocabulaire
+#### Référentiels
+__references__: Un ensemble d'informations permettant de préciser le contexte de la mesure ou de l'observation. En déportant ces informations dans des fichiers __references__, on évite la répétition d'informations. On utilisera la clef d'une information pour y faire référence.
+
+#### Types de données
+__data__ : Un ensemble de données correspondant à une thématique et un format de fichier commun. 
+
+__variable__ : correspond à un ensemble de données, qualifiant ou se rapportant à une variable de mesure, d'observation, d'informations, de temporalité ou de contexte. 
+
+__component__ : un ensemble de valeur qui servent à décrire une variable (valeur, écart type, nombre de mesure; indice de qualité; méthode d'obtention...)
+
+__localisationScope__ :  Une ou des informations contextuelles (variable-component) qui font sens pour limiter les autorisations.
+
+__timeScope__ :  L'information de temporalité d'une ligne faisant sens pour limiter des authorisations à une période.
+
+__dataGroups__ : un découpage partitionement de variables en un ensemble de groupes de variables (__dataGroups__), pour limiter les droits à la totalité ou a des sous ensembles de variables.
+
+On pourrait dans notre exemple distinguer 3 __dataGroups__:
+- informations(date et localization)
+- precipitation(precipitation)
+- temperature (temperature)
+Mais on peut aussi faire le choix d'un seul groupe
+- all(date,localization,precipitation,temperature)
+Ou de 4 groupes en découpant informations en date et localization
+
+# Aide fichier à la rédaction du fichier de configuration
 ## La création :
 Vous trouverez ci-dessous un exemple de fichier Yaml fictif qui décrit les parties attendues dans celui-ci pour qu'il 
 soit valide. **Attention le format Yaml est sensible** il faut donc respecter l'indentation. 
@@ -18,34 +132,105 @@ Il y a 5 parties (<span style="color: orange">sans indentation</span>) attendues
 
 Informations sur le fichier lui même
 
-#### on renseigne la version du parser de yaml.
-Soit version actuelle du site qui est 0 actuellement.
+#### on renseigne la version de l'analyseur (parser) du fichier de configuration.
+Soit version actuelle du site qui est 1 actuellement. Il faut avoir en tête que lorsque l'application évolue et que la version de l'analyseur s'incrémente, le fichier de configuration peut ne plus être valide.
 
 
 ``` yaml
-version: 0
-```
-
-```
-  D'une version à l'autre le format du yaml peut changer
+version: 1
 ```
 
 <span style="color: orange">*version* n'est pas indenté.</span>
-#### on présente l'application avec son nom et sa la version du fichier yaml :
+#### on présente l'application avec son nom et la version du fichier de configuration :
 (on commence par la version 1) 
 
 S'il y a déjà une application du même nom mais que l'on a fait des modifications dans le fichier on incrémente la  version.
 
 ``` yaml
 application:
-  name: Aplication_Nom
+  name: application_nom
+  internationalizationName:
+    fr: Ma première application
+    en: My first application
   version: 1
 ```
 
+> :warning: Les sections d'internationalisation ne sont pas obligatoires, mais permettent une internatinalisation des interfaces.
+
+
 <span style="color: orange">*application* n'est pas indenté. *nom* et *version* sont indentés de 1.</span>
+
+## A propos du format yaml
+
+on utilise le format clef: valeur. 
+- la clef est le nom d'une valeur ou d'une sous section
+- la valeur peut être une chaine, une chaine sur plusieurs lignes, une valeur numérique, un booléen, un ensemble de valeurs (liste),
+un ensemble de __clef-valeur__ (sous-section ou objet)
+```yaml
+nom: Toto # un commentaire avec #
+age: 22 #22 est la valeur de age
+marié: true
+enfants: [Thomas,Celine,Jean]# une liste
+petits-enfants:
+  maternel: # une sous section
+    - Jeanne: 
+  paternel:
+    - Roger # une liste sur plusieurs lignes
+    - Thiefaine
+"texte préféré": > #pour commencer un texte mutiligne
+  Voici un texte sur plusieurs ligne
+  avec saut de ligne
+  
+  et tout le tintouin
+  La fin du texte est signifié par la fin du retrait
+"autre": "Voici un texte entre guillemets"
+#et voici une liste d'objets
+vehicule:
+  - marque : golf
+    annee: 2012
+    couleur: rouge
+  - marque : citroën 
+    annee: 2004
+    couleur: bleue
+```
+- on peut rajouter des commentaires avec #
+- On met : après une clef suivi d'un espace avant la valeur
+- Une liste peut être entre crochet __[]__ avec __,__ comme séparateur, ou à la ligne avec un retrait et un __-__
+- l'absence de valeur peut être traduite de plusieurs façon
+```yaml
+rien:
+encore rien: ~
+toujours rien: null
+```
+
+### Chaque retrait est une sous section
+
+```yaml
+a:
+ a1: "a1"
+ a2:
+b:
+ b1:
+   b1-1: false
+   b1-2:
+
+
+```
+donne la hiérarchie de sections:
+
+```mermaid
+  flowchart LR
+  a-->a2
+  b-->b1
+  b1-->b11(b1_1)
+  b1-->b12(b1_2)
+```
+> :warning: Une valeur peut être une valeur (chaine de texte, valeur numérique ou booléean) ou bien une section
+
 
 ### Description référentiels
 on décrit les référentiels dans la partie *references*, on y liste les noms des colonnes souhaitées (dans *columns*); on précisant la liste de colonnes qui forment la clef naturelle (dans *keyColumn*):
+
 
 pour le modèle de référentiels
 
@@ -57,14 +242,14 @@ pour le modèle de référentiels
 et pour les fichiers :
 
 
-- sites
+- __sites.csv__
 
 | nom du site |
 | ------ |
 | site1 |
 | site2 |
 
-- parcelles
+- __parcelles.csv__
 
 | site | nom de la parcelle |
 | ------ | ------ |
@@ -94,26 +279,56 @@ references:
       nom de la parcelle:
 ```
 
-```
-Le nom du référentiel est libre. Cependant pour ceux réutilisés  ailleurs dans l'application, préférer utiliser minuscules et underscores sous peine de générer des erreurss: 
-
-exampl : mon_nom_de_referentiel
-```
-
-Le nom des colonnes des references doivent être courte pour ne pas être tronqué lors de la création des vues de l'application.
-
+Le nom du référentiel est libre. Cependant pour ceux réutilisés  ailleurs dans l'application, préférer utiliser minuscules et underscores sous peine de générer des erreurs: 
 
 ```
-  les noms des colonnes dans la base de données est limité à 63 caractères. Dans les vues, ce nom est une concaténation du nom du référentiel et du nom de la colonne
+exemple: mon_nom_de_referentiel
 ```
+
+> :warning: Le nom des colonnes des references doivent être courtes pour ne pas être tronqué lors de la création des vues de l'application. 
+ Les noms des colonnes dans la base de données est limité à 63 caractères. Dans les vues, ce nom est une concaténation du nom du référentiel et du nom de la colonne
+
 
 Penser à mettre le même nom de colonnes dans le fichier *.csv* que dans la partie *columns* du fichier yaml.
 
 <span style="color: orange">*references* n'est pas indenté. *sites* et *parcelles* sont indentés de 1. *keyColumns* et 
 *columns* sont indentés de 2. Le contenue de *columns* seront indenté de 3.</span>
 
+#### Colonnes calculées (computed columns)
+
+A faire
+
 
 #### On peut poser des contraintes sur les données de référence
+
+##### Utilisation de vérificateurs (checker)
+
+``` yaml
+  sites:
+  #donnée de référence avec une clef sur une colonne
+    keyColumns: [nom du site]
+    columns:
+      Agroécosystème:
+      nom du site:
+        checker: 
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: sites #qui porte sur le référentiel site
+            required: true # la valeur ne peut être manquante
+            transformation:
+              codify: true #on transforme la valeur en son code avant de la tester
+      date:
+        checker: 
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: true
+      numéro:
+        checker: 
+          name: Integer   
+``` 
+
+
 
 Les contraintes se définissent pour chacune des données de référence dans la section validations.
 Chaque règle de validation peut porter sur plusieurs colonnes de la donnée de référence.
@@ -161,11 +376,14 @@ Elle comporte une description et un checker (Reference, Integer, Float, RegularE
 
 |  name| References | Integer | Float | GroovyExpression | RegularExpression | *
 | --- | :-:  | :-:  | :-:  | :-:  | :-:  | --- | 
-| columns | X | X | X |  | X | La colonne dans laquelle on prend la valeur | 
-| refTypes | X | |  |  |  | Le référentiels de jointure | 
+| refType | X | |  |  |  | Le référentiels de jointure | 
 | pattern |  | |  |  | X | Le pattern pour une expression régulière | 
 | required | X | X | X |  | X | Le contenu de la colonne ne peut être vide | 
-| replace |  | |  | X |  | l'expression groovy renvoie un résultat au lieu d'un booléen | 
+
+On peur rajouter une section transformation pour modifier la valeur avant sa vérification :
+Cette transformation peut être configurée avec
+- codify : la valeur sera alors échappée pour être transformée en clé naturelle
+- groovy : permet de déclarer une transformation de la valeur avec une expression Groovy (qui doit retourner une chaîne de caractère)
 
 
 La section groovy accepte trois paramètres
@@ -174,9 +392,6 @@ references : une liste de référentiels pour lesquels on veut disposer des vale
 datatypes : une liste de datatypes pour lesquels on veut disposer des valeurs dans l'expression
 transformation: la configuration de la transformation à appliquer avant le contrôle 
 
-Cette transformation peut être configurée avec
-- codify : la valeur sera alors échappée pour être transformée en clé naturelle
-- groovy : permet de déclarer une transformation de la valeur avec une expression Groovy (qui doit retourner une chaîne de caractère)
 
 
 Pour les checkers GroovyExpression, on récupère dans le script des informations :
@@ -198,7 +413,7 @@ Pour les checkers GroovyExpression, on récupère dans le script des information
 ### il est possible de définir des clefs composite entre différentes références
 
   Une clef composite permet de définir une hiérarchie entre différentes données de référence.
-  Dans l'example ci-dessous il y a une relation oneToMany entre les deux données de référence nomDeLaReferences et 
+  Dans l'exemple ci-dessous il y a une relation oneToMany entre les deux données de référence nomDeLaReferences et 
   nomDeLaReferences2. 
 
   La clef naturelle permet de distinguer deux lignes distinctes
@@ -228,11 +443,11 @@ compositeReferences:
         parentKeyColumn: "site"
 ```
 
-<span style="color: orange">*compositeReferences* n'est pas indenté. *localizations* est indenté de 1. *components* est 
+> :warning:  <span style="color: orange">*compositeReferences* n'est pas indenté. *localizations* est indenté de 1. *components* est 
 indenté de 2. *- reference* et *- parentKeyColumn* sont indentés de 3. Le *reference* qui est sous parentKeyColumn est 
 indenté de 4.</span>
 
-Il est possible de définir une composite référence récursive dans le cas de données de références dui font référence à elle même. En ce cas on utilisera la clef `parentRecursiveKey` pour faire référence à la colonne parent du même fichier. 
+Il est possible de définir une composite référence récursive dans le cas de données de références qui font référence à elle même. En ce cas on utilisera la clef `parentRecursiveKey` pour faire référence à la colonne parent du même fichier. 
 ``` yaml
 
 compositeReferences:
@@ -427,8 +642,8 @@ On décrit un format pour stocker les données sous la forment
               name: Integer
 ```
 
-<span style="color: red">*/!\ *refType* doit forcément être identique aux noms des références déclarées dans la partie 
-*references* /!\ </span>
+> :warning:  <span style="color: red"> *refType* doit forcément être identique aux noms des références déclarées dans la partie 
+*references* </span>
 
 <span style="color: orange">*data* est indenté de 2. Les variables sont indentés de 3 et les components le sont de 4.</span>
 
@@ -747,7 +962,7 @@ On peut surcharger l'affichage d'une colonne faisant référence à un référen
 ```
 ## templating
 IL est possible d'utiliser un template lorsque certaines colonnes de datatype on un format commun.
-par example avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*)
+par exemple avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*)
 
 ``` csv
 Date	      Time	SWC_1_10	SWC_2_10	SWC_3_10	SWC_4_10
@@ -838,10 +1053,10 @@ Dans le zip le contenu de la section  <section><sous_section><sous_sous_section>
 Au premier niveau il est possible de placer un fichier configuration.yaml qui servira de base à la génération du yaml.
 A défaut de se fichier on utilisera comme base 
 ```yaml
-version: 0
+version: 1
 ```
 
-voici un example du contenu du zip :
+voici un exemple du contenu du zip :
 
 ``` html
 multiyaml.zip

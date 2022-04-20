@@ -158,6 +158,8 @@ public class Fixtures {
         yamls.put("testAuthorizationScopeWithReferenceAndNoHierarchicalReference", "/data/progressiveyaml/testAuthorizationScopeWithReferenceAndNoHierarchicalReference.yaml");
         yamls.put("yamlWithEmptyDatagroup", "/data/progressiveyaml/testEmptyDatagroup.yaml");
         yamls.put("yamlWithoutAuthorization", "/data/progressiveyaml/noAuthorization.yaml");
+        yamls.put("testProgressiveYamlWithoutAuthorizationScope", "/data/progressiveyaml/noAuthorizationScope.yaml");
+        yamls.put("testProgressiveYamlWithoutTimescopeScope", "/data/progressiveyaml/noTimeScope.yaml");
         return yamls;
     }
 

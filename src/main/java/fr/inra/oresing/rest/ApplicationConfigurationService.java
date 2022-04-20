@@ -57,7 +57,7 @@ public class ApplicationConfigurationService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             Versioned versioned = mapper.readValue(bytes, Versioned.class);
             int actualVersion = versioned.getVersion();
-            int expectedVersion = 0;
+            int expectedVersion = 1;
             if (actualVersion != expectedVersion) {
                 return ConfigurationParsingResult.builder()
                         .unsupportedVersion(actualVersion, expectedVersion)
@@ -327,7 +327,10 @@ public class ApplicationConfigurationService {
 
     private void verifyDatatypeAuthorizationScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration configuration, Set<String> variables, LinkedHashMap<String, Configuration.AuthorizationScopeDescription> authorizationScopesVariableComponentKey) {
         if (authorizationScopesVariableComponentKey == null || authorizationScopesVariableComponentKey.isEmpty()) {
+/*
+            on ne revoit pas d'erreur, mais les authorisations ne seront pas posées sur un localizationscope
             builder.missingAuthorizationScopeVariableComponentKey(dataType);
+*/
         } else {
             Configuration.DataTypeDescription dataTypeDescription = configuration.getDataTypes().get(dataType);
             authorizationScopesVariableComponentKey.entrySet().stream().forEach(authorizationScopeVariableComponentKeyEntry -> {
@@ -401,7 +404,8 @@ public class ApplicationConfigurationService {
 
     private void verifyDatatypeTimeScopeExistsAndIsValid(ConfigurationParsingResult.Builder builder, String dataType, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables, VariableComponentKey timeScopeVariableComponentKey) {
         if (timeScopeVariableComponentKey == null) {
-            builder.missingTimeScopeVariableComponentKey(dataType);
+           /* on ne renvoie pas d'erreur
+           builder.missingTimeScopeVariableComponentKey(dataType);*/
         } else {
             if (timeScopeVariableComponentKey.getVariable() == null) {
                 builder.timeScopeVariableComponentKeyMissingVariable(dataType, variables);
