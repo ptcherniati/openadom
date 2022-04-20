@@ -70,7 +70,7 @@
                   </div>
                 </div>
                 <div class="card-content">
-                  <div class="columns" v-for="key in modalArrayObj" :key="key.id">
+                  <div class="columns modalArrayObj" v-for="key in modalArrayObj" :key="key.id">
                     <p class="column">{{ key.column }} {{ $t('ponctuation.colon')}}</p>
                     <p class="column">{{ key.value }}</p>
                   </div>
