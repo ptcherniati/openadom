@@ -7,7 +7,7 @@ export class DownloadDatasetQuery {
   applicationNameOrId;
   dataType;
   offset = 0;
-  limit = 15;
+  limit = 10;
   variableComponentSelects = [];
   variableComponentFilters = [];
   variableComponentOrderBy = [];
@@ -16,7 +16,7 @@ export class DownloadDatasetQuery {
     applicationNameOrId,
     dataType,
     offset = 0,
-    limit = 15,
+    limit = 10,
     variableComponentSelects,
     variableComponentFilters,
     variableComponentOrderBy
@@ -33,7 +33,7 @@ export class DownloadDatasetQuery {
       this.applicationNameOrId = applicationNameOrId;
       this.dataType = dataType;
       this.offset = offset ? offset : 0;
-      this.limit = limit ? limit : 15;
+      this.limit = limit ? limit : 10;
       this.variableComponentSelects = [];
       for (const select in variableComponentSelects) {
         this.variableComponentSelects.push(select);
