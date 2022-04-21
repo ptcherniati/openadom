@@ -2,6 +2,7 @@
     "titles":{
         "login-page":"Welcome to SI-ORE",
         "applications-page":"My applications",
+        "aide":"Help writing an application's configuration file.",
         "references-page":"{applicationName} references",
         "references-data":"{refName} data",
         "application-creation":"Application creation",

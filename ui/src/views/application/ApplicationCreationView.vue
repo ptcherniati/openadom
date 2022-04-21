@@ -70,6 +70,7 @@
             <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-left="plus">
               {{ $t("applications.create") }}
             </b-button>
+            <b-button type="is-primary" @click="showHelp" icon-left="question-circle" />
           </div>
         </ValidationObserver>
         <div v-if="errorsMessages.length">
@@ -132,6 +133,9 @@ export default class ApplicationCreationView extends Vue {
     } catch (error) {
       this.checkMessageErrors(error);
     }
+  }
+  showHelp(){
+    this.$router.push("/help");
   }
 
   async testApplication() {
