@@ -3,7 +3,7 @@
     <h1 class="title main-title">{{ $t("titles.aide") }}</h1>
 
     <div class="columns columnPrincipale">
-      <embed  src="files/aide.pdf" width=800 height=500 type='application/pdf'/>
+      <embed  class="column" src="files/aide.pdf" width=800 height=500 type='application/pdf'/>
     </div>
   </PageView>
 </template>
@@ -26,11 +26,6 @@ export default class HelpView extends Vue {
   margin: 0px;
   width: 100%;
   height: 100%;
-
-  &.columnPrincipale {
-    margin-left: 50px;
-    margin-top: 50px;
-  }
 }
 .columns embed {
   width: 100%;

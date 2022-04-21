@@ -56,6 +56,7 @@ import {
   faTimesCircle,
   faEdit,
   faInfo,
+  faQuestion,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 library.add(
@@ -110,7 +111,8 @@ library.add(
   faArchive,
   faTimesCircle,
   faEdit,
-  faInfo
+  faInfo,
+  faQuestion
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
