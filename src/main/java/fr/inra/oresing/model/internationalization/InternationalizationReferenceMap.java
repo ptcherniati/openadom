@@ -10,6 +10,7 @@ import java.util.Map;
 public class InternationalizationReferenceMap {
     Internationalization internationalizationName;
     Map<String, Internationalization> internationalizedColumns;
+    Map<String, Internationalization> internationalizedDynamicColumns;
     InternationalizationDisplay internationalizationDisplay;
     Map<String, Internationalization> internationalizedValidations;
 }
