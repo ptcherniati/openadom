@@ -6,7 +6,7 @@
         <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
           <div class="columns">
             <ValidationProvider
-                class="column"
+                class="column is-3"
                 rules="required"
                 name="applicationCreation"
                 v-slot="{ errors, valid }"
@@ -20,9 +20,6 @@
               }"
               >
                 <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
-                <span>
-                  <b-button size="is-small" type="is-primary" @click="showHelp" icon-left="question" outlined rounded/>
-                </span>
                   <span class="file-cta">
                   <b-icon class="file-icon" icon="upload"></b-icon>
                   <span class="file-label">{{ $t("applications.chose-config") }}</span>
@@ -33,6 +30,9 @@
                 </b-upload>
               </b-field>
             </ValidationProvider>
+            <div style="margin: 5px" class="column is-1">
+              <b-button size="is-small" type="is-primary" @click="showHelp" icon-left="question" outlined rounded/>
+            </div>
             <ValidationProvider
                 class="column"
                 rules="required|validApplicationName|validApplicationNameLength"
@@ -141,6 +141,7 @@ export default class ApplicationCreationView extends Vue {
     }
   }
   showHelp(){
+    //window.open(this.$router.push("/help"));
     this.$router.push("/help");
   }
 
