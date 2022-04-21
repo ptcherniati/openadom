@@ -23,6 +23,19 @@
         :applicationTitle="$t('titles.references-page')"
         :lineCount="lineCount(ref)"
       >
+        <div v-if="errorsMessages.length">
+          <div v-for="msg in errorsMessages" v-bind:key="msg">
+            <b-message
+                :title="$t('message.app-config-error')"
+                type="is-danger"
+                has-icon
+                :aria-close-label="$t('message.close')"
+                class="mt-4"
+            >
+              <span v-html="msg" />
+            </b-message>
+          </div>
+        </div>
       </CollapsibleTree>
       <ReferencesDetailsPanel
         :leftAlign="false"
@@ -48,6 +61,7 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { Button } from "@/model/Button";
+import {HttpStatusCodes} from "@/utils/HttpUtils";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -66,6 +80,7 @@ export default class ReferencesManagementView extends Vue {
   chosenRef = null;
   application = new ApplicationResult();
   subMenuPaths = [];
+  errorsMessages = [];
   buttons = [
     new Button(
       this.$t("referencesManagement.consult"),
@@ -120,6 +135,7 @@ export default class ReferencesManagementView extends Vue {
       this.$router.push(`/applications/${this.applicationName}/references/${ref.id}`);
     }
   }
+
   lineCount(ref) {
     for (let i = 0; i <= this.application.referenceSynthesis.length - 1; i++) {
       if (this.application.referenceSynthesis[i].referenceType === ref.label) {
@@ -165,12 +181,27 @@ export default class ReferencesManagementView extends Vue {
   }
 
   async uploadReferenceCsv(label, refFile) {
+    this.errorsMessages = [];
     const reference = this.findReferenceByLabel(label);
     try {
-      await this.referenceService.createReference(this.applicationName, reference.id, refFile);
-      this.alertService.toastSuccess(this.$t("alert.reference-updated"));
-    } catch (error) {
-      this.alertService.toastError(this.$t("alert.reference-csv-upload-error"), error);
+      let response = await this.referenceService.createReference(this.applicationName, reference.id, refFile);
+      if (response.valid === true) {
+        this.alertService.toastSuccess(this.$t("alert.reference-updated"));
+      } else {
+        this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
+      }
+    } catch (errors) {
+      this.checkMessageErrors(errors);
+    }
+  }
+
+  checkMessageErrors(errors) {
+    if (errors.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      this.errorsMessages = this.errorsService.getErrorsMessages(
+        errors.content.validationCheckResults
+      );
+    } else {
+      this.alertService.toastError(this.$t("alert.reference-csv-upload-error"), errors);
     }
   }
 
