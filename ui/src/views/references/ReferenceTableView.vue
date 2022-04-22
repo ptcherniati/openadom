@@ -49,12 +49,12 @@
           :sticky="column.key"
           v-slot="props"
         >
-          <span v-if="info(column.id)">
+          <span v-if="info(column.id) || multiplicity(column.id, props.row[column.id])">
             <b-button
               size="is-small"
               type="is-dark"
               v-if="showBtnTablDynamicColumn(props.row[column.id])"
-              @click="showModal(props.row[column.id])"
+              @click="showModal(column.id,props.row[column.id])"
               icon-left="eye"
               rounded
               style="height: inherit"
@@ -71,8 +71,8 @@
                 </div>
                 <div class="card-content">
                   <div class="columns modalArrayObj" v-for="key in modalArrayObj" :key="key.id">
-                    <p class="column">{{ key.column }} {{ $t('ponctuation.colon')}}</p>
-                    <p class="column">{{ key.value }}</p>
+                    <p class="column" v-if="key.column">{{ key.column }} {{ $t('ponctuation.colon')}}</p>
+                    <p class="column" v-if="key.value">{{ key.value }}</p>
                   </div>
                 </div>
               </div>
@@ -135,7 +135,7 @@ export default class ReferenceTableView extends Vue {
   referencesDynamic;
   display = "__display_" + window.localStorage.lang;
 
-  async showModal(tablDynamicColumn) {
+  async showModal(columName, tablDynamicColumn) {
     this.isCardModalActive = true;
     this.modalArrayObj = Object.entries(tablDynamicColumn)
       .filter((a) => a[1])
@@ -144,20 +144,29 @@ export default class ReferenceTableView extends Vue {
         obj[a[0]] = a[1];
         return obj;
       });
-    for (let i = 0; i < this.referencesDynamic.referenceValues.length; i++) {
-      for (let j = 0; j < this.modalArrayObj.length; j++) {
+    if(this.referencesDynamic) {
+      for (let i = 0; i < this.referencesDynamic.referenceValues.length; i++) {
         let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
-        if (this.modalArrayObj[j][hierarchicalKey]) {
-          let column = this.referencesDynamic.referenceValues[i].values[this.display] ?
-              this.referencesDynamic.referenceValues[i].values[this.display] : hierarchicalKey ;
-          let value = this.modalArrayObj[j][hierarchicalKey];
-          this.modalArrayObj[j] = { ...this.modalArrayObj[j], column: column, value: value };
+        for (let j = 0; j < this.modalArrayObj.length; j++) {
+          if (this.modalArrayObj[j][hierarchicalKey]) {
+            let column = this.referencesDynamic.referenceValues[i].values[this.display] ?
+                this.referencesDynamic.referenceValues[i].values[this.display] : hierarchicalKey ;
+            let value = this.modalArrayObj[j][hierarchicalKey];
+            this.modalArrayObj[j] = { ...this.modalArrayObj[j], column: column, value: value };
+          }
+        }
+        for(let j = 0; j < tablDynamicColumn.length; j++) {
+          if (tablDynamicColumn[j] === hierarchicalKey) {
+            let value = this.referencesDynamic.referenceValues[i].values[this.display] ?
+                this.referencesDynamic.referenceValues[i].values[this.display] : columName ;
+            this.modalArrayObj[j] = { ...this.modalArrayObj[j], value: value };
+          }
         }
       }
+      return this.modalArrayObj;
     }
     return this.modalArrayObj;
   }
-
   info(refType) {
     let dynamicColumns = Object.entries(this.reference.dynamicColumns).filter((a) => a[1]);
     for (let i = 0; i < dynamicColumns.length; i++) {
@@ -175,6 +184,19 @@ export default class ReferenceTableView extends Vue {
         return obj;
       });
     return showModal.length !== 0;
+  }
+
+  multiplicity(column, arrayValues) {
+    for(let i = 0; i < this.tableValues.length ; i++) {
+      let showModal = Object.entries(this.tableValues[i])
+          .filter((a) => a[1]);
+      for (let j = 0; j < showModal.length; j++) {
+        if (showModal[j][0] === column && showModal[j][1] === arrayValues && Array.isArray(showModal[j][1])) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   async created() {
@@ -198,7 +220,6 @@ export default class ReferenceTableView extends Vue {
         this.applicationName,
         this.refId
       );
-      console.log(this.application);
       if (references) {
         this.referenceValues = references.referenceValues;
       }
@@ -261,6 +282,14 @@ export default class ReferenceTableView extends Vue {
         this.applicationName,
         dynamicColumns[i][1].reference
       );
+    }
+    for (let i = 0; i < this.columns.length; i++) {
+      if(this.application.references[this.columns[i].id]) {
+        this.referencesDynamic = await this.referenceService.getReferenceValues(
+            this.applicationName,
+            this.columns[i].id
+        );
+      }
     }
   }
 }
