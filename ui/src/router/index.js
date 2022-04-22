@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import LoginView from "@/views/LoginView.vue";
+import HelpView from "@/views/documentation/HelpView.vue";
 import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
@@ -17,6 +18,11 @@ const routes = [
   {
     path: "/",
     redirect: "/login",
+  },
+  {
+    path: "/help",
+    name: "help",
+    component: HelpView,
   },
   {
     path: "/login",

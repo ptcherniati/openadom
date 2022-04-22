@@ -26,3 +26,4 @@ ui/cypress/integration/examples
 ui/cypress/videos
 ui/cypress/screenshots
 ui/cypress/downloads
+/public/files/
