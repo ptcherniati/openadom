@@ -9,6 +9,19 @@
     <h1 class="title main-title">
       {{ $t("titles.references-page", { applicationName: application.localName }) }}
     </h1>
+    <div v-if="errorsMessages.length" style="margin: 10px">
+      <div v-for="msg in errorsMessages" v-bind:key="msg">
+        <b-message
+            :title="$t('message.app-config-error')"
+            type="is-danger"
+            has-icon
+            :aria-close-label="$t('message.close')"
+            class="mt-4"
+        >
+          <span v-html="msg" />
+        </b-message>
+      </div>
+    </div>
     <div>
       <CollapsibleTree
         class="liste"
@@ -23,19 +36,6 @@
         :applicationTitle="$t('titles.references-page')"
         :lineCount="lineCount(ref)"
       >
-        <div v-if="errorsMessages.length">
-          <div v-for="msg in errorsMessages" v-bind:key="msg">
-            <b-message
-                :title="$t('message.app-config-error')"
-                type="is-danger"
-                has-icon
-                :aria-close-label="$t('message.close')"
-                class="mt-4"
-            >
-              <span v-html="msg" />
-            </b-message>
-          </div>
-        </div>
       </CollapsibleTree>
       <ReferencesDetailsPanel
         :leftAlign="false"
@@ -62,6 +62,7 @@ import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { Button } from "@/model/Button";
 import {HttpStatusCodes} from "@/utils/HttpUtils";
+import {ErrorsService} from "@/services/ErrorsService";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -73,6 +74,7 @@ export default class ReferencesManagementView extends Vue {
   referenceService = ReferenceService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
+  errorsService = ErrorsService.INSTANCE;
 
   references = [];
   currentPage = 1;
@@ -81,6 +83,7 @@ export default class ReferencesManagementView extends Vue {
   application = new ApplicationResult();
   subMenuPaths = [];
   errorsMessages = [];
+  errorsList = [];
   buttons = [
     new Button(
       this.$t("referencesManagement.consult"),
@@ -191,14 +194,23 @@ export default class ReferencesManagementView extends Vue {
         this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
       }
     } catch (errors) {
-      this.checkMessageErrors(errors);
+      await this.checkMessageErrors(errors);
     }
   }
 
-  checkMessageErrors(errors) {
+  async checkMessageErrors(errors) {
     if (errors.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-      this.errorsMessages = this.errorsService.getErrorsMessages(
-        errors.content.validationCheckResults
+      errors.content.then(
+          value => {
+            for (let i =0 ; i<value.length; i++) {
+              this.errorsList[i] = value[i];
+            }
+            if (this.errorsList.length !== 0) {
+              this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+            } else {
+              this.errorsMessages = this.errorsService.getErrorsMessages(errors);
+            }
+          }
       );
     } else {
       this.alertService.toastError(this.$t("alert.reference-csv-upload-error"), errors);

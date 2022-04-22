@@ -44,6 +44,7 @@ public class OreExceptionHandler {
     public ResponseEntity<ConfigurationParsingResult> handle(BadApplicationConfigurationException badApplicationConfigurationException) {
         return ResponseEntity.badRequest().body(badApplicationConfigurationException.getConfigurationParsingResult());
     }
+
     @ExceptionHandler(value = OreSiTechnicalException.class)
     public ResponseEntity<OreSiTechnicalException> handle(OreSiTechnicalException oreSiTechnicalException) {
         log.error("Technical Exception not resolved", oreSiTechnicalException);
