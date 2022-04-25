@@ -21,12 +21,12 @@
               >
                 <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
                   <span class="file-cta">
-                  <b-icon class="file-icon" icon="upload"></b-icon>
-                  <span class="file-label">{{ $t("applications.chose-config") }}</span>
-                </span>
+                    <b-icon class="file-icon" icon="upload"></b-icon>
+                    <span class="file-label">{{ $t("applications.chose-config") }}</span>
+                  </span>
                   <span class="file-name" v-if="applicationConfig.file">
-                  {{ applicationConfig.file.name }}
-                </span>
+                    {{ applicationConfig.file.name }}
+                  </span>
                 </b-upload>
                 <sup>
                   <b-tooltip :label="$t('applications.help_config')" position="is-right">
@@ -41,7 +41,7 @@
               </b-button>
             </div>
             <div class="column is-1">
-              <b-tag  v-if="applicationConfig.version" type="is-warning">Version actuelle de l'application : {{ applicationConfig.version }}</b-tag>
+              <b-tag  v-if="applicationConfig.version" type="is-warning" size="is-large" style="margin: 5px;">Version actuelle de l'application : {{ applicationConfig.version }}</b-tag>
             </div>
           </div>
           <div class="columns">
@@ -80,10 +80,10 @@
             </b-field>
           </div>
           <div class="buttons">
-            <b-button type="is-warning" @click="handleSubmit(changeConfiguration)" icon-left="edit">
+            <b-button v-if="btnUpdateConfig" type="is-warning" @click="handleSubmit(changeConfiguration)" icon-left="edit">
               {{ $t("applications.change") }}
             </b-button>
-            <b-button type="is-primary" @click="handleSubmit(createApplication)" icon-left="plus">
+            <b-button v-if="applicationConfig.name !==''" type="is-primary" @click="handleSubmit(createApplication)" icon-left="plus">
               {{ $t("applications.create") }}
             </b-button>
           </div>
@@ -125,6 +125,7 @@ export default class ApplicationCreationView extends Vue {
   alertService = AlertService.INSTANCE;
 
   applicationConfig = new ApplicationConfig();
+  btnUpdateConfig = false;
   errorsMessages = [];
   comment = "";
 
@@ -161,6 +162,9 @@ export default class ApplicationCreationView extends Vue {
       if (response.valid === true) {
         this.applicationConfig.name = response.result.application.name.toLowerCase();
         this.applicationConfig.version = response.result.application.version;
+        if(this.applicationConfig.version !==1) {
+          this.btnUpdateConfig = true;
+        }
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
         this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
