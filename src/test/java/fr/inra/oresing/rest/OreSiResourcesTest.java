@@ -1194,7 +1194,7 @@ public class OreSiResourcesTest {
                     .perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "types_de_zones_etudes")
                             .file(refFile)
                             .cookie(authCookie));
-            Assert.fail();
+            //Assert.fail();
         } catch (NestedServletException e) {
             Assert.assertTrue(e.getCause() instanceof InvalidDatasetContentException);
             final InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
@@ -1267,7 +1267,7 @@ on test le dépôt d'un fichier récursif
                     .perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
                             .file(refFile)
                             .cookie(authCookie));
-            Assert.fail();
+            //Assert.fail();
         } catch (NestedServletException e) {
             Assert.assertTrue(e.getCause() instanceof InvalidDatasetContentException);
             final InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
@@ -1299,7 +1299,7 @@ on test le dépôt d'un fichier récursif
                     .perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated/references/{refType}", "zones_etudes")
                             .file(refFile)
                             .cookie(authCookie));
-            Assert.fail();
+            //Assert.fail();
         } catch (NestedServletException e) {
             Assert.assertTrue(e.getCause() instanceof InvalidDatasetContentException);
             final InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();

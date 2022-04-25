@@ -15,6 +15,19 @@
     </h1>
 
     <AvailablityChart v-if="false" />
+    <div v-if="errorsMessages.length" style="margin: 10px">
+      <div v-for="msg in errorsMessages" v-bind:key="msg">
+        <b-message
+            :title="$t('message.data-type-config-error')"
+            type="is-danger"
+            has-icon
+            :aria-close-label="$t('message.close')"
+            class="mt-4 DataTypesManagementView-message"
+        >
+          <span v-html="msg" />
+        </b-message>
+      </div>
+    </div>
     <div>
       <CollapsibleTree
         class="liste"
@@ -54,19 +67,6 @@
         >
         </DetailModalCard>
       </b-modal>
-    </div>
-    <div v-if="errorsMessages.length">
-      <div v-for="msg in errorsMessages" v-bind:key="msg">
-        <b-message
-          :title="$t('message.data-type-config-error')"
-          type="is-danger"
-          has-icon
-          :aria-close-label="$t('message.close')"
-          class="mt-4 DataTypesManagementView-message"
-        >
-          <span v-html="msg" />
-        </b-message>
-      </div>
     </div>
   </PageView>
 </template>
@@ -126,6 +126,7 @@ export default class DataTypesManagementView extends Vue {
 
   dataTypes = [];
   errorsMessages = [];
+  errorsList = [];
   openPanel = false;
   openSynthesisDetailPanel = false;
   currentOptions = {};
@@ -284,9 +285,20 @@ export default class DataTypesManagementView extends Vue {
   checkMessageErrors(error) {
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
       if (error.content != null) {
-        this.errorsMessages = this.errorsService.getCsvErrorsMessages(error.content);
-      } else {
-        this.alertService.toastServerError(error);
+        this.errorsList = [];
+        error.content.then(
+          value => {
+            for (let i =0 ; i<value.length; i++) {
+              console.log(value[i]);
+              this.errorsList[i] = value[i];
+            }
+            if (this.errorsList.length !== 0) {
+              this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+            } else {
+              this.errorsMessages = this.errorsService.getErrorsMessages(error);
+            }
+          }
+        );
       }
     } else {
       this.alertService.toastServerError(error);
