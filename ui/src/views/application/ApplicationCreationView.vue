@@ -40,11 +40,14 @@
                 {{ $t("applications.test") }}
               </b-button>
             </div>
+            <div class="column is-1">
+              <b-tag  v-if="applicationConfig.version" type="is-warning">Version actuelle de l'application : {{ applicationConfig.version }}</b-tag>
+            </div>
           </div>
           <div class="columns">
             <ValidationProvider
+                v-if="applicationConfig.name"
                 class="column"
-                rules="required|validApplicationName|validApplicationNameLength"
                 name="applicationsName"
                 v-slot="{ errors, valid }"
                 vid="applicationsName"
@@ -156,6 +159,8 @@ export default class ApplicationCreationView extends Vue {
     try {
       let response = await this.applicationService.validateConfiguration(this.applicationConfig);
       if (response.valid === true) {
+        this.applicationConfig.name = response.result.application.name.toLowerCase();
+        this.applicationConfig.version = response.result.application.version;
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
         this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
