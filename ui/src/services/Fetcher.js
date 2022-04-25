@@ -93,7 +93,7 @@ export class Fetcher {
 
   async _handleResponse(response, isText) {
     try {
-      const text = await isText?response.text():response.json();
+      const text = (await isText) ? response.text() : response.json();
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
         return Promise.resolve(text);
       }
@@ -114,11 +114,11 @@ export class Fetcher {
 
   async downloadFile(urlPath) {
     const url = new URL(`${config.API_URL}${urlPath}`);
-    console.log(url)
+    console.log(url);
     const link = document.createElement("a");
-    link.href=url;
-    link.type='application/octet-stream'
-    link.download = "export.csv"
+    link.href = url;
+    link.type = "application/octet-stream";
+    link.download = "export.csv";
     link.click();
   }
 

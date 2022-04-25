@@ -6,18 +6,18 @@
         <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
           <div class="columns">
             <ValidationProvider
-                class="column is-3"
-                rules="required"
-                name="applicationCreation"
-                v-slot="{ errors, valid }"
-                vid="applicationCreation"
+              class="column is-3"
+              rules="required"
+              name="applicationCreation"
+              v-slot="{ errors, valid }"
+              vid="applicationCreation"
             >
               <b-field
-                  class="file is-primary"
-                  :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid,
-              }"
+                class="file is-primary"
+                :type="{
+                  'is-danger': errors && errors.length > 0,
+                  'is-success': valid,
+                }"
               >
                 <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
                   <span class="file-cta">
@@ -30,7 +30,9 @@
                 </b-upload>
                 <sup>
                   <b-tooltip :label="$t('applications.help_config')" position="is-right">
-                    <a @click="showHelp" style="color: #006464FF;margin-left: 10px"><b-icon icon="question-circle"> </b-icon></a>
+                    <a @click="showHelp" style="color: #006464ff; margin-left: 10px"
+                      ><b-icon icon="question-circle"> </b-icon
+                    ></a>
                   </b-tooltip>
                 </sup>
               </b-field>
@@ -41,34 +43,41 @@
               </b-button>
             </div>
             <div class="column is-1">
-              <b-tag  v-if="applicationConfig.version" type="is-warning" size="is-large" style="margin: 5px;">Version actuelle de l'application : {{ applicationConfig.version }}</b-tag>
+              <b-tag
+                v-if="applicationConfig.version"
+                type="is-warning"
+                size="is-large"
+                style="margin: 5px"
+              >
+                {{ $t("applications.app_version") }}{{ applicationConfig.version }}
+              </b-tag>
             </div>
           </div>
           <div class="columns">
             <ValidationProvider
-                v-if="applicationConfig.name"
-                class="column"
-                name="applicationsName"
-                v-slot="{ errors, valid }"
-                vid="applicationsName"
+              v-if="applicationConfig.name"
+              class="column"
+              name="applicationsName"
+              v-slot="{ errors, valid }"
+              vid="applicationsName"
             >
               <b-field
-                  class="input-field"
-                  :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid,
-              }"
-                  :message="errors[0]"
+                class="input-field"
+                :type="{
+                  'is-danger': errors && errors.length > 0,
+                  'is-success': valid,
+                }"
+                :message="errors[0]"
               >
                 <template slot="label">
                   {{ $t("applications.name") }}
                   <span class="mandatory">
-                  {{ $t("validation.obligatoire") }}
-                </span>
+                    {{ $t("validation.obligatoire") }}
+                  </span>
                 </template>
                 <b-input
-                    v-model="applicationConfig.name"
-                    :placeholder="$t('applications.name-placeholder')"
+                  v-model="applicationConfig.name"
+                  :placeholder="$t('applications.name-placeholder')"
                 >
                 </b-input>
               </b-field>
@@ -80,10 +89,20 @@
             </b-field>
           </div>
           <div class="buttons">
-            <b-button v-if="btnUpdateConfig" type="is-warning" @click="handleSubmit(changeConfiguration)" icon-left="edit">
+            <b-button
+              v-if="btnUpdateConfig"
+              type="is-warning"
+              @click="handleSubmit(changeConfiguration)"
+              icon-left="edit"
+            >
               {{ $t("applications.change") }}
             </b-button>
-            <b-button v-if="applicationConfig.name !==''" type="is-primary" @click="handleSubmit(createApplication)" icon-left="plus">
+            <b-button
+              v-if="applicationConfig.name !== ''"
+              type="is-primary"
+              @click="handleSubmit(createApplication)"
+              icon-left="plus"
+            >
               {{ $t("applications.create") }}
             </b-button>
           </div>
@@ -150,9 +169,9 @@ export default class ApplicationCreationView extends Vue {
       this.checkMessageErrors(error);
     }
   }
-  showHelp(){
+  showHelp() {
     let routeData = this.$router.resolve("/help");
-    window.open(routeData.href, '_blank');
+    window.open(routeData.href, "_blank");
   }
 
   async testApplication() {
@@ -162,7 +181,7 @@ export default class ApplicationCreationView extends Vue {
       if (response.valid === true) {
         this.applicationConfig.name = response.result.application.name.toLowerCase();
         this.applicationConfig.version = response.result.application.version;
-        if(this.applicationConfig.version !==1) {
+        if (this.applicationConfig.version !== 1) {
           this.btnUpdateConfig = true;
         }
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));

@@ -93,7 +93,8 @@
         "filter":"Filter by",
         "change": "Edit app",
         "version" : "The current version of the application <b class=\"has-text-primary\">{applicationName}</b> is <b class=\"has-text-primary\">{version}.</b>",
-        "help_config" : "Help PDF configuration"
+        "help_config" : "Help PDF configuration",
+        "app_version": "Current app version :"
     },
     "errors": {
         "authorizationScopeVariableComponentKeyMissingVariable": "You must indicate the variable in which to collect the spatial information to which to attach the data for the management of the rights dataset <code> {dataType} </code> for the authorization <code> {authorizationName} </code>. Possible values ​​<code> {variables} </code> ",

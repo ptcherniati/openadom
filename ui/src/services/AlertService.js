@@ -43,9 +43,7 @@ export class AlertService {
 
   toastServerError(error) {
     if (error.content != null) {
-      error.content.then(
-        value => this.toastError(value.message, error)
-      );
+      error.content.then((value) => this.toastError(value.message, error));
     } else {
       this.toastError(i18n.t("alert.server-error"), error);
     }
