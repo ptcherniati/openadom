@@ -28,11 +28,20 @@
                   {{ applicationConfig.file.name }}
                 </span>
                 </b-upload>
+                <sup>
+                  <b-tooltip :label="$t('applications.help_config')" position="is-right">
+                    <a @click="showHelp" style="color: #006464FF;margin-left: 10px"><b-icon icon="question-circle"> </b-icon></a>
+                  </b-tooltip>
+                </sup>
               </b-field>
             </ValidationProvider>
             <div style="margin: 5px" class="column is-1">
-              <b-button size="is-small" type="is-primary" @click="showHelp" icon-left="question" outlined rounded/>
+              <b-button type="is-light" @click="handleSubmit(testApplication)" icon-left="vial">
+                {{ $t("applications.test") }}
+              </b-button>
             </div>
+          </div>
+          <div class="columns">
             <ValidationProvider
                 class="column"
                 rules="required|validApplicationName|validApplicationNameLength"
@@ -68,9 +77,6 @@
             </b-field>
           </div>
           <div class="buttons">
-            <b-button type="is-light" @click="handleSubmit(testApplication)" icon-left="vial">
-              {{ $t("applications.test") }}
-            </b-button>
             <b-button type="is-warning" @click="handleSubmit(changeConfiguration)" icon-left="edit">
               {{ $t("applications.change") }}
             </b-button>
@@ -141,8 +147,8 @@ export default class ApplicationCreationView extends Vue {
     }
   }
   showHelp(){
-    //window.open(this.$router.push("/help"));
-    this.$router.push("/help");
+    let routeData = this.$router.resolve("/help");
+    window.open(routeData.href, '_blank');
   }
 
   async testApplication() {

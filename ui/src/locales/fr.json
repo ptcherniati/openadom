@@ -91,7 +91,8 @@
 	    "trierRecent": "Date récente",
 	    "filter": "Filtrer",
         "change": "Modifier l'application",
-        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>"
+        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>",
+        "help_config" : "PDF aide configuration"
     },
     "errors": {
         "authorizationScopeVariableComponentKeyMissingVariable": "Il faut indiquer la variable dans laquelle on recueille les informations spatiales à laquelle rattacher la donnée pour le gestion des droits jeu de données <code>{dataType}</code> pour l'autorisation <code>{authorizationName}</code>. Valeurs possibles <code>{variables}</code>",
