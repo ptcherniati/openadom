@@ -12,7 +12,7 @@
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" v-bind:key="msg">
         <b-message
-            :title="$t('message.app-config-error')"
+            :title="$t('message.data-type-config-error')"
             type="is-danger"
             has-icon
             :aria-close-label="$t('message.close')"
