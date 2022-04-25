@@ -23,9 +23,9 @@
         - [Utilisation de vérificateurs checker](#utilisation-de-v%C3%A9rificateurs-checker)
         - [Utilisation de validations portant sur une ou plusieurs colonnnes](#utilisation-de-validations-portant-sur-une-ou-plusieurs-colonnnes)
         - [<a id="ReferencesChecker" />Vérificateurs](#a-idreferenceschecker-v%C3%A9rificateurs)
-    - [<a id="compositeReferences"" />Définition de clefs composites entre différentes références](#a-idcompositereferences-d%C3%A9finition-de-clefs-composites-entre-diff%C3%A9rentes-r%C3%A9f%C3%A9rences)
+    - [<a id="compositeReferences" />Définition de clefs composites entre différentes références](#a-idcompositereferences-d%C3%A9finition-de-clefs-composites-entre-diff%C3%A9rentes-r%C3%A9f%C3%A9rences)
       - [Relation entre deux référentiels avec multiplicité](#relation-entre-deux-r%C3%A9f%C3%A9rentiels-avec-multiplicit%C3%A9)
-    - [<a id="datatypes"" />Description des *dataTypes*](#a-iddatatypes-description-des-datatypes)
+    - [<a id="datatypes" />Description des *dataTypes*](#a-iddatatypes-description-des-datatypes)
       - [<a id="data" />*data*](#a-iddata-data)
       - [la validation est utilisé pour valider une ligne sur une ou plusieurs colonnes.](#la-validation-est-utilis%C3%A9-pour-valider-une-ligne-sur-une-ou-plusieurs-colonnes)
       - [Déclaration des contraintes d'unicité](#d%C3%A9claration-des-contraintes-dunicit%C3%A9)
@@ -401,11 +401,13 @@ On définira le référentiel objet de la manière suivante
      nom de l'objet
     keyColumns:[nom de l'objet]
     dynamicColumns:
-     headerPrefix: pt_ # les colonne commençant par ce préfixe seront comprise comme étant des colonnes dynamiques
-     reference: proprietes #le référentiel qui contient les noms des colonnes
-     referenceColumnToLookForHeader: nom de la proprieté # la colonne qui contient  les noms des colonnes dans le référentiels sus désigné.
-     id: propriétes de l'objet # la clef à utiliser pour enregistrer la "map" propriété:valeur
-     title: propriétes de l'objet # le titre de la colonne en sortie pour lister les valeurs
+      propriétés de taxons:
+        internationalizationName: #une section d'internationalisation pour afficher le nom de la colonne propriétés de taxons
+          fr: Proprétés de Taxons
+          en: Properties of Taxa
+        headerPrefix: "pt_" # les colonne commençant par ce préfixe seront comprise comme étant des colonnes dynamiques
+        reference: proprietes_taxon #le référentiel qui contient les noms des colonnes
+        referenceColumnToLookForHeader: nom de la propriété_key # la colonne qui contient  les noms des colonnes dans le référentiels sus désigné.
 ```
 
 #### On peut poser des contraintes sur les données de référence
@@ -568,7 +570,7 @@ Pour les checkers GroovyExpression et les transformation Groovy, on récupère d
           return date.isBefore(maxDate) && date.isAfter(minDate)
 ```
 
-### <a id="compositeReferences"" />Définition de clefs composites entre différentes références
+### <a id="compositeReferences" />Définition de clefs composites entre différentes références
 
   Une clef composite permet de définir une hiérarchie entre différentes données de référence.
 
@@ -691,7 +693,7 @@ references:
 ```
 > :information_source: dans la base, modalites sera un tableau.
 
-### <a id="datatypes"" />Description des *dataTypes*
+### <a id="datatypes" />Description des *dataTypes*
 
  Pour enregistrer un type de données, il faut déclarer
  - le [data](#data) : ce qui sera enregistré en base de données [*section data*](#data)

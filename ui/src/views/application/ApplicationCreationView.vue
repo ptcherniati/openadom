@@ -4,57 +4,64 @@
       <h1 class="title main-title">{{ $t("titles.application-creation") }}</h1>
       <div>
         <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-          <ValidationProvider
-            rules="required|validApplicationName|validApplicationNameLength"
-            name="applicationsName"
-            v-slot="{ errors, valid }"
-            vid="applicationsName"
-          >
-            <b-field
-              class="input-field"
-              :type="{
+          <div class="columns">
+            <ValidationProvider
+                class="column is-3"
+                rules="required"
+                name="applicationCreation"
+                v-slot="{ errors, valid }"
+                vid="applicationCreation"
+            >
+              <b-field
+                  class="file is-primary"
+                  :type="{
                 'is-danger': errors && errors.length > 0,
                 'is-success': valid,
               }"
-              :message="errors[0]"
-            >
-              <template slot="label">
-                {{ $t("applications.name") }}
-                <span class="mandatory">
-                  {{ $t("validation.obligatoire") }}
-                </span>
-              </template>
-              <b-input
-                v-model="applicationConfig.name"
-                :placeholder="$t('applications.name-placeholder')"
               >
-              </b-input>
-            </b-field>
-          </ValidationProvider>
-          <ValidationProvider
-            rules="required"
-            name="applicationCreation"
-            v-slot="{ errors, valid }"
-            vid="applicationCreation"
-          >
-            <b-field
-              class="file is-primary"
-              :type="{
-                'is-danger': errors && errors.length > 0,
-                'is-success': valid,
-              }"
-            >
-              <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
-                <span class="file-cta">
+                <b-upload v-model="applicationConfig.file" class="file-label" accept=".yaml, .zip">
+                  <span class="file-cta">
                   <b-icon class="file-icon" icon="upload"></b-icon>
                   <span class="file-label">{{ $t("applications.chose-config") }}</span>
                 </span>
-                <span class="file-name" v-if="applicationConfig.file">
+                  <span class="file-name" v-if="applicationConfig.file">
                   {{ applicationConfig.file.name }}
                 </span>
-              </b-upload>
-            </b-field>
-          </ValidationProvider>
+                </b-upload>
+              </b-field>
+            </ValidationProvider>
+            <div style="margin: 5px" class="column is-1">
+              <b-button size="is-small" type="is-primary" @click="showHelp" icon-left="question" outlined rounded/>
+            </div>
+            <ValidationProvider
+                class="column"
+                rules="required|validApplicationName|validApplicationNameLength"
+                name="applicationsName"
+                v-slot="{ errors, valid }"
+                vid="applicationsName"
+            >
+              <b-field
+                  class="input-field"
+                  :type="{
+                'is-danger': errors && errors.length > 0,
+                'is-success': valid,
+              }"
+                  :message="errors[0]"
+              >
+                <template slot="label">
+                  {{ $t("applications.name") }}
+                  <span class="mandatory">
+                  {{ $t("validation.obligatoire") }}
+                </span>
+                </template>
+                <b-input
+                    v-model="applicationConfig.name"
+                    :placeholder="$t('applications.name-placeholder')"
+                >
+                </b-input>
+              </b-field>
+            </ValidationProvider>
+          </div>
           <div class="columns">
             <b-field class="column" :label="$t('dataTypesRepository.comment')" expanded>
               <b-input v-model="comment" maxlength="200" type="textarea"></b-input>
@@ -132,6 +139,10 @@ export default class ApplicationCreationView extends Vue {
     } catch (error) {
       this.checkMessageErrors(error);
     }
+  }
+  showHelp(){
+    //window.open(this.$router.push("/help"));
+    this.$router.push("/help");
   }
 
   async testApplication() {

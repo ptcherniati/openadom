@@ -354,6 +354,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       let localName = refValues.referenceValues.find((r) => r.naturalKey == key);
       if (localName?.values?.["__display_" + lang]) {
         localName = localName?.values?.["__display_" + lang];
+      } else {
+        localName = key;
       }
       if (!localName) {
         localName = key;

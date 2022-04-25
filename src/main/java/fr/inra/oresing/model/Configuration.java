@@ -197,6 +197,11 @@ public class Configuration {
                         Maps.transformValues(referenceDescription.getValidations(), InternationalizationImpl::getInternationalizationName);
                 internationalizationReference.setInternationalizedValidations(internationalizedValidations);
                 internationalizationReferenceMap.put(reference, internationalizationReference);
+                Map<String, Internationalization> internationalizedDynamicColumns =
+                        Maps.transformValues(referenceDescription.getDynamicColumns(), ReferenceDynamicColumnDescription::getInternationalizationName);
+
+                internationalizationReference.setInternationalizedDynamicColumns(internationalizedDynamicColumns);
+                internationalizationReferenceMap.put(reference, internationalizationReference);
             }
             return internationalizationReferenceMap;
         }
@@ -242,6 +247,8 @@ public class Configuration {
     @Setter
     @ToString
     public static class ReferenceDynamicColumnDescription extends ReferenceColumnDescription {
+        @ApiModelProperty(notes = "How to translate this name in differents locales",required = false)
+        Internationalization internationalizationName;
 
         @ApiModelProperty(notes = "The header prefix. All columns that starts with this prefix use this description", example = "rt_", required = true)
         private String headerPrefix = "";

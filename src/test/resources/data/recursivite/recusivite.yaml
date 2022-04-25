@@ -13,6 +13,20 @@ compositeReferences:
         reference: taxon
 references:
   proprietes_taxon:
+    internationalizationName:
+      fr: Proprétés de Taxon
+      en: Properties of Taxa
+    internationalizedColumns:
+      nom de la propriété_key:
+        fr: nom de la propriété_fr
+        en: nom de la propriété_en
+      définition_fr:
+        fr: définition_fr
+        en: définition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom de la propriété_key}'
+        en: '{nom de la propriété_key}'
     keyColumns: [nom de la propriété_key]
     columns:
       nom de la propriété_key:
@@ -26,6 +40,13 @@ references:
       ordre d'affichage:
 
   taxon:
+    internationalizationName:
+      fr: Taxons
+      en: Taxa
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du taxon déterminé}'
+        en: '{nom du taxon déterminé}'
     keyColumns: [nom du taxon déterminé]
     validations:
       nom du taxon déterminé:
@@ -69,6 +90,9 @@ references:
       Notes libres:
     dynamicColumns:
       propriétés de taxons:
+        internationalizationName:
+          fr: Proprétés de Taxons
+          en: Properties of Taxa
         headerPrefix: "pt_"
         reference: proprietes_taxon
         referenceColumnToLookForHeader: nom de la propriété_key
