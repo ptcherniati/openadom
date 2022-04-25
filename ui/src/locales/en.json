@@ -56,6 +56,7 @@
     },
     "message":{
         "app-config-error":"Error in yaml file",
+        "csv-config-error": "Error in csv file",
         "close":"Close message",
         "data-type-config-error":"Error in csv file"
     },
