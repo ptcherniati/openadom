@@ -93,7 +93,7 @@ export class Fetcher {
 
   async _handleResponse(response, isText) {
     try {
-      const text = (await isText) ? response.text() : response.json();
+      const text = isText ? response.text() : response.json();
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
         return Promise.resolve(text);
       }
