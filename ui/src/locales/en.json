@@ -79,7 +79,7 @@
         "create":"Create application",
         "comment": "Comment : ",
         "no-comment": "No comment",
-        "test":"Test",
+        "test":"Configuration validation",
         "name":"Application name",
         "name-placeholder":"Ex : olac",
         "creation-date":"Creation date",
@@ -211,7 +211,8 @@
         "unknownVariablesInDataGroup": "Data group <code>{dataGroup}</code> has undeclared data : <code>{unknownVariables}</code>. <br>Known data : <code>{variables}</code>",
         "unrecognizedProperty": "Error in line <code>{lineNumber}</code> (column : <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, is not a known property. <br>Known properties : <code>{knownProperties}</code>",
         "unsupportedVersion": "YAML files with version <code>{actualVersion}</code> aren't currently managed, expected version : <code>{expectedVersion}</code>",
-        "variableInMultipleDataGroup": "Variable <code>{variable}</code> is declared in several data groups, it needs to be only in one"
+        "variableInMultipleDataGroup": "Variable <code>{variable}</code> is declared in several data groups, it needs to be only in one",
+        "expetion": "The translation string is missing for your error contact the administrators: "
     },
     "referencesManagement":{
         "actions":"Actions",

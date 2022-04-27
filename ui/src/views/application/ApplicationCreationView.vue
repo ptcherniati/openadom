@@ -6,7 +6,7 @@
         <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
           <div class="columns">
             <ValidationProvider
-              class="column is-3"
+              class="column is-4"
               rules="required"
               name="applicationCreation"
               v-slot="{ errors, valid }"
@@ -37,14 +37,14 @@
                 </sup>
               </b-field>
             </ValidationProvider>
-            <div style="margin: 5px" class="column is-1">
+            <div style="margin: 5px" class="column is-4">
               <b-button type="is-light" @click="handleSubmit(testApplication)" icon-left="vial">
                 {{ $t("applications.test") }}
               </b-button>
             </div>
-            <div class="column is-1">
+            <div class="column is-4">
               <b-tag
-                v-if="applicationConfig.version"
+                v-if="btnUpdateConfig"
                 type="is-warning"
                 size="is-large"
                 style="margin: 5px"
@@ -98,7 +98,7 @@
               {{ $t("applications.change") }}
             </b-button>
             <b-button
-              v-if="applicationConfig.name !== ''"
+              v-if="applicationConfig.name !== '' && !btnUpdateConfig"
               type="is-primary"
               @click="handleSubmit(createApplication)"
               icon-left="plus"
@@ -116,7 +116,9 @@
               :aria-close-label="$t('message.close')"
               class="mt-4"
             >
-              <span v-html="msg" />
+              <span v-if="msg.mess" v-html="msg.mess" class="columns" style="margin: 10px; font-weight: bold"/>
+              <span v-if="msg.param" class="columns" style="margin: 0">{{ msg.param }}</span>
+              <span v-else v-html="msg" />
             </b-message>
           </div>
         </div>
@@ -146,6 +148,7 @@ export default class ApplicationCreationView extends Vue {
   applicationConfig = new ApplicationConfig();
   btnUpdateConfig = false;
   errorsMessages = [];
+  error = [];
   comment = "";
 
   async createApplication() {
@@ -181,12 +184,21 @@ export default class ApplicationCreationView extends Vue {
       if (response.valid === true) {
         this.applicationConfig.name = response.result.application.name.toLowerCase();
         this.applicationConfig.version = response.result.application.version;
-        if (this.applicationConfig.version !== 1) {
+        if (response.result.application.version !== 1) {
           this.btnUpdateConfig = true;
         }
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
-        this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
+        for(let i =0; i<response.validationCheckResults.length; i++) {
+          if (this.errorsService.getErrorsMessages(response.validationCheckResults)[i] === this.$t("errors.expetion")) {
+            this.error[i] = {...this.error[i],
+              mess: this.errorsService.getErrorsMessages(response.validationCheckResults)[i],
+              param: response.validationCheckResults[i].message};
+            this.errorsMessages.push(this.error[i]);
+          } else {
+            this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
+          }
+        }
       }
     } catch (error) {
       this.checkMessageErrors(error);

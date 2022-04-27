@@ -97,14 +97,11 @@ export class Fetcher {
       if (response.ok && response.status !== HttpStatusCodes.NO_CONTENT) {
         return Promise.resolve(text);
       }
-      return Promise.reject({ httpResponseCode: response.status, content: text });
+      return Promise.reject({ httpResponseCode: response.status, content: Promise.resolve(text) });
     } catch (error) {
       console.error(error);
+      return Promise.reject({ httpResponseCode: response.status });
     }
-    if (response.ok) {
-      return Promise.resolve();
-    }
-    return Promise.reject({ httpResponseCode: response.status });
   }
 
   async showFile(urlPath) {
@@ -114,7 +111,6 @@ export class Fetcher {
 
   async downloadFile(urlPath) {
     const url = new URL(`${config.API_URL}${urlPath}`);
-    console.log(url);
     const link = document.createElement("a");
     link.href = url;
     link.type = "application/octet-stream";
