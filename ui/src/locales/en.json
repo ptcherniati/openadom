@@ -212,7 +212,7 @@
         "unrecognizedProperty": "Error in line <code>{lineNumber}</code> (column : <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, is not a known property. <br>Known properties : <code>{knownProperties}</code>",
         "unsupportedVersion": "YAML files with version <code>{actualVersion}</code> aren't currently managed, expected version : <code>{expectedVersion}</code>",
         "variableInMultipleDataGroup": "Variable <code>{variable}</code> is declared in several data groups, it needs to be only in one",
-        "expetion": "The translation string is missing for your error contact the administrators: "
+        "expetion": "The translation string for the following error is missing. Please verify that this is not an indentation problem before contacting the administrators. "
     },
     "referencesManagement":{
         "actions":"Actions",

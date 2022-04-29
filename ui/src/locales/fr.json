@@ -212,7 +212,7 @@
         "unrecognizedProperty": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, c’est pas une propriété reconnue. Les propriétés reconnues sont <code>{knownProperties}</code>",
         "unsupportedVersion": "Les fichiers YAML de version <code>{actualVersion}</code> ne sont pas gérés, version attendue <code>{expectedVersion}</code>",
         "variableInMultipleDataGroup": "La variable <code>{variable}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
-        "expetion": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation  avant de contacter les administrateurs. "
+        "expetion": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
     },
     "referencesManagement": {
         "actions": "Actions",
