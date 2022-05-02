@@ -132,7 +132,6 @@ export class ErrorsService {
   }
 
   getCsvErrorsMessages(csvErrors) {
-    console.log("coucou : ",csvErrors);
     return csvErrors.map((csvError) => {
       const func = ERRORS[csvError.validationCheckResult.message];
       if (!func) {

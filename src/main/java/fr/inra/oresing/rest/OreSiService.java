@@ -697,7 +697,7 @@ public class OreSiService {
                             "timerangeoutofinterval",
                             ImmutableMap.of(
                                     "from", DATE_FORMATTER_DDMMYYYY.format(from),
-                                    "to", DATE_TIME_FORMATTER.format(to),
+                                    "to", DATE_FORMATTER_DDMMYYYY.format(to),
                                     "value", DATE_FORMATTER_DDMMYYYY.format(timeScope.getRange().lowerEndpoint())
                             )
                     ),

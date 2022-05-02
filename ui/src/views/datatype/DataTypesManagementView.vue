@@ -268,7 +268,6 @@ export default class DataTypesManagementView extends Vue {
 
   async downloadDataType(event) {
     let param = new DownloadDatasetQuery(this.application, this.applicationName, event)
-    console.log('download',new DownloadDatasetQuery(),  event)
     let csv = await this.dataService.getDataTypesCsv(
         this.applicationName,
         event,
