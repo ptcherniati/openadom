@@ -114,7 +114,6 @@ export class Fetcher {
 
   async downloadFile(urlPath) {
     const url = new URL(`${config.API_URL}${urlPath}`);
-    console.log(url)
     const link = document.createElement("a");
     link.href=url;
     link.type='application/octet-stream'

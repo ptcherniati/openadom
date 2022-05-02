@@ -478,6 +478,14 @@ export default class DataTypesRepositoryView extends Vue {
 
   async publish(dataset, pusblished) {
     dataset.params.published = pusblished;
+    let requiredauthorizations = dataset.params.binaryFiledataset.requiredauthorizations;
+    requiredauthorizations = Object.keys(requiredauthorizations).reduce(function (acc, key){
+      acc[key] = acc[key]?acc[key].sql:"";
+      return acc;
+    }, requiredauthorizations)
+    console.log('requiredauthorizations',requiredauthorizations)
+    dataset.params.binaryFiledataset.requiredauthorizations = requiredauthorizations;
+    console.log('binaryFiledataset',dataset.params.binaryFiledataset)
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     var uuid = await this.dataService.addData(
       this.applicationName,
@@ -492,7 +500,6 @@ export default class DataTypesRepositoryView extends Vue {
     this.selected.requiredauthorizations[key] = event.referenceValues.hierarchicalKey;
     this.requiredauthorizationsObject[key] = event.completeLocalName;
     this.datasets = this.currentDataset = null;
-    console.log(this.$refs?.[key]);
     this.$refs?.[key]?.[0].toggle();
     if (this.isAuthorisationsSelected()) {
       this.$emit("authorizationChanged");
