@@ -403,7 +403,7 @@ public class OreSiResourcesTest {
     @Test
     @Category(OTHERS_TEST.class)
     public void addApplicationMonsoreWithRepository() throws Exception {
-        URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
+        URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationWithRepositoryResourceName());
         String oirFilesUUID;
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
