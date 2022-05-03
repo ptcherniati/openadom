@@ -7,7 +7,9 @@ import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 
+import java.util.HashSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineChecker<ReferenceLineCheckerConfiguration> {
 
@@ -47,8 +49,8 @@ public class ReferenceLineChecker implements CheckerOnOneVariableComponentLineCh
             validationCheckResult = ReferenceValidationCheckResult.success(target, rawValue, valueAsLtree, referenceValues.get(valueAsLtree));
         } else {
             validationCheckResult = ReferenceValidationCheckResult.error(target, rawValue, getTarget().getInternationalizedKey("invalidReference"), ImmutableMap.of(
-                    "target", target,
-                    "referenceValues", referenceValues,
+                    "target", target.toHumanReadableString(),
+                    "referenceValues", referenceValues==null?new HashSet<>():referenceValues.keySet().stream().map(Ltree::getSql).collect(Collectors.toSet()),
                     "refType", reference,
                     "value", rawValue));
         }

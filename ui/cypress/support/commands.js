@@ -31,7 +31,6 @@ Cypress.Commands.add('setLocale', (locale) => {
     });
 })
 Cypress.Commands.add('login', (userRole, applications) => {
-    console.log(userRole)
     localStorage.clear()
     let applicationsResponse = []
     if (applications && applications instanceof Array) {

@@ -172,7 +172,6 @@ export default class ReferencesManagementView extends Vue {
     const reference = this.findReferenceByLabel(label);
     if (reference) {
       let csv = await this.referenceService.getReferenceCsv(this.applicationName, reference.id);
-      console.log(csv);
       var hiddenElement = document.createElement("a");
       hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
 
