@@ -96,7 +96,6 @@ public class ApplicationConfigurationService {
         ImmutableSet.Builder<String> requiredAuthorizationsAttributesBuilder = ImmutableSet.builder();
         for (Map.Entry<String, Configuration.CompositeReferenceDescription> compositeReferenceEntry : configuration.getCompositeReferences().entrySet()) {
             verifyCompositeReferenceReferenceExists(configuration, builder, compositeReferenceEntry);
-            verifyCompositeReferenceParentColumnExists(configuration, builder, compositeReferenceEntry);
             verifyCompositeReferenceParentRecursiveColumnExists(configuration, builder, compositeReferenceEntry);
         }
 
@@ -197,6 +196,8 @@ public class ApplicationConfigurationService {
         ImmutableSet<String> unknownReferences = Sets.difference(expectingReferences, existingReferences).immutableCopy();
         if (!unknownReferences.isEmpty()) {
             builder.unknownReferenceInCompositeReference(compositeReferenceName, unknownReferences, existingReferences);
+        } else {
+            verifyCompositeReferenceParentColumnExists(configuration, builder, compositeReferenceEntry);
         }
     }
 

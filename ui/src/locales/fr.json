@@ -79,7 +79,7 @@
         "create": "Créer l'application",
         "comment": "Commentaire : ",
         "no-comment": "Pas de commentaire",
-        "test": "Tester",
+        "test": "Validation configuration",
         "name": "Nom de l'application",
         "name-placeholder": "Ex : olac",
         "creation-date": "Date de création",
@@ -92,7 +92,9 @@
 	    "trierRecent": "Date récente",
 	    "filter": "Filtrer",
         "change": "Modifier l'application",
-        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>"
+        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>",
+        "help_config" : "PDF aide configuration",
+        "app_version": "Version actuelle de l'application :"
     },
     "errors": {
         "authorizationScopeVariableComponentKeyMissingVariable": "Il faut indiquer la variable dans laquelle on recueille les informations spatiales à laquelle rattacher la donnée pour le gestion des droits jeu de données <code>{dataType}</code> pour l'autorisation <code>{authorizationName}</code>. Valeurs possibles <code>{variables}</code>",
@@ -209,7 +211,8 @@
         "unknownVariablesInDataGroup": "le groupe de données <code>{dataGroup}</code> contient des données qui ne sont pas déclarées <code>{unknownVariables}</code>. Données connues <code>{variables}</code>",
         "unrecognizedProperty": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, c’est pas une propriété reconnue. Les propriétés reconnues sont <code>{knownProperties}</code>",
         "unsupportedVersion": "Les fichiers YAML de version <code>{actualVersion}</code> ne sont pas gérés, version attendue <code>{expectedVersion}</code>",
-        "variableInMultipleDataGroup": "La variable <code>{variable}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe"
+        "variableInMultipleDataGroup": "La variable <code>{variable}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
+        "expetion": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
     },
     "referencesManagement": {
         "actions": "Actions",

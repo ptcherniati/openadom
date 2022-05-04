@@ -175,6 +175,7 @@
                 <div class="card-footer">
                   <div class="card-footer-item">
                     <b-button
+                      v-if="application.referenceType.length !== 0"
                       icon-left="drafting-compass"
                       @click="displayReferencesManagement(application)"
                     >
@@ -182,7 +183,11 @@
                     </b-button>
                   </div>
                   <div class="card-footer-item">
-                    <b-button icon-left="poll" @click="displayDataSetManagement(application)">
+                    <b-button
+                      v-if="application.dataType.length !== 0"
+                      icon-left="poll"
+                      @click="displayDataSetManagement(application)"
+                    >
                       {{ $t("applications.dataset") }}
                     </b-button>
                   </div>

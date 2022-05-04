@@ -18,11 +18,11 @@
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" v-bind:key="msg">
         <b-message
-            :title="$t('message.data-type-config-error')"
-            type="is-danger"
-            has-icon
-            :aria-close-label="$t('message.close')"
-            class="mt-4 DataTypesManagementView-message"
+          :title="$t('message.data-type-config-error')"
+          type="is-danger"
+          has-icon
+          :aria-close-label="$t('message.close')"
+          class="mt-4 DataTypesManagementView-message"
         >
           <span v-html="msg" />
         </b-message>
@@ -31,8 +31,8 @@
     <div>
       <CollapsibleTree
         class="liste"
-        v-for="(data,i) in dataTypes"
-        :id="i+1"
+        v-for="(data, i) in dataTypes"
+        :id="i + 1"
         :key="data.id"
         :option="{
           ...data,
@@ -88,7 +88,7 @@ import { InternationalisationService } from "@/services/InternationalisationServ
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
 import DetailModalCard from "@/components/charts/DetailModalCard";
-import {DownloadDatasetQuery} from "@/model/application/DownloadDatasetQuery";
+import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
 
 @Component({
   components: {
@@ -276,7 +276,7 @@ export default class DataTypesManagementView extends Vue {
     hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
 
     //provide the name for the CSV file to be downloaded
-    hiddenElement.download = 'export.csv';
+    hiddenElement.download = "export.csv";
     hiddenElement.click();
     return false;
   }
@@ -285,19 +285,17 @@ export default class DataTypesManagementView extends Vue {
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
       if (error.content != null) {
         this.errorsList = [];
-        error.content.then(
-          value => {
-            for (let i =0 ; i<value.length; i++) {
-              console.log(value[i]);
-              this.errorsList[i] = value[i];
-            }
-            if (this.errorsList.length !== 0) {
-              this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
-            } else {
-              this.errorsMessages = this.errorsService.getErrorsMessages(error);
-            }
+        error.content.then((value) => {
+          for (let i = 0; i < value.length; i++) {
+            console.log(value[i]);
+            this.errorsList[i] = value[i];
           }
-        );
+          if (this.errorsList.length !== 0) {
+            this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+          } else {
+            this.errorsMessages = this.errorsService.getErrorsMessages(error);
+          }
+        });
       }
     } else {
       this.alertService.toastServerError(error);

@@ -1,9 +1,10 @@
-><template>
+>
+<template>
   <PageView>
     <h1 class="title main-title">{{ $t("titles.aide") }}</h1>
 
     <div class="columns columnPrincipale">
-      <embed  class="column" src="files/aide.pdf" width=800 height=500 type='application/pdf'/>
+      <embed class="column" src="files/aide.pdf" width="800" height="500" type="application/pdf" />
     </div>
   </PageView>
 </template>
@@ -15,8 +16,7 @@ import PageView from "@/views/common/PageView.vue";
 @Component({
   components: { PageView },
 })
-export default class HelpView extends Vue {
-}
+export default class HelpView extends Vue {}
 </script>
 
 <style lang="scss" scoped>

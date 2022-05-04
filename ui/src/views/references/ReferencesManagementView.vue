@@ -12,11 +12,11 @@
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" v-bind:key="msg">
         <b-message
-            :title="$t('message.data-type-config-error')"
-            type="is-danger"
-            has-icon
-            :aria-close-label="$t('message.close')"
-            class="mt-4"
+          :title="$t('message.data-type-config-error')"
+          type="is-danger"
+          has-icon
+          :aria-close-label="$t('message.close')"
+          class="mt-4"
         >
           <span v-html="msg" />
         </b-message>
@@ -61,8 +61,8 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
 import { AlertService } from "@/services/AlertService";
 import { Button } from "@/model/Button";
-import {HttpStatusCodes} from "@/utils/HttpUtils";
-import {ErrorsService} from "@/services/ErrorsService";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
+import { ErrorsService } from "@/services/ErrorsService";
 
 @Component({
   components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
@@ -186,12 +186,12 @@ export default class ReferencesManagementView extends Vue {
     this.errorsMessages = [];
     const reference = this.findReferenceByLabel(label);
     try {
-      let response = await this.referenceService.createReference(this.applicationName, reference.id, refFile);
-      if (response.valid === true) {
-        this.alertService.toastSuccess(this.$t("alert.reference-updated"));
-      } else {
-        this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
-      }
+      await this.referenceService.createReference(
+        this.applicationName,
+        reference.id,
+        refFile
+      );
+      this.alertService.toastSuccess(this.$t("alert.reference-updated"));
     } catch (errors) {
       await this.checkMessageErrors(errors);
     }
@@ -199,18 +199,16 @@ export default class ReferencesManagementView extends Vue {
 
   async checkMessageErrors(errors) {
     if (errors.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
-      errors.content.then(
-          value => {
-            for (let i =0 ; i<value.length; i++) {
-              this.errorsList[i] = value[i];
-            }
-            if (this.errorsList.length !== 0) {
-              this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
-            } else {
-              this.errorsMessages = this.errorsService.getErrorsMessages(errors);
-            }
-          }
-      );
+      errors.content.then((value) => {
+        for (let i = 0; i < value.length; i++) {
+          this.errorsList[i] = value[i];
+        }
+        if (this.errorsList.length !== 0) {
+          this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+        } else {
+          this.errorsMessages = this.errorsService.getErrorsMessages(errors);
+        }
+      });
     } else {
       this.alertService.toastError(this.$t("alert.reference-csv-upload-error"), errors);
     }

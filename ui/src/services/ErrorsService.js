@@ -125,7 +125,8 @@ export class ErrorsService {
     return errors.map((error) => {
       const func = ERRORS[error.message];
       if (!func) {
-        throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
+        //throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
+        return i18n.t("errors.expetion");
       }
       return func(error.messageParams);
     });
@@ -135,10 +136,8 @@ export class ErrorsService {
     return csvErrors.map((csvError) => {
       const func = ERRORS[csvError.validationCheckResult.message];
       if (!func) {
-        throw new Error(
-          "Il manque la chaine de traduction pour l'erreur : " +
-            csvError.validationCheckResult.message
-        );
+        //throw new Error("Il manque la chaine de traduction pour l'erreur : " + csvError.validationCheckResult.message);
+        return Error(i18n.t("errors.expetion") + csvError.validationCheckResult.message);
       }
       const params = {
         lineNumber: csvError.lineNumber,

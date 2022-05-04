@@ -1,11 +1,13 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiTechnicalException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -21,10 +23,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +46,50 @@ public class ApplicationConfigurationServiceTest {
 
     @Autowired
     private ApplicationConfigurationService service;
+
+    public static final Map<String, BadApplicationConfigurationException> configurationParsingResults = new HashMap<>();
+
+    @AfterClass
+    public static void registerErrors() throws IOException {
+        final Map<String, ConfigurationParsingResult> collect = configurationParsingResults.entrySet()
+                .stream().filter(e -> !e.getValue().getConfigurationParsingResult().isValid())
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getConfigurationParsingResult()));
+        final String errorsAsString = new ObjectMapper().writeValueAsString(collect);
+        File errorsFile = new File("ui/cypress/fixtures/applications/errors/errors.json");
+        log.debug(errorsFile.getAbsolutePath());
+        BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
+        writer.write(errorsAsString);
+        writer.close();
+    }
+
+    private ConfigurationParsingResult getConfigurationParsingResult(String methodName, byte[] bytes) {
+        final ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
+        try {
+            BadApplicationConfigurationException.check(configurationParsingResult);
+        } catch (BadApplicationConfigurationException e) {
+            configurationParsingResults.put(methodName, e);
+        }
+        return configurationParsingResult;
+
+    }
+
+    private ConfigurationParsingResult parseYaml(String methodName, String toReplace, String by) {
+        ConfigurationParsingResult configurationParsingResult;
+        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getValidationApplicationConfigurationResourceName())) {
+            String yaml = IOUtils.toString(configurationFile, StandardCharsets.UTF_8);
+            String wrongYaml = yaml.replace(toReplace, by);
+            byte[] bytes = wrongYaml.getBytes(StandardCharsets.UTF_8);
+            configurationParsingResult = service.parseConfigurationBytes(bytes);
+            try {
+                BadApplicationConfigurationException.check(configurationParsingResult);
+            } catch (BadApplicationConfigurationException e) {
+                configurationParsingResults.put(methodName, e);
+            }
+            return configurationParsingResult;
+        } catch (IOException e) {
+            throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
+        }
+    }
 
     @Test
     public void parseConfigurationFile() {
@@ -74,23 +121,10 @@ public class ApplicationConfigurationServiceTest {
         }
     }
 
-    private ConfigurationParsingResult parseYaml(String toReplace, String by) {
-        ConfigurationParsingResult configurationParsingResult;
-        try (InputStream configurationFile = getClass().getResourceAsStream(fixtures.getValidationApplicationConfigurationResourceName())) {
-            String yaml = IOUtils.toString(configurationFile, StandardCharsets.UTF_8);
-            String wrongYaml = yaml.replace(toReplace, by);
-            byte[] bytes = wrongYaml.getBytes(StandardCharsets.UTF_8);
-            configurationParsingResult = service.parseConfigurationBytes(bytes);
-            return configurationParsingResult;
-        } catch (IOException e) {
-            throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
-        }
-    }
-
     @Test
     public void testEmptyFile() {
         byte[] bytes = "".getBytes(StandardCharsets.UTF_8);
-        ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
+        ConfigurationParsingResult configurationParsingResult = getConfigurationParsingResult("testEmptyFile", bytes);
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -99,7 +133,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingReferenceForChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceForChecker", "refType: sites", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
         ValidationCheckResult missingReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "missingReferenceForChecker".equals(vcr.getMessage()));
@@ -111,7 +145,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingVariableComponentForUniqueness() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml(
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingVariableComponentForUniqueness",
                 "- variable: date\n" +
                         "        component: day",
                 "- variable: date\n" +
@@ -128,7 +162,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingInternationalizedColumn() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizedColumns:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingInternationalizedColumn", "internationalizedColumns:\n" +
                 "      nom du projet_key:", "internationalizedColumns:\n" +
                 "      nom du projet_unknown:");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -139,7 +173,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceForChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("refType: sites", "refType: sitee");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceForChecker", "refType: sites", "refType: sitee");
         Assert.assertFalse(configurationParsingResult.isValid());
         List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
         ValidationCheckResult unknownReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "unknownReferenceForChecker".equals(vcr.getMessage()));
@@ -151,7 +185,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnsupportedVersion() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("version: 1", "version: -1");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnsupportedVersion", "version: 1", "version: -1");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -160,7 +194,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceInCompositeReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: typeDeSites");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceInCompositeReference", "- reference: typeSites", "- reference: typeDeSites");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -169,7 +203,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingReferenceInCompositereference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "- reference: ");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceInCompositereference", "- reference: typeSites", "- reference: ");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -178,7 +212,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testRequiredReferenceInCompositeReferenceForParentKeyColumn() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("- reference: typeSites", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testRequiredReferenceInCompositeReferenceForParentKeyColumn", "- reference: typeSites", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -187,7 +221,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testRequiredParentKeyColumnInCompositeReferenceForReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("parentKeyColumn: \"nom du type de site\"\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testRequiredParentKeyColumnInCompositeReferenceForReference", "parentKeyColumn: \"nom du type de site\"\n" +
                 "        ", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
@@ -197,7 +231,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingParentColumnForReferenceInCompositeReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("- parentKeyColumn: \"nom du site\"", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParentColumnForReferenceInCompositeReference", "- parentKeyColumn: \"nom du site\"", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         boolean hasError = configurationParsingResult.getValidationCheckResults()
                 .stream()
@@ -207,7 +241,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingParentRecursiveKeyColumnForReferenceInCompositeReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("parentKeyColumn: \"nom du site\"\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParentRecursiveKeyColumnForReferenceInCompositeReference", "parentKeyColumn: \"nom du site\"\n" +
                 "        ", "parentKeyColumn: \"nom du site\"\n" +
                 "        parentRecursiveKey: \"nom du parent\"\n" +
                 "        ");
@@ -219,7 +253,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUndeclaredDataGroupForVariable() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUndeclaredDataGroupForVariable", "data:\n" +
                 "            - localization", "data:\n" +
                 "            - localizations");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -233,7 +267,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testVariableInMultipleDataGroup() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("data:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testVariableInMultipleDataGroup", "data:\n" +
                 "            - Couleur des individus", "data:\n" +
                 "            - localization\n" +
                 "            - Couleur des individus");
@@ -245,7 +279,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testRecordInvalidKeyColumns() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("columns:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testRecordInvalidKeyColumns", "columns:\n" +
                 "      nom du projet_key:", "columns:\n" +
                 "      nom du Projet_key:");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -263,7 +297,7 @@ public class ApplicationConfigurationServiceTest {
      *  on peut omettre le timescope
      */
     public void testMissingTimeScopeVariableComponentKey() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("component: site\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingTimeScopeVariableComponentKey", "component: site\n" +
                 "      timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day", "component: site\n");
@@ -275,7 +309,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testTimeScopeVariableComponentKeyMissingVariable() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimeScopeVariableComponentKeyMissingVariable", "timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day", "timeScope:\n" +
                 "        component: day");
@@ -287,7 +321,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testTimeScopeVariableComponentKeyUnknownVariable() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimeScopeVariableComponentKeyUnknownVariable", "timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day", "timeScope:\n" +
                 "        variable: dates\n" +
@@ -300,7 +334,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testTimeVariableComponentKeyMissingComponent() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimeVariableComponentKeyMissingComponent", "timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day", "timeScope:\n" +
                 "        variable: date\n" +
@@ -313,7 +347,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testTimeVariableComponentKeyUnknownComponent() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("timeScope:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimeVariableComponentKeyUnknownComponent", "timeScope:\n" +
                 "        variable: date\n" +
                 "        component: day", "timeScope:\n" +
                 "        variable: date\n" +
@@ -326,7 +360,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testTimeScopeVariableComponentWrongChecker() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("checker:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimeScopeVariableComponentWrongChecker", "checker:\n" +
                 "              name: Date", "checker:\n" +
                 "              name: Dates");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -355,7 +389,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testTimeScopeVariableComponentPatternUnknown() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("params:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimeScopeVariableComponentPatternUnknown", "params:\n" +
                 "                pattern: dd/MM/yyyy", "params:\n" +
                 "                pattern: dd/MM");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -366,7 +400,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnrecognizedProperty() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("compositeReferences", "compositReference");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnrecognizedProperty", "compositeReferences", "compositReference");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -378,7 +412,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testInvalidFormat() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("firstRowLine: 3", "firstRowLine: pas_un_chiffre");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidFormat", "firstRowLine: 3", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -387,7 +421,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingRequiredExpression() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("\"true\"", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingRequiredExpression", "\"true\"", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -396,7 +430,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testIllegalGroovyExpression() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("\"true\"", "if(}");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testIllegalGroovyExpression", "\"true\"", "if(}");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -405,7 +439,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownCheckerName() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("name: GroovyExpression", "name: GroovyExpressions");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownCheckerName", "name: GroovyExpression", "name: GroovyExpressions");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -414,7 +448,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testCsvBoundToUnknownVariable() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("header: \"typeSite\"\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testCsvBoundToUnknownVariable", "header: \"typeSite\"\n" +
                 "          boundTo:\n" +
                 "            variable: localization", "header: \"typeSite\"\n" +
                 "          boundTo:\n" +
@@ -427,7 +461,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testCsvBoundToUnknownVariableComponent() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("components:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testCsvBoundToUnknownVariableComponent", "components:\n" +
                 "          site:", "components:\n" +
                 "          sites:");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -441,7 +475,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testInvalidKeyColumns() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("keyColumns: [nom du projet_key]", "keyColumns: [nom du projet_clé]");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidKeyColumns", "keyColumns: [nom du projet_key]", "keyColumns: [nom du projet_clé]");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -450,7 +484,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingColumnInInternationalizationDisplayPattern() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("'{nom du site_fr}'", "'{nom du site}'");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingColumnInInternationalizationDisplayPattern", "'{nom du site_fr}'", "'{nom du site}'");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -461,7 +495,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUnknownReferenceInInternationalizationDisplayPatternInDatatype() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("internationalizationDisplays:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceInInternationalizationDisplayPatternInDatatype", "internationalizationDisplays:\n" +
                 "      sites:", "internationalizationDisplays:\n" +
                 "      plateforme:");
         Assert.assertFalse(configurationParsingResult.isValid());
@@ -472,7 +506,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingColumnInInternationalizationDisplayPatternInDatatype() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("'{nom du site_fr}'", "'{nom du site}'");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingColumnInInternationalizationDisplayPatternInDatatype", "'{nom du site_fr}'", "'{nom du site}'");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -483,19 +517,19 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testUndeclaredValueForChart() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("value: \"value\"", "value: null");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUndeclaredValueForChart", "value: \"value\"", "value: null");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unDeclaredValueForChart", onlyError.getMessage());
         Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
         Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("components")).equals(Set.of("value", "unit", "standardDeviation")));
     }
 
     @Test
     public void testMissingValueComponentForChart() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("value: \"value\"", "value: \"nonvalue\"");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingValueComponentForChart", "value: \"value\"", "value: \"nonvalue\"");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -503,12 +537,12 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
         Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
         Assert.assertTrue((onlyError.getMessageParams().get("valueComponent")).equals("nonvalue"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("components")).equals(Set.of("value", "unit", "standardDeviation")));
     }
 
     @Test
     public void testMissingAggregationVariableForChart() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("aggregation:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingAggregationVariableForChart", "aggregation:\n" +
                 "            variable: Couleur des individus\n" +
                 "            component: value", "aggregation:\n" +
                 "            variable: pasdevariable\n" +
@@ -521,12 +555,12 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
         Assert.assertTrue((onlyError.getMessageParams().get("aggregationVariable")).equals("pasdevariable"));
         Assert.assertTrue((onlyError.getMessageParams().get("aggregationComponent")).equals("value"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("variables")).equals(Set.of("date","localization","Couleur des individus","Nombre d'individus")));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("variables")).equals(Set.of("date", "localization", "Couleur des individus", "Nombre d'individus")));
     }
 
     @Test
     public void testMissingAggregationComponentForChart() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("aggregation:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingAggregationComponentForChart", "aggregation:\n" +
                 "            variable: Couleur des individus\n" +
                 "            component: value", "aggregation:\n" +
                 "            variable: Couleur des individus\n" +
@@ -539,12 +573,12 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
         Assert.assertTrue((onlyError.getMessageParams().get("aggregationVariable")).equals("Couleur des individus"));
         Assert.assertTrue((onlyError.getMessageParams().get("aggregationComponent")).equals("pasdevalue"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("components")).equals(Set.of("value", "unit", "standardDeviation")));
     }
 
     @Test
     public void testMissingStandardDeviationComponentForChart() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("standardDeviation: \"standardDeviation\"", "standardDeviation: \"badstandardDeviation\"");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingStandardDeviationComponentForChart", "standardDeviation: \"standardDeviation\"", "standardDeviation: \"badstandardDeviation\"");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -552,12 +586,12 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
         Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
         Assert.assertTrue((onlyError.getMessageParams().get("standardDeviation")).equals("badstandardDeviation"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("components")).equals(Set.of("value", "unit", "standardDeviation")));
     }
 
     @Test
     public void testMissingUnitComponentForChart() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("unit: \"unit\"", "unit: \"badunit\"");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingUnitComponentForChart", "unit: \"unit\"", "unit: \"badunit\"");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -565,18 +599,18 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertTrue((onlyError.getMessageParams().get("variable")).equals("Nombre d'individus"));
         Assert.assertTrue((onlyError.getMessageParams().get("dataType")).equals("site"));
         Assert.assertTrue((onlyError.getMessageParams().get("unit")).equals("badunit"));
-        Assert.assertTrue(((Set)onlyError.getMessageParams().get("components")).equals(Set.of("value","unit","standardDeviation")));
+        Assert.assertTrue(((Set) onlyError.getMessageParams().get("components")).equals(Set.of("value", "unit", "standardDeviation")));
     }
 
     @Test
-    public void testvalid(){
-        ConfigurationParsingResult configurationParsingResult = parseYaml("","");
+    public void testvalid() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("", "", "");
         Assert.assertTrue(configurationParsingResult.isValid());
     }
 
     @Test
     public void testMissingKeyColumnsForReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("keyColumns: [nom du projet_key]", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingKeyColumnsForReference", "keyColumns: [nom du projet_key]", "");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -595,7 +629,7 @@ public class ApplicationConfigurationServiceTest {
                 "              params:\n" +
                 "                pattern: dd/MM/yyyy\n" +
                 "                refType: peu_importe_refType_n_a_pas_de_sens";
-        ConfigurationParsingResult configurationParsingResult = parseYaml(toReplace, replacement);
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testIllegalCheckerConfigurationParameterForVariableComponentChecker", toReplace, replacement);
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
@@ -614,7 +648,7 @@ public class ApplicationConfigurationServiceTest {
                 "              params:\n" +
                 "                refType: sites";
         String replacement = "";
-        ConfigurationParsingResult configurationParsingResult = parseYaml(toReplace, replacement);
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testauthorizationScopeMissingReferenceCheckerForAuthorizationScope", toReplace, replacement);
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
