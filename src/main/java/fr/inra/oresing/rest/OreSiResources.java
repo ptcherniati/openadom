@@ -3,7 +3,6 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
@@ -122,19 +121,21 @@ public class OreSiResources {
                 }
             });
         });
-        Map<String, ApplicationResult.Reference> references = Maps.transformEntries(application.getConfiguration().getReferences(), (reference, referenceDescription) -> {
-            Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
-            Map<String, ApplicationResult.Reference.DynamicColumn> dynamicColumns = Maps.transformEntries(referenceDescription.getDynamicColumns(), (dynamicColumnName, dynamicColumnDescription) ->
-                    new ApplicationResult.Reference.DynamicColumn(
-                            dynamicColumnName,
-                            dynamicColumnName,
-                            dynamicColumnDescription.getHeaderPrefix(),
-                            dynamicColumnDescription.getReference(),
-                            dynamicColumnDescription.getReferenceColumnToLookForHeader(),
-                            dynamicColumnDescription.getPresenceConstraint().isMandatory()));
-            Set<String> children = childrenPerReferences.get(reference);
-            return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns);
-        });
+        Map<String, ApplicationResult.Reference> references = Maps.transformEntries(
+                application.getConfiguration().getReferences(),
+                (reference, referenceDescription) -> {
+                    Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
+                    Map<String, ApplicationResult.Reference.DynamicColumn> dynamicColumns = Maps.transformEntries(referenceDescription.getDynamicColumns(), (dynamicColumnName, dynamicColumnDescription) ->
+                            new ApplicationResult.Reference.DynamicColumn(
+                                    dynamicColumnName,
+                                    dynamicColumnName,
+                                    dynamicColumnDescription.getHeaderPrefix(),
+                                    dynamicColumnDescription.getReference(),
+                                    dynamicColumnDescription.getReferenceColumnToLookForHeader(),
+                                    dynamicColumnDescription.getPresenceConstraint().isMandatory()));
+                    Set<String> children = childrenPerReferences.get(reference);
+                    return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns);
+                });
         Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
                 Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.doGetAllComponentDescriptions(), (component, componentDescription) -> {
@@ -304,9 +305,9 @@ public class OreSiResources {
                 .collect(Collectors.toSet());
         Map<Ltree, List<ReferenceValue>> requiredreferencesValues = service.getReferenceDisplaysById(service.getApplication(nameOrId), listOfDataIds);
         final Map<String, LineChecker> referenceLineCheckers = checkedFormatVariableComponents.get(ReferenceLineChecker.class.getSimpleName());
-        if(referenceLineCheckers==null) {
+        if (referenceLineCheckers == null) {
             //TODO on est dans le cas ou aucun checker reference n'est décrit : authorizationscope  n'est pas un referentiel
-        }else {
+        } else {
             for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
                 String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
@@ -326,16 +327,16 @@ public class OreSiResources {
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {
         Configuration.AuthorizationDescription authorization = service.getApplication(nameOrId).getConfiguration().getDataTypes().get(dataType).getAuthorization();
         LinkedHashSet<String> orderedVariableComponents = new LinkedHashSet<String>();
-        if(authorization!=null && authorization.getTimeScope()!=null) {
+        if (authorization != null && authorization.getTimeScope() != null) {
             orderedVariableComponents.add(authorization.getTimeScope().getVariable());
         }
-        if(authorization!=null && authorization.getAuthorizationScopes()!=null) {
+        if (authorization != null && authorization.getAuthorizationScopes() != null) {
             authorization.getAuthorizationScopes().values()
                     .stream()
                     .filter(vc -> !orderedVariableComponents.contains(vc.getVariable()))
                     .forEach(vc -> orderedVariableComponents.add(vc.getVariable()));
         }
-        if(authorization!=null && authorization.getDataGroups()!=null) {
+        if (authorization != null && authorization.getDataGroups() != null) {
             authorization.getDataGroups()
                     .values()
                     .stream()
