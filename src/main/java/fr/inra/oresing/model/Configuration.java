@@ -4,44 +4,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
-import fr.inra.oresing.checker.CheckerTarget;
-import fr.inra.oresing.checker.DateLineCheckerConfiguration;
-import fr.inra.oresing.checker.FloatCheckerConfiguration;
-import fr.inra.oresing.checker.GroovyLineCheckerConfiguration;
-import fr.inra.oresing.checker.IntegerCheckerConfiguration;
-import fr.inra.oresing.checker.Multiplicity;
-import fr.inra.oresing.checker.ReferenceLineCheckerConfiguration;
-import fr.inra.oresing.checker.RegularExpressionCheckerConfiguration;
-import fr.inra.oresing.model.internationalization.Internationalization;
-import fr.inra.oresing.model.internationalization.InternationalizationApplicationMap;
-import fr.inra.oresing.model.internationalization.InternationalizationAuthorisationMap;
-import fr.inra.oresing.model.internationalization.InternationalizationAuthorisationName;
-import fr.inra.oresing.model.internationalization.InternationalizationDataTypeMap;
-import fr.inra.oresing.model.internationalization.InternationalizationDisplayImpl;
-import fr.inra.oresing.model.internationalization.InternationalizationImpl;
-import fr.inra.oresing.model.internationalization.InternationalizationMap;
-import fr.inra.oresing.model.internationalization.InternationalizationMapDisplayImpl;
-import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
+import fr.inra.oresing.checker.*;
+import fr.inra.oresing.model.internationalization.*;
 import fr.inra.oresing.transformer.TransformationConfiguration;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -105,19 +78,40 @@ public class Configuration {
 
     private void addDependencyNodesForReference(Map<String, DependencyNode> nodes, Map.Entry<String, ReferenceDescription> reference) {
         DependencyNode dependencyNode = nodes.computeIfAbsent(reference.getKey(), k -> new DependencyNode(reference.getKey()));
-        LinkedHashMap<String, LineValidationRuleWithColumnsDescription> validations = reference.getValue().getValidations();
-        if (!CollectionUtils.isEmpty(validations)) {
-            for (Map.Entry<String, LineValidationRuleWithColumnsDescription> validation : validations.entrySet()) {
-                CheckerDescription checker = validation.getValue().getChecker();
-                if (checker != null) {
-                    String refType = checker.getParams().getRefType();
-                    if ("Reference".equals(checker.getName()) && StringUtils.isNotEmpty(refType)) {
-                        DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
-                        dependencyNode.addDependance(node);
-                    }
-                }
-            }
-        }
+        reference.getValue().getValidations().values().stream()
+                .filter(Objects::nonNull)
+                .map(LineValidationRuleWithColumnsDescription::getChecker)
+                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .forEach(checker -> {
+                    final String refType = checker.getParams().getRefType();
+                    DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
+                    dependencyNode.addDependance(node);
+                });
+        reference.getValue().getComputedColumns().values().stream()
+                .filter(Objects::nonNull)
+                .map(ReferenceStaticComputedColumnDescription::getChecker)
+                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .forEach(checker -> {
+                    final String refType = checker.getParams().getRefType();
+                    DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
+                    dependencyNode.addDependance(node);
+                });
+        reference.getValue().getColumns().values().stream()
+                .filter(Objects::nonNull)
+                .map(ReferenceStaticColumnDescription::getChecker)
+                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .forEach(checker -> {
+                    final String refType = checker.getParams().getRefType();
+                    DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
+                    dependencyNode.addDependance(node);
+                });
+        reference.getValue().getDynamicColumns().values().stream()
+                .filter(Objects::nonNull)
+                .map(ReferenceDynamicColumnDescription::getReference)
+                .forEach(refType -> {
+                    DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
+                    dependencyNode.addDependance(node);
+                });
     }
 
     private void addRecursively(DependencyNode node, LinkedHashMap<String, ReferenceDescription> sortedReferences, LinkedHashMap<String, ReferenceDescription> references) {
@@ -247,7 +241,7 @@ public class Configuration {
     @Setter
     @ToString
     public static class ReferenceDynamicColumnDescription extends ReferenceColumnDescription {
-        @ApiModelProperty(notes = "How to translate this name in differents locales",required = false)
+        @ApiModelProperty(notes = "How to translate this name in differents locales", required = false)
         Internationalization internationalizationName;
 
         @ApiModelProperty(notes = "The header prefix. All columns that starts with this prefix use this description", example = "rt_", required = true)
@@ -339,7 +333,7 @@ public class Configuration {
                         String variable = variableEntry.getKey();
                         return variableEntry.getValue().doGetAllComponents().stream()
                                 .map(component -> new VariableComponentKey(variable, component));
-            }).collect(ImmutableSet.toImmutableSet());
+                    }).collect(ImmutableSet.toImmutableSet());
         }
     }
 
@@ -390,7 +384,7 @@ public class Configuration {
     @Setter
     @ToString
     public static class AuthorizationDescription {
-        public static AuthorizationDescription DEFAULT_INSTANCE=new AuthorizationDescription();
+        public static AuthorizationDescription DEFAULT_INSTANCE = new AuthorizationDescription();
 
         @ApiModelProperty(notes = "The variable component that identifies the time scope of the line (must be a variable/component with a checker of type 'Date')", required = true)
         private VariableComponentKey timeScope;

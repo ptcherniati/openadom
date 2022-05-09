@@ -95,7 +95,7 @@
                       :date-parser="parseDate"
                       :placeholder="
                         $t('dataTypesRepository.placeholder-datepicker') +
-                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                       "
                       editable
                       icon="calendar"
@@ -110,7 +110,7 @@
                       :date-parser="parseDate"
                       :placeholder="
                         $t('dataTypesRepository.placeholder-datepicker') +
-                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                       "
                       editable
                       icon="calendar"
