@@ -357,7 +357,7 @@ Une colonne calculée est une colonne qui n'est pas présente dans le fichier. S
     checker:
      name:Date
      params:
-      pattern:yyyy-MM-ddThh:mm:ss
+      pattern:yyyy-MM-ddTHH:mm:ss
 
 ```
 
@@ -737,8 +737,8 @@ Voici quelque possibilité de *pattern* possible pour les dates et heures :
 |MM/yyyy   |01/2021       |12/2021      |
 |M/yyyy    |1/2021        |12/2021      |
 |HH:mm     |13:00         |01:00        |
-|hh:mm:ss  |13:00:00      |01:00:00     |
-|dd/MM/yy hh:mm:ss|31/01/21 13:00:00|31/12/21 01:00:00|
+|HH:mm:ss  |13:00:00      |01:00:00     |
+|dd/MM/yy HH:mm:ss|31/01/21 13:00:00|31/12/21 01:00:00|
 
 <span style="color : orange">Pour les dates anglaises inverser le "dd" avec le "MM" (exemple : MM/dd/yy -> 01/31/21) et
 pour l'heure anglaise il suffit d'ajouter am/pm (exemple "hh:mm am/pm"-> "01:00 am" ou "hh:mm:ss AM/PM" -> "01:00:00 AM").
@@ -778,10 +778,10 @@ On décrit un format pour stocker les données sous la forment
           datetime:
             computation :#calcul d'une valeur par défaut date+time avec une expression groovy
               expression: return datum.date.day + " " + datum.date.time
-            checker: #ajout d'un checker date dd/MM/yyyy hh:mm:ss
+            checker: #ajout d'un checker date dd/MM/yyyy HH:mm:ss
               name: Date
               params:
-                pattern: dd/MM/yyyy hh:mm:ss
+                pattern: dd/MM/yyyy HH:mm:ss
         components: # les composantes non calculées
           day:
             checker:
@@ -792,7 +792,7 @@ On décrit un format pour stocker les données sous la forment
             checker:
               name: Date
               params:
-                pattern: hh:mm:ss
+                pattern: HH:mm:ss
       localization:
         components:
           parcelle:
