@@ -131,17 +131,13 @@ public class OreSiResourcesTest {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
             // on n'a pas le droit de creer de nouvelle application
-            try {
-                mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
+                final NotApplicationCreatorRightsException resolvedException = (NotApplicationCreatorRightsException) mockMvc.perform(multipart("/api/v1/applications/monsore")
                                 .file(configuration)
                                 .cookie(monsoreCookie))
-                        .andExpect(status().is4xxClientError());
+                        .andExpect(status().is4xxClientError())
+                        .andReturn().getResolvedException();
                 addUserRightCreateApplication(monsoreUserId, "monsore");
-                Assert.fail();
-            } catch (NestedServletException e) {
-                final NotApplicationCreatorRightsException cause = (NotApplicationCreatorRightsException) e.getCause();
-                Assert.assertEquals("monsore", cause.applicationName);
-            }
+            Assert.assertEquals("monsore", resolvedException.applicationName);
             addUserRightCreateApplication(monsoreUserId, "monsore");
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
