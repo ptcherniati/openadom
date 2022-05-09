@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.checker.CheckerType;
+import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
@@ -365,26 +367,16 @@ public class ApplicationConfigurationServiceTest {
                 "              name: Dates");
         Assert.assertFalse(configurationParsingResult.isValid());
 
+        Assert.assertFalse(configurationParsingResult.isValid());
         Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
-                .filter(e -> "unknownCheckerNameForVariableComponent".equals(e.getMessage()))
-                .filter(e -> "site".equals(e.getMessageParams().get("datatype")))
-                .filter(e -> "date".equals(e.getMessageParams().get("variable")))
-                .filter(e -> "day".equals(e.getMessageParams().get("component")))
-                .filter(e -> "Dates".equals(e.getMessageParams().get("checkerName")))
-                .collect(Collectors.toList()));
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
-                .filter(e -> "unknownCheckerNameForVariableComponent".equals(e.getMessage()))
-                .filter(e -> "site".equals(e.getMessageParams().get("datatype")))
-                .filter(e -> "date".equals(e.getMessageParams().get("variable")))
-                .filter(e -> "time".equals(e.getMessageParams().get("component")))
-                .filter(e -> "Dates".equals(e.getMessageParams().get("checkerName")))
-                .collect(Collectors.toList()));
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
-                .filter(e -> "timeScopeVariableComponentWrongChecker".equals(e.getMessage()))
-                .filter(e -> "Date".equals(e.getMessageParams().get("expectedChecker")))
-                .filter(e -> "date".equals(e.getMessageParams().get("variable")))
-                .filter(e -> "day".equals(e.getMessageParams().get("component")))
-                .collect(Collectors.toList()));
+                .filter(e -> "invalidFormat".equals(e.getMessage()))
+                .filter(e -> "Dates".equals(e.getMessageParams().get("value")))
+                .filter(e -> " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]".equals(e.getMessageParams().get("authorizedValues")))
+                .filter(e -> Integer.valueOf(131).equals(e.getMessageParams().get("lineNumber")))
+                .filter(e -> Integer.valueOf(21).equals(e.getMessageParams().get("columnNumber")))
+                .filter(e -> "dataTypes->site->data->date->components->day->checker->name".equals(e.getMessageParams().get("path")))
+                .collect(Collectors.toList())
+        );
     }
 
     @Test
@@ -415,8 +407,14 @@ public class ApplicationConfigurationServiceTest {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidFormat", "firstRowLine: 3", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-        log.debug(onlyError.getMessage());
-        Assert.assertEquals("invalidFormat", onlyError.getMessage());
+        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
+                .filter(e -> "invalidFormat".equals(e.getMessage()))
+                .filter(e -> "pas_un_chiffre".equals(e.getMessageParams().get("value")))
+                .filter(e -> "".equals(e.getMessageParams().get("authorizedValues")))
+                .filter(e -> Integer.valueOf(190).equals(e.getMessageParams().get("lineNumber")))
+                .filter(e -> Integer.valueOf(21).equals(e.getMessageParams().get("columnNumber")))
+                .filter(e -> "dataTypes->site->format->firstRowLine".equals(e.getMessageParams().get("path")))
+                .collect(Collectors.toList()));
     }
 
     @Test
@@ -441,9 +439,14 @@ public class ApplicationConfigurationServiceTest {
     public void testUnknownCheckerName() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownCheckerName", "name: GroovyExpression", "name: GroovyExpressions");
         Assert.assertFalse(configurationParsingResult.isValid());
-        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
-        log.debug(onlyError.getMessage());
-        Assert.assertEquals("unknownCheckerNameForValidationRuleInDataType", onlyError.getMessage());
+        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
+                .filter(e -> "invalidFormat".equals(e.getMessage()))
+                .filter(e -> "GroovyExpressions".equals(e.getMessageParams().get("value")))
+                .filter(e -> " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]".equals(e.getMessageParams().get("authorizedValues")))
+                .filter(e -> Integer.valueOf(177).equals(e.getMessageParams().get("lineNumber")))
+                .filter(e -> Integer.valueOf(17).equals(e.getMessageParams().get("columnNumber")))
+                .filter(e -> "dataTypes->site->validations->exempledeDeRegleDeValidation->checker->name".equals(e.getMessageParams().get("path")))
+                .collect(Collectors.toList()));
     }
 
     @Test
@@ -637,7 +640,7 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("site", onlyError.getMessageParams().get("dataType"));
         Assert.assertEquals("date", onlyError.getMessageParams().get("datum"));
         Assert.assertEquals("day", onlyError.getMessageParams().get("component"));
-        Assert.assertEquals("Date", onlyError.getMessageParams().get("checkerName"));
+        Assert.assertEquals(CheckerType.Date, onlyError.getMessageParams().get("checkerName"));
         Assert.assertEquals("refType", onlyError.getMessageParams().get("parameterName"));
     }
 

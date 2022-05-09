@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.CheckerFactory;
 import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.Multiplicity;
@@ -14,21 +13,12 @@ import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.groovy.StringSetGroovyExpression;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.ColumnPresenceConstraint;
-import fr.inra.oresing.model.ComputedValueUsage;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.GroovyDataInjectionConfiguration;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnMultipleValue;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -41,12 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -221,7 +206,7 @@ public class ReferenceService {
                 }
             };
         } else {
-            throw new IllegalStateException("multiplicity = " + multiplicity);
+            throw Multiplicity.getError(multiplicity);
         }
         return column;
     }
@@ -271,7 +256,7 @@ public class ReferenceService {
                 }
             };
         } else {
-            throw new IllegalStateException("multiplicity = " + multiplicity);
+            throw Multiplicity.getError(multiplicity);
         }
         return column;
     }
@@ -283,7 +268,7 @@ public class ReferenceService {
         } else if (multiplicity == Multiplicity.MANY) {
             column = newComputedManyColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
         } else {
-            throw new IllegalStateException("multiplicity = " + multiplicity);
+            throw Multiplicity.getError(multiplicity);
         }
         return column;
     }
@@ -380,11 +365,23 @@ public class ReferenceService {
                 try {
                     csvPrinter.printRecord(record);
                 } catch (IOException e) {
-                    throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+                    throw new SiOreIllegalArgumentException(
+                            "IOException",
+                            Map.of(
+                                    "message", e.getLocalizedMessage()
+                            )
+                    );
+                    // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
                 }
             });
         } catch (IOException e) {
-            throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+            throw new SiOreIllegalArgumentException(
+                    "IOException",
+                    Map.of(
+                            "message", e.getLocalizedMessage()
+                    )
+            );
+            // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
         }
         String csv = out.toString();
         return csv;

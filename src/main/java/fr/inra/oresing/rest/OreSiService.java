@@ -16,6 +16,8 @@ import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
@@ -113,7 +115,7 @@ public class OreSiService {
         binaryFile.setData(file.getBytes());
         BinaryFileInfos binaryFileInfos = new BinaryFileInfos();
         binaryFile.setParams(binaryFileInfos);
-        binaryFile.getParams().createuser = request.getRequestClient().getId();
+        binaryFile.getParams().createuser = request.getRequestUserId();
         binaryFile.getParams().createdate = LocalDateTime.now().toString();
         UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
         return result;
@@ -173,7 +175,7 @@ public class OreSiService {
         db.setTableOwner(sqlSchemaForApplication.referenceValue(), adminOnApplicationRole);
         db.setTableOwner(sqlSchemaForApplication.binaryFile(), adminOnApplicationRole);
 
-        OreSiUserRole creator = authenticationService.getUserRole(request.getRequestClient().getId());
+        OreSiUserRole creator = authenticationService.getUserRole(request.getRequestUserId());
         db.addUserInRole(creator, adminOnApplicationRole);
 
         authenticationService.setRoleForClient();
@@ -321,7 +323,7 @@ public class OreSiService {
         Configuration.CompositeReferenceDescription compositeReferenceDescription = application
                 .getConfiguration()
                 .getCompositeReferencesUsing(lowestLevelReference)
-                .orElseThrow();
+                .orElseThrow(() -> new OreSiTechnicalException("Can't find "));
         BiMap<Ltree, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
         Map<ReferenceValue, Ltree> parentHierarchicalKeys = new LinkedHashMap<>();
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -365,7 +367,6 @@ public class OreSiService {
     public UUID addData(String nameOrId, String dataType, MultipartFile file, FileOrUUID params) throws IOException, InvalidDatasetContentException {
         List<CsvRowValidationCheckResult> errors = new LinkedList<>();
         authenticationService.setRoleForClient();
-        log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
         Optional.ofNullable(params)
@@ -406,7 +407,7 @@ public class OreSiService {
                 storedFile.setParams(BinaryFileInfos.EMPTY_INSTANCE());
             }
             storedFile.getParams().published = true;
-            storedFile.getParams().publisheduser = request.getRequestClient().getId();
+            storedFile.getParams().publisheduser = request.getRequestUserId();
             storedFile.getParams().publisheddate = LocalDateTime.now().toString();
             repo.getRepository(app).binaryFile().store(storedFile);
             filesToStore.add(storedFile);
@@ -1108,7 +1109,13 @@ public class OreSiService {
                     csvPrinter.printRecord(rowAsRecord);
                 }
             } catch (IOException e) {
-                throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+                throw new SiOreIllegalArgumentException(
+                        "IOException",
+                        Map.of(
+                                "message", e.getLocalizedMessage()
+                        )
+                );
+                // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
             }
             result = out.toString();
         }

@@ -2,6 +2,7 @@ package fr.inra.oresing;
 
 import fr.inra.oresing.persistence.roles.OreSiAnonymousRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
+import fr.inra.oresing.rest.exceptions.authentication.DisconnectedException;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.UUID;
@@ -12,7 +13,7 @@ public enum OreSiAnonymousRequestClient implements OreSiRequestClient {
 
     @Override
     public UUID getId() {
-        throw new UnsupportedOperationException("la requête est faite en tant qu'utilisateur anonyme, il n'y a pas d'identifiant associé");
+        throw new DisconnectedException("la requête est faite en tant qu'utilisateur anonyme, il n'y a pas d'identifiant associé");
     }
 
     @Override

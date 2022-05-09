@@ -3,19 +3,12 @@ package fr.inra.oresing.persistence;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.ReferenceDatum;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -93,8 +86,32 @@ public class JsonRowMapper<T> implements RowMapper<T> {
             String json = rs.getString("json");
             T result = jsonMapper.readValue(json, type);
             return result;
-        } catch (ClassNotFoundException | IOException eee) {
-            throw new SQLException("Can't convert result from database to object", eee);
+        } catch (JsonProcessingException eee) {
+            throw new SiOreIllegalArgumentException(
+                    "sqlConvertException",
+                    Map.of(
+                            "originalMessage", eee.getOriginalMessage(),
+                            "locationLineNumber", eee.getLocation().getColumnNr(),
+                            "locationColumnNumber", eee.getLocation().getLineNr(),
+                            "message", eee.getMessage()
+                    )
+            );
+            // throw new SQLException("Can't convert result from database to object", eee);
+        }catch (ClassNotFoundException eee) {
+            throw new SiOreIllegalArgumentException(
+                    "sqlConvertExceptionForClass",
+                    Map.of(
+                            "message", eee.getLocalizedMessage()
+                    )
+            );
+            // throw new SQLException("Can't convert result from database to object", eee);
+        } catch (IOException e) {
+            throw new SiOreIllegalArgumentException(
+                    "IOException",
+                    Map.of(
+                            "message", e.getLocalizedMessage()
+                    )
+            );
         }
     }
 
@@ -102,7 +119,23 @@ public class JsonRowMapper<T> implements RowMapper<T> {
         try {
             return jsonMapper.writeValueAsString(e);
         } catch (JsonProcessingException eee) {
-            throw new IllegalArgumentException("Can't convert argument to json: " + e, eee);
+            throw new SiOreIllegalArgumentException(
+                    "sqlConvertException",
+                    Map.of(
+                            "originalMessage", eee.getOriginalMessage(),
+                            "locationLineNumber", eee.getLocation().getColumnNr(),
+                            "locationColumnNumber", eee.getLocation().getLineNr(),
+                            "message", eee.getMessage()
+                    )
+            );
+            // throw new SQLException("Can't convert result from database to object", eee);
+        } catch (IOException eee) {
+            throw new SiOreIllegalArgumentException(
+                    "IOException",
+                    Map.of(
+                            "message", eee.getLocalizedMessage()
+                    )
+            );
         }
     }
 }

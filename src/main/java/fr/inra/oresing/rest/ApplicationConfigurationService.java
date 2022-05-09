@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -10,7 +11,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
-import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.*;
@@ -18,6 +18,7 @@ import fr.inra.oresing.model.internationalization.InternationalizationDataTypeMa
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -35,11 +36,11 @@ import java.util.stream.Collectors;
 public class ApplicationConfigurationService {
 
     public static final String OTHERS_DATAGROUPS = "_others_";
-    private static final ImmutableSet<String> CHECKER_ON_TARGET_NAMES =
-            ImmutableSet.of("Date", "Float", "Integer", "RegularExpression", "Reference");
-    private static final ImmutableSet<String> ALL_CHECKER_NAMES = ImmutableSet.<String>builder()
+    private static final ImmutableSet<CheckerType> CHECKER_ON_TARGET_NAMES =
+            ImmutableSet.of(CheckerType.Date,CheckerType.Integer,CheckerType.Float,CheckerType.RegularExpression,CheckerType.Reference);
+    private static final ImmutableSet<CheckerType> ALL_CHECKER_NAMES = ImmutableSet.<CheckerType>builder()
             .addAll(CHECKER_ON_TARGET_NAMES)
-            .add(GroovyLineChecker.NAME)
+            .add(CheckerType.GroovyExpression)
             .build();
 
     ConfigurationParsingResult unzipConfiguration(MultipartFile file) {
@@ -70,7 +71,13 @@ public class ApplicationConfigurationService {
         } catch (JsonProcessingException e) {
             return onJsonProcessingException(e);
         } catch (IOException e) {
-            throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
+            throw new SiOreIllegalArgumentException(
+                    "IOException",
+                    Map.of(
+                            "message", e.getLocalizedMessage()
+                    )
+            );
+           // throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
         }
 
         Configuration configuration;
@@ -85,7 +92,13 @@ public class ApplicationConfigurationService {
         } catch (JsonProcessingException e) {
             return onJsonProcessingException(e);
         } catch (IOException e) {
-            throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
+            throw new SiOreIllegalArgumentException(
+                    "IOException",
+                    Map.of(
+                            "message", e.getLocalizedMessage()
+                    )
+            );
+            // throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
         }
         return getConfigurationParsingResultForSyntacticallyValidYaml(configuration);
     }
@@ -359,7 +372,7 @@ public class ApplicationConfigurationService {
                                     builder.authorizationScopeMissingReferenceCheckerForAuthorizationScope(authorizationScopeVariableComponentKeyEntry, dataType);
                                 } else {
                                     Configuration.CheckerDescription authorizationScopeVariableComponentChecker = allComponentDescriptions.get(authorizationScopeVariableComponentKey.getComponent()).getChecker();
-                                    if (authorizationScopeVariableComponentChecker == null || !"Reference".equals(authorizationScopeVariableComponentChecker.getName())) {
+                                    if (authorizationScopeVariableComponentChecker == null || !CheckerType.Reference.equals(authorizationScopeVariableComponentChecker.getName())) {
                                         builder.authorizationScopeVariableComponentWrongChecker(authorizationScopeVariableComponentKey, "Date");
                                     }
                                     String refType;
@@ -421,7 +434,7 @@ public class ApplicationConfigurationService {
                             builder.timeVariableComponentKeyUnknownComponent(timeScopeVariableComponentKey, dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponents());
                         } else {
                             Configuration.CheckerDescription timeScopeVariableComponentChecker = dataTypeDescription.getData().get(timeScopeVariableComponentKey.getVariable()).doGetAllComponentDescriptions().get(timeScopeVariableComponentKey.getComponent()).getChecker();
-                            if (timeScopeVariableComponentChecker == null || !"Date".equals(timeScopeVariableComponentChecker.getName())) {
+                            if (timeScopeVariableComponentChecker == null || !CheckerType.Date.equals(timeScopeVariableComponentChecker.getName())) {
                                 builder.timeScopeVariableComponentWrongChecker(timeScopeVariableComponentKey, "Date");
                             }
                             Optional.ofNullable(timeScopeVariableComponentChecker)
@@ -453,7 +466,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
+            public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, CheckerType checkerName, ImmutableSet<CheckerType> checkerOnTargetNames) {
                 builder.unknownCheckerNameForVariableComponentCheckerInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, checkerOnTargetNames);
             }
 
@@ -483,7 +496,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns) {
+            public void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, CheckerType checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns) {
                 builder.missingColumnReferenceForCheckerInDataType(
                         validationRuleDescriptionEntryKey,
                         knownColumns.stream().map(CheckerTarget::toHumanReadableString).collect(ImmutableSet.toImmutableSet()),
@@ -493,7 +506,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
+            public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, CheckerType checkerName, ImmutableSet<CheckerType> allCheckerNames) {
                 builder.unknownCheckerNameForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, allCheckerNames);
             }
 
@@ -513,7 +526,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName) {
+            public void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, CheckerType checkerName, String parameterName) {
                 builder.illegalCheckerConfigurationParameterForValidationRuleInDataType(validationRuleDescriptionEntryKey, dataType, checkerName, parameterName);
             }
         };
@@ -551,7 +564,7 @@ public class ApplicationConfigurationService {
                             }
 
                             @Override
-                            public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
+                            public void unknownCheckerOnOneTargetName(CheckerType checkerName, ImmutableSet<CheckerType> knownCheckerNames) {
                                 builder.unknownCheckerNameForVariableComponent(dataType, datum, component, checkerName, knownCheckerNames);
                             }
 
@@ -571,7 +584,7 @@ public class ApplicationConfigurationService {
                             }
 
                             @Override
-                            public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
+                            public void illegalCheckerConfigurationParameter(CheckerType checkerName, String parameterName) {
                                 builder.illegalCheckerConfigurationParameterForVariableComponentChecker(dataType, datum, component, checkerName, parameterName);
                             }
                         };
@@ -608,7 +621,7 @@ public class ApplicationConfigurationService {
                         }
 
                         @Override
-                        public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> knownCheckerNames) {
+                        public void unknownCheckerOnOneTargetName(CheckerType checkerName, ImmutableSet<CheckerType> knownCheckerNames) {
                             builder.unknownCheckerNameInReferenceColumn(referenceToValidate, column, checkerName, knownCheckerNames);
                         }
 
@@ -628,7 +641,7 @@ public class ApplicationConfigurationService {
                         }
 
                         @Override
-                        public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
+                        public void illegalCheckerConfigurationParameter(CheckerType checkerName, String parameterName) {
                             builder.illegalCheckerConfigurationParameterForReferenceColumnChecker(referenceToValidate, column, checkerName, parameterName);
                         }
                     };
@@ -639,8 +652,8 @@ public class ApplicationConfigurationService {
     }
 
     private void verifyCheckerOnOneTarget(CheckerOnOneTargetValidationContext builder, Configuration.CheckerDescription checkerDescription) {
-        String checkerName = checkerDescription.getName();
-        if ("Reference".equals(checkerName)) {
+        CheckerType checkerName = checkerDescription.getName();
+        if (CheckerType.Reference.equals(checkerName)) {
             if (checkerDescription.getParams() != null && checkerDescription.getParams().getRefType() != null) {
                 String refType = checkerDescription.getParams().getRefType();
                 if (!builder.getReferenceCheckerRefTypeParameterValidValues().contains(refType)) {
@@ -650,7 +663,7 @@ public class ApplicationConfigurationService {
                 builder.missingReferenceForChecker(builder.getReferenceCheckerRefTypeParameterValidValues());
             }
             verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("refType"));
-        } else if ("Date".equals(checkerName)) {
+        } else if (CheckerType.Date.equals(checkerName)) {
             String datePattern = checkerDescription.getParams().getPattern();
             if (DateLineChecker.isValidPattern(datePattern)) {
                 String duration = checkerDescription.getParams().getDuration();
@@ -663,13 +676,13 @@ public class ApplicationConfigurationService {
                 builder.invalidPatternForDateChecker(datePattern);
             }
             verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("pattern", "duration"));
-        } else if ("RegularExpression".equals(checkerName)) {
+        } else if (CheckerType.RegularExpression.equals(checkerName)) {
             String regularExpressionPattern = checkerDescription.getParams().getPattern();
             if (!RegularExpressionChecker.isValid(regularExpressionPattern)) {
                 builder.invalidPatternForRegularExpressionChecker(regularExpressionPattern);
             }
             verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of("pattern"));
-        } else if (Set.of("Integer", "Float").contains(checkerName)) {
+        } else if (Set.of(CheckerType.Integer, CheckerType.Float).contains(checkerName)) {
             verifyCheckerDescriptionParameters(builder, checkerDescription, Set.of());
         } else {
             builder.unknownCheckerOnOneTargetName(checkerName, CHECKER_ON_TARGET_NAMES);
@@ -854,7 +867,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> checkerOnTargetNames) {
+            public void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, CheckerType checkerName, ImmutableSet<CheckerType> checkerOnTargetNames) {
                 builder.unknownCheckerNameForVariableComponentCheckerInReference(validationRuleDescriptionEntryKey, reference, checkerName, checkerOnTargetNames);
             }
 
@@ -884,7 +897,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns) {
+            public void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, CheckerType checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns) {
                 builder.missingColumnReferenceForCheckerInReference(
                         validationRuleDescriptionEntryKey,
                         knownColumns.stream().map(CheckerTarget::toHumanReadableString).collect(ImmutableSet.toImmutableSet()),
@@ -894,7 +907,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames) {
+            public void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, CheckerType checkerName, ImmutableSet<CheckerType> allCheckerNames) {
                 builder.unknownCheckerNameForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, allCheckerNames);
             }
 
@@ -914,7 +927,7 @@ public class ApplicationConfigurationService {
             }
 
             @Override
-            public void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName) {
+            public void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, CheckerType checkerName, String parameterName) {
                 builder.illegalCheckerConfigurationParameterForValidationRuleInReference(validationRuleDescriptionEntryKey, reference, checkerName, parameterName);
             }
         };
@@ -934,7 +947,7 @@ public class ApplicationConfigurationService {
      */
     private void verifyLineValidationRuleDescription(LineValidationRuleDescriptionValidationContext validationContext, String validationRuleDescriptionEntryKey, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
         Configuration.CheckerDescription checker = lineValidationRuleDescription.getChecker();
-        if (GroovyLineChecker.NAME.equals(checker.getName())) {
+        if (CheckerType.GroovyExpression.equals(checker.getName())) {
             String expression = Optional.of(checker)
                     .map(Configuration.CheckerDescription::getParams)
                     .map(Configuration.CheckerConfigurationDescription::getGroovy)
@@ -974,7 +987,7 @@ public class ApplicationConfigurationService {
                 }
 
                 @Override
-                public void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames) {
+                public void unknownCheckerOnOneTargetName(CheckerType checkerName, ImmutableSet<CheckerType> validCheckerNames) {
                     validationContext.unknownCheckerNameForVariableComponentChecker(validationRuleDescriptionEntryKey, checkerName, validCheckerNames);
                 }
 
@@ -994,7 +1007,7 @@ public class ApplicationConfigurationService {
                 }
 
                 @Override
-                public void illegalCheckerConfigurationParameter(String checkerName, String parameterName) {
+                public void illegalCheckerConfigurationParameter(CheckerType checkerName, String parameterName) {
                     validationContext.illegalCheckerConfigurationParameter(validationRuleDescriptionEntryKey, checkerName, parameterName);
                 }
             };
@@ -1024,12 +1037,19 @@ public class ApplicationConfigurationService {
     }
 
     private ConfigurationParsingResult onInvalidFormatException(InvalidFormatException e) {
+       String  path = e.getPath().stream()
+                .map(JsonMappingException.Reference::getFieldName)
+                .collect(Collectors.joining("->"));
+        final String authorizedValues = Optional.ofNullable(e.getOriginalMessage())
+                .map(m->m.split(":"))
+                .filter(l->l.length>2)
+                .map(l->l[2])
+                .orElse("");
         int lineNumber = e.getLocation().getLineNr();
         int columnNumber = e.getLocation().getColumnNr();
         String value = e.getValue().toString();
-        String targetTypeName = e.getTargetType().getName();
         return ConfigurationParsingResult.builder()
-                .invalidFormat(lineNumber, columnNumber, value, targetTypeName)
+                .invalidFormat(lineNumber, columnNumber, path, authorizedValues, value)
                 .build();
     }
 
@@ -1047,7 +1067,7 @@ public class ApplicationConfigurationService {
 
         void missingReferenceForChecker(Set<String> references);
 
-        void unknownCheckerOnOneTargetName(String checkerName, ImmutableSet<String> validCheckerNames);
+        void unknownCheckerOnOneTargetName(CheckerType checkerName, ImmutableSet<CheckerType> validCheckerNames);
 
         void invalidPatternForDateChecker(String pattern);
 
@@ -1055,7 +1075,7 @@ public class ApplicationConfigurationService {
 
         void invalidPatternForRegularExpressionChecker(String pattern);
 
-        void illegalCheckerConfigurationParameter(String checkerName, String parameterName);
+        void illegalCheckerConfigurationParameter(CheckerType checkerName, String parameterName);
     }
 
     /**
@@ -1079,15 +1099,15 @@ public class ApplicationConfigurationService {
 
         void missingParamColumnReferenceForChecker(String validationRuleDescriptionEntryKey);
 
-        void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, String checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns);
+        void missingColumnReferenceForChecker(String validationRuleDescriptionEntryKey, CheckerType checkerName, Set<CheckerTarget> knownColumns, ImmutableSet<CheckerTarget> missingColumns);
 
-        void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, String name, ImmutableSet<String> checkerOnTargetNames);
+        void unknownCheckerNameForVariableComponentChecker(String validationRuleDescriptionEntryKey, CheckerType checkerName, ImmutableSet<CheckerType> checkerOnTargetNames);
 
         void unknownReferenceForChecker(String validationRuleDescriptionEntryKey, String refType, Set<String> references);
 
         void missingReferenceForChecker(String validationRuleDescriptionEntryKey, Set<String> references);
 
-        void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, String checkerName, ImmutableSet<String> allCheckerNames);
+        void unknownCheckerNameForValidationRule(String validationRuleDescriptionEntryKey, CheckerType checkerName, ImmutableSet<CheckerType> allCheckerNames);
 
         void invalidPatternForDateChecker(String validationRuleDescriptionEntryKey, String pattern);
 
@@ -1095,7 +1115,7 @@ public class ApplicationConfigurationService {
 
         void invalidPatternForRegularExpressionChecker(String validationRuleDescriptionEntryKey, String pattern);
 
-        void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, String checkerName, String parameterName);
+        void illegalCheckerConfigurationParameter(String validationRuleDescriptionEntryKey, CheckerType checkerName, String parameterName);
     }
 
     @Getter

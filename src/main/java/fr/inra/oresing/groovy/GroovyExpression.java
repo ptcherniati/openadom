@@ -1,17 +1,10 @@
 package fr.inra.oresing.groovy;
 
 import com.google.common.base.MoreObjects;
-import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.Value;
 
-import javax.script.Bindings;
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-import java.text.MessageFormat;
+import javax.script.*;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +18,30 @@ public class GroovyExpression implements Expression<Object> {
     private final String expression;
 
     private final CompiledScript script;
+
+    public static SiOreIllegalArgumentException getError(String expression, ScriptException e) {
+        return new SiOreIllegalArgumentException(
+                "badGroovyExpressionChecker",
+                Map.of(
+                        "expression", expression,
+                        "lineNumber", e.getLineNumber(),
+                        "columnNumber", e.getColumnNumber(),
+                        "message", e.getLocalizedMessage()
+                )
+        );
+    }
+    public static SiOreIllegalArgumentException getError(String expression, ScriptException e, Map<String, Object> context) {
+        return new SiOreIllegalArgumentException(
+                "badGroovyExpressionChecker",
+                Map.of(
+                        "expression", expression,
+                        "lineNumber", e.getLineNumber(),
+                        "columnNumber", e.getColumnNumber(),
+                        "context", context,
+                        "message", e.getLocalizedMessage()
+                )
+        );
+    }
 
     public static GroovyExpression forExpression(String expression) {
         return INSTANCES.computeIfAbsent(expression, GroovyExpression::new);
@@ -54,7 +71,7 @@ public class GroovyExpression implements Expression<Object> {
         try {
             this.script = compile(expression);
         } catch (ScriptException e) {
-            throw new OreSiTechnicalException("impossible de compiler l’expression " + expression, e);
+            throw GroovyExpression.getError(expression, e);
         }
     }
 
@@ -78,7 +95,7 @@ public class GroovyExpression implements Expression<Object> {
 //            if (e.getCause() instanceof GroovyRuntimeException) {
 //
 //            }
-            throw new OreSiTechnicalException(MessageFormat.format("L’évaluation de l’expression a provoqué une erreur. Expression = {0}, donnée = {1}, ligne = {2}, colonne = {3}", expression, context, lineNumber, columnNumber), e);
+            throw GroovyExpression.getError(expression, e, context);
         }
     }
 

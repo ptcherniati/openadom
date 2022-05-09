@@ -81,7 +81,7 @@ public class Configuration {
         reference.getValue().getValidations().values().stream()
                 .filter(Objects::nonNull)
                 .map(LineValidationRuleWithColumnsDescription::getChecker)
-                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
                     DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -90,7 +90,7 @@ public class Configuration {
         reference.getValue().getComputedColumns().values().stream()
                 .filter(Objects::nonNull)
                 .map(ReferenceStaticComputedColumnDescription::getChecker)
-                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
                     DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -99,7 +99,7 @@ public class Configuration {
         reference.getValue().getColumns().values().stream()
                 .filter(Objects::nonNull)
                 .map(ReferenceStaticColumnDescription::getChecker)
-                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
                     DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -640,7 +640,7 @@ public class Configuration {
     public static class CheckerDescription {
 
         @ApiModelProperty(notes = "The name of the checker that must be used", required = true)
-        private String name;
+        private CheckerType name;
 
         @ApiModelProperty(notes = "The params of the checker to configure it. Required for some checkers", required = false)
         private CheckerConfigurationDescription params = new CheckerConfigurationDescription();

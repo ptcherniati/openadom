@@ -1,11 +1,11 @@
 package fr.inra.oresing.checker;
 
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.Datum;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.transformer.TransformationConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -63,11 +63,17 @@ public class GroovyLineCheckerTest {
         try {
             groovyLineChecker.check(new Datum(invalidDatum2)).isSuccess();
             Assert.fail("une exception aurait dû être levée");
-        } catch (OreSiTechnicalException e) {
-            Assert.assertTrue(e.getCause().getMessage().contains("IllegalArgumentException: unité inconnue, degrés"));
-            if (log.isDebugEnabled()) {
-                log.debug("le test lève une erreur quand la validation est incorrecte");
-            }
+        } catch (SiOreIllegalArgumentException e) {
+            Assert.assertEquals("badGroovyExpressionChecker", e.getMessage());
+            Assert.assertEquals("Integer température = Integer.parseInt(datum.get(\"temperature\").get(\"valeur\"));\n" +
+                    "String unité = datum.get(\"temperature\").get(\"unité\");\n" +
+                    "if (\"°C\".equals(unité)) {\n" +
+                    "    return température >= -273.15;\n" +
+                    "} else if (\"kelvin\".equals(unité)) {\n" +
+                    "    return température >= 0;\n" +
+                    "}\n" +
+                    "throw new IllegalArgumentException(\"unité inconnue, \" + unité);", e.getParams().get("expression"));
+            Assert.assertEquals("java.lang.IllegalArgumentException: unité inconnue, degrés", e.getParams().get("message"));
         }
     }
 
@@ -92,8 +98,10 @@ public class GroovyLineCheckerTest {
         try {
             ValidationCheckResult validation = groovyLineChecker.check(new Datum(validDatum));
             Assert.fail("une exception aurait dû être levée");
-        } catch (OreSiTechnicalException e) {
-            Assert.assertTrue(e.getMessage().contains("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais 261.15."));
+        } catch (SiOreIllegalArgumentException e) {
+            Assert.assertEquals("badGroovyExpressionCheckerReturnType", e.getMessage());
+            Assert.assertEquals("261.15", e.getParams().get("value").toString());;
+            Assert.assertEquals(Set.of(CheckerReturnType.BOOLEAN), e.getParams().get("knownCheckerType"));
         }
     }
 

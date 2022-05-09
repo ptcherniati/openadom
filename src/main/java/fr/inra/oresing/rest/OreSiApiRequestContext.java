@@ -7,6 +7,8 @@ import lombok.ToString;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @ToString
@@ -21,5 +23,8 @@ public class OreSiApiRequestContext {
     public void reset() {
         setRequestClient(null);
         setClientCorrelationId(null);
+    }
+    public UUID getRequestUserId(){
+        return requestClient.getId();
     }
 }
