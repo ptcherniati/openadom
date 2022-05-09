@@ -5,6 +5,7 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.persistence.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
@@ -303,7 +304,8 @@ public class AuthorizationResourcesTest {
 
             {
                 //l'administrateur peut créer des applications.
-                fixtures.createApplicationMonSore(dbUserCookies, "monsore");
+                final String monsoreResult = fixtures.createApplicationMonSore(dbUserCookies, "monsore");
+                Assert.assertFalse(Strings.isNullOrEmpty(JsonPath.parse(monsoreResult).read("$.id", String.class)));
             }
             {
                 // on donne les droits pour un pattern acbb
@@ -319,17 +321,11 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())));
 
                 //on peut déposer acbb
-                fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
-
+                final String acbbResult = fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
+                Assert.assertFalse(Strings.isNullOrEmpty(JsonPath.parse(acbbResult).read("$.id", String.class)));
                 //on ne peut déposer monsore
-                try {
-                    fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore");
-                    Assert.fail();
-                } catch (NotApplicationCreatorRightsException e) {
-                    Assert.assertEquals(NotApplicationCreatorRightsException.NO_RIGHT_FOR_APPLICATION_CREATION, e.getMessage());
-                    Assert.assertEquals("monsore", e.applicationName);
-                    Assert.assertTrue(e.applicationRestrictions.contains("acbb"));
-                }
+                Assert.assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore"));
+
             }
             {
                 //on donne des droits pour le pattern monsore
@@ -344,7 +340,9 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())));
 
                 //on peut déposer monsore
-                fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore");
+                final String acbbResult = fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
+                Assert.assertFalse(Strings.isNullOrEmpty(JsonPath.parse(acbbResult).read("$.id", String.class)));
+
             }
             {
                 //on supprime des droits pour le pattern monsore
@@ -359,11 +357,7 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())));
 
                 //on ne peut déposer monsore
-                try {
-                    fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore");
-                }catch (NotApplicationCreatorRightsException e){
-                    Assert.assertEquals("monsore", e.applicationName);
-                }
+                Assert.assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore"));
             }
         }
 
