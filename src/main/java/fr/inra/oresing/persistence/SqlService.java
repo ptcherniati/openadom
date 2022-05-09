@@ -64,7 +64,7 @@ public class SqlService {
 
     public void createPolicy(SqlPolicy sqlPolicy) {
         String createPolicySql = String.format(
-                "CREATE POLICY %s ON %s AS %s FOR %s TO %s USING (%s)",
+                "DROP POLICY IF EXISTS %1$s ON %2$s;CREATE POLICY %1$s ON %2$s AS %3$s FOR %4$s TO %5$s USING (%6$s);",
                 sqlPolicy.getSqlIdentifier(),
                 sqlPolicy.getTable().getSqlIdentifier(),
                 sqlPolicy.getPermissiveOrRestrictive().name(),
@@ -77,7 +77,7 @@ public class SqlService {
 
     public void dropPolicy(SqlPolicy sqlPolicy) {
         String createPolicySql = String.format(
-                "DROP POLICY %s ON %s",
+                "DROP POLICY IF EXISTS %s ON %s",
                 sqlPolicy.getSqlIdentifier(),
                 sqlPolicy.getTable().getSqlIdentifier()
         );

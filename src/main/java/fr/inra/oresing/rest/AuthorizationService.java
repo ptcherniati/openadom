@@ -6,6 +6,7 @@ import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
+import fr.inra.oresing.persistence.roles.OreSiRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -47,6 +48,17 @@ public class AuthorizationService {
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, modifiedAuthorization.getId());
         db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.readerOn(application));
         addOrRemoveAuthorizationForUsers(previousUsers, newUsers, oreSiRightOnApplicationRole);
+
+        final String expression = String.format("name = '%s'",application.getName());
+        final SqlPolicy sqlPolicy = new SqlPolicy(
+                String.join("_", "application","reader", oreSiRightOnApplicationRole.getAsSqlRole()),
+                SqlSchema.main().application(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                SqlPolicy.Statement.SELECT,
+                oreSiRightOnApplicationRole,
+                expression
+        );
+        db.createPolicy(sqlPolicy);
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             SqlPolicy publishPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
@@ -91,7 +103,7 @@ public class AuthorizationService {
                     authByType.forEach(authorization -> {
                         authorization.getDataGroup()
                                 .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
-                        Set<String> labels =Optional.ofNullable( authorizationDescription)
+                        Set<String> labels = Optional.ofNullable(authorizationDescription)
                                 .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
                                 .map(Map::keySet)
                                 .orElseGet(Set::of);
@@ -170,6 +182,15 @@ public class AuthorizationService {
         UUID authorizationId = revokeAuthorizationRequest.getAuthorizationId();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
+        final SqlPolicy sqlPolicy = new SqlPolicy(
+                String.join("_", "application","reader", oreSiRightOnApplicationRole.getAsSqlRole()),
+                SqlSchema.main().application(),
+                null,
+                null,
+                null,
+                null
+        );
+        db.dropPolicy(sqlPolicy);
         if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             SqlPolicy publishPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
@@ -260,14 +281,14 @@ public class AuthorizationService {
 
     private ImmutableSortedSet<GetGrantableResult.DataGroup> getDataGroups(Application application, String dataType) {
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups =
-        Optional.of(application.getConfiguration().getDataTypes().get(dataType))
-                .map(Configuration.DataTypeDescription::getAuthorization)
-                .map(Configuration.AuthorizationDescription::getDataGroups)
-                .map(dg -> dg.entrySet().stream()
-                    .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)) )
-                )
-                .orElseGet(ImmutableSortedSet::of);
+                Optional.of(application.getConfiguration().getDataTypes().get(dataType))
+                        .map(Configuration.DataTypeDescription::getAuthorization)
+                        .map(Configuration.AuthorizationDescription::getDataGroups)
+                        .map(dg -> dg.entrySet().stream()
+                                .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
+                                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)))
+                        )
+                        .orElseGet(ImmutableSortedSet::of);
         return dataGroups;
     }
 
@@ -284,22 +305,22 @@ public class AuthorizationService {
         return Optional.of(application.getConfiguration().getDataTypes().get(dataType))
                 .map(Configuration.DataTypeDescription::getAuthorization)
                 .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
-                .map(authorizationScopes-> authorizationScopes.entrySet().stream()
+                .map(authorizationScopes -> authorizationScopes.entrySet().stream()
                         .map(
-                        authorizationScopeEntry -> {
-                    String variable = authorizationScopeEntry.getValue().getVariable();
-                    String component = authorizationScopeEntry.getValue().getComponent();
-                    VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                    ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
-                    String lowestLevelReference = referenceLineChecker.getRefType();
-                    HierarchicalReferenceAsTree hierarchicalReferenceAsTree = oreSiService.getHierarchicalReferenceAsTree(application, lowestLevelReference);
-                    ImmutableSortedSet<GetGrantableResult.AuthorizationScope.Option> rootOptions = hierarchicalReferenceAsTree.getRoots().stream()
-                            .map(rootReferenceValue -> toOption(hierarchicalReferenceAsTree, rootReferenceValue))
-                            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
-                    String authorizationScopeId = authorizationScopeEntry.getKey();
-                    return new GetGrantableResult.AuthorizationScope(authorizationScopeId, authorizationScopeId, rootOptions);
-                    })
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope::getId)))
+                                authorizationScopeEntry -> {
+                                    String variable = authorizationScopeEntry.getValue().getVariable();
+                                    String component = authorizationScopeEntry.getValue().getComponent();
+                                    VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                                    ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
+                                    String lowestLevelReference = referenceLineChecker.getRefType();
+                                    HierarchicalReferenceAsTree hierarchicalReferenceAsTree = oreSiService.getHierarchicalReferenceAsTree(application, lowestLevelReference);
+                                    ImmutableSortedSet<GetGrantableResult.AuthorizationScope.Option> rootOptions = hierarchicalReferenceAsTree.getRoots().stream()
+                                            .map(rootReferenceValue -> toOption(hierarchicalReferenceAsTree, rootReferenceValue))
+                                            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
+                                    String authorizationScopeId = authorizationScopeEntry.getKey();
+                                    return new GetGrantableResult.AuthorizationScope(authorizationScopeId, authorizationScopeId, rootOptions);
+                                })
+                        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope::getId)))
                 )
                 .orElseGet(ImmutableSortedSet::of);
     }
@@ -309,5 +330,75 @@ public class AuthorizationService {
                 .map(child -> toOption(tree, child))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
         return new GetGrantableResult.AuthorizationScope.Option(referenceValue.getHierarchicalKey().getSql(), referenceValue.getHierarchicalKey().getSql(), options);
+    }
+
+    public OreSiUserResult deleteRoleUser(OreSiRoleForUser roleForUser) {
+        if (OreSiRole.superAdmin().getAsSqlRole().equals(roleForUser.getRole())) {
+            return deleteAdminRoleUser(roleForUser);
+        } else if (OreSiRole.applicationCreator().getAsSqlRole().equals(roleForUser.getRole())) {
+            return deleteApplicationCreatorRoleUser(roleForUser);
+        }
+        throw new BadRoleException("cantDeleteRole", roleForUser.getRole());
+    }
+
+    private OreSiUserResult deleteApplicationCreatorRoleUser(OreSiRoleForUser oreSiUserRoleApplicationCreator) {
+        boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
+        if (canAddApplicationCreatorRole) {
+            final OreSiUser user = authenticationService.deleteUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId()), oreSiUserRoleApplicationCreator.getApplicationPattern());
+            return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.getUserId()));
+        }
+        throw new NotSuperAdminException();
+    }
+
+    private boolean canAddApplicationCreatorRole(OreSiRoleForUser oreSiUserRoleApplicationCreator) {
+        boolean canAddApplicationCreatorRole = false;
+        if (authenticationService.hasRole(OreSiRole.superAdmin())) {
+            canAddApplicationCreatorRole = true;
+        } else if (authenticationService.hasRole(OreSiRole.applicationCreator())) {
+            final OreSiUser user = userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId()));
+            if (user.getAuthorizations().contains(oreSiUserRoleApplicationCreator.getApplicationPattern())) {
+                canAddApplicationCreatorRole = true;
+            } else {
+                throw new NotApplicationCreatorRightsException(oreSiUserRoleApplicationCreator.getApplicationPattern(), user.getAuthorizations());
+            }
+
+        }
+        return canAddApplicationCreatorRole;
+    }
+
+    private OreSiUserResult deleteAdminRoleUser(OreSiRoleForUser oreSiRoleForUserAdmin) {
+        boolean canAddsupeadmin = false;
+        if (authenticationService.hasRole(OreSiRole.superAdmin())) {
+            OreSiUser user = authenticationService.deleteUserRightSuperadmin(UUID.fromString(oreSiRoleForUserAdmin.getUserId()));
+            return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiRoleForUserAdmin.getUserId()));
+        }
+        throw new NotSuperAdminException();
+    }
+
+    public OreSiUserResult addRoleUser(OreSiRoleForUser roleForUser) {
+        if (OreSiRole.superAdmin().getAsSqlRole().equals(roleForUser.getRole())) {
+            return addAdminRoleUser(roleForUser);
+        } else if (OreSiRole.applicationCreator().getAsSqlRole().equals(roleForUser.getRole())) {
+            return addApplicationCreatorRoleUser(roleForUser);
+        }
+        throw new BadRoleException("cantSetRole", roleForUser.getRole());
+    }
+
+    private OreSiUserResult addApplicationCreatorRoleUser(OreSiRoleForUser oreSiUserRoleApplicationCreator) {
+        boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
+        if (canAddApplicationCreatorRole) {
+            final OreSiUser user = authenticationService.addUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId()), oreSiUserRoleApplicationCreator.getApplicationPattern());
+            return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.getUserId()));
+        }
+        throw new NotSuperAdminException();
+    }
+
+    private OreSiUserResult addAdminRoleUser(OreSiRoleForUser oreSiRoleForUserAdmin) {
+        boolean canAddsupeadmin = false;
+        if (authenticationService.hasRole(OreSiRole.superAdmin())) {
+            OreSiUser user = authenticationService.addUserRightSuperadmin(UUID.fromString(oreSiRoleForUserAdmin.getUserId()));
+            return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiRoleForUserAdmin.getUserId()));
+        }
+        throw new NotSuperAdminException();
     }
 }

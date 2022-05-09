@@ -93,5 +93,5 @@ Afin d'essayer l'application, il faut pouvoir se connecter. Il faut pour cela cr
 INSERT INTO OreSiUser (id, login, password) values ('5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9'::uuid, 'poussin', '$2a$12$4gAH34ZwgvgQNS0pbR5dGem1Nle0AT/.UwrZWfqtqMiJ0hXeYMvUG');
 DROP ROLE IF EXISTS "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
 CREATE ROLE "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
-GRANT "applicationCreator" TO "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
+GRANT "superadmin" TO "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9";
 ```

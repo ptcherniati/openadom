@@ -2,6 +2,8 @@ package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.model.OreSiAuthorization;
+import fr.inra.oresing.model.OreSiRoleForUser;
+import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -28,20 +30,38 @@ public class AuthorizationResources {
         Set<UUID> previousUsers = authorization.getUuid()==null?new HashSet<>():authorization.getUsersId();
         OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(authorization);
         UUID authId = oreSiAuthorization.getId();
-            OreSiRightOnApplicationRole roleForAuthorization = null;
-        if(authorization.getUuid()==null){
-             roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
-        }
-
+        OreSiRightOnApplicationRole roleForAuthorization =  authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
         String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
-        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, authorizationId));
+    public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId,@PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
+        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId,dataType,  authorizationId));
         return ResponseEntity.ok(getAuthorizationResult);
+    }
+
+    @DeleteMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OreSiUser> deleteAuthorization(
+            @PathVariable(name = "role", required = true)String role,
+            @RequestParam(name = "userId", required = true)String userId,
+            @RequestParam(name = "applicationPattern", required = false)String applicationPattern)
+            throws NotSuperAdminException, NotApplicationCreatorRightsException {
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userId, role, applicationPattern);
+        OreSiUser user = authorizationService.deleteRoleUser(roleForUser);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OreSiUser> addAuthorization(
+            @PathVariable(name = "role", required = true)String role,
+            @RequestParam(name = "userId", required = true)String userId,
+            @RequestParam(name = "applicationPattern", required = false)String applicationPattern)
+            throws NotSuperAdminException, NotApplicationCreatorRightsException {
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userId, role, applicationPattern);
+        OreSiUser user = authorizationService.addRoleUser(roleForUser);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -57,8 +77,8 @@ public class AuthorizationResources {
     }
 
     @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
-        authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, authorizationId));
+    public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType,  @PathVariable("authorizationId") UUID authorizationId) {
+        authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, dataType,  authorizationId));
         return ResponseEntity.noContent().build();
     }
 }

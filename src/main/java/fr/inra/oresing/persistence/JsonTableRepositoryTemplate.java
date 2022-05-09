@@ -43,15 +43,18 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         // 5min48 pour 100
         // 5min50 pour 500
         // 6min21 pour 1000
+        final String s = namedParameterJdbcTemplate.queryForObject("select CURRENT_USER::TEXT;", Map.of(), String.class);
         return Iterators.partition(stream.iterator(), 50);
     }
 
     public List<UUID> storeAll(Stream<T> stream) {
+        final String s = namedParameterJdbcTemplate.queryForObject("select CURRENT_USER::TEXT;", Map.of(), String.class);
         String query = getUpsertQuery();
         List<UUID> uuids = new LinkedList<>();
         partition(stream).forEachRemaining(entities -> {
             entities.forEach(e -> {
                 if (e.getId() == null) {
+                    final String a = namedParameterJdbcTemplate.queryForObject("select login from oresiuser where id::TEXT=CURRENT_USER::TEXT;", Map.of(), String.class);
                     e.setId(UUID.randomUUID());
                 }
             });

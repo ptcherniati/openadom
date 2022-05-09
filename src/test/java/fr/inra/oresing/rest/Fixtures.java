@@ -5,14 +5,24 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.UserRepository;
 import org.apache.commons.io.IOUtils;
+import org.hamcrest.Matchers;
+import org.hamcrest.core.IsEqual;
+import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.NestedServletException;
 
 import javax.servlet.http.Cookie;
 import java.io.IOException;
@@ -24,11 +34,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Component
@@ -39,7 +52,11 @@ public class Fixtures {
 
     @Autowired
     private AuthenticationService authenticationService;
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    @Autowired
+    private UserRepository userRepository;
     private Cookie cookie;
 
     public String getMonsoreApplicationName() {
@@ -82,12 +99,12 @@ public class Fixtures {
         //fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv
         final Pattern pattern = Pattern.compile("(.*)_" + datatype + "_(.*)_(.*).csv");
         final Matcher matcher = pattern.matcher(fileName);
-        if(!matcher.matches()){
+        if (!matcher.matches()) {
             return null;
         }
         String zone_etude = matcher.group(1);
         final String[] parent_site = zone_etude.split("-");
-        if(parent_site.length>1){
+        if (parent_site.length > 1) {
             zone_etude = String.format("%1$s.%1$s__%2$s", parent_site[0], parent_site[1]);
         }
         final DateTimeFormatter formaterIn = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -95,8 +112,8 @@ public class Fixtures {
 
         final boolean isMonthly = datatype.matches(".*_m");
         final String format = (isMonthly ? "01-" : "") + "%s";
-        String dateDebut =formaterOut.format(LocalDate.parse(String.format(format, matcher.group(2)), formaterIn).atStartOfDay(ZoneOffset.UTC))+" 00:00:00";
-        String dateFin =formaterOut.format(LocalDate.parse(String.format(format, matcher.group(3)), formaterIn).atTime(0,0).plus(1, isMonthly ? ChronoUnit.MONTHS:ChronoUnit.DAYS))+" 00:00:00";
+        String dateDebut = formaterOut.format(LocalDate.parse(String.format(format, matcher.group(2)), formaterIn).atStartOfDay(ZoneOffset.UTC)) + " 00:00:00";
+        String dateFin = formaterOut.format(LocalDate.parse(String.format(format, matcher.group(3)), formaterIn).atTime(0, 0).plus(1, isMonthly ? ChronoUnit.MONTHS : ChronoUnit.DAYS)) + " 00:00:00";
         return String.format("{\n" +
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
@@ -249,12 +266,12 @@ public class Fixtures {
         return "/data/migration/couleurs.csv";
     }
 
-    private Cookie addApplicationCreatorUser() throws Exception {
+    public Cookie addSuperAdmin(String applicationPattern) throws Exception {
         if (cookie == null) {
             String aPassword = "xxxxxxxx";
-            String aLogin = "poussin";
+            String aLogin = "superAdmin";
             CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword);
-            authenticationService.addUserRightCreateApplication(createUserResult.getUserId());
+            authenticationService.addUserRightCreateApplication(createUserResult.getUserId(), applicationPattern);
             cookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", aLogin)
                             .param("password", aPassword))
@@ -263,15 +280,68 @@ public class Fixtures {
         return cookie;
     }
 
-    public Cookie addMonsoreApplication() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+    @Transactional
+    void addRoleAdmin(CreateUserResult dbUserResult) {
+        namedParameterJdbcTemplate.update("grant \"superadmin\" to \"" + dbUserResult.getUserId().toString() + "\"", Map.of());
+    }
+
+    public Cookie addApplicationCreatorUser(String applicationPattern) throws Exception {
+        if (cookie == null) {
+            String aPassword = "xxxxxxxx";
+            String aLogin = "poussin";
+            CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword);
+            addRoleAdmin(createUserResult);
+            final MockHttpServletResponse response = mockMvc.perform(post("/api/v1/login")
+                            .param("login", aLogin)
+                            .param("password", aPassword))
+                    .andReturn().getResponse();
+            cookie = response.getCookie(AuthHelper.JWT_COOKIE_NAME);
+        }
+        String aPassword = "xxxxxxxx";
+        String aLogin = applicationPattern;
+        CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword);
+        final UUID userId = createUserResult.getUserId();
+        ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                        .param("userId", userId.toString())
+                        .param("applicationPattern", applicationPattern)
+                        .cookie(cookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
+                .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
+                .andExpect(jsonPath("$.authorizations", Matchers.hasItem(applicationPattern)))
+                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
+        final OreSiUser user = userRepository.findById(userId);
+        Assert.assertTrue(user.getAuthorizations().contains(applicationPattern));
+        Cookie applicationCreator = mockMvc.perform(post("/api/v1/login")
+                        .param("login", aLogin)
+                        .param("password", aPassword))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        return applicationCreator;
+    }
+
+    public String createApplicationMonSore(Cookie authCookie, String applicationName) throws Exception {
+        ResultActions resultActions = null;
         try (InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
-                            .file(configuration)
-                            .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().isCreated());
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(String.format("/api/v1/applications/%s", applicationName == null ? "monsore" : applicationName))
+                    .file(configuration)
+                    .cookie(authCookie));
+            return resultActions.andExpect(MockMvcResultMatchers.status().isCreated())
+                    .andReturn()
+                    .getResponse().getContentAsString();
+        } catch (NestedServletException e) {
+            if (e.getCause() instanceof NotApplicationCreatorRightsException) {
+                throw (NotApplicationCreatorRightsException) e.getCause();
+            }
+            throw e;
+        } catch (AssertionError e) {
+            return resultActions.andReturn().getResolvedException().getMessage();
         }
+    }
+
+    public Cookie addMonsoreApplication() throws Exception {
+        Cookie authCookie = addApplicationCreatorUser("monsore");
+        String result = createApplicationMonSore(authCookie, "monsore");
 
         // Ajout de referentiel
         for (Map.Entry<String, String> e : getMonsoreReferentielFiles().entrySet()) {
@@ -296,7 +366,7 @@ public class Fixtures {
     }
 
     public Cookie addMigrationApplication() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+        Cookie authCookie = addApplicationCreatorUser("fakeapp");
         try (InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
             MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/fakeapp")
@@ -327,7 +397,7 @@ public class Fixtures {
     }
 
     public Cookie addApplicationAcbb() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+        Cookie authCookie = addApplicationCreatorUser("acbb");
         try (InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb")
@@ -399,7 +469,7 @@ public class Fixtures {
     }
 
     public Cookie addApplicationHauteFrequence() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+        Cookie authCookie = addApplicationCreatorUser("hautefrequence");
         try (InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence")
@@ -468,7 +538,7 @@ public class Fixtures {
     }
 
     public Cookie addApplicationOLAC() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+        Cookie authCookie = addApplicationCreatorUser("olac");
         try (InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac")
@@ -629,7 +699,7 @@ public class Fixtures {
     }
 
     public Cookie addApplicationFORET() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+        Cookie authCookie = addApplicationCreatorUser("foret");
         try (InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
@@ -700,7 +770,7 @@ public class Fixtures {
     }
 
     public void addApplicationRecursivity() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser();
+        Cookie authCookie = addApplicationCreatorUser("recursivite");
         try (InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite")

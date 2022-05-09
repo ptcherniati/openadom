@@ -9,5 +9,7 @@ public class AuthorizationRequest {
 
     String applicationNameOrId;
 
+    String dataType;
+
     UUID authorizationId;
 }

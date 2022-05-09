@@ -14,8 +14,7 @@ import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
-import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.persistence.roles.*;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
@@ -31,6 +30,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -69,6 +69,13 @@ public class OreSiService {
 
     @Autowired
     private AuthenticationService authenticationService;
+
+
+    @Autowired
+    private AuthorizationService authorizationService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private CheckerFactory checkerFactory;
@@ -120,6 +127,9 @@ public class OreSiService {
     }
 
     public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
+        final OreSiUser currentUser = userRepository.findById(request.getRequestClient().getId());
+        final boolean canCreateApplication = currentUser.getAuthorizations().stream()
+                .anyMatch(s -> name.matches(s));
         Application app = new Application();
         app.setName(name);
         app.setComment(comment);
@@ -289,7 +299,20 @@ public class OreSiService {
     }
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
-
+        final String applicationName = app.getName();
+        final OreSiUser currentUser = userRepository.findById(request.getRequestClient().getId());
+        authenticationService.setRoleForClient();
+        final boolean canCreateApplication = authenticationService.hasRole(OreSiRole.applicationCreator()) && currentUser.getAuthorizations().stream()
+                .anyMatch(s -> applicationName.matches(s));
+        final boolean isSuperAdmin = authenticationService.isSuperAdmin();
+        if (!(isSuperAdmin || canCreateApplication)) {
+            throw new NotApplicationCreatorRightsException(applicationName, currentUser.getAuthorizations());
+        } else if (!isSuperAdmin) {
+            currentUser.getAuthorizations().stream()
+                    .filter(s -> isSuperAdmin || applicationName.matches(s))
+                    .findAny()
+                    .orElseThrow(() -> new NotApplicationCreatorRightsException(applicationName));
+        }
         ConfigurationParsingResult configurationParsingResult;
         if (configurationFile.getOriginalFilename().matches(".*\\.zip")) {
             final byte[] bytes = new MultiYaml().parseConfigurationBytes(configurationFile);
@@ -302,11 +325,15 @@ public class OreSiService {
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
         app.setConfiguration(configuration);
-        app = initApplication.apply(app);
-        UUID confId = storeFile(app, configurationFile, app.getComment());
-        app.setConfigFile(confId);
-        UUID appId = repo.application().store(app);
-        return appId;
+        try {
+            app = initApplication.apply(app);
+            UUID confId = storeFile(app, configurationFile, app.getComment());
+            app.setConfigFile(confId);
+            UUID appId = repo.application().store(app);
+            return appId;
+        } catch (BadSqlGrammarException bsge) {
+            throw new NotApplicationCreatorRightsException(applicationName, currentUser.getAuthorizations());
+        }
     }
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
@@ -569,13 +596,13 @@ public class OreSiService {
         final Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
         final boolean haveAuthorizations = authorization != null;
 
-        final DateLineChecker timeScopeDateLineChecker = haveAuthorizations && authorization.getTimeScope()!=null?
+        final DateLineChecker timeScopeDateLineChecker = haveAuthorizations && authorization.getTimeScope() != null ?
                 lineCheckers.stream()
-                    .filter(lineChecker -> lineChecker instanceof DateLineChecker)
-                    .map(lineChecker -> (DateLineChecker) lineChecker)
-                    .filter(dateLineChecker -> dateLineChecker.getTarget().equals(authorization.getTimeScope()))
-                    .collect(MoreCollectors.onlyElement())
-                :null;
+                        .filter(lineChecker -> lineChecker instanceof DateLineChecker)
+                        .map(lineChecker -> (DateLineChecker) lineChecker)
+                        .filter(dateLineChecker -> dateLineChecker.getTarget().equals(authorization.getTimeScope()))
+                        .collect(MoreCollectors.onlyElement())
+                : null;
 
         return rowWithData -> {
             Datum datum = Datum.copyOf(rowWithData.getDatum());
@@ -611,7 +638,7 @@ public class OreSiService {
                 return Stream.empty();
             }
             LocalDateTimeRange timeScope;
-            if (timeScopeDateLineChecker!=null) {
+            if (timeScopeDateLineChecker != null) {
                 String timeScopeValue = datum.get(authorization.getTimeScope());
                 timeScope = LocalDateTimeRange.parse(timeScopeValue, timeScopeDateLineChecker);
             } else {
@@ -619,12 +646,12 @@ public class OreSiService {
             }
 
             Map<String, Ltree> requiredAuthorizations = new LinkedHashMap<>();
-            if(haveAuthorizations) {
+            if (haveAuthorizations) {
                 authorization.getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
                     VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                     String requiredAuthorization = datum.get(variableComponentKey);
                     Ltree.checkSyntax(requiredAuthorization);
-                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorization));
+                    requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorization));
                 });
             }
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
@@ -636,13 +663,13 @@ public class OreSiService {
                 return Stream.of((Data) null);
             }
             LinkedHashMap<String, Configuration.DataGroupDescription> dataGroups;
-            if(!haveAuthorizations){
-                dataGroups=new LinkedHashMap<>();
+            if (!haveAuthorizations) {
+                dataGroups = new LinkedHashMap<>();
                 final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
                 dataGroupDescription.setData(dataTypeDescription.getData().keySet());
                 dataGroups.put("_default_", dataGroupDescription);
-            }else{
-                dataGroups= authorization.getDataGroups();
+            } else {
+                dataGroups = authorization.getDataGroups();
             }
             Stream<Data> dataStream = dataGroups.entrySet().stream().map(entry -> {
                 String dataGroup = entry.getKey();

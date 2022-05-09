@@ -2,11 +2,9 @@ package fr.inra.oresing.persistence;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.persistence.roles.OreSiApplicationCreatorRole;
-import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
-import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.persistence.roles.*;
 import fr.inra.oresing.rest.CreateUserResult;
 import fr.inra.oresing.rest.LoginResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
@@ -17,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Component
 @Transactional
@@ -110,10 +109,102 @@ public class AuthenticationService {
         return new CreateUserResult(result.getId());
     }
 
-    public void addUserRightCreateApplication(UUID userId) {
+    public OreSiUser deleteUserRightSuperadmin(UUID userId) {
+        resetRole();
+        final OreSiUser oreSiUser = getOreSiUser(userId);
         OreSiUserRole roleToModify = getUserRole(userId);
+        OreSiSuperAdminRole roleToRevoke = OreSiRole.superAdmin();
+        db.removeUserInRole(roleToModify, new OreSiRoleToBeGranted() {
+            @Override
+            public String getAsSqlRole() {
+                return OreSiSuperAdminRole.SUPER_ADMIN.getAsSqlRole();
+            }
+        });
+        return userRepository.findById(userId);
+    }
+    public OreSiUser addUserRightSuperadmin(UUID userId) {
+        resetRole();
+        final OreSiUser oreSiUser = getOreSiUser(userId);
+        OreSiUserRole roleToModify = getUserRole(userId);
+        OreSiSuperAdminRole roleToAdd = OreSiRole.superAdmin();
+        db.addUserInRole(roleToModify, new OreSiRoleToBeGranted() {
+            @Override
+            public String getAsSqlRole() {
+                return OreSiSuperAdminRole.SUPER_ADMIN.getAsSqlRole();
+            }
+        });
+        return userRepository.findById(userId);
+    }
+
+    public OreSiUser deleteUserRightCreateApplication(UUID userId, String applicationPattern) {
+        resetRole();
+        final OreSiUser oreSiUser = getOreSiUser(userId);
+        OreSiUserRole roleToModify = getUserRole(userId);
+        oreSiUser.getAuthorizations().remove(applicationPattern);
+        OreSiApplicationCreatorRole roleToAdd = OreSiRole.applicationCreator();
+        db.removeUserInRole(roleToModify, roleToAdd);
+        final String expression = oreSiUser.getAuthorizations().stream()
+                .map(s -> String.format("%s", s))
+                .collect(Collectors.joining("|", "name ~ '(", ")'"));
+        final SqlPolicy sqlPolicy = new SqlPolicy(
+                String.join("_", OreSiRole.applicationCreator().getAsSqlRole(), userId.toString()),
+                SqlSchema.main().application(),
+                SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
+                SqlPolicy.Statement.ALL,
+                new OreSiRole() {
+                    @Override
+                    public String getAsSqlRole() {
+                        return userId.toString();
+                    }
+                },
+                expression
+        );
+        if(oreSiUser.getAuthorizations().isEmpty()){
+            db.dropPolicy(sqlPolicy);
+        }else{
+            db.createPolicy(sqlPolicy);
+        }
+
+        setRoleForClient();
+        if(!Strings.isNullOrEmpty(applicationPattern)){
+            userRepository.updateAuthorizations(userId, oreSiUser.getAuthorizations());
+            userRepository.flush();
+        }
+        resetRole();
+        return userRepository.findById(userId);
+    }
+
+    public OreSiUser addUserRightCreateApplication(UUID userId, String applicationPattern) {
+        resetRole();
+        final OreSiUser oreSiUser = getOreSiUser(userId);
+        OreSiUserRole roleToModify = getUserRole(userId);
+        oreSiUser.getAuthorizations().add(applicationPattern);
         OreSiApplicationCreatorRole roleToAdd = OreSiRole.applicationCreator();
         db.addUserInRole(roleToModify, roleToAdd);
+        final String expression = oreSiUser.getAuthorizations().stream()
+                .map(s -> String.format("%s", s))
+                .collect(Collectors.joining("|", "name ~ '(", ")'"));
+        final SqlPolicy sqlPolicy = new SqlPolicy(
+                String.join("_", OreSiRole.applicationCreator().getAsSqlRole(), userId.toString()),
+                SqlSchema.main().application(),
+                SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
+                SqlPolicy.Statement.ALL,
+                new OreSiRole() {
+                    @Override
+                    public String getAsSqlRole() {
+                        return userId.toString();
+                    }
+                },
+                expression
+        );
+        db.createPolicy(sqlPolicy);
+        setRoleForClient();
+        if(!Strings.isNullOrEmpty(applicationPattern)){
+            userRepository.updateAuthorizations(userId, oreSiUser.getAuthorizations());
+            userRepository.flush();
+        }
+        resetRole();
+        return userRepository.findById(userId);
     }
 
     public void removeUser(UUID userId) {
@@ -133,6 +224,19 @@ public class AuthenticationService {
     public OreSiUserRole getUserRole(UUID userId) {
         OreSiUser user = getOreSiUser(userId);
         return getUserRole(user);
+    }
+
+    public boolean hasRole(OreSiRole role) {
+        setRoleForClient();
+        final CurrentUserRoles currentUserRoles = userRepository.getRolesForCurrentUser();
+        setRoleAdmin();
+        return currentUserRoles.isSuper() ||
+                currentUserRoles.getCurrentUser().equals(role.getAsSqlRole()) ||
+                currentUserRoles.getMemberOf().contains(role.getAsSqlRole());
+    }
+
+    public boolean isSuperAdmin() {
+        return hasRole(OreSiRole.superAdmin());
     }
 
     public OreSiUserRole getUserRole(OreSiUser user) {

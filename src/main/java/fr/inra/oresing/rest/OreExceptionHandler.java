@@ -9,8 +9,13 @@ import org.postgresql.util.PSQLException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.support.WebExchangeBindException;
+
+import java.util.List;
 
 import java.util.List;
 
@@ -21,6 +26,12 @@ public class OreExceptionHandler {
     @ExceptionHandler(value = AuthenticationFailure.class)
     public ResponseEntity<String> handle(AuthenticationFailure eee) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
+    }
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public List<ObjectError> exception(WebExchangeBindException ex) {
+        log.error("{}", ex.getLocalizedMessage(), ex);
+        return ex.getAllErrors();
     }
 
     @ExceptionHandler(value = BadSqlGrammarException.class)
