@@ -99,7 +99,6 @@ export class Fetcher {
       }
       return Promise.reject({ httpResponseCode: response.status, content: Promise.resolve(text) });
     } catch (error) {
-      console.error(error);
       return Promise.reject({ httpResponseCode: response.status });
     }
   }

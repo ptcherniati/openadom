@@ -45,8 +45,8 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext,
                         "badStoreValueType",
                         Map.of(
                                 "referenceDatumKey",entry.getKey(),
-                                "storeValueTYpe", storedValue.getClass().getSimpleName(),
-                                "knownStoreValueTYpe", Set.of("String","Map<String, String>", "Set<String>")
+                                "storeValueType", storedValue.getClass().getSimpleName(),
+                                "knownStoreValueType", Set.of("String","Map<String, String>", "Set<String>")
                         )
                 );
             }

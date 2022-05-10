@@ -1,4 +1,17 @@
 {
+    "exceptionMessage": {
+        "sqlConvertException": "An error in a sql query is served row {locationLineNumber} column {locationColumnNumber}<br/>{message}",
+        "badStoreValueType": "Failed to get a value for key {referenceDatumKey}. Value type {storeValueType} is not one of the accepted return types: {knownStoreValueType}",
+        "badCheckerType": "The checker type {checkerType} is not valid. You can use one of these checkers: {knownCheckerType}",
+        "badGroovyExpressionCheckerReturnType": "Evaluation of Groovy expression {expression} returns value {evaluation}. Accepted return values ​​are: {knownCheckerReturnType}",
+        "badGroovyExpressionChecker": "Evaluating Groovy expression {expression} returns error {message} line {lineNumber} column {columnNumber}.",
+        "badBoundTypeForInterval": "The interval is bounded with the value {boundType}: accepted values ​​are {knownBoundType}",
+        "badBoundsForInterval": "The interval {lowerBound},{upperBound} is bounded with the value {upperBound}: accepted values ​​are {acceptedValues}",
+        "sqlConvertExceptionForClass": "A sql value evaluation error occurred. {message}",
+        "IOException": "A file read error occurred. {message}",
+        "jsonDeserializationError": "Failed to transform json string {json}: {message}",
+        "requestMapperSerializationError": "Failed to transform json string {requestClient}: {message}"
+    },
     "titles":{
         "login-page":"Welcome to SI-ORE",
         "applications-page":"My applications",

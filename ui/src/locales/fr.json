@@ -1,4 +1,17 @@
 {
+    "exceptionMessage": {
+        "sqlConvertException": "Une erreur dans une requête sql est servenue ligne {locationLineNumber} colonne {locationColumnNumber}<br/>{message}",
+        "badStoreValueType": "Impossible d'obtenir une valeur pour la clef {referenceDatumKey}. Le type de la valeur {storeValueType} n'est pas l'un des types de retour acceptés : {knownStoreValueType} ",
+        "badCheckerType": "Le checker de type {checkerType} n'est pas valide. Vous pouvez utiliser l'un de ces checkers : {knownCheckerType} ",
+        "badGroovyExpressionCheckerReturnType": "L'évaluation de l'expression Groovy {expression} renvoie la valeur {evaluation}. Les valeurs de retour acceptés sont  : {knownCheckerReturnType} ",
+        "badGroovyExpressionChecker": "L'évaluation de l'expression Groovy {expression} renvoie l'erreur {message} ligne {lineNumber} colonne {columnNumber}.",
+        "badBoundTypeForInterval": "L'interval est borné avec la valeur {boundType} : les valeurs acceptées sont  {knownBoundType}",
+        "badBoundsForInterval": "L'intervale {lowerBound},{upperBound} est borné avec la valeur {upperBound}: les valeurs acceptées sont  {acceptedValues}",
+        "sqlConvertExceptionForClass": "Une erreur sql d'évaluation de valeur est survenue. {message}",
+        "IOException": "Une erreur de lecture de fichier est survenue. {message}",
+        "jsonDeserializationError": "Impossible de transformer la chaîne json {json} : {message}",
+        "requestMapperSerializationError": "Impossible de transformer la chaîne json {requestClient} : {message}"
+    },
     "titles": {
         "login-page": "Bienvenue sur SI-ORE",
         "applications-page": "Mes applications",

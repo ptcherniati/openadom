@@ -22,7 +22,7 @@ export class LoginService extends Fetcher {
       login: login,
       password: pwd,
     });
-
+    console.log("ma reponse est : ", response)
     this.authenticatedUser = response;
     localStorage.setItem(LOCAL_STORAGE_AUTHENTICATED_USER, JSON.stringify(this.authenticatedUser));
 
