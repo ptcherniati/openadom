@@ -54,7 +54,7 @@
             <b-field
               v-else-if="column.display && indexColumn === 'extraction'"
               :field="indexColumn"
-              class="columns "
+              class="columns"
               style="margin-top: 6px"
             >
               <div class="column">
@@ -67,15 +67,17 @@
                   type="is-primary"
                   @click.native="selectCheckbox($event, index, indexColumn, scope)"
                 />
-                <div class="columns"
-                     v-if="
-                      states &&
-                      states[indexColumn] &&
-                      states[indexColumn][index] === 1 &&
-                      localAuthorizationsTree &&
-                      localAuthorizationsTree[indexColumn] &&
-                      localAuthorizationsTree[indexColumn][index]
-                ">
+                <div
+                  class="columns"
+                  v-if="
+                    states &&
+                    states[indexColumn] &&
+                    states[indexColumn][index] === 1 &&
+                    localAuthorizationsTree &&
+                    localAuthorizationsTree[indexColumn] &&
+                    localAuthorizationsTree[indexColumn][index]
+                  "
+                >
                   <b-taginput
                     v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
                     :data="dataGroups"
@@ -95,7 +97,7 @@
                       :date-parser="parseDate"
                       :placeholder="
                         $t('dataTypesRepository.placeholder-datepicker') +
-                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                       "
                       editable
                       icon="calendar"
@@ -104,13 +106,13 @@
                     >
                     </b-datepicker>
                   </div>
-                  <div class="column" >
+                  <div class="column">
                     <b-datepicker
                       v-model="localAuthorizationsTree[indexColumn][index].to"
                       :date-parser="parseDate"
                       :placeholder="
                         $t('dataTypesRepository.placeholder-datepicker') +
-                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                        ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                       "
                       editable
                       icon="calendar"
@@ -644,7 +646,7 @@ p {
 ::marker {
   color: transparent;
 }
-.column{
+.column {
   padding: 6px;
 }
 </style>

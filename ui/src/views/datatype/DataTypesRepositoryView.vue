@@ -92,7 +92,7 @@
                           :date-parser="parseDate"
                           :placeholder="
                             $t('dataTypesRepository.placeholder-datepicker') +
-                            ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                            ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                           "
                           editable
                           icon="calendar"
@@ -107,7 +107,7 @@
                           :date-parser="parseDate"
                           :placeholder="
                             $t('dataTypesRepository.placeholder-datepicker') +
-                            ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY hh:mm:ss'
+                            ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                           "
                           editable
                           icon="calendar"
@@ -479,13 +479,13 @@ export default class DataTypesRepositoryView extends Vue {
   async publish(dataset, pusblished) {
     dataset.params.published = pusblished;
     let requiredauthorizations = dataset.params.binaryFiledataset.requiredauthorizations;
-    requiredauthorizations = Object.keys(requiredauthorizations).reduce(function (acc, key){
-      acc[key] = acc[key]?acc[key].sql:"";
+    requiredauthorizations = Object.keys(requiredauthorizations).reduce(function (acc, key) {
+      acc[key] = acc[key] ? acc[key].sql : "";
       return acc;
-    }, requiredauthorizations)
-    console.log('requiredauthorizations',requiredauthorizations)
+    }, requiredauthorizations);
+    console.log("requiredauthorizations", requiredauthorizations);
     dataset.params.binaryFiledataset.requiredauthorizations = requiredauthorizations;
-    console.log('binaryFiledataset',dataset.params.binaryFiledataset)
+    console.log("binaryFiledataset", dataset.params.binaryFiledataset);
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     var uuid = await this.dataService.addData(
       this.applicationName,

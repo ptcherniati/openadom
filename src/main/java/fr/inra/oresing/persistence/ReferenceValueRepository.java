@@ -61,7 +61,24 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findAllByReferenceType(String refType, MultiValueMap<String, String> params) {
-        MultiValueMap<String, String> toto = new LinkedMultiValueMap<>();
+        int offset = Optional.of(params)
+                .map(m->m.remove("_offset_"))
+                .filter(l->l.size()>0)
+                .map(l->l.get(0))
+                .map(o-> {
+                    try {
+                        return Integer.valueOf(o);
+                    }catch (NumberFormatException e){
+                        return 0;
+                    }
+                })
+                .orElse(0);
+        String limit = Optional.of(params)
+                .map(m->m.remove("_limit_"))
+                .filter(l->l.size()>0)
+                .map(l->l.get(0))
+                .filter(o->o.matches("[0-9]*|ALL"))
+                .orElse("ALL");
         String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
                 + getTable().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
         MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
@@ -95,6 +112,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         if (StringUtils.isNotBlank(cond)) {
             cond = " AND (" + cond + ")";
         }
+        cond = String .format("%s offset %d  limit %s", cond, offset, limit);
 
         List result = getNamedParameterJdbcTemplate().query(query + cond, paramSource, getJsonRowMapper());
         return (List<ReferenceValue>) result;

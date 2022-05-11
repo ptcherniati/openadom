@@ -21,14 +21,14 @@
         style="padding-bottom: 20px; position: relative; z-index: 1"
         paginated
         :current-page="currentPage"
-        :per-page="perPage"
+        :per-page="params.limit"
       >
         <template #pagination>
           <b-pagination
             v-model="currentPage"
             :current-page.sync="currentPage"
-            :per-page="perPage"
-            :total="tableValues.length"
+            :per-page="params.limit"
+            :total="totalRows"
             role="navigation"
             :aria-label="$t('menu.aria-pagination')"
             :aria-current-label="$t('menu.aria-curent-page')"
@@ -38,6 +38,7 @@
             range-after="3"
             range-before="3"
             :rounded="true"
+            @change="changePage"
           />
         </template>
         <b-table-column
@@ -108,6 +109,7 @@ import { ReferenceService } from "@/services/rest/ReferenceService";
 import { Prop, Vue, Component } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
 
 @Component({
   components: { PageView, SubMenu },
@@ -120,6 +122,15 @@ export default class ReferenceTableView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
+  params = new DownloadDatasetQuery({
+    application: null,
+    applicationNameOrId: this.applicationName,
+    reference: this.refId,
+    offset: 0,
+    limit: 10,
+  });
+  totalRows = -1;
+  currentPage = 1;
 
   application = new ApplicationResult();
   subMenuPaths = [];
@@ -127,8 +138,6 @@ export default class ReferenceTableView extends Vue {
   columns = [];
   referenceValues = [];
   tableValues = [];
-  currentPage = 1;
-  perPage = 10;
 
   // show modal and cards
   isCardModalActive = false;
@@ -136,6 +145,11 @@ export default class ReferenceTableView extends Vue {
   modalTblObj = [];
   referencesDynamic;
   display = "__display_" + window.localStorage.lang;
+
+  async changePage(value) {
+    this.params.offset = (value - 1) * this.params.limit;
+    await this.init();
+  }
 
   async showModal(columName, tablDynamicColumn) {
     this.isCardModalActive = true;
@@ -171,6 +185,7 @@ export default class ReferenceTableView extends Vue {
     }
     return this.modalArrayObj;
   }
+
   info(refType) {
     let dynamicColumns = Object.entries(this.reference.dynamicColumns).filter((a) => a[1]);
     for (let i = 0; i < dynamicColumns.length; i++) {
@@ -225,10 +240,19 @@ export default class ReferenceTableView extends Vue {
       };
       const references = await this.referenceService.getReferenceValues(
         this.applicationName,
-        this.refId
+        this.refId,
+        {
+          _offset_: this.params.offset,
+          _limit_: this.params.limit,
+        }
       );
       if (references) {
         this.referenceValues = references.referenceValues;
+      }
+      for (let i = 0; i < this.application.referenceSynthesis.length; i++) {
+        if (this.application.referenceSynthesis[i].referenceType === this.refId) {
+          this.totalRows = this.application.referenceSynthesis[i].lineCount;
+        }
       }
     } catch (error) {
       this.alertService.toastServerError();
@@ -287,7 +311,11 @@ export default class ReferenceTableView extends Vue {
     for (let i = 0; i < dynamicColumns.length; i++) {
       this.referencesDynamic = await this.referenceService.getReferenceValues(
         this.applicationName,
-        dynamicColumns[i][1].reference
+        dynamicColumns[i][1].reference,
+        {
+          _offset_: this.offset,
+          _limit_: this.limit,
+        }
       );
     }
     let interNameColumn = Object.entries(this.application.internationalization.references).filter(
@@ -303,7 +331,7 @@ export default class ReferenceTableView extends Vue {
             if (this.columns[i].id === listInterHeaderColumn[g][0]) {
               let tradNameColumn = Object.entries(listInterHeaderColumn[g][1]).filter((a) => a[1]);
               for (let x = 0; x < tradNameColumn.length; x++) {
-                if(tradNameColumn[x][0] === window.localStorage.lang){
+                if (tradNameColumn[x][0] === window.localStorage.lang) {
                   this.columns[i].title = tradNameColumn[x][1];
                 }
               }
