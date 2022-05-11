@@ -101,7 +101,7 @@ public class GroovyLineCheckerTest {
         } catch (SiOreIllegalArgumentException e) {
             Assert.assertEquals("badGroovyExpressionCheckerReturnType", e.getMessage());
             Assert.assertEquals("261.15", e.getParams().get("value").toString());;
-            Assert.assertEquals(Set.of(CheckerReturnType.BOOLEAN), e.getParams().get("knownCheckerType"));
+            Assert.assertEquals(Set.of(CheckerReturnType.BOOLEAN), e.getParams().get("knownCheckerReturnType"));
         }
     }
 
