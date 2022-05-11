@@ -25,21 +25,21 @@
       >
         <template #pagination>
           <b-pagination
-              v-model="currentPage"
-              :current-page.sync="currentPage"
-              :per-page="perPage"
-              :total="tableValues.length"
-              role="navigation"
-              :aria-label="$t('menu.aria-pagination')"
-              :aria-current-label="$t('menu.aria-curent-page')"
-              :aria-next-label="$t('menu.aria-next-page')"
-              :aria-previous-label="$t('menu.aria-previous-page')"
-              order="is-centered"
-              range-after="3"
-              range-before="3"
-              :rounded="true"
-         />
-       </template>
+            v-model="currentPage"
+            :current-page.sync="currentPage"
+            :per-page="perPage"
+            :total="tableValues.length"
+            role="navigation"
+            :aria-label="$t('menu.aria-pagination')"
+            :aria-current-label="$t('menu.aria-curent-page')"
+            :aria-next-label="$t('menu.aria-next-page')"
+            :aria-previous-label="$t('menu.aria-previous-page')"
+            order="is-centered"
+            range-after="3"
+            range-before="3"
+            :rounded="true"
+          />
+        </template>
         <b-table-column
           v-for="column in columns"
           :key="column.id"
@@ -54,7 +54,7 @@
               size="is-small"
               type="is-dark"
               v-if="showBtnTablDynamicColumn(props.row[column.id])"
-              @click="showModal(column.id,props.row[column.id])"
+              @click="showModal(column.id, props.row[column.id])"
               icon-left="eye"
               rounded
               style="height: inherit"
@@ -71,7 +71,9 @@
                 </div>
                 <div class="card-content">
                   <div class="columns modalArrayObj" v-for="key in modalArrayObj" :key="key.id">
-                    <p class="column" v-if="key.column">{{ key.column }} {{ $t('ponctuation.colon')}}</p>
+                    <p class="column" v-if="key.column">
+                      {{ key.column }} {{ $t("ponctuation.colon") }}
+                    </p>
                     <p class="column" v-if="key.value">{{ key.value }}</p>
                   </div>
                 </div>
@@ -144,21 +146,23 @@ export default class ReferenceTableView extends Vue {
         obj[a[0]] = a[1];
         return obj;
       });
-    if(this.referencesDynamic) {
+    if (this.referencesDynamic) {
       for (let i = 0; i < this.referencesDynamic.referenceValues.length; i++) {
         let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
         for (let j = 0; j < this.modalArrayObj.length; j++) {
           if (this.modalArrayObj[j][hierarchicalKey]) {
-            let column = this.referencesDynamic.referenceValues[i].values[this.display] ?
-                this.referencesDynamic.referenceValues[i].values[this.display] : hierarchicalKey ;
+            let column = this.referencesDynamic.referenceValues[i].values[this.display]
+              ? this.referencesDynamic.referenceValues[i].values[this.display]
+              : hierarchicalKey;
             let value = this.modalArrayObj[j][hierarchicalKey];
             this.modalArrayObj[j] = { ...this.modalArrayObj[j], column: column, value: value };
           }
         }
-        for(let j = 0; j < tablDynamicColumn.length; j++) {
+        for (let j = 0; j < tablDynamicColumn.length; j++) {
           if (tablDynamicColumn[j] === hierarchicalKey) {
-            let value = this.referencesDynamic.referenceValues[i].values[this.display] ?
-                this.referencesDynamic.referenceValues[i].values[this.display] : columName ;
+            let value = this.referencesDynamic.referenceValues[i].values[this.display]
+              ? this.referencesDynamic.referenceValues[i].values[this.display]
+              : columName;
             this.modalArrayObj[j] = { ...this.modalArrayObj[j], value: value };
           }
         }
@@ -187,11 +191,14 @@ export default class ReferenceTableView extends Vue {
   }
 
   multiplicity(column, arrayValues) {
-    for(let i = 0; i < this.tableValues.length ; i++) {
-      let showModal = Object.entries(this.tableValues[i])
-          .filter((a) => a[1]);
+    for (let i = 0; i < this.tableValues.length; i++) {
+      let showModal = Object.entries(this.tableValues[i]).filter((a) => a[1]);
       for (let j = 0; j < showModal.length; j++) {
-        if (showModal[j][0] === column && showModal[j][1] === arrayValues && Array.isArray(showModal[j][1])) {
+        if (
+          showModal[j][0] === column &&
+          showModal[j][1] === arrayValues &&
+          Array.isArray(showModal[j][1])
+        ) {
           return true;
         }
       }
@@ -283,11 +290,31 @@ export default class ReferenceTableView extends Vue {
         dynamicColumns[i][1].reference
       );
     }
+    let interNameColumn = Object.entries(this.application.internationalization.references).filter(
+      (a) => a[1]
+    );
     for (let i = 0; i < this.columns.length; i++) {
-      if(this.application.references[this.columns[i].id]) {
+      for (let j = 0; j < interNameColumn.length; j++) {
+        if (interNameColumn[j][0] === this.reference.id) {
+          let listInterHeaderColumn = Object.entries(
+            interNameColumn[j][1].internationalizedDynamicColumns
+          ).filter((a) => a[1]);
+          for (let g = 0; g < listInterHeaderColumn.length; g++) {
+            if (this.columns[i].id === listInterHeaderColumn[g][0]) {
+              let tradNameColumn = Object.entries(listInterHeaderColumn[g][1]).filter((a) => a[1]);
+              for (let x = 0; x < tradNameColumn.length; x++) {
+                if(tradNameColumn[x][0] === window.localStorage.lang){
+                  this.columns[i].title = tradNameColumn[x][1];
+                }
+              }
+            }
+          }
+        }
+      }
+      if (this.application.references[this.columns[i].id]) {
         this.referencesDynamic = await this.referenceService.getReferenceValues(
-            this.applicationName,
-            this.columns[i].id
+          this.applicationName,
+          this.columns[i].id
         );
       }
     }
