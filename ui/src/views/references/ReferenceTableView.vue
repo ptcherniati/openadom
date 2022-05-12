@@ -17,7 +17,7 @@
         :isFocusable="true"
         :isHoverable="true"
         :sticky-header="true"
-        height="100%"
+        height="72.5vh"
         style="padding-bottom: 20px; position: relative; z-index: 1"
         paginated
         :current-page="currentPage"
@@ -362,3 +362,9 @@ export default class ReferenceTableView extends Vue {
   }
 }
 </script>
+<style lang="scss" scoped>
+.b-table .table th.is-sortable{
+  width: max-content;
+  position: sticky;
+}
+</style>
