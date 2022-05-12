@@ -87,7 +87,7 @@
           <b-collapse v-else :open="false">
             <template #trigger>
               <b-button
-                :label="'' + (tableValues.indexOf(props.row) + 1)"
+                :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
                 type="is-small"
                 aria-controls="contentIdForA11y1"
               />
@@ -148,7 +148,20 @@ export default class ReferenceTableView extends Vue {
 
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;
-    await this.init();
+    const references = await this.referenceService.getReferenceValues(
+        this.applicationName,
+        this.refId,
+        {
+          _offset_: this.params.offset,
+          _limit_: this.params.limit,
+        }
+    );
+    if (references) {
+      this.referenceValues = references.referenceValues;
+    }
+    if (this.referenceValues) {
+      this.tableValues = Object.values(this.referenceValues).map((refValue) => refValue.values);
+    }
   }
 
   async showModal(columName, tablDynamicColumn) {
