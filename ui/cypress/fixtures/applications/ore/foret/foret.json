@@ -1,0 +1,5894 @@
+{
+  "id": "4591638b-ef8e-412b-b06c-0912e9b73a9d",
+  "name": "foret",
+  "title": "foret",
+  "comment": "",
+  "internationalization": {
+    "application": {
+      "internationalizationName": {
+        "en": "ORE F-ORE-T",
+        "fr": "ORE F-ORE-T"
+      }
+    },
+    "references": {
+      "variables": {
+        "internationalizationName": {
+          "en": "Variables",
+          "fr": "Variables"
+        },
+        "internationalizedColumns": {
+          "definition_fr": {
+            "en": "definition_en",
+            "fr": "definition_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom}",
+            "fr": "{nom}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "traitements": {
+        "internationalizationName": {
+          "en": "Treatments",
+          "fr": "Traitements"
+        },
+        "internationalizedColumns": {
+          "libellé_fr": {
+            "en": "libellé_en",
+            "fr": "libellé_fr"
+          },
+          "description_fr": {
+            "en": "description_en",
+            "fr": "description_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{libellé_fr}",
+            "fr": "{libellé_fr}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "ic_site_theme_dataype_variable": {
+        "internationalizationName": {
+          "en": "Complement information for site, theme, datatype and variable",
+          "fr": "Informations complémentaires par site, thème, type de données et variable"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{Nom du Thème-Type de données-Variable} {nom de l'information complémentaire}",
+            "fr": "{Nom du Thème-Type de données-Variable} {nom de l'information complémentaire}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "instruments_periodes": {
+        "internationalizationName": {
+          "en": "Application periods of the instruments",
+          "fr": "Périodes d'application des instruments"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{Nom du Thème-Type de données-Variable}",
+            "fr": "{Nom du Thème-Type de données-Variable}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "methodes_periodes": {
+        "internationalizationName": {
+          "en": "Application periods of methods",
+          "fr": "Périodes d'application des méthodes"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{Nom du Thème-Type de données-Variable}",
+            "fr": "{Nom du Thème-Type de données-Variable}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "types_de_zones_etudes": {
+        "internationalizationName": {
+          "en": "Types of study areas",
+          "fr": "Types de zones d'études"
+        },
+        "internationalizedColumns": {
+          "nom_fr": {
+            "en": "nom_en",
+            "fr": "nom_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom_fr}",
+            "fr": "{nom_fr}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "liste_ic": {
+        "internationalizationName": {
+          "en": "List of complement information",
+          "fr": "Liste d'informations complémentaires"
+        },
+        "internationalizedColumns": {
+          "nom de la liste_fr": {
+            "en": "nom de la liste_en",
+            "fr": "nom de la liste_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom de la liste_fr}",
+            "fr": "{nom de la liste_fr}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "zones_etudes": {
+        "internationalizationName": {
+          "en": "Study areas",
+          "fr": "Zones d'études"
+        },
+        "internationalizedColumns": {
+          "description_fr": {
+            "en": "description_en",
+            "fr": "description_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom}",
+            "fr": "{nom}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "types_fichiers": {
+        "internationalizationName": {
+          "en": "Files' type<",
+          "fr": "Type de fichiers"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom}",
+            "fr": "{nom}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "reference": {
+        "internationalizationName": {
+          "en": "Références",
+          "fr": "Références"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{DOI} ({premier auteur} {année})",
+            "fr": "{DOI} ({premier auteur} {année})"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "themes": {
+        "internationalizationName": {
+          "en": "Thématics",
+          "fr": "Thèmes"
+        },
+        "internationalizedColumns": {
+          "nom_key": {
+            "en": "nom_en",
+            "fr": "nom_fr"
+          },
+          "description_fr": {
+            "en": "description_en",
+            "fr": "description_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom_key}",
+            "fr": "{nom_key}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "instruments": {
+        "internationalizationName": {
+          "en": "Instruments",
+          "fr": "Instruments"
+        },
+        "internationalizedColumns": {
+          "libellé_fr": {
+            "en": "libellé_en",
+            "fr": "libellé_fr"
+          },
+          "fabricant_fr": {
+            "en": "fabricant_en",
+            "fr": "fabricant_fr"
+          },
+          "description_fr": {
+            "en": "description_en",
+            "fr": "description_fr"
+          },
+          "informations de calibration_fr": {
+            "en": "informations de calibration_en",
+            "fr": "informations de calibration_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{libellé_fr} ({code})",
+            "fr": "{libellé_fr} ({code})"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "unites": {
+        "internationalizationName": {
+          "en": "Units",
+          "fr": "Unités"
+        },
+        "internationalizedColumns": {
+          "nom_key": {
+            "en": "nom_en",
+            "fr": "nom_fr"
+          },
+          "code_key": {
+            "en": "code_en",
+            "fr": "code_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom_key} ({code_key})",
+            "fr": "{nom_key} ({code_key})"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "theme_types_de_donnees_par_zone_etudes": {
+        "internationalizationName": {
+          "en": "Thematics and data types by study area",
+          "fr": "Thèmes et types de données par zone d'étude"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom du site}; {nom du thème}; {nom du type de données}",
+            "fr": "{nom du site}; {nom du thème}; {nom du type de données}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "variables_par_types_de_donnees": {
+        "internationalizationName": {
+          "en": "Variables by data types",
+          "fr": "Variable par types de données"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom du type de données} : {nom de la variable} ({nom de l'unité})",
+            "fr": "{nom du type de données} : {nom de la variable} ({nom de l'unité})"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "informations_complementaires": {
+        "internationalizationName": {
+          "en": "Complement information",
+          "fr": "Informations complementaires"
+        },
+        "internationalizedColumns": {
+          "description de l'information complémentaire_fr": {
+            "en": "description de l'information complémentaire_en",
+            "fr": "description de l'information complémentaire_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom de l'information complémentaire} ({description de l'information complémentaire_fr}",
+            "fr": "{nom de l'information complémentaire} ({description de l'information complémentaire_fr})"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "methodes": {
+        "internationalizationName": {
+          "en": "Methods",
+          "fr": "Méthodes"
+        },
+        "internationalizedColumns": {
+          "libellé_fr": {
+            "en": "libellé_en",
+            "fr": "libellé_fr"
+          },
+          "description_fr": {
+            "en": "description_en",
+            "fr": "description_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{libellé_fr} ({code})",
+            "fr": "{libellé_fr} ({code})"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "liste_valeur_ic": {
+        "internationalizationName": {
+          "en": "List of complement information values",
+          "fr": "Liste de valeurs d'informations complémentaires"
+        },
+        "internationalizedColumns": {
+          "libellé d'une valeur_fr": {
+            "en": "libellé d'une valeur_en",
+            "fr": "libellé d'une valeur_fr"
+          }
+        },
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{nom de la liste} : {libellé d'une valeur_fr}",
+            "fr": "{nom de la liste} : {libellé d'une valeur_fr}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "methodes_references": {
+        "internationalizationName": {
+          "en": "Methods references",
+          "fr": "Références des méthodes"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{code de la méthode de calcul} {doi de la référence}",
+            "fr": "{code de la méthode de calcul} {doi de la référence}"
+          }
+        },
+        "internationalizedValidations": {}
+      },
+      "instruments_references": {
+        "internationalizationName": {
+          "en": "Instruments references",
+          "fr": "Références des instruments"
+        },
+        "internationalizedColumns": null,
+        "internationalizedDynamicColumns": {},
+        "internationalizationDisplay": {
+          "pattern": {
+            "en": "{code de l'instrument} {doi de la référence}",
+            "fr": "{code de l'instrument} {doi de la référence}"
+          }
+        },
+        "internationalizedValidations": {}
+      }
+    },
+    "dataTypes": {
+      "flux_m": {
+        "internationalizationName": {
+          "en": "Flux monthly",
+          "fr": "Flux mensuel"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "flux_j": {
+        "internationalizationName": {
+          "en": "Flux daily",
+          "fr": "Flux journalier"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "meteo_j": {
+        "internationalizationName": {
+          "en": "Meteorology daily",
+          "fr": "Météorologie journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "flux_sh": {
+        "internationalizationName": {
+          "en": "Flux half hourly",
+          "fr": "Flux semi horaire"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "meteo_sh": {
+        "internationalizationName": {
+          "en": "Meteorology half hourly",
+          "fr": "Météorologie semi horaire"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "smp_j": {
+        "internationalizationName": {
+          "en": "Daily tension of water",
+          "fr": "Tension de l'eau journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "SMP": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "swc_j": {
+        "internationalizationName": {
+          "en": "Daily volume humidity",
+          "fr": "Humidité volumique journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "SWC": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "meteo_m": {
+        "internationalizationName": {
+          "en": "Meteorology monthly",
+          "fr": "Météorologie mensuelle"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "g_infraj": {
+        "internationalizationName": {
+          "en": "Infra-daily flow of heat",
+          "fr": "Flux de chaleur infra-journalier"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "G": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "swc_infraj": {
+        "internationalizationName": {
+          "en": "Infra daily volume humidity",
+          "fr": "Humidité volumique infra-journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "SWC": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "gwd_infraj": {
+        "internationalizationName": {
+          "en": "Infra-daily depth of the groundwater",
+          "fr": "Profondeur de la nappe infra-journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "GWD": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "chambrefluxsol_m": {
+        "internationalizationName": {
+          "en": "Monthly flux chambers",
+          "fr": "Flux de chambres mensuel"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "chambrefluxsol_j": {
+        "internationalizationName": {
+          "en": "Daily flux chambers",
+          "fr": "Flux de chambres journalier"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "g_j": {
+        "internationalizationName": {
+          "en": "Daily flow of heat",
+          "fr": "Flux de chaleur journalier"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "G": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "chambrefluxsol_infraj": {
+        "internationalizationName": {
+          "en": "Intraday flux chambers",
+          "fr": "Flux de chambres infra journalier"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "variables": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "ts_j": {
+        "internationalizationName": {
+          "en": "Daily temperature",
+          "fr": "Température journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "TS": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "gwd_j": {
+        "internationalizationName": {
+          "en": "Daily depth of the groundwater",
+          "fr": "Profondeur journalière de la nappe"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "GWD": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "smp_infraj": {
+        "internationalizationName": {
+          "en": "Infra-daily depth of the groundwater",
+          "fr": "Profondeur de la nappe infra-journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "SMP": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      },
+      "ts_infraj": {
+        "internationalizationName": {
+          "en": "Infra-daily temperature",
+          "fr": "Température infra-journalière"
+        },
+        "internationalizedColumns": null,
+        "authorization": {
+          "dataGroups": {
+            "date": {
+              "internationalizationName": null
+            },
+            "referentiel": {
+              "internationalizationName": null
+            },
+            "TS": {
+              "internationalizationName": null
+            },
+            "informations": {
+              "internationalizationName": null
+            }
+          },
+          "authorizationScopes": {
+            "localization": {
+              "internationalizationName": null
+            }
+          }
+        },
+        "internationalizationDisplay": null,
+        "internationalizedValidations": {}
+      }
+    }
+  },
+  "references": {
+    "variables": {
+      "id": "variables",
+      "label": "variables",
+      "children": [],
+      "columns": {
+        "nom": {
+          "id": "nom",
+          "title": "nom",
+          "key": true,
+          "linkedTo": null
+        },
+        "definition_en": {
+          "id": "definition_en",
+          "title": "definition_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "definition_fr": {
+          "id": "definition_fr",
+          "title": "definition_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "unites": {
+      "id": "unites",
+      "label": "unites",
+      "children": [],
+      "columns": {
+        "nom_en": {
+          "id": "nom_en",
+          "title": "nom_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom_fr": {
+          "id": "nom_fr",
+          "title": "nom_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "code_en": {
+          "id": "code_en",
+          "title": "code_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "code_fr": {
+          "id": "code_fr",
+          "title": "code_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom_key": {
+          "id": "nom_key",
+          "title": "nom_key",
+          "key": true,
+          "linkedTo": null
+        },
+        "code_key": {
+          "id": "code_key",
+          "title": "code_key",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "variables_par_types_de_donnees": {
+      "id": "variables_par_types_de_donnees",
+      "label": "variables_par_types_de_donnees",
+      "children": [],
+      "columns": {
+        "max": {
+          "id": "max",
+          "title": "max",
+          "key": false,
+          "linkedTo": null
+        },
+        "min": {
+          "id": "min",
+          "title": "min",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom de l'unité": {
+          "id": "nom de l'unité",
+          "title": "nom de l'unité",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom de la variable": {
+          "id": "nom de la variable",
+          "title": "nom de la variable",
+          "key": true,
+          "linkedTo": null
+        },
+        "nom du type de données": {
+          "id": "nom du type de données",
+          "title": "nom du type de données",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "types_de_zones_etudes": {
+      "id": "types_de_zones_etudes",
+      "label": "types_de_zones_etudes",
+      "children": [],
+      "columns": {
+        "nom_en": {
+          "id": "nom_en",
+          "title": "nom_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom_fr": {
+          "id": "nom_fr",
+          "title": "nom_fr",
+          "key": true,
+          "linkedTo": null
+        },
+        "définition_en": {
+          "id": "définition_en",
+          "title": "définition_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "définition_fr": {
+          "id": "définition_fr",
+          "title": "définition_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "zones_etudes": {
+      "id": "zones_etudes",
+      "label": "zones_etudes",
+      "children": [],
+      "columns": {
+        "nom": {
+          "id": "nom",
+          "title": "nom",
+          "key": true,
+          "linkedTo": null
+        },
+        "pente": {
+          "id": "pente",
+          "title": "pente",
+          "key": false,
+          "linkedTo": null
+        },
+        "parent": {
+          "id": "parent",
+          "title": "parent",
+          "key": true,
+          "linkedTo": null
+        },
+        "pays_en": {
+          "id": "pays_en",
+          "title": "pays_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "pays_fr": {
+          "id": "pays_fr",
+          "title": "pays_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "surface": {
+          "id": "surface",
+          "title": "surface",
+          "key": false,
+          "linkedTo": null
+        },
+        "altitude": {
+          "id": "altitude",
+          "title": "altitude",
+          "key": false,
+          "linkedTo": null
+        },
+        "date fin": {
+          "id": "date fin",
+          "title": "date fin",
+          "key": false,
+          "linkedTo": null
+        },
+        "latitude": {
+          "id": "latitude",
+          "title": "latitude",
+          "key": false,
+          "linkedTo": null
+        },
+        "longitude": {
+          "id": "longitude",
+          "title": "longitude",
+          "key": false,
+          "linkedTo": null
+        },
+        "région_en": {
+          "id": "région_en",
+          "title": "région_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "région_fr": {
+          "id": "région_fr",
+          "title": "région_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "date début": {
+          "id": "date début",
+          "title": "date début",
+          "key": false,
+          "linkedTo": null
+        },
+        "temp moyenne": {
+          "id": "temp moyenne",
+          "title": "temp moyenne",
+          "key": false,
+          "linkedTo": null
+        },
+        "type de site": {
+          "id": "type de site",
+          "title": "type de site",
+          "key": false,
+          "linkedTo": null
+        },
+        "type foret_en": {
+          "id": "type foret_en",
+          "title": "type foret_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "type foret_fr": {
+          "id": "type foret_fr",
+          "title": "type foret_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_en": {
+          "id": "description_en",
+          "title": "description_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_fr": {
+          "id": "description_fr",
+          "title": "description_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "précip moyenne": {
+          "id": "précip moyenne",
+          "title": "précip moyenne",
+          "key": false,
+          "linkedTo": null
+        },
+        "direction vent_en": {
+          "id": "direction vent_en",
+          "title": "direction vent_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "direction vent_fr": {
+          "id": "direction vent_fr",
+          "title": "direction vent_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "direction pente_en": {
+          "id": "direction pente_en",
+          "title": "direction pente_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "direction pente_fr": {
+          "id": "direction pente_fr",
+          "title": "direction pente_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "themes": {
+      "id": "themes",
+      "label": "themes",
+      "children": [],
+      "columns": {
+        "nom_en": {
+          "id": "nom_en",
+          "title": "nom_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom_fr": {
+          "id": "nom_fr",
+          "title": "nom_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom_key": {
+          "id": "nom_key",
+          "title": "nom_key",
+          "key": true,
+          "linkedTo": null
+        },
+        "description_en": {
+          "id": "description_en",
+          "title": "description_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_fr": {
+          "id": "description_fr",
+          "title": "description_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "theme_types_de_donnees_par_zone_etudes": {
+      "id": "theme_types_de_donnees_par_zone_etudes",
+      "label": "theme_types_de_donnees_par_zone_etudes",
+      "children": [],
+      "columns": {
+        "nom du site": {
+          "id": "nom du site",
+          "title": "nom du site",
+          "key": true,
+          "linkedTo": null
+        },
+        "nom du thème": {
+          "id": "nom du thème",
+          "title": "nom du thème",
+          "key": true,
+          "linkedTo": null
+        },
+        "nom du type de données": {
+          "id": "nom du type de données",
+          "title": "nom du type de données",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "ic_site_theme_dataype_variable": {
+      "id": "ic_site_theme_dataype_variable",
+      "label": "ic_site_theme_dataype_variable",
+      "children": [],
+      "columns": {
+        "nom de l'information complémentaire": {
+          "id": "nom de l'information complémentaire",
+          "title": "nom de l'information complémentaire",
+          "key": true,
+          "linkedTo": null
+        },
+        "Nom du Thème-Type de données-Variable": {
+          "id": "Nom du Thème-Type de données-Variable",
+          "title": "Nom du Thème-Type de données-Variable",
+          "key": true,
+          "linkedTo": null
+        },
+        "variables_par_types_de_donnees": {
+          "id": "variables_par_types_de_donnees",
+          "title": "variables_par_types_de_donnees",
+          "key": false,
+          "linkedTo": null
+        },
+        "theme_types_de_donnees_par_zone_etudes": {
+          "id": "theme_types_de_donnees_par_zone_etudes",
+          "title": "theme_types_de_donnees_par_zone_etudes",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "liste_ic": {
+      "id": "liste_ic",
+      "label": "liste_ic",
+      "children": [],
+      "columns": {
+        "nom de la liste_en": {
+          "id": "nom de la liste_en",
+          "title": "nom de la liste_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom de la liste_fr": {
+          "id": "nom de la liste_fr",
+          "title": "nom de la liste_fr",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "informations_complementaires": {
+      "id": "informations_complementaires",
+      "label": "informations_complementaires",
+      "children": [],
+      "columns": {
+        "nom de l'information complémentaire": {
+          "id": "nom de l'information complémentaire",
+          "title": "nom de l'information complémentaire",
+          "key": true,
+          "linkedTo": null
+        },
+        "description de l'information complémentaire_en": {
+          "id": "description de l'information complémentaire_en",
+          "title": "description de l'information complémentaire_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "description de l'information complémentaire_fr": {
+          "id": "description de l'information complémentaire_fr",
+          "title": "description de l'information complémentaire_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom de la liste de valeurs d'informations complémentaires": {
+          "id": "nom de la liste de valeurs d'informations complémentaires",
+          "title": "nom de la liste de valeurs d'informations complémentaires",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "instruments": {
+      "id": "instruments",
+      "label": "instruments",
+      "children": [],
+      "columns": {
+        "code": {
+          "id": "code",
+          "title": "code",
+          "key": true,
+          "linkedTo": null
+        },
+        "libellé_en": {
+          "id": "libellé_en",
+          "title": "libellé_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "libellé_fr": {
+          "id": "libellé_fr",
+          "title": "libellé_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "fabricant_en": {
+          "id": "fabricant_en",
+          "title": "fabricant_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "fabricant_fr": {
+          "id": "fabricant_fr",
+          "title": "fabricant_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_en": {
+          "id": "description_en",
+          "title": "description_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_fr": {
+          "id": "description_fr",
+          "title": "description_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "informations de calibration_en": {
+          "id": "informations de calibration_en",
+          "title": "informations de calibration_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "informations de calibration_fr": {
+          "id": "informations de calibration_fr",
+          "title": "informations de calibration_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "reference": {
+      "id": "reference",
+      "label": "reference",
+      "children": [],
+      "columns": {
+        "DOI": {
+          "id": "DOI",
+          "title": "DOI",
+          "key": true,
+          "linkedTo": null
+        },
+        "année": {
+          "id": "année",
+          "title": "année",
+          "key": false,
+          "linkedTo": null
+        },
+        "premier auteur": {
+          "id": "premier auteur",
+          "title": "premier auteur",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "instruments_references": {
+      "id": "instruments_references",
+      "label": "instruments_references",
+      "children": [],
+      "columns": {
+        "code de l'instrument": {
+          "id": "code de l'instrument",
+          "title": "code de l'instrument",
+          "key": true,
+          "linkedTo": null
+        },
+        "doi de la référence": {
+          "id": "doi de la référence",
+          "title": "doi de la référence",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "instruments_periodes": {
+      "id": "instruments_periodes",
+      "label": "instruments_periodes",
+      "children": [],
+      "columns": {
+        "Date de fin": {
+          "id": "Date de fin",
+          "title": "Date de fin",
+          "key": false,
+          "linkedTo": null
+        },
+        "Date de début": {
+          "id": "Date de début",
+          "title": "Date de début",
+          "key": false,
+          "linkedTo": null
+        },
+        "Code de l'instrument": {
+          "id": "Code de l'instrument",
+          "title": "Code de l'instrument",
+          "key": false,
+          "linkedTo": null
+        },
+        "Nom du Thème-Type de données-Variable": {
+          "id": "Nom du Thème-Type de données-Variable",
+          "title": "Nom du Thème-Type de données-Variable",
+          "key": true,
+          "linkedTo": null
+        },
+        "variables_par_types_de_donnees": {
+          "id": "variables_par_types_de_donnees",
+          "title": "variables_par_types_de_donnees",
+          "key": false,
+          "linkedTo": null
+        },
+        "theme_types_de_donnees_par_zone_etudes": {
+          "id": "theme_types_de_donnees_par_zone_etudes",
+          "title": "theme_types_de_donnees_par_zone_etudes",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "methodes": {
+      "id": "methodes",
+      "label": "methodes",
+      "children": [],
+      "columns": {
+        "code": {
+          "id": "code",
+          "title": "code",
+          "key": true,
+          "linkedTo": null
+        },
+        "libellé_en": {
+          "id": "libellé_en",
+          "title": "libellé_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "libellé_fr": {
+          "id": "libellé_fr",
+          "title": "libellé_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_en": {
+          "id": "description_en",
+          "title": "description_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_fr": {
+          "id": "description_fr",
+          "title": "description_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "methodes_references": {
+      "id": "methodes_references",
+      "label": "methodes_references",
+      "children": [],
+      "columns": {
+        "doi de la référence": {
+          "id": "doi de la référence",
+          "title": "doi de la référence",
+          "key": true,
+          "linkedTo": null
+        },
+        "code de la méthode de calcul": {
+          "id": "code de la méthode de calcul",
+          "title": "code de la méthode de calcul",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "methodes_periodes": {
+      "id": "methodes_periodes",
+      "label": "methodes_periodes",
+      "children": [],
+      "columns": {
+        "Date de fin": {
+          "id": "Date de fin",
+          "title": "Date de fin",
+          "key": false,
+          "linkedTo": null
+        },
+        "Date de début": {
+          "id": "Date de début",
+          "title": "Date de début",
+          "key": false,
+          "linkedTo": null
+        },
+        "Code de la méthode de calcul": {
+          "id": "Code de la méthode de calcul",
+          "title": "Code de la méthode de calcul",
+          "key": false,
+          "linkedTo": null
+        },
+        "Nom du Thème-Type de données-Variable": {
+          "id": "Nom du Thème-Type de données-Variable",
+          "title": "Nom du Thème-Type de données-Variable",
+          "key": true,
+          "linkedTo": null
+        },
+        "variables_par_types_de_donnees": {
+          "id": "variables_par_types_de_donnees",
+          "title": "variables_par_types_de_donnees",
+          "key": false,
+          "linkedTo": null
+        },
+        "theme_types_de_donnees_par_zone_etudes": {
+          "id": "theme_types_de_donnees_par_zone_etudes",
+          "title": "theme_types_de_donnees_par_zone_etudes",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "liste_valeur_ic": {
+      "id": "liste_valeur_ic",
+      "label": "liste_valeur_ic",
+      "children": [],
+      "columns": {
+        "nom de la liste": {
+          "id": "nom de la liste",
+          "title": "nom de la liste",
+          "key": true,
+          "linkedTo": null
+        },
+        "note de la valeur": {
+          "id": "note de la valeur",
+          "title": "note de la valeur",
+          "key": false,
+          "linkedTo": null
+        },
+        "libellé d'une valeur_en": {
+          "id": "libellé d'une valeur_en",
+          "title": "libellé d'une valeur_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "libellé d'une valeur_fr": {
+          "id": "libellé d'une valeur_fr",
+          "title": "libellé d'une valeur_fr",
+          "key": true,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "types_fichiers": {
+      "id": "types_fichiers",
+      "label": "types_fichiers",
+      "children": [],
+      "columns": {
+        "nom": {
+          "id": "nom",
+          "title": "nom",
+          "key": true,
+          "linkedTo": null
+        },
+        "description": {
+          "id": "description",
+          "title": "description",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    },
+    "traitements": {
+      "id": "traitements",
+      "label": "traitements",
+      "children": [],
+      "columns": {
+        "code": {
+          "id": "code",
+          "title": "code",
+          "key": true,
+          "linkedTo": null
+        },
+        "libellé_en": {
+          "id": "libellé_en",
+          "title": "libellé_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "libellé_fr": {
+          "id": "libellé_fr",
+          "title": "libellé_fr",
+          "key": false,
+          "linkedTo": null
+        },
+        "nom du site": {
+          "id": "nom du site",
+          "title": "nom du site",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_en": {
+          "id": "description_en",
+          "title": "description_en",
+          "key": false,
+          "linkedTo": null
+        },
+        "description_fr": {
+          "id": "description_fr",
+          "title": "description_fr",
+          "key": false,
+          "linkedTo": null
+        }
+      },
+      "dynamicColumns": {}
+    }
+  },
+  "dataTypes": {
+    "g_j": {
+      "id": "g_j",
+      "label": "g_j",
+      "variables": {
+        "G": {
+          "id": "G",
+          "label": "G",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "G",
+              "component": "profondeur",
+              "id": "G_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "ts_j": {
+      "id": "ts_j",
+      "label": "ts_j",
+      "variables": {
+        "TS": {
+          "id": "TS",
+          "label": "TS",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "TS",
+              "component": "profondeur",
+              "id": "TS_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "gwd_j": {
+      "id": "gwd_j",
+      "label": "gwd_j",
+      "variables": {
+        "GWD": {
+          "id": "GWD",
+          "label": "GWD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "GWD",
+              "component": "profondeur",
+              "id": "GWD_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "smp_j": {
+      "id": "smp_j",
+      "label": "smp_j",
+      "variables": {
+        "SMP": {
+          "id": "SMP",
+          "label": "SMP",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "SMP",
+              "component": "profondeur",
+              "id": "SMP_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "swc_j": {
+      "id": "swc_j",
+      "label": "swc_j",
+      "variables": {
+        "SWC": {
+          "id": "SWC",
+          "label": "SWC",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": null,
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "SWC",
+              "component": "profondeur",
+              "id": "SWC_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "filePattern": "(.*)_swc_j_(.*)_(.*).csv",
+        "authorizationScope": {
+          "localization": 1
+        },
+        "startDate": {
+          "token": 2
+        },
+        "endDate": {
+          "token": 3
+        }
+      },
+      "hasAuthorizations": true
+    },
+    "flux_j": {
+      "id": "flux_j",
+      "label": "flux_j",
+      "variables": {
+        "H": {
+          "id": "H",
+          "label": "H",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "T": {
+          "id": "T",
+          "label": "T",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "LE": {
+          "id": "LE",
+          "label": "LE",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sa": {
+          "id": "Sa",
+          "label": "Sa",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sb": {
+          "id": "Sb",
+          "label": "Sb",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sc": {
+          "id": "Sc",
+          "label": "Sc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sw": {
+          "id": "Sw",
+          "label": "Sw",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "TR": {
+          "id": "TR",
+          "label": "TR",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "ZL": {
+          "id": "ZL",
+          "label": "ZL",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "u*": {
+          "id": "u*",
+          "label": "u*",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "CO2": {
+          "id": "CO2",
+          "label": "CO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "H2O": {
+          "id": "H2O",
+          "label": "H2O",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "FCO2": {
+          "id": "FCO2",
+          "label": "FCO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "FCO2_gf": {
+          "id": "FCO2_gf",
+          "label": "FCO2_gf",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "flux_m": {
+      "id": "flux_m",
+      "label": "flux_m",
+      "variables": {
+        "H": {
+          "id": "H",
+          "label": "H",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "T": {
+          "id": "T",
+          "label": "T",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "LE": {
+          "id": "LE",
+          "label": "LE",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sa": {
+          "id": "Sa",
+          "label": "Sa",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sb": {
+          "id": "Sb",
+          "label": "Sb",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sc": {
+          "id": "Sc",
+          "label": "Sc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sw": {
+          "id": "Sw",
+          "label": "Sw",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "TR": {
+          "id": "TR",
+          "label": "TR",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "ZL": {
+          "id": "ZL",
+          "label": "ZL",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "u*": {
+          "id": "u*",
+          "label": "u*",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "CO2": {
+          "id": "CO2",
+          "label": "CO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "H2O": {
+          "id": "H2O",
+          "label": "H2O",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "FCO2": {
+          "id": "FCO2",
+          "label": "FCO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "month": {
+              "id": "month",
+              "label": "month"
+            }
+          },
+          "chartDescription": null
+        },
+        "FCO2_gf": {
+          "id": "FCO2_gf",
+          "label": "FCO2_gf",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "flux_sh": {
+      "id": "flux_sh",
+      "label": "flux_sh",
+      "variables": {
+        "H": {
+          "id": "H",
+          "label": "H",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "quality_class": {
+              "id": "quality_class",
+              "label": "quality_class"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "T": {
+          "id": "T",
+          "label": "T",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "quality_class": {
+              "id": "quality_class",
+              "label": "quality_class"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "LE": {
+          "id": "LE",
+          "label": "LE",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "quality_class": {
+              "id": "quality_class",
+              "label": "quality_class"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sa": {
+          "id": "Sa",
+          "label": "Sa",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sb": {
+          "id": "Sb",
+          "label": "Sb",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sc": {
+          "id": "Sc",
+          "label": "Sc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Sw": {
+          "id": "Sw",
+          "label": "Sw",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "TR": {
+          "id": "TR",
+          "label": "TR",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "ZL": {
+          "id": "ZL",
+          "label": "ZL",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "u*": {
+          "id": "u*",
+          "label": "u*",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "CO2": {
+          "id": "CO2",
+          "label": "CO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "H2O": {
+          "id": "H2O",
+          "label": "H2O",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "FCO2": {
+          "id": "FCO2",
+          "label": "FCO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "quality_class": {
+              "id": "quality_class",
+              "label": "quality_class"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "FCO2_gf": {
+          "id": "FCO2_gf",
+          "label": "FCO2_gf",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "meteo_j": {
+      "id": "meteo_j",
+      "label": "meteo_j",
+      "variables": {
+        "G": {
+          "id": "G",
+          "label": "G",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "P": {
+          "id": "P",
+          "label": "P",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Pa": {
+          "id": "Pa",
+          "label": "Pa",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rd": {
+          "id": "Rd",
+          "label": "Rd",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rg": {
+          "id": "Rg",
+          "label": "Rg",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rh": {
+          "id": "Rh",
+          "label": "Rh",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rn": {
+          "id": "Rn",
+          "label": "Rn",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rr": {
+          "id": "Rr",
+          "label": "Rr",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Ta": {
+          "id": "Ta",
+          "label": "Ta",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Tc": {
+          "id": "Tc",
+          "label": "Tc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "WD": {
+          "id": "WD",
+          "label": "WD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "WS": {
+          "id": "WS",
+          "label": "WS",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "APAR": {
+          "id": "APAR",
+          "label": "APAR",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Lwin": {
+          "id": "Lwin",
+          "label": "Lwin",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFD": {
+          "id": "PPFD",
+          "label": "PPFD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "Lwout": {
+          "id": "Lwout",
+          "label": "Lwout",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDd": {
+          "id": "PPFDd",
+          "label": "PPFDd",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDr": {
+          "id": "PPFDr",
+          "label": "PPFDr",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDbc": {
+          "id": "PPFDbc",
+          "label": "PPFDbc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Tarbre": {
+          "id": "Tarbre",
+          "label": "Tarbre",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "meteo_m": {
+      "id": "meteo_m",
+      "label": "meteo_m",
+      "variables": {
+        "G": {
+          "id": "G",
+          "label": "G",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "P": {
+          "id": "P",
+          "label": "P",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Pa": {
+          "id": "Pa",
+          "label": "Pa",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rd": {
+          "id": "Rd",
+          "label": "Rd",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rg": {
+          "id": "Rg",
+          "label": "Rg",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rh": {
+          "id": "Rh",
+          "label": "Rh",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rn": {
+          "id": "Rn",
+          "label": "Rn",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rr": {
+          "id": "Rr",
+          "label": "Rr",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Ta": {
+          "id": "Ta",
+          "label": "Ta",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Tc": {
+          "id": "Tc",
+          "label": "Tc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "WD": {
+          "id": "WD",
+          "label": "WD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "WS": {
+          "id": "WS",
+          "label": "WS",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "APAR": {
+          "id": "APAR",
+          "label": "APAR",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Lwin": {
+          "id": "Lwin",
+          "label": "Lwin",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFD": {
+          "id": "PPFD",
+          "label": "PPFD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "month": {
+              "id": "month",
+              "label": "month"
+            }
+          },
+          "chartDescription": null
+        },
+        "Lwout": {
+          "id": "Lwout",
+          "label": "Lwout",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDd": {
+          "id": "PPFDd",
+          "label": "PPFDd",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDr": {
+          "id": "PPFDr",
+          "label": "PPFDr",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDbc": {
+          "id": "PPFDbc",
+          "label": "PPFDbc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Tarbre": {
+          "id": "Tarbre",
+          "label": "Tarbre",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "g_infraj": {
+      "id": "g_infraj",
+      "label": "g_infraj",
+      "variables": {
+        "G": {
+          "id": "G",
+          "label": "G",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 WEEK",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "G",
+              "component": "profondeur",
+              "id": "G_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "meteo_sh": {
+      "id": "meteo_sh",
+      "label": "meteo_sh",
+      "variables": {
+        "G": {
+          "id": "G",
+          "label": "G",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "P": {
+          "id": "P",
+          "label": "P",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Pa": {
+          "id": "Pa",
+          "label": "Pa",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rd": {
+          "id": "Rd",
+          "label": "Rd",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rg": {
+          "id": "Rg",
+          "label": "Rg",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rh": {
+          "id": "Rh",
+          "label": "Rh",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rn": {
+          "id": "Rn",
+          "label": "Rn",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Rr": {
+          "id": "Rr",
+          "label": "Rr",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Ta": {
+          "id": "Ta",
+          "label": "Ta",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Tc": {
+          "id": "Tc",
+          "label": "Tc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "WD": {
+          "id": "WD",
+          "label": "WD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "WS": {
+          "id": "WS",
+          "label": "WS",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "APAR": {
+          "id": "APAR",
+          "label": "APAR",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "LWin": {
+          "id": "LWin",
+          "label": "LWin",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFD": {
+          "id": "PPFD",
+          "label": "PPFD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "LWout": {
+          "id": "LWout",
+          "label": "LWout",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDd": {
+          "id": "PPFDd",
+          "label": "PPFDd",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDr": {
+          "id": "PPFDr",
+          "label": "PPFDr",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "PPFDbc": {
+          "id": "PPFDbc",
+          "label": "PPFDbc",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "Tarbre": {
+          "id": "Tarbre",
+          "label": "Tarbre",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "ts_infraj": {
+      "id": "ts_infraj",
+      "label": "ts_infraj",
+      "variables": {
+        "TS": {
+          "id": "TS",
+          "label": "TS",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 WEEK",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "TS",
+              "component": "profondeur",
+              "id": "TS_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "gwd_infraj": {
+      "id": "gwd_infraj",
+      "label": "gwd_infraj",
+      "variables": {
+        "GWD": {
+          "id": "GWD",
+          "label": "GWD",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 WEEK",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "GWD",
+              "component": "profondeur",
+              "id": "GWD_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "smp_infraj": {
+      "id": "smp_infraj",
+      "label": "smp_infraj",
+      "variables": {
+        "SMP": {
+          "id": "SMP",
+          "label": "SMP",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 WEEK",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "SMP",
+              "component": "profondeur",
+              "id": "SMP_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "swc_infraj": {
+      "id": "swc_infraj",
+      "label": "swc_infraj",
+      "variables": {
+        "SWC": {
+          "id": "SWC",
+          "label": "SWC",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "variable": {
+              "id": "variable",
+              "label": "variable"
+            },
+            "profondeur": {
+              "id": "profondeur",
+              "label": "profondeur"
+            },
+            "repetition": {
+              "id": "repetition",
+              "label": "repetition"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 WEEK",
+            "standardDeviation": null,
+            "aggregation": {
+              "variable": "SWC",
+              "component": "profondeur",
+              "id": "SWC_profondeur",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            }
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            },
+            "profondeur max": {
+              "id": "profondeur max",
+              "label": "profondeur max"
+            },
+            "nombre de repetition max": {
+              "id": "nombre de repetition max",
+              "label": "nombre de repetition max"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "chambrefluxsol_j": {
+      "id": "chambrefluxsol_j",
+      "label": "chambrefluxsol_j",
+      "variables": {
+        "Ta": {
+          "id": "Ta",
+          "label": "Ta",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "standard_deviation": {
+              "id": "standard_deviation",
+              "label": "standard_deviation"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": "standard_deviation",
+            "aggregation": null
+          }
+        },
+        "FCO2": {
+          "id": "FCO2",
+          "label": "FCO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "nbval": {
+              "id": "nbval",
+              "label": "nbval"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "gap_filling": {
+              "id": "gap_filling",
+              "label": "gap_filling"
+            },
+            "gap_filling_isgf": {
+              "id": "gap_filling_isgf",
+              "label": "gap_filling_isgf"
+            },
+            "standard_deviation": {
+              "id": "standard_deviation",
+              "label": "standard_deviation"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": "standard_deviation",
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "treatment": {
+              "id": "treatment",
+              "label": "treatment"
+            },
+            "no_chamber": {
+              "id": "no_chamber",
+              "label": "no_chamber"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "chambrefluxsol_m": {
+      "id": "chambrefluxsol_m",
+      "label": "chambrefluxsol_m",
+      "variables": {
+        "FCO2": {
+          "id": "FCO2",
+          "label": "FCO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "nbval": {
+              "id": "nbval",
+              "label": "nbval"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "standard_deviation": {
+              "id": "standard_deviation",
+              "label": "standard_deviation"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 MONTH",
+            "standardDeviation": "standard_deviation",
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "month": {
+              "id": "month",
+              "label": "month"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "treatment": {
+              "id": "treatment",
+              "label": "treatment"
+            },
+            "no_chamber": {
+              "id": "no_chamber",
+              "label": "no_chamber"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    },
+    "chambrefluxsol_infraj": {
+      "id": "chambrefluxsol_infraj",
+      "label": "chambrefluxsol_infraj",
+      "variables": {
+        "FCH4": {
+          "id": "FCH4",
+          "label": "FCH4",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "gap_filling": {
+              "id": "gap_filling",
+              "label": "gap_filling"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "FCO2": {
+          "id": "FCO2",
+          "label": "FCO2",
+          "components": {
+            "unit": {
+              "id": "unit",
+              "label": "unit"
+            },
+            "value": {
+              "id": "value",
+              "label": "value"
+            },
+            "gap_filling": {
+              "id": "gap_filling",
+              "label": "gap_filling"
+            }
+          },
+          "chartDescription": {
+            "value": "value",
+            "unit": "unit",
+            "gap": "1 DAY",
+            "standardDeviation": null,
+            "aggregation": null
+          }
+        },
+        "date": {
+          "id": "date",
+          "label": "date",
+          "components": {
+            "day": {
+              "id": "day",
+              "label": "day"
+            },
+            "time": {
+              "id": "time",
+              "label": "time"
+            },
+            "datetime": {
+              "id": "datetime",
+              "label": "datetime"
+            },
+            "duration": {
+              "id": "duration",
+              "label": "duration"
+            }
+          },
+          "chartDescription": null
+        },
+        "informations": {
+          "id": "informations",
+          "label": "informations",
+          "components": {
+            "comment": {
+              "id": "comment",
+              "label": "comment"
+            },
+            "end date": {
+              "id": "end date",
+              "label": "end date"
+            },
+            "thematic": {
+              "id": "thematic",
+              "label": "thematic"
+            },
+            "frequency": {
+              "id": "frequency",
+              "label": "frequency"
+            },
+            "treatment": {
+              "id": "treatment",
+              "label": "treatment"
+            },
+            "no_chamber": {
+              "id": "no_chamber",
+              "label": "no_chamber"
+            },
+            "start date": {
+              "id": "start date",
+              "label": "start date"
+            }
+          },
+          "chartDescription": null
+        },
+        "localization": {
+          "id": "localization",
+          "label": "localization",
+          "components": {
+            "zones_etudes": {
+              "id": "zones_etudes",
+              "label": "zones_etudes"
+            },
+            "zones_etudes_parent": {
+              "id": "zones_etudes_parent",
+              "label": "zones_etudes_parent"
+            }
+          },
+          "chartDescription": null
+        }
+      },
+      "repository": {
+        "toto": "test"
+      },
+      "hasAuthorizations": true
+    }
+  },
+  "referenceSynthesis": [
+    {
+      "referenceType": "variables",
+      "lineCount": 42
+    },
+    {
+      "referenceType": "ic_site_theme_dataype_variable",
+      "lineCount": 40
+    },
+    {
+      "referenceType": "unites",
+      "lineCount": 31
+    },
+    {
+      "referenceType": "informations_complementaires",
+      "lineCount": 17
+    },
+    {
+      "referenceType": "instruments_references",
+      "lineCount": 4
+    },
+    {
+      "referenceType": "zones_etudes",
+      "lineCount": 13
+    },
+    {
+      "referenceType": "methodes",
+      "lineCount": 2
+    },
+    {
+      "referenceType": "variables_par_types_de_donnees",
+      "lineCount": 143
+    },
+    {
+      "referenceType": "types_de_zones_etudes",
+      "lineCount": 5
+    },
+    {
+      "referenceType": "methodes_periodes",
+      "lineCount": 5
+    },
+    {
+      "referenceType": "liste_valeur_ic",
+      "lineCount": 7
+    },
+    {
+      "referenceType": "traitements",
+      "lineCount": 8
+    },
+    {
+      "referenceType": "theme_types_de_donnees_par_zone_etudes",
+      "lineCount": 83
+    },
+    {
+      "referenceType": "instruments_periodes",
+      "lineCount": 5
+    },
+    {
+      "referenceType": "themes",
+      "lineCount": 4
+    },
+    {
+      "referenceType": "reference",
+      "lineCount": 5
+    },
+    {
+      "referenceType": "methodes_references",
+      "lineCount": 3
+    },
+    {
+      "referenceType": "liste_ic",
+      "lineCount": 2
+    },
+    {
+      "referenceType": "instruments",
+      "lineCount": 4
+    }
+  ]
+}

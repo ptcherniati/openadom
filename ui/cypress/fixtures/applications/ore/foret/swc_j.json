@@ -1,0 +1,31 @@
+[
+  {
+    "id": "f7cc4755-d083-4f2c-9c5e-1d162998d2e1",
+    "creationDate": null,
+    "updateDate": null,
+    "application": "4591638b-ef8e-412b-b06c-0912e9b73a9d",
+    "name": "fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv",
+    "comment": "",
+    "size": 6406,
+    "data": null,
+    "params": {
+      "binaryFiledataset": {
+        "datatype": "swc_j",
+        "requiredauthorizations": {
+          "localization": {
+            "sql": "fougeres.fougeres__fou_4"
+          }
+        },
+        "from": "1999-01-01 00:00:00",
+        "to": "1999-12-31 00:00:00",
+        "comment": null
+      },
+      "published": false,
+      "publisheduser": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+      "publisheddate": "2022-05-06 17:57:48.221158+02",
+      "createuser": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+      "createdate": "2022-05-06 18:15:38.212611+02",
+      "comment": null
+    }
+  }
+]
