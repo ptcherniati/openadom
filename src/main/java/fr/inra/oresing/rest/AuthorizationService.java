@@ -139,7 +139,8 @@ public class AuthorizationService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 statement,
                 oreSiRightOnApplicationRole,
-                usingExpression
+                usingExpression,
+                null
         );
         return sqlPolicy;
     }
