@@ -889,6 +889,21 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
+        // Ajout de taxon
+        for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielTaxon().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
         for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
