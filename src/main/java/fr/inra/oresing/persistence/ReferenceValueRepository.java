@@ -210,8 +210,8 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     public void updateConstraintForeignReferences(List<UUID> uuids) {
         String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference WHERE referenceId in (:ids)";
         String insertSql = String.join(" "
-                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencedBy)"
-                , "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencedBy"
+                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencesBy)"
+                , "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencesBy"
                 , "from " + getTable().getSqlIdentifier()
                 , "where id in (:ids)"
                 , "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING"
@@ -228,7 +228,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         String sql = "SELECT  DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(r) as json \n" +
                 "from " + getSchema().getSqlIdentifier() + ".data_reference dr\n" +
                 "join " + getSchema().getSqlIdentifier() + ".\"data\" d on dr.dataid = d.id\n" +
-                "join " + getTable().getSqlIdentifier() + " r on dr.referencedby = r.id\n" +
+                "join " + getTable().getSqlIdentifier() + " r on dr.referencesBy = r.id\n" +
                 "where d.rowid in (:list)";
         final List<ReferenceValue> list = getNamedParameterJdbcTemplate()
                 .query(sql, new MapSqlParameterSource().addValue("list", listOfIds), getJsonRowMapper());
