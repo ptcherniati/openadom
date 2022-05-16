@@ -31,8 +31,8 @@ create table ReferenceValue
 create table Reference_Reference
 (
     referenceId entityid REFERENCES ReferenceValue(id) ON DELETE CASCADE,
-    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT "Reference_Reference_PK" PRIMARY KEY (referenceId, referencedBy)
+    referencesBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT "Reference_Reference_PK" PRIMARY KEY (referenceId, referencesBy)
 );
 
 CREATE INDEX ref_refslinkedto_index ON ReferenceValue USING gin (refsLinkedTo);
@@ -100,8 +100,8 @@ create table Data
 create table Data_Reference
 (
     dataId entityid REFERENCES Data(id) ON DELETE CASCADE,
-    referencedBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT "Data_Reference_PK" PRIMARY KEY (dataId, referencedBy)
+    referencesBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT "Data_Reference_PK" PRIMARY KEY (dataId, referencesBy)
 );
 
 CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo jsonb_path_ops);
