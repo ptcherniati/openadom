@@ -661,4 +661,132 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("localization", onlyError.getMessageParams().get("variable"));
         Assert.assertEquals("site", onlyError.getMessageParams().get("component"));
     }
+
+    @Test
+    public void testAuthorizationScopeVariableComponentKeyMissingVariable() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationScopeVariableComponentKeyMissingVariable", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: site", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          component: site");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("authorizationScopeVariableComponentKeyMissingVariable", onlyError.getMessage());
+    }
+
+    @Test
+    public void testAuthorizationScopeVariableComponentKeyUnknownVariable() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationScopeVariableComponentKeyUnknownVariable", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: site", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localizations\n" +
+                "          component: site");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("authorizationScopeVariableComponentKeyUnknownVariable", onlyError.getMessage());
+    }
+
+    @Test
+    public void testAuthorizationVariableComponentKeyMissingComponent() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationVariableComponentKeyMissingComponent", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: site", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("authorizationVariableComponentKeyMissingComponent", onlyError.getMessage());
+    }
+
+    @Test
+    public void testAuthorizationVariableComponentKeyUnknownComponent() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationVariableComponentKeyUnknownComponent", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: site", "\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: sites");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("authorizationVariableComponentKeyUnknownComponent", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingColumnReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingColumnReferenceForCheckerInReference", "description_en:\n" +
+                "  sites:", "description_en:\n" +
+                "  sites:\n" +
+                "    validations:\n" +
+                "      typeSitesRef:\n" +
+                "        internationalizationName:\n" +
+                "          fr: référence au type de site\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: typeSites\n" +
+                "        columns: [ nom_key ]");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingColumnReferenceForCheckerInReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceForCheckerInReference", "description_en:\n" +
+                "  sites:", "description_en:\n" +
+                "  sites:\n" +
+                "    validations:\n" +
+                "      typeSitesRef:\n" +
+                "        internationalizationName:\n" +
+                "          fr: référence au type de site\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "        columns: [ nom du type de site ]");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceForCheckerInReference", onlyError.getMessage());
+    }
+
+
+    @Test
+    public void testUnknownReferenceForCheckerAndauthorizationScopeVariableComponentReftypeUnknown() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceForCheckerAndauthorizationScopeVariableComponentReftypeUnknown", "components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sites", "components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: site");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult unknownReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "unknownReferenceForChecker".equals(vcr.getMessage()));
+        ValidationCheckResult authorizationScopeVariableComponentReftypeUnknown = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentReftypeUnknown".equals(vcr.getMessage()));
+
+        Assert.assertEquals(true, unknownReferenceForChecker != null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeUnknown != null);
+    }
 }
