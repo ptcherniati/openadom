@@ -118,7 +118,7 @@ public class RelationalServiceTest {
                     , "where value != ''"
             );
             int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject(sql, Collections.emptyMap(), Integer.class);
-            Assert.assertEquals(384, numberOfRowInAssociationView);
+            Assert.assertEquals(424, numberOfRowInAssociationView);
         }
 
         for (Fixtures.Application application : applications) {

@@ -144,9 +144,12 @@ public class OreSiService {
 
         OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
         OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
+        OreSiRightOnApplicationRole writerOnApplicationRole = OreSiRightOnApplicationRole.writerOn(app);
 
         db.createRole(adminOnApplicationRole);
         db.createRole(readerOnApplicationRole);
+        db.createRole(writerOnApplicationRole);
+        db.addUserInRole(writerOnApplicationRole, readerOnApplicationRole);
 
         db.createPolicy(new SqlPolicy(
                 String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
@@ -154,7 +157,8 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.ALL,
                 adminOnApplicationRole,
-                "name = '" + app.getName() + "'"
+                "name = '" + app.getName() + "'",
+                null
         ));
 
         db.createPolicy(new SqlPolicy(
@@ -163,6 +167,18 @@ public class OreSiService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 readerOnApplicationRole,
+                "name = '" + app.getName() + "'",
+                null
+        ));
+
+
+        db.createPolicy(new SqlPolicy(
+                String.join("_", writerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.INSERT.name()),
+                SqlSchema.main().application(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                SqlPolicy.Statement.INSERT,
+                writerOnApplicationRole,
+                null,
                 "name = '" + app.getName() + "'"
         ));
 

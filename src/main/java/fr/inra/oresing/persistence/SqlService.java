@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.persistence.roles.*;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -63,21 +64,30 @@ public class SqlService {
     }
 
     public void createPolicy(SqlPolicy sqlPolicy) {
+        dropPolicy(sqlPolicy);
+        String using = "", withCheck = "";
+        if(!Strings.isNullOrEmpty(sqlPolicy.getUsingExpression())){
+            using = String.format(" USING (%s)", sqlPolicy.getUsingExpression());
+        }
+        if(!Strings.isNullOrEmpty(sqlPolicy.getWithCheckExpression())){
+            using = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
+        }
         String createPolicySql = String.format(
-                "CREATE POLICY %s ON %s AS %s FOR %s TO %s USING (%s)",
+                "CREATE POLICY %s ON %s AS %s FOR %s TO %s %s %s",
                 sqlPolicy.getSqlIdentifier(),
                 sqlPolicy.getTable().getSqlIdentifier(),
                 sqlPolicy.getPermissiveOrRestrictive().name(),
                 sqlPolicy.getStatement().name(),
                 sqlPolicy.getRole().getSqlIdentifier(),
-                sqlPolicy.getUsingExpression()
+                using,
+                withCheck
         );
         execute(createPolicySql);
     }
 
     public void dropPolicy(SqlPolicy sqlPolicy) {
         String createPolicySql = String.format(
-                "DROP POLICY %s ON %s",
+                "DROP POLICY IF EXISTS %s ON %s",
                 sqlPolicy.getSqlIdentifier(),
                 sqlPolicy.getTable().getSqlIdentifier()
         );
