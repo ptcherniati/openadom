@@ -1037,7 +1037,7 @@ public class ApplicationConfigurationService {
     }
 
     private ConfigurationParsingResult onInvalidFormatException(InvalidFormatException e) {
-       String  path = e.getPath().stream()
+        String  path = e.getPath().stream()
                 .map(JsonMappingException.Reference::getFieldName)
                 .collect(Collectors.joining("->"));
         final String authorizedValues = Optional.ofNullable(e.getOriginalMessage())
