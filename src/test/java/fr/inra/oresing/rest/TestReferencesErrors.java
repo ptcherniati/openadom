@@ -165,19 +165,14 @@ public class TestReferencesErrors {
                 responses.put(e.getKey(), response);
             }
         }
-        /*for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                JsonPath.parse(response).read("$.id");
-            }
+        // ajout de data
+        /*try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getFluxMeteoForetDataResourceName())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }*/
     }
 }

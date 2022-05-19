@@ -125,7 +125,7 @@
         "duplicateLineInReference": "In the repository file {file}, line {lineNumber} has the same id {duplicateKey} as lines {otherLines}",
         "duplicatedHeaders": "These headers are duplicated : <code>{duplicatedHeaders}</code>",
         "emptyFile": "File is empty",
-        "emptyHeader": "The file contains a column with an empty header",
+        "emptyHeader": "The file contains a column with an empty header at the line {headerLine}",
         "headerColumnPatternNotMatching": "Column header pattern not matching. Pattern to match : <code>{expectedHeaderColumnPattern}</code><br/>Actual header : <code>{actualHeaderColumn}</code>",
         "illegalCheckerConfigurationParameterForReferenceColumnChecker": "For reference <code>{referenceToValidate}</code> and column <code>{column}</code>, a checker <code>{checkerName}</code> is declared but it does not accept a <code>{parameterName}</code> parameter",
         "authorizationScopeMissingReferenceCheckerForAuthorizationScope": "In the {dataType} data type, you define an <i>authorizationScope</i> {authorizationScopeName} that references the <i>component</i> {component} of the <i>variable</i> {variable } . In order to be able to provide a list of values on which to authorize, you must define a <i>checker</i> of type <i>Reference</i> to the <i>variableComponent</i> ..",

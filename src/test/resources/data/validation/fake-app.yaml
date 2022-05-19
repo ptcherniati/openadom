@@ -13,6 +13,10 @@ compositeReferences:
         reference: sites
       - parentKeyColumn: "nom du site"
         reference: plateformes
+  taxon:
+    components:
+      - parentRecursiveKey: nom du taxon superieur
+        reference: taxon
 references:
   projets:
     separator:
@@ -87,6 +91,108 @@ references:
     keyColumns: [name]
     columns:
       name:
+  proprietes_taxon:
+    validations:
+      floats:
+        internationalizationName:
+          fr: les décimaux
+        columns: [ isFloatValue ]
+        checker:
+          name: Float
+      integer:
+        internationalizationName:
+          fr: les entiers
+        columns: [ ordre d'affichage ]
+        checker:
+          name: Integer
+    internationalizationName:
+      fr: Proprétés de Taxon
+      en: Properties of Taxa
+    internationalizedColumns:
+      nom de la propriété_key:
+        fr: nom de la propriété_fr
+        en: nom de la propriété_en
+      définition_fr:
+        fr: définition_fr
+        en: définition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom de la propriété_key}'
+        en: '{nom de la propriété_key}'
+    keyColumns: [nom de la propriété_key]
+    columns:
+      Date:
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: true
+      nom de la propriété_key:
+      nom de la propriété_fr:
+      nom de la propriété_en:
+      définition_fr:
+      définition_en:
+      isFloatValue:
+      isQualitative:
+      type associé:
+      ordre d'affichage:
+  taxon:
+    internationalizationName:
+      fr: Taxons
+      en: Taxa
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du taxon déterminé}'
+        en: '{nom du taxon déterminé}'
+    keyColumns: [nom du taxon déterminé]
+    validations:
+      nom du taxon déterminé:
+        internationalizationName:
+          fr: "nom du taxon déterminé"
+        checker:
+          name: RegularExpression
+          params:
+            pattern: .*
+            required: true
+            transformation:
+              codify: true
+        columns: [ nom du taxon déterminé ]
+      nom du taxon superieur:
+        internationalizationName:
+          fr: "nom du taxon superieur"
+        checker:
+          name: Reference
+          params:
+            required: false
+            transformation:
+              codify: true
+            refType: taxon
+        columns: [ nom du taxon superieur ]
+    columns:
+      nom du taxon déterminé:
+      theme:
+      nom du niveau de taxon:
+      nom du taxon superieur:
+      code sandre du taxon:
+      code sandre du taxon supérieur:
+      niveau incertitude de détermination:
+      Auteur de la description:
+      Année de la description:
+      Référence de la description:
+      Références relatives à ce taxon:
+      Synonyme ancien:
+      Synonyme récent:
+      Classe algale sensu Bourrelly:
+      Code Sandre:
+      Notes libres:
+    dynamicColumns:
+      propriétés de taxons:
+        internationalizationName:
+          fr: Proprétés de Taxons
+          en: Properties of Taxa
+        headerPrefix: "pt_"
+        reference: proprietes_taxon
+        referenceColumnToLookForHeader: nom de la propriété_key
 dataTypes:
   site:
     internationalizationName:

@@ -789,4 +789,97 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals(true, unknownReferenceForChecker != null);
         Assert.assertEquals(true, authorizationScopeVariableComponentReftypeUnknown != null);
     }
+
+    @Test
+    public void testInvalidPatternForReferenceColumnDateChecker() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidPatternForReferenceColumnDateChecker", "columns:\n" +
+                "      nom du projet_key:", "columns:\n" +
+                "      nom du projet_key:\n" +
+                "      Date:\n" +
+                "        checker:\n" +
+                "          name: Date\n" +
+                "          params:\n" +
+                "            pattern: coucou");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidPatternForReferenceColumnDateChecker", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidPatternForDateCheckerForValidationRuleInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidPatternForDateCheckerForValidationRuleInReference", "description_en:\n" +
+                "  sites:", "description_en:\n" +
+                "  sites:\n" +
+                "    validations:\n" +
+                "      typeSitesRef:\n" +
+                "        internationalizationName:\n" +
+                "          fr: référence au type de site\n" +
+                "        checker:\n" +
+                "          name: Date\n" + "\n" +
+                "          params:\n" +
+                "            pattern: coucuo\n" +
+                "        columns: [ nom du type de site ]");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidPatternForDateCheckerForValidationRuleInReference", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidPatternForVariableComponentDateChecker() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidPatternForVariableComponentDateChecker", "time:\n" +
+                "            checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: HH:mm:ss", "time:\n" +
+                "            checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: coucou");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidPatternForVariableComponentDateChecker", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingReferenceForCheckerInReferenceColumn() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceForCheckerInReferenceColumn", "altitude:\n" +
+                "      nom du type de plateforme:", "altitude:\n" +
+                "      nom du type de plateforme:\n" +
+                "        checker:\n" +
+                "          name: Reference");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceForCheckerInReferenceColumn", onlyError.getMessage());
+    }
+
+    /*  TO DO : missingParentLineInRecursiveReference ->
+        renvois : java.lang.IllegalArgumentException: expected one element but was:
+        <DefaultValidationCheckResult(level=ERROR, message=missingParentRecursiveKeyColumnForReferenceInCompositeReference, messageParams={compositeReference=taxon, reference=taxon, parentRecursiveKey=nom du taxon superieur}), DefaultValidationCheckResult(level=ERROR, message=missingColumnReferenceForCheckerInReference, messageParams={reference=taxon, validationRuleDescriptionEntryKey=nom du taxon déterminé, knownColumns=[nom du taxon déterminé, theme, nom du niveau de taxon, code sandre du taxon, code sandre du taxon supérieur, niveau incertitude de détermination, Auteur de la description, Année de la description, Référence de la description, Références relatives à ce taxon, Synonyme ancien, Synonyme récent, Classe algale sensu Bourrelly, Code Sandre, Notes libres], checkerName=Reference, missingColumns=[nom du taxon superieur]})>*/
+    @Test
+    @Ignore
+    public void testMissingParentLineInRecursiveReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParentLineInRecursiveReference", "nom du taxon superieur:", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingParentLineInRecursiveReference", onlyError.getMessage());
+    }
+
+    //  TO DO : missingParamColumnReferenceForCheckerInReference
+    @Test
+    @Ignore
+    public void testMissingParamColumnReferenceForCheckerInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParamColumnReferenceForCheckerInReference", "", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingParamColumnReferenceForCheckerInReference", onlyError.getMessage());
+    }
+
+
 }

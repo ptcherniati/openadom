@@ -222,17 +222,11 @@ public class Fixtures {
                 "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithColumn\",\"messageParams\":{\"target\":{\"column\":\"ordre d'affichage\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
         ));
         // le message d'erreur n'est pas bon par rapport à l'erreur (l'erreur créée est une duplacation de ligne dans un referentiel et non dans un datatype
-        /*referentielErrors.put("duplicatedLineInReference", List.of(
+        referentielErrors.put("duplicatedLineInReference", List.of(
                 "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;38,22;false;Phytoplancton;38",
                 "01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39",
                 "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
-        ));*/
-        // je pensais que c'était avec le params required des checkers mais je n'ai pas d'erreur quand je le met à true et que la cellule est vide...
-        /*referentielErrors.put("requiredValueWithColumn", List.of(
-                "02/01/2016",
-                "",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"autre\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
-        ));*/
+        ));
         // me renvois une erreur "invalidHeaders"
         referentielErrors.put("unexpectedHeaderColumn", List.of(
                 "Date;nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage",
