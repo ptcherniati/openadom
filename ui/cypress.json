@@ -7,6 +7,7 @@
         "applicationCreation_url": "/applicationCreation",
         "monsore_new_authorization_url": "/applications/monsore/dataTypes/pem/authorizations/new",
         "monsore_table_authorization_url": "/applications/monsore/dataTypes/pem/authorizations",
-        "dataType_monsore_url": "/applications/monsore/dataTypes"
+        "dataType_monsore_url": "/applications/monsore/dataTypes",
+        "ola_references_url": "/applications/ola/references"
     }
 }

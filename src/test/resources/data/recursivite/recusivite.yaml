@@ -13,6 +13,19 @@ compositeReferences:
         reference: taxon
 references:
   proprietes_taxon:
+    validations:
+      floats:
+        internationalizationName:
+          fr: les décimaux
+        columns: [ isFloatValue ]
+        checker:
+          name: Float
+      integer:
+        internationalizationName:
+          fr: les entiers
+        columns: [ ordre d'affichage ]
+        checker:
+          name: Integer
     internationalizationName:
       fr: Proprétés de Taxon
       en: Properties of Taxa
@@ -29,6 +42,12 @@ references:
         en: '{nom de la propriété_key}'
     keyColumns: [nom de la propriété_key]
     columns:
+      Date:
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: true
       nom de la propriété_key:
       nom de la propriété_fr:
       nom de la propriété_en:

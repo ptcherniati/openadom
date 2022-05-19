@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -186,6 +187,58 @@ public class Fixtures {
         referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_reduit-test.csv");
         return referentielFiles;
+    }
+
+    public Map<String, List<String>> getRecursiviteReferentielErrorsStringReplace() {
+        Map<String, List<String>> referentielErrors = new LinkedHashMap<>();
+        referentielErrors.put("invalidHeaders", List.of(
+                "définition_en",
+                "définition_es",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\"],\"missingColumns\":[\"définition_en\"],\"unknownColumns\":[\"définition_es\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("emptyHeader", List.of(
+                "définition_en",
+                "",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"emptyHeader\",\"messageParams\":{\"headerLine\":1},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("duplicatedHeaders", List.of(
+                "définition_en",
+                "définition_fr",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedHeaders\",\"messageParams\":{\"duplicatedHeaders\":[\"définition_fr\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("invalidDateWithColumn", List.of(
+                "02/01/2016",
+                "01/01/16",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":2}]"
+        ));
+        referentielErrors.put("invalidFloatWithColumn", List.of(
+                "55,22",
+                "x",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithColumn\",\"messageParams\":{\"target\":{\"column\":\"isFloatValue\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
+        ));
+        referentielErrors.put("invalidIntegerWithColumn", List.of(
+                "4",
+                "x",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithColumn\",\"messageParams\":{\"target\":{\"column\":\"ordre d'affichage\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
+        ));
+        // le message d'erreur n'est pas bon par rapport à l'erreur (l'erreur créée est une duplacation de ligne dans un referentiel et non dans un datatype
+        /*referentielErrors.put("duplicatedLineInReference", List.of(
+                "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;38,22;false;Phytoplancton;38",
+                "01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
+        ));*/
+        // je pensais que c'était avec le params required des checkers mais je n'ai pas d'erreur quand je le met à true et que la cellule est vide...
+        /*referentielErrors.put("requiredValueWithColumn", List.of(
+                "02/01/2016",
+                "",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"autre\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
+        ));*/
+        referentielErrors.put("unexpectedHeaderColumn", List.of(
+                "4",
+                "x",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"test\",\"messageParams\":{\"target\":{\"column\":\"ordre d'affichage\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
+        ));
+        return referentielErrors;
     }
 
     public Map<String, String> getRecursiviteReferentielFiles() {
