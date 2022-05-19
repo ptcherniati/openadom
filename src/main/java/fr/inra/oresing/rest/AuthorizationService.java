@@ -56,6 +56,7 @@ public class AuthorizationService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 oreSiRightOnApplicationRole,
+                null,
                 expression
         );
         db.createPolicy(sqlPolicy);
@@ -151,7 +152,8 @@ public class AuthorizationService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 statement,
                 oreSiRightOnApplicationRole,
-                usingExpression
+                usingExpression,
+                null
         );
         return sqlPolicy;
     }
@@ -185,6 +187,7 @@ public class AuthorizationService {
         final SqlPolicy sqlPolicy = new SqlPolicy(
                 String.join("_", "application","reader", oreSiRightOnApplicationRole.getAsSqlRole()),
                 SqlSchema.main().application(),
+                null,
                 null,
                 null,
                 null,
