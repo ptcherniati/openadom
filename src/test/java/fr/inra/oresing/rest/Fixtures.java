@@ -233,10 +233,11 @@ public class Fixtures {
                 "",
                 "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"autre\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
         ));*/
+        // me renvois une erreur "invalidHeaders"
         referentielErrors.put("unexpectedHeaderColumn", List.of(
-                "4",
-                "x",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"test\",\"messageParams\":{\"target\":{\"column\":\"ordre d'affichage\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
+                "Date;nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage",
+                "martin",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"martin\"],\"missingColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"unknownColumns\":[\"martin\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
         ));
         return referentielErrors;
     }
