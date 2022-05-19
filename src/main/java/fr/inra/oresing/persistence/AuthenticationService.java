@@ -157,7 +157,8 @@ public class AuthenticationService {
                         return userId.toString();
                     }
                 },
-                expression
+                expression,
+                null
         );
         if(oreSiUser.getAuthorizations().isEmpty()){
             db.dropPolicy(sqlPolicy);
@@ -195,7 +196,8 @@ public class AuthenticationService {
                         return userId.toString();
                     }
                 },
-                expression
+                expression,
+                null
         );
         db.createPolicy(sqlPolicy);
         setRoleForClient();

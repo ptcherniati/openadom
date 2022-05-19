@@ -56,8 +56,8 @@ public class AuthorizationService {
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                 SqlPolicy.Statement.SELECT,
                 oreSiRightOnApplicationRole,
-                null,
-                expression
+                expression,
+                null
         );
         db.createPolicy(sqlPolicy);
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
