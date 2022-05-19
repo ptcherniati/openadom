@@ -165,7 +165,7 @@ public class OreSiService {
                 String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                SqlPolicy.Statement.ALL,
+                List.of(SqlPolicy.Statement.ALL),
                 adminOnApplicationRole,
                 "name = '" + app.getName() + "'",
                 null
@@ -175,7 +175,7 @@ public class OreSiService {
                 String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                SqlPolicy.Statement.SELECT,
+                List.of(SqlPolicy.Statement.SELECT),
                 readerOnApplicationRole,
                 "name = '" + app.getName() + "'",
                 null
@@ -186,7 +186,7 @@ public class OreSiService {
                 String.join("_", writerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.INSERT.name()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                SqlPolicy.Statement.INSERT,
+                List.of(SqlPolicy.Statement.INSERT),
                 writerOnApplicationRole,
                 null,
                 "name = '" + app.getName() + "'"

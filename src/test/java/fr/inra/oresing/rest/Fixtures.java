@@ -201,7 +201,13 @@ public class Fixtures {
     public Map<String, String> getRecursiviteReferentielOrderFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
         referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
-        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_reduit-test.csv");
+        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton-reduit.csv");
+        return referentielFiles;
+    }
+
+    public Map<String, String> getRecursiviteReferentielTaxon() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton.csv");
         return referentielFiles;
     }
 

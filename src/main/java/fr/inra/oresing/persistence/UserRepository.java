@@ -3,6 +3,9 @@ package fr.inra.oresing.persistence;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
+import fr.inra.oresing.persistence.roles.OreSiRoleToAccessDatabase;
+import fr.inra.oresing.rest.OreSiApiRequestContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
+    @Autowired
+    private OreSiApiRequestContext request;
 
     @Override
     protected String getUpsertQuery() {
@@ -75,7 +80,8 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
 
     }
     public CurrentUserRoles getRolesForCurrentUser(){
-        return getRolesForRole(null);
+        final OreSiRoleToAccessDatabase role = request.getRequestClient().getRole();
+        return getRolesForRole(role.getAsSqlRole());
     }
 
     public int updateAuthorizations(UUID userId, List<String> authorizations) {

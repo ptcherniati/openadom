@@ -41,20 +41,22 @@ public class AuthorizationService {
     @Autowired
     private CheckerFactory checkerFactory;
 
-    public void
-    updateRoleForManagement(Set<UUID> previousUsers, OreSiAuthorization modifiedAuthorization) {
+    @Autowired
+    private OreSiApiRequestContext request;
+
+    public void updateRoleForManagement(Set<UUID> previousUsers, OreSiAuthorization modifiedAuthorization) {
         Set<UUID> newUsers = modifiedAuthorization.getOreSiUsers();
         Application application = repository.application().findApplication(modifiedAuthorization.getApplication());
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, modifiedAuthorization.getId());
         db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.readerOn(application));
         addOrRemoveAuthorizationForUsers(previousUsers, newUsers, oreSiRightOnApplicationRole);
 
-        final String expression = String.format("name = '%s'",application.getName());
+        final String expression = String.format("name = '%s'", application.getName());
         final SqlPolicy sqlPolicy = new SqlPolicy(
-                String.join("_", "application","reader", oreSiRightOnApplicationRole.getAsSqlRole()),
+                String.join("_", "application", "reader", oreSiRightOnApplicationRole.getAsSqlRole()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                SqlPolicy.Statement.SELECT,
+                List.of(SqlPolicy.Statement.SELECT),
                 oreSiRightOnApplicationRole,
                 expression,
                 null
@@ -62,17 +64,17 @@ public class AuthorizationService {
         db.createPolicy(sqlPolicy);
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
-            SqlPolicy publishPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
+            SqlPolicy publishPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT,SqlPolicy.Statement.INSERT));
             db.createPolicy(publishPolicy);
         }
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.extraction)) {
-            SqlPolicy extractPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, SqlPolicy.Statement.SELECT);
+            SqlPolicy extractPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, List.of(SqlPolicy.Statement.SELECT));
             db.createPolicy(extractPolicy);
         }
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
-            SqlPolicy extractPolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, SqlPolicy.Statement.DELETE);
-            db.createPolicy(extractPolicy);
+            SqlPolicy deletePolicy = toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.SELECT,SqlPolicy.Statement.DELETE));
+            db.createPolicy(deletePolicy);
         }
     }
 
@@ -84,20 +86,25 @@ public class AuthorizationService {
         return oreSiRightOnApplicationRole;
     }
 
+    public List<OreSiAuthorization> findUserAuthorizationsForApplicationAndDataType(Application application, String dataType) {
+        final UUID currentUserId = request.getRequestClient().getId();
+        AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
+        return authorizationRepository.findAuthorizations(currentUserId, application, dataType);
+    }
 
-    public OreSiAuthorization addAuthorization(CreateAuthorizationRequest authorizations) {
-        Application application = repository.application().findApplication(authorizations.getApplicationNameOrId());
+    public OreSiAuthorization addAuthorization(Application application, String dataType, CreateAuthorizationRequest authorizations, boolean isApplicationCreator) {
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         OreSiAuthorization entity = authorizations.getUuid() == null ?
                 new OreSiAuthorization()
                 : authorizationRepository.findById(authorizations.getUuid());
 
-        String dataType = authorizations.getDataType();
         Map<OperationType, List<Authorization>> authorizationsByType = authorizations.getAuthorizations();
 
         Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
 
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
+
+        //new AuthorisationResolver(authorizationsByType, authorizationDescription);
 
         authorizationsByType.values()
                 .forEach(authByType -> {
@@ -135,7 +142,7 @@ public class AuthorizationService {
     }
 
 
-    private SqlPolicy toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, SqlPolicy.Statement statement) {
+    private SqlPolicy toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, List<SqlPolicy.Statement> statements) {
         Set<String> usingExpressionElements = new LinkedHashSet<>();
         Application application = repository.application().findApplication(authorization.getApplication());
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
@@ -144,21 +151,27 @@ public class AuthorizationService {
         SqlPolicy sqlPolicy = null;
         usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
         usingExpressionElements.add("dataType = '" + dataType + "'");
-        String usingExpression = createUsingExpression(authorization, usingExpressionElements, application, sqlSchemaForApplication, operation);
-
+        String expression = createExpression(authorization, usingExpressionElements, application, sqlSchemaForApplication, operation);
+        String usingExpression=null, checkExpression=null;
+        if(statements.contains(SqlPolicy.Statement.ALL) ||statements.contains(SqlPolicy.Statement.SELECT)){
+            usingExpression = expression;
+        }
+        if(statements.contains(SqlPolicy.Statement.ALL) ||statements.contains(SqlPolicy.Statement.INSERT) ||statements.contains(SqlPolicy.Statement.UPDATE)){
+            checkExpression = expression;
+        }
         sqlPolicy = new SqlPolicy(
                 OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString(),
                 sqlSchemaForApplication.data(),
                 SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                statement,
+                statements,
                 oreSiRightOnApplicationRole,
                 usingExpression,
-                null
+                checkExpression
         );
         return sqlPolicy;
     }
 
-    private String createUsingExpression(OreSiAuthorization authorization, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
+    private String createExpression(OreSiAuthorization authorization, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
         if (authorization.getAuthorizations().containsKey(operation) &&
                 !authorization.getAuthorizations().get(operation).isEmpty()) {
             usingExpressionElements.add("\"authorization\" @> " +
@@ -185,7 +198,7 @@ public class AuthorizationService {
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
         final SqlPolicy sqlPolicy = new SqlPolicy(
-                String.join("_", "application","reader", oreSiRightOnApplicationRole.getAsSqlRole()),
+                String.join("_", "application", "reader", oreSiRightOnApplicationRole.getAsSqlRole()),
                 SqlSchema.main().application(),
                 null,
                 null,
@@ -196,15 +209,15 @@ public class AuthorizationService {
         db.dropPolicy(sqlPolicy);
         if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
             db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
-            SqlPolicy publishPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.publication, SqlPolicy.Statement.INSERT);
+            SqlPolicy publishPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.INSERT));
             db.dropPolicy(publishPolicy);
         }
         if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.extraction)) {
-            SqlPolicy extractPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, SqlPolicy.Statement.SELECT);
+            SqlPolicy extractPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, List.of(SqlPolicy.Statement.SELECT));
             db.dropPolicy(extractPolicy);
         }
         if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
-            SqlPolicy extractPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.delete, SqlPolicy.Statement.DELETE);
+            SqlPolicy extractPolicy = toDatatypePolicy(oreSiAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.DELETE));
             db.dropPolicy(extractPolicy);
         }
         authorizationRepository.delete(authorizationId);

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -42,25 +43,34 @@ public class AuthenticationService {
 
     /**
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
+     *
+     * @return
      */
-    public void setRoleForClient() {
+    public OreSiRoleToAccessDatabase setRoleForClient() {
         OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClient().getRole();
         setRole(roleToAccessDatabase);
+        return roleToAccessDatabase;
     }
 
     /**
      * Prend le role du superadmin qui a le droit de tout faire
+     *
+     * @return
      */
-    public void setRoleAdmin() {
+    public OreSiSuperAdminRole setRoleAdmin() {
         setRole(OreSiRole.superAdmin());
+        return OreSiRole.superAdmin();
     }
 
     /**
      * Prend le role du user passe en parametre, les requetes suivant ne pourra
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
+     *
+     * @return
      */
-    void setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
+    OreSiRoleToAccessDatabase setRole(OreSiRoleToAccessDatabase roleToAccessDatabase) {
         db.setRole(roleToAccessDatabase);
+        return roleToAccessDatabase;
     }
 
     /**
@@ -150,7 +160,7 @@ public class AuthenticationService {
                 String.join("_", OreSiRole.applicationCreator().getAsSqlRole(), userId.toString()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
-                SqlPolicy.Statement.ALL,
+                List.of(SqlPolicy.Statement.ALL),
                 new OreSiRole() {
                     @Override
                     public String getAsSqlRole() {
@@ -189,7 +199,7 @@ public class AuthenticationService {
                 String.join("_", OreSiRole.applicationCreator().getAsSqlRole(), userId.toString()),
                 SqlSchema.main().application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
-                SqlPolicy.Statement.ALL,
+                List.of(SqlPolicy.Statement.ALL),
                 new OreSiRole() {
                     @Override
                     public String getAsSqlRole() {

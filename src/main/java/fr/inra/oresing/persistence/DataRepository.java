@@ -98,13 +98,13 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public void updateConstraintForeignData(List<UUID> uuids) {
         String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference WHERE dataId in (:ids)";
         String insertSql = String.join(" "
-                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencedBy)"
+                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencesBy)"
                 , "with tuple as ("
-                , "  select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencedBy"
+                , "  select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencesBy"
                 , "  from " + getTable().getSqlIdentifier() + ""
                 , ")"
-                , "select dataId, referencedBy from tuple"
-                , "where dataId in (:ids) and referencedBy is not null"
+                , "select dataId, referencesBy from tuple"
+                , "where dataId in (:ids) and referencesBy is not null"
                 , "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING"
         );
         String sql = String.join(";", deleteSql, insertSql);

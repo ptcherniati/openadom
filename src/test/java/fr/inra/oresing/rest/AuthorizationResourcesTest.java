@@ -2,7 +2,12 @@ package fr.inra.oresing.rest;
 
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Strings;
@@ -47,6 +52,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthorizationResourcesTest {
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private SqlService db;
+
+
+    @Autowired
+    private ApplicationRepository applicationRepository;
+
+    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
@@ -59,11 +74,20 @@ public class AuthorizationResourcesTest {
     @Autowired
     private Fixtures fixtures;
 
+    @Autowired
+    private OreSiService oreSiService;
+
     @Test
     public void testAddAuthorization() throws Exception {
         Cookie authCookie = fixtures.addApplicationAcbb();
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
-        String readerUserId = createUserResult.getUserId().toString();
+        final String token = Jwts.parser()
+                .setSigningKey(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
+                .parseClaimsJws(authCookie.getValue())
+                .getBody()
+                .getSubject();
+        final String authId = JsonPath.parse(token).read("$.requestClient.id");
+        CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        String readerUserId = readerUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
                         .param("password", "xxxxxxxx"))
@@ -135,7 +159,57 @@ public class AuthorizationResourcesTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
+           /* NotApplicationCanSetRightsException error = (NotApplicationCanSetRightsException) mockMvc.perform(create)
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
+            Assert.assertEquals(NotApplicationCanSetRightsException.NO_RIGHT_FOR_SET_RIGHTS_APPLICATION, error.getMessage());
+            Assert.assertEquals("acbb", error.getApplicationName());
+            Assert.assertEquals("biomasse_production_teneur", error.getDataType());
+            final Application app = applicationRepository.findApplication("acbb");
+            db.addUserInRole(OreSiUserRole.forUser( userRepository.findById(UUID.fromString(authId))), OreSiRightOnApplicationRole.adminOn(app));*/
             String response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+
+            log.debug(StringUtils.abbreviate(response, 50));
+            //on ajoute une autre authorization
+            json = "{\n" +
+                    "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une autre authorization sur acbb\",\n" +
+                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredauthorizations\":{\n" +
+                    "            \"localization\":\"theix.theix__2\"\n" +
+                    "         },\n" +
+                    "         \"dataGroup\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2009,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2009,\n" +
+                    "               6,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
+            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie)
+                    .content(json);
+            response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
