@@ -13,8 +13,9 @@
     },
     "visitor": {
         "response": {
-            "body": "utilisateur non enregistré, merci de verrifié le login et le mot de passe",
-            "statusCode": 401
+            "body": "identifiants fournis incorrects",
+            "statusCode": 403,
+            "Content-Type:": "text/plain;charset=ISO-8859-1"
         }
     }
 }

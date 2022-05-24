@@ -16,7 +16,13 @@
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-      <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users" class="columns">
+      <ValidationProvider
+        v-slot="{ errors, valid }"
+        name="users"
+        rules="required"
+        vid="users"
+        class="columns"
+      >
         <b-field
           :label="$t('dataTypeAuthorizations.users')"
           :message="errors[0]"
@@ -124,7 +130,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() applicationName;
   @Prop() authorizationId;
 
-  __DEFAULT__ = '__DEFAULT__';
+  __DEFAULT__ = "__DEFAULT__";
   referenceService = ReferenceService.INSTANCE;
   references = {};
   authorizationService = AuthorizationService.INSTANCE;
@@ -285,23 +291,23 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         );
         remainingAuthorizations[key] = partition;
       }
-      if (!remainingAuthorizations.length){
+      if (!remainingAuthorizations.length) {
         remainingAuthorizations = [
           {
-            '__DEFAULT__' : {
-                  'authorizationScope': {
-                    id: '__DEFAULT__',
-                    localName: "root"
-                  },
-                  'completeLocalName': '__.__',
-                  'currentPath': '__.__',
-                  'isLeaf': true,
-                  'localName': '__.__fr',
-                  'reference': {},
-                  'referenceValues': {}
-                }
-          }
-        ]
+            __DEFAULT__: {
+              authorizationScope: {
+                id: "__DEFAULT__",
+                localName: "root",
+              },
+              completeLocalName: "__.__",
+              currentPath: "__.__",
+              isLeaf: true,
+              localName: "__.__fr",
+              reference: {},
+              referenceValues: {},
+            },
+          },
+        ];
       }
       this.authReferences = remainingAuthorizations;
     } catch (error) {

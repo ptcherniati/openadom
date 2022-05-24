@@ -43,12 +43,7 @@
               </b-button>
             </div>
             <div class="column is-4">
-              <b-tag
-                v-if="btnUpdateConfig"
-                type="is-warning"
-                size="is-large"
-                style="margin: 5px"
-              >
+              <b-tag v-if="btnUpdateConfig" type="is-warning" size="is-large" style="margin: 5px">
                 {{ $t("applications.app_version") }}{{ applicationConfig.version }}
               </b-tag>
             </div>
@@ -116,8 +111,15 @@
               :aria-close-label="$t('message.close')"
               class="mt-4"
             >
-              <span v-if="msg.mess" v-html="msg.mess" class="columns" style="margin: 10px; font-weight: bold"/>
-              <span v-if="msg.param" class="columns" style="margin: 0;"><p style=" width: 1650px">{{ msg.param }}</p></span>
+              <span
+                v-if="msg.mess"
+                v-html="msg.mess"
+                class="columns"
+                style="margin: 10px; font-weight: bold"
+              />
+              <span v-if="msg.param" class="columns" style="margin: 0"
+                ><p style="width: 1650px">{{ msg.param }}</p></span
+              >
               <span v-else v-html="msg" />
             </b-message>
           </div>
@@ -189,14 +191,21 @@ export default class ApplicationCreationView extends Vue {
         }
         this.alertService.toastSuccess(this.$t("alert.application-validate-success"));
       } else {
-        for(let i =0; i<response.validationCheckResults.length; i++) {
-          if (this.errorsService.getErrorsMessages(response.validationCheckResults)[i] === this.$t("errors.expetion")) {
-            this.error[i] = {...this.error[i],
+        for (let i = 0; i < response.validationCheckResults.length; i++) {
+          if (
+            this.errorsService.getErrorsMessages(response.validationCheckResults)[i] ===
+            this.$t("errors.expetion")
+          ) {
+            this.error[i] = {
+              ...this.error[i],
               mess: this.errorsService.getErrorsMessages(response.validationCheckResults)[i],
-              param: response.validationCheckResults[i].message.toString().split()};
+              param: response.validationCheckResults[i].message.toString().split(),
+            };
             this.errorsMessages.push(this.error[i]);
           } else {
-            this.errorsMessages = this.errorsService.getErrorsMessages(response.validationCheckResults);
+            this.errorsMessages = this.errorsService.getErrorsMessages(
+              response.validationCheckResults
+            );
           }
         }
       }
