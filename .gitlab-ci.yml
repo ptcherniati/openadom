@@ -101,12 +101,39 @@ maven_registry:
     - mvn versions:commit
     - mvn deploy -Pmia -s ci-settings.xml
 
+npm_test:
+  image: cypress/browsers:node17.8.0-chrome99-ff97-slim
+  stage: test
+  script:
+    # install dependencies
+    - cd ui
+    - npm ci
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    # start the server in the background
+    - npm run serve >/dev/null 2>file.txt &
+    - npm run i18n:report
+    - npm run lint
+    # run Cypress tests
+    - export NODE_OPTIONS=''
+    - npx cypress run --browser firefox
+  artifacts:
+    when: always
+    paths:
+      - ui/cypress/videos/**/*.mp4
+      - ui/cypress/screenshots/**/*.png
+    expire_in: 1 day
+
 npm:
   image: node:12-alpine
   stage: package
+  needs: ["maven_test_rest_1","maven_test_rest_others"]
   script:
     - cd ui
     - npm ci
     - npm run build
   tags:
     - docker
+  artifacts:
+    when: always
+    paths:
+      - ui/dist

@@ -45,8 +45,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.util.NestedServletException;
 
 import javax.servlet.http.Cookie;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -322,6 +321,36 @@ public class OreSiResourcesTest {
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("143"));
         }
+        final String getMonsoere = mockMvc.perform(get("/api/v1/applications/monsore")
+                        .cookie(authCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        final String getSites = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
+                        .cookie(authCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        final String getTypeSites = mockMvc.perform(get("/api/v1/applications/monsore/references/type_de_sites")
+                        .cookie(authCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        final String getProjet = mockMvc.perform(get("/api/v1/applications/monsore/references/projet")
+                        .cookie(authCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        final String getPem = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .cookie(authCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        final String getGrantable = mockMvc.perform(get("/api/v1/applications/monsore/dataType/pem/grantable")
+                        .cookie(authCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/references/type_de_sites.json", getTypeSites);
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/references/sites.json", getSites);
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/references/projet.json", getProjet);
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/grantable.json", getGrantable);
 
 //        // restitution de data json
 //        resource = getClass().getResource("/data/compare/export.json");
@@ -397,6 +426,14 @@ public class OreSiResourcesTest {
 //        }
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
+    }
+    public  void registerFile(String filePath, String jsonContent) throws IOException {
+        jsonContent = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonContent);
+        File errorsFile = new File(filePath);
+        log.debug(errorsFile.getAbsolutePath());
+        BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
+        writer.write(jsonContent);
+        writer.close();
     }
 
 

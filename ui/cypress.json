@@ -1,12 +1,15 @@
 {
-    "baseUrl": "http://localhost:8080",
-    "env": {
-        "home_url": "/",
-        "login_url": "/login",
-        "applications_url": "/applications",
-        "applicationCreation_url": "/applicationCreation",
-        "monsore_new_authorization_url": "/applications/monsore/dataTypes/pem/authorizations/new",
-        "monsore_table_authorization_url": "/applications/monsore/dataTypes/pem/authorizations",
-        "dataType_monsore_url": "/applications/monsore/dataTypes"
-    }
+  "baseUrl": "http://localhost:8080",
+  "env": {
+    "home_url": "/",
+    "login_url": "/login",
+    "applications_url": "/applications",
+    "applicationCreation_url": "/applicationCreation",
+    "monsore_new_authorization_url": "/applications/monsore/dataTypes/pem/authorizations/new",
+    "monsore_table_authorization_url": "/applications/monsore/dataTypes/pem/authorizations",
+    "dataType_monsore_url": "/applications/monsore/dataTypes"
+  },
+  "videoUploadOnPasses": false,
+  "video": true,
+  "videoCompression": false
 }
