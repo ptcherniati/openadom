@@ -1,0 +1,107 @@
+{
+  "users": [
+    {
+      "id": "8b48a812-7da7-462a-8012-3e93b696d14b",
+      "label": "philippe"
+    },
+    {
+      "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+      "label": "poussin"
+    }
+  ],
+  "dataGroups": [
+    {
+      "id": "qualitatif",
+      "label": "Données qualitatives"
+    },
+    {
+      "id": "quantitatif",
+      "label": "Données quantitatives"
+    },
+    {
+      "id": "referentiel",
+      "label": "Référentiel"
+    }
+  ],
+  "authorizationScopes": [
+    {
+      "id": "localization",
+      "label": "localization",
+      "options": [
+        {
+          "id": "bassin_versant",
+          "label": "bassin_versant",
+          "children": [
+            {
+              "id": "bassin_versant.nivelle",
+              "label": "bassin_versant.nivelle",
+              "children": []
+            },
+            {
+              "id": "bassin_versant.oir",
+              "label": "bassin_versant.oir",
+              "children": []
+            },
+            {
+              "id": "bassin_versant.scarff",
+              "label": "bassin_versant.scarff",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "plateforme",
+          "label": "plateforme",
+          "children": [
+            {
+              "id": "plateforme.nivelle.nivelle__p1",
+              "label": "plateforme.nivelle.nivelle__p1",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1",
+              "label": "plateforme.oir.oir__p1",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1.oir__p1__a",
+              "label": "plateforme.oir.oir__p1.oir__p1__a",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1.oir__p1__b",
+              "label": "plateforme.oir.oir__p1.oir__p1__b",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p2",
+              "label": "plateforme.oir.oir__p2",
+              "children": []
+            },
+            {
+              "id": "plateforme.scarff.scarff__p1",
+              "label": "plateforme.scarff.scarff__p1",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "projet",
+      "label": "projet",
+      "options": [
+        {
+          "id": "projet_atlantique",
+          "label": "projet_atlantique",
+          "children": []
+        },
+        {
+          "id": "projet_manche",
+          "label": "projet_manche",
+          "children": []
+        }
+      ]
+    }
+  ]
+}

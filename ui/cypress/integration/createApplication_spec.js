@@ -9,12 +9,10 @@ describe('test create application', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
 
         cy.get('.card-header-title.createApplication').first().contains(' Créer l\'application ').click()
-        const testYaml = 'applications/fake/fakeYaml_testCreateAplication.json'
         const yamlSite = 'applications/sites/site.yaml'
-        const nameApplication = 'site'
 
         cy.visit(Cypress.env('applications_url'))
-        cy.get('.card-header-title.createApplication').first().contains(" Créer l\'application ").click()
+        cy.get('.card-header-title.createApplication').first().contains(" Créer l'application ").click()
 
         cy.visit(Cypress.env('applicationCreation_url'))
         //cy.get('input[type = text]').first().type(nameApplication)
@@ -72,6 +70,7 @@ describe('test create application', () => {
                 },
             }).as('validateResponse')
         cy.get('.button > :nth-child(2)').first().click();
+        cy.wait(100)
         cy.get('.textarea').first().type("un commentaire")
         cy.intercept(
             'POST',

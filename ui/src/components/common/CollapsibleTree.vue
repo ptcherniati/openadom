@@ -136,7 +136,7 @@
       :radioName="radioName"
       @optionChecked="onInnerOptionChecked"
       :applicationTitle="applicationTitle"
-      :lineCount = child.lineCountChild
+      :lineCount="child.lineCountChild"
     />
   </div>
 </template>
