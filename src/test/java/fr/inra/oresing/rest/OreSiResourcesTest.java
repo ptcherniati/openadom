@@ -130,12 +130,12 @@ public class OreSiResourcesTest {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
             // on n'a pas le droit de creer de nouvelle application
-                final NotApplicationCreatorRightsException resolvedException = (NotApplicationCreatorRightsException) mockMvc.perform(multipart("/api/v1/applications/monsore")
-                                .file(configuration)
-                                .cookie(monsoreCookie))
-                        .andExpect(status().is4xxClientError())
-                        .andReturn().getResolvedException();
-                addUserRightCreateApplication(monsoreUserId, "monsore");
+            final NotApplicationCreatorRightsException resolvedException = (NotApplicationCreatorRightsException) mockMvc.perform(multipart("/api/v1/applications/monsore")
+                            .file(configuration)
+                            .cookie(monsoreCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
+            addUserRightCreateApplication(monsoreUserId, "monsore");
             Assert.assertEquals("monsore", resolvedException.applicationName);
             addUserRightCreateApplication(monsoreUserId, "monsore");
 
@@ -352,24 +352,29 @@ public class OreSiResourcesTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
         final String getSites = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getTypeSites = mockMvc.perform(get("/api/v1/applications/monsore/references/type_de_sites")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getProjet = mockMvc.perform(get("/api/v1/applications/monsore/references/projet")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getPem = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getGrantable = mockMvc.perform(get("/api/v1/applications/monsore/dataType/pem/grantable")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
@@ -453,7 +458,8 @@ public class OreSiResourcesTest {
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
     }
-    public  void registerFile(String filePath, String jsonContent) throws IOException {
+
+    public void registerFile(String filePath, String jsonContent) throws IOException {
         jsonContent = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonContent);
         File errorsFile = new File(filePath);
         log.debug(errorsFile.getAbsolutePath());
@@ -766,13 +772,13 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values.relevant.numero").value(hasItemInArray(equalTo("125")), String[].class))
                     .andReturn().getResponse().getContentAsString();
         }
-            MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/dataType/date_de_visite/authorization/%s", authorizationId))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie);
-             mockMvc.perform(delete)
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            // L'utilisateur sans droit ne peut voir les applications
+        MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/dataType/date_de_visite/authorization/%s", authorizationId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie);
+        mockMvc.perform(delete)
+                .andExpect(status().is2xxSuccessful())
+                .andReturn().getResponse().getContentAsString();
+        // L'utilisateur sans droit ne peut voir les applications
 
         //TODO
 
