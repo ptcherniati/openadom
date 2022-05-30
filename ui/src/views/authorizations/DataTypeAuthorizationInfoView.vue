@@ -434,6 +434,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     dataTypeAuthorization.usersId = this.usersToAuthorize;
     dataTypeAuthorization.applicationNameOrId = this.applicationName;
     dataTypeAuthorization.dataType = this.dataTypeId;
+    dataTypeAuthorization.name = this.name;
     dataTypeAuthorization.authorizations = this.authorizationsToSave;
 
     try {

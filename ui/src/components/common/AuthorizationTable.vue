@@ -483,7 +483,7 @@ export default class AuthorizationTable extends Vue {
       : this.localAuthorizationsTree;
     var actualState =
       (this.states && this.states[indexColumn] && this.states[indexColumn][index]) || 0;
-    if (event instanceof PointerEvent) {
+    if (event instanceof MouseEvent) {
       //cliock sur checkbox
       this.states[indexColumn] || this.initStates();
       var states, state;
