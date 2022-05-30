@@ -56,7 +56,7 @@ public class ApplicationConfigurationServiceTest {
         final Map<String, ConfigurationParsingResult> collect = configurationParsingResults.entrySet()
                 .stream().filter(e -> !e.getValue().getConfigurationParsingResult().isValid())
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getConfigurationParsingResult()));
-        final String errorsAsString = new ObjectMapper().writeValueAsString(collect);
+        final String errorsAsString = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(collect);
         File errorsFile = new File("ui/cypress/fixtures/applications/errors/errors.json");
         log.debug(errorsFile.getAbsolutePath());
         BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));

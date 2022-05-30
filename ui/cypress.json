@@ -9,5 +9,8 @@
         "monsore_table_authorization_url": "/applications/monsore/dataTypes/pem/authorizations",
         "dataType_monsore_url": "/applications/monsore/dataTypes",
         "ola_references_url": "/applications/ola/references"
-    }
+    },
+  	"videoUploadOnPasses": false,
+  	"video": true,
+  	"videoCompression": false
 }

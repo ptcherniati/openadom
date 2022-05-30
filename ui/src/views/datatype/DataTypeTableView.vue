@@ -429,7 +429,7 @@
           type="is-primary"
           @click.prevent="downloadResultSearch"
           style="margin-bottom: 15px; float: right"
-          >Télécharger</b-button
+          >{{$t("referencesManagement.download")}}</b-button
         >
       </div>
     </div>
@@ -622,20 +622,21 @@ export default class DataTypeTableView extends Vue {
     const key = component.key;
     if (!this.loadedReferences[rowId]) {
       let refvalues;
-      if (this.referenceLineCheckers[key]){
-        refvalues = this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum
+      if (this.referenceLineCheckers[key]) {
+        refvalues =
+          this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum;
       }
-      if (!refvalues){
+      if (!refvalues) {
         let params = { _row_id_: [rowId] };
         if (!refType) {
           params.any = true;
         }
         const reference = await this.referenceService.getReferenceValues(
-            this.applicationName,
-            refType,
-            params
+          this.applicationName,
+          refType,
+          params
         );
-        refvalues = reference.referenceValues[0].values
+        refvalues = reference.referenceValues[0].values;
       }
       const data = Object.entries(refvalues)
         .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
@@ -777,24 +778,26 @@ export default class DataTypeTableView extends Vue {
     this.showFilter = false;
   }
 
-  async downloadResultSearch(){
+  async downloadResultSearch() {
     this.params.variableComponentFilters = [];
     for (var i = 0; i < this.variableSearch.length; i++) {
       if (this.variableSearch[i]) {
         this.params.variableComponentFilters.push(this.variableSearch[i]);
       }
     }
-    let param = {...this.params, offset: 0, limit: 42, dataType: this.dataTypeId, applicationNameOrId: this.applicationName}
-    let csv = await this.dataService.getDataTypesCsv(
-      this.applicationName,
-      this.dataTypeId,
-      param
-    );
-    var hiddenElement = document.createElement('a');
-    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+    let param = {
+      ...this.params,
+      offset: 0,
+      limit: 42,
+      dataType: this.dataTypeId,
+      applicationNameOrId: this.applicationName,
+    };
+    let csv = await this.dataService.getDataTypesCsv(this.applicationName, this.dataTypeId, param);
+    var hiddenElement = document.createElement("a");
+    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
 
     //provide the name for the CSV file to be downloaded
-    hiddenElement.download = 'export.csv';
+    hiddenElement.download = "export.csv";
     hiddenElement.click();
     return false;
   }
@@ -815,10 +818,14 @@ export default class DataTypeTableView extends Vue {
   getDisplay(row, variable, component) {
     var key = variable + "_" + component;
     var value = row[variable][component];
-    var lang = '__display_'+localStorage.getItem('lang')
+    var lang = "__display_" + localStorage.getItem("lang");
     if (this.referenceLineCheckers[key]) {
-      if (this.referenceLineCheckers[key].referenceValues && this.referenceLineCheckers[key].referenceValues.refValues ) {
-        var display = this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum[lang];
+      if (
+        this.referenceLineCheckers[key].referenceValues &&
+        this.referenceLineCheckers[key].referenceValues.refValues
+      ) {
+        var display =
+          this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum[lang];
         return display ? display : value;
       }
     }

@@ -27,7 +27,7 @@ import 'cypress-file-upload';
 
 Cypress.Commands.add('setLocale', (locale) => {
     Cypress.on('window:before:load', window => {
-        Object.defineProperty(window.navigator, 'language', { value: locale });
+        Object.defineProperty(window.navigator, 'language', {value: locale});
     });
 })
 Cypress.Commands.add('login', (userRole, applications) => {
@@ -39,9 +39,11 @@ Cypress.Commands.add('login', (userRole, applications) => {
             applicationsResponse = app
         })
     }
+    cy.setLocale('fr');
     cy.fixture('users/users.json').as('users')
     cy.get('@users').then((users) => {
         const user = users[userRole]
+        console.log(userRole, user)
         cy.visit(Cypress.env('login_url'))
         cy.get(':nth-child(1) > .field > .control > input').first().type(userRole)
         cy.get(':nth-child(2) > .field > .control > input').first().type("password")

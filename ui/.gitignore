@@ -27,3 +27,4 @@ ui/cypress/videos
 ui/cypress/screenshots
 ui/cypress/downloads
 /public/files/
+/cypress/videos/

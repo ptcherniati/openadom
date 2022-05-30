@@ -312,6 +312,7 @@
         "arrow-right": "->",
         "arrow-left": "<-",
         "slash": "/",
-        "regEx": ".*"
+        "regEx": ".*",
+        "star": "*"
     }
 }

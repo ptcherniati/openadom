@@ -186,11 +186,7 @@ export default class ReferencesManagementView extends Vue {
     this.errorsMessages = [];
     const reference = this.findReferenceByLabel(label);
     try {
-      await this.referenceService.createReference(
-        this.applicationName,
-        reference.id,
-        refFile
-      );
+      await this.referenceService.createReference(this.applicationName, reference.id, refFile);
       this.alertService.toastSuccess(this.$t("alert.reference-updated"));
     } catch (errors) {
       await this.checkMessageErrors(errors);
