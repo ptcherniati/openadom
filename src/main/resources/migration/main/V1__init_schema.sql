@@ -79,7 +79,7 @@ create table OreSiUser
     updateDate     DateOrNow,
     login          Text UNIQUE NOT NULL,
     password       text        NOT NULL,-- can be null
-    authorizations TEXT[]
+    authorizations TEXT[] default '{}'
 );
 
 create table Application
