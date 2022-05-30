@@ -15,7 +15,7 @@ compositeReferences:
         reference: plateformes
   taxon:
     components:
-      - parentRecursiveKey: nom du taxon superieur
+      - parentRecursiveKey: "nom du taxon superieur"
         reference: taxon
 references:
   projets:
@@ -38,6 +38,31 @@ references:
       nom du projet_en:
       description du projet_fr:
       description du projet_en:
+  platform_type:
+    internationalizationName:
+      fr: Types de plateforme
+      en: Plateform types
+    internationalizedColumns:
+      nom du type de plateforme_key:
+        fr: nom du type de plateforme_fr
+        en: nom du type de plateforme_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du type de plateforme_key}'
+        en: '{nom du type de plateforme_key}'
+    keyColumns:
+      - nom du type de plateforme_key
+    columns:
+      nom du type de plateforme_key: null
+      nom du type de plateforme_fr: null
+      nom du type de plateforme_en: null
+      description_fr: null
+      description_en: null
+      code sandre: null
+      code sandre du contexte: null
   plateformes:
     separator:
     keyColumns: [nom de la plateforme_key]
@@ -50,6 +75,13 @@ references:
       longitude:
       altitude:
       nom du type de plateforme:
+        checker:
+          name: Reference
+          params:
+            refType: platform_type
+            required: true
+            transformation:
+              codify: true
       code sandre:
       code sandre du contexte:
   typeSites:
@@ -126,6 +158,7 @@ references:
           name: Date
           params:
             pattern: dd/MM/yyyy
+            duration: "1 MINUTES"
             required: true
       nom de la propriété_key:
       nom de la propriété_fr:
@@ -242,6 +275,15 @@ dataTypes:
               name: Date
               params:
                 pattern: HH:mm:ss
+          datetime:
+            defaultValue:
+              expression: >
+                return datum.date.day +" " +datum.date.time+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
       localization:
         components:
           site:

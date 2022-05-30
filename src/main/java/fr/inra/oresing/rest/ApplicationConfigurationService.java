@@ -384,9 +384,14 @@ public class ApplicationConfigurationService {
                                         builder.authorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
                                     } else {
                                         refType = checkerConfigurationDescription.getRefType();
-                                        if (refType == null || !configuration.getReferences().containsKey(refType)) {
-                                            builder.authorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
-                                        } else {
+                                        if (!configuration.getReferences().containsKey(refType)) {
+                                            if (refType == null) {
+                                                builder.authorizationScopeVariableComponentReftypeNull(authorizationScopeVariableComponentKey, configuration.getReferences().keySet());
+                                            } else {
+                                                builder.authorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
+                                            }
+                                        }
+                                        else {
                                             final LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences = configuration.getCompositeReferences();
                                             Set<String> compositesReferences = compositeReferences.values().stream()
                                                     .map(Configuration.CompositeReferenceDescription::getComponents)
@@ -934,7 +939,12 @@ public class ApplicationConfigurationService {
         for (Map.Entry<String, Configuration.LineValidationRuleWithColumnsDescription> validationRuleDescriptionEntry : referenceDescription.getValidations().entrySet()) {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
             Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
-            verifyLineValidationRuleDescription(lineValidationRuleDescriptionValidationContext, validationRuleDescriptionEntryKey, lineValidationRuleDescription);
+            if (lineValidationRuleDescription.getColumns() == null) {
+                System.out.println(lineValidationRuleDescription.getColumns());
+                lineValidationRuleDescriptionValidationContext.missingParamColumnReferenceForChecker(validationRuleDescriptionEntryKey);
+            }
+            else
+                verifyLineValidationRuleDescription(lineValidationRuleDescriptionValidationContext, validationRuleDescriptionEntryKey, lineValidationRuleDescription);
         }
     }
 

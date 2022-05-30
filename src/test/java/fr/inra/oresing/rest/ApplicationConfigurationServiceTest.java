@@ -96,7 +96,7 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void parseConfigurationFile() {
         ImmutableSet.of(
-                fixtures.getMonsoreApplicationConfigurationResourceName(),
+                //fixtures.getMonsoreApplicationConfigurationResourceName(),
                 fixtures.getAcbbApplicationConfigurationResourceName(),
                 fixtures.getOlaApplicationConfigurationResourceName(),
                 fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
@@ -367,8 +367,11 @@ public class ApplicationConfigurationServiceTest {
                 "              name: Dates");
         Assert.assertFalse(configurationParsingResult.isValid());
 
-        Assert.assertFalse(configurationParsingResult.isValid());
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidFormat", onlyError.getMessage());
+
+        /*Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
                 .filter(e -> "invalidFormat".equals(e.getMessage()))
                 .filter(e -> "Dates".equals(e.getMessageParams().get("value")))
                 .filter(e -> " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]".equals(e.getMessageParams().get("authorizedValues")))
@@ -376,7 +379,7 @@ public class ApplicationConfigurationServiceTest {
                 .filter(e -> Integer.valueOf(21).equals(e.getMessageParams().get("columnNumber")))
                 .filter(e -> "dataTypes->site->data->date->components->day->checker->name".equals(e.getMessageParams().get("path")))
                 .collect(Collectors.toList())
-        );
+        );*/
     }
 
     @Test
@@ -406,7 +409,12 @@ public class ApplicationConfigurationServiceTest {
     public void testInvalidFormat() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidFormat", "firstRowLine: 3", "firstRowLine: pas_un_chiffre");
         Assert.assertFalse(configurationParsingResult.isValid());
+
+
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidFormat", onlyError.getMessage());
+        /*
         Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
                 .filter(e -> "invalidFormat".equals(e.getMessage()))
                 .filter(e -> "pas_un_chiffre".equals(e.getMessageParams().get("value")))
@@ -414,7 +422,7 @@ public class ApplicationConfigurationServiceTest {
                 .filter(e -> Integer.valueOf(190).equals(e.getMessageParams().get("lineNumber")))
                 .filter(e -> Integer.valueOf(21).equals(e.getMessageParams().get("columnNumber")))
                 .filter(e -> "dataTypes->site->format->firstRowLine".equals(e.getMessageParams().get("path")))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()));*/
     }
 
     @Test
@@ -439,14 +447,18 @@ public class ApplicationConfigurationServiceTest {
     public void testUnknownCheckerName() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownCheckerName", "name: GroovyExpression", "name: GroovyExpressions");
         Assert.assertFalse(configurationParsingResult.isValid());
-        Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
+
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidFormat", onlyError.getMessage());
+        /*Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults().stream()
                 .filter(e -> "invalidFormat".equals(e.getMessage()))
                 .filter(e -> "GroovyExpressions".equals(e.getMessageParams().get("value")))
                 .filter(e -> " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]".equals(e.getMessageParams().get("authorizedValues")))
                 .filter(e -> Integer.valueOf(177).equals(e.getMessageParams().get("lineNumber")))
                 .filter(e -> Integer.valueOf(17).equals(e.getMessageParams().get("columnNumber")))
                 .filter(e -> "dataTypes->site->validations->exempledeDeRegleDeValidation->checker->name".equals(e.getMessageParams().get("path")))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()));*/
     }
 
     @Test
@@ -856,30 +868,266 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("missingReferenceForCheckerInReferenceColumn", onlyError.getMessage());
     }
 
-    /*  TO DO : missingParentLineInRecursiveReference ->
-        renvois : java.lang.IllegalArgumentException: expected one element but was:
-        <DefaultValidationCheckResult(level=ERROR, message=missingParentRecursiveKeyColumnForReferenceInCompositeReference, messageParams={compositeReference=taxon, reference=taxon, parentRecursiveKey=nom du taxon superieur}), DefaultValidationCheckResult(level=ERROR, message=missingColumnReferenceForCheckerInReference, messageParams={reference=taxon, validationRuleDescriptionEntryKey=nom du taxon déterminé, knownColumns=[nom du taxon déterminé, theme, nom du niveau de taxon, code sandre du taxon, code sandre du taxon supérieur, niveau incertitude de détermination, Auteur de la description, Année de la description, Référence de la description, Références relatives à ce taxon, Synonyme ancien, Synonyme récent, Classe algale sensu Bourrelly, Code Sandre, Notes libres], checkerName=Reference, missingColumns=[nom du taxon superieur]})>*/
     @Test
-    @Ignore
     public void testMissingParentLineInRecursiveReference() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParentLineInRecursiveReference", "nom du taxon superieur:", "");
         Assert.assertFalse(configurationParsingResult.isValid());
-        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult missingParentRecursiveKeyColumnForReferenceInCompositeReference = Iterables.find(validationCheckResults, vcr -> "missingParentRecursiveKeyColumnForReferenceInCompositeReference".equals(vcr.getMessage()));
+        ValidationCheckResult missingColumnReferenceForCheckerInReference = Iterables.find(validationCheckResults, vcr -> "missingColumnReferenceForCheckerInReference".equals(vcr.getMessage()));
 
-        log.debug(onlyError.getMessage());
-        Assert.assertEquals("missingParentLineInRecursiveReference", onlyError.getMessage());
+        Assert.assertEquals(true, missingParentRecursiveKeyColumnForReferenceInCompositeReference != null);
+        Assert.assertEquals(true, missingColumnReferenceForCheckerInReference != null);
     }
 
-    //  TO DO : missingParamColumnReferenceForCheckerInReference
     @Test
-    @Ignore
     public void testMissingParamColumnReferenceForCheckerInReference() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParamColumnReferenceForCheckerInReference", "", "");
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingParamColumnReferenceForCheckerInReference", "refType: taxon\n" +
+                "        columns: [ nom du taxon superieur ]", "refType: taxon\n" +
+                "        columns: ");
         Assert.assertFalse(configurationParsingResult.isValid());
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("missingParamColumnReferenceForCheckerInReference", onlyError.getMessage());
     }
 
+    @Test
+    public void testMissingReferenceForCheckerInDataType() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceForCheckerInDataType", "typeSite:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: typeSites", "typeSite:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceForChecker", onlyError.getMessage());
+    }
 
+    @Test
+    public void testUnknownReferenceForCheckerInDataType() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceForCheckerInDataType", "typeSite:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: typeSites", "typeSite:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: typeSite");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unknownReferenceForChecker", onlyError.getMessage());
+    }
+
+    @Test
+    @Ignore
+    /**
+     *  on peut omettre authorisation
+     */
+    public void testMissingAuthorizationForDatatype() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingAuthorizationForDatatype", "authorization:\n" +
+                "      dataGroups:\n" +
+                "        referentiel:\n" +
+                "          label: \"Référentiel\"\n" +
+                "          data:\n" +
+                "            - localization\n" +
+                "            - date\n" +
+                "        qualitatif:\n" +
+                "          label: \"Données qualitatives\"\n" +
+                "          data:\n" +
+                "            - Couleur des individus\n" +
+                "            - Nombre d'individus\n" +
+                "      authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: site\n" +
+                "      timeScope:\n" +
+                "        variable: date\n" +
+                "        component: day", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingAuthorizationForDatatype", onlyError.getMessage());
+    }
+
+    @Test
+    @Ignore
+    /**
+     *  on peut omettre authorisationScopes
+     */
+    public void testMissingAuthorizationScopeVariableComponentKey() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingAuthorizationScopeVariableComponentKey", "authorizationScopes:\n" +
+                "        localization:\n" +
+                "          variable: localization\n" +
+                "          component: site", "");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingAuthorizationScopeVariableComponentKey", onlyError.getMessage());
+    }
+
+    @Test
+    public void testAuthorizationScopeVariableComponentReftypeNull() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationScopeVariableComponentReftypeNull", "components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sites", "components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType:");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult missingReferenceForChecker = Iterables.find(validationCheckResults, vcr -> "missingReferenceForChecker".equals(vcr.getMessage()));
+        ValidationCheckResult authorizationScopeVariableComponentReftypeNull = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentReftypeNull".equals(vcr.getMessage()));
+
+        Assert.assertEquals(true, missingReferenceForChecker != null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentReftypeNull != null);
+    }
+
+    @Test
+    public void testAuthorizationScopeVariableComponentWrongChecker() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationScopeVariableComponentWrongChecker", "components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Reference\n" +
+                "              params:\n" +
+                "                refType: sites", "components:\n" +
+                "          site:\n" +
+                "            checker:\n" +
+                "              name: Integer\n" +
+                "              params:\n" +
+                "                refType: sites");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        List<ValidationCheckResult> validationCheckResults = configurationParsingResult.getValidationCheckResults();
+        ValidationCheckResult illegalCheckerConfigurationParameterForVariableComponentChecker = Iterables.find(validationCheckResults, vcr -> "illegalCheckerConfigurationParameterForVariableComponentChecker".equals(vcr.getMessage()));
+        ValidationCheckResult authorizationScopeVariableComponentWrongChecker = Iterables.find(validationCheckResults, vcr -> "authorizationScopeVariableComponentWrongChecker".equals(vcr.getMessage()));
+
+        Assert.assertEquals(true, illegalCheckerConfigurationParameterForVariableComponentChecker != null);
+        Assert.assertEquals(true, authorizationScopeVariableComponentWrongChecker != null);
+    }
+
+    @Test
+    public void testIllegalCheckerConfigurationParameterForReferenceColumnChecker() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testIllegalCheckerConfigurationParameterForReferenceColumnChecker", "nom du type de plateforme:\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: platform_type\n" +
+                "            required: true\n" +
+                "            transformation:\n" +
+                "              codify: true", "nom du type de plateforme:\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refTypes: platform_type");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
+    }
+
+    @Test
+    public void testIllegalCheckerConfigurationParameterForValidationRuleInReference() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testIllegalCheckerConfigurationParameterForValidationRuleInReference", "floats:\n" +
+                "        internationalizationName:\n" +
+                "          fr: les décimaux\n" +
+                "        columns: [ isFloatValue ]\n" +
+                "        checker:\n" +
+                "          name: Float", "floats:\n" +
+                "        internationalizationName:\n" +
+                "          fr: les décimaux\n" +
+                "        columns: [ isFloatValue ]\n" +
+                "        checker:\n" +
+                "          name: Flaot");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidFormat", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidDurationForVariableComponentDateChecker() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidDurationForVariableComponentDateChecker", "checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: \"dd/MM/yyyy HH:mm:ss\"\n" +
+                "                duration: \"1 MINUTES\"", "checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: \"dd/MM/yyyy HH:mm:ss\"\n" +
+                "                duration: \"X MINUTES\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidDurationForVariableComponentDateChecker", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidDurationForReferenceColumnDateChecker() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidDurationForReferenceColumnDateChecker", "columns:\n" +
+                "      Date:\n" +
+                "        checker:\n" +
+                "          name: Date\n" +
+                "          params:\n" +
+                "            pattern: dd/MM/yyyy\n" +
+                "            duration: \"1 MINUTES\"\n" +
+                "            required: true", "columns:\n" +
+                "      Date:\n" +
+                "        checker:\n" +
+                "          name: Date\n" +
+                "          params:\n" +
+                "            pattern: dd/MM/yyyy\n" +
+                "            duration: \"x MINUTES\"\n" +
+                "            required: true");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidDurationForReferenceColumnDateChecker", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidPatternForDateCheckerForValidationRuleInDataType() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidPatternForDateCheckerForValidationRuleInDataType", "components:\n" +
+                "          day:\n" +
+                "            checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: dd/MM/yyyy", "components:\n" +
+                "          day:\n" +
+                "            checker:\n" +
+                "              name: Date\n" +
+                "              params:\n" +
+                "                pattern: dd/MM/YY");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("timeScopeVariableComponentPatternUnknown", onlyError.getMessage());
+    }
+
+    @Test
+    public void testUnknownReferenceForCheckerInReferenceColumn() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceForCheckerInReferenceColumn", "nom du type de plateforme:\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            refType: platform_type\n" +
+                "            required: true", "nom du type de plateforme:\n" +
+                "        checker:\n" +
+                "          name: Reference\n" +
+                "          params:\n" +
+                "            name: Floatt");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
+    }
 }
