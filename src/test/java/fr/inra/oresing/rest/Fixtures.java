@@ -184,7 +184,6 @@ public class Fixtures {
 
     public Map<String, String> getRecursiviteReferentielOrderFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("site", "/data/recursivite/sites.csv");
         referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton-reduit.csv");
         return referentielFiles;
@@ -250,6 +249,16 @@ public class Fixtures {
                 "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":2}]"
         ));
         return referentielErrors;
+    }
+
+    public Map<String, List<String>> getRecursiviteDataErrorsStringReplace() {
+        Map<String, List<String>> DataTypeErrors = new LinkedHashMap<>();
+        DataTypeErrors.put("duplicatedLineInDatatype", List.of(
+                "suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;17/03/2010;Bouteille Pelletier;microscope inverse zeiss axiovert 135;878170.9",
+                "suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;24/02/2010;Bouteille Pelletier;microscope inverse zeiss axiovert 135;223408.73",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"phytoplancton_aggregated\",\"duplicatedRows\":[3,4],\"uniquenessKey\":{\"outils_prélèvement\":\"Bouteille Pelletier\",\"outils_mesure\":\"microscope inverse zeiss axiovert 135\",\"dates_day\":\"24/02/2010\",\"projets_nom du projet\":\"suivi_des_lacs\",\"plateformes_nom de la plateforme\":\"leman.shl2__station_de_prelevement_lac\",\"site_nom du site\":\"grand_lac.leman\"}},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+        ));
+        return DataTypeErrors;
     }
 
     public Map<String, String> getRecursiviteReferentielFiles() {

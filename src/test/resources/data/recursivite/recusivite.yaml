@@ -146,3 +146,94 @@ references:
         headerPrefix: "pt_"
         reference: proprietes_taxon
         referenceColumnToLookForHeader: nom de la propriété_key
+dataTypes:
+  phytoplancton_aggregated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: site
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      projets:
+        components:
+          nom du projet:
+      site:
+        components:
+          nom du site:
+      plateformes:
+        components:
+          nom de la plateforme:
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      variables:
+        components:
+          biovolume_algal:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - site
+            - plateformes
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outils
+            - variables
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: site
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "biovolume algal total de l'échantillon"
+          boundTo:
+            variable: variables
+            component: biovolume_algal

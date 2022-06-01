@@ -168,12 +168,32 @@ public class TestReferencesErrors {
         }
 
         // ajout de data
-        /*try (InputStream refStream = fixtures.getClass().getResourceAsStream(fixtures.getFluxMeteoForetDataResourceName())) {
-            MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                            .file(refFile)
-                            .cookie(authCookie))
-                    .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-        }*/
+        String phytoAggregatedData_path = fixtures.getPhytoAggregatedDataResourceName();
+        StringBuilder textBuilders = new StringBuilder();
+        try (InputStream refStream = fixtures.getClass().getResourceAsStream(phytoAggregatedData_path)) {
+            try (Reader reader = new BufferedReader(new InputStreamReader
+                    (refStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
+                int c = 0;
+                while ((c = reader.read()) != -1) {
+                    textBuilders.append((char) c);
+                }
+            }
+        }
+        String monDataCSV = textBuilders.toString();
+        for (Map.Entry<String, List<String>> e : fixtures.getRecursiviteDataErrorsStringReplace().entrySet()) {
+            String textCsvModify = monDataCSV.replace(e.getValue().get(0), e.getValue().get(1));
+            try (InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
+                MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", refStream);
+                log.info(e.getKey());
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/phytoplancton_aggregated")
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+                        .andReturn().getResponse().getContentAsString();
+
+                Assert.assertEquals(e.getValue().get(2), response);
+                responses.put(e.getKey(), response);
+            }
+        }
     }
 }
