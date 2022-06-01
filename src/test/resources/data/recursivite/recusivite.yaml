@@ -14,6 +14,15 @@ compositeReferences:
 references:
   proprietes_taxon:
     validations:
+      reference:
+        internationalizationName:
+          fr: les references
+        columns: [site]
+        checker:
+          name: Reference
+          params:
+            required: false
+            refType: site
       floats:
         internationalizationName:
           fr: les décimaux
@@ -57,7 +66,29 @@ references:
       isQualitative:
       type associé:
       ordre d'affichage:
-
+      site:
+  site:
+    internationalizationName:
+      fr: Site
+      en: Site
+    internationalizedColumns:
+      nom du site_key:
+        fr: nom du site_fr
+        en: nom du site_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom du site_key}'
+        en: '{nom du site_key}'
+    keyColumns: [nom du site_key]
+    columns:
+      nom du type de site:
+      nom du site_key:
+      nom du site_fr:
+      nom du site_en:
+      description du site_fr:
+      description du site_en:
+      code sandre du Plan d'eau:
+      code sandre de la Masse d'eau plan d'eau:
   taxon:
     internationalizationName:
       fr: Taxons

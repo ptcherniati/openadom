@@ -4892,11 +4892,11 @@
       "level" : "ERROR",
       "message" : "invalidFormat",
       "messageParams" : {
-        "value" : "Flaot",
         "path" : "references->proprietes_taxon->validations->floats->checker->name",
         "lineNumber" : 133,
         "authorizedValues" : " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]",
-        "columnNumber" : 17
+        "columnNumber" : 17,
+        "value" : "Flaot"
       },
       "error" : true,
       "success" : false
@@ -17654,11 +17654,11 @@
       "level" : "ERROR",
       "message" : "invalidFormat",
       "messageParams" : {
-        "value" : "pas_un_chiffre",
         "path" : "dataTypes->site->format->firstRowLine",
         "lineNumber" : 338,
         "authorizedValues" : "",
-        "columnNumber" : 21
+        "columnNumber" : 21,
+        "value" : "pas_un_chiffre"
       },
       "error" : true,
       "success" : false
@@ -26486,11 +26486,11 @@
       "level" : "ERROR",
       "message" : "invalidFormat",
       "messageParams" : {
-        "value" : "Dates",
         "path" : "dataTypes->site->data->date->components->day->checker->name",
         "lineNumber" : 270,
         "authorizedValues" : " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]",
-        "columnNumber" : 21
+        "columnNumber" : 21,
+        "value" : "Dates"
       },
       "error" : true,
       "success" : false
@@ -39221,11 +39221,11 @@
       "level" : "ERROR",
       "message" : "invalidFormat",
       "messageParams" : {
-        "value" : "GroovyExpressions",
         "path" : "dataTypes->site->validations->exempledeDeRegleDeValidation->checker->name",
         "lineNumber" : 325,
         "authorizedValues" : " [RegularExpression, GroovyExpression, Reference, Float, Integer, Date]",
-        "columnNumber" : 17
+        "columnNumber" : 17,
+        "value" : "GroovyExpressions"
       },
       "error" : true,
       "success" : false

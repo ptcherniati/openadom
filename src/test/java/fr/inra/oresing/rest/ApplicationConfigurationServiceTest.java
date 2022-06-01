@@ -857,9 +857,7 @@ public class ApplicationConfigurationServiceTest {
 
     @Test
     public void testMissingReferenceForCheckerInReferenceColumn() {
-        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceForCheckerInReferenceColumn", "altitude:\n" +
-                "      nom du type de plateforme:", "altitude:\n" +
-                "      nom du type de plateforme:\n" +
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferenceForCheckerInReferenceColumn", "nom du site:", "nom du site:\n" +
                 "        checker:\n" +
                 "          name: Reference");
         Assert.assertFalse(configurationParsingResult.isValid());

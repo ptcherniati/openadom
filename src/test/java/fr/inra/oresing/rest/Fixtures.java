@@ -184,6 +184,7 @@ public class Fixtures {
 
     public Map<String, String> getRecursiviteReferentielOrderFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("site", "/data/recursivite/sites.csv");
         referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton-reduit.csv");
         return referentielFiles;
@@ -200,7 +201,7 @@ public class Fixtures {
         referentielErrors.put("invalidHeaders", List.of(
                 "définition_en",
                 "définition_es",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\"],\"missingColumns\":[\"définition_en\"],\"unknownColumns\":[\"définition_es\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingColumns\":[\"définition_en\"],\"unknownColumns\":[\"définition_es\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
         ));
         referentielErrors.put("emptyHeader", List.of(
                 "définition_en",
@@ -227,17 +228,26 @@ public class Fixtures {
                 "x",
                 "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithColumn\",\"messageParams\":{\"target\":{\"column\":\"ordre d'affichage\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
         ));
-        // le message d'erreur n'est pas bon par rapport à l'erreur (l'erreur créée est une duplacation de ligne dans un referentiel et non dans un datatype
         referentielErrors.put("duplicatedLineInReference", List.of(
-                "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;38,22;false;Phytoplancton;38",
+                "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;39,22;false;Phytoplancton;38",
                 "01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
         ));
         // me renvois une erreur "invalidHeaders"
         referentielErrors.put("unexpectedHeaderColumn", List.of(
                 "Date;nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage",
                 "martin",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"martin\"],\"missingColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"unknownColumns\":[\"martin\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"martin\",\"site\"],\"missingColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"unknownColumns\":[\"martin\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("invalidReferenceWithColumn", List.of(
+                "38;",
+                "38;martin",
+                "[{\"validationCheckResult\":{\"target\":{\"column\":\"site\",\"type\":\"PARAM_COLUMN\"},\"level\":\"ERROR\",\"rawValue\":\"martin\",\"matchedReferenceHierarchicalKey\":null,\"matchedReferenceId\":null,\"message\":\"invalidReferenceWithColumn\",\"messageParams\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"error\":true,\"success\":false},\"lineNumber\":39}]"
+        ));
+        referentielErrors.put("patternNotMatchedWithColumn", List.of(
+                "02/01/2016",
+                "12:00:00",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":2}]"
         ));
         return referentielErrors;
     }

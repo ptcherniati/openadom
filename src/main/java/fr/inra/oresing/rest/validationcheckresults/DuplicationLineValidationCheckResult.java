@@ -19,7 +19,11 @@ public class DuplicationLineValidationCheckResult implements ValidationCheckResu
 
     public DuplicationLineValidationCheckResult(FileType filetype, String file, ValidationLevel level, Ltree hierarchicalKey, int currentLineNumber, SortedSet<Integer> otherLines) {
         this.level = level;
-        this.message = FileType.DATATYPE.message;
+        if(FileType.REFERENCES.message != null){
+            this.message = FileType.REFERENCES.message;
+        } else {
+            this.message = FileType.DATATYPE.message;
+        }
         this.messageParams = ImmutableMap.of(
                     "file", file,
                 "lineNumber", currentLineNumber,
