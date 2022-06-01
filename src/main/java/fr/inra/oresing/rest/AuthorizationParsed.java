@@ -9,7 +9,7 @@ import java.util.Map;
 @Value
 public class AuthorizationParsed {
     List<String> dataGroup;
-    Map<String, String> requiredauthorizations;
+    Map<String, String> requiredAuthorizations;
     LocalDate fromDay;
     LocalDate toDay;
 }

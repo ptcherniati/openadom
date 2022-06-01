@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @ToString
 public class Configuration {
 
-    @ApiModelProperty(notes = "The set of requiredAuthorization of data.authorization section. Fill by aplication", required = false, hidden = true)
+    @ApiModelProperty(notes = "The set of requiredAuthorizations of data.authorization section. Fill by aplication", required = false, hidden = true)
     private List<String> requiredAuthorizationsAttributes;
 
     @ApiModelProperty(notes = "The version number of the yaml schema used to read the deposited yaml", required = true, example = "1")

@@ -97,7 +97,7 @@ public class AuthorizationResourcesTest {
                     "   \"authorizations\":{\n" +
                     "   \"extraction\":[\n" +
                     "      {\n" +
-                    "         \"requiredauthorizations\":{\n" +
+                    "         \"requiredAuthorizations\":{\n" +
                     "            \"localization\":\"theix.theix__22\"\n" +
                     "         },\n" +
                     "         \"dataGroup\":[\n" +
@@ -176,7 +176,7 @@ public class AuthorizationResourcesTest {
                     "   \"authorizations\":{\n" +
                     "   \"extraction\":[\n" +
                     "      {\n" +
-                    "         \"requiredauthorizations\":{\n" +
+                    "         \"requiredAuthorizations\":{\n" +
                     "            \"localization\":\"bimont.bim13\",\n" +
                     "            \"projet\":\"sou\"\n" +
                     "         },\n" +

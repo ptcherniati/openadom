@@ -96,7 +96,7 @@ public class AuthorizationService {
                                 .map(Map::keySet)
                                 .orElseGet(Set::of);
                         Preconditions.checkArgument(
-                                labels.containsAll(authorization.getRequiredauthorizations().keySet())
+                                labels.containsAll(authorization.getRequiredAuthorizations().keySet())
                         );
                     });
                 });
@@ -242,7 +242,7 @@ public class AuthorizationService {
                 } else {
                     toDay = null;
                 }
-                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), Maps.transformValues(authorization.getRequiredauthorizations(), Ltree::getSql), fromDay, toDay));
+                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), Maps.transformValues(authorization.getRequiredAuthorizations(), Ltree::getSql), fromDay, toDay));
             }
             transformedAuthorizations.put(operationTypeListEntry.getKey(), authorizationsParsed);
         }

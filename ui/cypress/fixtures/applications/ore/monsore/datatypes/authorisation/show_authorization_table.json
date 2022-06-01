@@ -17,7 +17,7 @@
       "depot": [
         {
           "dataGroup": [],
-          "requiredauthorizations": {
+          "requiredAuthorizations": {
             "projet": "projet_atlantique"
           },
           "fromDay": null,
@@ -27,7 +27,7 @@
       "extraction": [
         {
           "dataGroup": [],
-          "requiredauthorizations": {
+          "requiredAuthorizations": {
             "projet": "projet_atlantique"
           },
           "fromDay": null,

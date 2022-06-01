@@ -42,13 +42,13 @@ CREATE INDEX ref_refvalues_index ON ReferenceValue USING gin (refValues);
 --CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
 CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
 
-CREATE TYPE ${applicationSchema}.requiredauthorizations AS
+CREATE TYPE ${applicationSchema}.requiredAuthorizations AS
 (
-    ${requiredauthorizations}
+    ${requiredAuthorizations}
 );
 CREATE TYPE ${applicationSchema}."authorization" AS
 (
-    requiredauthorizations ${applicationSchema}.requiredauthorizations,
+    requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
     datagroup              text[],
     timescope              tsrange
 );
@@ -63,7 +63,7 @@ BEGIN
     select exists(select 1
                   into result
                   from unnest("authorizedArray") authorized
-                  where ${requiredauthorizationscomparing}
+                  where ${requiredAuthorizationscomparing}
                   ((("authorized").datagroup = array []::TEXT[]) or
                    ((authorized).datagroup @> COALESCE(("authorization").datagroup, array []::TEXT[])))
                       and ((("authorized").timescope = '(,)'::tsrange) or
@@ -129,11 +129,11 @@ CREATE TABLE oresisynthesis
     application entityref,
     datatype text COLLATE pg_catalog."default",
     variable text COLLATE pg_catalog."default",
-    requiredauthorizations ${applicationSchema}.requiredauthorizations,
+    requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
     aggregation text COLLATE pg_catalog."default",
     ranges tsrange[],
     CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id),
-    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredauthorizations, aggregation)
+    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredAuthorizations, aggregation)
 );
 CREATE INDEX by_datatype_index ON oresisynthesis(application, aggregation,  datatype);
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);

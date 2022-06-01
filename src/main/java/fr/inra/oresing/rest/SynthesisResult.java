@@ -12,14 +12,14 @@ public class SynthesisResult {
     private UUID application;
     private String datatype;
     private String variable;
-    private Map<String, String> requiredauthorizations;
+    private Map<String, String> requiredAuthorizations;
     private String aggregation;
     private List<LocalDateTimeRangeResult> ranges;
     public SynthesisResult(OreSiSynthesis synthesis) {
         this.application = synthesis.getApplication();
         this.datatype = synthesis.getDatatype();
         this.variable = synthesis.getVariable();
-        this.requiredauthorizations = synthesis.getRequiredauthorizations();
+        this.requiredAuthorizations = synthesis.getRequiredAuthorizations();
         this.aggregation = synthesis.getAggregation();
         this.ranges = Optional.of(synthesis)
                 .map(OreSiSynthesis::getRanges)
