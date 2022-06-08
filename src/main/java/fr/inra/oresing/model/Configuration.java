@@ -81,6 +81,7 @@ public class Configuration {
         reference.getValue().getValidations().values().stream()
                 .filter(Objects::nonNull)
                 .map(LineValidationRuleWithColumnsDescription::getChecker)
+                .filter(Objects::nonNull)
                 .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
@@ -90,6 +91,7 @@ public class Configuration {
         reference.getValue().getComputedColumns().values().stream()
                 .filter(Objects::nonNull)
                 .map(ReferenceStaticComputedColumnDescription::getChecker)
+                .filter(Objects::nonNull)
                 .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
@@ -99,6 +101,7 @@ public class Configuration {
         reference.getValue().getColumns().values().stream()
                 .filter(Objects::nonNull)
                 .map(ReferenceStaticColumnDescription::getChecker)
+                .filter(Objects::nonNull)
                 .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
