@@ -256,7 +256,21 @@ public class AuthorizationService {
         ImmutableSortedSet<GetGrantableResult.User> users = getGrantableUsers();
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = getDataGroups(application, dataType);
         ImmutableSortedSet<GetGrantableResult.AuthorizationScope> authorizationScopes = getAuthorizationScopes(application, dataType);
-        return new GetGrantableResult(users, dataGroups, authorizationScopes);
+        ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> columnDescriptions = getColumnDescripton(configuration, dataType);
+        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions);
+    }
+
+    private ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> getColumnDescripton(Configuration configuration, String dataType) {
+        return  ImmutableSortedMap.copyOf(Optional.ofNullable(configuration)
+                .map(Configuration::getDataTypes)
+                .map(dty -> dty.get(dataType))
+                .map(Configuration.DataTypeDescription::getAuthorization)
+                .map(Configuration.AuthorizationDescription::getColumnsDescription)
+                .orElseGet(HashMap::new)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(columDescription -> columDescription.getKey(), columDescription -> new GetGrantableResult.ColumnDescription(columDescription.getValue().isDisplay(), columDescription.getValue().getTitle(), columDescription.getValue().isWithPeriods(), columDescription.getValue().isWithDataGroups(), columDescription.getValue().getInternationalizationName()))));
+
     }
 
     private ImmutableSortedSet<GetGrantableResult.DataGroup> getDataGroups(Application application, String dataType) {

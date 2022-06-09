@@ -10,4 +10,5 @@ import java.util.Map;
 public class InternationalizationAuthorisationMap {
     Map<String, InternationalizationAuthorisationName> dataGroups;
     Map<String, InternationalizationAuthorisationName> authorizationScopes;
+    Map<String, InternationalizationAuthorisationName> columnsDescription;
 }

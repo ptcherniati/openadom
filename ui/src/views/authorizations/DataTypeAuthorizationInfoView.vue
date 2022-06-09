@@ -75,7 +75,7 @@
                 v-for="(column, indexColumn) of columnsVisible"
                 :key="indexColumn"
                 :field="indexColumn"
-                :label="column.title"
+                :label="getColumnTitle(column)"
                 class="column"
             ></b-field>
           </div>
@@ -153,6 +153,24 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
 
+  columnsVisible = {
+    label: {title: "Label", display: true, internationalizationName:{fr:"Domaine",  en:"Domain"}}
+  };
+  period = this.periods.FROM_DATE_TO_DATE;
+  startDate = null;
+  endDate = null;
+  applications = [];
+  configuration = {};
+  authReferences = {};
+  subMenuPaths = [];
+
+  selectedUsers = []
+
+
+  getColumnTitle(column){
+    return  (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) || column.title
+  }
+
   modifyAuthorization(event) {
     var authorization = this.authorization
     var authorizations = authorization.authorizations[event.indexColumn] || []
@@ -169,25 +187,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     authorization.authorizations[event.indexColumn] = authorizations
     this.authorization = new Authorizations(authorization, this.authorizationScopes.map(as => as.id))
   }
-
-  columnsVisible = {
-    label: {title: "Label", display: true},
-    //dataGroups: {title: this.$t('dataTypeAuthorizations.data-groups'), display: true},
-    suppression: {title: "Suprression", display: true},
-    extraction: {title: "Extraction", display: true},
-    admin: {title: "Admin", display: true},
-    depot: {title: "Dépôt", display: true},
-    publication: {title: "Publication", display: true},
-  };
-  period = this.periods.FROM_DATE_TO_DATE;
-  startDate = null;
-  endDate = null;
-  applications = [];
-  configuration = {};
-  authReferences = {};
-  subMenuPaths = [];
-
-  selectedUsers = []
 
   async created() {
     this.init();
@@ -260,7 +259,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
-
+      this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription}
       if (this.authorizationId != 'new') {
         var authorizations = await this.authorizationService.getAuthorizations(
             this.applicationName,
