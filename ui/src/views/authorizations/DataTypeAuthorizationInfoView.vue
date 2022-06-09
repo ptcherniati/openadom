@@ -65,6 +65,7 @@
           :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
           :authorization="authorization"
           :current-authorization-scope="{}"
+          :is-root="true"
           class="rows"
           @modifyAuthorization="modifyAuthorization($event)"
       >
@@ -153,7 +154,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   modifyAuthorization(event) {
-    console.log('modifyAuthorization', event.authorizations, event.indexcolumn)
     var authorization = this.authorization
     var authorizations = authorization.authorizations[event.indexColumn] || []
     for (const authorizationKeytoAdd in event.authorizations.toAdd) {
@@ -162,7 +162,9 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     for (const authorizationKeytoDelete in event.authorizations.toDelete) {
       var toDeleteElement = event.authorizations.toDelete[authorizationKeytoDelete];
       authorizations = authorizations
-          .filter(auth=>!new Authorization(auth).equals(toDeleteElement, this.authorizationScopes.map(scope=>scope.id)));
+          .filter(auth=>{
+            return !new Authorization(auth).equals(toDeleteElement, this.authorizationScopes.map(scope=>scope.id))
+          });
     }
     authorization.authorizations[event.indexColumn] = authorizations
     this.authorization = new Authorizations(authorization, this.authorizationScopes.map(as => as.id))

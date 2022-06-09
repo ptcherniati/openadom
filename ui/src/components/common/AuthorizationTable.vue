@@ -42,7 +42,7 @@
                 class="column"
             >
               <b-icon
-                  :icon="STATES[states[indexColumn][getPath(index)]] || STATES[0]"
+                  :icon="STATES[states[indexColumn][getPath(index)].state] || STATES[0]"
                   size="is-medium"
                   type="is-primary"
                   @click.native="selectCheckbox($event, index, indexColumn)"
@@ -56,7 +56,7 @@
             >
               <div class="column">
                 <b-icon
-                    :icon="STATES[states[indexColumn][getPath(index)]] || STATES[0]"
+                    :icon="STATES[states[indexColumn][getPath(index)].state] || STATES[0]"
                     size="is-medium"
                     type="is-primary"
                     @click.native="selectCheckbox($event, index, indexColumn)"
@@ -134,6 +134,7 @@
               :path="getPath(index)"
               :remaining-option="getRemainingOption(scope)"
               :required-authorizations="{}"
+              :authorization-scopes="authorizationScopes"
               :current-authorization-scope="getCurrentAuthorizationScope(scope)"
               @set-indetermined="eventSetIndetermined($event, index)"
           />
@@ -146,6 +147,7 @@
 <script>
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import {Authorization} from "@/model/authorization/Authorization";
 //import { Authorization } from "@/model/authorization/Authorization";
 
 @Component({
@@ -158,10 +160,12 @@ export default class AuthorizationTable extends Vue {
   @Prop() remainingOption;//array of next nodes
   @Prop() columnsVisible;// infos for columns
   @Prop({default: ""}) path;
+  @Prop({default: false}) isRoot;
   @Prop() dataGroups; // array of the datagroups in  authorization configuration
   @Prop() authorization; //the authorizations scope from authorization configuration
-  @Prop() currentAuthorizationScope; //the authorizations scope from authorization configuration
-  emits = ['modifyAuthorization', 'set-indetermined']
+  @Prop() authorizationScopes; //the authorizationsscope from authorization configuration
+  @Prop() currentAuthorizationScope; //the current authorizations scope
+  emits = ['modifyAuthorization', 'set-indetermined', 'allCheckedChildren']
   name = "AuthorizationTable";
   open = {};
   upHere = false;
@@ -170,7 +174,6 @@ export default class AuthorizationTable extends Vue {
 
   @Watch('authorization')
   onAuthorizationChanged(auth) {
-    console.log('authorization changed', auth)
     this.authorization = auth
     this.updateStates()
 
@@ -188,8 +191,9 @@ export default class AuthorizationTable extends Vue {
       }
       states[column] = {}
       for (const authReferenceKey in this.authReference) {
-        var currentPath = this.getPath(authReferenceKey)
-        states[column][currentPath] = this.authorization.getState(column, currentPath)
+        let currentPath = this.getPath(authReferenceKey)
+        let state = this.authorization.getState(column, currentPath)
+        states[column][currentPath] = state
       }
     }
     this.states = states
@@ -243,14 +247,14 @@ export default class AuthorizationTable extends Vue {
 
   selectCheckbox(event, index, indexColumn, authorizations) {
     var eventToEmit
-      let checkedAuthorization,authorization,requiredAuthorizations,authReference
+    let checkedAuthorization, authorization, requiredAuthorizations, authReference
     if (!indexColumn || !event) {
       return
     }
     var stateElement = this.states[indexColumn][this.getPath(index)]
     var currentPath = this.getPath(index)
-      authorizations = authorizations || {toDelete:[], toAdd:[]}
-    if (stateElement) {
+    authorizations = authorizations || {toDelete: [], toAdd: []}
+    if (stateElement.state == 1) {
       checkedAuthorization = this.authorization.getCheckedAuthorization(indexColumn, currentPath)
       if (checkedAuthorization.scopeKey == currentPath) {
         authorizations.toDelete.push(checkedAuthorization.auth)
@@ -258,6 +262,7 @@ export default class AuthorizationTable extends Vue {
         this.$emit("modifyAuthorization", eventToEmit)
       } else {
         var indetermined = false
+        var count = 0;
         for (const authReferenceKey in this.authReference) {
           if (authReferenceKey != index) {
             authorization = {...checkedAuthorization.auth}
@@ -265,17 +270,33 @@ export default class AuthorizationTable extends Vue {
             authReference = this.authReference[authReferenceKey]
             requiredAuthorizations[authReference.authorizationScope] = authReference.currentPath
             authorization.requiredAuthorizations = requiredAuthorizations
-             authorizations.toAdd.push(authorization)
+            authorizations.toAdd.push(authorization)
             //this.$emit("addAuthorization", eventToEmit)
             indetermined = true
           }
         }
         eventToEmit = {event, index, indexColumn, authorizations};
-        if (indetermined) {
+        if (indetermined || !count) {
           this.$emit("set-indetermined", eventToEmit)
-        }else{
-          this.$emit("addAuthorization", eventToEmit)
+        } else {
+          this.$emit("modifyAuthorization", eventToEmit)
         }
+      }
+    } else {
+      let reference = this.authReference[index]
+      requiredAuthorizations = this.currentAuthorizationScope || {}
+      requiredAuthorizations[reference.authorizationScope] = reference.currentPath
+      let currentAuthorization = new Authorization({requiredAuthorizations})
+      let currentPath = currentAuthorization.getPath(this.authorizationScopes.map(as => as.id))
+      let dependants = this.authorization.getDependants(indexColumn, currentPath)
+      authorizations.toDelete = [...authorizations.toDelete, ...dependants]
+      if ((Object.values(this.states[indexColumn]).filter(s => s.state != 1).length - 1) || this.isRoot) {
+        authorizations.toAdd.push(currentAuthorization)
+        eventToEmit = {event, index, indexColumn, authorizations};
+        this.$emit("modifyAuthorization", eventToEmit)
+      } else {
+        eventToEmit = {event, index, indexColumn, authorizations};
+        this.$emit("set-indetermined", eventToEmit)
       }
     }
   }

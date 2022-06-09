@@ -39,7 +39,7 @@ export class Authorization {
     parse() {
         return {
             requiredAuthorizations: this.requiredAuthorizations,
-            dataGroup: (this.dataGroups || []).map((dataGroups) => dataGroups.id),
+            dataGroups: (this.dataGroups || []).map((dataGroups) => dataGroups.id),
             intervalDates: {
                 fromDay: this.parseDate(this.from),
                 toDay: this.parseDate(this.to),
