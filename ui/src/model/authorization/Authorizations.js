@@ -13,24 +13,25 @@ export class Authorizations {
 
     #scopesId = []
     scopes = {}
-    application = "";
+    uuid="";
+    applicationNameOrId = "";
     dataType = "";
-    id = "";
     name = "";
     users = [];
     authorizations = this.ROLE;
 
     constructor(authorizations, authorizationsScope) {
         this.#scopesId = authorizationsScope
-        this.users = authorizations.users;
+        this.users = authorizations.users || [];
+        this.applicationNameOrId = authorizations.applicationNameOrId
         this.dataType = authorizations.dataType;
         this.name = authorizations.name;
-        this.id = authorizations.id;
+        this.uuid = authorizations.uuid;
         this.#initStates(authorizations.authorizations);
     }
 
     #initStates(authorizations) {
-        this.authorizations = authorizations;
+        this.authorizations = authorizations || {};
         this.scopes ={}
         for (const scope in authorizations) {
             const scopeId = this.#scopesId;
@@ -67,8 +68,10 @@ export class Authorizations {
                 if (path.startsWith(pathToCompare)) {
                     state.fromPath = pathToCompare
                     state.fromAuthorization = authorizationElement
-                    state.from = authorizationElement.from
-                    state.to = authorizationElement.to
+                    state.fromDay = authorizationElement.fromDay
+                    state.toDay = authorizationElement.toDay
+                    state.from = authorizationElement.fromDay?new Date(authorizationElement.fromDay):null
+                    state.to =authorizationElement.toDay? new Date(authorizationElement.toDay):null
                     state.dataGroups = authorizationElement.dataGroups
                 }
             }

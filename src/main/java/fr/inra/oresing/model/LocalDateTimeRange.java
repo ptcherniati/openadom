@@ -16,7 +16,7 @@ import java.util.List;
  * https://www.postgresql.org/docs/current/rangetypes.html
  */
 @Value
-public class LocalDateTimeRange {
+public class  LocalDateTimeRange {
 
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Value
 public class GetAuthorizationResult {
-    UUID id;
+    UUID uuid;
     String name;
     Set<OreSiUser> users;
     UUID application;

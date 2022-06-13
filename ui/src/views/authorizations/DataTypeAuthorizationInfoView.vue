@@ -68,6 +68,7 @@
           :is-root="true"
           class="rows"
           @modifyAuthorization="modifyAuthorization($event)"
+          @registerCurrentAuthorization="registerCurrentAuthorization($event)"
       >
         <div class="row">
           <div class="columns">
@@ -99,7 +100,6 @@
 <script>
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import {DataTypeAuthorization} from "@/model/DataTypeAuthorization";
 import {AlertService} from "@/services/AlertService";
 import {ApplicationService} from "@/services/rest/ApplicationService";
 import {AuthorizationService} from "@/services/rest/AuthorizationService";
@@ -138,7 +138,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
-  authorization = new DataTypeAuthorization(this.applicationName, this.dataTypeId);
+  authorization = {};
   authorizations = [];
   users = [];
   name = null;
@@ -154,7 +154,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   columnsVisible = {
-    label: {title: "Label", display: true, internationalizationName:{fr:"Domaine",  en:"Domain"}}
+    label: {title: "Label", display: true, internationalizationName: {fr: "Domaine", en: "Domain"}}
   };
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
@@ -167,8 +167,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   selectedUsers = []
 
 
-  getColumnTitle(column){
-    return  (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) || column.title
+  getColumnTitle(column) {
+    return (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) || column.title
   }
 
   modifyAuthorization(event) {
@@ -180,10 +180,28 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     for (const authorizationKeytoDelete in event.authorizations.toDelete) {
       var toDeleteElement = event.authorizations.toDelete[authorizationKeytoDelete];
       authorizations = authorizations
-          .filter(auth=>{
-            return !new Authorization(auth).equals(toDeleteElement, this.authorizationScopes.map(scope=>scope.id))
+          .filter(auth => {
+            return !new Authorization(auth).equals(toDeleteElement, this.authorizationScopes.map(scope => scope.id))
           });
     }
+    authorization.authorizations[event.indexColumn] = authorizations
+    this.authorization = new Authorizations(authorization, this.authorizationScopes.map(as => as.id))
+  }
+
+  registerCurrentAuthorization(event) {
+    var authorization = this.authorization
+    var authorizations = authorization.authorizations[event.indexColumn] || []
+    var authorizationToReplace = event.authorizations;
+    authorizationToReplace.fromDay = authorizationToReplace.from && [authorizationToReplace.from.getFullYear(), authorizationToReplace.from.getMonth()+1,authorizationToReplace.from.getDate()]
+    authorizationToReplace.toDay = authorizationToReplace.to && [authorizationToReplace.to.getFullYear(),authorizationToReplace.to.getMonth()+1,authorizationToReplace.to.getDate()]
+    authorizations = authorizations
+        .map(auth => {
+          if (!new Authorization(auth).equals(authorizationToReplace, this.authorizationScopes.map(scope => scope.id))) {
+            return auth
+          } else {
+            return authorizationToReplace
+          }
+        });
     authorization.authorizations[event.indexColumn] = authorizations
     this.authorization = new Authorizations(authorization, this.authorizationScopes.map(as => as.id))
   }
@@ -268,19 +286,17 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         );
         authorizations = new Authorizations(authorizations, this.authorizationScopes.map(as => as.id));
         this.authorization = authorizations;
+      }else{
+        this.authorization =  new Authorizations({dataType:this.dataTypeId, applicationNameOrId : this.applicationName}, this.authorizationScopes.map(as => as.id));
       }
+      let currentAuthorizationUsers = this.authorization.users || []
       this.selectedUsers = this.users.filter((user) => {
-        return this.authorization.users.find((u) => {
+        return currentAuthorizationUsers.find((u) => {
           return u.id == user.id
         })
       })
           .map(user => user.id)
       grantableInfos.authorizationScopes.reverse();
-      // this.authorizationScopes[0].options[0].children[0].children.push({
-      //   children: [],
-      //   id: "toto",
-      //   label: "toto",
-      // });
       let ret = {};
       for (let auth in grantableInfos.authorizationScopes) {
         let authorizationScope = grantableInfos.authorizationScopes[auth];
@@ -340,24 +356,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     } catch (error) {
       this.alertService.toastServerError(error);
     }
-
-    /*this.authorizationsTree = {
-      "publication": {
-        "projet_atlantique": {
-          "bassin_versant": {
-            "nivelle": new Authorization(),
-            "oir": new Authorization()
-          },
-          plateforme: new Authorization(),
-        },
-      },
-      depot: {
-        projet_manche: new Authorization(),
-      },
-      "depot": {
-        "projet_manche": new Authorization()
-        }
-    };*/
   }
 
   async partitionReferencesValues(
@@ -459,10 +457,20 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   async createAuthorization() {
 
     try {
+      let authorizationToSend =  {...this.authorization, dataType: this.dataTypeId,applicationNameOrId:this.applicationName  }
+      authorizationToSend.usersId =  this.selectedUsers
+      for (const scope in authorizationToSend.authorizations) {
+        authorizationToSend.authorizations[scope] = authorizationToSend.authorizations[scope].map(auth =>{
+          var returnedAuth = new Authorization(auth)
+          returnedAuth.intervalDates = {fromDay:returnedAuth.fromDay,toDay: returnedAuth.toDay}
+         returnedAuth.dataGroups =  returnedAuth.dataGroups.map(dg=>dg.id ||dg)
+          return returnedAuth
+        });
+      }
       await this.authorizationService.createAuthorization(
           this.applicationName,
           this.dataTypeId,
-          this.authorization
+          authorizationToSend
       );
       this.alertService.toastSuccess(this.$t("alert.create-authorization"));
       this.$router.push(

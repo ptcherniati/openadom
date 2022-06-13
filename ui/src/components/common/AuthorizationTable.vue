@@ -47,7 +47,7 @@
                   type="is-primary"
                   @click.native="selectCheckbox($event, index, indexColumn)"
               />
-              <b-tooltip position="is-top">
+<!--              <b-tooltip position="is-bottom">
                 <b-icon
                     v-if="(
                         (column.withDataGroups && dataGroups.length>1)
@@ -67,7 +67,7 @@
                         || column.withPeriods)">ou </span>
                       <b v-if="column.withDataGroups && dataGroups.length>1">des groupes de données </b>
                       <br/>
-                    veuillez d'abord selectionner le droit.
+                      veuillez d'abord selectionner le droit.
                     </p>
                   </div>
                   <div v-else-if="states[indexColumn][getPath(index)].state == -1">
@@ -84,87 +84,50 @@
                       Des limitations sont en cours sur des enfants, elles seront remplacées.
                     </p>
                   </div>
-                  <div v-else class="has-background-primary">Permet de limiter le droit à
-                      <b v-if="column.withPeriods">une période </b>
-                      <span v-if="(
+                  <div v-else class="has-background-primary show-detail-for-selected">
+                    Permet de limiter le droit à
+                    <b v-if="column.withPeriods">une période </b>
+                    <span v-if="(
                         (column.withDataGroups && dataGroups.length>1)
                         || column.withPeriods)">ou </span>
-                      <b v-if="column.withDataGroups && dataGroups.length>1">des groupes de données </b>
-                      <br/></div>
+                    <b v-if="column.withDataGroups && dataGroups.length>1">des groupes de données </b>
+                    <div>
+                      <div class="title2">Période</div>
+                      <div v-if="states[indexColumn][getPath(index)].from || states[indexColumn][getPath(index)].to">
+                      <span v-if="states[indexColumn][getPath(index)].from">
+                        du {{ states[indexColumn][getPath(index)].from.toDateString() }}
+                      </span>
+                        <span v-if="states[indexColumn][getPath(index)].to">
+                        jusqu'au {{ states[indexColumn][getPath(index)].to.toDateString() }}
+                      </span>
+                      </div>
+                      <div v-else>Toutes les dates</div>
+                    </div>
+                    <div>
+                      <div class="title2">Groupes de données</div>
+                      <div v-if="states[indexColumn][getPath(index)].dataGroups &&
+                         states[indexColumn][getPath(index)].dataGroups.length>0">
+                        <span v-for="(datagroup, i) in  states[indexColumn][getPath(index)].dataGroups"
+                              class="tag is-info"
+                              :key="i">
+                          {{ dataGroups.find(dg=>dg.id == datagroup || dg.id ==  datagroup.id).label }}
+                        </span>
+                      </div>
+                      <div v-else>Toutes les variables</div>
+                    </div>
+                  </div>
                 </template>
-              </b-tooltip>
+              </b-tooltip>-->
+              <AuthorizationForPeriodDatagroups
+                  v-if="states[indexColumn][getPath(index)].fromAuthorization"
+                  :column="column"
+                  :dataGroups="dataGroups"
+                  :state="states[indexColumn][getPath(index)]"
+                  :index="index"
+                  :indexColumn="indexColumn"
+                  @registerCurrentAuthorization="$emit('registerCurrentAuthorization',$event)"
+                />
             </b-field>
-            <!--            <b-field
-                            v-else-if="column.display && indexColumn === 'extraction'"
-                            :field="indexColumn"
-                            class="columns"
-                            style="margin-top: 6px"
-                        >
-                          <div class="column">
-                            <b-icon
-                                :icon="STATES[states[indexColumn][getPath(index)].state] || STATES[0]"
-                                size="is-medium"
-                                type="is-primary"
-                                @click.native="selectCheckbox($event, index, indexColumn)"
-                            />
-                            &lt;!&ndash;
-                                            <div
-                                              class="columns"
-                                              v-if="
-                                                states &&
-                                                states[indexColumn] &&
-                                                states[indexColumn][index] === 1 &&
-                                                localAuthorizationsTree &&
-                                                localAuthorizationsTree[indexColumn] &&
-                                                localAuthorizationsTree[indexColumn][index]
-                                              "
-                                            >
-                                              <b-taginput
-                                                v-model="localAuthorizationsTree[indexColumn][index].dataGroups"
-                                                :data="dataGroups"
-                                                :open-on-focus="true"
-                                                :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-                                                :value="dataGroups.id"
-                                                autocomplete
-                                                class="column"
-                                                field="label"
-                                                type="is-primary"
-                                                @input="selectCheckbox($event, index, indexColumn, scope)"
-                                              >
-                                              </b-taginput>
-                                              <div class="column">
-                                                <b-datepicker
-                                                  v-model="localAuthorizationsTree[indexColumn][index].from"
-                                                  :date-parser="parseDate"
-                                                  :placeholder="
-                                                    $t('dataTypesRepository.placeholder-datepicker') +
-                                                    ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
-                                                  "
-                                                  editable
-                                                  icon="calendar"
-                                                  @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
-                                                  @input="selectCheckbox($event, index, indexColumn, scope, 'from')"
-                                                >
-                                                </b-datepicker>
-                                              </div>
-                                              <div class="column">
-                                                <b-datepicker
-                                                  v-model="localAuthorizationsTree[indexColumn][index].to"
-                                                  :date-parser="parseDate"
-                                                  :placeholder="
-                                                    $t('dataTypesRepository.placeholder-datepicker') +
-                                                    ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
-                                                  "
-                                                  editable
-                                                  icon="calendar"
-                                                  @input="selectCheckbox($event, index, indexColumn, scope, 'to')"
-                                                >
-                                                </b-datepicker>
-                                              </div>
-                                            </div>
-                            &ndash;&gt;
-                          </div>
-                        </b-field>-->
           </div>
         </div>
         <ul
@@ -184,6 +147,7 @@
               :current-authorization-scope="getCurrentAuthorizationScope(scope)"
               @setIndetermined="eventSetIndetermined($event, index)"
               @modifyAuthorization="$emit('modifyAuthorization',$event)"
+              @registerCurrentAuthorization="$emit('registerCurrentAuthorization',$event)"
           />
         </ul>
       </div>
@@ -195,10 +159,10 @@
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import {Authorization} from "@/model/authorization/Authorization";
-//import { Authorization } from "@/model/authorization/Authorization";
+import AuthorizationForPeriodDatagroups from "@/components/common/AuthorizationForPeriodDatagroups.vue";
 
 @Component({
-  components: {FontAwesomeIcon},
+  components: {FontAwesomeIcon, AuthorizationForPeriodDatagroups},
 })
 export default class AuthorizationTable extends Vue {
   STATES = {"-1": "minus-square", 0: "square", 1: "check-square"};
@@ -212,12 +176,14 @@ export default class AuthorizationTable extends Vue {
   @Prop() authorization; //the authorizations scope from authorization configuration
   @Prop() authorizationScopes; //the authorizationsscope from authorization configuration
   @Prop() currentAuthorizationScope; //the current authorizations scope
-  emits = ['modifyAuthorization', 'set-indetermined']
+  emits = ['modifyAuthorization', 'set-indetermined', 'registerCurrentAuthorization']
   name = "AuthorizationTable";
   open = {};
   upHere = false;
   remainingScopes = {};
   states = {}
+  currentAuthorization = null
+  showModal = false
 
   @Watch('authorization')
   onAuthorizationChanged(auth) {
@@ -248,12 +214,6 @@ export default class AuthorizationTable extends Vue {
 
   getScope() {
     return this.authorizationScopes?.[0]?.id;
-  }
-
-  parseDate(date) {
-    date =
-        date && date.replace(/(\d{2})\/(\d{2})\/(\d{4})(( \d{2})?(:\d{2})?(:\d{2})?)/, "$3-$2-$1$4");
-    return new Date(date);
   }
 
   initOpen() {
@@ -290,10 +250,6 @@ export default class AuthorizationTable extends Vue {
 
   eventSetIndetermined(event, index) {
     this.selectCheckbox(event.event, index, event.indexColumn, event.authorizations)
-  }
-
-  showDetail(event, index, indexColumn, authorizations) {
-    console.log(event, index, indexColumn, authorizations)
   }
 
   selectCheckbox(event, index, indexColumn, authorizations) {
@@ -426,5 +382,9 @@ p {
 
 .show-check-details {
   margin-left: .6em;
+}
+
+.show-detail-for-selected {
+  height: 60px;
 }
 </style>

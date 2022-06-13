@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 public class Authorization {
     LocalDateTimeRange timeScope;
-    private List<String> dataGroup;
+    private List<String> dataGroups = new LinkedList<>();
     private Map<String, Ltree> requiredAuthorizations;
 
     public Authorization(List<String> dataGroup, Map<String, Ltree> requiredAuthorizations, LocalDateTimeRange timeScope) {
-        this.dataGroup = dataGroup;
+        this.dataGroups = dataGroup;
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
     }
@@ -29,7 +29,7 @@ public class Authorization {
     }
 
     public static String timescopeToSQL(LocalDateTimeRange timeScope) {
-        return String.format("'%s'", timeScope.toSqlExpression());
+        return String.format("'%s'", (timeScope == null ? LocalDateTimeRange.always() : timeScope).toSqlExpression());
     }
 
     public static String datagroupToSQL(List<String> dataGroup) {
@@ -76,8 +76,8 @@ public class Authorization {
             sql.add(requiredAuthorizationsToSQL(requiredAuthorizationsAttributes, getRequiredAuthorizations())
             );
         }
-        if (dataGroup != null) {
-            sql.add(datagroupToSQL(dataGroup));
+        if (dataGroups != null) {
+            sql.add(datagroupToSQL(dataGroups));
         } else {
             sql.add("null::TEXT[]");
         }

@@ -75,7 +75,7 @@
             icon-left="pen-square"
             size="is-small"
             type="primary is-light"
-            @click="modifyAuthorization(props.row.id)"
+            @click="modifyAuthorization(props.row.uuid)"
             style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
           >
           </b-button>
