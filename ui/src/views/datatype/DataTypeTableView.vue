@@ -429,7 +429,7 @@
           type="is-primary"
           @click.prevent="downloadResultSearch"
           style="margin-bottom: 15px; float: right"
-          >Télécharger</b-button
+          >{{$t("referencesManagement.download")}}</b-button
         >
       </div>
     </div>
