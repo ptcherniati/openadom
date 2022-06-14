@@ -109,6 +109,38 @@
                 "localization" : {
                   "internationalizationName" : null
                 }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
+                }
               }
             },
             "internationalizationDisplay" : {
@@ -590,6 +622,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -602,6 +691,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -741,6 +862,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -1223,6 +1376,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -1235,6 +1445,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -1377,6 +1619,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -1859,6 +2133,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -1871,6 +2202,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -1989,6 +2352,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -2471,6 +2866,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -2483,6 +2935,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -2600,6 +3084,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -3076,6 +3592,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -3088,6 +3661,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -3205,6 +3810,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -3687,6 +4324,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -3699,6 +4393,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -3817,6 +4543,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -4299,6 +5057,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -4311,6 +5126,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -4440,6 +5287,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -4911,6 +5790,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -4923,6 +5859,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -5041,6 +6009,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -5523,6 +6523,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -5535,6 +6592,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -5654,6 +6743,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -6136,6 +7257,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -6148,6 +7326,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -6266,6 +7476,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -6748,6 +7990,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -6760,6 +8059,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -6878,6 +8209,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -7360,6 +8723,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -7372,6 +8792,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -7489,6 +8941,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -7971,6 +9455,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -7983,6 +9524,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -8004,7 +9577,7 @@
         "compilationError" : {
           "lineNumber" : -1,
           "columnNumber" : -1,
-          "message" : "startup failed:\nScript32.groovy: 1: unexpected token: } @ line 1, column 4.\n   if(}\n      ^\n\n1 error\n"
+          "message" : "startup failed:\nScript7.groovy: 1: unexpected token: } @ line 1, column 4.\n   if(}\n      ^\n\n1 error\n"
         }
       },
       "error" : true,
@@ -8106,6 +9679,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -8588,6 +10193,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -8600,6 +10262,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -8716,6 +10410,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -9198,6 +10924,63 @@
                 "data" : [ "localization", "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -9210,6 +10993,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -9328,6 +11143,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -9810,6 +11657,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -9822,6 +11726,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -9940,6 +11876,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -10422,6 +12390,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -10434,6 +12459,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -10554,6 +12611,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -11036,6 +13125,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -11048,6 +13194,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -11167,6 +13345,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -11649,6 +13859,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -11661,6 +13928,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -11779,6 +14078,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -12261,6 +14592,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -12273,6 +14661,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -12392,6 +14812,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -12874,6 +15326,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -12886,6 +15395,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -13005,6 +15546,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -13470,6 +16043,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -13482,6 +16112,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -13600,6 +16262,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -14082,6 +16776,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -14094,6 +16845,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -14210,6 +16993,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -14692,6 +17507,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -14704,6 +17576,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -14830,6 +17734,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -15312,6 +18248,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -15324,6 +18317,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -15452,6 +18477,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -15934,6 +18991,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -15946,6 +19060,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -16078,6 +19224,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -16560,6 +19738,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -16572,6 +19807,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -16690,6 +19957,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -17172,6 +20471,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -17184,6 +20540,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -17315,6 +20703,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -17797,6 +21217,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -17809,6 +21286,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -17943,6 +21452,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -18425,6 +21966,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -18437,6 +22035,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -18557,6 +22187,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -19039,6 +22701,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -19051,6 +22770,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -19169,6 +22920,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -19651,6 +23434,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -19663,6 +23503,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -19793,6 +23665,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -20275,6 +24179,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -20287,6 +24248,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -20420,6 +24413,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -20902,6 +24927,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -20914,6 +24996,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -21032,6 +25146,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -21519,6 +25665,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -21531,6 +25734,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -21647,6 +25882,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -22129,6 +26396,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -22141,6 +26465,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }
@@ -22261,6 +26617,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             },
@@ -22743,6 +27131,63 @@
                 "data" : [ "Nombre d'individus", "Couleur des individus" ]
               }
             },
+            "columnsDescription" : {
+              "depot" : {
+                "internationalizationName" : {
+                  "en" : "Deposit",
+                  "fr" : "Dépôt"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "depot",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "publication" : {
+                "internationalizationName" : {
+                  "en" : "Publication",
+                  "fr" : "Publication"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "publication",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "admin" : {
+                "internationalizationName" : {
+                  "en" : "Administration",
+                  "fr" : "Administration"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "admin",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              },
+              "extraction" : {
+                "internationalizationName" : {
+                  "en" : "Extraction",
+                  "fr" : "Extraction"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "extraction",
+                "withPeriods" : true,
+                "withDataGroups" : true
+              },
+              "delete" : {
+                "internationalizationName" : {
+                  "en" : "Deletion",
+                  "fr" : "Suppression"
+                },
+                "internationalizedColumns" : null,
+                "display" : true,
+                "title" : "delete",
+                "withPeriods" : false,
+                "withDataGroups" : false
+              }
+            },
             "internationalization" : {
               "dataGroups" : {
                 "referentiel" : {
@@ -22755,6 +27200,38 @@
               "authorizationScopes" : {
                 "localization" : {
                   "internationalizationName" : null
+                }
+              },
+              "columnsDescription" : {
+                "depot" : {
+                  "internationalizationName" : {
+                    "en" : "Deposit",
+                    "fr" : "Dépôt"
+                  }
+                },
+                "publication" : {
+                  "internationalizationName" : {
+                    "en" : "Publication",
+                    "fr" : "Publication"
+                  }
+                },
+                "admin" : {
+                  "internationalizationName" : {
+                    "en" : "Administration",
+                    "fr" : "Administration"
+                  }
+                },
+                "extraction" : {
+                  "internationalizationName" : {
+                    "en" : "Extraction",
+                    "fr" : "Extraction"
+                  }
+                },
+                "delete" : {
+                  "internationalizationName" : {
+                    "en" : "Deletion",
+                    "fr" : "Suppression"
+                  }
                 }
               }
             }

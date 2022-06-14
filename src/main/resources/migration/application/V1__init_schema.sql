@@ -49,7 +49,7 @@ CREATE TYPE ${applicationSchema}.requiredAuthorizations AS
 CREATE TYPE ${applicationSchema}."authorization" AS
 (
     requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
-    datagroup              text[],
+    datagroups              text[],
     timescope              tsrange
 );
 
@@ -64,8 +64,8 @@ BEGIN
                   into result
                   from unnest("authorizedArray") authorized
                   where ${requiredAuthorizationscomparing}
-                  ((("authorized").datagroup = array []::TEXT[]) or
-                   ((authorized).datagroup @> COALESCE(("authorization").datagroup, array []::TEXT[])))
+                  ((("authorized").datagroups = array []::TEXT[]) or
+                   ((authorized).datagroups @> COALESCE(("authorization").datagroups, array []::TEXT[])))
                       and ((("authorized").timescope = '(,)'::tsrange) or
                            (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
                );
@@ -88,8 +88,8 @@ create table Data
     dataType        TEXT
         constraint name_check CHECK (name_check(application, 'dataType', dataType)),
     rowId           TEXT                                                             NOT NULL,
-    datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED NOT NULL,
-    "authorization" ${applicationSchema}.authorization                               NOT NULL check (("authorization").datagroup[1] is not null),
+    datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroups[1]) STORED NOT NULL,
+    "authorization" ${applicationSchema}.authorization    NOT NULL check (("authorization").datagroups[1] is not null),
     refsLinkedTo    jsonb ,
     uniqueness      jsonb,
     dataValues      jsonb,
@@ -108,7 +108,7 @@ CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo jsonb_path_
 CREATE INDEX data_refvalues_index ON Data USING gin (dataValues jsonb_path_ops);
 
 ALTER TABLE Data
-    ADD CONSTRAINT row_uniqueness UNIQUE (rowId, dataGroup);
+    ADD CONSTRAINT row_uniqueness UNIQUE (rowId, datagroup);
 
 CREATE TABLE OreSiAuthorization
 (

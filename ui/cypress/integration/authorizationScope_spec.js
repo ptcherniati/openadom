@@ -76,7 +76,7 @@ describe('test authorization application', () => {
         cy.setLocale('fr');
     });
 
-    /*it('Test authorization monsore pem', () => {
+    it('Test authorization monsore pem', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
 
@@ -109,11 +109,11 @@ describe('test authorization application', () => {
         cy.get('div.rows > :nth-child(1) > :nth-child(2) > :nth-child(1) > :nth-child(2) > .field > .column > .icon').get(['data-icon=check-square'])
         cy.fixture('applications/ore/monsore/datatypes/authorisation/post_authorization.json').then(postAuthorization)
         cy.get('.buttons > .button').click()
-    })*/
+    })
 
 
 
-   /* it('Test une autre authorization monsore pem', () => {
+    it('Test une autre authorization monsore pem', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
 
@@ -143,7 +143,7 @@ describe('test authorization application', () => {
         cy.get('div.rows > :nth-child(1) > :nth-child(2) > :nth-child(1) > :nth-child(2) > .field > .column > .icon').get(['data-icon=check-square'])
         cy.fixture('applications/ore/monsore/datatypes/authorisation/post_authorization.json').then(postAuthorization)
         cy.get('.buttons > .button').click()
-    })*/
+    })
     it('Test une autre authorization monsore pem', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
