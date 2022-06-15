@@ -1591,7 +1591,6 @@ describe('test authorization application', () => {
 
         let returnErrors = {};
         for (const methodName in errors) {
-            console.log("coucou :", methodName, errors[methodName])
             cy.intercept(
                 'POST',
                 'http://localhost:8081/api/v1/applications/ola/references/thematic', {
@@ -1604,7 +1603,7 @@ describe('test authorization application', () => {
                     fileName: 'variable.csv',
                     mimeType: 'text/csv'
                 })
-            cy.get('.delete').click().parents()
+            cy.get('.delete').click({force: true})
         }
     })
 })
