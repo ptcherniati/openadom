@@ -1604,7 +1604,7 @@ describe('test authorization application', () => {
                     fileName: 'variable.csv',
                     mimeType: 'text/csv'
                 })
-            cy.get('.delete').click()
+            cy.get('.delete').click().parents()
         }
     })
 })
