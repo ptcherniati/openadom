@@ -1,1 +1,159 @@
-"{\"users\":[{\"id\":\"d066c452-56e1-455b-b035-c5c60e8657d1\",\"label\":\"lambda\"},{\"id\":\"e96081ba-7396-464b-9caa-26db24e95809\",\"label\":\"poussin\"}],\"dataGroups\":[{\"id\":\"qualitatif\",\"label\":\"Données qualitatives\"},{\"id\":\"quantitatif\",\"label\":\"Données quantitatives\"},{\"id\":\"referentiel\",\"label\":\"Référentiel\"}],\"authorizationScopes\":[{\"id\":\"localization\",\"label\":\"localization\",\"options\":[{\"id\":\"bassin_versant\",\"label\":\"bassin_versant\",\"children\":[{\"id\":\"bassin_versant.nivelle\",\"label\":\"bassin_versant.nivelle\",\"children\":[]},{\"id\":\"bassin_versant.oir\",\"label\":\"bassin_versant.oir\",\"children\":[]},{\"id\":\"bassin_versant.scarff\",\"label\":\"bassin_versant.scarff\",\"children\":[]}]},{\"id\":\"plateforme\",\"label\":\"plateforme\",\"children\":[{\"id\":\"plateforme.nivelle.nivelle__p1\",\"label\":\"plateforme.nivelle.nivelle__p1\",\"children\":[]},{\"id\":\"plateforme.oir.oir__p1\",\"label\":\"plateforme.oir.oir__p1\",\"children\":[]},{\"id\":\"plateforme.oir.oir__p1.oir__p1__a\",\"label\":\"plateforme.oir.oir__p1.oir__p1__a\",\"children\":[]},{\"id\":\"plateforme.oir.oir__p1.oir__p1__b\",\"label\":\"plateforme.oir.oir__p1.oir__p1__b\",\"children\":[]},{\"id\":\"plateforme.oir.oir__p2\",\"label\":\"plateforme.oir.oir__p2\",\"children\":[]},{\"id\":\"plateforme.scarff.scarff__p1\",\"label\":\"plateforme.scarff.scarff__p1\",\"children\":[]}]}]},{\"id\":\"projet\",\"label\":\"projet\",\"options\":[{\"id\":\"projet_atlantique\",\"label\":\"projet_atlantique\",\"children\":[]},{\"id\":\"projet_manche\",\"label\":\"projet_manche\",\"children\":[]}]}],\"columnsDescription\":{\"admin\":{\"display\":true,\"title\":\"admin\",\"withPeriods\":false,\"withDataGroups\":false,\"internationalizationName\":{\"en\":\"Administration\",\"fr\":\"Administration\"}},\"delete\":{\"display\":true,\"title\":\"delete\",\"withPeriods\":false,\"withDataGroups\":false,\"internationalizationName\":{\"en\":\"Deletion\",\"fr\":\"Suppression\"}},\"depot\":{\"display\":true,\"title\":\"depot\",\"withPeriods\":false,\"withDataGroups\":false,\"internationalizationName\":{\"en\":\"Deposit\",\"fr\":\"Dépôt\"}},\"extraction\":{\"display\":true,\"title\":\"extraction\",\"withPeriods\":true,\"withDataGroups\":true,\"internationalizationName\":{\"en\":\"Extraction\",\"fr\":\"Extraction\"}},\"publication\":{\"display\":true,\"title\":\"publication\",\"withPeriods\":false,\"withDataGroups\":false,\"internationalizationName\":{\"en\":\"Publication\",\"fr\":\"Publication\"}}}}"
+{
+  "users": [
+    {
+      "id": "88b99c65-e5ca-4aeb-b64d-53203bab5838",
+      "label": "lambda"
+    },
+    {
+      "id": "4df0f6d9-23dd-481b-a91c-6edb84760fb8",
+      "label": "poussin"
+    }
+  ],
+  "dataGroups": [
+    {
+      "id": "qualitatif",
+      "label": "Données qualitatives"
+    },
+    {
+      "id": "quantitatif",
+      "label": "Données quantitatives"
+    },
+    {
+      "id": "referentiel",
+      "label": "Référentiel"
+    }
+  ],
+  "authorizationScopes": [
+    {
+      "id": "localization",
+      "label": "localization",
+      "options": [
+        {
+          "id": "bassin_versant",
+          "label": "bassin_versant",
+          "children": [
+            {
+              "id": "bassin_versant.nivelle",
+              "label": "bassin_versant.nivelle",
+              "children": []
+            },
+            {
+              "id": "bassin_versant.oir",
+              "label": "bassin_versant.oir",
+              "children": []
+            },
+            {
+              "id": "bassin_versant.scarff",
+              "label": "bassin_versant.scarff",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "plateforme",
+          "label": "plateforme",
+          "children": [
+            {
+              "id": "plateforme.nivelle.nivelle__p1",
+              "label": "plateforme.nivelle.nivelle__p1",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1",
+              "label": "plateforme.oir.oir__p1",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1.oir__p1__a",
+              "label": "plateforme.oir.oir__p1.oir__p1__a",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p1.oir__p1__b",
+              "label": "plateforme.oir.oir__p1.oir__p1__b",
+              "children": []
+            },
+            {
+              "id": "plateforme.oir.oir__p2",
+              "label": "plateforme.oir.oir__p2",
+              "children": []
+            },
+            {
+              "id": "plateforme.scarff.scarff__p1",
+              "label": "plateforme.scarff.scarff__p1",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "projet",
+      "label": "projet",
+      "options": [
+        {
+          "id": "projet_atlantique",
+          "label": "projet_atlantique",
+          "children": []
+        },
+        {
+          "id": "projet_manche",
+          "label": "projet_manche",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "columnsDescription": {
+    "admin": {
+      "display": true,
+      "title": "admin",
+      "withPeriods": false,
+      "withDataGroups": false,
+      "internationalizationName": {
+        "en": "Administration",
+        "fr": "Administration"
+      }
+    },
+    "delete": {
+      "display": true,
+      "title": "delete",
+      "withPeriods": false,
+      "withDataGroups": false,
+      "internationalizationName": {
+        "en": "Deletion",
+        "fr": "Suppression"
+      }
+    },
+    "depot": {
+      "display": true,
+      "title": "depot",
+      "withPeriods": false,
+      "withDataGroups": false,
+      "internationalizationName": {
+        "en": "Deposit",
+        "fr": "Dépôt"
+      }
+    },
+    "extraction": {
+      "display": true,
+      "title": "extraction",
+      "withPeriods": true,
+      "withDataGroups": true,
+      "internationalizationName": {
+        "en": "Extraction",
+        "fr": "Extraction"
+      }
+    },
+    "publication": {
+      "display": true,
+      "title": "publication",
+      "withPeriods": false,
+      "withDataGroups": false,
+      "internationalizationName": {
+        "en": "Publication",
+        "fr": "Publication"
+      }
+    }
+  }
+}

@@ -277,6 +277,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
+      console.log('grantableInfos', grantableInfos)
       this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription}
       if (this.authorizationId != 'new') {
         var authorizations = await this.authorizationService.getAuthorizations(
