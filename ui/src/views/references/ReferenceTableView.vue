@@ -1,66 +1,67 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :root="application.localName"
-      :paths="subMenuPaths"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :root="application.localName"
+        :paths="subMenuPaths"
+        role="navigation"
+        :aria-label="$t('menu.aria-sub-menu')"
     />
     <h1 class="title main-title">
-      {{ $t("titles.references-data", { refName: application.localRefName }) }}
+      {{ $t("titles.references-data", {refName: application.localRefName}) }}
     </h1>
 
     <div v-if="reference && columns">
       <b-table
-        :data="tableValues"
-        :striped="true"
-        :isFocusable="true"
-        :isHoverable="true"
-        :sticky-header="true"
-        height="72.5vh"
-        style="padding-bottom: 20px; position: relative; z-index: 1"
-        paginated
-        :current-page="currentPage"
-        :per-page="params.limit"
+          :data="tableValues"
+          :striped="true"
+          :isFocusable="true"
+          :isHoverable="true"
+          :sticky-header="true"
+          height="72.5vh"
+          style="padding-bottom: 20px; position: relative; z-index: 1"
+          paginated
+          :current-page="currentPage"
+          :per-page="params.limit"
       >
         <template #pagination>
           <b-pagination
-            v-model="currentPage"
-            :current-page.sync="currentPage"
-            :per-page="params.limit"
-            :total="totalRows"
-            role="navigation"
-            :aria-label="$t('menu.aria-pagination')"
-            :aria-current-label="$t('menu.aria-curent-page')"
-            :aria-next-label="$t('menu.aria-next-page')"
-            :aria-previous-label="$t('menu.aria-previous-page')"
-            order="is-centered"
-            range-after="3"
-            range-before="3"
-            :rounded="true"
-            @change="changePage"
+              v-model="currentPage"
+              :current-page.sync="currentPage"
+              :per-page="params.limit"
+              :total="totalRows"
+              role="navigation"
+              :aria-label="$t('menu.aria-pagination')"
+              :aria-current-label="$t('menu.aria-curent-page')"
+              :aria-next-label="$t('menu.aria-next-page')"
+              :aria-previous-label="$t('menu.aria-previous-page')"
+              order="is-centered"
+              range-after="3"
+              range-before="3"
+              :rounded="true"
+              @change="changePage"
           />
         </template>
         <b-table-column
-          v-for="column in columns"
-          :key="column.id"
-          :field="column.id"
-          :label="column.title"
-          sortable
-          :sticky="column.key"
-          v-slot="props"
+            v-for="column in columns"
+            :key="column.id"
+            :field="column.id"
+            :label="column.title"
+            sortable
+            :sticky="column.key"
+            v-slot="props"
         >
           <span v-if="info(column.id) || multiplicity(column.id, props.row[column.id])">
             <b-button
-              size="is-small"
-              type="is-dark"
-              v-if="showBtnTablDynamicColumn(props.row[column.id])"
-              @click="showModal(column.id, props.row[column.id])"
-              icon-left="eye"
-              rounded
-              style="height: inherit"
-            ></b-button>
-            <p v-else></p>
+                size="is-small"
+                type="is-dark"
+                v-if="showBtnTablDynamicColumn(props.row[column.id])"
+                @click="showModal(column.id, props.row[column.id])"
+                icon-left="eye"
+                rounded
+                style="height: inherit"
+            >
+            <span class="tile"> {{props.row[column.id] &&  Object.values(props.row[column.id]).filter(value => value.length).length }}</span>
+            </b-button>
             <b-modal v-model="isCardModalActive" class="modalCardRef" width="70%">
               <div class="card">
                 <div class="card-header">
@@ -87,9 +88,9 @@
           <b-collapse v-else :open="false">
             <template #trigger>
               <b-button
-                :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
-                type="is-small"
-                aria-controls="contentIdForA11y1"
+                  :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
+                  type="is-small"
+                  aria-controls="contentIdForA11y1"
               />
             </template>
             {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
@@ -101,18 +102,18 @@
 </template>
 
 <script>
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
-import { ApplicationResult } from "@/model/ApplicationResult";
-import { AlertService } from "@/services/AlertService";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { ReferenceService } from "@/services/rest/ReferenceService";
-import { Prop, Vue, Component } from "vue-property-decorator";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {ApplicationResult} from "@/model/ApplicationResult";
+import {AlertService} from "@/services/AlertService";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {ReferenceService} from "@/services/rest/ReferenceService";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {DownloadDatasetQuery} from "@/model/application/DownloadDatasetQuery";
 
 @Component({
-  components: { PageView, SubMenu },
+  components: {PageView, SubMenu},
 })
 export default class ReferenceTableView extends Vue {
   @Prop() applicationName;
@@ -167,30 +168,30 @@ export default class ReferenceTableView extends Vue {
   async showModal(columName, tablDynamicColumn) {
     this.isCardModalActive = true;
     this.modalArrayObj = Object.entries(tablDynamicColumn)
-      .filter((a) => a[1])
-      .map(function (a) {
-        let obj = {};
-        obj[a[0]] = a[1];
-        return obj;
-      });
+        .filter((a) => a[1])
+        .map(function (a) {
+          let obj = {};
+          obj[a[0]] = a[1];
+          return obj;
+        });
     if (this.referencesDynamic) {
       for (let i = 0; i < this.referencesDynamic.referenceValues.length; i++) {
         let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
         for (let j = 0; j < this.modalArrayObj.length; j++) {
           if (this.modalArrayObj[j][hierarchicalKey]) {
             let column = this.referencesDynamic.referenceValues[i].values[this.display]
-              ? this.referencesDynamic.referenceValues[i].values[this.display]
-              : hierarchicalKey;
+                ? this.referencesDynamic.referenceValues[i].values[this.display]
+                : hierarchicalKey;
             let value = this.modalArrayObj[j][hierarchicalKey];
-            this.modalArrayObj[j] = { ...this.modalArrayObj[j], column: column, value: value };
+            this.modalArrayObj[j] = {...this.modalArrayObj[j], column: column, value: value};
           }
         }
         for (let j = 0; j < tablDynamicColumn.length; j++) {
           if (tablDynamicColumn[j] === hierarchicalKey) {
             let value = this.referencesDynamic.referenceValues[i].values[this.display]
-              ? this.referencesDynamic.referenceValues[i].values[this.display]
-              : columName;
-            this.modalArrayObj[j] = { ...this.modalArrayObj[j], value: value };
+                ? this.referencesDynamic.referenceValues[i].values[this.display]
+                : columName;
+            this.modalArrayObj[j] = {...this.modalArrayObj[j], value: value};
           }
         }
       }
@@ -209,12 +210,12 @@ export default class ReferenceTableView extends Vue {
 
   showBtnTablDynamicColumn(tablDynamicColumn) {
     let showModal = Object.entries(tablDynamicColumn)
-      .filter((a) => a[1])
-      .map(function (a) {
-        let obj = {};
-        obj[a[0]] = a[1];
-        return obj;
-      });
+        .filter((a) => a[1])
+        .map(function (a) {
+          let obj = {};
+          obj[a[0]] = a[1];
+          return obj;
+        });
     return showModal.length !== 0;
   }
 
@@ -223,9 +224,9 @@ export default class ReferenceTableView extends Vue {
       let showModal = Object.entries(this.tableValues[i]).filter((a) => a[1]);
       for (let j = 0; j < showModal.length; j++) {
         if (
-          showModal[j][0] === column &&
-          showModal[j][1] === arrayValues &&
-          Array.isArray(showModal[j][1])
+            showModal[j][0] === column &&
+            showModal[j][1] === arrayValues &&
+            Array.isArray(showModal[j][1])
         ) {
           return true;
         }
@@ -245,19 +246,19 @@ export default class ReferenceTableView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
         localRefName: this.internationalisationService.localeReferenceName(
-          this.application.references[this.refId],
-          this.application
+            this.application.references[this.refId],
+            this.application
         ),
       };
       const references = await this.referenceService.getReferenceValues(
-        this.applicationName,
-        this.refId,
-        {
-          _offset_: this.params.offset,
-          _limit_: this.params.limit,
-        }
+          this.applicationName,
+          this.refId,
+          {
+            _offset_: this.params.offset,
+            _limit_: this.params.limit,
+          }
       );
       if (references) {
         this.referenceValues = references.referenceValues;
@@ -278,25 +279,25 @@ export default class ReferenceTableView extends Vue {
     }
 
     this.reference = Object.values(this.application.references).find(
-      (ref) => ref.id === this.refId
+        (ref) => ref.id === this.refId
     );
 
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("referencesManagement.references").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/references`),
-        () => this.$router.push(`/applications`)
+          this.$t("referencesManagement.references").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/references`),
+          () => this.$router.push(`/applications`)
       ),
       new SubMenuPath(
-        this.reference.label,
-        () => this.$router.push(`/applications/${this.applicationName}/references/${this.refId}`),
-        () => this.$router.push(`/applications/${this.applicationName}/references`)
+          this.reference.label,
+          () => this.$router.push(`/applications/${this.applicationName}/references/${this.refId}`),
+          () => this.$router.push(`/applications/${this.applicationName}/references`)
       ),
     ];
 
     if (this.reference && this.reference.columns) {
       this.columns = [
-        { id: "#", title: "#id", key: false, linkedTo: null },
+        {id: "#", title: "#id", key: false, linkedTo: null},
         ...Object.values(this.reference.columns).sort((c1, c2) => {
           if (c1.title < c2.title) {
             return -1;
@@ -323,22 +324,22 @@ export default class ReferenceTableView extends Vue {
     let dynamicColumns = Object.entries(this.reference.dynamicColumns).filter((a) => a[1]);
     for (let i = 0; i < dynamicColumns.length; i++) {
       this.referencesDynamic = await this.referenceService.getReferenceValues(
-        this.applicationName,
-        dynamicColumns[i][1].reference,
-        {
-          _offset_: this.offset,
-          _limit_: this.limit,
-        }
+          this.applicationName,
+          dynamicColumns[i][1].reference,
+          {
+            _offset_: this.offset,
+            _limit_: this.limit,
+          }
       );
     }
     let interNameColumn = Object.entries(this.application.internationalization.references).filter(
-      (a) => a[1]
+        (a) => a[1]
     );
     for (let i = 0; i < this.columns.length; i++) {
       for (let j = 0; j < interNameColumn.length; j++) {
         if (interNameColumn[j][0] === this.reference.id) {
           let listInterHeaderColumn = Object.entries(
-            interNameColumn[j][1].internationalizedDynamicColumns
+              interNameColumn[j][1].internationalizedDynamicColumns
           ).filter((a) => a[1]);
           for (let g = 0; g < listInterHeaderColumn.length; g++) {
             if (this.columns[i].id === listInterHeaderColumn[g][0]) {
@@ -354,8 +355,8 @@ export default class ReferenceTableView extends Vue {
       }
       if (this.application.references[this.columns[i].id]) {
         this.referencesDynamic = await this.referenceService.getReferenceValues(
-          this.applicationName,
-          this.columns[i].id
+            this.applicationName,
+            this.columns[i].id
         );
       }
     }
@@ -363,7 +364,7 @@ export default class ReferenceTableView extends Vue {
 }
 </script>
 <style lang="scss" scoped>
-.b-table .table th.is-sortable{
+.b-table .table th.is-sortable {
   width: max-content;
   position: sticky;
 }
