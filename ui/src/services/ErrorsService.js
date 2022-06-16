@@ -139,7 +139,18 @@ export class ErrorsService {
       const func = ERRORS[csvError.validationCheckResult.message];
       if (csvError.validationCheckResult.messageParams.target != null) {
         if (csvError.validationCheckResult.messageParams.target.column != null) {
-          csvError.validationCheckResult.messageParams.target = csvError.validationCheckResult.messageParams.target.column;
+          csvError.validationCheckResult.messageParams.target =
+            csvError.validationCheckResult.messageParams.target.column;
+        }
+      }
+      if(csvError.validationCheckResult.messageParams.expectedValue != null || csvError.validationCheckResult.messageParams.givenValue != null) {
+        if (csvError.validationCheckResult.messageParams.expectedValue.sql != null) {
+          csvError.validationCheckResult.messageParams.expectedValue =
+            csvError.validationCheckResult.messageParams.expectedValue.sql;
+        }
+        if(csvError.validationCheckResult.messageParams.givenValue.sql != null) {
+          csvError.validationCheckResult.messageParams.givenValue =
+              csvError.validationCheckResult.messageParams.givenValue.sql;
         }
       }
       if (!func) {
