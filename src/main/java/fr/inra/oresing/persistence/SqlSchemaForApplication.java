@@ -37,7 +37,7 @@ public class SqlSchemaForApplication implements SqlSchema {
         return new SqlTable(this, "oreSiAuthorization");
     }
 
-    public String getRequiredauthorizationsAttributes(Application app) {
+    public String requiredAuthorizationsAttributes(Application app) {
         return app.getConfiguration().getRequiredAuthorizationsAttributes().stream()
                 .map(s -> String.format("%s ltree", s))
                 .collect(Collectors.joining(",\n"));
@@ -65,13 +65,13 @@ public class SqlSchemaForApplication implements SqlSchema {
                 .orElse(Set.of("").stream());
     }
 
-    public String getRequiredauthorizationsAttributesComparing(Application app) {
-        String requiredauthorizationsAttributesComparing = app.getConfiguration().getRequiredAuthorizationsAttributes().stream()
+    public String requiredAuthorizationsAttributesComparing(Application app) {
+        String requiredAuthorizationsAttributesComparing = app.getConfiguration().getRequiredAuthorizationsAttributes().stream()
                 .map(attribute -> String.format(
-                        "((authorized).requiredauthorizations.%1$s is null or (COALESCE((authorized).requiredauthorizations.%1$s, ''::ltree) <@ COALESCE((\"authorization\").requiredauthorizations.%1$s, ''::ltree)))",
+                        "((authorized).requiredAuthorizations.%1$s is null or (COALESCE((authorized).requiredAuthorizations.%1$s, ''::ltree) <@ COALESCE((\"authorization\").requiredAuthorizations.%1$s, ''::ltree)))",
                         attribute
                 ))
                 .collect(Collectors.joining("\n AND "));
-        return requiredauthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredauthorizationsAttributesComparing)?"":" AND\n ");
+        return requiredAuthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredAuthorizationsAttributesComparing)?"":" AND\n ");
     }
 }

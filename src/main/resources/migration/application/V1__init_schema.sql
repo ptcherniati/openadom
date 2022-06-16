@@ -42,14 +42,14 @@ CREATE INDEX ref_refvalues_index ON ReferenceValue USING gin (refValues);
 --CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
 CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
 
-CREATE TYPE ${applicationSchema}.requiredauthorizations AS
+CREATE TYPE ${applicationSchema}.requiredAuthorizations AS
 (
-    ${requiredauthorizations}
+    ${requiredAuthorizations}
 );
 CREATE TYPE ${applicationSchema}."authorization" AS
 (
-    requiredauthorizations ${applicationSchema}.requiredauthorizations,
-    datagroup              text[],
+    requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
+    datagroups              text[],
     timescope              tsrange
 );
 
@@ -63,9 +63,9 @@ BEGIN
     select exists(select 1
                   into result
                   from unnest("authorizedArray") authorized
-                  where ${requiredauthorizationscomparing}
-                  ((("authorized").datagroup = array []::TEXT[]) or
-                   ((authorized).datagroup @> COALESCE(("authorization").datagroup, array []::TEXT[])))
+                  where ${requiredAuthorizationscomparing}
+                  ((("authorized").datagroups = array []::TEXT[]) or
+                   ((authorized).datagroups @> COALESCE(("authorization").datagroups, array []::TEXT[])))
                       and ((("authorized").timescope = '(,)'::tsrange) or
                            (authorized).timescope @> COALESCE(("authorization").timescope, '[,]'::tsrange))
                );
@@ -88,8 +88,8 @@ create table Data
     dataType        TEXT
         constraint name_check CHECK (name_check(application, 'dataType', dataType)),
     rowId           TEXT                                                             NOT NULL,
-    datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroup[1]) STORED NOT NULL,
-    "authorization" ${applicationSchema}.authorization                               NOT NULL check (("authorization").datagroup[1] is not null),
+    datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroups[1]) STORED NOT NULL,
+    "authorization" ${applicationSchema}.authorization    NOT NULL check (("authorization").datagroups[1] is not null),
     refsLinkedTo    jsonb ,
     uniqueness      jsonb,
     dataValues      jsonb,
@@ -108,7 +108,7 @@ CREATE INDEX data_refslinkedto_index ON Data USING gin (refsLinkedTo jsonb_path_
 CREATE INDEX data_refvalues_index ON Data USING gin (dataValues jsonb_path_ops);
 
 ALTER TABLE Data
-    ADD CONSTRAINT row_uniqueness UNIQUE (rowId, dataGroup);
+    ADD CONSTRAINT row_uniqueness UNIQUE (rowId, datagroup);
 
 CREATE TABLE OreSiAuthorization
 (
@@ -129,11 +129,11 @@ CREATE TABLE oresisynthesis
     application entityref,
     datatype text COLLATE pg_catalog."default",
     variable text COLLATE pg_catalog."default",
-    requiredauthorizations ${applicationSchema}.requiredauthorizations,
+    requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
     aggregation text COLLATE pg_catalog."default",
     ranges tsrange[],
     CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id),
-    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredauthorizations, aggregation)
+    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredAuthorizations, aggregation)
 );
 CREATE INDEX by_datatype_index ON oresisynthesis(application, aggregation,  datatype);
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);

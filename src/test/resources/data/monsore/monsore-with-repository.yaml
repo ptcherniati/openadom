@@ -214,6 +214,7 @@ references:
       checkDatatype:
         internationalizationName:
           fr: test
+        columns: [ nom du type de données ]
         checker:
           name: GroovyExpression
           params:
@@ -326,6 +327,7 @@ references:
       checkDatatype:
         internationalizationName:
           fr: test
+        columns: [ nom du type de données ]
         checker:
           name: GroovyExpression
           params:

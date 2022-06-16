@@ -107,28 +107,28 @@ public class CheckerFactory {
                         new Configuration.CheckerConfigurationDescription()
                 );
         LineTransformer transformer = transformerFactory.newTransformer(configuration.getTransformation(), app, target);
-        CheckerOnOneVariableComponentLineChecker lineChecker;
+        CheckerOnOneVariableComponentLineChecker lineChecker = null;
         switch (checkerDescription.getName()) {
-            case "Date":
+            case Date:
                 lineChecker = new DateLineChecker(target, configuration.getPattern(), configuration, transformer);
                 break;
-            case "Integer":
+            case Integer:
                 lineChecker = new IntegerChecker(target, configuration, transformer);
                 break;
-            case "Float":
+            case Float:
                 lineChecker = new FloatChecker(target, configuration, transformer);
                 break;
-            case "RegularExpression":
+            case RegularExpression:
                 lineChecker = new RegularExpressionChecker(target, configuration.getPattern(), configuration, transformer);
                 break;
-            case "Reference":
+            case Reference:
                 String refType = configuration.getRefType();
                 ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
                 ImmutableMap<Ltree, UUID> referenceValues = referenceValueRepository.getReferenceIdPerKeys(refType);
                 lineChecker = new ReferenceLineChecker(target, refType, referenceValues, configuration, transformer);
                 break;
             default:
-                throw new IllegalArgumentException("checker inconnu " + checkerDescription.getName());
+                CheckerType.getError(checkerDescription.getName(), Set.of( CheckerType.Date,CheckerType.Integer,CheckerType.Float, CheckerType.RegularExpression,CheckerType.Reference));
         }
         Preconditions.checkState(lineChecker.getTarget().equals(target));
         return lineChecker;
@@ -137,8 +137,8 @@ public class CheckerFactory {
     private LineChecker newLineChecker(Application app, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
         Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
         Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
-        LineChecker lineChecker;
-        if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
+        LineChecker lineChecker=null;
+        if (CheckerType.GroovyExpression.equals(checkerDescription.getName())) {
             String expression = configurationDescription.getGroovy().getExpression();
             Set<String> references = configurationDescription.getGroovy().getReferences();
             Set<String> dataTypes = configurationDescription.getGroovy().getDatatypes();
@@ -153,7 +153,7 @@ public class CheckerFactory {
                     .build();
             lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
         } else {
-            throw new IllegalArgumentException("checker " + checkerDescription.getName());
+            throw CheckerType.getError(checkerDescription.getName(), Set.of(CheckerType.GroovyExpression));
         }
         return lineChecker;
     }
@@ -163,7 +163,7 @@ public class CheckerFactory {
         for (Map.Entry<String, Configuration.LineValidationRuleDescription> validationEntry : validations.entrySet()) {
             Configuration.LineValidationRuleDescription lineValidationRuleDescription = validationEntry.getValue();
             Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
-            if (GroovyLineChecker.NAME.equals(checkerDescription.getName())) {
+            if (CheckerType.GroovyExpression.equals(checkerDescription.getName())) {
                 LineChecker lineChecker = newLineChecker(app, lineValidationRuleDescription);
                 checkersBuilder.add(lineChecker);
             } else {

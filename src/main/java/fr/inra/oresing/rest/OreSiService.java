@@ -16,6 +16,8 @@ import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
@@ -113,7 +115,7 @@ public class OreSiService {
         binaryFile.setData(file.getBytes());
         BinaryFileInfos binaryFileInfos = new BinaryFileInfos();
         binaryFile.setParams(binaryFileInfos);
-        binaryFile.getParams().createuser = request.getRequestClient().getId();
+        binaryFile.getParams().createuser = request.getRequestUserId();
         binaryFile.getParams().createdate = LocalDateTime.now().toString();
         UUID result = repo.getRepository(app).binaryFile().store(binaryFile);
         return result;
@@ -137,8 +139,8 @@ public class OreSiService {
         flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
         flywayConfiguration.setLocations(new Location("classpath:migration/application"));
         flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
-        flywayConfiguration.getPlaceholders().put("requiredauthorizations", sqlSchemaForApplication.getRequiredauthorizationsAttributes(app));
-        flywayConfiguration.getPlaceholders().put("requiredauthorizationscomparing", sqlSchemaForApplication.getRequiredauthorizationsAttributesComparing(app));
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(app));
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(app));
         Flyway flyway = new Flyway(flywayConfiguration);
         flyway.migrate();
 
@@ -189,7 +191,7 @@ public class OreSiService {
         db.setTableOwner(sqlSchemaForApplication.referenceValue(), adminOnApplicationRole);
         db.setTableOwner(sqlSchemaForApplication.binaryFile(), adminOnApplicationRole);
 
-        OreSiUserRole creator = authenticationService.getUserRole(request.getRequestClient().getId());
+        OreSiUserRole creator = authenticationService.getUserRole(request.getRequestUserId());
         db.addUserInRole(creator, adminOnApplicationRole);
 
         authenticationService.setRoleForClient();
@@ -337,7 +339,7 @@ public class OreSiService {
         Configuration.CompositeReferenceDescription compositeReferenceDescription = application
                 .getConfiguration()
                 .getCompositeReferencesUsing(lowestLevelReference)
-                .orElseThrow();
+                .orElseThrow(() -> new OreSiTechnicalException("Can't find "));
         BiMap<Ltree, ReferenceValue> indexedByHierarchicalKeyReferenceValues = HashBiMap.create();
         Map<ReferenceValue, Ltree> parentHierarchicalKeys = new LinkedHashMap<>();
         ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -381,7 +383,6 @@ public class OreSiService {
     public UUID addData(String nameOrId, String dataType, MultipartFile file, FileOrUUID params) throws IOException, InvalidDatasetContentException {
         List<CsvRowValidationCheckResult> errors = new LinkedList<>();
         authenticationService.setRoleForClient();
-        log.debug(request.getRequestClient().getId().toString());
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
         Optional.ofNullable(params)
@@ -422,7 +423,7 @@ public class OreSiService {
                 storedFile.setParams(BinaryFileInfos.EMPTY_INSTANCE());
             }
             storedFile.getParams().published = true;
-            storedFile.getParams().publisheduser = request.getRequestClient().getId();
+            storedFile.getParams().publisheduser = request.getRequestUserId();
             storedFile.getParams().publisheddate = LocalDateTime.now().toString();
             repo.getRepository(app).binaryFile().store(storedFile);
             filesToStore.add(storedFile);
@@ -467,7 +468,7 @@ public class OreSiService {
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredAuthorizations()))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
             AtomicLong lines = new AtomicLong();
             final Instant debut = Instant.now();
@@ -638,13 +639,13 @@ public class OreSiService {
             if(haveAuthorizations) {
                 authorization.getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
                     VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
-                    String requiredAuthorization = datum.get(variableComponentKey);
-                    Ltree.checkSyntax(requiredAuthorization);
-                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorization));
+                    String requiredAuthorizationsFromDatum = datum.get(variableComponentKey);
+                    Ltree.checkSyntax(requiredAuthorizationsFromDatum);
+                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorizationsFromDatum));
                 });
             }
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
-            checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
+            checkrequiredAuthorizationsInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
             final List<String> uniquenessValues = uniquenessBuilder.test(datum, rowWithData.getLineNumber());
@@ -724,14 +725,14 @@ public class OreSiService {
     }
 
 
-    private void checkRequiredAuthorizationInDatasetRange(Map<String, Ltree> requiredAuthorizations,
+    private void checkrequiredAuthorizationsInDatasetRange(Map<String, Ltree> requiredAuthorizations,
                                                           List<CsvRowValidationCheckResult> errors,
                                                           BinaryFileDataset binaryFileDataset,
                                                           int rowNumber) {
         if (binaryFileDataset == null) {
             return;
         }
-        binaryFileDataset.getRequiredauthorizations().entrySet()
+        binaryFileDataset.getRequiredAuthorizations().entrySet()
                 .forEach(entry -> {
                     if (!requiredAuthorizations.get(entry.getKey()).equals(entry.getValue())) {
                         errors.add(
@@ -1124,7 +1125,13 @@ public class OreSiService {
                     csvPrinter.printRecord(rowAsRecord);
                 }
             } catch (IOException e) {
-                throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+                throw new SiOreIllegalArgumentException(
+                        "IOException",
+                        Map.of(
+                                "message", e.getLocalizedMessage()
+                        )
+                );
+                // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
             }
             result = out.toString();
         }

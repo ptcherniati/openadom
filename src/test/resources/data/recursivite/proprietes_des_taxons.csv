@@ -1,40 +1,40 @@
-nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage
-niveau incertitude de détermination;niveau incertitude de détermination;Uncertainty determining the level;niveau du taxon qui a été déterminé;Level of the determined taxon;false;false;Phytoplancton;1
-Auteur de la description;Auteur de la description;Description's author;Quand c'est connu;When known;false;false;Phytoplancton;2
-Année de la description;Année de la description;Description's year;Quand c'est connu;When known;false;false;Phytoplancton;3
-Référence de la description;Référence de la description;Description's reference;;;false;false;Phytoplancton;4
-Références relatives à ce taxon;Références relatives à ce taxon;References concerning this taxon;Infos bibliographiques;Bibliographical informations;false;false;Phytoplancton;5
-Synonyme ancien;Synonyme ancien;Former synonyms;Il peut y avoir plusieurs synonymes anciens;May have several former synonyms;false;false;Phytoplancton;6
-Synonyme récent;Synonyme récent;Latest synonyms;Il peut y avoir plusieurs synonymes, bien qu'en général ils passent dans les anciens;May have several latest synonyms, tough some goes in the former ones;false;false;Phytoplancton;7
-Classe algale sensu Bourrelly;Classe algale sensu Bourrelly;Algal class sensu Bourrelly;Regroupement taxonomique selon Bourrelly (standard);Taxonomic grouping according to Bourrelly (standard);false;true;Phytoplancton;8
-Code Sandre;Code Sandre;Sandre code;Code affecté par le SANDRE (réseau national sur l'eau);Code affecté par le SANDRE (réseau national sur l'eau);true;false;Phytoplancton;9
-Code taxa Cemagref;Code taxa Cemagref;Taxa Cemagref code;Code affecté par le CEMAGREF;Code affecté par le CEMAGREF;false;false;Phytoplancton;10
-Code INRA;Code INRA;INRA code;Code interne utilisé par JC Druat (ancien INRA);Code interne utilisé par JC Druat (ancien INRA);true;false;Phytoplancton;11
-code INRA lettres;code INRA lettres;INRA code (w/ letters);code affecté;Affected code;false;false;Phytoplancton;12
-Rebecca name;Rebecca name;Rebecca name;;;false;false;Phytoplancton;13
-Code Rebecca;Code Rebecca;Rebecca code;;;false;false;Phytoplancton;14
-Code Omnidia;Code Omnidia;Omnidia code;Code pour les diatomés;Code for the diatoms;false;false;Phytoplancton;15
-Unité de comptage du taxon;Unité de comptage du taxon;Taxon's counting unit;Indique sous quel format est compté le taxon (filament, cellule, colonie);Indicates the format in which the taxon is counted (filament, cell colony);false;true;Phytoplancton;16
-Erreur sur le biovolume;Erreur sur le biovolume;Error on the biovolume;indique si il y a une erreur ou pas;Whether there is an error or not;false;true;Phytoplancton;17
-valeur du biovolume spécifique choisi pour le taxon;valeur du biovolume spécifique choisi pour le taxon;Specific biovolume value chosen for the taxon;µm3;µm3;true;false;Phytoplancton;18
-Longueur de la cellule;Longueur de la cellule;Cell length;µm;µm;true;false;Phytoplancton;19
-Largeur de la cellule;Largeur de la cellule;Cell width;µm;µm;true;false;Phytoplancton;20
-Epaisseur de la cellule;Epaisseur de la cellule;Cell thickness;µm;µm;true;false;Phytoplancton;21
-Forme géométrique de la cellule;Forme géométrique de la cellule;Cell's geometric form;;;false;true;Phytoplancton;22
-Facteur à multiplier à la forme géométrique pour avoir le biovolume de la cellule;Facteur à multiplier à la forme géométrique pour avoir le biovolume de la cellule;Factor to multiply the geometric shape to get the cell biovolume;;;true;false;Phytoplancton;23
-Facteur à diviser à la forme géométrique pour avoir la surface de la cellule;Facteur à diviser à la forme géométrique pour avoir la surface de la cellule;Factor to multiply the geometric shape to get the cell surface;;;true;false;Phytoplancton;24
-Surface de la cellule;Surface de la cellule;Cell surface;µm2;µm2;true;false;Phytoplancton;25
-Biovolume de la cellule;Biovolume de la cellule;Cell biovolume;µm3;µm3;true;false;Phytoplancton;26
-Nombre de cellule par colonie;Nombre de cellule par colonie;Number of cells by colony;;;true;false;Phytoplancton;27
-Surface cumulée des cellules;Surface cumulée des cellules;Cumulative surface of cells;µm2;µm2;true;false;Phytoplancton;28
-biovolume cumulé des cellules;biovolume cumulé des cellules;Cumulative biovolume of cells;µm3;µm3;true;false;Phytoplancton;29
-Longueur de la colonie (prends en compte la gelée);Longueur de la colonie (prends en compte la gelée);Colony length (with jelly);µm;µm;true;false;Phytoplancton;30
-Largeur de la colonie (prends en compte la gelée);Largeur de la colonie (prends en compte la gelée);Colony width (with jelly);µm;µm;true;false;Phytoplancton;31
-Epaisseur de la colonie (prends en compte la gelée);Epaisseur de la colonie (prends en compte la gelée);Colony thickness (with jelly);µm;µm;true;false;Phytoplancton;32
-Forme géométrique de la colonie;Forme géométrique de la colonie;Colony's geometric form;;;false;true;Phytoplancton;33
-Facteur à multiplier à la forme géométrique pour avoir le biovolume de la colonie (sans prendre en compte la gelée);Facteur à multiplier à la forme géométrique pour avoir le biovolume de la colonie (sans prendre en compte la gelée);Factor to multiply the geometric shape to get the colony biovolume (without jelly);;;true;false;Phytoplancton;34
-Facteur à diviser à la forme géométrique pour avoir la surface de la colonie (en prenant en compte la gelée);Facteur à diviser à la forme géométrique pour avoir la surface de la colonie (en prenant en compte la gelée);Factor to multiply the geometric shape to get the colony surface (with jelly);;;true;false;Phytoplancton;35
-Surface de la colonie;Surface de la colonie;Colony surface;µm2;µm2;true;false;Phytoplancton;36
-Biovolume de la colonie;Biovolume de la colonie;Colony biovolume;µm3;µm3;true;false;Phytoplancton;37
-Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;false;false;Phytoplancton;38
-Notes libres;Notes libres;Free notes;;;false;false;Phytoplancton;39
+Date;nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage;site
+02/01/2016;niveau incertitude de détermination;niveau incertitude de détermination;Uncertainty determining the level;niveau du taxon qui a été déterminé;Level of the determined taxon;1,22;false;Phytoplancton;1;
+01/01/2017;Auteur de la description;Auteur de la description;Description's author;Quand c'est connu;When known;2,22;false;Phytoplancton;2;
+01/01/2016;Année de la description;Année de la description;Description's year;Quand c'est connu;When known;3,22;false;Phytoplancton;3;
+01/01/2016;Référence de la description;Référence de la description;Description's reference;;;55,22;false;Phytoplancton;4;
+01/01/2016;Références relatives à ce taxon;Références relatives à ce taxon;References concerning this taxon;Infos bibliographiques;Bibliographical informations;5,22;false;phtoplancton;5;
+01/01/2016;Synonyme ancien;Synonyme ancien;Former synonyms;Il peut y avoir plusieurs synonymes anciens;May have several former synonyms;6,22;false;Phytoplancton;6;
+01/01/2016;Synonyme récent;Synonyme récent;Latest synonyms;Il peut y avoir plusieurs synonymes, bien qu'en général ils passent dans les anciens;May have several latest synonyms, tough some goes in the former ones;7,22;false;Phytoplancton;7;
+01/01/2016;Classe algale sensu Bourrelly;Classe algale sensu Bourrelly;Algal class sensu Bourrelly;Regroupement taxonomique selon Bourrelly (standard);Taxonomic grouping according to Bourrelly (standard);8,22;true;Phytoplancton;8;
+01/01/2016;Code Sandre;Code Sandre;Sandre code;Code affecté par le SANDRE (réseau national sur l'eau);Code affecté par le SANDRE (réseau national sur l'eau);9,22;false;Phytoplancton;9;
+01/01/2016;Code taxa Cemagref;Code taxa Cemagref;Taxa Cemagref code;Code affecté par le CEMAGREF;Code affecté par le CEMAGREF;10,22;false;Phytoplancton;10;
+01/01/2016;Code INRA;Code INRA;INRA code;Code interne utilisé par JC Druat (ancien INRA);Code interne utilisé par JC Druat (ancien INRA);11,22;false;Phytoplancton;11;
+01/01/2016;code INRA lettres;code INRA lettres;INRA code (w/ letters);code affecté;Affected code;12,22;false;Phytoplancton;12;
+01/01/2016;Rebecca name;Rebecca name;Rebecca name;;;13,22;false;Phytoplancton;13;
+01/01/2016;Code Rebecca;Code Rebecca;Rebecca code;;;85,22;false;Phytoplancton;85;
+01/01/2016;Code Omnidia;Code Omnidia;Omnidia code;Code pour les diatomés;Code for the diatoms;15,22;false;Phytoplancton;15;
+01/01/2016;Unité de comptage du taxon;Unité de comptage du taxon;Taxon's counting unit;Indique sous quel format est compté le taxon (filament, cellule, colonie);Indicates the format in which the taxon is counted (filament, cell colony);16,22;true;Phytoplancton;16;
+01/01/2016;Erreur sur le biovolume;Erreur sur le biovolume;Error on the biovolume;indique si il y a une erreur ou pas;Whether there is an error or not;17,22;true;Phytoplancton;17;
+01/01/2016;valeur du biovolume spécifique choisi pour le taxon;valeur du biovolume spécifique choisi pour le taxon;Specific biovolume value chosen for the taxon;µm3;µm3;18,22;false;Phytoplancton;18;
+01/01/2016;Longueur de la cellule;Longueur de la cellule;Cell length;µm;µm;19,22;false;Phytoplancton;19;
+01/01/2016;Largeur de la cellule;Largeur de la cellule;Cell width;µm;µm;20,22;false;Phytoplancton;20;
+01/01/2016;Epaisseur de la cellule;Epaisseur de la cellule;Cell thickness;µm;µm;21,22;false;Phytoplancton;21;
+01/01/2016;Forme géométrique de la cellule;Forme géométrique de la cellule;Cell's geometric form;;;22,22;true;Phytoplancton;22;
+01/01/2016;Facteur à multiplier à la forme géométrique pour avoir le biovolume de la cellule;Facteur à multiplier à la forme géométrique pour avoir le biovolume de la cellule;Factor to multiply the geometric shape to get the cell biovolume;;;23,22;false;Phytoplancton;23;
+01/01/2016;Facteur à diviser à la forme géométrique pour avoir la surface de la cellule;Facteur à diviser à la forme géométrique pour avoir la surface de la cellule;Factor to multiply the geometric shape to get the cell surface;;;28,22;false;Phytoplancton;28;
+01/01/2016;Surface de la cellule;Surface de la cellule;Cell surface;µm2;µm2;25,22;false;Phytoplancton;25;
+01/01/2016;Biovolume de la cellule;Biovolume de la cellule;Cell biovolume;µm3;µm3;26,22;false;Phytoplancton;26;
+01/01/2016;Nombre de cellule par colonie;Nombre de cellule par colonie;Number of cells by colony;;;27,22;false;Phytoplancton;27;
+01/01/2016;Surface cumulée des cellules;Surface cumulée des cellules;Cumulative surface of cells;µm2;µm2;28,22;false;Phytoplancton;28;
+01/01/2016;biovolume cumulé des cellules;biovolume cumulé des cellules;Cumulative biovolume of cells;µm3;µm3;29,22;false;Phytoplancton;29;
+01/01/2016;Longueur de la colonie (prends en compte la gelée);Longueur de la colonie (prends en compte la gelée);Colony length (with jelly);µm;µm;30,22;false;Phytoplancton;30;
+01/01/2016;Largeur de la colonie (prends en compte la gelée);Largeur de la colonie (prends en compte la gelée);Colony width (with jelly);µm;µm;31,22;false;Phytoplancton;31;
+01/01/2016;Epaisseur de la colonie (prends en compte la gelée);Epaisseur de la colonie (prends en compte la gelée);Colony thickness (with jelly);µm;µm;32,22;false;Phytoplancton;32;
+01/01/2016;Forme géométrique de la colonie;Forme géométrique de la colonie;Colony's geometric form;;;33,22;true;Phytoplancton;33;
+01/01/2016;Facteur à multiplier à la forme géométrique pour avoir le biovolume de la colonie (sans prendre en compte la gelée);Facteur à multiplier à la forme géométrique pour avoir le biovolume de la colonie (sans prendre en compte la gelée);Factor to multiply the geometric shape to get the colony biovolume (without jelly);;;59,22;false;Phytoplancton;39;
+01/01/2016;Facteur à diviser à la forme géométrique pour avoir la surface de la colonie (en prenant en compte la gelée);Facteur à diviser à la forme géométrique pour avoir la surface de la colonie (en prenant en compte la gelée);Factor to multiply the geometric shape to get the colony surface (with jelly);;;35,22;false;Phytoplancton;35;
+01/01/2016;Surface de la colonie;Surface de la colonie;Colony surface;µm2;µm2;36,22;false;Phytoplancton;36;
+01/01/2016;Biovolume de la colonie;Biovolume de la colonie;Colony biovolume;µm3;µm3;37,22;false;Phytoplancton;37;
+01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;39,22;false;Phytoplancton;38;
+01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39;

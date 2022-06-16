@@ -2,13 +2,18 @@ package fr.inra.oresing.model;
 
 import com.google.common.collect.*;
 import fr.inra.oresing.checker.DateLineChecker;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A vocation a représenter une donnée en base stockée sous forme de tsrange.
@@ -17,6 +22,29 @@ import java.util.List;
  */
 @Value
 public class LocalDateTimeRange {
+    public static final Set<String> ACCEPTED_START_OF_BOUNDS = Set.of("[","(");
+    public static final Set<String> ACCEPTED_END_OF_BOUNDS = Set.of("]",")");
+    public static SiOreIllegalArgumentException getError( String boundValue, String lowerBound, String upperBound, Set<String> acceptedValues ) {
+        return new SiOreIllegalArgumentException(
+                "badBoundsForInterval",
+                Map.of(
+                        "boundValue", boundValue,
+                        "lowerBound", lowerBound,
+                        "upperBound", upperBound,
+                        "acceptedValues", acceptedValues
+                )
+        );
+    }
+
+    public static SiOreIllegalArgumentException getErrorBoundType(BoundType boundType) {
+        return new SiOreIllegalArgumentException(
+                "badBoundTypeForInterval",
+                Map.of(
+                        "boundType", boundType,
+                        "knownBoundType", Arrays.stream(BoundType.values()).map(BoundType::toString).collect(Collectors.toSet())
+                )
+        );
+    }
 
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -160,7 +188,8 @@ public class LocalDateTimeRange {
             } else if (lowerBoundString.startsWith("(")) {
                 range = Range.greaterThan(lowerBound);
             } else {
-                throw new IllegalStateException(upperBoundString);
+                throw getError(lowerBoundString.substring(0,1), lowerBoundString, upperBoundString, ACCEPTED_START_OF_BOUNDS);
+
             }
         } else {
             LocalDateTime upperBound = parseBound(upperBoundString);
@@ -170,7 +199,7 @@ public class LocalDateTimeRange {
                 } else if (upperBoundString.endsWith(")")) {
                     range = Range.closedOpen(lowerBound, upperBound);
                 } else {
-                    throw new IllegalStateException(upperBoundString);
+                    throw getError(upperBoundString.substring(upperBoundString.length() - 1), lowerBoundString, upperBoundString, ACCEPTED_END_OF_BOUNDS);
                 }
             } else if (lowerBoundString.startsWith("(")) {
                 if (upperBoundString.endsWith("]")) {
@@ -178,27 +207,27 @@ public class LocalDateTimeRange {
                 } else if (upperBoundString.endsWith(")")) {
                     range = Range.open(lowerBound, upperBound);
                 } else {
-                    throw new IllegalStateException(upperBoundString);
+                    throw getError(upperBoundString.substring(upperBoundString.length() - 1), lowerBoundString, null, ACCEPTED_END_OF_BOUNDS);
                 }
             } else {
-                throw new IllegalStateException(lowerBoundString);
+                throw getError(lowerBoundString.substring(0,1), lowerBoundString, upperBoundString, ACCEPTED_START_OF_BOUNDS);
             }
         }
         return range;
     }
 
-    private static Range<LocalDateTime> parseLowerBound(String upperBoundString) {
+    private static Range<LocalDateTime> parseLowerBound(String lowerBoundString) {
         Range<LocalDateTime> range;
-        if (upperBoundString.equals(")")) {
+        if (lowerBoundString.equals(")")) {
             range = Range.all();
         } else {
-            LocalDateTime upperBound = parseBound(upperBoundString);
-            if (upperBoundString.endsWith("]")) {
+            LocalDateTime upperBound = parseBound(lowerBoundString);
+            if (lowerBoundString.endsWith("]")) {
                 range = Range.atMost(upperBound);
-            } else if (upperBoundString.endsWith(")")) {
+            } else if (lowerBoundString.endsWith(")")) {
                 range = Range.lessThan(upperBound);
             } else {
-                throw new IllegalStateException(upperBoundString);
+                throw getError(lowerBoundString.substring(lowerBoundString.length() - 1), lowerBoundString, null, ACCEPTED_END_OF_BOUNDS);
             }
         }
         return range;
@@ -232,7 +261,7 @@ public class LocalDateTimeRange {
             } else if (range.lowerBoundType() == BoundType.CLOSED) {
                 lowerBoundString = "[" + formattedLowerBound;
             } else {
-                throw new IllegalStateException(range + " borné par " + range.lowerBoundType());
+                throw getErrorBoundType(range.lowerBoundType());
             }
         } else {
             lowerBoundString = "(";
@@ -245,7 +274,7 @@ public class LocalDateTimeRange {
             } else if (range.upperBoundType() == BoundType.CLOSED) {
                 upperBoundString = formattedUpperBound + "]";
             } else {
-                throw new IllegalStateException(range + " borné par " + range.upperBoundType());
+                throw getErrorBoundType(range.upperBoundType());
             }
         } else {
             upperBoundString = ")";

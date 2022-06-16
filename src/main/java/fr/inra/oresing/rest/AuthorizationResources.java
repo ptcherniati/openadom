@@ -25,7 +25,10 @@ public class AuthorizationResources {
 
     @PostMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAuthorization(@RequestBody CreateAuthorizationRequest authorization) {
-        Set<UUID> previousUsers = authorization.getUuid()==null?new HashSet<>():authorization.getUsersId();
+        Set<UUID> previousUsers = new HashSet<>();
+        if(authorization.getUuid()==null){
+            previousUsers= authorization.getUsersId();
+        }
         OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(authorization);
         UUID authId = oreSiAuthorization.getId();
             OreSiRightOnApplicationRole roleForAuthorization = null;

@@ -225,3 +225,8 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
   background-color: rgb(239, 239, 239);
   border-bottom: 1px solid rgba(128, 128, 128,0.3);
 }
+
+.media-content {
+  overflow: auto;
+  word-wrap: break-word;
+}
