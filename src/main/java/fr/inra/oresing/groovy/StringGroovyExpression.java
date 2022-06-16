@@ -1,9 +1,10 @@
 package fr.inra.oresing.groovy;
 
 import com.google.common.base.MoreObjects;
-import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.checker.CheckerReturnType;
 
 import java.util.Map;
+import java.util.Set;
 
 public class StringGroovyExpression implements Expression<String> {
 
@@ -25,7 +26,8 @@ public class StringGroovyExpression implements Expression<String> {
         } else if (evaluation instanceof Number) {
             return evaluation.toString();
         } else {
-            throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur de type chaîne de caractères mais " + evaluation + ". Expression = " + expression + ", donnée = " + context);
+            throw CheckerReturnType.getError(evaluation, expression, context,  Set.of(CheckerReturnType.STRING, CheckerReturnType.NUMBER));
+
         }
     }
 

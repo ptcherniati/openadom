@@ -1681,7 +1681,7 @@
             "$ref": "#/definitions/LocalDate"
           }
         },
-        "requiredauthorizations": {
+        "requiredAuthorizations": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/Ltree"
@@ -1738,7 +1738,7 @@
           "type": "string",
           "format": "date"
         },
-        "requiredauthorizations": {
+        "requiredAuthorizations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -1860,7 +1860,7 @@
         "from": {
           "type": "string"
         },
-        "requiredauthorizations": {
+        "requiredAuthorizations": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/Ltree"

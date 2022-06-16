@@ -1,7 +1,7 @@
 package fr.inra.oresing.groovy;
 
 import com.google.common.base.MoreObjects;
-import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.checker.CheckerReturnType;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -35,12 +35,12 @@ public class StringSetGroovyExpression implements Expression<Set<String>> {
                 } else if (unknownElement instanceof Number) {
                     result.add(unknownElement.toString());
                 } else {
-                    throw new OreSiTechnicalException("L'évaluation de l’expression a bien retourné une collection mais elle contient un élément " + unknownElement + " qui n'est pas de type chaîne de caractères. Expression = " + expression + ", donnée = " + context);
+                    throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.SET_OF_STRING, CheckerReturnType.SET_OF_NUMBER));
                 }
             }
             return result;
         } else {
-            throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une collection de chaîne de caractères mais " + evaluation + ". Expression = " + expression + ", donnée = " + context);
+            throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.SET_OF_STRING));
         }
     }
 

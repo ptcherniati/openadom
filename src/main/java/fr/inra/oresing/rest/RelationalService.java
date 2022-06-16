@@ -13,14 +13,7 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.ReferenceColumn;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
-import fr.inra.oresing.persistence.SqlSchema;
-import fr.inra.oresing.persistence.SqlSchemaForRelationalViewsForApplication;
-import fr.inra.oresing.persistence.SqlService;
-import fr.inra.oresing.persistence.SqlTable;
-import fr.inra.oresing.persistence.WithSqlIdentifier;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -33,13 +26,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -141,7 +128,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
                 // TODO reste à poser des contraintes de clés étrangères et des indexes
             } else {
-                throw new IllegalArgumentException("stratégie " + viewStrategy);
+                throw ViewStrategy.getError(viewStrategy);
             }
         }
     }
@@ -156,7 +143,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
             } else if (viewStrategy == ViewStrategy.TABLE) {
                 db.dropTable(view);
             } else {
-                throw new IllegalArgumentException("stratégie " + viewStrategy);
+                throw ViewStrategy.getError(viewStrategy);
             }
         }
         db.dropSchema(schemaCreationCommand.getSchema());
@@ -354,7 +341,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                         } else if (multiplicity == Multiplicity.MANY) {
                             columnDeclaration = String.format("ARRAY(SELECT JSONB_ARRAY_ELEMENTS_TEXT(%s.%s::JSONB))::%s[] AS %s", quotedReferenceType, columnName, columnType.getSql(), columnName);
                         } else {
-                            throw new IllegalStateException("multiplicy = " + multiplicity);
+                            throw Multiplicity.getError(multiplicity);
                         }
                         return columnDeclaration;
                     })

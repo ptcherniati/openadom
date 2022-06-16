@@ -3,13 +3,9 @@ package fr.inra.oresing.model;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, Object>>, SomethingToBeSentToFrontend<Map<String, Object>> {
@@ -45,7 +41,14 @@ public class ReferenceDatum implements SomethingThatCanProvideEvaluationContext,
                 Set<String> collect = new HashSet<>(((Collection<String>) storedValue));
                 referenceColumnValue = new ReferenceColumnMultipleValue(collect);
             } else {
-                throw new IllegalStateException("valeur inattendue en base pour un référentiel à la clé " + entry.getKey() + " dans " + mapFromDatabase);
+                throw new SiOreIllegalArgumentException(
+                        "badStoreValueType",
+                        Map.of(
+                                "referenceDatumKey",entry.getKey(),
+                                "storeValueType", storedValue.getClass().getSimpleName(),
+                                "knownStoreValueType", Set.of("String","Map<String, String>", "Set<String>")
+                        )
+                );
             }
             result.put(referenceColumn, referenceColumnValue);
         }

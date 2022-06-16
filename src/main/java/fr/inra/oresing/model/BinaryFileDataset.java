@@ -18,14 +18,14 @@ public class BinaryFileDataset {
         return new BinaryFileDataset();
     }
     private String datatype;
-    private Map<String, Ltree> requiredauthorizations = new HashMap<>();
+    private Map<String, Ltree> requiredAuthorizations = new HashMap<>();
     private String from;
     private String to;
     private String comment;
 
     @Override
     public String toString() {
-        String authorizationsString = requiredauthorizations.entrySet().stream()
+        String authorizationsString = requiredAuthorizations.entrySet().stream()
                 .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue().getSql()))
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",

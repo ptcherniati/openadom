@@ -7,6 +7,10 @@ export class AuthorizationService extends Fetcher {
     super();
   }
 
+  async getAuthorizations(applicationName, dataTypeId, authorizationId) {
+    return this.get(`applications/${applicationName}/dataType/${dataTypeId}/authorization/${authorizationId}`);
+  }
+
   async getDataAuthorizations(applicationName, dataTypeId) {
     return this.get(`applications/${applicationName}/dataType/${dataTypeId}/authorization`);
   }
