@@ -71,6 +71,14 @@
             style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
           >
           </b-button>
+          <b-button
+            icon-left="pen-square"
+            size="is-small"
+            type="primary is-light"
+            @click="modifyAuthorization(props.row.uuid)"
+            style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+          >
+          </b-button>
         </b-table-column>
       </b-table>
       <b-pagination
@@ -195,6 +203,11 @@ export default class DataTypeAuthorizationsView extends Vue {
   addAuthorization() {
     this.$router.push(
       `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
+    );
+  }
+  modifyAuthorization(id){
+    this.$router.push(
+      `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/${id}`
     );
   }
 

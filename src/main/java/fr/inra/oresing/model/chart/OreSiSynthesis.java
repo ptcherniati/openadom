@@ -17,7 +17,7 @@ public class OreSiSynthesis extends OreSiEntity {
     private UUID application;
     private String datatype;
     private String variable;
-    private Map<String, String> requiredauthorizations;
+    private Map<String, String> requiredAuthorizations;
     private String Aggregation;
     private List<LocalDateTimeRange> ranges;
 }
