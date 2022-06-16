@@ -1,36 +1,42 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :paths="subMenuPaths"
-      :root="application.localName || application.title"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
+        :aria-label="$t('menu.aria-sub-menu')"
     />
 
     <h1 class="title main-title">
       <span v-if="authorizationId === 'new'">{{
-        $t("titles.data-type-new-authorization", {
-          dataType: application.localDatatypeName || dataTypeId,
-        })
-      }}</span>
+          $t("titles.data-type-new-authorization", {
+            dataType: application.localDatatypeName || dataTypeId,
+          })
+        }}</span>
     </h1>
 
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-      <ValidationProvider v-slot="{ errors, valid }" name="users" rules="required" vid="users" class="columns">
+      <ValidationProvider
+          v-slot="{ errors, valid }"
+          name="users"
+          rules="required"
+          vid="users"
+          class="columns"
+      >
         <b-field
-          :label="$t('dataTypeAuthorizations.users')"
-          :message="errors[0]"
-          :type="{
+            :label="$t('dataTypeAuthorizations.users')"
+            :message="errors[0]"
+            :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          class="column mb-4"
+            class="column mb-4"
         >
           <b-select
-            v-model="usersToAuthorize"
-            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-            expanded
-            multiple
+              v-model="selectedUsers"
+              :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+              expanded
+              multiple
           >
             <option v-for="user in users" :key="user.id" :value="user.id">
               {{ user.label }}
@@ -39,39 +45,39 @@
         </b-field>
 
         <b-field
-          :label="$t('dataTypeAuthorizations.name')"
-          :message="errors[0]"
-          :type="{
+            :label="$t('dataTypeAuthorizations.name')"
+            :message="errors[0]"
+            :type="{
             'is-danger': errors && errors.length > 0,
             'is-success': valid,
           }"
-          class="column mb-4"
+            class="column mb-4"
         >
-          <b-input v-model="name" />
+          <b-input v-model="authorization.name"/>
         </b-field>
       </ValidationProvider>
       <AuthorizationTable
-        v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
-        :authReference="authReferences[0]"
-        :authorization-scopes="authorizationScopes"
-        :authorizations-tree="authorizationsTree"
-        :columnsVisible="columnsVisible"
-        :dataGroups="dataGroups"
-        :authorizations-to-save="authorizationsToSave"
-        :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
-        :required-authorizations="{}"
-        class="rows"
-        @add-authorization="emitUpdateAuthorization($event)"
-        @delete-authorization="emitUpdateAuthorization($event)"
+          v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
+          :authReference="authReferences[0]"
+          :authorization-scopes="authorizationScopes"
+          :columnsVisible="columnsVisible"
+          :dataGroups="dataGroups"
+          :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
+          :authorization="authorization"
+          :current-authorization-scope="{}"
+          :is-root="true"
+          class="rows"
+          @modifyAuthorization="modifyAuthorization($event)"
+          @registerCurrentAuthorization="registerCurrentAuthorization($event)"
       >
         <div class="row">
           <div class="columns">
             <b-field
-              v-for="(column, indexColumn) of columnsVisible"
-              :key="indexColumn"
-              :field="indexColumn"
-              :label="column.title"
-              class="column"
+                v-for="(column, indexColumn) of columnsVisible"
+                :key="indexColumn"
+                :field="indexColumn"
+                :label="getColumnTitle(column)"
+                class="column"
             ></b-field>
           </div>
         </div>
@@ -79,10 +85,10 @@
 
       <div class="buttons">
         <b-button
-          icon-left="plus"
-          type="is-dark"
-          @click="handleSubmit(createAuthorization)"
-          style="margin-bottom: 10px"
+            icon-left="plus"
+            type="is-dark"
+            @click="handleSubmit(createAuthorization)"
+            style="margin-bottom: 10px"
         >
           {{ $t("dataTypeAuthorizations.create") }}
         </b-button>
@@ -93,21 +99,21 @@
 
 <script>
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
-import { DataTypeAuthorization } from "@/model/DataTypeAuthorization";
-import { AlertService } from "@/services/AlertService";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { AuthorizationService } from "@/services/rest/AuthorizationService";
-import { UserPreferencesService } from "@/services/UserPreferencesService";
-import { ValidationObserver, ValidationProvider } from "vee-validate";
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {AlertService} from "@/services/AlertService";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {AuthorizationService} from "@/services/rest/AuthorizationService";
+import {UserPreferencesService} from "@/services/UserPreferencesService";
+import {ValidationObserver, ValidationProvider} from "vee-validate";
+import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import { ApplicationResult } from "@/model/ApplicationResult";
-import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
-import { ReferenceService } from "@/services/rest/ReferenceService";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {ApplicationResult} from "@/model/ApplicationResult";
+import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
+import {ReferenceService} from "@/services/rest/ReferenceService";
 import AuthorizationTable from "@/components/common/AuthorizationTable";
-import { Authorization } from "@/model/authorization/Authorization";
+import {Authorization} from "@/model/authorization/Authorization";
+import {Authorizations} from "@/model/authorization/Authorizations";
 
 @Component({
   components: {
@@ -122,9 +128,9 @@ import { Authorization } from "@/model/authorization/Authorization";
 export default class DataTypeAuthorizationInfoView extends Vue {
   @Prop() dataTypeId;
   @Prop() applicationName;
-  @Prop() authorizationId;
+  @Prop({default: "new"}) authorizationId;
 
-  __DEFAULT__ = '__DEFAULT__';
+  __DEFAULT__ = "__DEFAULT__";
   referenceService = ReferenceService.INSTANCE;
   references = {};
   authorizationService = AuthorizationService.INSTANCE;
@@ -132,18 +138,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
   userPreferencesService = UserPreferencesService.INSTANCE;
-  authorizationsTree = {};
-  checkbox = false;
+  authorization = {};
   authorizations = [];
   users = [];
   name = null;
   dataGroups = [];
   authorizationScopes = [];
   application = new ApplicationResult();
-  usersToAuthorize = [];
-  dataGroupToAuthorize = null;
-  openCollapse = null;
-  scopesToAuthorize = {};
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -153,62 +154,100 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   };
 
   columnsVisible = {
-    label: { title: "Label", display: true },
-    //dataGroups: {title: this.$t('dataTypeAuthorizations.data-groups'), display: true},
-    extraction: { title: "Extraction", display: true },
-    admin: { title: "Admin", display: true },
-    depot: { title: "Dépôt", display: true },
-    publication: { title: "Publication", display: true },
+    label: {title: "Label", display: true, internationalizationName: {fr: "Domaine", en: "Domain"}}
   };
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
   endDate = null;
   applications = [];
   configuration = {};
-  ToAuthorize;
   authReferences = {};
-  authorizationsToSave = {};
+  subMenuPaths = [];
 
-  created() {
+  selectedUsers = []
+
+
+  getColumnTitle(column) {
+    return (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) || column.title
+  }
+
+  modifyAuthorization(event) {
+    var authorization = this.authorization
+    var authorizations = authorization.authorizations[event.indexColumn] || []
+    for (const authorizationKeytoAdd in event.authorizations.toAdd) {
+      authorizations.push(event.authorizations.toAdd[authorizationKeytoAdd])
+    }
+    for (const authorizationKeytoDelete in event.authorizations.toDelete) {
+      var toDeleteElement = event.authorizations.toDelete[authorizationKeytoDelete];
+      authorizations = authorizations
+          .filter(auth => {
+            return !new Authorization(auth).equals(toDeleteElement, this.authorizationScopes.map(scope => scope.id))
+          });
+    }
+    authorization.authorizations[event.indexColumn] = authorizations
+    this.authorization = new Authorizations(authorization, this.authorizationScopes.map(as => as.id))
+  }
+
+  registerCurrentAuthorization(event) {
+    var authorization = this.authorization
+    var authorizations = authorization.authorizations[event.indexColumn] || []
+    var authorizationToReplace = event.authorizations;
+    authorizationToReplace.fromDay = authorizationToReplace.from && [authorizationToReplace.from.getFullYear(), authorizationToReplace.from.getMonth()+1,authorizationToReplace.from.getDate()]
+    authorizationToReplace.toDay = authorizationToReplace.to && [authorizationToReplace.to.getFullYear(),authorizationToReplace.to.getMonth()+1,authorizationToReplace.to.getDate()]
+    authorizations = authorizations
+        .map(auth => {
+          if (!new Authorization(auth).equals(authorizationToReplace, this.authorizationScopes.map(scope => scope.id))) {
+            return auth
+          } else {
+            return authorizationToReplace
+          }
+        });
+    authorization.authorizations[event.indexColumn] = authorizations
+    this.authorization = new Authorizations(authorization, this.authorizationScopes.map(as => as.id))
+  }
+
+  async created() {
     this.init();
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
-        () => this.$router.push("/applications")
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+          () => this.$router.push("/applications")
       ),
       new SubMenuPath(
-        this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
-          dataType: this.dataTypeId,
-        }),
-        () => {
-          this.$router.push(
-            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
-          );
-        },
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+          this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
+            dataType: this.dataTypeId,
+          }),
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+            );
+          },
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
       new SubMenuPath(
-        this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
-        () => {},
-        () => {
-          this.$router.push(
-            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
-          );
-        }
+          this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
+          () => {
+          },
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+            );
+          }
       ),
     ];
   }
 
-  mounted() {}
+  mounted() {
+  }
 
   showDetail(parent) {
     for (const child in parent) {
       if (parent[child].children.length !== 0) {
-        parent[child] = { ...parent[child], showDetailIcon: true };
+        parent[child] = {...parent[child], showDetailIcon: true};
       }
-      parent[child] = { ...parent[child], showDetailIcon: false };
+      parent[child] = {...parent[child], showDetailIcon: false};
     }
   }
 
@@ -217,121 +256,114 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.applications = await this.applicationService.getApplications();
       this.application = await this.applicationService.getApplication(this.applicationName);
       this.configuration = this.applications
-        .filter((a) => a.name === this.applicationName)
-        .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
+          .filter((a) => a.name === this.applicationName)
+          .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-          this.application,
-          this.application.dataTypes[this.dataTypeId]
+            this.application,
+            this.application.dataTypes[this.dataTypeId]
         ),
       };
-      this.authorizations = await this.authorizationService.getDataAuthorizations(
-        this.applicationName,
-        this.dataTypeId
-      );
       this.authorizations = this.configuration?.authorization?.authorizationScopes || [];
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
-        this.applicationName,
-        this.dataTypeId
+          this.applicationName,
+          this.dataTypeId
       );
       ({
         authorizationScopes: this.authorizationScopes,
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
+      console.log('grantableInfos', grantableInfos)
+      this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription}
+      if (this.authorizationId != 'new') {
+        var authorizations = await this.authorizationService.getAuthorizations(
+            this.applicationName,
+            this.dataTypeId,
+            this.authorizationId
+        );
+        authorizations = new Authorizations(authorizations, this.authorizationScopes.map(as => as.id));
+        this.authorization = authorizations;
+      }else{
+        this.authorization =  new Authorizations({dataType:this.dataTypeId, applicationNameOrId : this.applicationName}, this.authorizationScopes.map(as => as.id));
+      }
+      let currentAuthorizationUsers = this.authorization.users || []
+      this.selectedUsers = this.users.filter((user) => {
+        return currentAuthorizationUsers.find((u) => {
+          return u.id == user.id
+        })
+      })
+          .map(user => user.id)
       grantableInfos.authorizationScopes.reverse();
-      // this.authorizationScopes[0].options[0].children[0].children.push({
-      //   children: [],
-      //   id: "toto",
-      //   label: "toto",
-      // });
       let ret = {};
       for (let auth in grantableInfos.authorizationScopes) {
         let authorizationScope = grantableInfos.authorizationScopes[auth];
         let vc = this.authorizations[authorizationScope?.label];
         var reference =
-          this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
+            this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
         let ref = await this.getOrLoadReferences(reference);
-        ret[auth] = { references: ref, authorizationScope: authorizationScope.label };
+        ret[auth] = {references: ref, authorizationScope: authorizationScope.label};
       }
       let refs = Object.values(ret)
-        .reduce(
-          (acc, k) => [
-            ...acc,
-            ...k.references.referenceValues.reduce(
-              (a, b) => [...a, ...b.hierarchicalReference.split(".")],
-              acc
-            ),
-          ],
-          []
-        )
-        .reduce((a, b) => {
-          if (a.indexOf(b) < 0) {
-            a.push(b);
-          }
-          return a;
-        }, []);
+          .reduce(
+              (acc, k) => [
+                ...acc,
+                ...k.references.referenceValues.reduce(
+                    (a, b) => [...a, ...b.hierarchicalReference.split(".")],
+                    acc
+                ),
+              ],
+              []
+          )
+          .reduce((a, b) => {
+            if (a.indexOf(b) < 0) {
+              a.push(b);
+            }
+            return a;
+          }, []);
       for (const refsKey in refs) {
         await this.getOrLoadReferences(refs[refsKey]);
       }
       var remainingAuthorizations = [];
       for (const key in ret) {
         let partition = await this.partitionReferencesValues(
-          ret[key]?.references?.referenceValues,
-          ret[key]?.authorizationScope
+            ret[key]?.references?.referenceValues,
+            ret[key]?.authorizationScope
         );
         remainingAuthorizations[key] = partition;
       }
-      if (!remainingAuthorizations.length){
+      if (!remainingAuthorizations.length) {
         remainingAuthorizations = [
           {
-            '__DEFAULT__' : {
-                  'authorizationScope': {
-                    id: '__DEFAULT__',
-                    localName: "root"
-                  },
-                  'completeLocalName': '__.__',
-                  'currentPath': '__.__',
-                  'isLeaf': true,
-                  'localName': '__.__fr',
-                  'reference': {},
-                  'referenceValues': {}
-                }
-          }
-        ]
+            __DEFAULT__: {
+              authorizationScope: {
+                id: "__DEFAULT__",
+                localName: "root",
+              },
+              completeLocalName: "__.__",
+              currentPath: "__.__",
+              isLeaf: true,
+              localName: "__.__fr",
+              reference: {},
+              referenceValues: {},
+            },
+          },
+        ];
       }
       this.authReferences = remainingAuthorizations;
     } catch (error) {
       this.alertService.toastServerError(error);
     }
-
-    /*this.authorizationsTree = {
-      "publication": {
-        "projet_atlantique": {
-          "bassin_versant": {
-            "nivelle": new Authorization(),
-            "oir": new Authorization()
-          },
-          plateforme: new Authorization(),
-        },
-      },
-      depot: {
-        projet_manche: new Authorization(),
-      },
-      "depot": {
-        "projet_manche": new Authorization()
-        }
-    };*/
   }
 
   async partitionReferencesValues(
-    referencesValues,
-    authorizationScope,
-    currentPath,
-    currentCompleteLocalName
+      referencesValues,
+      authorizationScope,
+      currentPath,
+      currentCompleteLocalName
   ) {
     let returnValues = {};
     for (const referenceValue of referencesValues) {
@@ -361,7 +393,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         localName = key;
       }
       var completeLocalName =
-        typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
+          typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
       completeLocalName = completeLocalName + (completeLocalName == "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
@@ -380,21 +412,21 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       var auth = returnValues[returnValuesKey];
       let referenceValueLeaf = auth.referenceValues?.[0];
       if (
-        auth.referenceValues.length <= 1 &&
-        referenceValueLeaf.hierarchicalKey == auth.currentPath
+          auth.referenceValues.length <= 1 &&
+          referenceValueLeaf.hierarchicalKey == auth.currentPath
       ) {
         returnValues[returnValuesKey] = {
           ...auth,
           authorizationScope,
           isLeaf: true,
-          referenceValues: { ...referenceValueLeaf, authorizationScope },
+          referenceValues: {...referenceValueLeaf, authorizationScope},
         };
       } else {
         var r = await this.partitionReferencesValues(
-          auth.referenceValues,
-          authorizationScope,
-          auth.currentPath,
-          auth.completeLocalName
+            auth.referenceValues,
+            authorizationScope,
+            auth.currentPath,
+            auth.completeLocalName
         );
         returnValues[returnValuesKey] = {
           ...auth,
@@ -424,21 +456,26 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   }
 
   async createAuthorization() {
-    const dataTypeAuthorization = new DataTypeAuthorization();
-    dataTypeAuthorization.usersId = this.usersToAuthorize;
-    dataTypeAuthorization.applicationNameOrId = this.applicationName;
-    dataTypeAuthorization.dataType = this.dataTypeId;
-    dataTypeAuthorization.authorizations = this.authorizationsToSave;
 
     try {
+      let authorizationToSend =  {...this.authorization, dataType: this.dataTypeId,applicationNameOrId:this.applicationName  }
+      authorizationToSend.usersId =  this.selectedUsers
+      for (const scope in authorizationToSend.authorizations) {
+        authorizationToSend.authorizations[scope] = authorizationToSend.authorizations[scope].map(auth =>{
+          var returnedAuth = new Authorization(auth)
+          returnedAuth.intervalDates = {fromDay:returnedAuth.fromDay,toDay: returnedAuth.toDay}
+         returnedAuth.dataGroups =  returnedAuth.dataGroups.map(dg=>dg.id ||dg)
+          return returnedAuth
+        });
+      }
       await this.authorizationService.createAuthorization(
-        this.applicationName,
-        this.dataTypeId,
-        dataTypeAuthorization
+          this.applicationName,
+          this.dataTypeId,
+          authorizationToSend
       );
       this.alertService.toastSuccess(this.$t("alert.create-authorization"));
       this.$router.push(
-        `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+          `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
       );
     } catch (error) {
       this.alertService.toastServerError(error);
@@ -446,12 +483,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   }
 
   emitUpdateAuthorization(event) {
-    this.authorizationsTree = event.authorizationsTree;
-    var authorizationsToSave = {};
-    for (const type in event.authorizationsTree) {
-      authorizationsToSave[type] = this.extractAuthorizations(event.authorizationsTree[type]);
-    }
-    this.authorizationsToSave = { ...authorizationsToSave };
+    console.log(event)
+    /* this.authorizationsTree = event.authorizationsTree;
+     var authorizationsToSave = {};
+     for (const type in event.authorizationsTree) {
+       authorizationsToSave[type] = this.extractAuthorizations(event.authorizationsTree[type]);
+     }
+     this.authorizationsToSave = { ...authorizationsToSave };*/
   }
 
   extractAuthorizations(authorizationTree) {
@@ -464,8 +502,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       authorizationArray = [
         ...authorizationArray,
         ...(treeOrAuthorization instanceof Authorization
-          ? [treeOrAuthorization.parse()]
-          : this.extractAuthorizations(treeOrAuthorization)),
+            ? [treeOrAuthorization.parse()]
+            : this.extractAuthorizations(treeOrAuthorization)),
       ];
     }
     return authorizationArray;
@@ -512,15 +550,18 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   font-weight: bolder;
   color: $dark;
 }
+
 .rows .card-content .row.label .columns .column {
   padding: 0 0 0 10px;
   border-bottom: 2px solid;
   border-color: $dark;
   margin-bottom: 12px;
 }
+
 ul li.card-content {
   background-color: rgba(0, 0, 0, 0.05);
 }
+
 a {
   color: $dark;
 }

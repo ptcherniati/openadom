@@ -4369,5 +4369,3458 @@
       }
     },
     "configFile": "0f7c9d63-0ccf-40ad-ac7a-366cf3fb3c62"
+  },
+  {
+    "id": "20a6b24b-ac4e-4cee-a21d-02bb75d7ab1d",
+    "creationDate": 1652802043728,
+    "updateDate": 1652871799732,
+    "name": "ola",
+    "comment": "",
+    "referenceType": [
+      "niveau_taxon",
+      "propriete_taxon",
+      "taxon_phytoplancton",
+      "taxon_zooplancton",
+      "stade_développement_zoo",
+      "valeurs_qualitative",
+      "data_type",
+      "controle_coherence",
+      "unit",
+      "variable_group",
+      "variable_norm",
+      "variable",
+      "file_type",
+      "tool_type",
+      "tool",
+      "site_type",
+      "site",
+      "platform_type",
+      "platform",
+      "project",
+      "thematic"
+    ],
+    "dataType": [
+      "condition_prelevements",
+      "physico-chimie",
+      "sonde_multiparametres"
+    ],
+    "configuration": {
+      "requiredAuthorizationsAttributes": [
+        "localization_site",
+        "localization_projet"
+      ],
+      "version": 1,
+      "internationalization": {
+        "application": {
+          "internationalizationName": {
+            "en": "Lake's observatory",
+            "fr": "Observatoire des lacs"
+          }
+        },
+        "references": {
+          "controle_coherence": {
+            "internationalizationName": {
+              "en": "Controle de la cohérence",
+              "fr": "Controle de la cohérence"
+            },
+            "internationalizedColumns": null,
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "taxon_phytoplancton": {
+            "internationalizationName": {
+              "en": "taxon's phytoplanctons",
+              "fr": "taxon des phytoplanctons"
+            },
+            "internationalizedColumns": null,
+            "internationalizedDynamicColumns": {
+              "proprietes_taxon": {
+                "en": "Properties of Taxa",
+                "fr": "Proprétés de Taxons"
+              }
+            },
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}",
+                "fr": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "site_type": {
+            "internationalizationName": {
+              "en": "Sites types",
+              "fr": "Types de site"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              },
+              "description_fr": {
+                "en": "description_en",
+                "fr": "description_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom_key}",
+                "fr": "{nom_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "stade_développement_zoo": {
+            "internationalizationName": {
+              "en": "Stage of development",
+              "fr": "Stade de développement"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              },
+              "description_fr": {
+                "en": "description_en",
+                "fr": "description_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "project": {
+            "internationalizationName": {
+              "en": "Project",
+              "fr": "Projet"
+            },
+            "internationalizedColumns": {
+              "nom du projet_key": {
+                "en": "nom du projet_en",
+                "fr": "nom du projet_fr"
+              },
+              "description du projet_fr": {
+                "en": "description du projet_en",
+                "fr": "description du projet_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom du projet_key}",
+                "fr": "{nom du projet_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "valeurs_qualitative": {
+            "internationalizationName": {
+              "en": "Qualitative values",
+              "fr": "Valeurs qualitatives"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              },
+              "valeur_key": {
+                "en": "valeur_en",
+                "fr": "valeur_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "variable_norm": {
+            "internationalizationName": {
+              "en": "Variables' norms",
+              "fr": "Normes de variable"
+            },
+            "internationalizedColumns": null,
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom}",
+                "fr": "{nom}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "propriete_taxon": {
+            "internationalizationName": {
+              "en": "Proporties of taxons",
+              "fr": "Propiété des taxons"
+            },
+            "internationalizedColumns": {
+              "définition_fr": {
+                "en": "définition_en",
+                "fr": "définition_fr"
+              },
+              "nom de la propriété_key": {
+                "en": "nom de la propriété_en",
+                "fr": "nom de la propriété_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom de la propriété_key}",
+                "fr": "{nom de la propriété_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "tool": {
+            "internationalizationName": {
+              "en": "Measuring tool",
+              "fr": "Outils de mesure"
+            },
+            "internationalizedColumns": {
+              "description_fr": {
+                "en": "description_en",
+                "fr": "description_fr"
+              },
+              "nom de l_outil de mesure_fr": {
+                "en": "nom de l_outil de mesure_en",
+                "fr": "nom de l_outil de mesure_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "platform": {
+            "internationalizationName": {
+              "en": "Plateforms",
+              "fr": "Plateformes"
+            },
+            "internationalizedColumns": {
+              "nom de la plateforme_key": {
+                "en": "nom de la plateforme_en",
+                "fr": "nom de la plateforme_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom de la plateforme_key}",
+                "fr": "{nom de la plateforme_key}"
+              }
+            },
+            "internationalizedValidations": {
+              "format_float": {
+                "fr": "latitude,longitude,altitude au format flottant obligatoire"
+              }
+            }
+          },
+          "site": {
+            "internationalizationName": {
+              "en": "Site",
+              "fr": "Site"
+            },
+            "internationalizedColumns": {
+              "nom du site_key": {
+                "en": "nom du site_en",
+                "fr": "nom du site_fr"
+              },
+              "description du site_fr": {
+                "en": "description du site_en",
+                "fr": "description du site_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom du site_key}",
+                "fr": "{nom du site_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "unit": {
+            "internationalizationName": {
+              "en": "Units",
+              "fr": "Unités"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom_key}",
+                "fr": "{nom_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "tool_type": {
+            "internationalizationName": {
+              "en": "Tools type",
+              "fr": "Type d'outils"
+            },
+            "internationalizedColumns": null,
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "platform_type": {
+            "internationalizationName": {
+              "en": "Plateform types",
+              "fr": "Types de plateforme"
+            },
+            "internationalizedColumns": {
+              "description_fr": {
+                "en": "description_en",
+                "fr": "description_fr"
+              },
+              "nom du type de plateforme_key": {
+                "en": "nom du type de plateforme_en",
+                "fr": "nom du type de plateforme_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom du type de plateforme_key}",
+                "fr": "{nom du type de plateforme_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "file_type": {
+            "internationalizationName": {
+              "en": "Type's Files",
+              "fr": "Type de fichier"
+            },
+            "internationalizedColumns": null,
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom}",
+                "fr": "{nom}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "variable": {
+            "internationalizationName": {
+              "en": "Variables",
+              "fr": "Variables"
+            },
+            "internationalizedColumns": {
+              "définition_fr": {
+                "en": "définition_en",
+                "fr": "définition_fr"
+              },
+              "nom de la variable_fr": {
+                "en": "nom de la variable_en",
+                "fr": "nom de la variable_fr"
+              },
+              "Affichage de la variable_fr": {
+                "en": "Affichage de la variable_en",
+                "fr": "Affichage de la variable_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "data_type": {
+            "internationalizationName": {
+              "en": "Data type",
+              "fr": "Types de données"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              },
+              "description_fr": {
+                "en": "description_en",
+                "fr": "description_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "niveau_taxon": {
+            "internationalizationName": {
+              "en": "Level of taxon",
+              "fr": "Niveau de taxon"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom_key}",
+                "fr": "{nom_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "variable_group": {
+            "internationalizationName": {
+              "en": "Variable's groups",
+              "fr": "Groupes de variable"
+            },
+            "internationalizedColumns": {
+              "nom du groupe": {
+                "en": "nom du groupe_en",
+                "fr": "nom du groupe_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom du groupe_en}",
+                "fr": "{nom du groupe_fr}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "taxon_zooplancton": {
+            "internationalizationName": {
+              "en": "taxon's zooplancton",
+              "fr": "taxon des zooplancton"
+            },
+            "internationalizedColumns": null,
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}",
+                "fr": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}"
+              }
+            },
+            "internationalizedValidations": {}
+          },
+          "thematic": {
+            "internationalizationName": {
+              "en": "Thematic",
+              "fr": "Thème"
+            },
+            "internationalizedColumns": {
+              "nom_key": {
+                "en": "nom_en",
+                "fr": "nom_fr"
+              },
+              "description_fr": {
+                "en": "description_en",
+                "fr": "description_fr"
+              }
+            },
+            "internationalizedDynamicColumns": {},
+            "internationalizationDisplay": {
+              "pattern": {
+                "en": "{nom_key}",
+                "fr": "{nom_key}"
+              }
+            },
+            "internationalizedValidations": {}
+          }
+        },
+        "dataTypes": {
+          "condition_prelevements": {
+            "internationalizationName": {
+              "en": "Collection condition",
+              "fr": "Condition de prélèvement"
+            },
+            "internationalizedColumns": null,
+            "authorization": {
+              "dataGroups": {
+                "referentiel": {
+                  "internationalizationName": {
+                    "en": "Referential",
+                    "fr": "Référentiel"
+                  }
+                },
+                "qualitatif": {
+                  "internationalizationName": {
+                    "en": "Qualitative data",
+                    "fr": "Données qualitatives"
+                  }
+                },
+                "quantitatif": {
+                  "internationalizationName": {
+                    "en": "Quantitative data",
+                    "fr": "Données quantitatives"
+                  }
+                }
+              },
+              "authorizationScopes": {
+                "localization_site": {
+                  "internationalizationName": null
+                },
+                "localization_projet": {
+                  "internationalizationName": null
+                }
+              }
+            },
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "physico-chimie": {
+            "internationalizationName": {
+              "en": "Chemical Physics",
+              "fr": "Physico Chimie"
+            },
+            "internationalizedColumns": null,
+            "authorization": {
+              "dataGroups": {
+                "condition": {
+                  "internationalizationName": {
+                    "en": "Context",
+                    "fr": "Contexte"
+                  }
+                },
+                "referentiel": {
+                  "internationalizationName": {
+                    "en": "Referential",
+                    "fr": "Référentiel"
+                  }
+                },
+                "variable": {
+                  "internationalizationName": {
+                    "en": "Data",
+                    "fr": "Données"
+                  }
+                }
+              },
+              "authorizationScopes": {
+                "localization_site": {
+                  "internationalizationName": null
+                },
+                "localization_projet": {
+                  "internationalizationName": null
+                }
+              }
+            },
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          },
+          "sonde_multiparametres": {
+            "internationalizationName": {
+              "en": "Probe data",
+              "fr": "Données des sondes"
+            },
+            "internationalizedColumns": null,
+            "authorization": {
+              "dataGroups": {
+                "referentiel": {
+                  "internationalizationName": {
+                    "en": "Referential",
+                    "fr": "Référentiel"
+                  }
+                },
+                "condition_prelevement": {
+                  "internationalizationName": {
+                    "en": "Prelevement's condition",
+                    "fr": "Condition de prélèvement"
+                  }
+                },
+                "donnee_prelevement": {
+                  "internationalizationName": {
+                    "en": "Data's condition",
+                    "fr": "Données du prélèvement"
+                  }
+                }
+              },
+              "authorizationScopes": {
+                "localization_site": {
+                  "internationalizationName": null
+                },
+                "localization_projet": {
+                  "internationalizationName": null
+                }
+              }
+            },
+            "internationalizationDisplay": null,
+            "internationalizedValidations": {}
+          }
+        }
+      },
+      "comment": null,
+      "application": {
+        "internationalizationName": {
+          "en": "Lake's observatory",
+          "fr": "Observatoire des lacs"
+        },
+        "internationalizedColumns": null,
+        "name": "ola",
+        "version": 2,
+        "defaultLanguage": "fr",
+        "internationalization": {
+          "internationalizationName": {
+            "en": "Lake's observatory",
+            "fr": "Observatoire des lacs"
+          }
+        }
+      },
+      "references": {
+        "stade_développement_zoo": {
+          "internationalizationName": {
+            "en": "Stage of development",
+            "fr": "Stade de développement"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "code sandre": null,
+            "description_en": null,
+            "description_fr": null,
+            "code sandre du contexte": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "valeurs_qualitative": {
+          "internationalizationName": {
+            "en": "Qualitative values",
+            "fr": "Valeurs qualitatives"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "valeur_key": {
+              "en": "valeur_en",
+              "fr": "valeur_fr"
+            }
+          },
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom_key",
+            "valeur_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "valeur_en": null,
+            "valeur_fr": null,
+            "valeur_key": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "propriete_taxon": {
+          "internationalizationName": {
+            "en": "Proporties of taxons",
+            "fr": "Propiété des taxons"
+          },
+          "internationalizedColumns": {
+            "définition_fr": {
+              "en": "définition_en",
+              "fr": "définition_fr"
+            },
+            "nom de la propriété_key": {
+              "en": "nom de la propriété_en",
+              "fr": "nom de la propriété_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom de la propriété_key}",
+              "fr": "{nom de la propriété_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom de la propriété_key"
+          ],
+          "columns": {
+            "isFloatValue": null,
+            "isQualitative": null,
+            "type associé": null,
+            "définition_en": null,
+            "définition_fr": null,
+            "ordre d'affichage": null,
+            "nom de la propriété_en": null,
+            "nom de la propriété_fr": null,
+            "nom de la propriété_key": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "niveau_taxon": {
+          "internationalizationName": {
+            "en": "Level of taxon",
+            "fr": "Niveau de taxon"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom_key}",
+              "fr": "{nom_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "code sandre": null,
+            "code sandre du contexte": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "taxon_phytoplancton": {
+          "internationalizationName": {
+            "en": "taxon's phytoplanctons",
+            "fr": "taxon des phytoplanctons"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}",
+              "fr": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du taxon déterminé"
+          ],
+          "columns": {
+            "theme": null,
+            "Code Sandre": null,
+            "Notes libres": null,
+            "Synonyme ancien": null,
+            "Synonyme récent": null,
+            "code sandre du taxon": null,
+            "nom du niveau de taxon": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "niveau_taxon",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "nom du taxon superieur": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "taxon_phytoplancton",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": false,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "Année de la description": null,
+            "Auteur de la description": null,
+            "nom du taxon déterminé": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "RegularExpression",
+                "params": {
+                  "pattern": ".*",
+                  "refType": null,
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "Classe algale sensu Bourrelly": null,
+            "Référence de la description": null,
+            "code sandre du taxon supérieur": null,
+            "Références relatives à ce taxon": null,
+            "niveau incertitude de détermination": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {
+            "proprietes_taxon": {
+              "presenceConstraint": "MANDATORY",
+              "internationalizationName": {
+                "en": "Properties of Taxa",
+                "fr": "Proprétés de Taxons"
+              },
+              "headerPrefix": "pt_",
+              "reference": "propriete_taxon",
+              "referenceColumnToLookForHeader": "nom de la propriété_key"
+            }
+          },
+          "validations": {}
+        },
+        "data_type": {
+          "internationalizationName": {
+            "en": "Data type",
+            "fr": "Types de données"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "description_en": null,
+            "description_fr": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "controle_coherence": {
+          "internationalizationName": {
+            "en": "Controle de la cohérence",
+            "fr": "Controle de la cohérence"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom de la variable",
+            "nom du type de données",
+            "nom du site"
+          ],
+          "columns": {
+            "valeur max": null,
+            "valeur min": null,
+            "nom du site": null,
+            "nom de la variable": null,
+            "nom du type de données": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "data_type",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": false,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            }
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "taxon_zooplancton": {
+          "internationalizationName": {
+            "en": "taxon's zooplancton",
+            "fr": "taxon des zooplancton"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}",
+              "fr": "{nom du niveau de taxon}: {nom du taxon superieur}.{nom du taxon déterminé}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du taxon déterminé"
+          ],
+          "columns": {
+            "theme": null,
+            "preselected": null,
+            "code sandre du taxon": null,
+            "nom du niveau de taxon": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "niveau_taxon",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "nom du taxon superieur": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "taxon_zooplancton",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": false,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "nom du taxon déterminé": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "RegularExpression",
+                "params": {
+                  "pattern": ".*",
+                  "refType": null,
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "code sandre du taxon supérieur": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "file_type": {
+          "internationalizationName": {
+            "en": "Type's Files",
+            "fr": "Type de fichier"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom}",
+              "fr": "{nom}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom"
+          ],
+          "columns": {
+            "nom": null,
+            "description": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "variable_group": {
+          "internationalizationName": {
+            "en": "Variable's groups",
+            "fr": "Groupes de variable"
+          },
+          "internationalizedColumns": {
+            "nom du groupe": {
+              "en": "nom du groupe_en",
+              "fr": "nom du groupe_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom du groupe_en}",
+              "fr": "{nom du groupe_fr}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du groupe"
+          ],
+          "columns": {
+            "code sandre": null,
+            "nom du groupe": null,
+            "nom du groupe_en": null,
+            "nom du groupe_fr": null,
+            "nom du groupe parent": null,
+            "code sandre du contexte": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "variable_norm": {
+          "internationalizationName": {
+            "en": "Variables' norms",
+            "fr": "Normes de variable"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom}",
+              "fr": "{nom}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom"
+          ],
+          "columns": {
+            "nom": null,
+            "définition": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "variable": {
+          "internationalizationName": {
+            "en": "Variables",
+            "fr": "Variables"
+          },
+          "internationalizedColumns": {
+            "définition_fr": {
+              "en": "définition_en",
+              "fr": "définition_fr"
+            },
+            "nom de la variable_fr": {
+              "en": "nom de la variable_en",
+              "fr": "nom de la variable_fr"
+            },
+            "Affichage de la variable_fr": {
+              "en": "Affichage de la variable_en",
+              "fr": "Affichage de la variable_fr"
+            }
+          },
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom de la variable_fr"
+          ],
+          "columns": {
+            "code sandre": null,
+            "nom du groupe": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "variable_group",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": false,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "définition_en": null,
+            "définition_fr": null,
+            "ordre daffichage": null,
+            "valeur  qualitative": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "RegularExpression",
+                "params": {
+                  "pattern": "faux|vrai",
+                  "refType": null,
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "nom de la variable_en": null,
+            "nom de la variable_fr": null,
+            "code sandre du contexte": null,
+            "Affichage de la variable_en": null,
+            "Affichage de la variable_fr": null,
+            "nom de la norme de variable": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "variable_norm",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            }
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "thematic": {
+          "internationalizationName": {
+            "en": "Thematic",
+            "fr": "Thème"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom_key}",
+              "fr": "{nom_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "description_en": null,
+            "description_fr": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "site_type": {
+          "internationalizationName": {
+            "en": "Sites types",
+            "fr": "Types de site"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            },
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom_key}",
+              "fr": "{nom_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom_key"
+          ],
+          "columns": {
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null,
+            "code sandre": null,
+            "description_en": null,
+            "description_fr": null,
+            "code sandre du contexte": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "site": {
+          "internationalizationName": {
+            "en": "Site",
+            "fr": "Site"
+          },
+          "internationalizedColumns": {
+            "nom du site_key": {
+              "en": "nom du site_en",
+              "fr": "nom du site_fr"
+            },
+            "description du site_fr": {
+              "en": "description du site_en",
+              "fr": "description du site_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom du site_key}",
+              "fr": "{nom du site_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du site_key"
+          ],
+          "columns": {
+            "nom du site_en": null,
+            "nom du site_fr": null,
+            "nom du site_key": null,
+            "nom du type de site": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "site_type",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "description du site_en": null,
+            "description du site_fr": null,
+            "code sandre du Plan d'eau": null,
+            "code sandre de la Masse d'eau plan d'eau": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "platform_type": {
+          "internationalizationName": {
+            "en": "Plateform types",
+            "fr": "Types de plateforme"
+          },
+          "internationalizedColumns": {
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            },
+            "nom du type de plateforme_key": {
+              "en": "nom du type de plateforme_en",
+              "fr": "nom du type de plateforme_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom du type de plateforme_key}",
+              "fr": "{nom du type de plateforme_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du type de plateforme_key"
+          ],
+          "columns": {
+            "code sandre": null,
+            "description_en": null,
+            "description_fr": null,
+            "code sandre du contexte": null,
+            "nom du type de plateforme_en": null,
+            "nom du type de plateforme_fr": null,
+            "nom du type de plateforme_key": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "platform": {
+          "internationalizationName": {
+            "en": "Plateforms",
+            "fr": "Plateformes"
+          },
+          "internationalizedColumns": {
+            "nom de la plateforme_key": {
+              "en": "nom de la plateforme_en",
+              "fr": "nom de la plateforme_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom de la plateforme_key}",
+              "fr": "{nom de la plateforme_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du site",
+            "nom du type de plateforme_key",
+            "nom de la plateforme_key"
+          ],
+          "columns": {
+            "altitude": null,
+            "latitude": null,
+            "longitude": null,
+            "code sandre": null,
+            "nom du site": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "site",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": {
+                      "expression": "return references.site.find({it.naturalKey.equals(datum[\"nom du site\"])}).hierarchicalKey;\n",
+                      "references": [
+                        "site"
+                      ],
+                      "datatypes": []
+                    }
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            },
+            "code sandre du contexte": null,
+            "nom de la plateforme_en": null,
+            "nom de la plateforme_fr": null,
+            "nom de la plateforme_key": null,
+            "nom du type de plateforme_key": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "platform_type",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": true,
+                    "groovy": null
+                  },
+                  "required": true,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            }
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {
+            "format_float": {
+              "internationalizationName": {
+                "fr": "latitude,longitude,altitude au format flottant obligatoire"
+              },
+              "internationalizedColumns": null,
+              "checker": {
+                "name": "Float",
+                "params": {
+                  "pattern": null,
+                  "refType": null,
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": false,
+                    "groovy": null
+                  },
+                  "required": false,
+                  "multiplicity": "ONE"
+                }
+              },
+              "columns": [
+                "altitude",
+                "latitude",
+                "longitude"
+              ]
+            }
+          }
+        },
+        "project": {
+          "internationalizationName": {
+            "en": "Project",
+            "fr": "Projet"
+          },
+          "internationalizedColumns": {
+            "nom du projet_key": {
+              "en": "nom du projet_en",
+              "fr": "nom du projet_fr"
+            },
+            "description du projet_fr": {
+              "en": "description du projet_en",
+              "fr": "description du projet_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom du projet_key}",
+              "fr": "{nom du projet_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "nom du projet_key"
+          ],
+          "columns": {
+            "nom du projet_en": null,
+            "nom du projet_fr": null,
+            "nom du projet_key": null,
+            "description du projet_en": null,
+            "description du projet_fr": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "unit": {
+          "internationalizationName": {
+            "en": "Units",
+            "fr": "Unités"
+          },
+          "internationalizedColumns": {
+            "nom_key": {
+              "en": "nom_en",
+              "fr": "nom_fr"
+            }
+          },
+          "internationalizationDisplay": {
+            "pattern": {
+              "en": "{nom_key}",
+              "fr": "{nom_key}"
+            }
+          },
+          "separator": ";",
+          "keyColumns": [
+            "code"
+          ],
+          "columns": {
+            "code": null,
+            "nom_en": null,
+            "nom_fr": null,
+            "nom_key": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "tool_type": {
+          "internationalizationName": {
+            "en": "Tools type",
+            "fr": "Type d'outils"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom du type d_outils"
+          ],
+          "columns": {
+            "code sandre": null,
+            "type d_outils": null,
+            "nom du type d_outils": null,
+            "code sandre du contexte": null
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        },
+        "tool": {
+          "internationalizationName": {
+            "en": "Measuring tool",
+            "fr": "Outils de mesure"
+          },
+          "internationalizedColumns": {
+            "description_fr": {
+              "en": "description_en",
+              "fr": "description_fr"
+            },
+            "nom de l_outil de mesure_fr": {
+              "en": "nom de l_outil de mesure_en",
+              "fr": "nom de l_outil de mesure_fr"
+            }
+          },
+          "internationalizationDisplay": null,
+          "separator": ";",
+          "keyColumns": [
+            "nom du type d_outils de mesure",
+            "nom de l_outil de mesure_fr"
+          ],
+          "columns": {
+            "modèle": null,
+            "fabricant": null,
+            "code sandre": null,
+            "description": null,
+            "étalonnage": null,
+            "description_en": null,
+            "description_fr": null,
+            "numéro de série": null,
+            "code sandre du contexte": null,
+            "nom de l_outil de mesure_en": null,
+            "nom de l_outil de mesure_fr": null,
+            "nom du type d_outils de mesure": {
+              "presenceConstraint": "MANDATORY",
+              "checker": {
+                "name": "Reference",
+                "params": {
+                  "pattern": null,
+                  "refType": "tool_type",
+                  "groovy": null,
+                  "duration": null,
+                  "transformation": {
+                    "codify": false,
+                    "groovy": null
+                  },
+                  "required": false,
+                  "multiplicity": "ONE"
+                }
+              },
+              "defaultValue": null
+            }
+          },
+          "computedColumns": {},
+          "dynamicColumns": {},
+          "validations": {}
+        }
+      },
+      "compositeReferences": {
+        "outil": {
+          "internationalizationName": null,
+          "internationalizedColumns": null,
+          "components": [
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "tool_type",
+              "parentKeyColumn": null,
+              "parentRecursiveKey": null
+            },
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "tool",
+              "parentKeyColumn": "nom du type d_outils de mesure",
+              "parentRecursiveKey": null
+            }
+          ]
+        },
+        "project": {
+          "internationalizationName": null,
+          "internationalizedColumns": null,
+          "components": [
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "project",
+              "parentKeyColumn": null,
+              "parentRecursiveKey": null
+            }
+          ]
+        },
+        "zooplanctons": {
+          "internationalizationName": null,
+          "internationalizedColumns": null,
+          "components": [
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "taxon_zooplancton",
+              "parentKeyColumn": null,
+              "parentRecursiveKey": "nom du taxon superieur"
+            }
+          ]
+        },
+        "localizations": {
+          "internationalizationName": null,
+          "internationalizedColumns": null,
+          "components": [
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "site_type",
+              "parentKeyColumn": null,
+              "parentRecursiveKey": null
+            },
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "site",
+              "parentKeyColumn": "nom du type de site",
+              "parentRecursiveKey": null
+            },
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "platform",
+              "parentKeyColumn": "nom du site",
+              "parentRecursiveKey": null
+            }
+          ]
+        },
+        "phytoplanctons": {
+          "internationalizationName": null,
+          "internationalizedColumns": null,
+          "components": [
+            {
+              "internationalizationName": null,
+              "internationalizedColumns": null,
+              "reference": "taxon_phytoplancton",
+              "parentKeyColumn": null,
+              "parentRecursiveKey": "nom du taxon superieur"
+            }
+          ]
+        }
+      },
+      "dataTypes": {
+        "physico-chimie": {
+          "internationalizationName": {
+            "en": "Chemical Physics",
+            "fr": "Physico Chimie"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplays": null,
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom_du_projet",
+                "boundTo": {
+                  "variable": "projet",
+                  "component": "nom du projet",
+                  "id": "projet_nom du projet",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nom_du_site",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nom_de_la_plateforme",
+                "boundTo": {
+                  "variable": "plateforme",
+                  "component": "nom de la plateforme",
+                  "id": "plateforme_nom de la plateforme",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "date_de_prelevement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "date_de_debut_de_campagne",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "date_de_fin_de_campagne",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "date_de_reception",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "outil_de_prelevement",
+                "boundTo": {
+                  "variable": "outil",
+                  "component": "prélèvement",
+                  "id": "outil_prélèvement",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "profondeur_minimum",
+                "boundTo": {
+                  "variable": "profondeur",
+                  "component": "minimum",
+                  "id": "profondeur_minimum",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "profondeur_maximum",
+                "boundTo": {
+                  "variable": "profondeur",
+                  "component": "maximum",
+                  "id": "profondeur_maximum",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "profondeur_reelle",
+                "boundTo": {
+                  "variable": "profondeur",
+                  "component": "reelle",
+                  "id": "profondeur_reelle",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nom_de_la_variable",
+                "boundTo": {
+                  "variable": "variable",
+                  "component": "nom",
+                  "id": "variable_nom",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "valeur_de_la_variable",
+                "boundTo": {
+                  "variable": "variable",
+                  "component": "values",
+                  "id": "variable_values",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "data": {
+            "date": {
+              "chartDescription": null,
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy",
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": null
+              },
+              "computedComponents": {}
+            },
+            "site": {
+              "chartDescription": null,
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "site",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": {
+                          "expression": "return references.site.find({it.naturalKey.equals(datum.site['nom du site'])}).hierarchicalKey;\n",
+                          "references": [
+                            "site"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "outil": {
+              "chartDescription": null,
+              "components": {
+                "prélèvement": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "tool",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": {
+                          "expression": "return references.tool.find({it.refValues[\"nom de l_outil de mesure_fr\"].equals(datum.outil['prélèvement'])}).hierarchicalKey;\n",
+                          "references": [
+                            "tool"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": false,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "projet": {
+              "chartDescription": null,
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "project",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": {
+                          "expression": "return references.project.find({it.naturalKey.equals(datum.projet['nom du projet'])}).hierarchicalKey;\n",
+                          "references": [
+                            "project"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "variable": {
+              "chartDescription": null,
+              "components": {
+                "nom": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "variable",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": null
+                      },
+                      "required": false,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "values": null
+              },
+              "computedComponents": {}
+            },
+            "plateforme": {
+              "chartDescription": null,
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "platform",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": {
+                          "expression": "return references.platform.find({it.refValues['nom de la plateforme_key'].equals(datum.plateforme['nom de la plateforme'])}).hierarchicalKey;\n",
+                          "references": [
+                            "platform"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "profondeur": {
+              "chartDescription": null,
+              "components": {
+                "reelle": null,
+                "maximum": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "minimum": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            }
+          },
+          "validations": {},
+          "uniqueness": [],
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "day",
+              "id": "date_day",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "internationalizationName": null,
+                "internationalizedColumns": null,
+                "variable": "site",
+                "component": "nom du site",
+                "variableComponentKey": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              "localization_projet": {
+                "internationalizationName": null,
+                "internationalizedColumns": null,
+                "variable": "projet",
+                "component": "nom du projet",
+                "variableComponentKey": {
+                  "variable": "projet",
+                  "component": "nom du projet",
+                  "id": "projet_nom du projet",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              }
+            },
+            "dataGroups": {
+              "variable": {
+                "internationalizationName": {
+                  "en": "Data",
+                  "fr": "Données"
+                },
+                "internationalizedColumns": null,
+                "label": "Données",
+                "data": [
+                  "variable"
+                ]
+              },
+              "condition": {
+                "internationalizationName": {
+                  "en": "Context",
+                  "fr": "Contexte"
+                },
+                "internationalizedColumns": null,
+                "label": "Contexte",
+                "data": [
+                  "outil",
+                  "profondeur"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "internationalizedColumns": null,
+                "label": "Référentiel",
+                "data": [
+                  "date",
+                  "site",
+                  "projet",
+                  "plateforme"
+                ]
+              }
+            },
+            "internationalization": {
+              "dataGroups": {
+                "condition": {
+                  "internationalizationName": {
+                    "en": "Context",
+                    "fr": "Contexte"
+                  }
+                },
+                "referentiel": {
+                  "internationalizationName": {
+                    "en": "Referential",
+                    "fr": "Référentiel"
+                  }
+                },
+                "variable": {
+                  "internationalizationName": {
+                    "en": "Data",
+                    "fr": "Données"
+                  }
+                }
+              },
+              "authorizationScopes": {
+                "localization_site": {
+                  "internationalizationName": null
+                },
+                "localization_projet": {
+                  "internationalizationName": null
+                }
+              }
+            }
+          },
+          "repository": {
+            "toto": "test"
+          }
+        },
+        "sonde_multiparametres": {
+          "internationalizationName": {
+            "en": "Probe data",
+            "fr": "Données des sondes"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplays": null,
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "nom du projet",
+                "boundTo": {
+                  "variable": "projet",
+                  "component": "nom du projet",
+                  "id": "projet_nom du projet",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nom de la plateforme",
+                "boundTo": {
+                  "variable": "plateforme",
+                  "component": "nom de la plateforme",
+                  "id": "plateforme_nom de la plateforme",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "date de prélèvement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "outil de mesure",
+                "boundTo": {
+                  "variable": "outil",
+                  "component": "mesure",
+                  "id": "outil_mesure",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "commentaire sonde",
+                "boundTo": {
+                  "variable": "condition_prelevement",
+                  "component": "commentaire",
+                  "id": "condition_prelevement_commentaire",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "heure",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "time",
+                  "id": "date_time",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "profondeur",
+                "boundTo": {
+                  "variable": "condition_prelevement",
+                  "component": "profondeur",
+                  "id": "condition_prelevement_profondeur",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "température",
+                "boundTo": {
+                  "variable": "condition_prelevement",
+                  "component": "temperature",
+                  "id": "condition_prelevement_temperature",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "chl a",
+                "boundTo": {
+                  "variable": "chl",
+                  "component": "a",
+                  "id": "chl_a",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "Chl a corrigée  labo",
+                "boundTo": {
+                  "variable": "chl",
+                  "component": "a_corrige_labo",
+                  "id": "chl_a_corrige_labo",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "pH brut",
+                "boundTo": {
+                  "variable": "ph",
+                  "component": "brut",
+                  "id": "ph_brut",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "pH tc",
+                "boundTo": {
+                  "variable": "ph",
+                  "component": "tc",
+                  "id": "ph_tc",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "pH corrigé labo",
+                "boundTo": {
+                  "variable": "ph",
+                  "component": "corrige_labo",
+                  "id": "ph_corrige_labo",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "cond25degres",
+                "boundTo": {
+                  "variable": "cond25",
+                  "component": "degres",
+                  "id": "cond25_degres",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "Cond25C corrigee labo",
+                "boundTo": {
+                  "variable": "cond25",
+                  "component": "C_corrige_labo",
+                  "id": "cond25_C_corrige_labo",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "oxygene mg",
+                "boundTo": {
+                  "variable": "oxygene",
+                  "component": "mg",
+                  "id": "oxygene_mg",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "oxygene mg corrige winkler",
+                "boundTo": {
+                  "variable": "oxygene",
+                  "component": "mg_corrige",
+                  "id": "oxygene_mg_corrige",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "oxygene saturation",
+                "boundTo": {
+                  "variable": "oxygene",
+                  "component": "saturation",
+                  "id": "oxygene_saturation",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "oxygene saturation corrige winkler",
+                "boundTo": {
+                  "variable": "oxygene",
+                  "component": "saturation_corrige",
+                  "id": "oxygene_saturation_corrige",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "turbidite",
+                "boundTo": {
+                  "variable": "turbidite",
+                  "component": "value",
+                  "id": "turbidite_value",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "trans",
+                "boundTo": {
+                  "variable": "trans",
+                  "component": "value",
+                  "id": "trans_value",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "par w",
+                "boundTo": {
+                  "variable": "trans",
+                  "component": "par_w",
+                  "id": "trans_par_w",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "par a",
+                "boundTo": {
+                  "variable": "trans",
+                  "component": "par_a",
+                  "id": "trans_par_a",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "data": {
+            "ph": {
+              "chartDescription": null,
+              "components": {
+                "tc": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "brut": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "corrige_labo": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "chl": {
+              "chartDescription": null,
+              "components": {
+                "a": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "a_corrige_labo": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "date": {
+              "chartDescription": null,
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy",
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "HH:mm:ss",
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "site": {
+              "chartDescription": null,
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "site",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": {
+                          "expression": "return references.site.find({it.naturalKey.equals(datum.site['nom du site'])}).hierarchicalKey;\n",
+                          "references": [
+                            "site"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "outil": {
+              "chartDescription": null,
+              "components": {
+                "mesure": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "tool",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": {
+                          "expression": "return references.tool.find({it.refValues[\"nom de l_outil de mesure_fr\"].equals(datum.outil['prélèvement'])}).hierarchicalKey;\n",
+                          "references": [
+                            "tool"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": false,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "trans": {
+              "chartDescription": null,
+              "components": {
+                "par_a": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "par_w": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "value": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "cond25": {
+              "chartDescription": null,
+              "components": {
+                "degres": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "C_corrige_labo": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "projet": {
+              "chartDescription": null,
+              "components": {
+                "nom du projet": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "project",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": {
+                          "expression": "return references.project.find({it.naturalKey.equals(datum.projet['nom du projet'])}).hierarchicalKey;\n",
+                          "references": [
+                            "project"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "oxygene": {
+              "chartDescription": null,
+              "components": {
+                "mg": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "mg_corrige": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "saturation": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "saturation_corrige": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "turbidite": {
+              "chartDescription": null,
+              "components": {
+                "value": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "plateforme": {
+              "chartDescription": null,
+              "components": {
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "platform",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": {
+                          "expression": "return references.platform.find({it.refValues['nom de la plateforme_key'].equals(datum.plateforme['nom de la plateforme'])}).hierarchicalKey;\n",
+                          "references": [
+                            "platform"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "condition_prelevement": {
+              "chartDescription": null,
+              "components": {
+                "profondeur": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "commentaire": null,
+                "temperature": {
+                  "checker": {
+                    "name": "Float",
+                    "params": {
+                      "pattern": null,
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            }
+          },
+          "validations": {},
+          "uniqueness": [],
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "day",
+              "id": "date_day",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "internationalizationName": null,
+                "internationalizedColumns": null,
+                "variable": "site",
+                "component": "nom du site",
+                "variableComponentKey": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              "localization_projet": {
+                "internationalizationName": null,
+                "internationalizedColumns": null,
+                "variable": "projet",
+                "component": "nom du projet",
+                "variableComponentKey": {
+                  "variable": "projet",
+                  "component": "nom du projet",
+                  "id": "projet_nom du projet",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              }
+            },
+            "dataGroups": {
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "internationalizedColumns": null,
+                "label": "Référentiel",
+                "data": [
+                  "date",
+                  "site",
+                  "outil",
+                  "projet",
+                  "plateforme"
+                ]
+              },
+              "donnee_prelevement": {
+                "internationalizationName": {
+                  "en": "Data's condition",
+                  "fr": "Données du prélèvement"
+                },
+                "internationalizedColumns": null,
+                "label": "Données du prélèvement",
+                "data": [
+                  "chl",
+                  "oxygene",
+                  "ph",
+                  "cond25",
+                  "turbidite",
+                  "trans"
+                ]
+              },
+              "condition_prelevement": {
+                "internationalizationName": {
+                  "en": "Prelevement's condition",
+                  "fr": "Condition de prélèvement"
+                },
+                "internationalizedColumns": null,
+                "label": "Condition de prélèvement",
+                "data": [
+                  "condition_prelevement"
+                ]
+              }
+            },
+            "internationalization": {
+              "dataGroups": {
+                "referentiel": {
+                  "internationalizationName": {
+                    "en": "Referential",
+                    "fr": "Référentiel"
+                  }
+                },
+                "condition_prelevement": {
+                  "internationalizationName": {
+                    "en": "Prelevement's condition",
+                    "fr": "Condition de prélèvement"
+                  }
+                },
+                "donnee_prelevement": {
+                  "internationalizationName": {
+                    "en": "Data's condition",
+                    "fr": "Données du prélèvement"
+                  }
+                }
+              },
+              "authorizationScopes": {
+                "localization_site": {
+                  "internationalizationName": null
+                },
+                "localization_projet": {
+                  "internationalizationName": null
+                }
+              }
+            }
+          },
+          "repository": {
+            "toto": "test"
+          }
+        },
+        "condition_prelevements": {
+          "internationalizationName": {
+            "en": "Collection condition",
+            "fr": "Condition de prélèvement"
+          },
+          "internationalizedColumns": null,
+          "internationalizationDisplays": null,
+          "format": {
+            "headerLine": 1,
+            "firstRowLine": 2,
+            "separator": ";",
+            "columns": [
+              {
+                "header": "Nom du projet",
+                "boundTo": {
+                  "variable": "projet",
+                  "component": "value",
+                  "id": "projet_value",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nom du site",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "Nom de la plateforme",
+                "boundTo": {
+                  "variable": "site",
+                  "component": "nom de la plateforme",
+                  "id": "site_nom de la plateforme",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "date de prelevement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "day",
+                  "id": "date_day",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "heure de prelevement",
+                "boundTo": {
+                  "variable": "date",
+                  "component": "time",
+                  "id": "date_time",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "commentaire",
+                "boundTo": {
+                  "variable": "commentaire",
+                  "component": "value",
+                  "id": "commentaire_value",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "Température de l'air",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "temperature de l'air",
+                  "id": "valeurs quantitatives_temperature de l'air",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "nebulosite",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "nebulosite",
+                  "id": "valeurs qualitatives_nebulosite",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "ensoleillement",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "ensoleillement",
+                  "id": "valeurs qualitatives_ensoleillement",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "temps",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "temps",
+                  "id": "valeurs qualitatives_temps",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "direction du vent",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "direction du vent",
+                  "id": "valeurs qualitatives_direction du vent",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "vitesse du vent",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "vitesse du vent",
+                  "id": "valeurs qualitatives_vitesse du vent",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "pression atmosphérique",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "pression atmospherique",
+                  "id": "valeurs quantitatives_pression atmospherique",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "aspect de l'eau",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "aspect de l'eau",
+                  "id": "valeurs qualitatives_aspect de l'eau",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "etat de surface",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "etat de surface",
+                  "id": "valeurs qualitatives_etat de surface",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "transparence par disque inra",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "transparence par disque inra",
+                  "id": "valeurs quantitatives_transparence par disque inra",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "transparence par secchi 20 cm",
+                "boundTo": {
+                  "variable": "valeurs quantitatives",
+                  "component": "transparence par secchi",
+                  "id": "valeurs quantitatives_transparence par secchi",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              {
+                "header": "couleur de l'eau",
+                "boundTo": {
+                  "variable": "valeurs qualitatives",
+                  "component": "couleur de l'eau",
+                  "id": "valeurs qualitatives_couleur de l'eau",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              }
+            ],
+            "repeatedColumns": [],
+            "constants": []
+          },
+          "data": {
+            "date": {
+              "chartDescription": null,
+              "components": {
+                "day": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "dd/MM/yyyy",
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "time": {
+                  "checker": {
+                    "name": "Date",
+                    "params": {
+                      "pattern": "HH:mm:ss",
+                      "refType": null,
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": null
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "site": {
+              "chartDescription": null,
+              "components": {
+                "nom du site": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "site",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": {
+                          "expression": "String site = datum.site['nom du site']; return references.platform\n  .find({it.refValues['nom du site'].split(\"\\\\.\")[1].equals(site)})\n  .collect({it.refValues['nom du site']})[0];\n",
+                          "references": [
+                            "platform"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                },
+                "nom de la plateforme": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "platform",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": false,
+                        "groovy": {
+                          "expression": "String plateforme = references.platform\n  .find({ it.refValues['nom de la plateforme_key'].equals(datum.site['nom de la plateforme']) })\n  .hierarchicalKey;\nreturn plateforme;\n",
+                          "references": [
+                            "platform"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": true,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "projet": {
+              "chartDescription": null,
+              "components": {
+                "value": {
+                  "checker": {
+                    "name": "Reference",
+                    "params": {
+                      "pattern": null,
+                      "refType": "project",
+                      "groovy": null,
+                      "duration": null,
+                      "transformation": {
+                        "codify": true,
+                        "groovy": {
+                          "expression": "return references.project.find({it.naturalKey.equals(datum.projet['value'])}).naturalKey;\n",
+                          "references": [
+                            "project"
+                          ],
+                          "datatypes": []
+                        }
+                      },
+                      "required": false,
+                      "multiplicity": "ONE"
+                    }
+                  },
+                  "defaultValue": null
+                }
+              },
+              "computedComponents": {}
+            },
+            "commentaire": {
+              "chartDescription": null,
+              "components": {
+                "value": null
+              },
+              "computedComponents": {}
+            },
+            "valeurs qualitatives": {
+              "chartDescription": null,
+              "components": {
+                "temps": null,
+                "nebulosite": null,
+                "ensoleillement": null,
+                "aspect de l'eau": null,
+                "etat de surface": null,
+                "vitesse du vent": null,
+                "couleur de l'eau": null,
+                "direction du vent": null
+              },
+              "computedComponents": {}
+            },
+            "valeurs quantitatives": {
+              "chartDescription": null,
+              "components": {
+                "temperature de l'air": null,
+                "pression atmospherique": null,
+                "transparence par secchi": null,
+                "transparence par disque inra": null
+              },
+              "computedComponents": {}
+            }
+          },
+          "validations": {},
+          "uniqueness": [],
+          "migrations": {},
+          "authorization": {
+            "timeScope": {
+              "variable": "date",
+              "component": "day",
+              "id": "date_day",
+              "type": "PARAM_VARIABLE_COMPONENT_KEY"
+            },
+            "authorizationScopes": {
+              "localization_site": {
+                "internationalizationName": null,
+                "internationalizedColumns": null,
+                "variable": "site",
+                "component": "nom du site",
+                "variableComponentKey": {
+                  "variable": "site",
+                  "component": "nom du site",
+                  "id": "site_nom du site",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              },
+              "localization_projet": {
+                "internationalizationName": null,
+                "internationalizedColumns": null,
+                "variable": "projet",
+                "component": "value",
+                "variableComponentKey": {
+                  "variable": "projet",
+                  "component": "value",
+                  "id": "projet_value",
+                  "type": "PARAM_VARIABLE_COMPONENT_KEY"
+                }
+              }
+            },
+            "dataGroups": {
+              "qualitatif": {
+                "internationalizationName": {
+                  "en": "Qualitative data",
+                  "fr": "Données qualitatives"
+                },
+                "internationalizedColumns": null,
+                "label": "Données qualitatives",
+                "data": [
+                  "valeurs qualitatives"
+                ]
+              },
+              "quantitatif": {
+                "internationalizationName": {
+                  "en": "Quantitative data",
+                  "fr": "Données quantitatives"
+                },
+                "internationalizedColumns": null,
+                "label": "Données quantitatives",
+                "data": [
+                  "valeurs quantitatives"
+                ]
+              },
+              "referentiel": {
+                "internationalizationName": {
+                  "en": "Referential",
+                  "fr": "Référentiel"
+                },
+                "internationalizedColumns": null,
+                "label": "Référentiel",
+                "data": [
+                  "date",
+                  "site",
+                  "projet",
+                  "commentaire"
+                ]
+              }
+            },
+            "internationalization": {
+              "dataGroups": {
+                "referentiel": {
+                  "internationalizationName": {
+                    "en": "Referential",
+                    "fr": "Référentiel"
+                  }
+                },
+                "qualitatif": {
+                  "internationalizationName": {
+                    "en": "Qualitative data",
+                    "fr": "Données qualitatives"
+                  }
+                },
+                "quantitatif": {
+                  "internationalizationName": {
+                    "en": "Quantitative data",
+                    "fr": "Données quantitatives"
+                  }
+                }
+              },
+              "authorizationScopes": {
+                "localization_site": {
+                  "internationalizationName": null
+                },
+                "localization_projet": {
+                  "internationalizationName": null
+                }
+              }
+            }
+          },
+          "repository": {
+            "toto": "test"
+          }
+        }
+      }
+    },
+    "configFile": "10d6d91e-fedf-4dd1-ac52-87104a25e4bd"
   }
 ]

@@ -77,14 +77,14 @@ abstract class ReferenceImporter {
         }
     }
 
-    public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
+    public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale) {
         return referenceImporterContext.getDisplayByReferenceAndNaturalKey(referencedColumn, naturalKey, locale);
     }
 
     /**
      * Importer le fichier passé en paramètre.
      *
-     * @param file le fichier à lire en flux
+     * @param file   le fichier à lire en flux
      * @param fileId l'id du fichier file car chaque entité stockée est associée au fichier dont elle provient
      * @throws IOException en cas d'erreur pendant la lecture du fichier passé
      */
@@ -145,13 +145,13 @@ abstract class ReferenceImporter {
                     evaluate.ifPresent(presentEvaluate -> {
                         if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_VALUE) {
                             rowWithValues.put(referenceColumn, presentEvaluate);
-                        } else if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE){
+                        } else if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE) {
                             rowWithDefaults.put(referenceColumn, presentEvaluate);
                         } else {
-                            throw new IllegalArgumentException("on ne sait comment utiliser la valeur calculée de " + referenceColumn + " → " + column.getComputedValueUsage());
+                            throw ComputedValueUsage.getError(column.getComputedValueUsage());
                         }
                     });
-        });
+                });
         rowWithDefaults.putAll(rowWithValues);
         return new RowWithReferenceDatum(rowWithReferenceDatum.getLineNumber(), rowWithDefaults, rowWithReferenceDatum.getRefsLinkedTo());
     }
@@ -215,7 +215,7 @@ abstract class ReferenceImporter {
 
     /**
      * Passe les {@link fr.inra.oresing.checker.LineChecker} sur la ligne passée.
-     *
+     * <p>
      * Cela aura pour effet :
      *
      * <ul>
@@ -274,7 +274,7 @@ abstract class ReferenceImporter {
                         referenceColumnNewValue = new ReferenceColumnMultipleValue(values);
                         break;
                     default:
-                        throw new IllegalStateException("multiplicity = " + multiplicity);
+                        throw Multiplicity.getError(multiplicity);
                 }
                 referenceDatum.put(referenceColumn, referenceColumnNewValue);
             }
@@ -341,7 +341,7 @@ abstract class ReferenceImporter {
 
     /**
      * Pour une ligne passée, calcule la clé naturelle composite de cette ligne.
-     *
+     * <p>
      * Il s'agit d'aller lire les différentes colonnes qui composent la clé, de joindre le tout et de gérer
      * l'échappement.
      */

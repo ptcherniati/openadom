@@ -61,7 +61,24 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
      * @return la liste qui satisfont aux criteres
      */
     public List<ReferenceValue> findAllByReferenceType(String refType, MultiValueMap<String, String> params) {
-        MultiValueMap<String, String> toto = new LinkedMultiValueMap<>();
+        int offset = Optional.of(params)
+                .map(m -> m.remove("_offset_"))
+                .filter(l -> l.size() > 0)
+                .map(l -> l.get(0))
+                .map(o -> {
+                    try {
+                        return Integer.valueOf(o);
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                })
+                .orElse(0);
+        String limit = Optional.of(params)
+                .map(m -> m.remove("_limit_"))
+                .filter(l -> l.size() > 0)
+                .map(l -> l.get(0))
+                .filter(o -> o.matches("[0-9]*|ALL"))
+                .orElse("ALL");
         String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
                 + getTable().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
         MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
@@ -95,6 +112,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         if (StringUtils.isNotBlank(cond)) {
             cond = " AND (" + cond + ")";
         }
+        cond = String.format("%s offset %d  limit %s", cond, offset, limit);
 
         List result = getNamedParameterJdbcTemplate().query(query + cond, paramSource, getJsonRowMapper());
         return (List<ReferenceValue>) result;
@@ -171,7 +189,14 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public ImmutableMap<Ltree, UUID> getReferenceIdPerKeys(String referenceType) {
-        return findAllByReferenceType(referenceType).stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
+        final List<ReferenceValue> allByReferenceType = findAllByReferenceType(referenceType);
+        final ImmutableMap<Ltree, UUID> byHierarchicalKey = allByReferenceType.stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getNaturalKey, ReferenceValue::getId));
+        final ImmutableMap<Ltree, UUID> byNaturalKey = allByReferenceType.stream().collect(ImmutableMap.toImmutableMap(ReferenceValue::getHierarchicalKey, ReferenceValue::getId));
+        final ImmutableMap.Builder<Ltree, UUID> builder = ImmutableMap.builder();
+        return builder
+                .putAll(byHierarchicalKey)
+                .putAll(byNaturalKey.entrySet().stream().filter(e->!byHierarchicalKey.containsKey(e.getKey())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
+                .build();
     }
 
     public List<ApplicationResult.ReferenceSynthesis> buildReferenceSynthesis() {
@@ -185,8 +210,8 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     public void updateConstraintForeignReferences(List<UUID> uuids) {
         String deleteSql = "DELETE FROM " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference WHERE referenceId in (:ids)";
         String insertSql = String.join(" "
-                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencedBy)"
-                , "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencedBy"
+                , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencesBy)"
+                , "select id referenceId, (jsonb_array_elements_text((jsonb_each(refsLinkedTo)).value))::uuid referencesBy"
                 , "from " + getTable().getSqlIdentifier()
                 , "where id in (:ids)"
                 , "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING"
@@ -197,13 +222,13 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Set<String> listOfIds) {
-        if(listOfIds.isEmpty()){
+        if (listOfIds.isEmpty()) {
             return new HashMap<>();
         }
-       String sql =  "SELECT  DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(r) as json \n" +
-                "from "+getSchema().getSqlIdentifier()+".data_reference dr\n" +
-                "join "+getSchema().getSqlIdentifier()+".\"data\" d on dr.dataid = d.id\n" +
-                "join "+getTable().getSqlIdentifier()+" r on dr.referencedby = r.id\n"+
+        String sql = "SELECT  DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(r) as json \n" +
+                "from " + getSchema().getSqlIdentifier() + ".data_reference dr\n" +
+                "join " + getSchema().getSqlIdentifier() + ".\"data\" d on dr.dataid = d.id\n" +
+                "join " + getTable().getSqlIdentifier() + " r on dr.referencesBy = r.id\n" +
                 "where d.rowid in (:list)";
         final List<ReferenceValue> list = getNamedParameterJdbcTemplate()
                 .query(sql, new MapSqlParameterSource().addValue("list", listOfIds), getJsonRowMapper());

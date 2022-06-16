@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "cypress:open": "cypress open  --browser chrome",
-    "serve": "mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service serve",
-    "build": "mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service build;  ",
+    "cypress:open": "cypress open",
+    "serve": "export SERVER='development';mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service serve",
+    "build": "export SERVER='production';mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service build;  ",
     "lint": "vue-cli-service lint",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
   },
@@ -39,7 +39,8 @@
     "@vue/eslint-config-prettier": "^6.0.0",
     "babel-eslint": "^10.1.0",
     "cache-loader": "^4.1.0",
-    "cypress": "^9.6.1",
+    "cypress": "^8.3.1",
+    "cypress-plugin-tab": "^1.0.5",
     "eslint": "^6.8.0",
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-vue": "^6.2.2",

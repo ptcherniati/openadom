@@ -39,14 +39,14 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                         "FROM (select id, application, name, comment, size, params from %s  " +
                         "WHERE application = :application::uuid\n" +
                         "and (params->>'published' )::bool\n" +
-                        "and params->'binaryfiledataset'->'requiredauthorizations'= :requiredAuthorization::jsonb) t",
+                        "and params->'binaryfiledataset'->'requiredauthorizations'= :requiredAuthorizations::jsonb) t",
                 getEntityClass().getName(), getTable().getSqlIdentifier()
         );
         Optional<BinaryFile> result = getNamedParameterJdbcTemplate().query(
                 query,
                 new MapSqlParameterSource()
                         .addValue("application", getApplication().getId())
-                        .addValue("requiredAuthorization",   getJsonRowMapper().toJson(binaryFileDataset.getRequiredauthorizations())),
+                        .addValue("requiredAuthorizations",   getJsonRowMapper().toJson(binaryFileDataset.getRequiredAuthorizations())),
                 getJsonRowMapper()
         ).stream().findFirst();
         return result;
@@ -107,8 +107,8 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     public List<BinaryFile> findByBinaryFileDataset(String datatype, BinaryFileDataset binaryFileDataset, boolean overlap) {
         MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         List<String> where = new LinkedList<>();
-        if (Optional.ofNullable(binaryFileDataset).map(bfd -> bfd.getRequiredauthorizations()).isPresent()) {
-            for (Map.Entry<String, Ltree> entry : binaryFileDataset.getRequiredauthorizations().entrySet()) {
+        if (Optional.ofNullable(binaryFileDataset).map(bfd -> bfd.getRequiredAuthorizations()).isPresent()) {
+            for (Map.Entry<String, Ltree> entry : binaryFileDataset.getRequiredAuthorizations().entrySet()) {
                 String t = String.format("params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' @@ ('$ == \"'||:%1$s||'\"')::jsonpath", entry.getKey());
                 mapSqlParameterSource.addValue(entry.getKey(), entry.getValue().getSql());
                 where.add(t);

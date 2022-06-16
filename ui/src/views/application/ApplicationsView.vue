@@ -126,8 +126,7 @@
                       </div>
                       <div class="card-content">
                         <div class="content">
-                          <p
-                            v-html="
+                          <p v-html="
                               $t('applications.version', {
                                 applicationName: application.localName,
                                 version: application.configuration.application.version,

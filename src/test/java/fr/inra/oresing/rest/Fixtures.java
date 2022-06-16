@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,7 +101,7 @@ public class Fixtures {
         return String.format("{\n" +
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"localization\":\"%1$s\"\n" +
                 "      },\n" +
                 "      \"from\":\"%2$s\",\n" +
@@ -114,7 +115,7 @@ public class Fixtures {
         return String.format("{\n" +
                 "   \"fileid\":\"%1$s\",\n" +
                 "   \"binaryfiledataset\":{\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"projet\":\"projet_%2$s\",\n" +
                 "         \"localization\":\"%3$s.%4$s.%4$s__p1\"\n" +
                 "      },\n" +
@@ -130,7 +131,7 @@ public class Fixtures {
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
                 "      \"datatype\":\"monsore\",\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"projet\":\"projet_%1$s\",\n" +
                 "         \"localization\":\"%2$s.%3$s.%3$s__p1\"\n" +
                 "      },\n" +
@@ -143,7 +144,7 @@ public class Fixtures {
 
     public String getPemRepositoryId(String plateforme, String projet, String site) {
         return String.format("{\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"projet\":\"projet_%2$s\",\n" +
                 "         \"localization\":\"%1$s.%3$s.%3$s__p1\"\n" +
                 "      },\n" +
@@ -184,8 +185,80 @@ public class Fixtures {
     public Map<String, String> getRecursiviteReferentielOrderFiles() {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
         referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
-        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_reduit-test.csv");
+        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton-reduit.csv");
         return referentielFiles;
+    }
+
+    public Map<String, String> getRecursiviteReferentielTaxon() {
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton.csv");
+        return referentielFiles;
+    }
+
+    public Map<String, List<String>> getRecursiviteReferentielErrorsStringReplace() {
+        Map<String, List<String>> referentielErrors = new LinkedHashMap<>();
+        referentielErrors.put("invalidHeaders", List.of(
+                "définition_en",
+                "définition_es",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingColumns\":[\"définition_en\"],\"unknownColumns\":[\"définition_es\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("emptyHeader", List.of(
+                "définition_en",
+                "",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"emptyHeader\",\"messageParams\":{\"headerLine\":1},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("duplicatedHeaders", List.of(
+                "définition_en",
+                "définition_fr",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedHeaders\",\"messageParams\":{\"duplicatedHeaders\":[\"définition_fr\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("invalidDateWithColumn", List.of(
+                "02/01/2016",
+                "01/01/16",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":2}]"
+        ));
+        referentielErrors.put("invalidFloatWithColumn", List.of(
+                "55,22",
+                "x",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithColumn\",\"messageParams\":{\"target\":{\"column\":\"isFloatValue\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
+        ));
+        referentielErrors.put("invalidIntegerWithColumn", List.of(
+                "4",
+                "x",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithColumn\",\"messageParams\":{\"target\":{\"column\":\"ordre d'affichage\",\"type\":\"PARAM_COLUMN\"},\"value\":\"x\"},\"error\":true,\"success\":false},\"lineNumber\":5}]"
+        ));
+        referentielErrors.put("duplicatedLineInReference", List.of(
+                "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;39,22;false;Phytoplancton;38",
+                "01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"error\":true,\"success\":false},\"lineNumber\":40}]"
+        ));
+        // me renvois une erreur "invalidHeaders"
+        referentielErrors.put("unexpectedHeaderColumn", List.of(
+                "Date;nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage",
+                "martin",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"actualColumns\":[\"martin\",\"site\"],\"missingColumns\":[\"Date\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"définition_en\",\"définition_fr\",\"ordre d'affichage\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"nom de la propriété_key\"],\"unknownColumns\":[\"martin\"]},\"error\":true,\"success\":false},\"lineNumber\":1}]"
+        ));
+        referentielErrors.put("invalidReferenceWithColumn", List.of(
+                "38;",
+                "38;martin",
+                "[{\"validationCheckResult\":{\"target\":{\"column\":\"site\",\"type\":\"PARAM_COLUMN\"},\"level\":\"ERROR\",\"rawValue\":\"martin\",\"matchedReferenceHierarchicalKey\":null,\"matchedReferenceId\":null,\"message\":\"invalidReferenceWithColumn\",\"messageParams\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"error\":true,\"success\":false},\"lineNumber\":39}]"
+        ));
+        referentielErrors.put("patternNotMatchedWithColumn", List.of(
+                "02/01/2016",
+                "12:00:00",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"target\":{\"column\":\"Date\",\"type\":\"PARAM_COLUMN\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":2}]"
+        ));
+        return referentielErrors;
+    }
+
+    public Map<String, List<String>> getRecursiviteDataErrorsStringReplace() {
+        Map<String, List<String>> DataTypeErrors = new LinkedHashMap<>();
+        DataTypeErrors.put("duplicatedLineInDatatype", List.of(
+                "suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;17/03/2010;Bouteille Pelletier;microscope inverse zeiss axiovert 135;878170.9",
+                "suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;24/02/2010;Bouteille Pelletier;microscope inverse zeiss axiovert 135;223408.73",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"phytoplancton_aggregated\",\"duplicatedRows\":[3,4],\"uniquenessKey\":{\"outils_prélèvement\":\"Bouteille Pelletier\",\"outils_mesure\":\"microscope inverse zeiss axiovert 135\",\"dates_day\":\"24/02/2010\",\"projets_nom du projet\":\"suivi_des_lacs\",\"plateformes_nom de la plateforme\":\"leman.shl2__station_de_prelevement_lac\",\"site_nom du site\":\"grand_lac.leman\"}},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+        ));
+        return DataTypeErrors;
     }
 
     public Map<String, String> getRecursiviteReferentielFiles() {

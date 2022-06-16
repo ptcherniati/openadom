@@ -34,7 +34,7 @@ describe('test repository', () => {
          cy.get('@swc_j').then((swc_j) => {
              cy.intercept({
                      method: 'GET',
-                     url: 'http://localhost:8081/api/v1/applications/foret/filesOnRepository/swc_j?repositoryId=%7B%22datatype%22%3A%22swc_j%22%2C%22requiredauthorizations%22%3A%7B%22localization%22%3A%22fougeres.fougeres__fou_4%22%7D%2C%22from%22%3Anull%2C%22to%22%3Anull%2C%22comment%22%3Anull%7D'
+                     url: 'http://localhost:8081/api/v1/applications/foret/filesOnRepository/swc_j?repositoryId=%7B%22datatype%22%3A%22swc_j%22%2C%22requiredAuthorizations%22%3A%7B%22localization%22%3A%22fougeres.fougeres__fou_4%22%7D%2C%22from%22%3Anull%2C%22to%22%3Anull%2C%22comment%22%3Anull%7D'
                  },
                  swc_j).as('getSWCJForetResponse')
          })
@@ -42,7 +42,7 @@ describe('test repository', () => {
          cy.get('@swc_j2').then((swc_j) => {
              cy.intercept({
                      method: 'GET',
-                     url: 'http://localhost:8081/api/v1/applications/foret/filesOnRepository/swc_j?repositoryId=%7B%22datatype%22%3A%22swc_j%22%2C%22requiredauthorizations%22%3A%7B%22localization%22%3A%22fougeres.fougeres__fou_2%22%7D%2C%22from%22%3Anull%2C%22to%22%3Anull%2C%22comment%22%3Anull%7D'
+                     url: 'http://localhost:8081/api/v1/applications/foret/filesOnRepository/swc_j?repositoryId=%7B%22datatype%22%3A%22swc_j%22%2C%22requiredAuthorizations%22%3A%7B%22localization%22%3A%22fougeres.fougeres__fou_2%22%7D%2C%22from%22%3Anull%2C%22to%22%3Anull%2C%22comment%22%3Anull%7D'
                  },
                  swc_j).as('getSWCJForetResponse')
          })

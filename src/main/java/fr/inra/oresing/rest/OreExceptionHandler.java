@@ -4,6 +4,9 @@ import com.google.common.base.Throwables;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.persistence.AuthenticationFailure;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.authentication.DisconnectedException;
+import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,14 @@ import java.util.List;
 @Slf4j
 public class OreExceptionHandler {
 
+    @ExceptionHandler(value = DisconnectedException.class)
+    public ResponseEntity<DisconnectedException> handle(DisconnectedException eee) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
+    }
+    @ExceptionHandler(value = SiOreIllegalArgumentException.class)
+    public ResponseEntity<SiOreIllegalArgumentException> handle(SiOreIllegalArgumentException eee) {
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(eee);
+    }
     @ExceptionHandler(value = AuthenticationFailure.class)
     public ResponseEntity<String> handle(AuthenticationFailure eee) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
@@ -30,7 +41,7 @@ public class OreExceptionHandler {
             if (log.isTraceEnabled()) {
                 log.trace("erreur de permission PostgreSQL", badSqlGrammarException);
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(badSqlGrammarException.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(badSqlGrammarException.getMessage());
         }
         throw badSqlGrammarException;
     }

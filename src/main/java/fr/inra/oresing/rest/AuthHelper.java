@@ -3,8 +3,8 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.JwtCookieValue;
-import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -69,7 +70,15 @@ public class AuthHelper {
             JwtCookieValue jwtCookieValue = objectMapper.readValue(json, JwtCookieValue.class);
             requestClient = jwtCookieValue.getRequestClient();
         } catch (IOException e) {
-            throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
+            throw new SiOreIllegalArgumentException(
+                    "jsonDeserializationError",
+                    Map.of(
+                          "json",   json,
+                            "objectMapper", objectMapper,
+                            "message", e.getLocalizedMessage()
+                    )
+            );
+           // throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
         }
         return requestClient;
     }
@@ -80,7 +89,15 @@ public class AuthHelper {
             JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
             json = objectMapper.writeValueAsString(jwtCookieValue);
         } catch (JsonProcessingException e) {
-            throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
+            throw new SiOreIllegalArgumentException(
+                    "requestMapperSerializationError",
+                    Map.of(
+                          "requestClient",   requestClient,
+                            "objectMapper", objectMapper,
+                            "message", e.getLocalizedMessage()
+                    )
+            );
+            //throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
         Date issuedAt = new Date();
         String token = Jwts.builder()

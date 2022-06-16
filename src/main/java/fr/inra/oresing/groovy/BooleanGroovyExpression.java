@@ -1,9 +1,10 @@
 package fr.inra.oresing.groovy;
 
 import com.google.common.base.MoreObjects;
-import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.checker.CheckerReturnType;
 
 import java.util.Map;
+import java.util.Set;
 
 public class BooleanGroovyExpression implements Expression<Boolean> {
 
@@ -23,7 +24,7 @@ public class BooleanGroovyExpression implements Expression<Boolean> {
         if (evaluation instanceof Boolean) {
             return (Boolean) evaluation;
         } else {
-            throw new OreSiTechnicalException("L'évaluation de l’expression n'a pas retourné une valeur booléenne mais " + evaluation + ". Expression = " + expression + ", donnée = " + context);
+            throw CheckerReturnType.getError(evaluation, expression, context,  Set.of(CheckerReturnType.BOOLEAN));
         }
     }
 

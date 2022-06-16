@@ -2,6 +2,7 @@ import { i18n } from "@/main";
 //prettier-ignore
 
 const ERRORS = {
+  authorizationScopeMissingReferenceCheckerForAuthorizationScope: (params) => i18n.t("errors.authorizationScopeMissingReferenceCheckerForAuthorizationScope", params),
   authorizationScopeVariableComponentKeyMissingVariable: (params) => i18n.t("errors.authorizationScopeVariableComponentKeyMissingVariable", params),
   authorizationScopeVariableComponentKeyUnknownVariable: (params) => i18n.t("errors.authorizationScopeVariableComponentKeyUnknownVariable", params),
   authorizationScopeVariableComponentReftypeNull: (params) => i18n.t("errors.authorizationScopeVariableComponentReftypeNull", params),
@@ -13,8 +14,8 @@ const ERRORS = {
   checkerExpressionReturnedFalse: (params) => i18n.t("errors.checkerExpressionReturnedFalse", params),
   csvBoundToUnknownVariable: (params) => i18n.t("errors.csvBoundToUnknownVariable", params),
   csvBoundToUnknownVariableComponent: (params) => i18n.t("errors.csvBoundToUnknownVariableComponent", params),
-  duplicateLineInDatatype: (params) => i18n.t("errors.duplicateLineInDatatype", params),
-  duplicateLineInReference: (params) => i18n.t("errors.duplicateLineInReference", params),
+  duplicatedLineInDatatype: (params) => i18n.t("errors.duplicatedLineInDatatype", params),
+  duplicatedLineInReference: (params) => i18n.t("errors.duplicatedLineInReference", params),
   duplicatedHeaders: (params) => i18n.t("errors.duplicatedHeaders", params),
   emptyFile: (params) => i18n.t("errors.emptyFile", params),
   emptyHeader: (params) => i18n.t("errors.emptyHeader", params),
@@ -124,6 +125,7 @@ export class ErrorsService {
   getErrorsMessages(errors) {
     return errors.map((error) => {
       const func = ERRORS[error.message];
+      console.log("test", error.messageParams.target);
       if (!func) {
         //throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
         return i18n.t("errors.expetion");
@@ -135,6 +137,11 @@ export class ErrorsService {
   getCsvErrorsMessages(csvErrors) {
     return csvErrors.map((csvError) => {
       const func = ERRORS[csvError.validationCheckResult.message];
+      if (csvError.validationCheckResult.messageParams.target != null) {
+        if (csvError.validationCheckResult.messageParams.target.column != null) {
+          csvError.validationCheckResult.messageParams.target = csvError.validationCheckResult.messageParams.target.column;
+        }
+      }
       if (!func) {
         //throw new Error("Il manque la chaine de traduction pour l'erreur : " + csvError.validationCheckResult.message);
         return Error(i18n.t("errors.expetion") + csvError.validationCheckResult.message);

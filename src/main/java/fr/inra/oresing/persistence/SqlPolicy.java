@@ -18,6 +18,8 @@ public class SqlPolicy implements WithSqlIdentifier {
 
     String usingExpression;
 
+    String withCheckExpression;
+
     @Override
     public String getSqlIdentifier() {
         return WithSqlIdentifier.escapeSqlIdentifier(id);
