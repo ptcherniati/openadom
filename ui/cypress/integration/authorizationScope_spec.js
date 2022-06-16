@@ -1,7 +1,7 @@
 /// <reference types="Cypress" />
 
 import Assert from "assert";
-import * as assert from "assert";
+
 require('cypress-plugin-tab')
 const verify = function (req, response) {
     console.log('req', req.body, 'response', response)
@@ -18,102 +18,23 @@ const verify = function (req, response) {
 }
 
 const verify2 = function (req, response) {
-    var res = {
-        "scopes": {
-            "admin": {
-                "projet_atlantique": {
-                    "requiredAuthorizations": {
-                        "projet": "projet_atlantique"
-                    },
-                    "dataGroups": [],
-                    "from": null,
-                    "to": null
-                }
-            },
-            "extraction": {
-                "projet_atlantique.bassin_versant": {
-                    "requiredAuthorizations": {
-                        "projet": "projet_atlantique",
-                        "localization": "bassin_versant"
-                    },
-                    "dataGroups": [
-                        {
-                            "id": "referentiel",
-                            "label": "Référentiel"
-                        }
-                    ],
-                    "from": "2020-12-31T23:00:00.000Z",
-                    "to": "2021-12-30T23:00:00.000Z",
-                    "fromDay": [
-                        2021,
-                        1,
-                        1
-                    ],
-                    "toDay": [
-                        2021,
-                        12,
-                        31
-                    ]
-                }
-            }
-        },
-        "applicationNameOrId": "monsore",
-        "dataType": "pem",
-        "name": "Une authorization",
-        "users": [],
-        "authorizations": {
-            "admin": [
-                {
-                    "requiredAuthorizations": {
-                        "projet": "projet_atlantique"
-                    },
-                    "dataGroups": [],
-                    "from": null,
-                    "to": null,
-                    "intervalDates": {}
-                }
-            ],
-            "extraction": [
-                {
-                    "requiredAuthorizations": {
-                        "projet": "projet_atlantique",
-                        "localization": "bassin_versant"
-                    },
-                    "dataGroups": [
-                        "referentiel"
-                    ],
-                    "from": "2020-12-31T23:00:00.000Z",
-                    "to": "2021-12-30T23:00:00.000Z",
-                    "fromDay": [
-                        2021,
-                        1,
-                        1
-                    ],
-                    "toDay": [
-                        2021,
-                        12,
-                        31
-                    ],
-                    "intervalDates": {
-                        "fromDay": [
-                            2021,
-                            1,
-                            1
-                        ],
-                        "toDay": [
-                            2021,
-                            12,
-                            31
-                        ]
-                    }
-                }
-            ]
-        },
-        "usersId": [
-            "88b99c65-e5ca-4aeb-b64d-53203bab5838"
-        ]
-    }
-    Assert.equal(JSON.stringify(res), JSON.stringify(req.body))
+    console.log('req', req.body, 'response', response)
+    Assert.equal('monsore', req.body.applicationNameOrId)
+    Assert.equal('pem', req.body.dataType)
+    Assert.equal('88b99c65-e5ca-4aeb-b64d-53203bab5838', req.body.usersId[0])
+    Assert.equal("Une authorization", req.body.name)
+    var extraction = req.body.authorizations.extraction;
+    cy.expect(extraction).should('have.length', 1)
+    var admin = req.body.authorizations.admin;
+    cy.expect(admin).should('have.length', 1)
+    Assert.equal('projet_atlantique', extraction[0].requiredAuthorizations.projet)
+    Assert.equal('bassin_versant', extraction[0].requiredAuthorizations.localization)
+    cy.expect(extraction.dataGroups).should('have.length', 1)
+    Assert.equal('referentiel', extraction[0].dataGroups[0])
+    Assert.equal(new Date([2021, 1, 1]),new Date( extraction[0].fromDay))
+    Assert.equal(new Date([2021, 12, 31]),new Date( extraction[0].toDay))
+
+
     req.reply({
         statusCode: 201,
         body: response,
@@ -204,7 +125,6 @@ describe('test authorization application', () => {
     })
 
 
-
     it('Test une autre authorization monsore pem', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
@@ -271,7 +191,7 @@ describe('test authorization application', () => {
 
         cy.get('.autocomplete > .control > .input').click()
         cy.get('.dropdown-content > :nth-child(3)').click().tab()
-         cy.get('.autocomplete > .control > .input').click().tab()
+        cy.get('.autocomplete > .control > .input').click().tab()
         cy.get(':nth-child(2) > .datepicker > .dropdown > .dropdown-trigger > .control > .input').type('2021/01/01').tab()
         cy.get(':nth-child(3) > .datepicker > .dropdown > .dropdown-trigger > .control > .input').type('2021/12/31').tab().type('{esc}')
         cy.wait(100)
