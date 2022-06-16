@@ -6,6 +6,7 @@ export class DownloadDatasetQuery {
   application = new Application();
   applicationNameOrId;
   dataType;
+  reference;
   offset = 0;
   limit = 10;
   variableComponentSelects = [];
@@ -15,6 +16,7 @@ export class DownloadDatasetQuery {
     downloadDatasetQueryOrApplication,
     applicationNameOrId,
     dataType,
+    reference,
     offset = 0,
     limit = 10,
     variableComponentSelects,
@@ -32,6 +34,7 @@ export class DownloadDatasetQuery {
       this.variableComponentKey = downloadDatasetQueryOrApplication;
       this.applicationNameOrId = applicationNameOrId;
       this.dataType = dataType;
+      this.reference = reference;
       this.offset = offset ? offset : 0;
       this.limit = limit ? limit : 10;
       this.variableComponentSelects = [];
