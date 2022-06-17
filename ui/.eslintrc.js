@@ -13,7 +13,7 @@ module.exports = {
   ],
 
   parserOptions: {
-    parser: 'babel-eslint',
+    parser: "babel-eslint",
     ecmaVersion: 2020,
     ecmaFeatures: {
       legacyDecorators: true,
@@ -21,44 +21,44 @@ module.exports = {
   },
 
   rules: {
-    'no-console': 'off',
-    'no-debugger': 'off',
+    "no-console": "off",
+    "no-debugger": "off",
 
-    '@intlify/vue-i18n/no-duplicate-keys-in-locale': [
-      'error',
+    "@intlify/vue-i18n/no-duplicate-keys-in-locale": [
+      "error",
       {
-        ignoreI18nBlock: false
-      }
+        ignoreI18nBlock: false,
+      },
     ],
-    '@intlify/vue-i18n/no-missing-keys': 'error',
-    '@intlify/vue-i18n/no-missing-keys-in-other-locales': [
-      'error',
+    "@intlify/vue-i18n/no-missing-keys": "error",
+    "@intlify/vue-i18n/no-missing-keys-in-other-locales": [
+      "error",
       {
         ignoreLocales: [],
       },
     ],
-    '@intlify/vue-i18n/no-unused-keys': [
-      'error',
+    "@intlify/vue-i18n/no-unused-keys": [
+      "error",
       {
-        src: './src',
-        extensions: ['.js', '.vue', '*.ts', '*.json'],
+        src: "./src",
+        extensions: [".js", ".vue", "*.ts", "*.json"],
         enableFix: false,
       },
     ],
   },
 
   settings: {
-    'vue-i18n': {
-      localeDir: './src/locales/*.{json,json5,yaml,yml}',
+    "vue-i18n": {
+      localeDir: "./src/locales/*.{json,json5,yaml,yml}",
 
-      messageSyntaxVersion: '^8.22.3',
+      messageSyntaxVersion: "^8.22.3",
     },
   },
 
-  'extends': [
-    'plugin:vue/strongly-recommended',
-    'eslint:recommended',
-    '@vue/prettier',
-    'plugin:@intlify/vue-i18n/recommended'
-  ]
+  extends: [
+    "plugin:vue/strongly-recommended",
+    "eslint:recommended",
+    "@vue/prettier",
+    "plugin:@intlify/vue-i18n/recommended",
+  ],
 };

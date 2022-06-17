@@ -290,6 +290,24 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
+    public static class TokenDateDescription {
+        Integer token;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class RepositoryDescription {
+
+        String filePattern= "";
+        Map<String, Integer> authorizationScope = new HashMap<>();
+        TokenDateDescription startDate;
+        TokenDateDescription endDate;
+    }
+
+    @Getter
+    @Setter
+    @ToString
     public static class DataTypeDescription extends InternationalizationMapDisplayImpl {
 
         @ApiModelProperty(notes = "This section describes a binding between a file and the data", required = true)
@@ -311,7 +329,7 @@ public class Configuration {
         private AuthorizationDescription authorization;
 
         @ApiModelProperty(notes = "If this section exists, the data file will be store on a repository tree", required = false)
-        private LinkedHashMap<String, String> repository = null;
+        private RepositoryDescription repository = null;
 
         public static Map<String, InternationalizationDataTypeMap> getInternationalization(LinkedHashMap<String, DataTypeDescription> dataTypeDescriptionMap) {
             Map<String, InternationalizationDataTypeMap> internationalizationDataTypeMapMap = new HashMap<>();

@@ -2,7 +2,7 @@
   <ModalCard
     v-show="open"
     :title="dataType && (dataType.localName || dataType.label)"
-    :closeCb="closeCb"
+    :close-cb="closeCb"
   >
     <div class="modal-card" style="width: auto; height: auto">
       <div v-if="options && options.synthesis">

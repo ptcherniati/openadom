@@ -2,7 +2,7 @@
     fr: Température infra-journalière
     en: Infra-daily temperature
   repository:
-    toto: test
+    filePattern:
   template:
     TS_([0-9]*)_([0-9]*):
       variables:

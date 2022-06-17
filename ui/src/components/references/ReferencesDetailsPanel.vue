@@ -1,9 +1,9 @@
 <template>
   <SidePanel
     :open="open"
-    :leftAlign="leftAlign"
+    :left-align="leftAlign"
     :title="reference && (reference.refNameLocal || reference.label)"
-    :closeCb="closeCb"
+    :close-cb="closeCb"
   >
     <div class="Panel-buttons">
       <b-button type="is-danger" icon-left="trash-alt" @click="askDeletionConfirmation">{{

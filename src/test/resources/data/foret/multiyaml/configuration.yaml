@@ -5,7 +5,7 @@ dataTypes:
       fr: Profondeur de la nappe infra-journalière
       en: Infra-daily depth of the groundwater
     repository:
-      toto: test
+      filePattern:
     template:
       GWD_([0-9]*)_([0-9]*):
         variables:

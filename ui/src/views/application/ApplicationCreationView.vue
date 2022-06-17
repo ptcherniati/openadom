@@ -103,7 +103,7 @@
           </div>
         </ValidationObserver>
         <div v-if="errorsMessages.length">
-          <div v-for="msg in errorsMessages" v-bind:key="msg">
+          <div v-for="msg in errorsMessages" :key="msg">
             <b-message
               :title="$t('message.app-config-error')"
               type="is-danger"
@@ -194,7 +194,7 @@ export default class ApplicationCreationView extends Vue {
         for (let i = 0; i < response.validationCheckResults.length; i++) {
           if (
             this.errorsService.getErrorsMessages(response.validationCheckResults)[i] ===
-            this.$t("errors.expetion")
+            this.$t("errors.exception")
           ) {
             this.error[i] = {
               ...this.error[i],
