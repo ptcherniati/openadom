@@ -54,11 +54,4 @@ module.exports = {
       messageSyntaxVersion: "^8.22.3",
     },
   },
-
-  extends: [
-    "plugin:vue/strongly-recommended",
-    "eslint:recommended",
-    "@vue/prettier",
-    "plugin:@intlify/vue-i18n/recommended",
-  ],
 };

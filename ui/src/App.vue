@@ -21,7 +21,7 @@ export default class App extends Vue {}
   flex-direction: column;
   height: 100%;
 }
-div.media-content span{
+div.media-content span {
   white-space: pre-line;
   word-break: break-all;
 }
