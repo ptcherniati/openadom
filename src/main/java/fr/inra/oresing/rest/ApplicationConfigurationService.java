@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
@@ -37,7 +38,7 @@ public class ApplicationConfigurationService {
 
     public static final String OTHERS_DATAGROUPS = "_others_";
     private static final ImmutableSet<CheckerType> CHECKER_ON_TARGET_NAMES =
-            ImmutableSet.of(CheckerType.Date,CheckerType.Integer,CheckerType.Float,CheckerType.RegularExpression,CheckerType.Reference);
+            ImmutableSet.of(CheckerType.Date, CheckerType.Integer, CheckerType.Float, CheckerType.RegularExpression, CheckerType.Reference);
     private static final ImmutableSet<CheckerType> ALL_CHECKER_NAMES = ImmutableSet.<CheckerType>builder()
             .addAll(CHECKER_ON_TARGET_NAMES)
             .add(CheckerType.GroovyExpression)
@@ -77,7 +78,7 @@ public class ApplicationConfigurationService {
                             "message", e.getLocalizedMessage()
                     )
             );
-           // throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
+            // throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
         }
 
         Configuration configuration;
@@ -127,6 +128,7 @@ public class ApplicationConfigurationService {
             verifyDataTypeValidationRules(builder, dataType, dataTypeDescription, references);
             verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType);
             verifyUniquenessComponentKeysInDatatype(dataType, dataTypeDescription, builder);
+            verifyDatatypeRepository(dataType, dataTypeDescription, builder);
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
@@ -135,7 +137,7 @@ public class ApplicationConfigurationService {
                 //builder.missingAuthorizationForDatatype(dataType);
 //                authorization = Configuration.AuthorizationDescription.DEFAULT_INSTANCE;
 //                dataTypeDescription.setAuthorization(authorization);
-            /*} else {*/
+                /*} else {*/
                 VariableComponentKey timeScopeVariableComponentKey = authorization.getTimeScope();
                 verifyDatatypeTimeScopeExistsAndIsValid(builder, dataType, dataTypeDescription, variables, timeScopeVariableComponentKey);
 
@@ -390,8 +392,7 @@ public class ApplicationConfigurationService {
                                             } else {
                                                 builder.authorizationScopeVariableComponentReftypeUnknown(authorizationScopeVariableComponentKey, refType, configuration.getReferences().keySet());
                                             }
-                                        }
-                                        else {
+                                        } else {
                                             final LinkedHashMap<String, Configuration.CompositeReferenceDescription> compositeReferences = configuration.getCompositeReferences();
                                             Set<String> compositesReferences = compositeReferences.values().stream()
                                                     .map(Configuration.CompositeReferenceDescription::getComponents)
@@ -821,6 +822,67 @@ public class ApplicationConfigurationService {
         }
     }
 
+    private void verifyDatatypeRepository(String dataType, Configuration.DataTypeDescription dataTypeDescription, ConfigurationParsingResult.Builder builder) {
+        final Configuration.RepositoryDescription repository = dataTypeDescription.getRepository();
+        final String filePattern = Optional.ofNullable(repository).map(
+                Configuration.RepositoryDescription::getFilePattern)
+                .orElse(null);
+        if (repository == null || Strings.isNullOrEmpty(filePattern)) {
+            return;
+        }
+        final long countGroups = Arrays.stream(filePattern.split("\\("))
+                .skip(1)
+                .filter(s -> s.contains(")"))
+                .count();
+        if (countGroups == 0) {
+            builder.noCapturingGroupForDatatypeRepository(dataType);
+            return;
+        }
+        try {
+            Pattern.compile(filePattern);
+        } catch (Exception e) {
+            builder.invalidPatternForDatatypeRepository(dataType);
+            return;
+        }
+        extracted(dataType, builder, repository, countGroups, true);
+        extracted(dataType, builder, repository, countGroups, false);
+        try {
+            final Map<String, Integer> authorizationScope = repository.getAuthorizationScope();
+            if (authorizationScope != null && authorizationScope.size() > 0) {
+                final LinkedHashMap<String, Configuration.AuthorizationScopeDescription> declaredAuthorizationScopes = Optional.ofNullable(dataTypeDescription.getAuthorization())
+                        .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
+                        .orElseThrow(IllegalArgumentException::new);
+                authorizationScope.entrySet().stream()
+                        .forEach(scopeName -> {
+                            if (declaredAuthorizationScopes.get(scopeName.getKey()) == null) {
+                                throw new IllegalArgumentExceptionMap(Map.of(
+                                        "scopeName", scopeName.getKey(),
+                                        "registerScopes", declaredAuthorizationScopes.keySet()
+                                ));
+                            }
+                            final Integer scopeToken = authorizationScope.get(scopeName.getKey());
+                            if (scopeToken <= 0 || scopeToken > countGroups) {
+                                builder.invalidCapturingGroupForDatatypeRepositoryAuthorizationScope(dataType, scopeToken, countGroups, scopeName.getKey());
+                            }
+                        });
+            }
+        } catch (IllegalArgumentExceptionMap e) {
+            builder.invalidCapturingGroupForDatatypeRepository(dataType, e.messages);
+        }
+
+    }
+
+    private void extracted(String dataType, ConfigurationParsingResult.Builder builder,  Configuration.RepositoryDescription repository, long countGroups, boolean isStart) {
+        Optional.ofNullable(isStart ? repository.getStartDate() : repository.getEndDate())
+                .map(Configuration.TokenDateDescription::getToken)
+                .ifPresent(token -> {
+                    if (token <= 0 || token > countGroups) {
+                        builder.invalidCapturingGroupForDatatypeRepositoryDate(dataType, token, countGroups, isStart);
+                    }
+                });
+    }
+
+
     private void verifyUniquenessComponentKeysInDatatype(String dataType, Configuration.DataTypeDescription dataTypeDescription, ConfigurationParsingResult.Builder builder) {
         final List<VariableComponentKey> uniqueness = dataTypeDescription.getUniqueness();
         final Set<String> availableVariableComponents = dataTypeDescription.getData().entrySet().stream()
@@ -942,8 +1004,7 @@ public class ApplicationConfigurationService {
             if (lineValidationRuleDescription.getColumns() == null) {
                 System.out.println(lineValidationRuleDescription.getColumns());
                 lineValidationRuleDescriptionValidationContext.missingParamColumnReferenceForChecker(validationRuleDescriptionEntryKey);
-            }
-            else
+            } else
                 verifyLineValidationRuleDescription(lineValidationRuleDescriptionValidationContext, validationRuleDescriptionEntryKey, lineValidationRuleDescription);
         }
     }
@@ -1047,13 +1108,13 @@ public class ApplicationConfigurationService {
     }
 
     private ConfigurationParsingResult onInvalidFormatException(InvalidFormatException e) {
-        String  path = e.getPath().stream()
+        String path = e.getPath().stream()
                 .map(JsonMappingException.Reference::getFieldName)
                 .collect(Collectors.joining("->"));
         final String authorizedValues = Optional.ofNullable(e.getOriginalMessage())
-                .map(m->m.split(":"))
-                .filter(l->l.length>2)
-                .map(l->l[2])
+                .map(m -> m.split(":"))
+                .filter(l -> l.length > 2)
+                .map(l -> l[2])
                 .orElse("");
         int lineNumber = e.getLocation().getLineNr();
         int columnNumber = e.getLocation().getColumnNr();
@@ -1133,6 +1194,14 @@ public class ApplicationConfigurationService {
     @ToString
     private static class Versioned {
         int version;
+    }
+
+    private class IllegalArgumentExceptionMap extends IllegalArgumentException {
+        Map<String, Object> messages;
+
+        public IllegalArgumentExceptionMap(Map<String, Object> messages) {
+            this.messages = messages;
+        }
     }
 
 }

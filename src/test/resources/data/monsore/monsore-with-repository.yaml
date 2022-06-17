@@ -365,7 +365,14 @@ dataTypes:
           fr: 'espèce :{esp_nom}'
           en: 'espèce :{esp_nom}'
     repository:
-      toto: test
+        filePattern: "(.*)_(.*)_(.*)_(.*).csv"
+        authorizationScope: 
+          localization: 1
+          projet: 2
+        startDate: 
+          token: 3
+        endDate: 
+          token: 4
     data:
       projet:
         components:

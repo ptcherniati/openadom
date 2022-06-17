@@ -128,15 +128,15 @@
       :key="child.id"
       :option="child"
       :level="level + 1"
-      :onClickLabelCb="onClickLabelCb"
-      :onUploadCb="onUploadCb"
+      :on-click-label-cb="onClickLabelCb"
+      :on-upload-cb="onUploadCb"
       :buttons="buttons"
       :class="displayChildren ? '' : 'hide'"
-      :withRadios="withRadios"
-      :radioName="radioName"
+      :with-radios="withRadios"
+      :radio-name="radioName"
       @optionChecked="onInnerOptionChecked"
-      :applicationTitle="applicationTitle"
-      :lineCount="child.lineCountChild"
+      :application-title="applicationTitle"
+      :line-count="child.lineCountChild"
     />
   </div>
 </template>

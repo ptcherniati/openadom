@@ -739,7 +739,7 @@ dataTypes:
       fr: Température infra-journalière
       en: Infra-daily temperature
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -1002,7 +1002,7 @@ dataTypes:
       fr: Profondeur de la nappe infra-journalière
       en: Infra-daily depth of the groundwater
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -1253,7 +1253,7 @@ dataTypes:
       fr: Profondeur de la nappe infra-journalière
       en: Infra-daily depth of the groundwater
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -1504,7 +1504,7 @@ dataTypes:
       fr: Flux de chaleur infra-journalier
       en: Infra-daily flow of heat
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -1755,7 +1755,7 @@ dataTypes:
       fr: Humidité volumique infra-journalière
       en: Infra daily volume humidity
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -2006,7 +2006,7 @@ dataTypes:
       fr: Température journalière
       en: Daily temperature
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -2239,7 +2239,7 @@ dataTypes:
       fr: Tension de l'eau journalière
       en: Daily tension of water
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -2472,7 +2472,7 @@ dataTypes:
       fr: Profondeur journalière de la nappe
       en: Daily depth of the groundwater
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -2705,7 +2705,7 @@ dataTypes:
       fr: Flux de chaleur journalier
       en: Daily flow of heat
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -2938,7 +2938,7 @@ dataTypes:
       fr: Humidité volumique journalière
       en: Daily volume humidity
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -3170,7 +3170,7 @@ dataTypes:
       fr: Flux de chambres infra journalier
       en: Intraday flux chambers
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -3435,7 +3435,7 @@ dataTypes:
       fr: Flux de chambres journalier
       en: Daily flux chambers
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -3704,7 +3704,7 @@ dataTypes:
       fr: Flux de chambres mensuel
       en: Monthly flux chambers
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -3919,7 +3919,7 @@ dataTypes:
       fr: Flux semi horaire
       en: Flux half hourly
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -4498,7 +4498,7 @@ dataTypes:
       fr: Flux journalier
       en: Flux daily
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -5011,7 +5011,7 @@ dataTypes:
       fr: Flux mensuel
       en: Flux monthly
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -5520,7 +5520,7 @@ dataTypes:
       fr: Météorologie semi horaire
       en: Meteorology half hourly
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -6207,7 +6207,7 @@ dataTypes:
       fr: Météorologie journalière
       en: Meteorology daily
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:
@@ -6876,7 +6876,7 @@ dataTypes:
       fr: Météorologie mensuelle
       en: Meteorology monthly
     repository:
-      toto: test
+      filePattern:
     authorization:
       authorizationScopes:
         localization:

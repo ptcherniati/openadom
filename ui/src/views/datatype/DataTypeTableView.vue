@@ -246,7 +246,12 @@
           :key="variable.id"
           :variable="variable.id"
         >
-          <b-collapse class="card" animation="slide" :open="isOpen === index" @open="isOpen = index">
+          <b-collapse
+            class="card"
+            animation="slide"
+            :open="isOpen === index"
+            @open="isOpen = index"
+          >
             <template #trigger="props">
               <div class="card-header" role="button">
                 <p class="card-header-title" style="text-transform: capitalize">
@@ -269,7 +274,7 @@
                 <b-field v-if="variable.id === component.variable" :label="component.component">
                   <b-field v-if="'date' === component.type || 'numeric' === component.type">
                     <CollapsibleInterval
-                      :variableComponent="component"
+                      :variable-component="component"
                       @setting_interval="addVariableSearch"
                     ></CollapsibleInterval>
                   </b-field>
@@ -429,7 +434,7 @@
           type="is-primary"
           @click.prevent="downloadResultSearch"
           style="margin-bottom: 15px; float: right"
-          >{{$t("referencesManagement.download")}}</b-button
+          >{{ $t("referencesManagement.download") }}</b-button
         >
       </div>
     </div>

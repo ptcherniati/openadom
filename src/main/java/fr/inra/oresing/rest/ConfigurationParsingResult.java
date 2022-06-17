@@ -719,5 +719,51 @@ public class ConfigurationParsingResult {
                     "dataType", dataType
             ));
         }
+
+        public void noCapturingGroupForDatatypeRepository(String dataType) {
+            recordError("noCapturingGroupForDatatypeRepository", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public void invalidPatternForDatatypeRepository(String dataType) {
+            recordError("invalidPatternForDatatypeRepository", ImmutableMap.of(
+                    "dataType", dataType
+            ));
+        }
+
+        public void invalidCapturingGroupForDatatypeRepositoryAuthorizationScope(String dataType, Integer scopeToken, long countGroups, String scopeName) {
+
+            recordError("invalidCapturingGroupForDatatypeRepositoryAuthorizationScope", ImmutableMap.of(
+                    "scopeName", scopeName,
+                    "scopeToken", scopeToken,
+                    "countGroups", countGroups,
+                    "dataType", dataType
+            ));
+        }
+
+        public void invalidCapturingGroupForDatatypeRepository(String dataType, Map<String, Object> messages) {
+            final Object scopeName = messages.get("scopeName");
+            final Object registerScopes = messages.get("registerScopes");
+            recordError("invalidCapturingGroupForDatatypeRepository", ImmutableMap.of(
+                    "scopeName", scopeName,
+                    "registerScopes", registerScopes,
+                    "dataType", dataType
+            ));
+        }
+
+        public void invalidCapturingGroupForDatatypeRepositoryDate(String dataType, Integer token, long countGroups, boolean isStart) {
+            String message;
+            if (isStart) {
+                message = "invalidCapturingGroupForStartDateDatatypeRepositoryDate";
+            } else {
+                message = "invalidCapturingGroupForEndDateDatatypeRepositoryDate";
+            }
+            recordError(message, ImmutableMap.of(
+                    "token", token,
+                    "countGroups", countGroups,
+                    "dataType", dataType
+            ));
+        }
     }
 }

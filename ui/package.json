@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "cypress:open": "cypress open",
-    "serve": "mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service serve",
-    "build": "mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service build;  ",
+    "serve": "export SERVER='development';mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service serve",
+    "build": "export SERVER='production';mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service build;  ",
     "lint": "vue-cli-service lint",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
   },
   "dependencies": {
+    "@cypress/vue": "^3.1.2",
+    "@cypress/webpack-dev-server": "^1.8.4",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/vue-fontawesome": "^2.0.2",
@@ -17,6 +19,7 @@
     "chart.js": "^2.9.4",
     "core-js": "^3.17.1",
     "husky": "^6.0.0",
+    "moment": "^2.29.3",
     "sortablejs": "^1.14.0",
     "vee-validate": "^3.4.12",
     "vue": "^2.6.14",

@@ -4,7 +4,7 @@
       <b-dropdown-item v-if="option.isLeaf" :value="option.referenceValues" @click="select()">
         {{ option.localName }}
       </b-dropdown-item>
-      <b-dropdown v-else v-on:select-menu-item="select" :ref="option.key" expanded>
+      <b-dropdown v-else @select-menu-item="select" :ref="option.key" expanded>
         <template #trigger="{ active }">
           <b-button
             expanded
@@ -17,7 +17,7 @@
           v-for="(opt, itemKey) in option.referenceValues"
           :key="itemKey"
           :option="opt"
-          v-on:select-menu-item="select"
+          @select-menu-item="select"
         />
       </b-dropdown>
     </div>

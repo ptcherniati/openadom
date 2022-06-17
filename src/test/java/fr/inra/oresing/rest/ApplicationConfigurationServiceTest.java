@@ -1128,4 +1128,81 @@ public class ApplicationConfigurationServiceTest {
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
     }
+
+    @Test
+    public void testNoCapturingGroupForDatatypeRepository() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testNoCapturingGroupForDatatypeRepository",
+                "filePattern: \"(.*)_(.*)_(.*)_(.*).csv\"",
+                "filePattern: \"toto.csv\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("noCapturingGroupForDatatypeRepository", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidPatternForDatatypeRepository() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidPatternForDatatypeRepository",
+                "filePattern: \"(.*)_(.*)_(.*)_(.*).csv\"",
+                "filePattern: \"(.*)_(.*)_(.*)_((.*).csv\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidPatternForDatatypeRepository", onlyError.getMessage());
+    }
+
+    @Test
+    public void testInvalidCapturingGroupForDatatypeRepositoryAuthorizationScope() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidCapturingGroupForDatatypeRepositoryAuthorizationScope",
+                "localization: 1",
+                "localization: -1");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidCapturingGroupForDatatypeRepositoryAuthorizationScope", onlyError.getMessage());
+    }
+    @Test
+    public void testInvalidCapturingGroupForDatatypeRepositoryAuthorizationScope2() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidCapturingGroupForDatatypeRepositoryAuthorizationScope2",
+                "localization: 1",
+                "localization: 5");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidCapturingGroupForDatatypeRepositoryAuthorizationScope", onlyError.getMessage());
+    }
+    @Test
+    public void testInvalidCapturingGroupForDatatypeRepository() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidCapturingGroupForDatatypeRepository",
+                "localization: 1",
+                "projet: 1");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidCapturingGroupForDatatypeRepository", onlyError.getMessage());
+    }
+    @Test
+    public void testInvalidCapturingGroupForStartDateDatatypeRepositoryDate() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidCapturingGroupForDatatypeRepositoryAuthorizationScope2",
+                "startDate:\n" +
+                        "        token: 3",
+                "startDate:\n" +
+                        "        token: -1");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidCapturingGroupForStartDateDatatypeRepositoryDate", onlyError.getMessage());
+    }
+    @Test
+    public void testInvalidCapturingGroupForEndDateDatatypeRepositoryDate() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testInvalidCapturingGroupForEndDateDatatypeRepositoryDate",
+                "endDate:\n" +
+                        "        token: 4",
+                "endDate:\n" +
+                        "        token: 5");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("invalidCapturingGroupForEndDateDatatypeRepositoryDate", onlyError.getMessage());
+    }
 }

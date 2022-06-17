@@ -154,9 +154,18 @@ public class OreSiResources {
                 }
                 return new ApplicationResult.DataType.Variable(variable, variable, components, chartDescriptionResult);
             });
-            Map<String, String> repository = dataTypeDescription.getRepository();
-            final boolean hasAuthorizations = dataTypeDescription.getAuthorization() != null;
-            return new ApplicationResult.DataType(dataType, dataType, variables, Optional.ofNullable(repository).filter(m -> !m.isEmpty()).orElse(null), hasAuthorizations);
+            Configuration.RepositoryDescription repository = dataTypeDescription.getRepository();
+            final boolean hasAuthorizations = repository != null;
+            final ApplicationResult.DataType.Repository repositoryResult = Optional.ofNullable(repository)
+                    .map(repositoryDescription -> {
+                        final String filePattern = repositoryDescription.getFilePattern();
+                        final Map<String, Integer> authorizationScope = repositoryDescription.getAuthorizationScope();
+                        final ApplicationResult.DataType.TokenDateDescription startDate = Optional.ofNullable(repositoryDescription.getStartDate()).map(sd -> new ApplicationResult.DataType.TokenDateDescription(sd.getToken())).orElse(null);
+                        final ApplicationResult.DataType.TokenDateDescription endDate = Optional.ofNullable(repositoryDescription.getEndDate()).map(ed -> new ApplicationResult.DataType.TokenDateDescription(ed.getToken())).orElse(null);
+                        return new ApplicationResult.DataType.Repository(filePattern, authorizationScope,startDate,endDate);
+                    })
+                    .orElse(null);
+            return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations);
         });
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis);
         return ResponseEntity.ok(applicationResult);
