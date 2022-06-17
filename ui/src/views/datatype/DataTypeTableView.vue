@@ -246,7 +246,7 @@
           :key="variable.id"
           :variable="variable.id"
         >
-          <b-collapse class="card" animation="slide" :open="isOpen == index" @open="isOpen = index">
+          <b-collapse class="card" animation="slide" :open="isOpen === index" @open="isOpen = index">
             <template #trigger="props">
               <div class="card-header" role="button">
                 <p class="card-header-title" style="text-transform: capitalize">

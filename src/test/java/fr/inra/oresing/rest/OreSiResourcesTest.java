@@ -693,7 +693,7 @@ public class OreSiResourcesTest {
                     "   \"authorizations\":{\n" +
                     "   \"extraction\":[\n" +
                     "      {\n" +
-                    "         \"requiredauthorizations\":{},\n" +
+                    "         \"requiredAuthorizations\":{},\n" +
                     "         \"dataGroup\":[],\n" +
                     "         \"intervalDates\":{\n" +
                     "            \"fromDay\":null,\n" +

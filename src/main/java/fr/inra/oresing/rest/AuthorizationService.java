@@ -89,14 +89,14 @@ public class AuthorizationService {
         authorizationsByType.values()
                 .forEach(authByType -> {
                     authByType.forEach(authorization -> {
-                        authorization.getDataGroup()
+                        authorization.getDataGroups()
                                 .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
-                        Set<String> labels =Optional.ofNullable( authorizationDescription)
+                        Set<String> labels = Optional.ofNullable(authorizationDescription)
                                 .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
                                 .map(Map::keySet)
                                 .orElseGet(Set::of);
                         Preconditions.checkArgument(
-                                labels.containsAll(authorization.getRequiredauthorizations().keySet())
+                                labels.containsAll(authorization.getRequiredAuthorizations().keySet())
                         );
                     });
                 });
@@ -229,22 +229,23 @@ public class AuthorizationService {
         for (Map.Entry<OperationType, List<Authorization>> operationTypeListEntry : authorizations.entrySet()) {
             List<AuthorizationParsed> authorizationsParsed = new LinkedList<>();
             for (Authorization authorization : operationTypeListEntry.getValue()) {
-                Range<LocalDateTime> timeScopeRange = authorization.getTimeScope().getRange();
-                LocalDate fromDay;
-                if (timeScopeRange.hasLowerBound()) {
-                    fromDay = timeScopeRange.lowerEndpoint().toLocalDate();
-                } else {
-                    fromDay = null;
+                LocalDate fromDay=null, toDay=null;
+                if (authorization.getTimeScope() != null) {
+                    Range<LocalDateTime> timeScopeRange = authorization.getTimeScope().getRange();
+                    if (timeScopeRange.hasLowerBound()) {
+                        fromDay = timeScopeRange.lowerEndpoint().toLocalDate();
+                    } else {
+                        fromDay = null;
+                    }
+                    if (timeScopeRange.hasUpperBound()) {
+                        toDay = timeScopeRange.upperEndpoint().toLocalDate();
+                    } else {
+                        toDay = null;
+                    }
                 }
-                LocalDate toDay;
-                if (timeScopeRange.hasUpperBound()) {
-                    toDay = timeScopeRange.upperEndpoint().toLocalDate();
-                } else {
-                    toDay = null;
-                }
-                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroup(), Maps.transformValues(authorization.getRequiredauthorizations(), Ltree::getSql), fromDay, toDay));
+                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroups(), Maps.transformValues(authorization.getRequiredAuthorizations(), Ltree::getSql), fromDay, toDay));
+                transformedAuthorizations.put(operationTypeListEntry.getKey(), authorizationsParsed);
             }
-            transformedAuthorizations.put(operationTypeListEntry.getKey(), authorizationsParsed);
         }
         return transformedAuthorizations;
     }
@@ -256,19 +257,33 @@ public class AuthorizationService {
         ImmutableSortedSet<GetGrantableResult.User> users = getGrantableUsers();
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = getDataGroups(application, dataType);
         ImmutableSortedSet<GetGrantableResult.AuthorizationScope> authorizationScopes = getAuthorizationScopes(application, dataType);
-        return new GetGrantableResult(users, dataGroups, authorizationScopes);
+        ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> columnDescriptions = getColumnDescripton(configuration, dataType);
+        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions);
+    }
+
+    private ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> getColumnDescripton(Configuration configuration, String dataType) {
+        return ImmutableSortedMap.copyOf(Optional.ofNullable(configuration)
+                .map(Configuration::getDataTypes)
+                .map(dty -> dty.get(dataType))
+                .map(Configuration.DataTypeDescription::getAuthorization)
+                .map(Configuration.AuthorizationDescription::getColumnsDescription)
+                .orElseGet(HashMap::new)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(columDescription -> columDescription.getKey(), columDescription -> new GetGrantableResult.ColumnDescription(columDescription.getValue().isDisplay(), columDescription.getValue().getTitle(), columDescription.getValue().isWithPeriods(), columDescription.getValue().isWithDataGroups(), columDescription.getValue().getInternationalizationName()))));
+
     }
 
     private ImmutableSortedSet<GetGrantableResult.DataGroup> getDataGroups(Application application, String dataType) {
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups =
-        Optional.of(application.getConfiguration().getDataTypes().get(dataType))
-                .map(Configuration.DataTypeDescription::getAuthorization)
-                .map(Configuration.AuthorizationDescription::getDataGroups)
-                .map(dg -> dg.entrySet().stream()
-                    .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)) )
-                )
-                .orElseGet(ImmutableSortedSet::of);
+                Optional.of(application.getConfiguration().getDataTypes().get(dataType))
+                        .map(Configuration.DataTypeDescription::getAuthorization)
+                        .map(Configuration.AuthorizationDescription::getDataGroups)
+                        .map(dg -> dg.entrySet().stream()
+                                .map(dataGroupEntry -> new GetGrantableResult.DataGroup(dataGroupEntry.getKey(), dataGroupEntry.getValue().getLabel()))
+                                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.DataGroup::getId)))
+                        )
+                        .orElseGet(ImmutableSortedSet::of);
         return dataGroups;
     }
 
@@ -285,22 +300,22 @@ public class AuthorizationService {
         return Optional.of(application.getConfiguration().getDataTypes().get(dataType))
                 .map(Configuration.DataTypeDescription::getAuthorization)
                 .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
-                .map(authorizationScopes-> authorizationScopes.entrySet().stream()
+                .map(authorizationScopes -> authorizationScopes.entrySet().stream()
                         .map(
-                        authorizationScopeEntry -> {
-                    String variable = authorizationScopeEntry.getValue().getVariable();
-                    String component = authorizationScopeEntry.getValue().getComponent();
-                    VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                    ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
-                    String lowestLevelReference = referenceLineChecker.getRefType();
-                    HierarchicalReferenceAsTree hierarchicalReferenceAsTree = oreSiService.getHierarchicalReferenceAsTree(application, lowestLevelReference);
-                    ImmutableSortedSet<GetGrantableResult.AuthorizationScope.Option> rootOptions = hierarchicalReferenceAsTree.getRoots().stream()
-                            .map(rootReferenceValue -> toOption(hierarchicalReferenceAsTree, rootReferenceValue))
-                            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
-                    String authorizationScopeId = authorizationScopeEntry.getKey();
-                    return new GetGrantableResult.AuthorizationScope(authorizationScopeId, authorizationScopeId, rootOptions);
-                    })
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope::getId)))
+                                authorizationScopeEntry -> {
+                                    String variable = authorizationScopeEntry.getValue().getVariable();
+                                    String component = authorizationScopeEntry.getValue().getComponent();
+                                    VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
+                                    ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
+                                    String lowestLevelReference = referenceLineChecker.getRefType();
+                                    HierarchicalReferenceAsTree hierarchicalReferenceAsTree = oreSiService.getHierarchicalReferenceAsTree(application, lowestLevelReference);
+                                    ImmutableSortedSet<GetGrantableResult.AuthorizationScope.Option> rootOptions = hierarchicalReferenceAsTree.getRoots().stream()
+                                            .map(rootReferenceValue -> toOption(hierarchicalReferenceAsTree, rootReferenceValue))
+                                            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope.Option::getId)));
+                                    String authorizationScopeId = authorizationScopeEntry.getKey();
+                                    return new GetGrantableResult.AuthorizationScope(authorizationScopeId, authorizationScopeId, rootOptions);
+                                })
+                        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.AuthorizationScope::getId)))
                 )
                 .orElseGet(ImmutableSortedSet::of);
     }

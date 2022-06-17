@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.checker.*;
 import fr.inra.oresing.model.internationalization.*;
+import fr.inra.oresing.persistence.OperationType;
 import fr.inra.oresing.transformer.TransformationConfiguration;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 @ToString
 public class Configuration {
 
-    @ApiModelProperty(notes = "The set of requiredAuthorization of data.authorization section. Fill by aplication", required = false, hidden = true)
+    @ApiModelProperty(notes = "The set of requiredAuthorizations of data.authorization section. Fill by aplication", required = false, hidden = true)
     private List<String> requiredAuthorizationsAttributes;
 
     @ApiModelProperty(notes = "The version number of the yaml schema used to read the deposited yaml", required = true, example = "1")
@@ -398,6 +399,10 @@ public class Configuration {
         @ApiModelProperty(notes = "The list of 'data groups'. Each data group contains variables. People will be given a right on one or more data-group.", required = true)
         private LinkedHashMap<String, DataGroupDescription> dataGroups = new LinkedHashMap<>();
 
+        @ApiModelProperty(notes = "The description for columns in authorization panel", required = false)
+        private Map<String, AuthorizationColumnsDescription> columnsDescription = Arrays.stream(OperationType.values())
+                .collect(Collectors.toMap(OperationType::toString,OperationType::getAuthorizationColumnsDescription));
+
         public InternationalizationAuthorisationMap getInternationalization() {
             final InternationalizationAuthorisationMap internationalizationAuthorisationMap = new InternationalizationAuthorisationMap();
             Map<String, InternationalizationAuthorisationName> authorizationScopesLocalization = new HashMap<>();
@@ -414,8 +419,28 @@ public class Configuration {
                 datagroupsLocalization.put(entry.getKey(), internationalizationAuthorisationName);
             }
             internationalizationAuthorisationMap.setDataGroups(datagroupsLocalization);
+            Map<String, InternationalizationAuthorisationName> authorizationColumnsDescription = new HashMap<>();
+            for (Map.Entry<String, AuthorizationColumnsDescription> entry : columnsDescription.entrySet()) {
+                final InternationalizationAuthorisationName internationalizationAuthorisationName = new InternationalizationAuthorisationName();
+                internationalizationAuthorisationName.setInternationalizationName(entry.getValue().getInternationalizationName());
+                authorizationColumnsDescription.put(entry.getKey(), internationalizationAuthorisationName);
+            }
+            internationalizationAuthorisationMap.setColumnsDescription(authorizationColumnsDescription);
             return internationalizationAuthorisationMap;
         }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class AuthorizationColumnsDescription extends InternationalizationImpl {
+
+        @ApiModelProperty(notes = "This column is or not visible in the authorization panel", required = false)
+        private boolean display = true;
+        @ApiModelProperty(notes = "This column name or the id for internationalization", required = false)
+        private String title = "";
+        private boolean withPeriods = false;
+        private boolean withDataGroups = false;
     }
 
     @Getter

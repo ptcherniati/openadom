@@ -195,16 +195,16 @@ public class DataSynthesisRepository extends JsonTableInApplicationSchemaReposit
             "from result\n" +
             "group by application, \"datatype\", variable, requiredAuthorizations, aggregation";
     public static final String SELECT_SYNTHESIS_BY_APPLICATION_AND_DATATYPE = "SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (" +
-            "select id, updatedate, application, \"datatype\", variable, requiredauthorizations, aggregation, ranges " +
+            "select id, updatedate, application, \"datatype\", variable, requiredAuthorizations, aggregation, ranges " +
             "from %s  " +
             "WHERE \"application\" = :application::uuid and \"datatype\" = :datatype) t";
     public static final String SELECT_SYNTHESIS_BY_APPLICATION_DATATYPE_AND_VARIABLE = "SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (" +
-            "select id, updatedate, application, \"datatype\", variable, requiredauthorizations, aggregation, ranges " +
+            "select id, updatedate, application, \"datatype\", variable, requiredAuthorizations, aggregation, ranges " +
             "from %s  " +
             "WHERE \"application\" = :application::uuid and \"datatype\" = :datatype and \"variable\" = :variable) t";
-    public static final String SYNTHESIS_UPSERT = "INSERT INTO %1$s (id, application, datatype, variable, requiredauthorizations, aggregation, ranges) \n" +
+    public static final String SYNTHESIS_UPSERT = "INSERT INTO %1$s (id, application, datatype, variable, requiredAuthorizations, aggregation, ranges) \n" +
             "SELECT  \n" +
-            "id, application, datatype, variable, requiredauthorizations, aggregation, ranges\n" +
+            "id, application, datatype, variable, requiredAuthorizations, aggregation, ranges\n" +
             "FROM json_populate_recordset(NULL::%1$s, :json::json) \n "
             + " ON CONFLICT (id) " +
             "DO UPDATE " +

@@ -1,7 +1,9 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.internationalization.Internationalization;
 import lombok.Value;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,6 +13,7 @@ public class GetGrantableResult {
     Set<User> users;
     Set<DataGroup> dataGroups;
     Set<AuthorizationScope> authorizationScopes;
+    Map<String, ColumnDescription> columnsDescription;
 
     @Value
     public static class User {
@@ -22,6 +25,15 @@ public class GetGrantableResult {
     public static class DataGroup {
         String id;
         String label;
+    }
+
+    @Value
+    public static class ColumnDescription {
+        boolean display;
+        String title;
+        boolean withPeriods;
+        boolean withDataGroups;
+        Internationalization internationalizationName;
     }
 
     @Value

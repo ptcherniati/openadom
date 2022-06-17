@@ -101,7 +101,7 @@ public class Fixtures {
         return String.format("{\n" +
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"localization\":\"%1$s\"\n" +
                 "      },\n" +
                 "      \"from\":\"%2$s\",\n" +
@@ -115,7 +115,7 @@ public class Fixtures {
         return String.format("{\n" +
                 "   \"fileid\":\"%1$s\",\n" +
                 "   \"binaryfiledataset\":{\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"projet\":\"projet_%2$s\",\n" +
                 "         \"localization\":\"%3$s.%4$s.%4$s__p1\"\n" +
                 "      },\n" +
@@ -131,7 +131,7 @@ public class Fixtures {
                 "   \"fileid\":null,\n" +
                 "   \"binaryfiledataset\":{\n" +
                 "      \"datatype\":\"monsore\",\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"projet\":\"projet_%1$s\",\n" +
                 "         \"localization\":\"%2$s.%3$s.%3$s__p1\"\n" +
                 "      },\n" +
@@ -144,7 +144,7 @@ public class Fixtures {
 
     public String getPemRepositoryId(String plateforme, String projet, String site) {
         return String.format("{\n" +
-                "      \"requiredauthorizations\":{\n" +
+                "      \"requiredAuthorizations\":{\n" +
                 "         \"projet\":\"projet_%2$s\",\n" +
                 "         \"localization\":\"%1$s.%3$s.%3$s__p1\"\n" +
                 "      },\n" +

@@ -49,8 +49,8 @@
         <div class="column" style="padding-top: 20px">
           <h1>
             {{
-              this.requiredauthorizationsObject
-                ? Object.entries(this.requiredauthorizationsObject)
+              this.requiredAuthorizationsObject
+                ? Object.entries(this.requiredAuthorizationsObject)
                     .filter((e) => e[1])
                     .map(
                       (e) =>
@@ -313,7 +313,7 @@ export default class DataTypesRepositoryView extends Vue {
   authorizations = [];
   authReferences = {};
   selected = null;
-  requiredauthorizationsObject = null;
+  requiredAuthorizationsObject = null;
   datasets = {};
   file = null;
   startDate = null;
@@ -369,7 +369,7 @@ export default class DataTypesRepositoryView extends Vue {
       this.authorizations = this.configuration.authorization.authorizationScopes;
       this.selected = new BinaryFileDataset({
         datatype: this.dataTypeId,
-        requiredauthorizations: Object.keys(this.authorizations).reduce((acc, auth) => {
+        requiredAuthorizations: Object.keys(this.authorizations).reduce((acc, auth) => {
           acc[auth] = null;
           return acc;
         }, {}),
@@ -377,7 +377,7 @@ export default class DataTypesRepositoryView extends Vue {
         to: "",
         comment: "",
       });
-      this.requiredauthorizationsObject = Object.keys(this.authorizations).reduce((acc, auth) => {
+      this.requiredAuthorizationsObject = Object.keys(this.authorizations).reduce((acc, auth) => {
         acc[auth] = null;
         return acc;
       }, {});
@@ -468,7 +468,7 @@ export default class DataTypesRepositoryView extends Vue {
         null,
         new BinaryFileDataset(
           this.dataTypeId,
-          this.selected.requiredauthorizations,
+          this.selected.requiredAuthorizations,
           /(.{10})T(.{8}).*/
             .exec(new Date(this.startDate).toISOString())
             .filter((a, i) => i != 0)
@@ -494,12 +494,14 @@ export default class DataTypesRepositoryView extends Vue {
   async publish(dataset, pusblished) {
     this.errorsMessages = [];
     dataset.params.published = pusblished;
-    let requiredauthorizations = dataset.params.binaryFiledataset.requiredauthorizations;
-    requiredauthorizations = Object.keys(requiredauthorizations).reduce(function (acc, key) {
+    let requiredAuthorizations = dataset.params.binaryFiledataset.requiredAuthorizations;
+    requiredAuthorizations = Object.keys(requiredAuthorizations).reduce(function (acc, key) {
       acc[key] = acc[key] ? acc[key].sql : "";
       return acc;
-    }, requiredauthorizations);
-    dataset.params.binaryFiledataset.requiredauthorizations = requiredauthorizations;
+    }, requiredAuthorizations);
+    console.log("requiredAuthorizations", requiredAuthorizations);
+    dataset.params.binaryFiledataset.requiredAuthorizations = requiredAuthorizations;
+    console.log("binaryFiledataset", dataset.params.binaryFiledataset);
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     try {
       var uuid = await this.dataService.addData(
@@ -551,8 +553,8 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   selectAuthorization(key, event) {
-    this.selected.requiredauthorizations[key] = event.referenceValues.hierarchicalKey;
-    this.requiredauthorizationsObject[key] = event.completeLocalName;
+    this.selected.requiredAuthorizations[key] = event.referenceValues.hierarchicalKey;
+    this.requiredAuthorizationsObject[key] = event.completeLocalName;
     this.datasets = this.currentDataset = null;
     this.$refs?.[key]?.[0].toggle();
     if (this.isAuthorisationsSelected()) {
@@ -572,7 +574,7 @@ export default class DataTypesRepositoryView extends Vue {
 
   isAuthorisationsSelected() {
     return (
-      this.selected && Object.values(this.selected.requiredauthorizations).every((v) => v?.length)
+      this.selected && Object.values(this.selected.requiredAuthorizations).every((v) => v?.length)
     );
   }
 

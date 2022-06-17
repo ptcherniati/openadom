@@ -139,8 +139,8 @@ public class OreSiService {
         flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
         flywayConfiguration.setLocations(new Location("classpath:migration/application"));
         flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
-        flywayConfiguration.getPlaceholders().put("requiredauthorizations", sqlSchemaForApplication.getRequiredauthorizationsAttributes(app));
-        flywayConfiguration.getPlaceholders().put("requiredauthorizationscomparing", sqlSchemaForApplication.getRequiredauthorizationsAttributesComparing(app));
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(app));
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(app));
         Flyway flyway = new Flyway(flywayConfiguration);
         flyway.migrate();
 
@@ -468,7 +468,7 @@ public class OreSiService {
                     .map(buildCsvRecordToLineAsMapFn(columns))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredauthorizations()))
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredAuthorizations()))
                     .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
             AtomicLong lines = new AtomicLong();
             final Instant debut = Instant.now();
@@ -639,13 +639,13 @@ public class OreSiService {
             if(haveAuthorizations) {
                 authorization.getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
                     VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
-                    String requiredAuthorization = datum.get(variableComponentKey);
-                    Ltree.checkSyntax(requiredAuthorization);
-                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorization));
+                    String requiredAuthorizationsFromDatum = datum.get(variableComponentKey);
+                    Ltree.checkSyntax(requiredAuthorizationsFromDatum);
+                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorizationsFromDatum));
                 });
             }
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
-            checkRequiredAuthorizationInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
+            checkrequiredAuthorizationsInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
             String rowId = UUID.randomUUID().toString();
             final List<String> uniquenessValues = uniquenessBuilder.test(datum, rowWithData.getLineNumber());
@@ -725,14 +725,14 @@ public class OreSiService {
     }
 
 
-    private void checkRequiredAuthorizationInDatasetRange(Map<String, Ltree> requiredAuthorizations,
+    private void checkrequiredAuthorizationsInDatasetRange(Map<String, Ltree> requiredAuthorizations,
                                                           List<CsvRowValidationCheckResult> errors,
                                                           BinaryFileDataset binaryFileDataset,
                                                           int rowNumber) {
         if (binaryFileDataset == null) {
             return;
         }
-        binaryFileDataset.getRequiredauthorizations().entrySet()
+        binaryFileDataset.getRequiredAuthorizations().entrySet()
                 .forEach(entry -> {
                     if (!requiredAuthorizations.get(entry.getKey()).equals(entry.getValue())) {
                         errors.add(
