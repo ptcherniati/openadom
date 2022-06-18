@@ -55,13 +55,23 @@
             </template>
 
             <b-dropdown-item
-              @click="logout()"
-              @keypress.enter="logout()"
-              tabindex="0"
-              aria-role="menuitem"
+                @click="logout()"
+                @keypress.enter="logout()"
+                tabindex="0"
+                aria-role="menuitem"
             >
               <b-icon icon="sign-out-alt" />
               {{ $t("menu.logout") }}
+            </b-dropdown-item>
+            <b-dropdown-item
+                v-if="currentUser.superadmin || currentUser.authorizedForApplicationCreation"
+                @click="showApplicationRightManagement()"
+                @keypress.enter="showApplicationRightManagement()"
+                tabindex="0"
+                aria-role="menuitem"
+            >
+              <b-icon icon="wrench" />
+              {{ $t("menu.authorizations") }}
             </b-dropdown-item>
           </b-dropdown>
         </b-navbar-item>
@@ -104,6 +114,10 @@ export default class MenuView extends Vue {
 
   logout() {
     this.loginService.logout();
+  }
+
+  showApplicationRightManagement() {
+    this.$router.push("/authorizationsManagement");
   }
 
   setUserPrefLocale() {

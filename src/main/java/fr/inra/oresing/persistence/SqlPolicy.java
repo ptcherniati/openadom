@@ -3,6 +3,8 @@ package fr.inra.oresing.persistence;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 public class SqlPolicy implements WithSqlIdentifier {
 
@@ -12,7 +14,7 @@ public class SqlPolicy implements WithSqlIdentifier {
 
     PermissiveOrRestrictive permissiveOrRestrictive;
 
-    Statement statement;
+    List<Statement> statements;
 
     OreSiRole role;
 

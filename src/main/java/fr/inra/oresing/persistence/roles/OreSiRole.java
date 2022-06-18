@@ -2,7 +2,9 @@ package fr.inra.oresing.persistence.roles;
 
 import fr.inra.oresing.persistence.WithSqlIdentifier;
 
-public interface OreSiRole extends WithSqlIdentifier {
+@FunctionalInterface
+public interface
+OreSiRole extends WithSqlIdentifier {
 
     static OreSiAnonymousRole anonymous() {
         return OreSiAnonymousRole.ANONYMOUS;

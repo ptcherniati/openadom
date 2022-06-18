@@ -11,6 +11,7 @@ import DataTypesManagementView from "@/views/datatype/DataTypesManagementView.vu
 import DataTypesRepositoryView from "@/views/datatype/DataTypesRepositoryView.vue";
 import DataTypeAuthorizationsView from "@/views/authorizations/DataTypeAuthorizationsView.vue";
 import DataTypeAuthorizationInfoView from "@/views/authorizations/DataTypeAuthorizationInfoView.vue";
+import AuthorizationManagementView from "@/views/authorizations/AuthorizationManagementView.vue";
 
 Vue.use(VueRouter);
 
@@ -38,6 +39,11 @@ const routes = [
     path: "/applicationCreation",
     name: "Application creation",
     component: ApplicationCreationView,
+  },
+  {
+    path: "/authorizationsManagement",
+    name: "Authorizations mangement view",
+    component: AuthorizationManagementView,
   },
   {
     path: "/applications/:applicationName/references",

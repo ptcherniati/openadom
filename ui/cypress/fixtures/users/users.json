@@ -1,21 +1,21 @@
 {
-    "admin": {
-        "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
-        "creationDate": 1621610134187,
-        "updateDate": 1621610134187,
-        "login": "poussin",
-        "password": "xxxxxxxx",
-        "response": {
-            "fixture": "users/login/poussin_login.json",
-            "statusCode": 200,
-            "Content-Type:": "application/json"
-        }
-    },
-    "visitor": {
-        "response": {
-            "body": "identifiants fournis incorrects",
-            "statusCode": 403,
-            "Content-Type:": "text/plain;charset=ISO-8859-1"
-        }
+  "admin": {
+    "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+    "creationDate": 1621610134187,
+    "updateDate": 1621610134187,
+    "login": "poussin",
+    "password": "xxxxxxxx",
+    "response": {
+      "fixture": "users/login/poussin_login.json",
+      "statusCode": 200,
+      "Content-Type:": "application/json"
     }
+  },
+  "visitor": {
+    "response": {
+      "body": "identifiants fournis incorrects",
+      "statusCode": 403,
+      "Content-Type:": "text/plain;charset=ISO-8859-1"
+    }
+  }
 }

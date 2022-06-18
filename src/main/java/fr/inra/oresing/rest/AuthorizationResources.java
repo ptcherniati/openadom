@@ -1,7 +1,14 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiAuthorization;
+import fr.inra.oresing.model.OreSiRoleForUser;
+import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -11,40 +18,72 @@ import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
 public class AuthorizationResources {
 
     @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
     private AuthorizationService authorizationService;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OreSiRepository repo;
+    @GetMapping(value = "/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<LoginResult> getAuthorizations(){
+        return authenticationService.getAuthorizations();
+    }
 
     @PostMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> addAuthorization(@RequestBody CreateAuthorizationRequest authorization) {
-        Set<UUID> previousUsers = new HashSet<>();
-        if(authorization.getUuid()==null){
-            previousUsers= authorization.getUsersId();
+    public ResponseEntity<Map<String, String>> addAuthorization(@PathVariable(name = "nameOrId") String nameOrId, @PathVariable(name = "dataType") String dataType, @RequestBody CreateAuthorizationRequest authorization) {
+        final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
+        final Application application = repo.application().findApplication(nameOrId);
+        final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
+        final boolean canChangeRoles= isApplicationCreator;
+        if (!canChangeRoles) {
+            throw new NotApplicationCanSetRightsException(application.getName(), dataType);
         }
-        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(authorization);
+        Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
+        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
-            OreSiRightOnApplicationRole roleForAuthorization = null;
-        if(authorization.getUuid()==null){
-             roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
-        }
-
+        OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
+        final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
         String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
-        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, authorizationId));
+    public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
+        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
         return ResponseEntity.ok(getAuthorizationResult);
+    }
+
+    @DeleteMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OreSiUser> deleteAuthorization(
+            @PathVariable(name = "role", required = true) String role,
+            @RequestParam(name = "userId", required = true) String userId,
+            @RequestParam(name = "applicationPattern", required = false) String applicationPattern)
+            throws NotSuperAdminException, NotApplicationCreatorRightsException {
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userId, role, applicationPattern);
+        OreSiUser user = authorizationService.deleteRoleUser(roleForUser);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OreSiUser> addAuthorization(
+            @PathVariable(name = "role", required = true) String role,
+            @RequestParam(name = "userId", required = true) String userId,
+            @RequestParam(name = "applicationPattern", required = false) String applicationPattern)
+            throws NotSuperAdminException, NotApplicationCreatorRightsException {
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userId, role, applicationPattern);
+        OreSiUser user = authorizationService.addRoleUser(roleForUser);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -60,8 +99,8 @@ public class AuthorizationResources {
     }
 
     @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("authorizationId") UUID authorizationId) {
-        authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, authorizationId));
+    public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
+        authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
         return ResponseEntity.noContent().build();
     }
 }

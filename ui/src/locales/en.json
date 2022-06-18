@@ -22,7 +22,8 @@
         "data-types-page":"{applicationName} data types",
         "data-types-repository": "Management of data sets {applicationName}",
         "data-type-authorizations":"{dataType} authorizations",
-        "data-type-new-authorization":"New authorization for {dataType}"
+        "data-type-new-authorization":"New authorization for {dataType}",
+        "authorizations-management": "Authorizations management of applications"
     },
     "login":{
         "signin":"Sign in",
@@ -85,7 +86,8 @@
         "aria-pagination": "Pagination",
         "aria-curent-page": "Curent page",
         "aria-next-page": "Next page",
-        "aria-previous-page": "Previous page"
+        "aria-previous-page": "Previous page",
+        "authorizations": "Authorizations"
     },
     "applications":{
         "chose-config":"Chose a configuration",

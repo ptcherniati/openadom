@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -77,7 +78,7 @@ public class SqlService {
                 sqlPolicy.getSqlIdentifier(),
                 sqlPolicy.getTable().getSqlIdentifier(),
                 sqlPolicy.getPermissiveOrRestrictive().name(),
-                sqlPolicy.getStatement().name(),
+                sqlPolicy.getStatements().stream().map(SqlPolicy.Statement::name).collect(Collectors.joining(",")),
                 sqlPolicy.getRole().getSqlIdentifier(),
                 using,
                 withCheck

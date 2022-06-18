@@ -7,3 +7,5 @@ target
 
 # Fichiers temporaires
 *~
+/ui/cypress/videos/
+/ui/cypress/screenshots/
