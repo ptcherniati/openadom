@@ -160,7 +160,7 @@ dataTypes:
       fr: Condition de prélèvement
       en: Collection condition
     repository:
-      toto: test
+      filePattern:
     uniqueness:
       - variable: date
         component: datetime

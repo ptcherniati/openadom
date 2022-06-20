@@ -26,8 +26,8 @@
 
       <b-table
         :data="authorizations"
-        :isFocusable="true"
-        :isHoverable="true"
+        :is-focusable="true"
+        :is-hoverable="true"
         :paginated="true"
         :per-page="15"
         :sticky-header="true"
@@ -205,7 +205,7 @@ export default class DataTypeAuthorizationsView extends Vue {
       `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
     );
   }
-  modifyAuthorization(id){
+  modifyAuthorization(id) {
     this.$router.push(
       `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/${id}`
     );

@@ -16,7 +16,7 @@
 
     <AvailablityChart v-if="false" />
     <div v-if="errorsMessages.length" style="margin: 10px">
-      <div v-for="msg in errorsMessages" v-bind:key="msg">
+      <div v-for="msg in errorsMessages" :key="msg">
         <b-message
           :title="$t('message.data-type-config-error')"
           type="is-danger"
@@ -41,29 +41,29 @@
           withSynthesis: true,
         }"
         :level="0"
-        :onClickLabelCb="(event, label) => openDataTypeCb(event, label)"
-        :onClickLabelSynthesisDetailCb="
+        :on-click-label-cb="(event, label) => openDataTypeCb(event, label)"
+        :on-click-label-synthesis-detail-cb="
           (event, option) => openDataTypeDetailSynthesisCb(event, option)
         "
-        :onUploadCb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
+        :on-upload-cb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
         :repository="data.repository"
-        :repositoryRedirect="(label) => showRepository(label)"
+        :repository-redirect="(label) => showRepository(label)"
         :buttons="buttons"
       />
       <DataTypeDetailsPanel
-        :leftAlign="false"
+        :left-align="false"
         :open="openPanel"
-        :dataType="chosenDataType"
-        :closeCb="(newVal) => (openPanel = newVal)"
-        :applicationName="applicationName"
+        :data-type="chosenDataType"
+        :close-cb="(newVal) => (openPanel = newVal)"
+        :application-name="applicationName"
       />
       <b-modal class="modalByAgrégation" v-model="openSynthesisDetailPanel" width="100rem">
         <DetailModalCard
           :open="true"
           :options="currentOptions"
-          :dataType="chosenDataType"
-          :closeCb="(newVal) => (openSynthesisDetailPanel = newVal)"
-          :applicationName="applicationName"
+          :data-type="chosenDataType"
+          :close-cb="(newVal) => (openSynthesisDetailPanel = newVal)"
+          :application-name="applicationName"
         >
         </DetailModalCard>
       </b-modal>

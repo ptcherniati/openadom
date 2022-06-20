@@ -1,7 +1,7 @@
-import { defineStore } from 'pinia'
+import { defineStore } from "pinia";
 
-export const authorization = defineStore('authorization', {
+export const authorization = defineStore("authorization", {
   state: () => {
-    return {}
+    return {};
   },
-})
+});

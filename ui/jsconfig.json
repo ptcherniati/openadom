@@ -7,5 +7,6 @@
     "experimentalDecorators": true
   },
   "include": ["src/**/*.js", "src/**/*.vue"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "editor": "/bin/visualvs"
 }

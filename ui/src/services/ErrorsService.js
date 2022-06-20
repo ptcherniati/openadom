@@ -116,6 +116,12 @@ const ERRORS = {
   unknownVariablesInDataGroup: (params) => i18n.t("errors.unknownVariablesInDataGroup", params),
   unrecognizedProperty: (params) => i18n.t("errors.unrecognizedProperty", params),
   unsupportedVersion: (params) => i18n.t("errors.unsupportedVersion", params),
+  noCapturingGroupForDatatypeRepository: (params) => i18n.t("errors.noCapturingGroupForDatatypeRepository", params),
+  invalidPatternForDatatypeRepository: (params) => i18n.t("errors.invalidPatternForDatatypeRepository", params),
+  invalidCapturingGroupForDatatypeRepositoryAuthorizationScope: (params) => i18n.t("errors.invalidCapturingGroupForDatatypeRepositoryAuthorizationScope", params),
+  invalidCapturingGroupForDatatypeRepository: (params) => i18n.t("errors.invalidCapturingGroupForDatatypeRepository", params),
+  invalidCapturingGroupForStartDateDatatypeRepositoryDate: (params) => i18n.t("errors.invalidCapturingGroupForStartDateDatatypeRepositoryDate", params),
+  invalidCapturingGroupForEndDateDatatypeRepositoryDate: (params) => i18n.t("errors.invalidCapturingGroupForEndDateDatatypeRepositoryDate", params),
   variableInMultipleDataGroup: (params) => i18n.t("errors.variableInMultipleDataGroup", params),
 };
 
@@ -128,7 +134,7 @@ export class ErrorsService {
       console.log("test", error.messageParams.target);
       if (!func) {
         //throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
-        return i18n.t("errors.expetion");
+        return i18n.t("errors.exception");
       }
       return func(error.messageParams);
     });
@@ -155,7 +161,7 @@ export class ErrorsService {
       }
       if (!func) {
         //throw new Error("Il manque la chaine de traduction pour l'erreur : " + csvError.validationCheckResult.message);
-        return Error(i18n.t("errors.expetion") + csvError.validationCheckResult.message);
+        return Error(i18n.t("errors.exception") + csvError.validationCheckResult.message);
       }
       const params = {
         lineNumber: csvError.lineNumber,

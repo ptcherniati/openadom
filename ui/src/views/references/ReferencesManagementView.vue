@@ -10,7 +10,7 @@
       {{ $t("titles.references-page", { applicationName: application.localName }) }}
     </h1>
     <div v-if="errorsMessages.length" style="margin: 10px">
-      <div v-for="msg in errorsMessages" v-bind:key="msg">
+      <div v-for="msg in errorsMessages" :key="msg">
         <b-message
           :title="$t('message.data-type-config-error')"
           type="is-danger"
@@ -30,18 +30,18 @@
         :option="ref"
         :level="0"
         :id="i + 1"
-        :onClickLabelCb="(event, label) => openRefDetails(event, label)"
-        :onUploadCb="(label, refFile) => uploadReferenceCsv(label, refFile)"
+        :on-click-label-cb="(event, label) => openRefDetails(event, label)"
+        :on-upload-cb="(label, refFile) => uploadReferenceCsv(label, refFile)"
         :buttons="buttons"
-        :applicationTitle="$t('titles.references-page')"
-        :lineCount="lineCount(ref)"
+        :application-title="$t('titles.references-page')"
+        :line-count="lineCount(ref)"
       >
       </CollapsibleTree>
       <ReferencesDetailsPanel
-        :leftAlign="false"
+        :left-align="false"
         :open="openPanel"
         :reference="chosenRef"
-        :closeCb="(newVal) => (openPanel = newVal)"
+        :close-cb="(newVal) => (openPanel = newVal)"
       />
     </div>
   </PageView>

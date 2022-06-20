@@ -1,14 +1,17 @@
 module.exports = {
   root: true,
+
   env: {
     node: true,
   },
+
   extends: [
     "plugin:vue/essential",
     "eslint:recommended",
     "@vue/prettier",
     "plugin:@intlify/vue-i18n/recommended",
   ],
+
   parserOptions: {
     parser: "babel-eslint",
     ecmaVersion: 2020,
@@ -16,11 +19,11 @@ module.exports = {
       legacyDecorators: true,
     },
   },
-  rules: {
-    "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
-    "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
 
-    // i18n rules
+  rules: {
+    "no-console": "off",
+    "no-debugger": "off",
+
     "@intlify/vue-i18n/no-duplicate-keys-in-locale": [
       "error",
       {
@@ -43,12 +46,11 @@ module.exports = {
       },
     ],
   },
+
   settings: {
     "vue-i18n": {
       localeDir: "./src/locales/*.{json,json5,yaml,yml}",
 
-      // Specify the version of `vue-i18n` you are using.
-      // If not specified, the message will be parsed twice.
       messageSyntaxVersion: "^8.22.3",
     },
   },

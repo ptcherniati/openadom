@@ -225,7 +225,13 @@
         "unrecognizedProperty": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, c’est pas une propriété reconnue. Les propriétés reconnues sont <code>{knownProperties}</code>",
         "unsupportedVersion": "Les fichiers YAML de version <code>{actualVersion}</code> ne sont pas gérés, version attendue <code>{expectedVersion}</code>",
         "variableInMultipleDataGroup": "La variable <code>{variable}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un groupe",
-        "expetion": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
+        "noCapturingGroupForDatatypeRepository":"Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche ne contient aucun groupe de capture." ,
+        "invalidPatternForDatatypeRepository":"Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche est invalide." ,
+        "invalidCapturingGroupForDatatypeRepositoryAuthorizationScope":"Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> est <code>{scopeToken}</code>; il doit être compris entre 0 et {countGroups}." ,
+        "invalidCapturingGroupForDatatypeRepository":"Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>." ,
+        "invalidCapturingGroupForStartDateDatatypeRepositoryDate":"Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}." ,
+        "invalidCapturingGroupForEndDateDatatypeRepositoryDate":"Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}." ,
+        "exception": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
     },
     "referencesManagement": {
         "actions": "Actions",

@@ -39,7 +39,7 @@
                     v-for="(option, optionKey) in authReference"
                     :key="optionKey"
                     :option="option"
-                    v-on:select-menu-item="selectAuthorization(authKey, $event)"
+                    @select-menu-item="selectAuthorization(authKey, $event)"
                   />
                 </b-dropdown>
               </b-field>
@@ -86,10 +86,11 @@
                 <div class="content">
                   <div class="columns">
                     <div class="column">
-                      <b-field :label="$t('dataTypesRepository.start-date')">
+                      <b-field :label="$t('dataTypesRepository.start-date')" data-cy="dateStart">
                         <b-datepicker
                           v-model="startDate"
                           :date-parser="parseDate"
+                          :date-formatter="formatDate"
                           :placeholder="
                             $t('dataTypesRepository.placeholder-datepicker') +
                             ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
@@ -101,10 +102,11 @@
                       </b-field>
                     </div>
                     <div class="column">
-                      <b-field :label="$t('dataTypesRepository.end-date')">
+                      <b-field :label="$t('dataTypesRepository.end-date')" data-cy="dateEnd">
                         <b-datepicker
                           v-model="endDate"
                           :date-parser="parseDate"
+                          :date-formatter="formatDate"
                           :placeholder="
                             $t('dataTypesRepository.placeholder-datepicker') +
                             ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
@@ -116,7 +118,13 @@
                       </b-field>
                     </div>
                     <div class="column">
-                      <b-upload v-model="file" class="file-label" style="margin-top: 30px">
+                      <b-upload
+                        @input="changeFile"
+                        v-model="file"
+                        class="file-label"
+                        style="margin-top: 30px"
+                        data-cy="changeFileButton"
+                      >
                         <span class="file-cta">
                           <b-icon class="file-icon" icon="upload"></b-icon>
                           <span class="file-label">{{
@@ -286,6 +294,7 @@ import { Dataset } from "@/model/file/Dataset";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
 import DropDownMenu from "@/components/common/DropDownMenu";
+import moment from "moment";
 import {HttpStatusCodes} from "@/utils/HttpUtils";
 
 @Component({
@@ -320,6 +329,7 @@ export default class DataTypesRepositoryView extends Vue {
   endDate = null;
   comment = "";
   currentDataset = null;
+  repository = {};
   errorsMessages = [];
 
   mounted() {
@@ -350,10 +360,99 @@ export default class DataTypesRepositoryView extends Vue {
     this.init();
   }
 
+  changeFile(file) {
+    console.log("repository", this.repository);
+    let pattern = this.repository.filePattern;
+    let split = [];
+    if (pattern && pattern.length) {
+      let matches = new RegExp(pattern).exec(file.name);
+      if (matches) {
+        if (this.repository.authorizationScope) {
+          for (const authorizationScopeKey in this.repository.authorizationScope) {
+            let authorizationScope =
+              matches[this.repository.authorizationScope[authorizationScopeKey]];
+
+            var currentNode = this.authReferences[authorizationScopeKey];
+
+            // on teste une naturalKey
+            split = authorizationScope.split("__");
+            for (const key in split) {
+              if (currentNode.referenceValues) {
+                let path = currentNode.currentPath + "__" + split[key];
+                currentNode = currentNode.referenceValues[path];
+              } else {
+                currentNode = currentNode[split[key]];
+              }
+              if (currentNode) {
+                this.selectAuthorization(authorizationScopeKey, currentNode);
+              }
+              if (!currentNode || currentNode.isLeaf) break;
+            }
+            if (!currentNode) {
+              //on teste une hierarchicalKey
+              currentNode = this.authReferences[authorizationScopeKey];
+              split = authorizationScope.split(".");
+              for (const key in split) {
+                if (currentNode.referenceValues) {
+                  currentNode = currentNode.referenceValues[split[key]];
+                } else {
+                  currentNode = currentNode[split[key]];
+                }
+                if (currentNode) {
+                  this.selectAuthorization(authorizationScopeKey, currentNode);
+                }
+                if (!currentNode || currentNode.isLeaf) break;
+              }
+            }
+          }
+        }
+        if (
+          this.repository.startDate &&
+          this.repository.startDate.token &&
+          matches[this.repository.startDate.token]
+        ) {
+          this.startDate = moment(matches[this.repository.startDate.token], "DD-MM-YYYY").toDate();
+        }
+        if (
+          this.repository.endDate &&
+          this.repository.endDate.token &&
+          matches[this.repository.endDate.token]
+        ) {
+          this.endDate = moment(matches[this.repository.endDate.token], "DD-MM-YYYY").toDate();
+        }
+      }
+    }
+  }
+
+  getRefType(variable, component) {
+    let refType = "";
+    let compositeReferenceDependance = false;
+
+    try {
+      refType = this.configuration.data[variable].components[component].checker.params.refType;
+      compositeReferenceDependance = false;
+      for (const ref in this.application.references) {
+        if (this.application.references[ref].children.length) {
+          compositeReferenceDependance = this.application.references[ref].children;
+        }
+      }
+      return {
+        refType,
+        compositeReferenceDependance,
+      };
+    } catch (e) {
+      return {
+        refType,
+        compositeReferenceDependance,
+      };
+    }
+  }
+
   async init() {
     try {
       this.applications = await this.applicationService.getApplications();
       this.application = await this.applicationService.getApplication(this.applicationName);
+      this.repository = this.application.dataTypes[this.dataTypeId].repository;
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -366,13 +465,15 @@ export default class DataTypesRepositoryView extends Vue {
       this.configuration = this.applications
         .filter((a) => a.name === this.applicationName)
         .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
+      console.log("refType", this.getRefType("site", "chemin"));
       this.authorizations = this.configuration.authorization.authorizationScopes;
+      let requiredAuthorizations = Object.keys(this.authorizations).reduce((acc, auth) => {
+        acc[auth] = null;
+        return acc;
+      }, {});
       this.selected = new BinaryFileDataset({
         datatype: this.dataTypeId,
-        requiredAuthorizations: Object.keys(this.authorizations).reduce((acc, auth) => {
-          acc[auth] = null;
-          return acc;
-        }, {}),
+        requiredAuthorizations,
         from: "",
         to: "",
         comment: "",
@@ -389,6 +490,7 @@ export default class DataTypesRepositoryView extends Vue {
         let ref = await this.getOrLoadReferences(reference);
         ret[auth] = ref;
       }
+
       let refs = Object.values(ret)
         .reduce(
           (acc, k) => [
@@ -436,9 +538,11 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   parseDate(date) {
-    date =
-      date && date.replace(/(\d{2})\/(\d{2})\/(\d{4})(( \d{2})?(:\d{2})?(:\d{2})?)/, "$3-$2-$1$4");
-    return new Date(date);
+    return moment(date, "DD/MM/YYYY").toDate();
+  }
+
+  formatDate(date) {
+    return moment(date).format("DD/MM/YYYY");
   }
 
   periodeToString(dataset) {
@@ -553,6 +657,7 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   selectAuthorization(key, event) {
+    console.log("key", key, "event", event);
     this.selected.requiredAuthorizations[key] = event.referenceValues.hierarchicalKey;
     this.requiredAuthorizationsObject[key] = event.completeLocalName;
     this.datasets = this.currentDataset = null;
@@ -573,9 +678,12 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   isAuthorisationsSelected() {
-    return (
-      this.selected && Object.values(this.selected.requiredAuthorizations).every((v) => v?.length)
-    );
+    if (this.selected && this.selected.requiredAuthorizations) {
+      return (
+        this.selected && Object.values(this.selected.requiredAuthorizations).every((v) => v?.length)
+      );
+    }
+    return false;
   }
 
   async updateDatasets(uuid) {
@@ -713,10 +821,12 @@ export default class DataTypesRepositoryView extends Vue {
     overflow-wrap: break-word;
   }
 }
+
 .dropdown-content {
   margin-left: 10px;
   margin-right: -30px;
 }
+
 table.datasetsPanel {
   width: 50%;
 }
@@ -727,6 +837,7 @@ table.datasetsPanel td {
   border-collapse: collapse;
   text-align: center;
 }
+
 .numberData tr:hover td {
   background-color: $primary;
   color: white;
@@ -742,6 +853,7 @@ caption {
 .b-tooltip {
   .tooltip-trigger a {
   }
+
   .tooltip-content {
   }
 }

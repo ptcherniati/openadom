@@ -365,3 +365,11 @@ dataTypes:
           boundTo:
             variable: Nombre d'individus
             component: standardDeviation
+    repository:
+      filePattern: "(.*)_(.*)_(.*)_(.*).csv"
+      authorizationScope:
+        localization: 1
+      startDate:
+        token: 3
+      endDate:
+        token: 4

@@ -3,11 +3,13 @@
 import Assert from "assert";
 
 require('cypress-plugin-tab')
+const grantable = require('../fixtures/applications/ore/monsore/datatypes/authorisation/grantable.json')
+var lambdaId = JSON.parse(grantable).users.find(u=>u.label=='lambda').id
 const verify = function (req, response) {
     console.log('req', req.body, 'response', response)
     Assert.equal('monsore', req.body.applicationNameOrId)
     Assert.equal('pem', req.body.dataType)
-    Assert.equal('88b99c65-e5ca-4aeb-b64d-53203bab5838', req.body.usersId[0])
+    Assert.equal(lambdaId, req.body.usersId[0])
     Assert.equal("Une authorization", req.body.name)
     Assert.equal('projet_atlantique', req.body.authorizations.extraction[0].requiredAuthorizations.projet)
     Assert.equal('plateforme', req.body.authorizations.extraction[0].requiredAuthorizations.localization)
@@ -21,7 +23,7 @@ const verify2 = function (req, response) {
     console.log('req', req.body, 'response', response)
     Assert.equal('monsore', req.body.applicationNameOrId)
     Assert.equal('pem', req.body.dataType)
-    Assert.equal('88b99c65-e5ca-4aeb-b64d-53203bab5838', req.body.usersId[0])
+    Assert.equal(lambdaId, req.body.usersId[0])
     Assert.equal("Une authorization", req.body.name)
     var extraction = req.body.authorizations.extraction;
     cy.expect(extraction).to.have.length(1)
@@ -107,7 +109,7 @@ describe('test authorization application', () => {
         cy.wait(['@getGrantable', '@getMonsoere'])
         cy.wait(100)
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
-        cy.get("select").select("88b99c65-e5ca-4aeb-b64d-53203bab5838")
+        cy.get("select").select(lambdaId)
         cy.get("input[type=text]").type("Une authorization")
         cy.contains('Projet Atlantique').click()
         cy.get("div[field=extraction] span.icon").eq(2).click()
@@ -146,7 +148,7 @@ describe('test authorization application', () => {
         cy.wait(['@getGrantable', '@getMonsoere'])
         cy.wait(100)
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
-        cy.get("select").select("88b99c65-e5ca-4aeb-b64d-53203bab5838")
+        cy.get("select").select(lambdaId)
         cy.get("input[type=text]").type("Une authorization")
         cy.get(':nth-child(2) > .columns > :nth-child(5) > .field > .icon').first().click()
         cy.contains('Projet Atlantique').click()
@@ -182,7 +184,7 @@ describe('test authorization application', () => {
         cy.wait(['@getGrantable', '@getMonsoere'])
         cy.wait(100)
         cy.get('.title.main-title').first().contains('Nouvelle autorisation pour Piégeage en Montée')
-        cy.get("select").select("88b99c65-e5ca-4aeb-b64d-53203bab5838")
+        cy.get("select").select(lambdaId)
         cy.get("input[type=text]").type("Une authorization")
         cy.get(':nth-child(2) > .columns > :nth-child(2) > .field > .icon').first().click()
         cy.contains('Projet Atlantique').click()

@@ -8,9 +8,11 @@
         "monsore_new_authorization_url": "/applications/monsore/dataTypes/pem/authorizations/new",
         "monsore_table_authorization_url": "/applications/monsore/dataTypes/pem/authorizations",
         "dataType_monsore_url": "/applications/monsore/dataTypes",
+        "repository_foret_url": "/applications/foret/dataTypesRepository/swc_j",
+        "zone_etude_url": "applications/foret/references/zones_etudes.js",
         "ola_references_url": "/applications/ola/references"
     },
-  	"videoUploadOnPasses": false,
-  	"video": true,
-  	"videoCompression": false
+    "videoUploadOnPasses": false,
+    "video": true,
+    "videoCompression": false
 }

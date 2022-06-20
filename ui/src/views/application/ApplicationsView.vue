@@ -94,7 +94,7 @@
         <div class="columns">
           <div
             v-for="(application, index) in selectedApplications"
-            v-bind:key="application.name"
+            :key="application.name"
             style="margin-left: 30px"
           >
             <div class="column is-3-widescreen is-6-desktop is-12-tablet">
@@ -126,7 +126,8 @@
                       </div>
                       <div class="card-content">
                         <div class="content">
-                          <p v-html="
+                          <p
+                            v-html="
                               $t('applications.version', {
                                 applicationName: application.localName,
                                 version: application.configuration.application.version,

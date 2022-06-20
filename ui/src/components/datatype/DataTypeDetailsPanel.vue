@@ -1,9 +1,9 @@
 <template>
   <SidePanel
     :open="open"
-    :leftAlign="leftAlign"
+    :left-align="leftAlign"
     :title="dataType && (dataType.localName || dataType.label)"
-    :closeCb="closeCb"
+    :close-cb="closeCb"
   >
     <div class="Panel-buttons">
       <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{

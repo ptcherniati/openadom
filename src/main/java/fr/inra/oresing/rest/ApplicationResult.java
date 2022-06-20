@@ -6,10 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Value
 public class ApplicationResult {
@@ -61,8 +58,19 @@ public class ApplicationResult {
         String id;
         String label;
         Map<String, Variable> variables;
-        Map<String, String> repository;
+        Repository repository;
         boolean hasAuthorizations;
+        @Value
+        public static class Repository {
+            String filePattern;
+            Map<String, Integer> authorizationScope;
+            TokenDateDescription startDate;
+            TokenDateDescription endDate;
+        }
+        @Value
+        public static class TokenDateDescription {
+            Integer token;
+        }
 
         @Value
         public static class Variable {

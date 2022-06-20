@@ -1,5 +1,5 @@
 <template>
-  <PageView class="LoginView" :hasMenu="false">
+  <PageView class="LoginView" :has-menu="false">
     <h1 class="title main-title">{{ $t("titles.login-page") }}</h1>
     <div class="card LoginView-card">
       <b-tabs v-model="selectedTab" type="is-boxed" :animated="false">

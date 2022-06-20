@@ -2,7 +2,7 @@
     fr: Tension de l'eau infra-journalière
     en: Infra-daily tension water
   repository:
-    toto: test
+    filePattern:
   template:
     SMP_([0-9]*)_([0-9]*):
       variables:
