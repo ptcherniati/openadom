@@ -1111,6 +1111,72 @@ public class ApplicationConfigurationServiceTest {
         Assert.assertEquals("timeScopeVariableComponentPatternUnknown", onlyError.getMessage());
     }
 
+    // ne renvois pas d'erreur
+    @Test
+    @Ignore
+    public void testMissingBoundToForConstantDescription() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingBoundToForConstantDescription", "format:", "format:\n" +
+                "      constants:\n" +
+                "        - rowNumber: 1\n" +
+                "          columnNumber: 2\n" +
+                "          exportHeader: nom du projet");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingBoundToForConstantDescription", onlyError.getMessage());
+    }
+
+    // ne renvois pas d'erreur
+    @Test
+    @Ignore
+    public void testMissingColumnNumberOrHeaderNameForConstantDescription() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingColumnNumberOrHeaderNameForConstantDescription", "format:", "format:\n" +
+                "      constants:\n" +
+                "        - rowNumber: 1\n" +
+                "          boundTo:\n" +
+                "            variable: localization\n" +
+                "            component: site\n" +
+                "          exportHeader: \"Site\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingColumnNumberOrHeaderNameForConstantDescription", onlyError.getMessage());
+    }
+
+    // ne renvois pas d'erreur
+    @Test
+    @Ignore
+    public void testMissingExportHeaderNameForConstantDescription() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingExportHeaderNameForConstantDescription", "format:", "format:\n" +
+                "      constants:\n" +
+                "        - rowNumber: 1\n" +
+                "          columnNumber: 2\n" +
+                "          boundTo:\n" +
+                "            variable: localization\n" +
+                "            component: site\n");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingExportHeaderNameForConstantDescription", onlyError.getMessage());
+    }
+
+    // ne renvois pas d'erreur
+    @Test
+    @Ignore
+    public void testMissingRowLineForConstantDescription() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingRowLineForConstantDescription", "format:", "format:\n" +
+                "      constants:\n" +
+                "        - columnNumber: 2\n" +
+                "          boundTo:\n" +
+                "            variable: localization\n" +
+                "            component: site\n" +
+                "          exportHeader: \"Site\"");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingRowLineForConstantDescription", onlyError.getMessage());
+    }
+
     @Test
     public void testUnknownReferenceForCheckerInReferenceColumn() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceForCheckerInReferenceColumn", "nom du type de plateforme:\n" +
@@ -1127,6 +1193,28 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
+    }
+
+    // je n'arrive pas à fiare remonter cette erreur mais je ne suis pas sûr d'être sur pour cette erreur
+    @Test
+    @Ignore
+    public void testTimerangeoutofinterval() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testTimerangeoutofinterval", "variables:\n" +
+                "        components:\n" +
+                "          biovolume_algal:", "variables:\n" +
+                "        components:\n" +
+                "          biovolume_algal:\n" +
+                "        chartDescription:\n" +
+                "          value: value\n" +
+                "          aggregation:\n" +
+                "            variable: variables\n" +
+                "            component: biovolume_algal\n" +
+                "          unit: \"unit\"\n" +
+                "          gap: '1 MONTH'");
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("timerangeoutofinterval", onlyError.getMessage());
     }
 
     @Test
