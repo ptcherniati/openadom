@@ -30,17 +30,17 @@ export class AuthorizationService extends Fetcher {
     );
   }
 
-  async createAuthorizedRole(roleName, userId, applicationPattern) {
+  async createAuthorizedRole(roleName, userIdOrLogin, applicationPattern) {
     return this.put(
         `/authorization/${roleName}`,
-        {applicationPattern,userId}
+        {applicationPattern,userIdOrLogin}
     );
   }
 
-  async revokeAuthorizedRole(roleName, userId, applicationPattern) {
+  async revokeAuthorizedRole(roleName, userIdOrLogin, applicationPattern) {
     return this.delete(
         `authorization/${roleName}`,
-        {applicationPattern,userId}
+        {applicationPattern,userIdOrLogin}
     );
   }
 

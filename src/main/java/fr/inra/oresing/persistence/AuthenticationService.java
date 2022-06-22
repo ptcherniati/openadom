@@ -276,4 +276,8 @@ public class AuthenticationService {
             throw new NotSuperAdminException();
         }
     }
+
+    public OreSiUser getByIdOrLogin(String userIdOrLogin) {
+         return userRepository.findByLogin(userIdOrLogin).orElseGet(()->userRepository.findById(UUID.fromString(userIdOrLogin)));
+    }
 }

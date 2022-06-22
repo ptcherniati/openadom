@@ -5,7 +5,7 @@
     "authorizedForApplicationCreation": true,
     "superadmin": false,
     "authorizations": [
-      "toto"
+      "toto","foret"
     ]
   },
   {
@@ -15,7 +15,19 @@
     "superadmin": true,
     "authorizations": [
       ".*",
-      "titi"
+      "titi",
+      "ola", "pro"
+    ]
+  },
+  {
+    "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+    "login": "acreator",
+    "authorizedForApplicationCreation": true,
+    "superadmin": false,
+    "authorizations": [
+      "ola",
+      "foret",
+      "pro"
     ]
   }
 ]

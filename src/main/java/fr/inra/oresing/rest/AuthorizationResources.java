@@ -67,22 +67,24 @@ public class AuthorizationResources {
     @DeleteMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OreSiUser> deleteAuthorization(
             @PathVariable(name = "role", required = true) String role,
-            @RequestParam(name = "userId", required = true) String userId,
+            @RequestParam(name = "userIdOrLogin", required = true) String userIdOrLogin,
             @RequestParam(name = "applicationPattern", required = false) String applicationPattern)
             throws NotSuperAdminException, NotApplicationCreatorRightsException {
-        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userId, role, applicationPattern);
-        OreSiUser user = authorizationService.deleteRoleUser(roleForUser);
+        OreSiUser user = authenticationService.getByIdOrLogin(userIdOrLogin);
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(user.getId().toString(), role, applicationPattern);
+        user = authorizationService.deleteRoleUser(roleForUser);
         return ResponseEntity.ok(user);
     }
 
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OreSiUser> addAuthorization(
             @PathVariable(name = "role", required = true) String role,
-            @RequestParam(name = "userId", required = true) String userId,
+            @RequestParam(name = "userIdOrLogin", required = true) String userIdOrLogin,
             @RequestParam(name = "applicationPattern", required = false) String applicationPattern)
             throws NotSuperAdminException, NotApplicationCreatorRightsException {
-        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userId, role, applicationPattern);
-        OreSiUser user = authorizationService.addRoleUser(roleForUser);
+        OreSiUser user = authenticationService.getByIdOrLogin(userIdOrLogin);
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userIdOrLogin, role, applicationPattern);
+        user = authorizationService.addRoleUser(roleForUser);
         return ResponseEntity.ok(user);
     }
 

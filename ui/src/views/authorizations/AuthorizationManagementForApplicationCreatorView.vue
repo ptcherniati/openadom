@@ -11,6 +11,7 @@
         $t("titles.authorizations-management")
       }}
     </h1>
+    <div>{{ changes.applications }}</div>
     <div class="rows">
       <b-table class="row" :data="authorizations" :paginated="true" per-page="15">
 
@@ -29,19 +30,6 @@
           </template>
         </b-table-column>
         <b-table-column
-            v-if="currentUser.superadmin"
-            field="administrator"
-            :label="'Administration'"
-            width="300"
-            sortable
-            v-slot="props"
-        >
-          <template>
-            <b-checkbox v-model="props.row.superadmin"
-                        @input="selectAdmin($event, props.row)"/>
-          </template>
-        </b-table-column>
-        <b-table-column
             v-if="currentUser.authorizedForApplicationCreation"
             field="applications"
             :label="'Applications'"
@@ -50,16 +38,19 @@
             v-slot="props"
         >
           <template>
-            <b-taginput
-                :before-adding="beforeAdding"
-                v-model="props.row.authorizations"
-                @add="addApplication($event, props.row)"
-                @remove="removeApplication($event, props.row)"
-                ellipsis
-                icon="file"
-                placeholder="Ajouter une applicationg"
-                aria-close-label="Supprimer l'application">
-            </b-taginput>
+            <div class="columns">
+              <b-button
+                  :class="'tag has-background-info has-text-white '+changed(props.row.login, auth)"
+                  v-for="auth in props.row.authorizations"
+                  :key="auth"
+                  @click="removeApplication(props.row.login, auth)">{{ auth }}
+              </b-button>
+              <b-button :class="'tag has-background-link-light '+changed(props.row.login, auth)"
+                        v-for="auth in currentUserApplicationPattern.filter(a=>! props.row.authorizations.find(aa=>aa == a))"
+                        :key="auth"
+                        @click="addApplication(props.row.login, auth)">{{ auth }}
+              </b-button>
+            </div>
           </template>
         </b-table-column>
 
@@ -82,14 +73,17 @@ import {Component, Vue} from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import {SubMenuPath} from "@/components/common/SubMenu";
 import {AuthorizationService} from "@/services/rest/AuthorizationService";
+import DataTypeAuthorizationInfoView from "@/views/authorizations/DataTypeAuthorizationInfoView";
 
 @Component({
-  components: {PageView, SubMenu},
+  components: {DataTypeAuthorizationInfoView, PageView, SubMenu},
 })
 export default class AuthorizationManagementView extends Vue {
   subMenuPaths = [];
   authorizationService = AuthorizationService.INSTANCE;
   authorizations = []
+  currentUser = localStorage.getItem('authenticatedUser')
+  currentUserApplicationPattern = localStorage.getItem('authenticatedUser')
 
   search(user, search) {
     console.log('search', user, search)
@@ -106,11 +100,22 @@ export default class AuthorizationManagementView extends Vue {
   currentUser = JSON.parse(localStorage.getItem('authenticatedUser'))
 
   async init() {
+    this.currentUserApplicationPattern = this.currentUser.authorizations
     this.changes = {
       administrator: {add: [], remove: []},
       applications: {}
     }
-    this.authorizations = await this.authorizationService.getAuthorizations();
+    var authorizations = await this.authorizationService.getAuthorizations()
+    authorizations = authorizations.map(authorization => {
+      authorization.authorizations = authorization.authorizations.filter(this.filterAuthorization)
+      return authorization
+    })
+    console.log('authorizations', authorizations)
+    this.authorizations = authorizations;
+  }
+
+  filterAuthorization(authorization) {
+    return this.currentUserApplicationPattern.find(auth => auth == authorization)
   }
 
   async created() {
@@ -133,7 +138,7 @@ export default class AuthorizationManagementView extends Vue {
     await this.init()
   }
 
-  async makeChanges(){
+  async makeChanges() {
     this.changes.administrator.add.forEach(userId => {
       this.authorizationService.createAuthorizedRole('superadmin', userId)
     })
@@ -153,49 +158,59 @@ export default class AuthorizationManagementView extends Vue {
           this.authorizationService.revokeAuthorizedRole('applicationCreator', userId, applicationPattern)
         })
       }
-    }}
+    }
+  }
 
-  selectAdmin(isAdmin, user) {
-    console.log('add', this.changes.administrator.add, 'remove', this.changes.administrator.remove)
-    if (isAdmin) {
-      if (this.changes.administrator.remove.find(v => v == user.id)) {
-        this.changes.administrator.remove = this.changes.administrator.remove.filter(v => v == v.id)
-      } else if (!this.changes.administrator.add.find(v => v == user.id)) {
-        this.changes.administrator.add.push(user.id)
+  changed(user, value) {
+    let style = ''
+    let changes = this.changes.applications[user]
+    if (changes) {
+      var add = changes.add
+      add = add && add.filter(v => v == value).length
+      var remove = changes.remove
+      remove = remove && remove.filter(v => v == value).length
+      style = add || remove ? 'hasBorder ' : ''
+    }
+    return style
+  }
+
+  addApplication(user, value) {
+    this.authorizations = this.authorizations.map(authorization => {
+      if (authorization.login == user) {
+        authorization.authorizations.push(value)
       }
+      return authorization
+    });
+
+    if (this.changes.applications[user]?.remove?.find(v => v == value)) {
+      this.changes.applications[user].remove = this.changes.applications[user].remove.filter(v => v != value)
     } else {
-      if (this.changes.administrator.add.find(v => v == user.id)) {
-        this.changes.administrator.add = this.changes.administrator.add.filter(v => v == v.id)
-      } else if (!this.changes.administrator.remove.find(v => v == user.id)) {
-        this.changes.administrator.remove.push(user.id)
+      this.changes.applications[user] = this.changes.applications[user] || {}
+      this.changes.applications[user].add = this.changes.applications[user].add || []
+      this.changes.applications[user].add.push(value)
+    }
+  }
+
+  removeApplication(user, value) {
+    this.authorizations = this.authorizations.map(authorization => {
+      if (authorization.login == user) {
+        var a = authorization.authorizations.filter(aa => aa != value)
+        authorization.authorizations = a;
       }
-    }
-  }
-
-  addApplication(value, user) {
-    console.log('adding ' + value)
-    if (this.changes.applications[user.id]?.remove?.find(v => v == value)) {
-      this.changes.applications[user.id].remove = this.changes.applications[user.id].remove.filter(v => v != value)
+      return authorization
+    });
+    if (this.changes.applications[user]?.add?.find(v => v == value)) {
+      this.changes.applications[user].add = this.changes.applications[user].add.filter(v => v != value)
     } else {
-      this.changes.applications[user.id] = this.changes.applications[user.id] || {}
-      this.changes.applications[user.id].add = this.changes.applications[user.id].add || []
-      this.changes.applications[user.id].add.push(value)
+      this.changes.applications[user] = this.changes.applications[user] || {}
+      this.changes.applications[user].remove = this.changes.applications[user].remove || []
+      this.changes.applications[user].remove.push(value)
     }
-  }
-
-  removeApplication(value, user) {
-    if (this.changes.applications[user.id]?.add?.find(v => v == value)) {
-      this.changes.applications[user.id].add = this.changes.applications[user.id].add.filter(v => v != value)
-    } else {
-      this.changes.applications[user.id] = this.changes.applications[user.id] || {}
-      this.changes.applications[user.id].remove = this.changes.applications[user.id].remove || []
-      this.changes.applications[user.id].remove.push(value)
-    }
-  }
-
-  beforeAdding(value) {
-    console.log('before adding ' + value)
-    return value
   }
 }
 </script>
+<style lang="scss" scoped>
+.hasBorder {
+  border: solid #fb0738 6px;
+}
+</style>
