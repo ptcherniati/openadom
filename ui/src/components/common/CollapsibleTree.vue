@@ -142,40 +142,57 @@
 </template>
 
 <script>
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import AvailiblityChart from "../charts/AvailiblityChart.vue";
+export default {
+  name: "CollapsibleTree",
+  components: {FontAwesomeIcon},
+  props: {
+    applicationName: String,
+    option: Object,
+    level: {
+      type: Number,
+      default: 0,
+    },
+    onClickLabelCb: Function,
+    onClickLabelSynthesisDetailCb: Object,
+    onUploadCb: Function,
+    buttons: Array,
+    withRadios: {
+      type: Boolean,
+      default: false,
+    },
+    radioName: Object,
+    repository: Object,
+    repositoryRedirect: Object,
+    lineCount: {
+      type: Number,
+      default: 0,
+    },
+    applicationTitle: {
+      type: String,
+    },
+  },
+  data() {
+    return {
 
-@Component({
-  components: { FontAwesomeIcon, AvailiblityChart },
-})
-export default class CollapsibleTree extends Vue {
-  @Prop() option;
-  @Prop({ default: 0 }) level;
-  @Prop() onClickLabelCb;
-  @Prop() onClickLabelSynthesisDetailCb;
-  @Prop() onUploadCb;
-  @Prop() buttons;
-  @Prop({ default: false }) withRadios;
-  @Prop() radioName;
-  @Prop() repository;
-  @Prop() repositoryRedirect;
-  @Prop({ default: 0 }) lineCount;
-  @Prop({ default: null }) applicationTitle;
-
-  displayChildren = false;
-  refFile = null;
-  innerOptionChecked = null;
-
-  @Watch("innerOptionChecked")
-  onInnerOptionChecked(value) {
-    this.$emit("optionChecked", value);
-  }
-  stopPropagation(event) {
-    event.stopPropagation();
-  }
-  showChildren() {
-    this.displayChildren = true;
+      displayChildren: false,
+      refFile: null,
+      innerOptionChecked: null,
+    }
+  },
+  watch:{
+    innerOptionChecked: (value)=>this.$emit("optionChecked", value)
+  },
+  methods:{
+    onInnerOptionChecked:function(value) {
+      this.$emit("optionChecked", value);
+    },
+    stopPropagation:function(event) {
+      event.stopPropagation();
+    },
+    showChildren:function() {
+      this.displayChildren = true;
+    }
   }
 }
 </script>
