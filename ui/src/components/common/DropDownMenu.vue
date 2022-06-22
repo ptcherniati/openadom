@@ -25,18 +25,24 @@
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+//import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-@Component({
-  components: { FontAwesomeIcon },
-})
-export default class DropDownMenu extends Vue {
-  @Prop() option;
-  emits = ["select-menu-item"];
+export default {
 
-  select(option) {
-    this.$emit("select-menu-item", option || this.option);
+  name: "DropDownMenu",
+  //components: {FontAwesomeIcon},
+  props: {
+    option: {}
+  },
+  data() {
+    return {
+      emits : ["select-menu-item"],
+    }
+  },
+  methods:{
+    select: function(option) {
+      this.$emit("select-menu-item", option || this.option);
+    }
   }
 }
 </script>
