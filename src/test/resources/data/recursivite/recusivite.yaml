@@ -152,6 +152,10 @@ dataTypes:
     uniqueness:
       - variable: date
         component: day
+      - variable: date
+        component: time
+      - variable: site
+        component: nom du site
     # ajout d'un nom internationnalisé
     internationalizationName:
       fr: Condition de prélèvement
@@ -196,12 +200,14 @@ dataTypes:
           etat de surface:
           nebulosite:
           vitesse du vent:
-            checker:
-              name: Integer
       valeurs quantitatives:
         components:
           pression atmospherique:
           temperature de l'air:
+            checker:
+              name: Integer
+              params:
+                required: false
           transparence par disque inra:
           transparence par secchi:
             checker:

@@ -271,11 +271,6 @@ public class Fixtures {
 
     public Map<String, List<String>> getRecursiviteDataErrorsStringReplace() {
         Map<String, List<String>> DataTypeErrors = new LinkedHashMap<>();
-        DataTypeErrors.put("duplicatedLineInDatatype", List.of(
-                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "suivi des lacs;leman;SHL2;20/07/2020;08:45:00;;21;1;ensoleille;clair;;2;973;friselis;amas d'algues;;7.8;vert-gris",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"condition_prelevements\",\"duplicatedRows\":[3,8],\"uniquenessKey\":{\"valeurs qualitatives_nebulosite\":\"1\",\"valeurs qualitatives_etat de surface\":\"amas d'algues\",\"valeurs qualitatives_aspect de l'eau\":\"friselis\",\"valeurs qualitatives_vitesse du vent\":\"2\",\"date_day\":\"20/07/2020\",\"projet_value\":\"suivi des lacs\",\"commentaire_value\":\"\",\"valeurs qualitatives_couleur de l'eau\":\"vert-gris\",\"valeurs quantitatives_temperature de l'air\":\"21\",\"date_time\":\"08:45:00\",\"valeurs quantitatives_pression atmospherique\":\"973\",\"valeurs quantitatives_transparence par secchi\":\"7.8\",\"valeurs qualitatives_ensoleillement\":\"ensoleille\",\"valeurs quantitatives_transparence par disque inra\":\"\",\"valeurs qualitatives_direction du vent\":\"\",\"site_nom de la plateforme\":\"SHL2\",\"valeurs qualitatives_temps\":\"clair\",\"site_nom du site\":\"leman\"}},\"error\":true,\"success\":false},\"lineNumber\":3}]"
-        ));
         // problème liste de site non fixe donc le test ne passe pas mais le message d'erreur est bon
         /*DataTypeErrors.put("invalidReference", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
@@ -283,24 +278,29 @@ public class Fixtures {
                 "[{\"validationCheckResult\":{\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"level\":\"ERROR\",\"rawValue\":\"lemann\",\"matchedReferenceHierarchicalKey\":null,\"matchedReferenceId\":null,\"message\":\"invalidReference\",\"messageParams\":{\"target\":\"site/nom du site\",\"referenceValues\":[\"izourt\",\"cos\",\"anterne\",\"bresses_superieur\",\"jovet\",\"lauzanier\",\"blanc_du_carro\",\"pormenaz\",\"barroude\",\"pave\",\"petarel\",\"dranse\",\"port___bielh\",\"bresses_inferieur\",\"estany_gros\",\"merlet_superieur\",\"rabuons\",\"corne\",\"blanc_du_bramant\",\"mercube\",\"pisses\",\"oncet\",\"annecy\",\"bourget\",\"gentau\",\"bramant\",\"aiguebelette\",\"leman\",\"mont_coua\",\"espingo\",\"port_bielh\",\"muzelle\",\"aumar\",\"arbu\",\"cornu\",\"aratilles\",\"gourg_gaudet\",\"isaby\",\"arpont\",\"plan_vianney\",\"brevent\",\"malrif\",\"noir_du_carro\"],\"refType\":\"site\",\"value\":\"lemann\"},\"error\":true,\"success\":false},\"lineNumber\":3}]"
         ));*/
         DataTypeErrors.put("invalidDate", List.of(
-                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "suivi des lacs;leman;SHL2;20/07/20;08:45:00;;21;1;ensoleille;clair;;2;973;friselis;amas d'algues;;7.8;vert-gris",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDate\",\"messageParams\":{\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"20/07/20\"},\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":3}]"
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;leman;SHL2;x16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDate\",\"messageParams\":{\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x16/12/2020\"},\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":17}]"
         ));
         DataTypeErrors.put("invalidInt", List.of(
-                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "suivi des lacs;leman;SHL2;20/07/2020;08:45:00;;21;1;ensoleille;clair;;0.2;973;friselis;amas d'algues;;7.8;vert-gris",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidInteger\",\"messageParams\":{\"target\":{\"variable\":\"valeurs qualitatives\",\"component\":\"vitesse du vent\",\"id\":\"valeurs qualitatives_vitesse du vent\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"value\":\"0.2\"},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6.0;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidInteger\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"temperature de l'air\",\"id\":\"valeurs quantitatives_temperature de l'air\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"value\":\"6.0\"},\"error\":true,\"success\":false},\"lineNumber\":17}]"
         ));
         DataTypeErrors.put("invalidFloat", List.of(
-                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "suivi des lacs;leman;SHL2;20/07/2020;08:45:00;;21;1;ensoleille;clair;;2;973;friselis;amas d'algues;;7.8x;vert-gris",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloat\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"transparence par secchi\",\"id\":\"valeurs quantitatives_transparence par secchi\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"value\":\"7.8x\"},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8x;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloat\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"transparence par secchi\",\"id\":\"valeurs quantitatives_transparence par secchi\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"value\":\"7.8x\"},\"error\":true,\"success\":false},\"lineNumber\":17}]"
         ));
         DataTypeErrors.put("requiredValue", List.of(
-                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "suivi des lacs;;SHL2;20/07/2020;08:45:00;;21;1;ensoleille;clair;;2;973;friselis;amas d'algues;;7.8;vert-gris",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"requiredValue\",\"messageParams\":{\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"}},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"requiredValue\",\"messageParams\":{\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"}},\"error\":true,\"success\":false},\"lineNumber\":17}]"
+        ));
+        DataTypeErrors.put("duplicatedLineInDatatype", List.of(
+                "suivi des lacs;leman;SHL2;18/11/2020;09:15:00;Octeau tract� par Daphnie;12;5;ensoleille;clair;W;2;983;petites vagues;branches;;5.2;vert-jaune",
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"condition_prelevements\",\"duplicatedRows\":[16,17],\"uniquenessKey\":{\"date_time\":\"09:15:00\",\"date_day\":\"16/12/2020\",\"site_nom du site\":\"leman\"}},\"error\":true,\"success\":false},\"lineNumber\":16}]"
         ));
         return DataTypeErrors;
     }
