@@ -150,7 +150,7 @@ dataTypes:
   # début de la description du fichier des données de condition de prélèvement
   condition_prelevements:
     uniqueness:
-      - variable: dates
+      - variable: date
         component: day
     # ajout d'un nom internationnalisé
     internationalizationName:
