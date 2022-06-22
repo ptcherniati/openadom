@@ -1065,7 +1065,7 @@ public class OreSiResourcesTest {
 
     private void addUserRightCreateApplication(UUID userId, String pattern) throws Exception {
         ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                        .param("userId", userId.toString())
+                        .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", pattern)
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())

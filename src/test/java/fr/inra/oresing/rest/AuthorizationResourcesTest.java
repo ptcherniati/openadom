@@ -385,7 +385,7 @@ public class AuthorizationResourcesTest {
                 // on donne les droits pour un pattern acbb
 
                 ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                                .param("userId", applicationCreatorResult.getUserId().toString())
+                                .param("userIdOrLogin", applicationCreatorResult.getUserId().toString())
                                 .param("applicationPattern", "acbb")
                                 .cookie(dbUserCookies))
                         .andExpect(status().is2xxSuccessful())
@@ -404,7 +404,7 @@ public class AuthorizationResourcesTest {
             {
                 //on donne des droits pour le pattern monsore
                 ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                                .param("userId", applicationCreatorResult.getUserId().toString())
+                                .param("userIdOrLogin", applicationCreatorResult.getUserId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(dbUserCookies))
                         .andExpect(status().is2xxSuccessful())
@@ -421,7 +421,7 @@ public class AuthorizationResourcesTest {
             {
                 //on supprime des droits pour le pattern monsore
                 ResultActions resultActions = mockMvc.perform(delete("/api/v1/authorization/applicationCreator")
-                                .param("userId", applicationCreatorResult.getUserId().toString())
+                                .param("userIdOrLogin", applicationCreatorResult.getUserId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(dbUserCookies))
                         .andExpect(status().is2xxSuccessful())

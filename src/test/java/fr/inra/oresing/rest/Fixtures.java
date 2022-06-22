@@ -375,7 +375,7 @@ public class Fixtures {
         CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword);
         final UUID userId = createUserResult.getUserId();
         ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                        .param("userId", userId.toString())
+                        .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", applicationPattern)
                         .cookie(cookie))
                 .andExpect(status().is2xxSuccessful())
