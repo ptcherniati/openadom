@@ -71,7 +71,7 @@ public class SqlService {
             using = String.format(" USING (%s)", sqlPolicy.getUsingExpression());
         }
         if(!Strings.isNullOrEmpty(sqlPolicy.getWithCheckExpression())){
-            using = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
+            withCheck = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
         }
         String createPolicySql = String.format(
                 "CREATE POLICY %s ON %s AS %s FOR %s TO %s %s %s",

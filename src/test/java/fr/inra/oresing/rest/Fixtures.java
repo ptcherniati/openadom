@@ -31,11 +31,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -469,8 +465,10 @@ public class Fixtures {
         return authCookie;
     }
 
-    public Cookie addApplicationAcbb() throws Exception {
-        Cookie authCookie = addApplicationCreatorUser("acbb");
+    public Cookie addApplicationAcbb(Cookie authCookie) throws Exception {
+        if (authCookie == null) {
+            authCookie = addApplicationCreatorUser("acbb");
+        }
         try (InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb")
@@ -491,22 +489,15 @@ public class Fixtures {
         }
 
         // ajout de data
-        try (InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
-                            .file(file)
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
+        addFluxTours(authCookie);
 
-        try (InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
-            MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .file(file)
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
+        addBiomasse(authCookie);
 
+        addSWC(authCookie);
+        return authCookie;
+    }
+
+    private void addSWC(Cookie authCookie) throws Exception {
         try (InputStream in = openSwcDataResourceName(true)) {
             MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/SWC")
@@ -514,7 +505,26 @@ public class Fixtures {
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
-        return authCookie;
+    }
+
+    private void addBiomasse(Cookie authCookie) throws Exception {
+        try (InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                            .file(file)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+    }
+
+    private void addFluxTours(Cookie authCookie) throws Exception {
+        try (InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
+            MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/acbb/data/flux_tours")
+                            .file(file)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
     }
 
     public String getValidationApplicationConfigurationResourceName() {

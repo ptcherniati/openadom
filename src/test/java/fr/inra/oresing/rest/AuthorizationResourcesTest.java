@@ -79,20 +79,26 @@ public class AuthorizationResourcesTest {
 
     @Test
     public void testAddAuthorization() throws Exception {
-        Cookie authCookie = fixtures.addApplicationAcbb();
+        CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
+        String withRigthsUserId = withRightsUserResult.getUserId().toString();
+        Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "withrigths")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "UnReader")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        String readerUserId = readerUserResult.getUserId().toString();
+
+        Cookie authCookie = fixtures.addApplicationAcbb(null);
         final String token = Jwts.parser()
                 .setSigningKey(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
                 .parseClaimsJws(authCookie.getValue())
                 .getBody()
                 .getSubject();
         final String authId = JsonPath.parse(token).read("$.requestClient.id");
-        CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
-        String readerUserId = readerUserResult.getUserId().toString();
-        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "UnReader")
-                        .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authCookie)
@@ -213,6 +219,18 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
+        }
+        {
+            final MockHttpServletRequestBuilder authorizations = get("/api/v1/acbb/authorization/biomasse_production_teneur/" + authId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie);
+            mockMvc.perform(authorizations)
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.applicationName", equalTo("acbb")))
+                    .andExpect(jsonPath("$.dataType",  equalTo("biomasse_production_teneur")))
+                    .andExpect(jsonPath("$.authorizationResults.extraction[0].requiredAuthorizations.localization",  equalTo("theix.theix__2")))
+                    .andReturn().getResponse().getContentAsString();
+
         }
 
         {

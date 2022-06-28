@@ -14,6 +14,7 @@ import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
@@ -113,7 +114,7 @@ public class OreSiService {
         return Ltree.escapeToLabel(key);
     }
 
-    protected UUID storeFile(Application app, MultipartFile file, String comment) throws IOException {
+    public UUID storeFile(Application app, MultipartFile file, String comment, BinaryFileDataset binaryFileDataset) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         BinaryFile binaryFile = new BinaryFile();
@@ -123,6 +124,7 @@ public class OreSiService {
         binaryFile.setSize(file.getSize());
         binaryFile.setData(file.getBytes());
         BinaryFileInfos binaryFileInfos = new BinaryFileInfos();
+        binaryFileInfos.binaryFiledataset = binaryFileDataset;
         binaryFile.setParams(binaryFileInfos);
         binaryFile.getParams().createuser = request.getRequestUserId();
         binaryFile.getParams().createdate = LocalDateTime.now().toString();
@@ -131,7 +133,7 @@ public class OreSiService {
     }
 
     public UUID createApplication(String name, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
-        final OreSiUser currentUser = userRepository.findById(request.getRequestClient().getId());
+        final OreSiUser currentUser = getCurrentUser();
         final boolean canCreateApplication = currentUser.getAuthorizations().stream()
                 .anyMatch(s -> name.matches(s));
         Application app = new Application();
@@ -141,6 +143,10 @@ public class OreSiService {
         relationalService.createViews(app.getName());
 
         return result;
+    }
+
+    private OreSiUser getCurrentUser() {
+        return userRepository.findById(request.getRequestClient().getId());
     }
 
     public Application initApplication(Application app) {
@@ -320,7 +326,7 @@ public class OreSiService {
 
     private UUID changeApplicationConfiguration(Application app, MultipartFile configurationFile, Function<Application, Application> initApplication) throws IOException, BadApplicationConfigurationException {
         final String applicationName = app.getName();
-        final OreSiUser currentUser = userRepository.findById(request.getRequestClient().getId());
+        final OreSiUser currentUser = getCurrentUser();
         authenticationService.setRoleForClient();
         final boolean canCreateApplication = authenticationService.hasRole(OreSiRole.applicationCreator()) && currentUser.getAuthorizations().stream()
                 .anyMatch(s -> applicationName.matches(s));
@@ -347,7 +353,7 @@ public class OreSiService {
         app.setConfiguration(configuration);
         try {
             app = initApplication.apply(app);
-            UUID confId = storeFile(app, configurationFile, app.getComment());
+            UUID confId = storeFile(app, configurationFile, app.getComment(), null);
             app.setConfigFile(confId);
             UUID appId = repo.application().store(app);
             return appId;
@@ -358,7 +364,7 @@ public class OreSiService {
 
     public UUID addReference(Application app, String refType, MultipartFile file) throws IOException {
         authenticationService.setRoleForClient();
-        UUID fileId = storeFile(app, file, "");
+        UUID fileId = storeFile(app, file, "", null);
         referenceService.addReference(app, refType, file, fileId);
         return fileId;
     }
@@ -414,28 +420,39 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         Application app = getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
-        Optional.ofNullable(params)
-                .map(par -> par.getBinaryfiledataset())
-                .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataType));
-        BinaryFile storedFile = loadOrCreateFile(file, params, app);
-        if (params != null && !params.topublish) {
-            if (storedFile.getParams() != null && storedFile.getParams().published) {
-                storedFile.getParams().published = false;
-                filesToStore.add(storedFile);
-                unPublishVersions(app, filesToStore, dataType);
-            }
-            return storedFile.getId();
-        } else if (params != null && params.getBinaryfiledataset() != null) {
-            BinaryFile publishedVersion = getPublishedVersion(params, app);
-            if (publishedVersion != null && publishedVersion.getParams().published) {
-                filesToStore.add(publishedVersion);
-                unPublishVersions(app, filesToStore, dataType);
+        final AuthorizationPublicationHelper authorizationPublicationHelper = new AuthorizationPublicationHelper(repo.getRepository(app.getId()), authorizationService, this);
+        authorizationPublicationHelper.init(app, userRepository, dataType, params);
+
+        BinaryFile storedFile = authorizationPublicationHelper.loadOrCreateFile(file, params, app);
+        if (authorizationPublicationHelper.isRepository()) {
+            if (params != null && !params.topublish) {
+                if (storedFile.getParams() != null && storedFile.getParams().published) {
+                    storedFile.getParams().published = false;
+                    filesToStore.add(storedFile);
+                    assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
+                    unPublishVersions(app, filesToStore, dataType);
+                }
+                return storedFile.getId();
+            } else if (params != null && params.getBinaryfiledataset() != null) {
+                BinaryFile publishedVersion = getPublishedVersion(params, app);
+                if (publishedVersion != null && publishedVersion.getParams().published) {
+                    filesToStore.add(publishedVersion);
+                    assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
+                    unPublishVersions(app, filesToStore, dataType);
+                }
             }
         }
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
         Configuration.FormatDescription formatDescription = dataTypeDescription.getFormat();
         InvalidDatasetContentException.checkErrorsIsEmpty(findPublishedVersion(nameOrId, dataType, params, filesToStore, true));
+        final boolean isApplicationCreator = Optional.ofNullable(userRepository.getRolesForCurrentUser())
+                .map(CurrentUserRoles::getMemberOf)
+                .map(roles -> roles.stream().anyMatch(role -> OreSiRole.applicationCreator().getAsSqlRole().equals(role)))
+                .orElse(false);
+        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(app.getName(), dataType, getCurrentUser().getLogin());
+
+        assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
         publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
@@ -558,7 +575,7 @@ public class OreSiService {
                 .orElseGet(() -> {
                     UUID fileId = null;
                     try {
-                        fileId = storeFile(app, file, "");
+                        fileId = storeFile(app, file, "", null);
                     } catch (IOException e) {
                         return null;
                     }
@@ -613,9 +630,9 @@ public class OreSiService {
                                                                                Configuration.DataTypeDescription dataTypeDescription,
                                                                                BinaryFileDataset binaryFileDataset) {
         final Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
-        final boolean haveAuthorizations = authorization != null;
+        final boolean haveAuthorizationsDescription = authorization != null;
 
-        final DateLineChecker timeScopeDateLineChecker = haveAuthorizations && authorization.getTimeScope() != null ?
+        final DateLineChecker timeScopeDateLineChecker = haveAuthorizationsDescription && authorization.getTimeScope() != null ?
                 lineCheckers.stream()
                         .filter(lineChecker -> lineChecker instanceof DateLineChecker)
                         .map(lineChecker -> (DateLineChecker) lineChecker)
@@ -665,12 +682,12 @@ public class OreSiService {
             }
 
             Map<String, Ltree> requiredAuthorizations = new LinkedHashMap<>();
-            if (haveAuthorizations) {
+            if (haveAuthorizationsDescription) {
                 authorization.getAuthorizationScopes().forEach((authorizationScope, authorizationScopeDescription) -> {
                     VariableComponentKey variableComponentKey = authorizationScopeDescription.getVariableComponentKey();
                     String requiredAuthorizationsFromDatum = datum.get(variableComponentKey);
                     Ltree.checkSyntax(requiredAuthorizationsFromDatum);
-                requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorizationsFromDatum));
+                    requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorizationsFromDatum));
                 });
             }
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
@@ -682,7 +699,7 @@ public class OreSiService {
                 return Stream.of((Data) null);
             }
             LinkedHashMap<String, Configuration.DataGroupDescription> dataGroups;
-            if (!haveAuthorizations) {
+            if (!haveAuthorizationsDescription) {
                 dataGroups = new LinkedHashMap<>();
                 final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
                 dataGroupDescription.setData(dataTypeDescription.getData().keySet());
@@ -755,9 +772,9 @@ public class OreSiService {
 
 
     private void checkrequiredAuthorizationsInDatasetRange(Map<String, Ltree> requiredAuthorizations,
-                                                          List<CsvRowValidationCheckResult> errors,
-                                                          BinaryFileDataset binaryFileDataset,
-                                                          int rowNumber) {
+                                                           List<CsvRowValidationCheckResult> errors,
+                                                           BinaryFileDataset binaryFileDataset,
+                                                           int rowNumber) {
         if (binaryFileDataset == null) {
             return;
         }

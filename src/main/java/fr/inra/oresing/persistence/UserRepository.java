@@ -26,7 +26,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
                 + " ON CONFLICT (id) DO UPDATE SET updateDate=current_timestamp, login=EXCLUDED.login, password=EXCLUDED.password, authorizations=EXCLUDED.authorizations"
                 + " RETURNING id";
     }
-    
+
     @Override
     protected SqlTable getTable() {
         return SqlSchema.main().oreSiUser();
@@ -39,6 +39,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
 
     public Optional<OreSiUser> findByLogin(String login) {
         String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t WHERE login = :login";
+
         Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
                 new MapSqlParameterSource("login", login), getJsonRowMapper()).stream().collect(MoreCollectors.toOptional());
         return result;
@@ -73,14 +74,17 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
                 "group by userid, r.rolname,t.isSuper;";
         final Map<String, String> parameters =new HashMap<>();
         parameters.put("roleName", role);
-        return  getNamedParameterJdbcTemplate().queryForObject(
+        final CurrentUserRoles currentUserRoles = getNamedParameterJdbcTemplate().queryForObject(
                 query,
                 parameters, rowMapper);
+        Optional.ofNullable(currentUserRoles).map(CurrentUserRoles::getCurrentUser).map(this::findByLogin).ifPresent(currentUserRoles::setUserOptional);
+        return currentUserRoles;
 
 
     }
     public CurrentUserRoles getRolesForCurrentUser(){
         final OreSiRoleToAccessDatabase role = request.getRequestClient().getRole();
+        final OreSiUser user = findById(UUID.fromString(role.getAsSqlRole()));
         return getRolesForRole(role.getAsSqlRole());
     }
 

@@ -37,20 +37,23 @@ public class AuthorizationResources {
     public List<LoginResult> getAuthorizations(){
         return authenticationService.getAuthorizations();
     }
+    @GetMapping(value = "/{applicationNameOrId}/authorization/{dataType}/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "dataType") String dataType, @PathVariable(name = "userLoginOrId") String userLoginOrId){
+        return authorizationService.getAuthorizationsForUser(applicationNameOrId, dataType,userLoginOrId);
+    }
 
     @PostMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAuthorization(@PathVariable(name = "nameOrId") String nameOrId, @PathVariable(name = "dataType") String dataType, @RequestBody CreateAuthorizationRequest authorization) {
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         final Application application = repo.application().findApplication(nameOrId);
         final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        final boolean canChangeRoles= isApplicationCreator;
-        if (!canChangeRoles) {
+        if (!isApplicationCreator) {
             throw new NotApplicationCanSetRightsException(application.getName(), dataType);
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
-        OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+        authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
         List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);

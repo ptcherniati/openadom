@@ -81,6 +81,7 @@ create table OreSiUser
     password       text        NOT NULL,-- can be null
     authorizations TEXT[] default '{}'
 );
+GRANT SELECT on OreSiUser to public;
 
 create table Application
 (

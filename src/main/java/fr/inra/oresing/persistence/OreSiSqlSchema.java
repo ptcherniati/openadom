@@ -11,6 +11,10 @@ public enum OreSiSqlSchema implements SqlSchema {
         return new SqlTable(MAIN, "application");
     }
 
+    public SqlTable bvinaryFile() {
+        return new SqlTable(MAIN, "application");
+    }
+
     public SqlTable oreSiUser() {
         return new SqlTable(MAIN, "oreSiUser");
     }

@@ -135,28 +135,26 @@ export default class AuthorizationManagementView extends Vue {
 
   async registerChanges() {
     await this.makeChanges();
-    await this.init()
+    await this.init();
   }
 
   async makeChanges() {
-    this.changes.administrator.add.forEach(userId => {
-      this.authorizationService.createAuthorizedRole('superadmin', userId)
-    })
-    this.changes.administrator.remove.forEach(userId => {
-      this.authorizationService.revokeAuthorizedRole('superadmin', userId)
-    })
-    for (const userId in this.changes.applications) {
-      if (this.changes.applications[userId].add) {
-        this.changes.applications[userId].add.forEach(applicationPattern => {
-          this.authorizationService.createAuthorizedRole('applicationCreator', userId, applicationPattern)
-        })
-      }
+    for (const userId of this.changes.administrator.add) {
+      await this.authorizationService.createAuthorizedRole('superadmin', userId);
+    }
+    for (const userId of this.changes.administrator.remove) {
+      await this.authorizationService.revokeAuthorizedRole('superadmin', userId);
     }
     for (const userId in this.changes.applications) {
+      if (this.changes.applications[userId].add) {
+        for (const applicationPattern of this.changes.applications[userId].add) {
+          await this.authorizationService.createAuthorizedRole('applicationCreator', userId, applicationPattern)
+        }
+      }
       if (this.changes.applications[userId].remove) {
-        this.changes.applications[userId].remove.forEach(applicationPattern => {
-          this.authorizationService.revokeAuthorizedRole('applicationCreator', userId, applicationPattern)
-        })
+        for (const applicationPattern of this.changes.applications[userId].remove) {
+          await this.authorizationService.revokeAuthorizedRole('applicationCreator', userId, applicationPattern)
+        }
       }
     }
   }

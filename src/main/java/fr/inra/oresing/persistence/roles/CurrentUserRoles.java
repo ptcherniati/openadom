@@ -1,11 +1,16 @@
 package fr.inra.oresing.persistence.roles;
 
+import fr.inra.oresing.model.OreSiUser;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 public class CurrentUserRoles {
+    @Setter
+    Optional<OreSiUser> userOptional;
     String currentUser;
     List<String> memberOf;
 
@@ -16,4 +21,6 @@ public class CurrentUserRoles {
         this.memberOf = memberOf;
         this.isSuper = isSuper;
     }
+
+
 }

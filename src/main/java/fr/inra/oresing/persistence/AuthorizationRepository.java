@@ -1,7 +1,6 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.Authorization;
 import fr.inra.oresing.model.OreSiAuthorization;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -47,7 +46,7 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
 
     public List<OreSiAuthorization> findAuthorizations(UUID userId, Application application, String dataType) {
         String query  = String.join("\n",
-                "select '"+Authorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
+                "select '"+OreSiAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
                 "from " + getTable().getSqlIdentifier()+ " t",
                 "where t.application = :applicationId",
                " and t.dataType = :dataType",
