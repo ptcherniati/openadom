@@ -14,7 +14,6 @@
         })
       }}</span>
     </h1>
-
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
       <ValidationProvider
         v-slot="{ errors, valid }"
@@ -36,6 +35,7 @@
             v-model="selectedUsers"
             :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
             expanded
+            :native-size="users.length"
             multiple
           >
             <option v-for="user in users" :key="user.id" :value="user.id">
@@ -301,7 +301,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
-      console.log("grantableInfos", grantableInfos);
+      //console.log("grantableInfos", grantableInfos);
       this.columnsVisible = { ...this.columnsVisible, ...grantableInfos.columnsDescription };
       if (this.authorizationId != "new") {
         var authorizations = await this.authorizationService.getAuthorizations(

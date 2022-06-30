@@ -228,3 +228,23 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 .b-table .table th.is-sortable, .b-table .table th.is-sortable .th-wrap {
   width: max-content;
 }
+a.leaf {
+  padding: 15px;
+}
+p.folder {
+  padding-left: 15px;
+  padding-bottom: 10px;
+  padding-top: 12px;
+}
+ul.rows{
+  margin-bottom: 10px;
+}
+h3 {
+  text-decoration: underline;
+}
+.defaultValueTooltip {
+  background-color: white;
+  color: $primary;
+  font-weight: bold;
+  padding-top: 5px;
+}
