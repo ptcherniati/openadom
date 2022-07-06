@@ -159,7 +159,7 @@ export default class AuthorizationTable extends Vue {
   updateStates() {
     var states = {};
     for (const column in this.columnsVisible) {
-      if (column == "label") {
+      if (column === "label") {
         continue;
       }
       states[column] = {};
@@ -220,9 +220,9 @@ export default class AuthorizationTable extends Vue {
     var stateElement = this.states[indexColumn][this.getPath(index)];
     var currentPath = this.getPath(index);
     authorizations = authorizations || {toDelete: [], toAdd: []};
-    if (stateElement.state == 1) {
+    if (stateElement.state === 1) {
       checkedAuthorization = this.authorization.getCheckedAuthorization(indexColumn, currentPath);
-      if (checkedAuthorization.scopeKey == currentPath) {
+      if (checkedAuthorization.scopeKey === currentPath) {
         authorizations.toDelete.push(checkedAuthorization.auth);
         eventToEmit = {currentPath, authorizations, index, indexColumn};
         this.$emit("modifyAuthorization", eventToEmit);
@@ -230,7 +230,7 @@ export default class AuthorizationTable extends Vue {
         var indetermined = false;
         var count = 0;
         for (const authReferenceKey in this.authReference) {
-          if (authReferenceKey != index) {
+          if (authReferenceKey !== index) {
             authorization = {...checkedAuthorization.auth};
             requiredAuthorizations = {...this.currentAuthorizationScope};
             authReference = this.authReference[authReferenceKey];
@@ -257,7 +257,7 @@ export default class AuthorizationTable extends Vue {
       let dependants = this.authorization.getDependants(indexColumn, currentPath);
       authorizations.toDelete = [...authorizations.toDelete, ...dependants];
       if (
-          Object.values(this.states[indexColumn]).filter((s) => s.state != 1).length - 1 ||
+          Object.values(this.states[indexColumn]).filter((s) => s.state !== 1).length - 1 ||
           this.isRoot
       ) {
         authorizations.toAdd.push(currentAuthorization);

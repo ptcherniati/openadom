@@ -219,14 +219,16 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   configuration = {};
   authReferences = {};
   subMenuPaths = [];
-
+  repositury = null;
   selectedUsers = [];
 
   getColumnTitle(column) {
-    return (
-        (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
-        column.title
-    );
+    if(column.display) {
+      return (
+          (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
+          column.title
+      );
+    }
   }
 
   modifyAuthorization(event) {
@@ -346,6 +348,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         ),
       };
       this.authorizations = this.configuration?.authorization?.authorizationScopes || [];
+      this.repositury = (this.application.dataTypes[this.dataTypeId].repository != null);
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
           this.applicationName,
           this.dataTypeId
@@ -357,6 +360,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       } = grantableInfos);
       //console.log("grantableInfos", grantableInfos);
       this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription};
+      if (!this.repositury) {
+        this.columnsVisible.publication = {...this.columnsVisible.publication, display: false }
+      }
+      console.log(this.columnsVisible)
       if (this.authorizationId != "new") {
         var authorizations = await this.authorizationService.getAuthorizations(
             this.applicationName,
@@ -388,11 +395,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
             this.selectedlabels.push(this.users[j].label);
           }
         }
-      };
+      }
+      ;
       for (let i = 0; i < this.users.length; i++) {
-        if(!this.selectedlabels.includes(this.users[i].label))
+        if (!this.selectedlabels.includes(this.users[i].label))
           this.userLabels.push(this.users[i].label)
       }
+      this.userLabels.sort();
       grantableInfos.authorizationScopes.reverse();
       let ret = {};
       for (let auth in grantableInfos.authorizationScopes) {
@@ -463,22 +472,12 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           .toLowerCase()
           .indexOf(text.toLowerCase()) >= 0
     })
-    console.log(this.filteredTags)
     for (let i = 0; i < this.filteredTags.length; i++) {
-      if(!this.selectedlabels.includes(this.filteredTags[i].label)) {
+      if (!this.selectedlabels.includes(this.filteredTags[i].label)) {
         this.userLabels.push(this.filteredTags[i].label)
       }
     }
-
-    /*for (let i = 0; i < this.filteredTags.length; i++) {
-      for (let j = 0; j < this.selectedlabels.length; j++) {
-        if (this.selectedlabels[j] === this.filteredTags[i].label) {
-          console.log(this.filteredTags)
-        } else {
-          this.userLabels.push(this.filteredTags[i].label)
-        }
-      }
-    }*/
+    this.userLabels.sort();
   }
 
   async partitionReferencesValues(
