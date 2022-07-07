@@ -348,8 +348,8 @@ public class AuthorizationService {
                                                 authorization.getDataGroups(),
                                                 authorization.getRequiredAuthorizations().entrySet().stream()
                                                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSql())),
-                                                authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
-                                                authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
+                                                authorization.getTimeScope()==null?null:authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
+                                                authorization.getTimeScope()==null?null:authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
                                         )).
                                         forEach(authorizationResult -> authorizationMap
                                                 .computeIfAbsent(key, k -> new LinkedList<>())

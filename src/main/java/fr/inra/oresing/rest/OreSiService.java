@@ -453,7 +453,7 @@ public class OreSiService {
         final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(app.getName(), dataType, getCurrentUser().getLogin());
 
         assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
-        publishVersion(dataType, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
+        publishVersion(dataType, authorizationPublicationHelper,errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
         unPublishVersions(app, filesToStore, dataType);
@@ -490,7 +490,7 @@ public class OreSiService {
     }
 
     private void publishVersion(String dataType,
-                                List<CsvRowValidationCheckResult> errors,
+                                AuthorizationPublicationHelper authorizationPublicationHelper, List<CsvRowValidationCheckResult> errors,
                                 Application app,
                                 BinaryFile storedFile,
                                 Configuration.DataTypeDescription dataTypeDescription,
@@ -515,7 +515,7 @@ public class OreSiService {
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
                     .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredAuthorizations()))
-                    .flatMap(buildLineValuesToEntityStreamFn(app, dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
+                    .flatMap(buildLineValuesToEntityStreamFn(app, authorizationPublicationHelper,dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
             AtomicLong lines = new AtomicLong();
             final Instant debut = Instant.now();
             final DataRepository dataRepository = repo.getRepository(app).data();
@@ -596,17 +596,18 @@ public class OreSiService {
      * return a function that transform each RowWithData to a stream of data entities
      *
      * @param app
+     * @param authorizationPublicationHelper
      * @param dataType
      * @param fileId
      * @param uniquenessBuilder
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, String dataType, UUID fileId, UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, AuthorizationPublicationHelper authorizationPublicationHelper, String dataType, UUID fileId, UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        return buildRowWithDataStreamFunction(app, dataType, fileId, uniquenessBuilder, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, uniquenessBuilder,authorizationPublicationHelper, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
     }
 
     /**
@@ -616,6 +617,7 @@ public class OreSiService {
      * @param dataType
      * @param fileId
      * @param uniquenessBuilder
+     * @param authorizationPublicationHelper
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
@@ -625,7 +627,7 @@ public class OreSiService {
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
                                                                                String dataType,
                                                                                UUID fileId,
-                                                                               UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors,
+                                                                               UniquenessBuilder uniquenessBuilder, AuthorizationPublicationHelper authorizationPublicationHelper, List<CsvRowValidationCheckResult> errors,
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
                                                                                BinaryFileDataset binaryFileDataset) {
@@ -707,6 +709,7 @@ public class OreSiService {
             } else {
                 dataGroups = authorization.getDataGroups();
             }
+
             Stream<Data> dataStream = dataGroups.entrySet().stream().map(entry -> {
                 String dataGroup = entry.getKey();
                 Configuration.DataGroupDescription dataGroupDescription = entry.getValue();
@@ -727,12 +730,27 @@ public class OreSiService {
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
                 }
-
+                final Authorization authorization1 = new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope);
+                if(!authorizationPublicationHelper.isRepository()&& !authorizationPublicationHelper.isApplicationCreator()){
+                    if(!authorizationPublicationHelper.hasRightForPublishOrUnPublish(authorization1)){
+                        errors.add(
+                                new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
+                                        "norightforpublish",
+                                        ImmutableMap.of(
+                                                "application",app.getName(),
+                                                "dataType",dataType,
+                                                "lineNumber",rowWithData.getLineNumber()
+                                        )
+                                ),
+                                rowWithData.getLineNumber())
+                        );
+                    }
+                }
                 Data e = new Data();
                 e.setBinaryFile(fileId);
                 e.setDataType(dataType);
                 e.setRowId(rowId);
-                e.setAuthorization(new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope));
+                e.setAuthorization(authorization1);
                 e.setApplication(app.getId());
                 e.setRefsLinkedTo(refsLinkedToToStore);
                 e.setUniqueness(uniquenessValues);
