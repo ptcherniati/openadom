@@ -166,9 +166,23 @@ public class TestReferencesErrors {
                 responses.put(e.getKey(), response);
             }
         }
+        for (Map.Entry<String, String> e : fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
 
         // ajout de data
-        String phytoAggregatedData_path = fixtures.getPhytoAggregatedDataResourceName();
+        /*String phytoAggregatedData_path = fixtures.getConditionsPrelevementDataResourceName();
         StringBuilder textBuilders = new StringBuilder();
         try (InputStream refStream = fixtures.getClass().getResourceAsStream(phytoAggregatedData_path)) {
             try (Reader reader = new BufferedReader(new InputStreamReader
@@ -186,6 +200,35 @@ public class TestReferencesErrors {
                 MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/phytoplancton_aggregated")
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+                        .andReturn().getResponse().getContentAsString();
+
+                Assert.assertEquals(e.getValue().get(2), response);
+                responses.put(e.getKey(), response);
+            }
+        }*/
+        // test repository
+        String site = "leman";
+        URL resources = getClass().getResource(fixtures.getConditionsPrelevementRepositoryResourceName(site));
+        StringBuilder textBuild = new StringBuilder();
+        try (InputStream refStream = Objects.requireNonNull(resources).openStream()) {
+            try (Reader reader = new BufferedReader(new InputStreamReader
+                    (refStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
+                int c = 0;
+                while ((c = reader.read()) != -1) {
+                    textBuild.append((char) c);
+                }
+            }
+        }
+        String monRepositoryCSV = textBuild.toString();
+        for (Map.Entry<String, List<String>> e : fixtures.getRecursiviteDataErrorsStringReplace().entrySet()) {
+            String textCsvModify = monRepositoryCSV.replace(e.getValue().get(0), e.getValue().get(1));
+            try (InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
+                MockMultipartFile refFile = new MockMultipartFile("file", "suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", "text/plain", refStream);
+                log.info(e.getKey());
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(MockMvcResultMatchers.status().is4xxClientError())

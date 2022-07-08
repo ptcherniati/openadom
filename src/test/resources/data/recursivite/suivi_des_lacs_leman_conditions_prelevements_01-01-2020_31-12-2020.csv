@@ -1,0 +1,17 @@
+Nom du projet;nom du site;Nom de la plateforme;date de prelevement;heure de prelevement;commentaire;Température de l'air;nebulosite;ensoleillement; temps ;direction du vent;vitesse du vent;pression atmosphérique;aspect de l'eau;etat de surface;transparence par disque inra;transparence par secchi 20 cm;couleur de l'eau
+suivi des lacs;leman;SHL2;22/01/2020;08:45:00;probleme de treuil a 150 m batteries. sans consequences;3;1;ensoleille;clair;;2;978;vaguelettes;propre;;15;vert-vert
+suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert
+suivi des lacs;leman;SHL2;05/05/2020;10:30:00;pas d�iWS en panne . echantillon moyen avec les 7 surfaces. pas de production prim. commenc� par Multiparametre cause mauvais temps. puis echantillons avec amelioration;12;8;ombre;clair;;3;970;petites vagues;pollen;;6.1;vert-vert
+suivi des lacs;leman;SHL2;02/06/2020;08:15:00;test de la 214. utilisation du Daphnie en secours ;24;1;ensoleille;clair;;1;970;plat;propre;;5.9;vert-gris
+suivi des lacs;leman;SHL2;15/06/2020;08:30:00;PAM pour Serena. Cyto en panne.Pb treuil sur retour Sonde;18;6;ombre;clair;NW;1;974;plat;propre;;7.5;vert-vert
+suivi des lacs;leman;SHL2;30/06/2020;08:45:00;PAM . +Louise;20;1;ensoleille;clair;;2;970;friselis;amas d'algues;;10.7;bleu-gris
+suivi des lacs;leman;SHL2;20/07/2020;08:45:00;;21;1;ensoleille;clair;;2;973;friselis;amas d'algues;;7.8;vert-gris
+suivi des lacs;leman;SHL2;03/08/2020;08:45:00;orage apres 2 palanquees. attente puis fin prelevements chimie. A/R Evian . impossible l'apres-midi. Pas de ProdPrim;16;10;ombre;clair;;12;969;vagues deferlantes;propre;;;
+suivi des lacs;leman;SHL2;04/08/2020;09:00:00;;13;6;ombre;clair;E;3;971;houle longue;propre;;5.2;vert-vert
+suivi des lacs;leman;SHL2;20/08/2020;08:30:00;la production a deriv�. retrouv�e en face de Torrent;21;1;ensoleille;clair;W;2;968;friselis;branches;;7.0;vert-gris
+suivi des lacs;leman;SHL2;09/09/2020;09:30:00;La prod a d�riv� Pr�sence Yvan Mattadia (2 filets de ZOO);24;1;ensoleille;clair;;1;978;friselis;propre;;6;vert-vert
+suivi des lacs;leman;SHL2;23/09/2020;10:30:00;Commencement tardif cause hourle � l'arriv�e;22;4;ensoleille;clair;;3;966;houle courte;propre;;5.8;vert-gris
+suivi des lacs;leman;SHL2;13/10/2020;11:45:00;"Commencement tardif cause hourle jusqu'à 11H00, pr�l�vement pour Yvan M Leslie et Alexis.  Branche sur parcours";11;5;ensoleille;clair;;3;966;houle courte;propre;;6.4;vert-vert
+suivi des lacs;leman;SHL2;03/11/2020;09:20:00;Octeau tract� par Daphnie. Vent temp�tueux  l'AM et pluie. Profil sonde jusqu�� 240 m.Profil sonde refait  le 6/11;;;ombre;clair;;5;;;branches;;6.5;vert-vert
+suivi des lacs;leman;SHL2;18/11/2020;09:15:00;Octeau tract� par Daphnie;12;5;ensoleille;clair;W;2;983;petites vagues;branches;;5.2;vert-jaune
+suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert

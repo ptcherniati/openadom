@@ -199,7 +199,21 @@
                 {{
                   currentDataset[0].periode
                 }}
+                <div v-if="errorsMessages.length" style="margin: 10px">
+                  <div v-for="msg in errorsMessages" v-bind:key="msg">
+                    <b-message
+                        :title="$t('message.data-type-config-error')"
+                        type="is-danger"
+                        has-icon
+                        :aria-close-label="$t('message.close')"
+                        class="mt-4 DataTypesManagementView-message"
+                    >
+                      <span v-html="msg" />
+                    </b-message>
+                  </div>
+                </div>
               </caption>
+
               <tr>
                 <th align>{{ $t("dataTypesRepository.table-file-data-id") }}</th>
                 <th align>{{ $t("dataTypesRepository.table-file-data-size") }}</th>
@@ -281,6 +295,7 @@ import { InternationalisationService } from "@/services/InternationalisationServ
 import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
 import DropDownMenu from "@/components/common/DropDownMenu";
 import moment from "moment";
+import {HttpStatusCodes} from "@/utils/HttpUtils";
 
 @Component({
   components: { DropDownMenu, CollapsibleTree, PageView, SubMenu },
@@ -315,6 +330,7 @@ export default class DataTypesRepositoryView extends Vue {
   comment = "";
   currentDataset = null;
   repository = {};
+  errorsMessages = [];
 
   mounted() {
     this.$on("authorizationChanged", this.updateDatasets);
@@ -575,12 +591,12 @@ export default class DataTypesRepositoryView extends Vue {
         this.file,
         fileOrId
       );
-      console.log(fileOrId);
       this.$emit("uploaded", uuid);
     }
   }
 
   async publish(dataset, pusblished) {
+    this.errorsMessages = [];
     dataset.params.published = pusblished;
     let requiredAuthorizations = dataset.params.binaryFiledataset.requiredAuthorizations;
     requiredAuthorizations = Object.keys(requiredAuthorizations).reduce(function (acc, key) {
@@ -591,13 +607,53 @@ export default class DataTypesRepositoryView extends Vue {
     dataset.params.binaryFiledataset.requiredAuthorizations = requiredAuthorizations;
     console.log("binaryFiledataset", dataset.params.binaryFiledataset);
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
-    var uuid = await this.dataService.addData(
-      this.applicationName,
-      this.dataTypeId,
-      null,
-      fileOrId
-    );
-    this.$emit("published", uuid.fileId);
+    try {
+      var uuid = await this.dataService.addData(
+          this.applicationName,
+          this.dataTypeId,
+          null,
+          fileOrId
+      );
+      this.$emit("published", uuid.fileId);
+      this.alertService.toastSuccess(this.$t("alert.data-updated"));
+    } catch (error) {
+      this.checkMessageErrors(error);
+    }
+  }
+
+  checkMessageErrors(error) {
+    let message = [];
+    if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      if (error.content != null) {
+        this.errorsList = [];
+        error.content.then((value) => {
+          for (let i = 0; i < value.length; i++) {
+            if (message.length > 0) {
+              if (JSON.stringify(value[i]) !== JSON.stringify(value[i-message.length])) {
+                console.log(message)
+                this.errorsList.push(value[i]);
+              }
+              for(let j = 0; j < message.length; j++) {
+                if (!message.includes(value[i].validationCheckResult.message)) {
+                  message.push(value[i].validationCheckResult.message);
+                }
+              }
+            } else {
+              message.push(value[i].validationCheckResult.message);
+              this.errorsList.push(value[i]);
+            }
+          }
+          console.log(this.errorsList)
+          if (this.errorsList.length !== 0) {
+            this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+          } else {
+            this.errorsMessages = this.errorsService.getErrorsMessages(error);
+          }
+        });
+      }
+    } else {
+      this.alertService.toastServerError(error);
+    }
   }
 
   selectAuthorization(key, event) {
