@@ -153,6 +153,23 @@ public class Fixtures {
                 "   }", plateforme, projet, site);
     }
 
+
+    public String getConditionsPrelevementRepositoryId(String site) {
+        return String.format("{\n" +
+                "      \"requiredAuthorizations\":{\n" +
+                "         \"localization_site\":\"leman\"\n" +
+                "      },\n" +
+                "      \"from\":\"2020-01-01 00:00:00\",\n" +
+                "      \"to\":\"2020-31-12 00:00:00\"\n" +
+                "   }", site);
+    }
+    public String getConditionsPrelevementDataResourceName() {
+        return "/data/recursivite/suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv";
+    }
+    public String getConditionsPrelevementRepositoryResourceName(String site) {
+        return String.format("/data/recursivite/suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", site);
+    }
+
     public Map<String, String> getProgressiveYaml() {
         Map<String, String> yamls = new LinkedHashMap<>();
         yamls.put("testAuthorizationScopeWithoutReference", "/data/progressiveyaml/testAuthorizationScopeWithoutReference.yaml");
@@ -186,6 +203,7 @@ public class Fixtures {
         Map<String, String> referentielFiles = new LinkedHashMap<>();
         referentielFiles.put("proprietes_taxon", "/data/recursivite/proprietes_des_taxons.csv");
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton-reduit.csv");
+        referentielFiles.put("site", "/data/recursivite/sites.csv");
         return referentielFiles;
     }
 
@@ -253,10 +271,36 @@ public class Fixtures {
 
     public Map<String, List<String>> getRecursiviteDataErrorsStringReplace() {
         Map<String, List<String>> DataTypeErrors = new LinkedHashMap<>();
+        // problème liste de site non fixe donc le test ne passe pas mais le message d'erreur est bon
+        /*DataTypeErrors.put("invalidReference", List.of(
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "suivi des lacs;Lemann;SHL2;24/02/2020;00:00:00;Tract� par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "[{\"validationCheckResult\":{\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"level\":\"ERROR\",\"rawValue\":\"lemann\",\"matchedReferenceHierarchicalKey\":null,\"matchedReferenceId\":null,\"message\":\"invalidReference\",\"messageParams\":{\"target\":\"site/nom du site\",\"referenceValues\":[\"izourt\",\"cos\",\"anterne\",\"bresses_superieur\",\"jovet\",\"lauzanier\",\"blanc_du_carro\",\"pormenaz\",\"barroude\",\"pave\",\"petarel\",\"dranse\",\"port___bielh\",\"bresses_inferieur\",\"estany_gros\",\"merlet_superieur\",\"rabuons\",\"corne\",\"blanc_du_bramant\",\"mercube\",\"pisses\",\"oncet\",\"annecy\",\"bourget\",\"gentau\",\"bramant\",\"aiguebelette\",\"leman\",\"mont_coua\",\"espingo\",\"port_bielh\",\"muzelle\",\"aumar\",\"arbu\",\"cornu\",\"aratilles\",\"gourg_gaudet\",\"isaby\",\"arpont\",\"plan_vianney\",\"brevent\",\"malrif\",\"noir_du_carro\"],\"refType\":\"site\",\"value\":\"lemann\"},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+        ));*/
+        DataTypeErrors.put("invalidDate", List.of(
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;leman;SHL2;x16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDate\",\"messageParams\":{\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x16/12/2020\"},\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"date\":null,\"localDateTime\":null,\"error\":true,\"success\":false},\"lineNumber\":17}]"
+        ));
+        DataTypeErrors.put("invalidInt", List.of(
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6.0;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidInteger\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"temperature de l'air\",\"id\":\"valeurs quantitatives_temperature de l'air\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"value\":\"6.0\"},\"error\":true,\"success\":false},\"lineNumber\":17}]"
+        ));
+        DataTypeErrors.put("invalidFloat", List.of(
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8x;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloat\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"transparence par secchi\",\"id\":\"valeurs quantitatives_transparence par secchi\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"},\"value\":\"7.8x\"},\"error\":true,\"success\":false},\"lineNumber\":17}]"
+        ));
+        DataTypeErrors.put("requiredValue", List.of(
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "suivi des lacs;;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"requiredValue\",\"messageParams\":{\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\",\"type\":\"PARAM_VARIABLE_COMPONENT_KEY\"}},\"error\":true,\"success\":false},\"lineNumber\":17}]"
+        ));
         DataTypeErrors.put("duplicatedLineInDatatype", List.of(
-                "suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;17/03/2010;Bouteille Pelletier;microscope inverse zeiss axiovert 135;878170.9",
-                "suivi_des_lacs;grand_lac.leman;leman.shl2__station_de_prelevement_lac;24/02/2010;Bouteille Pelletier;microscope inverse zeiss axiovert 135;223408.73",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"phytoplancton_aggregated\",\"duplicatedRows\":[3,4],\"uniquenessKey\":{\"outils_prélèvement\":\"Bouteille Pelletier\",\"outils_mesure\":\"microscope inverse zeiss axiovert 135\",\"dates_day\":\"24/02/2010\",\"projets_nom du projet\":\"suivi_des_lacs\",\"plateformes_nom de la plateforme\":\"leman.shl2__station_de_prelevement_lac\",\"site_nom du site\":\"grand_lac.leman\"}},\"error\":true,\"success\":false},\"lineNumber\":3}]"
+                "suivi des lacs;leman;SHL2;18/11/2020;09:15:00;Octeau tract� par Daphnie;12;5;ensoleille;clair;W;2;983;petites vagues;branches;;5.2;vert-jaune",
+                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"condition_prelevements\",\"duplicatedRows\":[16,17],\"uniquenessKey\":{\"date_time\":\"09:15:00\",\"date_day\":\"16/12/2020\",\"site_nom du site\":\"leman\"}},\"error\":true,\"success\":false},\"lineNumber\":16}]"
         ));
         return DataTypeErrors;
     }

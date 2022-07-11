@@ -143,10 +143,25 @@ export class ErrorsService {
   getCsvErrorsMessages(csvErrors) {
     return csvErrors.map((csvError) => {
       const func = ERRORS[csvError.validationCheckResult.message];
+      // console.log(csvError.validationCheckResult.messageParams.target);
       if (csvError.validationCheckResult.messageParams.target != null) {
         if (csvError.validationCheckResult.messageParams.target.column != null) {
           csvError.validationCheckResult.messageParams.target =
             csvError.validationCheckResult.messageParams.target.column;
+        }
+        if (csvError.validationCheckResult.messageParams.target.id != null) {
+          csvError.validationCheckResult.messageParams.target =
+            csvError.validationCheckResult.messageParams.target.id;
+        }
+      }
+      if(csvError.validationCheckResult.messageParams.expectedValue != null || csvError.validationCheckResult.messageParams.givenValue != null) {
+        if (csvError.validationCheckResult.messageParams.expectedValue.sql != null) {
+          csvError.validationCheckResult.messageParams.expectedValue =
+            csvError.validationCheckResult.messageParams.expectedValue.sql;
+        }
+        if(csvError.validationCheckResult.messageParams.givenValue.sql != null) {
+          csvError.validationCheckResult.messageParams.givenValue =
+              csvError.validationCheckResult.messageParams.givenValue.sql;
         }
       }
       if (!func) {
