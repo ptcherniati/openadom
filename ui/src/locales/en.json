@@ -308,13 +308,13 @@
         "card-header-extraction": "Set checkout law",
         "label-tagInput": "Select data group",
         "label-datePicker": "Select a date",
-        "info-limit-action": "To limit the law to ",
         "all-variable": "All variables",
         "all-dates": "All dates",
         "or": "or",
         "info-limit-taginput": "Limits the law to ",
         "select-authorization": "Please select the law first.",
-        "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced."
+        "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced.",
+        "localization": "Localisation"
     },
     "ponctuation": {
         "semicolon" : ";",

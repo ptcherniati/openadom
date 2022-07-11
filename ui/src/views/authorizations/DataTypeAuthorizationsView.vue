@@ -1,10 +1,10 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :paths="subMenuPaths"
-      :root="application.localName || application.title"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
+        :aria-label="$t('menu.aria-sub-menu')"
     />
     <h1 class="title main-title">
       {{
@@ -23,78 +23,160 @@
           </div>
         </div>
       </div>
-
       <b-table
-        :data="authorizations"
-        :is-focusable="true"
-        :is-hoverable="true"
-        :paginated="true"
-        :per-page="15"
-        :sticky-header="true"
-        :striped="true"
-        class="row"
-        height="100%"
+          :data="authorizations"
+          :is-focusable="true"
+          :is-hoverable="true"
+          :paginated="true"
+          :per-page="15"
+          :striped="true"
+          class="row"
+          height="100%"
       >
         <b-table-column
-          v-slot="props"
-          :label="$t('dataTypeAuthorizations.name')"
-          b-table-column
-          field="name"
-          sortable
+            v-slot="props"
+            :label="$t('dataTypeAuthorizations.name')"
+            b-table-column
+            field="name"
+            sortable
         >
           {{ props.row.name }}
         </b-table-column>
         <b-table-column
-          v-slot="props"
-          :label="$t('dataTypeAuthorizations.roles')"
-          b-table-column
-          field="authorizations"
-          sortable
+            v-slot="props"
+            :label="$t('dataTypeAuthorizations.users')"
+            b-table-column
+            field="users"
+            sortable
         >
-          {{ Object.keys(props.row.authorizations || {}) }}
+          <template v-for="user in props.row.users.map((use) => use.login)">
+            <div :key="user">
+              <span>
+                {{ user }}
+              </span>
+            </div>
+          </template>
         </b-table-column>
         <b-table-column
-          v-slot="props"
-          :label="$t('dataTypeAuthorizations.users')"
-          b-table-column
-          field="users"
-          sortable
+            v-slot="props"
+            :label="$t('dataTypeAuthorizations.roles')"
+            b-table-column
+            field="authorizations"
+            sortable
         >
-          {{ props.row.users.map((use) => use.login) }}
+          <template v-for="authorization in Object.keys(props.row.authorizations)">
+            <div :key="authorization.id" class="columns">
+              <p class="column is-half">
+                {{ authorization }}
+              </p>
+              <a
+                  class="show-check-details column is-half"
+                  type="is-primary "
+                  @click="showModal(props.row.name, authorization)"
+                  style="color: #006464ff; margin-left: 10px"
+              >
+                <b-icon icon="eye" size="fa-4x"></b-icon>
+              </a>
+              <b-modal
+                  v-model="isCardModalActive"
+                  v-show="
+                  isSelectedName === props.row.name && isSelectedAuthorization === authorization
+                "
+              >
+                <div class="card">
+                  <div class="card-header">
+                    <div class="title card-header-title">
+                      <p field="name">{{ authorization }}</p>
+                    </div>
+                  </div>
+                  <div class="card-content">
+                    <div class="content">
+                      <h3>
+                        {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+                      </h3>
+                      <div
+                          v-for="configuration in props.row.authorizations[authorization]"
+                          v-bind:key="configuration"
+                      >
+                        <div :key="configuration">
+                          <p>
+                            <span>
+                              {{ $t("dataTypeAuthorizations.localization") }}
+                              {{ $t("ponctuation.colon") }}
+                              <i>{{ configuration.requiredAuthorizations.localization }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                          </p>
+                          <p>
+                            <span v-if="configuration.dataGroups.length === 0">
+                              {{ $t("dataTypeAuthorizations.data-group") }}
+                              {{ $t("ponctuation.colon") }}
+                              <i>{{ $t("dataTypeAuthorizations.all-variable") }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                            <span v-else>
+                              {{ $t("dataTypeAuthorizations.data-group") }}
+                              {{ $t("ponctuation.colon") }} <i>{{ configuration.dataGroups }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                          </p>
+                          <p>
+                            <span>
+                              {{ $t("dataTypeAuthorizations.period") }}
+                              {{ $t("ponctuation.colon") }} <i>{{ getPeriod(configuration) }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </b-modal>
+            </div>
+          </template>
         </b-table-column>
         <b-table-column v-slot="props" :label="$t('dataTypeAuthorizations.actions')" b-table-column>
           <b-button
-            icon-left="times-circle"
-            size="is-small"
-            type="is-danger is-light"
-            @click="revoke(props.row.id)"
-            style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+              icon-left="times-circle"
+              size="is-small"
+              type="is-danger is-light"
+              @click="revoke(props.row.uuid)"
+              style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
           >
           </b-button>
           <b-button
-            icon-left="pen-square"
-            size="is-small"
-            type="primary is-light"
-            @click="modifyAuthorization(props.row.uuid)"
-            style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+              icon-left="pen-square"
+              size="is-small"
+              type="is-warning"
+              @click="modifyAuthorization(props.row.uuid)"
+              outlined
+              onmouseover="this.style.color='rgba(255,140,0,0.5)'"
+              onmouseout="this.style.color='';"
+              style="
+              height: 1.5em;
+              background-color: transparent;
+              font-size: 1.45rem;
+              border-color: transparent;
+            "
           >
           </b-button>
         </b-table-column>
       </b-table>
       <b-pagination
-        v-if="selectedUser && perPage <= selectedUser.length"
-        v-model="currentPage"
-        :per-page="perPage"
-        :total="selectedUser.length"
-        role="navigation"
-        :aria-label="$t('menu.aria-pagination')"
-        :aria-current-label="$t('menu.aria-curent-page')"
-        :aria-next-label="$t('menu.aria-next-page')"
-        :aria-previous-label="$t('menu.aria-previous-page')"
-        order="is-centered"
-        range-after="3"
-        range-before="3"
-        :rounded="true"
+          v-if="selectedUser && perPage <= selectedUser.length"
+          v-model="currentPage"
+          :per-page="perPage"
+          :total="selectedUser.length"
+          role="navigation"
+          :range-after="2"
+          :range-before="2"
+          :rounded="true"
+          :aria-label="$t('menu.aria-pagination')"
+          :aria-current-label="$t('menu.aria-curent-page')"
+          :aria-next-label="$t('menu.aria-next-page')"
+          :aria-previous-label="$t('menu.aria-previous-page')"
+          order="is-centered"
       >
       </b-pagination>
     </div>
@@ -102,17 +184,17 @@
 </template>
 
 <script>
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
-import { AlertService } from "@/services/AlertService";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { AuthorizationService } from "@/services/rest/AuthorizationService";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {AlertService} from "@/services/AlertService";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {AuthorizationService} from "@/services/rest/AuthorizationService";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import { ApplicationResult } from "@/model/ApplicationResult";
+import {ApplicationResult} from "@/model/ApplicationResult";
 
 @Component({
-  components: { PageView, SubMenu },
+  components: {PageView, SubMenu},
 })
 export default class DataTypeAuthorizationsView extends Vue {
   @Prop() dataTypeId;
@@ -130,6 +212,9 @@ export default class DataTypeAuthorizationsView extends Vue {
   scopes = [];
   currentPage = 1;
   perPage = 15;
+  isSelectedName = "";
+  isSelectedAuthorization = "";
+  isCardModalActive = false;
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
@@ -141,33 +226,23 @@ export default class DataTypeAuthorizationsView extends Vue {
     this.init();
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
-        () => this.$router.push("/applications")
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+          () => this.$router.push("/applications")
       ),
       new SubMenuPath(
-        this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
-          dataType: this.dataTypeId,
-        }),
-        () => {
-          this.$router.push(
-            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
-          );
-        },
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+          this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
+            dataType: this.dataTypeId,
+          }),
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+            );
+          },
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
     ];
   }
-  // fillAuthorizationtTree(tree, auth){
-  //   tree = tree ||{};
-  //   for (const scope in auth.authorizedScopes) {
-  //     var nodes = auth.authorizedScopes[scope].split('.')
-  //     while(node.length){
-  //       var node = nodes.shift();
-  //       var nodeScope = tree[node];
-  //     }
-  //   }
-  // }
 
   async init() {
     try {
@@ -175,15 +250,15 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-          this.application,
-          this.application.dataTypes[this.dataTypeId]
+            this.application,
+            this.application.dataTypes[this.dataTypeId]
         ),
       };
       this.authorizations = await this.authorizationService.getDataAuthorizations(
-        this.applicationName,
-        this.dataTypeId
+          this.applicationName,
+          this.dataTypeId
       );
       if (this.authorizations && this.authorizations.length !== 0) {
         this.scopes = Object.keys(this.authorizations[0].authorizations);
@@ -202,30 +277,32 @@ export default class DataTypeAuthorizationsView extends Vue {
 
   addAuthorization() {
     this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
+        `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
     );
   }
+
   modifyAuthorization(id) {
     this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/${id}`
+        `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/${id}`
     );
   }
 
   async revoke(id) {
     try {
       await this.authorizationService.revokeAuthorization(
-        this.applicationName,
-        this.dataTypeId,
-        id
+          this.applicationName,
+          this.dataTypeId,
+          id
       );
       this.alertService.toastSuccess(this.$t("alert.revoke-authorization"));
       this.authorizations.splice(
-        this.authorizations.findIndex((a) => a.id === id),
-        1
+          this.authorizations.findIndex((a) => a.id === id),
+          1
       );
     } catch (error) {
       this.alertService.toastServerError(error);
     }
+    window.location.reload();
   }
 
   getPeriod(authorization) {
@@ -233,17 +310,36 @@ export default class DataTypeAuthorizationsView extends Vue {
       return this.periods.ALWAYS;
     } else if (authorization.fromDay && !authorization.toDay) {
       return (
-        this.periods.FROM_DATE +
-        ` ${authorization.fromDay[2]}/${authorization.fromDay[1]}/${authorization.fromDay[0]}`
+          this.periods.FROM_DATE +
+          ` ${authorization.fromDay[2]}/${authorization.fromDay[1]}/${authorization.fromDay[0]}`
       );
     } else if (!authorization.fromDay && authorization.toDay) {
       return (
-        this.periods.TO_DATE +
-        ` ${authorization.toDay[2]}/${authorization.toDay[1]}/${authorization.toDay[0]}`
+          this.periods.TO_DATE +
+          ` ${authorization.toDay[2]}/${authorization.toDay[1]}/${authorization.toDay[0]}`
       );
     } else {
       return `${authorization.fromDay[2]}/${authorization.fromDay[1]}/${authorization.fromDay[0]} - ${authorization.toDay[2]}/${authorization.toDay[1]}/${authorization.toDay[0]}`;
     }
   }
+
+  showModal(name, authorization) {
+    this.isSelectedName = name;
+    this.isSelectedAuthorization = authorization;
+    this.isCardModalActive = true;
+  }
 }
 </script>
+<style lang="scss">
+td {
+  padding: 6px;
+
+  .columns {
+    margin: 0;
+
+    .column.is-half {
+      padding: 6px;
+    }
+  }
+}
+</style>
