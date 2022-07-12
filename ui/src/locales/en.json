@@ -314,7 +314,8 @@
         "info-limit-taginput": "Limits the law to ",
         "select-authorization": "Please select the law first.",
         "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced.",
-        "localization": "Localisation"
+        "localization": "Localisation",
+        "showMore": "Show more..."
     },
     "ponctuation": {
         "semicolon" : ";",

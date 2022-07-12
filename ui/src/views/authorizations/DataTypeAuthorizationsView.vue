@@ -49,11 +49,37 @@
             field="users"
             sortable
         >
-          <template v-for="user in props.row.users.map((use) => use.login)">
-            <div :key="user">
-              <span>
-                {{ user }}
-              </span>
+          <template v-for="(user, idx) in props.row.users.map((use) => use.login)">
+            <div v-bind:key="idx" class="columns">
+              <b-tooltip position="is-right" :label="$t('dataTypeAuthorizations.showMore')">
+                <a
+                    class="show-check-details column is-half"
+                    type="is-primary "
+                    @click="showModal2(user)"
+                    style="color: #006464ff; margin-left: 10px"
+                >
+                  {{ user }}
+                </a>
+              </b-tooltip>
+              <b-modal
+                  v-model="isCardModalActive2"
+                  v-show="isSelectedName === user"
+              >
+                <div class="card">
+                  <div class="card-header">
+                    <div class="title card-header-title">
+                      <p field="name">{{ user }}</p>
+                    </div>
+                  </div>
+                  <div class="card-content">
+                    <div class="content">
+                      <h3>
+                        {{ isSelectedName }}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              </b-modal>
             </div>
           </template>
         </b-table-column>
@@ -64,19 +90,18 @@
             field="authorizations"
             sortable
         >
-          <template v-for="authorization in Object.keys(props.row.authorizations)">
-            <div :key="authorization.id" class="columns">
-              <p class="column is-half">
-                {{ authorization }}
-              </p>
-              <a
-                  class="show-check-details column is-half"
-                  type="is-primary "
-                  @click="showModal(props.row.name, authorization)"
-                  style="color: #006464ff; margin-left: 10px"
-              >
-                <b-icon icon="eye" size="fa-4x"></b-icon>
-              </a>
+          <template v-for="(authorization, idx) in Object.keys(props.row.authorizations)">
+            <div v-bind:key="idx" class="columns">
+              <b-tooltip position="is-right" :label="$t('dataTypeAuthorizations.showMore')">
+                <a
+                    class="show-check-details column is-half"
+                    type="is-primary "
+                    @click="showModal(props.row.name, authorization)"
+                    style="color: #006464ff; margin-left: 10px"
+                >
+                  {{ authorization }}
+                </a>
+              </b-tooltip>
               <b-modal
                   v-model="isCardModalActive"
                   v-show="
@@ -95,10 +120,11 @@
                         {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
                       </h3>
                       <div
-                          v-for="configuration in props.row.authorizations[authorization]"
-                          v-bind:key="configuration"
+                          v-for="(configuration, idx) in props.row.authorizations[authorization]"
+                          v-bind:key="idx"
+                          class="listAuthorization"
                       >
-                        <div :key="configuration">
+                        <div>
                           <p>
                             <span>
                               {{ $t("dataTypeAuthorizations.localization") }}
@@ -215,6 +241,7 @@ export default class DataTypeAuthorizationsView extends Vue {
   isSelectedName = "";
   isSelectedAuthorization = "";
   isCardModalActive = false;
+  isCardModalActive2 = false;
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
@@ -323,6 +350,10 @@ export default class DataTypeAuthorizationsView extends Vue {
     }
   }
 
+  showModal2(name) {
+    this.isSelectedName = name;
+    this.isCardModalActive2 = true;
+  }
   showModal(name, authorization) {
     this.isSelectedName = name;
     this.isSelectedAuthorization = authorization;
@@ -341,5 +372,14 @@ td {
       padding: 6px;
     }
   }
+}
+.listAuthorization {
+  border: solid #dbdbdb;
+  border-width: 0 0 1px;
+  margin: 0 10px 0 10px;
+  padding: 15px;
+}
+.listAuthorization:nth-child(odd){
+  background-color: #f5f5f5;
 }
 </style>

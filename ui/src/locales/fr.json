@@ -314,7 +314,8 @@
         "info-limit-taginput": "Permet de limiter le droit à ",
         "select-authorization": "Veuillez d'abord selectionner le droit.",
         "warnning-chil-not-null": "Des limitations sont en cours sur des enfants, elles seront remplacées.",
-        "localization": "Localisation"
+        "localization": "Localisation",
+        "showMore": "Voir plus..."
     },
     "ponctuation": {
         "semicolon" : ";",
