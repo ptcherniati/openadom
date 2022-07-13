@@ -28,19 +28,47 @@
           :is-focusable="true"
           :is-hoverable="true"
           :paginated="true"
-          :per-page="15"
+          :per-page="perPage"
           :striped="true"
           class="row"
           height="100%"
       >
+        <template #pagination>
+          <b-pagination
+              v-model="currentPage"
+              :current-page.sync="currentPage"
+              :per-page="perPage"
+              :total="authorizations.length"
+              role="navigation"
+              :aria-label="$t('menu.aria-pagination')"
+              :aria-current-label="$t('menu.aria-curent-page')"
+              :aria-next-label="$t('menu.aria-next-page')"
+              :aria-previous-label="$t('menu.aria-previous-page')"
+              order="is-centered"
+              range-after="3"
+              range-before="3"
+              :rounded="true"
+              @change="changePage"
+          />
+        </template>
         <b-table-column
-            v-slot="props"
             :label="$t('dataTypeAuthorizations.name')"
             b-table-column
             field="name"
             sortable
+            :searchable="true"
         >
-          {{ props.row.name }}
+          <template
+              #searchable="props">
+            <b-input
+                v-model="props.filters[props.column.field]"
+                placeholder="Search..."
+                icon="magnify"
+                size="is-small" />
+          </template>
+          <template v-slot="props">
+            {{ props.row.name }}
+          </template>
         </b-table-column>
         <b-table-column
             v-slot="props"
@@ -189,22 +217,6 @@
           </b-button>
         </b-table-column>
       </b-table>
-      <b-pagination
-          v-if="selectedUser && perPage <= selectedUser.length"
-          v-model="currentPage"
-          :per-page="perPage"
-          :total="selectedUser.length"
-          role="navigation"
-          :range-after="2"
-          :range-before="2"
-          :rounded="true"
-          :aria-label="$t('menu.aria-pagination')"
-          :aria-current-label="$t('menu.aria-curent-page')"
-          :aria-next-label="$t('menu.aria-next-page')"
-          :aria-previous-label="$t('menu.aria-previous-page')"
-          order="is-centered"
-      >
-      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -235,9 +247,10 @@ export default class DataTypeAuthorizationsView extends Vue {
   authorizations = [];
   authorizationByUser = {};
   application = new ApplicationResult();
-  scopes = [];
+  // pagination
+  offset = 0;
   currentPage = 1;
-  perPage = 15;
+  perPage = 10;
   isSelectedName = "";
   isSelectedAuthorization = "";
   isCardModalActive = false;
@@ -248,6 +261,10 @@ export default class DataTypeAuthorizationsView extends Vue {
     FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
+
+  async changePage(page) {
+    this.offset = (page - 1) * this.perPage;
+  }
 
   created() {
     this.init();
@@ -354,6 +371,7 @@ export default class DataTypeAuthorizationsView extends Vue {
     this.isSelectedName = name;
     this.isCardModalActive2 = true;
   }
+
   showModal(name, authorization) {
     this.isSelectedName = name;
     this.isSelectedAuthorization = authorization;
@@ -373,13 +391,15 @@ td {
     }
   }
 }
+
 .listAuthorization {
   border: solid #dbdbdb;
   border-width: 0 0 1px;
   margin: 0 10px 0 10px;
   padding: 15px;
 }
-.listAuthorization:nth-child(odd){
+
+.listAuthorization:nth-child(odd) {
   background-color: #f5f5f5;
 }
 </style>
