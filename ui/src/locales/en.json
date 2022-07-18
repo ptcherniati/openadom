@@ -315,7 +315,8 @@
         "select-authorization": "Please select the law first.",
         "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced.",
         "localization": "Localisation",
-        "showMore": "Show more..."
+        "showMore": "Show more...",
+        "search": "Search..."
     },
     "ponctuation": {
         "semicolon" : ";",

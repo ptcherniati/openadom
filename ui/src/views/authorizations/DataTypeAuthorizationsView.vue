@@ -62,8 +62,8 @@
               #searchable="props">
             <b-input
                 v-model="props.filters[props.column.field]"
-                placeholder="Search..."
-                icon="magnify"
+                :placeholder="$t('dataTypeAuthorizations.search')"
+                icon="search"
                 size="is-small" />
           </template>
           <template v-slot="props">

@@ -315,7 +315,8 @@
         "select-authorization": "Veuillez d'abord selectionner le droit.",
         "warnning-chil-not-null": "Des limitations sont en cours sur des enfants, elles seront remplacées.",
         "localization": "Localisation",
-        "showMore": "Voir plus..."
+        "showMore": "Voir plus...",
+        "search": "Recherche..."
     },
     "ponctuation": {
         "semicolon" : ";",

@@ -24,8 +24,11 @@ a {
 }
 
 // affichage icon uniformisé
+.control.has-icons-left .input.is-small ~ .icon {
+  font-size: 0.5rem;
+}
 .button .icon, .button .icon.is-small, .icon{
-  font-size: 0.75rem;
+  font-size: $size-icon-small;
   align-items: center;
   display: inline-flex;
 }
@@ -43,7 +46,7 @@ a {
   cursor: pointer;
 }
 .icon.is-small {
-  font-size: 0.75rem;
+  font-size: $size-icon-small;
 }
 .link {
   cursor: pointer;
