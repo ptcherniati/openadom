@@ -143,9 +143,10 @@
 
 <script>
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import AvailiblityChart from "../charts/AvailiblityChart.vue";
 export default {
   name: "CollapsibleTree",
-  components: {FontAwesomeIcon},
+  components: {FontAwesomeIcon, AvailiblityChart},
   props: {
     applicationName: String,
     option: Object,
@@ -154,7 +155,7 @@ export default {
       default: 0,
     },
     onClickLabelCb: Function,
-    onClickLabelSynthesisDetailCb: Object,
+    onClickLabelSynthesisDetailCb: Function,
     onUploadCb: Function,
     buttons: Array,
     withRadios: {
@@ -163,7 +164,7 @@ export default {
     },
     radioName: Object,
     repository: Object,
-    repositoryRedirect: Object,
+    repositoryRedirect: Function,
     lineCount: {
       type: Number,
       default: 0,

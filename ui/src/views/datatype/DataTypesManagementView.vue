@@ -160,7 +160,7 @@ export default class DataTypesManagementView extends Vue {
       this.dataTypes = Object.values(
         this.internationalisationService.localeDatatypeName(this.application)
       );
-      this.initSynthesis();
+      await this.initSynthesis();
     } catch (error) {
       this.alertService.toastServerError();
     }
