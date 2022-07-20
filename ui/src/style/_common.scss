@@ -24,6 +24,7 @@ a {
 }
 
 // affichage icon uniformisé
+.control.has-icons-right .input.is-small ~ .icon,
 .control.has-icons-left .input.is-small ~ .icon {
   font-size: 0.5rem;
 }

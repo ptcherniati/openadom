@@ -256,7 +256,9 @@
         "sorted": "Les tris utilisés",
         "title-modal-numeric": "Choix de l'interval de valeur",
         "title-modal-date": "Choix de l'interval de date",
-        "manage-datasets": "Gérer les jeux de données"
+        "manage-datasets": "Gérer les jeux de données",
+        "accepted": "Accepté",
+        "refuse": "Refusé"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version sur ce jeux de données",
@@ -330,7 +332,7 @@
         "arrow-right": "->",
         "arrow-left": "<-",
         "slash": "/",
-        "regEx": ".*",
+        "regEx": "Option expression régilière (.*) :",
         "star": "*"
     }
 }
