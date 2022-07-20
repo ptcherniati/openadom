@@ -288,9 +288,10 @@
                   ></b-input>
                   <b-field>
                     <b-button
+                      class="btnRegExp"
                       type="is-dark"
                       size="is-small"
-                      @click="this.params.variableComponentFilters.isRegex = true"
+                      @click="testChangeRegEx()"
                       outlined
                     >
                       {{ $t("ponctuation.regEx") }}</b-button
@@ -505,6 +506,20 @@ export default class DataTypeTableView extends Vue {
   variableSearch = [];
   referenceLineCheckers = [];
   isRegExp = false;
+
+  testChangeRegEx() {
+    if (this.params.variableComponentFilters.isRegex === true) {
+      this.params.variableComponentFilters.isRegex = false;
+      document.querySelector(".btnRegExp").classList.remove('active')
+    }
+    else if (this.params.variableComponentFilters.isRegex === false) {
+      this.params.variableComponentFilters.isRegex = true;
+      document.querySelector(".btnRegExp").classList.add('active')
+    } else {
+      this.params.variableComponentFilters.isRegex = !this.isRegExp;
+      document.querySelector(".btnRegExp").classList.add('active')
+    }
+  }
 
   async created() {
     await this.init();
@@ -920,7 +935,10 @@ $row-variable-height: 60px;
 .row.variableComponent:hover {
   background-color: rgba(0, 163, 166, 0.2);
 }
-
+.button.is-dark.is-outlined.active{
+  background-color: $dark;
+  color: #dbdbdb;
+}
 .ASC .asc,
 .DESC .desc {
   background-color: $dark;
@@ -944,5 +962,8 @@ $row-variable-height: 60px;
 }
 .columns {
   margin: 0;
+}
+.icon.is-small {
+  font-size: 5rem;
 }
 </style>
