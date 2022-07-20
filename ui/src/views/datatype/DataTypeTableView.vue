@@ -627,7 +627,7 @@ export default class DataTypeTableView extends Vue {
     const key = component.key;
     if (!this.loadedReferences[rowId]) {
       let refvalues;
-      if (this.referenceLineCheckers[key]) {
+      if (this.referenceLineCheckers[key].referenceValues) {
         refvalues =
           this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum;
       }
