@@ -59,7 +59,15 @@ import {
   faInfo,
   faQuestion,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendarDays as farCalendarDays,
+  faCalendar as farCalendar,
+  faSquare as farSquare,
+  faMinusSquare as farMinusSquare,
+  faCheckSquare as farCheckSquare,
+} from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+library.add(farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare);
 library.add(
   faCircle,
   faEye,

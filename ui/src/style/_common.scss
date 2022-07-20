@@ -24,8 +24,11 @@ a {
 }
 
 // affichage icon uniformisé
+.control.has-icons-left .input.is-small ~ .icon {
+  font-size: 0.5rem;
+}
 .button .icon, .button .icon.is-small, .icon{
-  font-size: 0.75rem;
+  font-size: $size-icon-small;
   align-items: center;
   display: inline-flex;
 }
@@ -43,7 +46,7 @@ a {
   cursor: pointer;
 }
 .icon.is-small {
-  font-size: 0.75rem;
+  font-size: $size-icon-small;
 }
 .link {
   cursor: pointer;
@@ -227,4 +230,24 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active, butto
 }
 .b-table .table th.is-sortable, .b-table .table th.is-sortable .th-wrap {
   width: max-content;
+}
+a.leaf {
+  padding: 15px;
+}
+p.folder {
+  padding-left: 15px;
+  padding-bottom: 10px;
+  padding-top: 12px;
+}
+ul.rows{
+  margin-bottom: 10px;
+}
+h3 {
+  text-decoration: underline;
+}
+.defaultValueTooltip {
+  background-color: white;
+  color: $primary;
+  font-weight: bold;
+  padding-top: 5px;
 }

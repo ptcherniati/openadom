@@ -21,9 +21,11 @@
               "
               :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
               :field="indexColumn"
+              style="min-height: 10px; display: table-cell; vertical-align: middle"
               @click="indexColumn === 'label' && toggle(index)"
-              >{{ localName(scope) }}</a
             >
+              {{ localName(scope) }}
+            </a>
             <p
               v-else-if="
                 column.display &&
@@ -35,10 +37,10 @@
             >
               {{ localName(scope) }}
             </p>
-
             <b-field v-else-if="column.display" :field="indexColumn" class="column">
               <b-icon
                 :icon="STATES[states[indexColumn][getPath(index)].state] || STATES[0]"
+                pack="far"
                 size="is-medium"
                 type="is-primary"
                 @click.native="selectCheckbox($event, index, indexColumn)"
@@ -52,6 +54,51 @@
                 :index-column="indexColumn"
                 @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
               />
+              <b-tooltip
+                position="is-right"
+                multilined
+                v-if="
+                  states[indexColumn][getPath(index)].state === 0 ||
+                  states[indexColumn][getPath(index)].state === -1
+                "
+              >
+                <b-button
+                  v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
+                  disabled
+                  style="border: none; background-color: transparent"
+                >
+                  <b-icon
+                    v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
+                    icon="eye"
+                    size="fa-4x"
+                  ></b-icon>
+                </b-button>
+                <template v-slot:content>
+                  <div v-if="states[indexColumn][getPath(index)].state === 0">
+                    <p>
+                      {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
+                      <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
+                      <span>{{ $t("dataTypeAuthorizations.or") }}</span>
+                      <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
+                      <br />
+                      {{ $t("dataTypeAuthorizations.select-authorization") }}
+                    </p>
+                  </div>
+                  <div v-else-if="states[indexColumn][getPath(index)].state === -1">
+                    <p>
+                      {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
+                      <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
+                      <span>{{ $t("dataTypeAuthorizations.or") }} </span>
+                      <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
+                      <br />
+                      {{ $t("dataTypeAuthorizations.select-authorization") }}
+                    </p>
+                    <p class="has-background-white-bis has-text-danger-dark">
+                      {{ $t("dataTypeAuthorizations.warnning-chil-not-null") }}
+                    </p>
+                  </div>
+                </template>
+              </b-tooltip>
             </b-field>
           </div>
         </div>
@@ -123,7 +170,7 @@ export default class AuthorizationTable extends Vue {
   updateStates() {
     var states = {};
     for (const column in this.columnsVisible) {
-      if (column == "label") {
+      if (column === "label") {
         continue;
       }
       states[column] = {};
@@ -184,9 +231,9 @@ export default class AuthorizationTable extends Vue {
     var stateElement = this.states[indexColumn][this.getPath(index)];
     var currentPath = this.getPath(index);
     authorizations = authorizations || { toDelete: [], toAdd: [] };
-    if (stateElement.state == 1) {
+    if (stateElement.state === 1) {
       checkedAuthorization = this.authorization.getCheckedAuthorization(indexColumn, currentPath);
-      if (checkedAuthorization.scopeKey == currentPath) {
+      if (checkedAuthorization.scopeKey === currentPath) {
         authorizations.toDelete.push(checkedAuthorization.auth);
         eventToEmit = { currentPath, authorizations, index, indexColumn };
         this.$emit("modifyAuthorization", eventToEmit);
@@ -194,7 +241,7 @@ export default class AuthorizationTable extends Vue {
         var indetermined = false;
         var count = 0;
         for (const authReferenceKey in this.authReference) {
-          if (authReferenceKey != index) {
+          if (authReferenceKey !== index) {
             authorization = { ...checkedAuthorization.auth };
             requiredAuthorizations = { ...this.currentAuthorizationScope };
             authReference = this.authReference[authReferenceKey];
@@ -221,7 +268,7 @@ export default class AuthorizationTable extends Vue {
       let dependants = this.authorization.getDependants(indexColumn, currentPath);
       authorizations.toDelete = [...authorizations.toDelete, ...dependants];
       if (
-        Object.values(this.states[indexColumn]).filter((s) => s.state != 1).length - 1 ||
+        Object.values(this.states[indexColumn]).filter((s) => s.state !== 1).length - 1 ||
         this.isRoot
       ) {
         authorizations.toAdd.push(currentAuthorization);

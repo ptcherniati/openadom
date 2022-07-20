@@ -14,48 +14,57 @@
         })
       }}</span>
     </h1>
-
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
-      <ValidationProvider
-        v-slot="{ errors, valid }"
-        name="users"
-        rules="required"
-        vid="users"
-        class="columns"
-      >
-        <b-field
-          :label="$t('dataTypeAuthorizations.users')"
-          :message="errors[0]"
-          :type="{
-            'is-danger': errors && errors.length > 0,
-            'is-success': valid,
-          }"
-          class="column mb-4"
+      <div class="columns">
+        <ValidationProvider
+          v-slot="{ errors, valid }"
+          name="users"
+          rules="required"
+          vid="users"
+          class="column is-half"
         >
-          <b-select
-            v-model="selectedUsers"
-            :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
-            expanded
-            multiple
+          <b-field
+            :label="$t('dataTypeAuthorizations.users')"
+            :message="errors[0]"
+            :type="{
+              'is-danger': errors && errors.length > 0,
+              'is-success': valid,
+            }"
+            class="column mb-4"
           >
-            <option v-for="user in users" :key="user.id" :value="user.id">
-              {{ user.label }}
-            </option>
-          </b-select>
-        </b-field>
-
-        <b-field
-          :label="$t('dataTypeAuthorizations.name')"
-          :message="errors[0]"
-          :type="{
-            'is-danger': errors && errors.length > 0,
-            'is-success': valid,
-          }"
-          class="column mb-4"
+            <b-taginput
+              v-model="selectedlabels"
+              :data="userLabels"
+              :value="userLabels"
+              autocomplete
+              :open-on-focus="true"
+              type="is-dark"
+              :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
+              @typing="getFilteredTags"
+            >
+            </b-taginput>
+          </b-field>
+        </ValidationProvider>
+        <ValidationProvider
+          v-slot="{ errors, valid }"
+          name="users"
+          rules="required"
+          vid="users"
+          class="column is-half"
         >
-          <b-input v-model="authorization.name" />
-        </b-field>
-      </ValidationProvider>
+          <b-field
+            :label="$t('dataTypeAuthorizations.name')"
+            :message="errors[0]"
+            :type="{
+              'is-danger': errors && errors.length > 0,
+              'is-success': valid,
+            }"
+            class="column mb-4"
+          >
+            <b-input v-model="authorization.name" />
+          </b-field>
+        </ValidationProvider>
+      </div>
       <AuthorizationTable
         v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
         :auth-reference="authReferences[0]"
@@ -145,6 +154,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   dataGroups = [];
   authorizationScopes = [];
   application = new ApplicationResult();
+  selectedlabels = [];
+  userLabels = [];
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -167,14 +178,16 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   configuration = {};
   authReferences = {};
   subMenuPaths = [];
-
+  repositury = null;
   selectedUsers = [];
 
   getColumnTitle(column) {
-    return (
-      (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
-      column.title
-    );
+    if (column.display) {
+      return (
+        (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
+        column.title
+      );
+    }
   }
 
   modifyAuthorization(event) {
@@ -292,6 +305,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         ),
       };
       this.authorizations = this.configuration?.authorization?.authorizationScopes || [];
+      this.repositury = this.application.dataTypes[this.dataTypeId].repository != null;
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
         this.applicationName,
         this.dataTypeId
@@ -301,8 +315,12 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataGroups: this.dataGroups,
         users: this.users,
       } = grantableInfos);
-      console.log("grantableInfos", grantableInfos);
+      //console.log("grantableInfos", grantableInfos);
       this.columnsVisible = { ...this.columnsVisible, ...grantableInfos.columnsDescription };
+      if (!this.repositury) {
+        this.columnsVisible.publication = { ...this.columnsVisible.publication, display: false };
+      }
+      console.log(this.columnsVisible);
       if (this.authorizationId != "new") {
         var authorizations = await this.authorizationService.getAuthorizations(
           this.applicationName,
@@ -328,6 +346,18 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           });
         })
         .map((user) => user.id);
+      for (let i = 0; i < this.selectedUsers.length; i++) {
+        for (let j = 0; j < this.users.length; j++) {
+          if (this.selectedUsers[i] === this.users[j].id) {
+            this.selectedlabels.push(this.users[j].label);
+          }
+        }
+      }
+      for (let i = 0; i < this.users.length; i++) {
+        if (!this.selectedlabels.includes(this.users[i].label))
+          this.userLabels.push(this.users[i].label);
+      }
+      this.userLabels.sort();
       grantableInfos.authorizationScopes.reverse();
       let ret = {};
       for (let auth in grantableInfos.authorizationScopes) {
@@ -388,6 +418,19 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     } catch (error) {
       this.alertService.toastServerError(error);
     }
+  }
+
+  getFilteredTags(text) {
+    this.userLabels = [];
+    this.filteredTags = this.users.filter((option) => {
+      return option.label.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
+    });
+    for (let i = 0; i < this.filteredTags.length; i++) {
+      if (!this.selectedlabels.includes(this.filteredTags[i].label)) {
+        this.userLabels.push(this.filteredTags[i].label);
+      }
+    }
+    this.userLabels.sort();
   }
 
   async partitionReferencesValues(
@@ -493,6 +536,13 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         dataType: this.dataTypeId,
         applicationNameOrId: this.applicationName,
       };
+      for (let i = 0; i < this.selectedlabels.length; i++) {
+        for (let j = 0; j < this.users.length; j++) {
+          if (this.selectedlabels[i] === this.users[j].label) {
+            this.selectedUsers.push(this.users[j].id);
+          }
+        }
+      }
       authorizationToSend.usersId = this.selectedUsers;
       for (const scope in authorizationToSend.authorizations) {
         authorizationToSend.authorizations[scope] = authorizationToSend.authorizations[scope].map(

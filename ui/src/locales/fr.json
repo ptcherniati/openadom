@@ -302,7 +302,21 @@
         "data-group": "Groupe de données",
         "data-type": "Type de donnée",
         "actions": "Actions",
-        "revoke": "Révoquer"
+        "revoke": "Révoquer",
+        "a-period": "une période ",
+        "a-datagroup": "des groupes de données ",
+        "card-header-extraction": "Paramettre de droit d'extraction",
+        "label-tagInput": "Selection de groupe de données",
+        "label-datePicker": "Selection une date",
+        "all-variable": "Toutes les variables",
+        "all-dates": "Toutes les dates",
+        "or": "ou",
+        "info-limit-taginput": "Permet de limiter le droit à ",
+        "select-authorization": "Veuillez d'abord selectionner le droit.",
+        "warnning-chil-not-null": "Des limitations sont en cours sur des enfants, elles seront remplacées.",
+        "localization": "Localisation",
+        "showMore": "Voir plus...",
+        "search": "Recherche..."
     },
     "ponctuation": {
         "semicolon" : ";",

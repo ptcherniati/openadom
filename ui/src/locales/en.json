@@ -302,7 +302,21 @@
         "data-group": "Data group",
         "data-type": "Data type",
         "actions": "Actions",
-        "revoke": "Revoke"
+        "revoke": "Revoke",
+        "a-period": "a periode ",
+        "a-datagroup": "a data group ",
+        "card-header-extraction": "Set checkout law",
+        "label-tagInput": "Select data group",
+        "label-datePicker": "Select a date",
+        "all-variable": "All variables",
+        "all-dates": "All dates",
+        "or": "or",
+        "info-limit-taginput": "Limits the law to ",
+        "select-authorization": "Please select the law first.",
+        "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced.",
+        "localization": "Localisation",
+        "showMore": "Show more...",
+        "search": "Search..."
     },
     "ponctuation": {
         "semicolon" : ";",
