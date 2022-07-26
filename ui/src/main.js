@@ -60,6 +60,10 @@ import {
     faVial,
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFloppyDisk as farFloppyDisk,
+} from "@fortawesome/free-regular-svg-icons";
+library.add(farFloppyDisk);
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import "@/style/global.scss";
 

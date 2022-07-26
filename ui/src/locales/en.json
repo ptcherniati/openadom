@@ -305,7 +305,9 @@
         "data-group": "Data group",
         "data-type": "Data type",
         "actions": "Actions",
-        "revoke": "Revoke"
+        "revoke": "Revoke",
+        "save" : "Save change",
+        "add-application-name": "Add an app"
     },
     "ponctuation": {
         "semicolon" : ";",

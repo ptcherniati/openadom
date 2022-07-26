@@ -269,6 +269,15 @@ public class AuthenticationService {
                             hasRole(oreSiUser.getId(),OreSiRole.superAdmin()),
                             oreSiUser.getAuthorizations()))
                     .collect(Collectors.toList());
+        }else if(hasRole(OreSiRole.applicationCreator())) {
+            return userRepository.findAll().stream()
+                    .map(oreSiUser -> new LoginResult(
+                            oreSiUser.getId(),
+                            oreSiUser.getLogin(),
+                            oreSiUser.getAuthorizations().size() > 0,
+                            hasRole(oreSiUser.getId(), OreSiRole.applicationCreator()),
+                            oreSiUser.getAuthorizations()))
+                    .collect(Collectors.toList());
         }else{
             throw new NotSuperAdminException();
         }

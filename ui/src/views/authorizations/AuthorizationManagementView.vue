@@ -12,9 +12,28 @@
       }}
     </h1>
     <div class="rows">
-      <b-table class="row" :data="authorizations" :paginated="true" per-page="15">
-
-
+      <b-table class="row" :data="authorizations"
+               paginated
+               :current-page="currentPage"
+               per-page="15"
+      >
+        <template #pagination>
+          <b-pagination
+              v-model="currentPage"
+              :current-page.sync="currentPage"
+              per-page="15"
+              :total="authorizations.length"
+              role="navigation"
+              :aria-label="$t('menu.aria-pagination')"
+              :aria-current-label="$t('menu.aria-curent-page')"
+              :aria-next-label="$t('menu.aria-next-page')"
+              :aria-previous-label="$t('menu.aria-previous-page')"
+              order="is-centered"
+              range-after="3"
+              range-before="3"
+              :rounded="true"
+          />
+        </template>
         <b-table-column
             searchable
             field="admin"
@@ -51,13 +70,15 @@
         >
           <template>
             <b-taginput
+                class="inputAuth"
                 :before-adding="beforeAdding"
                 v-model="props.row.authorizations"
                 @add="addApplication($event, props.row)"
                 @remove="removeApplication($event, props.row)"
                 ellipsis
+                type="is-dark"
                 icon="file"
-                placeholder="Ajouter une applicationg"
+                :placeholder="$t('dataTypeAuthorizations.add-application-name')"
                 aria-close-label="Supprimer l'application">
             </b-taginput>
           </template>
@@ -66,8 +87,8 @@
       </b-table>
       <div class="row">
         <div class="column is-offset-10 is-2">
-          <b-button icon-left="plus" type="is-primary is-right" @click="registerChanges">
-            {{ $t("dataTypeAuthorizations.add-auhtorization") }}
+          <b-button icon-left="floppy-disk" icon-pack="far" type="is-primary is-right" @click="registerChanges">
+            {{ $t("dataTypeAuthorizations.save") }}
           </b-button>
         </div>
       </div>
@@ -90,6 +111,9 @@ export default class AuthorizationManagementView extends Vue {
   subMenuPaths = [];
   authorizationService = AuthorizationService.INSTANCE;
   authorizations = []
+  totalRows = -1;
+  currentPage = 1;
+
 
   search(user, search) {
     console.log('search', user, search)
@@ -158,15 +182,15 @@ export default class AuthorizationManagementView extends Vue {
   selectAdmin(isAdmin, user) {
     console.log('add', this.changes.administrator.add, 'remove', this.changes.administrator.remove)
     if (isAdmin) {
-      if (this.changes.administrator.remove.find(v => v == user.id)) {
-        this.changes.administrator.remove = this.changes.administrator.remove.filter(v => v == v.id)
-      } else if (!this.changes.administrator.add.find(v => v == user.id)) {
+      if (this.changes.administrator.remove.find(v => v === user.id)) {
+        this.changes.administrator.remove = this.changes.administrator.remove.filter(v => v === v.id)
+      } else if (!this.changes.administrator.add.find(v => v === user.id)) {
         this.changes.administrator.add.push(user.id)
       }
     } else {
-      if (this.changes.administrator.add.find(v => v == user.id)) {
-        this.changes.administrator.add = this.changes.administrator.add.filter(v => v == v.id)
-      } else if (!this.changes.administrator.remove.find(v => v == user.id)) {
+      if (this.changes.administrator.add.find(v => v === user.id)) {
+        this.changes.administrator.add = this.changes.administrator.add.filter(v => v === v.id)
+      } else if (!this.changes.administrator.remove.find(v => v === user.id)) {
         this.changes.administrator.remove.push(user.id)
       }
     }
@@ -174,8 +198,8 @@ export default class AuthorizationManagementView extends Vue {
 
   addApplication(value, user) {
     console.log('adding ' + value)
-    if (this.changes.applications[user.id]?.remove?.find(v => v == value)) {
-      this.changes.applications[user.id].remove = this.changes.applications[user.id].remove.filter(v => v != value)
+    if (this.changes.applications[user.id]?.remove?.find(v => v === value)) {
+      this.changes.applications[user.id].remove = this.changes.applications[user.id].remove.filter(v => v !== value)
     } else {
       this.changes.applications[user.id] = this.changes.applications[user.id] || {}
       this.changes.applications[user.id].add = this.changes.applications[user.id].add || []
@@ -184,8 +208,8 @@ export default class AuthorizationManagementView extends Vue {
   }
 
   removeApplication(value, user) {
-    if (this.changes.applications[user.id]?.add?.find(v => v == value)) {
-      this.changes.applications[user.id].add = this.changes.applications[user.id].add.filter(v => v != value)
+    if (this.changes.applications[user.id]?.add?.find(v => v === value)) {
+      this.changes.applications[user.id].add = this.changes.applications[user.id].add.filter(v => v !== value)
     } else {
       this.changes.applications[user.id] = this.changes.applications[user.id] || {}
       this.changes.applications[user.id].remove = this.changes.applications[user.id].remove || []
@@ -199,3 +223,8 @@ export default class AuthorizationManagementView extends Vue {
   }
 }
 </script>
+<style lang="scss" scoped>
+.icon {
+  font-size: 0.5rem;
+}
+</style>

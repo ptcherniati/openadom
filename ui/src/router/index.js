@@ -43,7 +43,7 @@ const routes = [
   },
   {
     path: "/authorizationsManagementForApplicationCreator",
-    name: "Application creation",
+    name: "Authorizations application creation",
     component: AuthorizationManagementForApplicationCreatorView,
   },
   {
