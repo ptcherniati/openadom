@@ -8,9 +8,9 @@ const test1= function (response){
     Assert.equal('pro', response.request.body.match('pro'))
 }
 const test2= function (response){
-    console.log('response1', response.request.body)
+    console.log('response2', response.request.body)
     Assert.equal('poussin', response.request.body.match('poussin'))
-    Assert.equal('pro', response.request.body.match('pro'))
+    Assert.equal('ola', response.request.body.match('ola'))
 }
 import Assert from "assert";
 describe('test high authorization application', () => {
