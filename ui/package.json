@@ -13,6 +13,7 @@
     "@cypress/vue": "^3.1.2",
     "@cypress/webpack-dev-server": "^1.8.4",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-regular-svg-icons": "^6.1.2",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/vue-fontawesome": "^2.0.2",
     "buefy": "^0.9.8",

@@ -1,5 +1,9 @@
 {
-    "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
-    "login": "poussin",
-    "authorizedForApplicationCreation": true
+  "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+  "login": "poussin",
+  "authorizedForApplicationCreation": true,
+  "superadmin": true,
+  "authorizations": [
+    ".*"
+  ]
 }

@@ -4,9 +4,11 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.OreSiAuthorization;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -40,5 +42,19 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
 
     public List<OreSiAuthorization> findByDataType(String dataType) {
         return findByPropertyEquals("dataType", dataType);
+    }
+
+    public List<OreSiAuthorization> findAuthorizations(UUID userId, Application application, String dataType) {
+        String query  = String.join("\n",
+                "select '"+OreSiAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
+                "from " + getTable().getSqlIdentifier()+ " t",
+                "where t.application = :applicationId",
+               " and t.dataType = :dataType",
+               " and array[ :userId::entityref] <@ t.oresiusers"
+        );
+         MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("dataType", dataType)
+                .addValue("userId", userId.toString());
+        return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
     }
 }
