@@ -64,7 +64,7 @@
                 v-model="props.filters[props.column.field]"
                 :placeholder="$t('dataTypeAuthorizations.search')"
                 icon="search"
-                size="is-small" />
+                size="is-small"/>
           </template>
           <template v-slot="props">
             {{ props.row.name }}
@@ -83,7 +83,7 @@
                 <a
                     class="show-check-details column is-half"
                     type="is-primary "
-                    @click="showModal2(user)"
+                    @click="showModalUser(user)"
                     style="color: #006464ff; margin-left: 10px"
                 >
                   {{ user }}
@@ -124,7 +124,7 @@
                 <a
                     class="show-check-details column is-half"
                     type="is-primary "
-                    @click="showModal(props.row.name, authorization)"
+                    @click="showModalRole(props.row.name, authorization, props.row.authorizations[authorization])"
                     style="color: #006464ff; margin-left: 10px"
                 >
                   {{ authorization }}
@@ -157,7 +157,9 @@
                             <span>
                               {{ $t("dataTypeAuthorizations.localization") }}
                               {{ $t("ponctuation.colon") }}
-                              <i>{{ configuration.requiredAuthorizations.localization }}</i>
+                              <i v-for="localization in localizations">{{
+                                  configuration.requiredAuthorizations[localization]
+                                }} {{ $t("ponctuation.comma") }}</i>
                               {{ $t("ponctuation.semicolon") }}
                             </span>
                           </p>
@@ -255,6 +257,7 @@ export default class DataTypeAuthorizationsView extends Vue {
   isSelectedAuthorization = "";
   isCardModalActive = false;
   isCardModalActive2 = false;
+  localizations = {};
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
@@ -367,12 +370,15 @@ export default class DataTypeAuthorizationsView extends Vue {
     }
   }
 
-  showModal2(name) {
+  showModalUser(name) {
     this.isSelectedName = name;
     this.isCardModalActive2 = true;
   }
 
-  showModal(name, authorization) {
+  showModalRole(name, authorization, configuration) {
+    for (let i = 0; i < configuration.length; i++) {
+      this.localizations = Object.keys(configuration[i].requiredAuthorizations);
+    }
     this.isSelectedName = name;
     this.isSelectedAuthorization = authorization;
     this.isCardModalActive = true;
