@@ -147,45 +147,81 @@ references:
         reference: proprietes_taxon
         referenceColumnToLookForHeader: nom de la propriété_key
 dataTypes:
-  phytoplancton_aggregated:
+  # début de la description du fichier des données de condition de prélèvement
+  condition_prelevements:
     uniqueness:
-      - variable: dates
+      - variable: date
         component: day
-      - variable: projets
-        component: nom du projet
+      - variable: date
+        component: time
       - variable: site
         component: nom du site
-      - variable: plateformes
-        component: nom de la plateforme
-      - variable: outils
-        component: prélèvement
-      - variable: outils
-        component: mesure
+    # ajout d'un nom internationnalisé
+    internationalizationName:
+      fr: Condition de prélèvement
+      en: Collection condition
+    repository:
+      filePattern:
+    # mise en place des liens entre les references et les colonnes du fichier
     data:
-      dates:
+      date:
         components:
           day:
             checker:
               name: Date
               params:
                 pattern: dd/MM/yyyy
-      projets:
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+      projet:
         components:
-          nom du projet:
+          value:
       site:
         components:
           nom du site:
-      plateformes:
-        components:
+            checker:
+              name: Reference
+              params:
+                transformation:
+                  codify: true
+                required: true
+                refType: site
           nom de la plateforme:
-      outils:
+      valeurs qualitatives:
         components:
-          prélèvement:
-          mesure:
-      variables:
+          couleur de l'eau:
+          direction du vent:
+          ensoleillement:
+          temps:
+          aspect de l'eau:
+          etat de surface:
+          nebulosite:
+          vitesse du vent:
+      valeurs quantitatives:
         components:
-          biovolume_algal:
+          pression atmospherique:
+          temperature de l'air:
+            checker:
+              name: Integer
+              params:
+                required: false
+          transparence par disque inra:
+          transparence par secchi:
+            checker:
+              name: Float
+              params:
+                required: false
+      #            defaultValue:
+      #              expression : return "cm"
+      commentaire:
+        components:
+          value:
+    # création des authorisations
     authorization:
+      # par groupe de données
       dataGroups:
         referentiel:
           internationalizationName:
@@ -193,47 +229,112 @@ dataTypes:
             en: Referential
           label: "Référentiel"
           data:
-            - dates
-            - projets
+            - date
+            - projet
             - site
-            - plateformes
-        condition:
+            - commentaire
+        qualitatif:
           internationalizationName:
-            fr: Contexte
-            en: Context
-          label: "Contexte"
+            fr: Données qualitatives
+            en: Qualitative data
+          label: "Données qualitatives"
           data:
-            - outils
-            - variables
+            - valeurs qualitatives
+        quantitatif:
+          internationalizationName:
+            fr: Données quantitatives
+            en: Quantitative data
+          label: "Données quantitatives"
+          data:
+            - valeurs quantitatives
+      # par types de données (ex: ici on fait par localisation)
+      authorizationScopes:
+        localization_site:
+          variable: site
+          component: nom du site
+      # par date
+      timeScope:
+        variable: date
+        component: day
+    # description de la mise en page du fichier de données colonne par colonne
     format:
+      # on localise la ligne où il y a les noms des colonnes (dans ce fichier c'est la ligne 1)
       headerLine: 1
+      # on localise la première ligne avec des données (ici on commence à la ligne 2)
       firstRowLine: 2
+      # puis on liste les colonnes
       columns:
-        - header: "nom du projet"
+        # dans header on met le nom de la colonne (attention il faut que le nom de la colonne soit IDENTIQUE à celui du fichier. /!\ Espace compris)
+        - header: "Nom du projet"
           boundTo:
-            variable: projets
-            component: nom du projet
+            variable: projet
+            component: value
         - header: "nom du site"
           boundTo:
             variable: site
             component: nom du site
-        - header: "nom de la plateforme"
+        - header: "Nom de la plateforme"
           boundTo:
-            variable: plateformes
+            variable: site
             component: nom de la plateforme
-        - header: "date de prélèvement"
+        - header: "date de prelevement"
           boundTo:
-            variable: dates
+            variable: date
             component: day
-        - header: "outil de prélèvement"
+        - header: "heure de prelevement"
           boundTo:
-            variable: outils
-            component: prélèvement
-        - header: "outil de mesure"
+            variable: date
+            component: time
+        - header: "commentaire"
           boundTo:
-            variable: outils
-            component: mesure
-        - header: "biovolume algal total de l'échantillon"
+            variable: commentaire
+            component: value
+        - header: "Température de l'air"
           boundTo:
-            variable: variables
-            component: biovolume_algal
+            variable: valeurs quantitatives
+            component: temperature de l'air
+        - header: "nebulosite"
+          boundTo:
+            variable: valeurs qualitatives
+            component: nebulosite
+
+        - header: "ensoleillement"
+          boundTo:
+            variable: valeurs qualitatives
+            component: ensoleillement
+        - header: "temps"
+          boundTo:
+            variable: valeurs qualitatives
+            component: temps
+        - header: "direction du vent"
+          boundTo:
+            variable: valeurs qualitatives
+            component: direction du vent
+        - header: "vitesse du vent"
+          boundTo:
+            variable: valeurs qualitatives
+            component: vitesse du vent
+        - header: "pression atmosphérique"
+          boundTo:
+            variable: valeurs quantitatives
+            component: pression atmospherique
+        - header: "aspect de l'eau"
+          boundTo:
+            variable: valeurs qualitatives
+            component: aspect de l'eau
+        - header: "etat de surface"
+          boundTo:
+            variable: valeurs qualitatives
+            component: etat de surface
+        - header: "transparence par disque inra"
+          boundTo:
+            variable: valeurs quantitatives
+            component: transparence par disque inra
+        - header: "transparence par secchi 20 cm"
+          boundTo:
+            variable: valeurs quantitatives
+            component: transparence par secchi
+        - header: "couleur de l'eau"
+          boundTo:
+            variable: valeurs qualitatives
+            component: couleur de l'eau
