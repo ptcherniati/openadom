@@ -44472,7 +44472,7 @@
         "compilationError" : {
           "lineNumber" : -1,
           "columnNumber" : -1,
-          "message" : "startup failed:\nScript4.groovy: 1: unexpected token: } @ line 1, column 4.\n   if(}\n      ^\n\n1 error\n"
+          "message" : "startup failed:\nScript32.groovy: 1: unexpected token: } @ line 1, column 4.\n   if(}\n      ^\n\n1 error\n"
         }
       },
       "error" : true,

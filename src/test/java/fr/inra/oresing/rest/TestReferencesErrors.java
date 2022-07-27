@@ -175,7 +175,7 @@ public class TestReferencesErrors {
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/references/{refType}", e.getKey())
                                 .file(refFile)
-                                .cookie(authCookie))
+                                .cookie(recursivityCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -233,7 +233,7 @@ public class TestReferencesErrors {
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
                                 .file(refFile)
-                                .cookie(authCookie))
+                                .cookie(recursivityCookie))
                         .andExpect(MockMvcResultMatchers.status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
 
