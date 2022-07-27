@@ -18,6 +18,7 @@ import org.testcontainers.shaded.com.google.common.base.Preconditions;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -281,8 +282,12 @@ public class AuthorizationService {
         if (authenticationService.hasRole(OreSiRole.superAdmin())) {
             canAddApplicationCreatorRole = true;
         } else if (authenticationService.hasRole(OreSiRole.applicationCreator())) {
-            final OreSiUser user = userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId()));
-            if (user.getAuthorizations().contains(oreSiUserRoleApplicationCreator.getApplicationPattern())) {
+            final OreSiUser user =  userRepository.findByLogin(oreSiUserRoleApplicationCreator.getUserId()).orElseGet(()->userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId())));;
+            if (user.getAuthorizations().stream()
+                    .anyMatch(p->Pattern.compile(p)
+                            .matcher(oreSiUserRoleApplicationCreator.getApplicationPattern())
+                            .matches()
+                    )) {
                 canAddApplicationCreatorRole = true;
             } else {
                 throw new NotApplicationCreatorRightsException(oreSiUserRoleApplicationCreator.getApplicationPattern(), user.getAuthorizations());

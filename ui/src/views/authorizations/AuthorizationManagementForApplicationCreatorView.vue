@@ -65,10 +65,17 @@
                   {{ auth }} {{ $t("ponctuation.colon") }}
                 </p>
                 <b-button
+                    v-if=" props.row.authorizations.find(a=>currentUserApplicationPattern.find(aa=>new RegExp(aa).test(a)))"
                     icon-left="times-circle"
                     size="is-small"
                     type="is-danger is-light"
                     @click="removeApplication(props.row.login, auth)"
+                    style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+                >
+                </b-button>
+                <b-button v-else
+                    size="is-small"
+                    type="is-danger is-light"
                     style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                 >
                 </b-button>
@@ -77,7 +84,8 @@
                   class="column is-2"
                   v-for="auth in currentUserApplicationPattern.filter(a=>! props.row.authorizations.find(aa=>aa === a))"
                   :key="auth">
-                <p style="margin-top: 8px;">
+                <p style="margin-top: 8px;"
+                    class="has-text-grey-light">
                   {{ auth }} {{ $t("ponctuation.colon") }}
                 </p>
                 <b-button
@@ -156,7 +164,7 @@ export default class AuthorizationManagementForApplicationCreatorView extends Vu
   }
 
   filterAuthorization(authorization) {
-    return this.currentUserApplicationPattern.find(auth => auth === authorization)
+    return this.currentUserApplicationPattern.find(auth => auth === authorization || new RegExp(authorization).test(auth))
   }
 
   async created() {

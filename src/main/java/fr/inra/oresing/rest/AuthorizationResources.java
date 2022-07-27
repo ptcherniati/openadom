@@ -86,7 +86,7 @@ public class AuthorizationResources {
             @RequestParam(name = "applicationPattern", required = false) String applicationPattern)
             throws NotSuperAdminException, NotApplicationCreatorRightsException {
         OreSiUser user = authenticationService.getByIdOrLogin(userIdOrLogin);
-        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(userIdOrLogin, role, applicationPattern);
+        final OreSiRoleForUser roleForUser = new OreSiRoleForUser(user.getId().toString(), role, applicationPattern);
         user = authorizationService.addRoleUser(roleForUser);
         return ResponseEntity.ok(user);
     }
