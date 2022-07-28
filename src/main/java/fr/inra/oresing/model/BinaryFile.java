@@ -11,6 +11,7 @@ import java.util.UUID;
 @Setter
 @ToString(callSuper = true)
 public class BinaryFile extends OreSiEntity {
+
     public final static BinaryFileInfos EMPTY_INSTANCE(){
         return new BinaryFileInfos();
     }

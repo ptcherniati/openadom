@@ -11,7 +11,7 @@
     "params": {
       "binaryFiledataset": {
         "datatype": "swc_j",
-        "requiredauthorizations": {
+        "requiredAuthorizations": {
           "localization": {
             "sql": "fougeres.fougeres__fou_2"
           }

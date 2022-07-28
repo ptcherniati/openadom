@@ -2,9 +2,17 @@ package fr.inra.oresing.rest;
 
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Strings;
+import org.hamcrest.Matchers;
+import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,15 +22,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.Cookie;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -40,36 +52,65 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthorizationResourcesTest {
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private SqlService db;
+
+
+    @Autowired
+    private ApplicationRepository applicationRepository;
+
+    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private AuthenticationService authenticationService;
 
+
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
     @Autowired
     private Fixtures fixtures;
 
+    @Autowired
+    private OreSiService oreSiService;
+
     @Test
     public void testAddAuthorization() throws Exception {
-        Cookie authCookie = fixtures.addApplicationAcbb();
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader" , "xxxxxxxx");
-        String readerUserId = createUserResult.getUserId().toString();
-        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login" , "UnReader")
-                        .param("password" , "xxxxxxxx"))
+        CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
+        String withRigthsUserId = withRightsUserResult.getUserId().toString();
+        Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "withrigths")
+                        .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
+        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "UnReader")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        String readerUserId = readerUserResult.getUserId().toString();
 
+        Cookie authCookie = fixtures.addApplicationAcbb(null);
+        final String token = Jwts.parser()
+                .setSigningKey(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
+                .parseClaimsJws(authCookie.getValue())
+                .getBody()
+                .getSubject();
+        final String authId = JsonPath.parse(token).read("$.requestClient.id");
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste" , response.contains("acbb"));
+            Assert.assertTrue("Le créateur de l'application doit pouvoir la retrouver dans la liste", response.contains("acbb"));
         }
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés" , response.contains("acbb"));
+            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("acbb"));
         }
 
         {
@@ -89,7 +130,7 @@ public class AuthorizationResourcesTest {
 
         {
             String json = "{\n" +
-                    "   \"usersId\":[\""+readerUserId+"\"],\n" +
+                    "   \"usersId\":[\"" + readerUserId + "\"],\n" +
                     "   \"applicationNameOrId\":\"acbb\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur acbb\",\n" +
@@ -100,7 +141,7 @@ public class AuthorizationResourcesTest {
                     "         \"requiredAuthorizations\":{\n" +
                     "            \"localization\":\"theix.theix__22\"\n" +
                     "         },\n" +
-                    "         \"dataGroup\":[\n" +
+                    "         \"datagroups\":[\n" +
                     "            \"all\"\n" +
                     "         ],\n" +
                     "         \"intervalDates\":{\n" +
@@ -124,17 +165,79 @@ public class AuthorizationResourcesTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
+           /* NotApplicationCanSetRightsException error = (NotApplicationCanSetRightsException) mockMvc.perform(create)
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
+            Assert.assertEquals(NotApplicationCanSetRightsException.NO_RIGHT_FOR_SET_RIGHTS_APPLICATION, error.getMessage());
+            Assert.assertEquals("acbb", error.getApplicationName());
+            Assert.assertEquals("biomasse_production_teneur", error.getDataType());
+            final Application app = applicationRepository.findApplication("acbb");
+            db.addUserInRole(OreSiUserRole.forUser( userRepository.findById(UUID.fromString(authId))), OreSiRightOnApplicationRole.adminOn(app));*/
             String response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
+
+
             log.debug(StringUtils.abbreviate(response, 50));
+            //on ajoute une autre authorization
+            json = "{\n" +
+                    "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une autre authorization sur acbb\",\n" +
+                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"theix.theix__2\"\n" +
+                    "         },\n" +
+                    "         \"dataGroups\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2009,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2009,\n" +
+                    "               6,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
+            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie)
+                    .content(json);
+            response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+        }
+        {
+            final MockHttpServletRequestBuilder authorizations = get("/api/v1/acbb/authorization/biomasse_production_teneur/" + authId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie);
+            mockMvc.perform(authorizations)
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.applicationName", equalTo("acbb")))
+                    .andExpect(jsonPath("$.dataType",  equalTo("biomasse_production_teneur")))
+                    .andExpect(jsonPath("$.authorizationResults.extraction[0].requiredAuthorizations.localization",  equalTo("theix.theix__2")))
+                    .andReturn().getResponse().getContentAsString();
+
         }
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
             ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste" , response.contains("acbb"));
+            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("acbb"));
         }
 
         {
@@ -153,14 +256,13 @@ public class AuthorizationResourcesTest {
 
     @Test
     public void testAddAuthorizationOnTwoScopes() throws Exception {
-
         Cookie authCookie = fixtures.addApplicationHauteFrequence();
 
-        CreateUserResult createUserResult = authenticationService.createUser("UnReader" , "xxxxxxxx");
+        CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
         String readerUserId = createUserResult.getUserId().toString();
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login" , "UnReader")
-                        .param("password" , "xxxxxxxx"))
+                        .param("login", "UnReader")
+                        .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         String authorizationId;
@@ -168,7 +270,7 @@ public class AuthorizationResourcesTest {
         {
 
             String json = "{\n" +
-                    "   \"usersId\":[\""+readerUserId+"\"],\n" +
+                    "   \"usersId\":[\"" + readerUserId + "\"],\n" +
                     "   \"applicationNameOrId\":\"hautefrequence\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur haute fréquence\",\n" +
@@ -180,7 +282,7 @@ public class AuthorizationResourcesTest {
                     "            \"localization\":\"bimont.bim13\",\n" +
                     "            \"projet\":\"sou\"\n" +
                     "         },\n" +
-                    "         \"dataGroup\":[\n" +
+                    "         \"datagroups\":[\n" +
                     "            \"all\"\n" +
                     "         ],\n" +
                     "         \"intervalDates\":{\n" +
@@ -214,8 +316,7 @@ public class AuthorizationResourcesTest {
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
-                            .cookie(authCookie)
-                            .accept(MediaType.APPLICATION_JSON))
+                            .cookie(authCookie))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -235,7 +336,7 @@ public class AuthorizationResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values.localization.projet").value(not(hasItemInArray(equalTo("rnt"))), String[].class))
                     .andExpect(jsonPath("$.rows[*].values.date.day").value(hasItemInArray(equalTo("date:2016-06-14T00:00:00:14/06/2016")), String[].class))
                     .andExpect(jsonPath("$.rows[*].values.date.day").value(not(hasItemInArray(equalTo("date:2017-01-30T00:00:00:30/01/2017"))), String[].class))
-                    .andExpect(jsonPath("$.totalRows" , equalTo(7456)))
+                    .andExpect(jsonPath("$.totalRows", equalTo(7456)))
                     .andReturn().getResponse().getContentAsString();
 
 
@@ -257,8 +358,105 @@ public class AuthorizationResourcesTest {
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalRows" , equalTo(-1)))
+                    .andExpect(jsonPath("$.totalRows", equalTo(-1)))
                     .andReturn().getResponse().getContentAsString();
         }
+    }
+
+    @Test
+    public void testAddApplicationMonsoere() throws Exception {
+        fixtures.addMonsoreApplication();
+    }
+
+    @Test
+    public void testAddRightForAddApplication() throws Exception {
+
+        {
+            final String TEST = "test";
+            CreateUserResult dbUserResult = authenticationService.createUser(TEST, TEST);
+            final Cookie dbUserCookies = mockMvc.perform(post("/api/v1/login")
+                            .param("login", TEST)
+                            .param("password", TEST))
+                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+            addRoleAdmin(dbUserResult);
+            String applicationCreatorLogin = "applicationCreator";
+            String applicationCreatorPassword = "xxxxxxxx";
+            CreateUserResult applicationCreatorResult = authenticationService.createUser(applicationCreatorLogin, applicationCreatorPassword);
+            final Cookie applicationCreatorCookies = mockMvc.perform(post("/api/v1/login")
+                            .param("login", applicationCreatorLogin)
+                            .param("password", applicationCreatorPassword))
+                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+            String lambdaLogin = "lambda";
+            String lambdaPassword = "xxxxxxxx";
+            CreateUserResult lambdaResult = authenticationService.createUser(lambdaLogin, lambdaPassword);
+            final Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
+                            .param("login", lambdaLogin)
+                            .param("password", lambdaPassword))
+                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+
+            {
+                //l'administrateur peut créer des applications.
+                final String monsoreResult = fixtures.createApplicationMonSore(dbUserCookies, "monsore");
+                Assert.assertFalse(Strings.isNullOrEmpty(JsonPath.parse(monsoreResult).read("$.id", String.class)));
+            }
+            {
+                // on donne les droits pour un pattern acbb
+
+                ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                                .param("userIdOrLogin", applicationCreatorResult.getUserId().toString())
+                                .param("applicationPattern", "acbb")
+                                .cookie(dbUserCookies))
+                        .andExpect(status().is2xxSuccessful())
+                        .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())))
+                        .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
+                        .andExpect(jsonPath("$.authorizations", Matchers.hasItem("acbb")))
+                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())));
+
+                //on peut déposer acbb
+                final String acbbResult = fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
+                Assert.assertFalse(Strings.isNullOrEmpty(JsonPath.parse(acbbResult).read("$.id", String.class)));
+                //on ne peut déposer monsore
+                Assert.assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore"));
+
+            }
+            {
+                //on donne des droits pour le pattern monsore
+                ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                                .param("userIdOrLogin", applicationCreatorResult.getUserId().toString())
+                                .param("applicationPattern", "monsore")
+                                .cookie(dbUserCookies))
+                        .andExpect(status().is2xxSuccessful())
+                        .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())))
+                        .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
+                        .andExpect(jsonPath("$.authorizations", Matchers.hasItem("monsore")))
+                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())));
+
+                //on peut déposer monsore
+                final String acbbResult = fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
+                Assert.assertFalse(Strings.isNullOrEmpty(JsonPath.parse(acbbResult).read("$.id", String.class)));
+
+            }
+            {
+                //on supprime des droits pour le pattern monsore
+                ResultActions resultActions = mockMvc.perform(delete("/api/v1/authorization/applicationCreator")
+                                .param("userIdOrLogin", applicationCreatorResult.getUserId().toString())
+                                .param("applicationPattern", "monsore")
+                                .cookie(dbUserCookies))
+                        .andExpect(status().is2xxSuccessful())
+                        .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())))
+                        .andExpect(jsonPath("$.roles.memberOf", not(Matchers.hasItem("applicationCreator"))))
+                        .andExpect(jsonPath("$.authorizations", not(Matchers.hasItem("monsore"))))
+                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.getUserId().toString())));
+
+                //on ne peut déposer monsore
+                Assert.assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", fixtures.createApplicationMonSore(applicationCreatorCookies, "monsore"));
+            }
+        }
+
+    }
+
+    @Transactional
+    void addRoleAdmin(CreateUserResult dbUserResult) {
+        namedParameterJdbcTemplate.update("grant \"superadmin\" to \"" + dbUserResult.getUserId().toString() + "\"", Map.of());
     }
 }

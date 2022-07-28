@@ -46,7 +46,7 @@ public class RelationalServiceTest {
         //fixtures.addApplicationPRO();
         fixtures.addApplicationOLAC();
         fixtures.addApplicationFORET();
-        fixtures.addApplicationAcbb();
+        fixtures.addApplicationAcbb(null);
         fixtures.addApplicationRecursivity();
     }
 

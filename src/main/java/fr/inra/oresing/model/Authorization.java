@@ -19,8 +19,8 @@ public class Authorization {
     private List<String> dataGroups = new LinkedList<>();
     private Map<String, Ltree> requiredAuthorizations;
 
-    public Authorization(List<String> dataGroup, Map<String, Ltree> requiredAuthorizations, LocalDateTimeRange timeScope) {
-        this.dataGroups = dataGroup;
+    public Authorization(List<String> dataGroups, Map<String, Ltree> requiredAuthorizations, LocalDateTimeRange timeScope) {
+        this.dataGroups = dataGroups;
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
     }
@@ -32,8 +32,8 @@ public class Authorization {
         return String.format("'%s'", (timeScope == null ? LocalDateTimeRange.always() : timeScope).toSqlExpression());
     }
 
-    public static String datagroupToSQL(List<String> dataGroup) {
-        return dataGroup.stream()
+    public static String datagroupToSQL(List<String> dataGroups) {
+        return dataGroups.stream()
                 .map(dg -> String.format(String.format("'%s'", dg)))
                 .collect(Collectors.joining(",", "array[", "]::TEXT[]"));
     }

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "66b3cbb7-2f3f-4db0-b63a-856ad7c2f006",
+    "login": "lambda",
+    "authorizedForApplicationCreation": true,
+    "superadmin": false,
+    "authorizations": [
+      "toto","foret"
+    ]
+  },
+  {
+    "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+    "login": "poussin",
+    "authorizedForApplicationCreation": true,
+    "superadmin": true,
+    "authorizations": [
+      ".*",
+      "titi",
+      "ola", "pro"
+    ]
+  },
+  {
+    "id": "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9",
+    "login": "acreator",
+    "authorizedForApplicationCreation": true,
+    "superadmin": false,
+    "authorizations": [
+      "ola",
+      "foret",
+      "pro"
+    ]
+  }
+]

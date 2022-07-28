@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -70,14 +71,14 @@ public class SqlService {
             using = String.format(" USING (%s)", sqlPolicy.getUsingExpression());
         }
         if(!Strings.isNullOrEmpty(sqlPolicy.getWithCheckExpression())){
-            using = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
+            withCheck = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
         }
         String createPolicySql = String.format(
                 "CREATE POLICY %s ON %s AS %s FOR %s TO %s %s %s",
                 sqlPolicy.getSqlIdentifier(),
                 sqlPolicy.getTable().getSqlIdentifier(),
                 sqlPolicy.getPermissiveOrRestrictive().name(),
-                sqlPolicy.getStatement().name(),
+                sqlPolicy.getStatements().stream().map(SqlPolicy.Statement::name).collect(Collectors.joining(",")),
                 sqlPolicy.getRole().getSqlIdentifier(),
                 using,
                 withCheck
