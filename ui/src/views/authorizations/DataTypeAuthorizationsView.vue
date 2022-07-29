@@ -23,35 +23,52 @@
           </div>
         </div>
       </div>
-
       <b-table
         :data="authorizations"
         :is-focusable="true"
         :is-hoverable="true"
         :paginated="true"
-        :per-page="15"
-        :sticky-header="true"
+        :per-page="perPage"
         :striped="true"
         class="row"
         height="100%"
       >
+        <template #pagination>
+          <b-pagination
+            v-model="currentPage"
+            :current-page.sync="currentPage"
+            :per-page="perPage"
+            :total="authorizations.length"
+            role="navigation"
+            :aria-label="$t('menu.aria-pagination')"
+            :aria-current-label="$t('menu.aria-curent-page')"
+            :aria-next-label="$t('menu.aria-next-page')"
+            :aria-previous-label="$t('menu.aria-previous-page')"
+            order="is-centered"
+            range-after="3"
+            range-before="3"
+            :rounded="true"
+            @change="changePage"
+          />
+        </template>
         <b-table-column
-          v-slot="props"
           :label="$t('dataTypeAuthorizations.name')"
           b-table-column
           field="name"
           sortable
+          :searchable="true"
         >
-          {{ props.row.name }}
-        </b-table-column>
-        <b-table-column
-          v-slot="props"
-          :label="$t('dataTypeAuthorizations.roles')"
-          b-table-column
-          field="authorizations"
-          sortable
-        >
-          {{ Object.keys(props.row.authorizations || {}) }}
+          <template #searchable="props">
+            <b-input
+              v-model="props.filters[props.column.field]"
+              :placeholder="$t('dataTypeAuthorizations.search')"
+              icon="search"
+              size="is-small"
+            />
+          </template>
+          <template v-slot="props">
+            {{ props.row.name }}
+          </template>
         </b-table-column>
         <b-table-column
           v-slot="props"
@@ -60,43 +77,143 @@
           field="users"
           sortable
         >
-          {{ props.row.users.map((use) => use.login) }}
+          <template v-for="(user, idx) in props.row.users.map((use) => use.login)">
+            <div v-bind:key="idx" class="columns">
+              <b-tooltip position="is-right" :label="$t('dataTypeAuthorizations.showMore')">
+                <a
+                  class="show-check-details column is-half"
+                  type="is-primary "
+                  @click="showModal2(user)"
+                  style="color: #006464ff; margin-left: 10px"
+                >
+                  {{ user }}
+                </a>
+              </b-tooltip>
+              <b-modal v-model="isCardModalActive2" v-show="isSelectedName === user">
+                <div class="card">
+                  <div class="card-header">
+                    <div class="title card-header-title">
+                      <p field="name">{{ user }}</p>
+                    </div>
+                  </div>
+                  <div class="card-content">
+                    <div class="content">
+                      <h3>
+                        {{ isSelectedName }}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              </b-modal>
+            </div>
+          </template>
+        </b-table-column>
+        <b-table-column
+          v-slot="props"
+          :label="$t('dataTypeAuthorizations.roles')"
+          b-table-column
+          field="authorizations"
+          sortable
+        >
+          <template v-for="(authorization, idx) in Object.keys(props.row.authorizations)">
+            <div v-bind:key="idx" class="columns">
+              <b-tooltip position="is-right" :label="$t('dataTypeAuthorizations.showMore')">
+                <a
+                  class="show-check-details column is-half"
+                  type="is-primary "
+                  @click="showModal(props.row.name, authorization)"
+                  style="color: #006464ff; margin-left: 10px"
+                >
+                  {{ authorization }}
+                </a>
+              </b-tooltip>
+              <b-modal
+                v-model="isCardModalActive"
+                v-show="
+                  isSelectedName === props.row.name && isSelectedAuthorization === authorization
+                "
+              >
+                <div class="card">
+                  <div class="card-header">
+                    <div class="title card-header-title">
+                      <p field="name">{{ authorization }}</p>
+                    </div>
+                  </div>
+                  <div class="card-content">
+                    <div class="content">
+                      <h3>
+                        {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+                      </h3>
+                      <div
+                        v-for="(configuration, idx) in props.row.authorizations[authorization]"
+                        v-bind:key="idx"
+                        class="listAuthorization"
+                      >
+                        <div>
+                          <p>
+                            <span>
+                              {{ $t("dataTypeAuthorizations.localization") }}
+                              {{ $t("ponctuation.colon") }}
+                              <i>{{ configuration.requiredAuthorizations.localization }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                          </p>
+                          <p>
+                            <span v-if="configuration.dataGroups.length === 0">
+                              {{ $t("dataTypeAuthorizations.data-group") }}
+                              {{ $t("ponctuation.colon") }}
+                              <i>{{ $t("dataTypeAuthorizations.all-variable") }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                            <span v-else>
+                              {{ $t("dataTypeAuthorizations.data-group") }}
+                              {{ $t("ponctuation.colon") }} <i>{{ configuration.dataGroups }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                          </p>
+                          <p>
+                            <span>
+                              {{ $t("dataTypeAuthorizations.period") }}
+                              {{ $t("ponctuation.colon") }} <i>{{ getPeriod(configuration) }}</i>
+                              {{ $t("ponctuation.semicolon") }}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </b-modal>
+            </div>
+          </template>
         </b-table-column>
         <b-table-column v-slot="props" :label="$t('dataTypeAuthorizations.actions')" b-table-column>
           <b-button
             icon-left="times-circle"
             size="is-small"
             type="is-danger is-light"
-            @click="revoke(props.row.id)"
+            @click="revoke(props.row.uuid)"
             style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
           >
           </b-button>
           <b-button
             icon-left="pen-square"
             size="is-small"
-            type="primary is-light"
+            type="is-warning"
             @click="modifyAuthorization(props.row.uuid)"
-            style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+            outlined
+            onmouseover="this.style.color='rgba(255,140,0,0.5)'"
+            onmouseout="this.style.color='';"
+            style="
+              height: 1.5em;
+              background-color: transparent;
+              font-size: 1.45rem;
+              border-color: transparent;
+            "
           >
           </b-button>
         </b-table-column>
       </b-table>
-      <b-pagination
-        v-if="selectedUser && perPage <= selectedUser.length"
-        v-model="currentPage"
-        :per-page="perPage"
-        :total="selectedUser.length"
-        role="navigation"
-        :aria-label="$t('menu.aria-pagination')"
-        :aria-current-label="$t('menu.aria-curent-page')"
-        :aria-next-label="$t('menu.aria-next-page')"
-        :aria-previous-label="$t('menu.aria-previous-page')"
-        order="is-centered"
-        range-after="3"
-        range-before="3"
-        :rounded="true"
-      >
-      </b-pagination>
     </div>
   </PageView>
 </template>
@@ -127,15 +244,24 @@ export default class DataTypeAuthorizationsView extends Vue {
   authorizations = [];
   authorizationByUser = {};
   application = new ApplicationResult();
-  scopes = [];
+  // pagination
+  offset = 0;
   currentPage = 1;
-  perPage = 15;
+  perPage = 10;
+  isSelectedName = "";
+  isSelectedAuthorization = "";
+  isCardModalActive = false;
+  isCardModalActive2 = false;
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
     FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
+
+  async changePage(page) {
+    this.offset = (page - 1) * this.perPage;
+  }
 
   created() {
     this.init();
@@ -158,16 +284,6 @@ export default class DataTypeAuthorizationsView extends Vue {
       ),
     ];
   }
-  // fillAuthorizationtTree(tree, auth){
-  //   tree = tree ||{};
-  //   for (const scope in auth.authorizedScopes) {
-  //     var nodes = auth.authorizedScopes[scope].split('.')
-  //     while(node.length){
-  //       var node = nodes.shift();
-  //       var nodeScope = tree[node];
-  //     }
-  //   }
-  // }
 
   async init() {
     try {
@@ -205,6 +321,7 @@ export default class DataTypeAuthorizationsView extends Vue {
       `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
     );
   }
+
   modifyAuthorization(id) {
     this.$router.push(
       `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/${id}`
@@ -226,6 +343,7 @@ export default class DataTypeAuthorizationsView extends Vue {
     } catch (error) {
       this.alertService.toastServerError(error);
     }
+    window.location.reload();
   }
 
   getPeriod(authorization) {
@@ -245,5 +363,40 @@ export default class DataTypeAuthorizationsView extends Vue {
       return `${authorization.fromDay[2]}/${authorization.fromDay[1]}/${authorization.fromDay[0]} - ${authorization.toDay[2]}/${authorization.toDay[1]}/${authorization.toDay[0]}`;
     }
   }
+
+  showModal2(name) {
+    this.isSelectedName = name;
+    this.isCardModalActive2 = true;
+  }
+
+  showModal(name, authorization) {
+    this.isSelectedName = name;
+    this.isSelectedAuthorization = authorization;
+    this.isCardModalActive = true;
+  }
 }
 </script>
+<style lang="scss">
+td {
+  padding: 6px;
+
+  .columns {
+    margin: 0;
+
+    .column.is-half {
+      padding: 6px;
+    }
+  }
+}
+
+.listAuthorization {
+  border: solid #dbdbdb;
+  border-width: 0 0 1px;
+  margin: 0 10px 0 10px;
+  padding: 15px;
+}
+
+.listAuthorization:nth-child(odd) {
+  background-color: #f5f5f5;
+}
+</style>

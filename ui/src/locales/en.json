@@ -259,7 +259,9 @@
         "sorted": "The sorts used",
         "title-modal-numeric": "Choice of value range",
         "title-modal-date": "Choice of date range",
-        "manage-datasets": "Manage datasets"
+        "manage-datasets": "Manage datasets",
+        "accepted": "Accepted",
+        "refuse": "Refuse"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Drop a version on this dataset",
@@ -306,6 +308,20 @@
         "data-type": "Data type",
         "actions": "Actions",
         "revoke": "Revoke",
+        "a-period": "a periode ",
+        "a-datagroup": "a data group ",
+        "card-header-extraction": "Set checkout law",
+        "label-tagInput": "Select data group",
+        "label-datePicker": "Select a date",
+        "all-variable": "All variables",
+        "all-dates": "All dates",
+        "or": "or",
+        "info-limit-taginput": "Limits the law to ",
+        "select-authorization": "Please select the law first.",
+        "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced.",
+        "localization": "Localisation",
+        "showMore": "Show more...",
+        "search": "Search...",
         "save" : "Save change",
         "add-application-name": "Add an app"
     },
@@ -321,7 +337,7 @@
         "arrow-right": "->",
         "arrow-left": "<-",
         "slash": "/",
-        "regEx": ".*",
+        "regEx": "Regular expression option (.*) :",
         "star": "*"
     }
 }
