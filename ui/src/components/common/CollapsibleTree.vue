@@ -146,7 +146,7 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import AvailiblityChart from "../charts/AvailiblityChart.vue";
 export default {
   name: "CollapsibleTree",
-  components: {FontAwesomeIcon, AvailiblityChart},
+  components: { FontAwesomeIcon, AvailiblityChart },
   props: {
     applicationName: String,
     option: Object,
@@ -175,27 +175,26 @@ export default {
   },
   data() {
     return {
-
       displayChildren: false,
       refFile: null,
       innerOptionChecked: null,
-    }
+    };
   },
-  watch:{
-    innerOptionChecked: (value)=>this.$emit("optionChecked", value)
+  watch: {
+    innerOptionChecked: (value) => this.$emit("optionChecked", value),
   },
-  methods:{
-    onInnerOptionChecked:function(value) {
+  methods: {
+    onInnerOptionChecked: function (value) {
       this.$emit("optionChecked", value);
     },
-    stopPropagation:function(event) {
+    stopPropagation: function (event) {
       event.stopPropagation();
     },
-    showChildren:function() {
+    showChildren: function () {
       this.displayChildren = true;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

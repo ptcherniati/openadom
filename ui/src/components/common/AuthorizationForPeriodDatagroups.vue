@@ -2,31 +2,31 @@
   <span>
     <b-tooltip position="is-right" multilined>
       <a
-          v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-          class="show-check-details"
-          :type="state.state !== 1 ? 'is-grey ' : 'is-primary '"
-          @click="showDetail"
-          style="color: #006464ff; margin-left: 10px"
-      ><b-icon
+        v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
+        class="show-check-details"
+        :type="state.state !== 1 ? 'is-grey ' : 'is-primary '"
+        @click="showDetail"
+        style="color: #006464ff; margin-left: 10px"
+        ><b-icon
           v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
           icon="eye"
           size="fa-4x"
-      ></b-icon
+        ></b-icon
       ></a>
       <template v-slot:content>
         <div
-            v-if="state.state === 1"
-            class="has-background-primary show-detail-for-selected"
-            style="height: 175px"
+          v-if="state.state === 1"
+          class="has-background-primary show-detail-for-selected"
+          style="height: 175px"
         >
           {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
           <b v-if="column.withPeriods">{{ $t("dataTypeAuthorizations.a-period") }}</b>
           <span v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-          >{{ $t("dataTypeAuthorizations.or") }}
+            >{{ $t("dataTypeAuthorizations.or") }}
           </span>
           <b v-if="column.withDataGroups && dataGroups.length > 1">{{
-              $t("dataTypeAuthorizations.a-datagroup")
-            }}</b>
+            $t("dataTypeAuthorizations.a-datagroup")
+          }}</b>
           <div>
             <h3>
               {{ $t("dataTypesRepository.table-file-data-period") }} {{ $t("ponctuation.colon") }}
@@ -59,11 +59,11 @@
       </template>
     </b-tooltip>
     <b-modal
-        v-if="currentAuthorization"
-        v-model="showModal"
-        class="modalCardRef"
-        has-modal-card
-        trap-focus
+      v-if="currentAuthorization"
+      v-model="showModal"
+      class="modalCardRef"
+      has-modal-card
+      trap-focus
     >
       <div class="card">
         <header class="card-header">
@@ -72,65 +72,70 @@
           </p>
         </header>
         <div class="card-content">
-          <b-field v-if="column.withDataGroups" :label="$t('dataTypeAuthorizations.label-tagInput')"
-                   label-position="on-border">
+          <b-field
+            v-if="column.withDataGroups"
+            :label="$t('dataTypeAuthorizations.label-tagInput')"
+            label-position="on-border"
+          >
             <b-taginput
-                v-model="currentAuthorization.authorizations.dataGroups"
-                :data="dataGroups"
-                :open-on-focus="true"
-                :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
-                :value="dataGroups.id"
-                autocomplete
-                class="column"
-                field="label"
-                type="is-primary"
+              v-model="currentAuthorization.authorizations.dataGroups"
+              :data="dataGroups"
+              :open-on-focus="true"
+              :placeholder="$t('dataTypeAuthorizations.data-groups-placeholder')"
+              :value="dataGroups.id"
+              autocomplete
+              class="column"
+              field="label"
+              type="is-primary"
             >
             </b-taginput>
           </b-field>
-          <b-field v-if="column.withPeriods"
-                   class="column"
-                   :label="$t('dataTypeAuthorizations.label-datePicker')"
-                   label-position="on-border"
+          <b-field
+            v-if="column.withPeriods"
+            class="column"
+            :label="$t('dataTypeAuthorizations.label-datePicker')"
+            label-position="on-border"
           >
             <b-datepicker
-                v-model="currentAuthorization.authorizations.from"
-                :date-parser="parseDate"
-                :placeholder="
+              v-model="currentAuthorization.authorizations.from"
+              :date-parser="parseDate"
+              :placeholder="
                 $t('dataTypesRepository.placeholder-datepicker') +
                 ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
               "
-                editable
-                icon="calendar"
-                pack="far"
-                @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
-                @input="selectCheckbox($event, index, indexColumn, scope, 'from')"
+              editable
+              icon="calendar"
+              pack="far"
+              @remove.capture="() => selectCheckbox($event, index, indexColumn, scope)"
+              @input="selectCheckbox($event, index, indexColumn, scope, 'from')"
             >
             </b-datepicker>
           </b-field>
-          <b-field v-if="column.withPeriods"
-                   class="column"
-                   :label="$t('dataTypeAuthorizations.label-datePicker')"
-                   label-position="on-border"
+          <b-field
+            v-if="column.withPeriods"
+            class="column"
+            :label="$t('dataTypeAuthorizations.label-datePicker')"
+            label-position="on-border"
           >
             <b-datepicker
-                v-model="currentAuthorization.authorizations.to"
-                :date-parser="parseDate"
-                :placeholder="
+              v-model="currentAuthorization.authorizations.to"
+              :date-parser="parseDate"
+              :placeholder="
                 $t('dataTypesRepository.placeholder-datepicker') +
                 ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
               "
-                editable
-                icon="calendar"
-                pack="far"
+              editable
+              icon="calendar"
+              pack="far"
             >
             </b-datepicker>
           </b-field>
           <div class="buttons">
             <b-button
-                icon-left="check"
-                type="is-dark"
-                @click="registerCurrentAuthorization"
-                style="margin-bottom: 10px"
+              icon-left="check"
+              type="is-dark"
+              @click="registerCurrentAuthorization"
+              style="margin-bottom: 10px"
             >
               {{ $t("dataTypesManagement.validate") }}
             </b-button>
@@ -142,11 +147,11 @@
 </template>
 
 <script>
-import {Component, Prop, Vue} from "vue-property-decorator";
-import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
-  components: {FontAwesomeIcon},
+  components: { FontAwesomeIcon },
 })
 export default class AuthorizationForPeriodDatagroups extends Vue {
   @Prop() column;
@@ -166,7 +171,7 @@ export default class AuthorizationForPeriodDatagroups extends Vue {
     var authorizations = this.state.fromAuthorization;
     if (authorizations) {
       authorizations.dataGroups = this.dataGroups.filter((dg) =>
-          authorizations.dataGroups.find((dg2) => dg.id == dg2)
+        authorizations.dataGroups.find((dg2) => dg.id == dg2)
       );
       authorizations.from = authorizations.fromDay ? new Date(authorizations.fromDay) : null;
       authorizations.to = authorizations.toDay ? new Date(authorizations.toDay) : null;
@@ -190,7 +195,7 @@ export default class AuthorizationForPeriodDatagroups extends Vue {
 
   parseDate(date) {
     date =
-        date && date.replace(/(\d{2})\/(\d{2})\/(\d{4})(( \d{2})?(:\d{2})?(:\d{2})?)/, "$3-$2-$1$4");
+      date && date.replace(/(\d{2})\/(\d{2})\/(\d{4})(( \d{2})?(:\d{2})?(:\d{2})?)/, "$3-$2-$1$4");
     return new Date(date);
   }
 }

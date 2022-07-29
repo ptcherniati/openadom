@@ -28,23 +28,22 @@
 //import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 export default {
-
   name: "DropDownMenu",
   //components: {FontAwesomeIcon},
   props: {
-    option: {}
+    option: {},
   },
   data() {
     return {
-      emits : ["select-menu-item"],
-    }
+      emits: ["select-menu-item"],
+    };
   },
-  methods:{
-    select: function(option) {
+  methods: {
+    select: function (option) {
       this.$emit("select-menu-item", option || this.option);
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

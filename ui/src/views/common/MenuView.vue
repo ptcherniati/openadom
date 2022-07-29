@@ -55,30 +55,30 @@
             </template>
 
             <b-dropdown-item
-                @click="logout()"
-                @keypress.enter="logout()"
-                tabindex="0"
-                aria-role="menuitem"
+              @click="logout()"
+              @keypress.enter="logout()"
+              tabindex="0"
+              aria-role="menuitem"
             >
               <b-icon icon="sign-out-alt" />
               {{ $t("menu.logout") }}
             </b-dropdown-item>
             <b-dropdown-item
-                v-if="currentUser.superadmin"
-                @click="showApplicationRightManagement()"
-                @keypress.enter="showApplicationRightManagement()"
-                tabindex="0"
-                aria-role="menuitem"
+              v-if="currentUser.superadmin"
+              @click="showApplicationRightManagement()"
+              @keypress.enter="showApplicationRightManagement()"
+              tabindex="0"
+              aria-role="menuitem"
             >
               <b-icon icon="wrench" />
               {{ $t("menu.authorizations") }}
             </b-dropdown-item>
             <b-dropdown-item
-                v-if="!currentUser.superadmin && currentUser.authorizedForApplicationCreation"
-                @click="showApplicationRightManagementForApplicationCreator()"
-                @keypress.enter="showApplicationRightManagementForApplicationCreator()"
-                tabindex="0"
-                aria-role="menuitem"
+              v-if="!currentUser.superadmin && currentUser.authorizedForApplicationCreation"
+              @click="showApplicationRightManagementForApplicationCreator()"
+              @keypress.enter="showApplicationRightManagementForApplicationCreator()"
+              tabindex="0"
+              aria-role="menuitem"
             >
               <b-icon icon="wrench" />
               {{ $t("menu.authorizations") }}
