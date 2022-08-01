@@ -6,6 +6,7 @@ import fr.inra.oresing.model.OreSiAuthorization;
 import fr.inra.oresing.model.OreSiRoleForUser;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.OperationType;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
@@ -47,14 +48,16 @@ public class AuthorizationResources {
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         final Application application = repo.application().findApplication(nameOrId);
         final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        if (!isApplicationCreator) {
+        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
+        if (!isApplicationCreator && !authorizationsForCurrentUser.stream().anyMatch(
+                a->!a.getAuthorizations().get(OperationType.admin).isEmpty()
+        )) {
             throw new NotApplicationCanSetRightsException(application.getName(), dataType);
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
-        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, isApplicationCreator);
+        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, authorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
         authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
-        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
         String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authId.toString(), Charset.defaultCharset());

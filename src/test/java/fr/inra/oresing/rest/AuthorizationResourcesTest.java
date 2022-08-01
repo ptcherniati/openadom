@@ -85,6 +85,24 @@ public class AuthorizationResourcesTest {
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        CreateUserResult withAdminRightsUserResult = authenticationService.createUser("withadminrigths", "xxxxxxxx");
+        String withAdminRigthsUserId = withAdminRightsUserResult.getUserId().toString();
+        Cookie withAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "withadminrigths")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        CreateUserResult withBadAdminRightsUserResult = authenticationService.createUser("withbadadminrigths", "xxxxxxxx");
+        String withBadAdminRigthsUserId = withBadAdminRightsUserResult.getUserId().toString();
+        Cookie withBadAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "withbadadminrigths")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        CreateUserResult lamdaUserResult = authenticationService.createUser("lambda", "xxxxxxxx");
+        String lambdaUserId = lamdaUserResult.getUserId().toString();
+        Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "lambda")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx");
         Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
@@ -126,6 +144,63 @@ public class AuthorizationResourcesTest {
             ).andReturn().getResponse().getContentAsString();
             Assert.assertTrue(response.contains("lusignan"));
             Assert.assertTrue(response.contains("laqueuille.laqueuille__1"));
+        }
+        {
+            // on met les droits administrateurs sur withAdminRigthsUser
+            String json = "{\n" +
+                    "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur acbb\",\n" +
+                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"admin\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"theix\"\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
+
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie)
+                    .content(json);
+            String response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+
+            // on met les droits administrateurs sur withBadAdminRigthsUser
+             json = "{\n" +
+                    "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur acbb\",\n" +
+                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"admin\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"laqueuille\"\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}";
+
+            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(authCookie)
+                    .content(json);
+            response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+
+
+
         }
 
         {
@@ -217,6 +292,25 @@ public class AuthorizationResourcesTest {
                     .content(json);
             response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+            // on peut aussi rajouter une authorization avec withAdminRigthsUserId
+            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(withAdminRigthsCookie)
+                    .content(json);
+            response = mockMvc.perform(create)
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(response, 50));
+            // on ne peut aussi rajouter une authorization avec withBadAdminRigthsUserId theix vs laqueuille
+            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .cookie(withBadAdminRigthsCookie)
+                    .content(json);
+            response = mockMvc.perform(create)
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.localizedMessage", IsEqual.equalTo("NO_RIGHT_FOR_SET_RIGHTS_APPLICATION")))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
         }

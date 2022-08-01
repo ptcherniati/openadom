@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -67,7 +68,7 @@ public class AuthorizationService {
         return authorizationRepository.findAuthorizations(currentUserId, application, dataType);
     }
 
-    public OreSiAuthorization addAuthorization(Application application, String dataType, CreateAuthorizationRequest authorizations, boolean isApplicationCreator) {
+    public OreSiAuthorization addAuthorization(Application application, String dataType, CreateAuthorizationRequest authorizations, List<OreSiAuthorization> authorizationsForCurrentUser, boolean isApplicationCreator) {
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         OreSiAuthorization entity = authorizations.getUuid() == null ?
                 new OreSiAuthorization()
@@ -79,7 +80,22 @@ public class AuthorizationService {
 
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
 
-        authorizationsByType.values()
+        authorizationsByType.entrySet().stream()
+                .map(authByTypeEntry ->{
+                    if(isApplicationCreator){
+                        return authByTypeEntry.getValue();
+                    }
+                    final Stream<Authorization> authorizationStream = authorizationsForCurrentUser.stream()
+                            .map(oreSiAuthorization -> oreSiAuthorization.getAuthorizations())
+                            .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
+                            .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
+                            .flatMap(List::stream);
+                    return authByTypeEntry.getValue().stream()
+                            .filter(authorization -> {
+                                        return testCanSetAuthorization(authorization, authorizationStream);
+                                    })
+                            .collect(Collectors.toList());
+                })
                 .forEach(authByType -> {
                     authByType.forEach(authorization -> {
                         authorization.getDataGroups()
@@ -100,6 +116,27 @@ public class AuthorizationService {
         entity.setAuthorizations(authorizations.getAuthorizations());
         authorizationRepository.store(entity);
         return entity;
+    }
+
+    private boolean testCanSetAuthorization(Authorization authorization, Stream<Authorization> authorizationStream) {
+        return authorizationStream
+                .anyMatch(authorizationAdmin ->  testCanSetAuthorization(authorization,authorizationAdmin));
+    }
+
+    private boolean testCanSetAuthorization(Authorization authorization, Authorization authorizationAdmin) {
+        final Map<String, Ltree> requiredAuthorizationsAdmin = authorizationAdmin.getRequiredAuthorizations();
+        if(requiredAuthorizationsAdmin.isEmpty()){
+            return false;
+        }
+        return authorization.getRequiredAuthorizations().entrySet().stream().allMatch(
+                ltreeEntry -> {
+                    if(!authorizationAdmin.getRequiredAuthorizations().containsKey(ltreeEntry.getKey())){
+                        return true;
+                    }else{
+                        return ltreeEntry.getValue().getSql().startsWith(authorizationAdmin.getRequiredAuthorizations().get(ltreeEntry.getKey()).getSql());
+                    }
+                }
+        );
     }
 
     private void addOrRemoveAuthorizationForUsers(Set<UUID> previousUsers, Set<UUID> newUsers, OreSiRightOnApplicationRole oreSiRightOnApplicationRole) {
