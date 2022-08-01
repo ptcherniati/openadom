@@ -123,8 +123,9 @@ public class AuthorizationService {
         Application application = repository.application().findApplication(applicationNameOrId);
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
+        final List<OreSiAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findByDataType(dataType).stream()
-                .map(this::toGetAuthorizationResult)
+                .map(oreSiAuthorization -> toGetAuthorizationResult(oreSiAuthorization, publicAuthorizations))
                 .collect(ImmutableSet.toImmutableSet());
         return authorizations;
     }
@@ -133,19 +134,24 @@ public class AuthorizationService {
         Application application = repository.application().findApplication(authorizationRequest.getApplicationNameOrId());
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         UUID authorizationId = authorizationRequest.getAuthorizationId();
+        final List<OreSiAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
-        return toGetAuthorizationResult(oreSiAuthorization);
+        return toGetAuthorizationResult(oreSiAuthorization, publicAuthorizations);
     }
 
-    private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization) {
+    private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization, List<OreSiAuthorization> publicAuthorizations) {
         List<OreSiUser> all = userRepository.findAll();
+        final List<Map<OperationType, List<Authorization>>> collectPublicAuthorizations = publicAuthorizations.stream()
+                .map(pa -> pa.getAuthorizations())
+                .collect(Collectors.toList());
         return new GetAuthorizationResult(
                 oreSiAuthorization.getId(),
                 oreSiAuthorization.getName(),
                 getOreSIUSers(all, oreSiAuthorization.getOreSiUsers()),
                 oreSiAuthorization.getApplication(),
                 oreSiAuthorization.getDataType(),
-                extractTimeRangeToFromAndTo(oreSiAuthorization.getAuthorizations())
+                extractTimeRangeToFromAndTo(oreSiAuthorization.getAuthorizations()),
+                collectPublicAuthorizations
         );
     }
 
@@ -223,7 +229,7 @@ public class AuthorizationService {
         List<OreSiUser> allUsers = userRepository.findAll();
         ImmutableSortedSet<GetGrantableResult.User> users = allUsers.stream()
                 .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::getId)));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::getLabel)));
         return users;
     }
 

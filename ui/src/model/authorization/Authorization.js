@@ -26,6 +26,17 @@ export class Authorization {
     return path;
   }
 
+  getPath2(scopeId) {
+    var path = [];
+    for (const scopeIdKey in scopeId) {
+      if (this.requiredAuthorizations[scopeId[scopeIdKey]]) {
+        path.push(this.requiredAuthorizations[scopeId[scopeIdKey]].sql);
+      }
+    }
+    path = path.reverse().join(".");
+    return path;
+  }
+
   equals(auth, scopes) {
     for (const scope in scopes) {
       if (

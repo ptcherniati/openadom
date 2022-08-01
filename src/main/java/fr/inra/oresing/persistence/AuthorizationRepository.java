@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -56,5 +57,13 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
                 .addValue("dataType", dataType)
                 .addValue("userId", userId.toString());
         return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
+    }
+
+    public List<OreSiAuthorization> findPublicAuthorizations() {
+        String query  = String.join("\n",
+                "select '"+OreSiAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
+                "from " + getTable().getSqlIdentifier()+ " t, public.oresiuser u",
+                "where ARRAY[u.id]::entityref[] <@ oresiusers and u.login='_public_'");
+        return getNamedParameterJdbcTemplate().query(query, Map.of(), getJsonRowMapper());
     }
 }
