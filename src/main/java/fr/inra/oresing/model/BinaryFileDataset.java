@@ -1,5 +1,6 @@
 package fr.inra.oresing.model;
 
+import com.google.common.base.Strings;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.rest.OreSiService;
 import lombok.Getter;
@@ -25,12 +26,12 @@ public class BinaryFileDataset {
 
     @Override
     public String toString() {
-        String authorizationsString = requiredAuthorizations.entrySet().stream()
+        String authorizationsString =requiredAuthorizations.entrySet().stream()
                 .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue().getSql()))
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",
-                authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(from)),
-                authorizationsString, OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(to))
+                authorizationsString, Strings.isNullOrEmpty(from) ?"":OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(from)),
+                authorizationsString, Strings.isNullOrEmpty(to)?"":OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(to))
         );
     }
 }

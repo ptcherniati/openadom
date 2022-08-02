@@ -24,6 +24,7 @@ a {
 }
 
 // affichage icon uniformisé
+.control.has-icons-right .input.is-small ~ .icon,
 .control.has-icons-left .input.is-small ~ .icon {
   font-size: 0.5rem;
 }
@@ -33,6 +34,11 @@ a {
   display: inline-flex;
 }
 
+.inputAuth .control.has-icons-left .icon.is-left{
+  top: 8px;
+  font-size: 0.5rem;
+  align-items: center;
+}
 .control.has-icons-left .icon, .control.has-icons-left .icon.is-left{
   top: 5px;
   left: 5px;
@@ -55,7 +61,6 @@ a {
     font-weight: bold;
   }
 }
-
 .hide {
   display: none;
 }

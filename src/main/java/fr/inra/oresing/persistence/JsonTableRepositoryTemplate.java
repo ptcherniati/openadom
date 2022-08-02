@@ -4,8 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import fr.inra.oresing.model.OreSiEntity;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,6 +15,8 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements InitializingBean {
@@ -43,21 +47,36 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         // 5min48 pour 100
         // 5min50 pour 500
         // 6min21 pour 1000
+        final String s = namedParameterJdbcTemplate.queryForObject("select CURRENT_USER::TEXT;", Map.of(), String.class);
         return Iterators.partition(stream.iterator(), 50);
     }
 
     public List<UUID> storeAll(Stream<T> stream) {
+        final String s = namedParameterJdbcTemplate.queryForObject("select CURRENT_USER::TEXT;", Map.of(), String.class);
         String query = getUpsertQuery();
         List<UUID> uuids = new LinkedList<>();
         partition(stream).forEachRemaining(entities -> {
             entities.forEach(e -> {
                 if (e.getId() == null) {
+                    final String a = namedParameterJdbcTemplate.queryForObject("select login from oresiuser where id::TEXT=CURRENT_USER::TEXT;", Map.of(), String.class);
                     e.setId(UUID.randomUUID());
                 }
             });
             String json = getJsonRowMapper().toJson(entities);
-            uuids.addAll(namedParameterJdbcTemplate.queryForList(
-                    query, new MapSqlParameterSource("json", json), UUID.class));
+            try{
+                uuids.addAll(namedParameterJdbcTemplate.queryForList(
+                        query, new MapSqlParameterSource("json", json), UUID.class));
+            }catch (BadSqlGrammarException bsge){
+                final Pattern pattern = Pattern.compile(".*new row violates row-level security policy for.*\"(.*)\".*", Pattern.DOTALL);
+                final Matcher matcher = pattern.matcher(bsge.getMessage());
+                if(matcher.matches()){
+                    final String table = matcher.group(1);
+                    throw new SiOreIllegalArgumentException("noRightOnTable", Map.of(
+                                    "table", table)
+                            );
+                }
+                throw bsge;
+            }
         });
         return uuids;
     }

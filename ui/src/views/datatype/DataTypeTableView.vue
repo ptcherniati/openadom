@@ -281,27 +281,36 @@
                   <b-input
                     v-model="search[component.variable + '_' + component.component]"
                     icon-right="search"
-                    placeholder="Search..."
+                    :placeholder="$t('dataTypeAuthorizations.search')"
                     type="search"
                     @blur="addVariableSearch(component)"
                     size="is-small"
                   ></b-input>
-                  <b-field>
-                    <b-button
-                      type="is-dark"
-                      size="is-small"
-                      @click="this.params.variableComponentFilters.isRegex = true"
-                      outlined
-                    >
-                      {{ $t("ponctuation.regEx") }}</b-button
-                    >
-                  </b-field>
                 </b-field>
               </div>
             </div>
           </b-collapse>
         </div>
       </div>
+      <b-field>
+        <b-switch
+          v-model="params.variableComponentFilters.isRegex"
+          passive-type="is-dark"
+          type="is-primary"
+          :true-value="$t('dataTypesManagement.accepted')"
+          :false-value="$t('dataTypesManagement.refuse')"
+          >{{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}</b-switch
+        >
+        <!--        <b-button
+                    class="btnRegExp"
+                    type="is-dark"
+                    size="is-small"
+                    @click="testChangeRegEx()"
+                    outlined
+                >
+                  {{ $t("ponctuation.regEx") }}</b-button
+                >-->
+      </b-field>
       <div class="columns">
         <div class="column is-8-widescreen is-6-desktop">
           {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
@@ -506,6 +515,22 @@ export default class DataTypeTableView extends Vue {
   referenceLineCheckers = [];
   isRegExp = false;
 
+  /*  testChangeRegEx() {
+    let checkboxes = document.querySelector('.btnRegExp');
+    if (this.params.variableComponentFilters.isRegex === true) {
+      this.params.variableComponentFilters.isRegex = false;
+      checkboxes.classList.remove('active');
+    }
+    else if (this.params.variableComponentFilters.isRegex === false) {
+      this.params.variableComponentFilters.isRegex = true;
+      checkboxes[i].classList.add('active');
+    } else {
+      this.params.variableComponentFilters.isRegex = !this.isRegExp;
+      checkboxes[i].classList.add('active');
+    }
+    console.log(this.params.variableComponentFilters.isRegex);
+  }*/
+
   async created() {
     await this.init();
     this.subMenuPaths = [
@@ -627,7 +652,7 @@ export default class DataTypeTableView extends Vue {
     const key = component.key;
     if (!this.loadedReferences[rowId]) {
       let refvalues;
-      if (this.referenceLineCheckers[key]) {
+      if (this.referenceLineCheckers[key].referenceValues) {
         refvalues =
           this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum;
       }
@@ -692,11 +717,11 @@ export default class DataTypeTableView extends Vue {
   }
 
   addVariableComponentToSortedList(variableComponentSorted, order) {
-    variableComponentSorted.order = variableComponentSorted.order == order ? null : order;
+    variableComponentSorted.order = variableComponentSorted.order === order ? null : order;
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
       (c) =>
-        c.variableComponentKey.variable != variableComponentSorted.variableComponentKey.variable ||
-        c.variableComponentKey.component != variableComponentSorted.variableComponentKey.component
+        c.variableComponentKey.variable !== variableComponentSorted.variableComponentKey.variable ||
+        c.variableComponentKey.component !== variableComponentSorted.variableComponentKey.component
     );
     if (variableComponentSorted.order) {
       this.params.variableComponentOrderBy.push(
@@ -707,7 +732,8 @@ export default class DataTypeTableView extends Vue {
   deleteTag(variable, component) {
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
       (c) =>
-        c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
+        c.variableComponentKey.variable !== variable ||
+        c.variableComponentKey.component !== component
     );
     this.params.variableComponentOrderBy.delete();
     document.getElementById(variable + component).remove();
@@ -718,13 +744,13 @@ export default class DataTypeTableView extends Vue {
     let icon = this.params.variableComponentOrderBy
       .filter(
         (c) =>
-          c.variableComponentKey.variable == variable &&
-          c.variableComponentKey.component == component
+          c.variableComponentKey.variable === variable &&
+          c.variableComponentKey.component === component
       )
       .map((vc) => {
-        if (vc.order == "ASC") {
+        if (vc.order === "ASC") {
           return "arrow-down";
-        } else if (vc.order == "DESC") {
+        } else if (vc.order === "DESC") {
           return "arrow-up";
         } else {
           return "";
@@ -739,7 +765,8 @@ export default class DataTypeTableView extends Vue {
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
       (c) =>
-        c.variableComponentKey.variable != variable || c.variableComponentKey.component != component
+        c.variableComponentKey.variable !== variable ||
+        c.variableComponentKey.component !== component
     );
     let search = null;
     if (value && value.length > 0) {
@@ -920,7 +947,10 @@ $row-variable-height: 60px;
 .row.variableComponent:hover {
   background-color: rgba(0, 163, 166, 0.2);
 }
-
+.button.is-dark.is-outlined.active {
+  background-color: $dark;
+  color: #dbdbdb;
+}
 .ASC .asc,
 .DESC .desc {
   background-color: $dark;
@@ -944,5 +974,8 @@ $row-variable-height: 60px;
 }
 .columns {
   margin: 0;
+}
+.icon.is-small {
+  font-size: 5rem;
 }
 </style>

@@ -39,7 +39,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                         "FROM (select id, application, name, comment, size, params from %s  " +
                         "WHERE application = :application::uuid\n" +
                         "and (params->>'published' )::bool\n" +
-                        "and params->'binaryfiledataset'->'requiredauthorizations'= :requiredAuthorizations::jsonb) t",
+                        "and params->'binaryfiledataset'->'requiredAuthorizations'= :requiredAuthorizations::jsonb) t",
                 getEntityClass().getName(), getTable().getSqlIdentifier()
         );
         Optional<BinaryFile> result = getNamedParameterJdbcTemplate().query(
@@ -109,7 +109,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         List<String> where = new LinkedList<>();
         if (Optional.ofNullable(binaryFileDataset).map(bfd -> bfd.getRequiredAuthorizations()).isPresent()) {
             for (Map.Entry<String, Ltree> entry : binaryFileDataset.getRequiredAuthorizations().entrySet()) {
-                String t = String.format("params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' @@ ('$ == \"'||:%1$s||'\"')::jsonpath", entry.getKey());
+                String t = String.format("coalesce(params #> '{\"binaryfiledataset\", \"requiredAuthorizations\", \"%1$s\"}', params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}') @@ ('$ == \"'||:%1$s||'\"')::jsonpath", entry.getKey());
                 mapSqlParameterSource.addValue(entry.getKey(), entry.getValue().getSql());
                 where.add(t);
             }

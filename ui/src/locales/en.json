@@ -22,7 +22,8 @@
         "data-types-page":"{applicationName} data types",
         "data-types-repository": "Management of data sets {applicationName}",
         "data-type-authorizations":"{dataType} authorizations",
-        "data-type-new-authorization":"New authorization for {dataType}"
+        "data-type-new-authorization":"New authorization for {dataType}",
+        "authorizations-management": "Authorizations management of applications"
     },
     "login":{
         "signin":"Sign in",
@@ -85,7 +86,8 @@
         "aria-pagination": "Pagination",
         "aria-curent-page": "Curent page",
         "aria-next-page": "Next page",
-        "aria-previous-page": "Previous page"
+        "aria-previous-page": "Previous page",
+        "authorizations": "Authorizations"
     },
     "applications":{
         "chose-config":"Chose a configuration",
@@ -201,6 +203,7 @@
         "timeVariableComponentKeyMissingComponent": "Mandatory indication of the component of : <code>{variable}</code> in which we collect the time period for which we need to attach the data for rights management of data type : <code>{dataType}</code>. <br>Accepted values : <code>{knownComponents}</code>",
         "timeVariableComponentKeyUnknownComponent": "<code>{component}</code> doesn't belong to any of known variables : <code>{variable}</code>. <br>Known components : <code>{knownComponents}</code>",
         "timerangeoutofinterval": "The date <code> {value} </code> is incompatible with the date range of the deposit. It must be between <code> {from} </code> and <code> {to} </code>. ",
+        "norightforpublish": "You do not have rights on the <code>{dataType}</code> data type of the <code>{application}</code> application to publish the values of the line <code >{lineNumber}</code>.",
         "tooBigRowLineForConstantDescription": "In the format->constant section of dataType <code>{dataType}</code> the row number must be less than the data row.",
         "tooLittleRowLineForConstantDescription": "In the format->constant section of dataType <code>{dataType}</code> the row number must be positive.",
         "unDeclaredValueForChart": "In the chart description of variable <code> {variable} </code> of data type <code> {dataType} </code>, the value is not declared.<br /> Expected values ​​<code>{components}</code>",
@@ -256,7 +259,9 @@
         "sorted": "The sorts used",
         "title-modal-numeric": "Choice of value range",
         "title-modal-date": "Choice of date range",
-        "manage-datasets": "Manage datasets"
+        "manage-datasets": "Manage datasets",
+        "accepted": "Accepted",
+        "refuse": "Refuse"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Drop a version on this dataset",
@@ -316,7 +321,9 @@
         "warnning-chil-not-null": "Limitations are in progress on children, they will be replaced.",
         "localization": "Localisation",
         "showMore": "Show more...",
-        "search": "Search..."
+        "search": "Search...",
+        "save" : "Save change",
+        "add-application-name": "Add an app"
     },
     "ponctuation": {
         "semicolon" : ";",
@@ -330,7 +337,7 @@
         "arrow-right": "->",
         "arrow-left": "<-",
         "slash": "/",
-        "regEx": ".*",
+        "regEx": "Regular expression option (.*) :",
         "star": "*"
     }
 }

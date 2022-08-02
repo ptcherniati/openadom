@@ -10,6 +10,9 @@ import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.persistence.OperationType;
+import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -32,6 +35,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestExecutionListeners;
@@ -39,10 +43,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.NestedServletException;
 
 import javax.servlet.http.Cookie;
@@ -54,9 +60,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItemInArray;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
@@ -85,17 +91,36 @@ public class OreSiResourcesTest {
 
     private Cookie authCookie;
 
-    private UUID userId;
+    private Cookie lambdaCookie;
+
+    private UUID authUserId;
     private CreateUserResult lambdaUser;
+
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Before
     public void createUser() throws Exception {
-        userId = authenticationService.createUser("poussin", "xxxxxxxx").getUserId();
         lambdaUser = authenticationService.createUser("lambda", "xxxxxxxx");
+        lambdaCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("lambda", "poussin")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        final CreateUserResult authUser = authenticationService.createUser("poussin", "xxxxxxxx");
+        authUserId = authUser.getUserId();
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "poussin")
                         .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        addRoleAdmin(authUser);
+    }
+
+    @Transactional
+    void addRoleAdmin(CreateUserResult dbUserResult) {
+        namedParameterJdbcTemplate.update("grant \"superadmin\" to \"" + dbUserResult.getUserId().toString() + "\"", Map.of());
     }
 
     @Test
@@ -103,21 +128,37 @@ public class OreSiResourcesTest {
     public void addApplicationMonsore() throws Exception {
         String appId;
 
+        final CreateUserResult monsoereUser = authenticationService.createUser("monsore", "xxxxxxxx");
+        UUID monsoreUserId = monsoereUser.getUserId();
+        Cookie monsoreCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "monsore")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
+        String withRigthsUserId = withRightsUserResult.getUserId().toString();
+        Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "withrigths")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+
         URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationResourceName());
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
 
             // on n'a pas le droit de creer de nouvelle application
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
+            final NotApplicationCreatorRightsException resolvedException = (NotApplicationCreatorRightsException) mockMvc.perform(multipart("/api/v1/applications/monsore")
                             .file(configuration)
-                            .cookie(authCookie))
-                    .andExpect(status().is4xxClientError());
-            authenticationService.addUserRightCreateApplication(userId);
+                            .cookie(monsoreCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
+            addUserRightCreateApplication(monsoreUserId, "monsore");
+            Assert.assertEquals("monsore", resolvedException.applicationName);
+            addUserRightCreateApplication(monsoreUserId, "monsore");
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                             .file(configuration)
                             .param("comment", "commentaire")
-                            .cookie(authCookie))
+                            .cookie(monsoreCookie))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                     .andReturn().getResponse().getContentAsString();
@@ -127,7 +168,7 @@ public class OreSiResourcesTest {
 
         String response = mockMvc.perform(get("/api/v1/applications/{appId}", appId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(authCookie))
+                        .cookie(monsoreCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 // id
@@ -148,7 +189,7 @@ public class OreSiResourcesTest {
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
                                 .file(refFile)
-                                .cookie(authCookie))
+                                .cookie(monsoreCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -158,13 +199,13 @@ public class OreSiResourcesTest {
         }
         mockMvc.perform(get("/api/v1/applications/{appId}", appId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(authCookie))
+                        .cookie(monsoreCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
 
         String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(authCookie))
+                        .cookie(monsoreCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
@@ -176,10 +217,19 @@ public class OreSiResourcesTest {
         resource = getClass().getResource(fixtures.getPemDataResourceName());
         try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-
+            // sans droit on ne peut pas
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
-                            .cookie(authCookie))
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(content().string("application inconnue 'monsore'"))
+                    .andReturn().getResponse().getContentAsString();
+            final String jsonRightsForMonsoere = getJsonRightsForMonsoere(monsoreCookie,withRigthsUserId, OperationType.publication.name());
+
+            //avec les droits on peut publier
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -193,7 +243,7 @@ public class OreSiResourcesTest {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", bytes);
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
-                            .cookie(authCookie))
+                            .cookie(monsoreCookie))
                     .andExpect(status().isBadRequest())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
@@ -203,26 +253,12 @@ public class OreSiResourcesTest {
 
         // list des types de data
         response = mockMvc.perform(get("/api/v1/applications/monsore/data")
-                        .cookie(authCookie))
+                        .cookie(monsoreCookie))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
         log.debug(StringUtils.abbreviate(response, 50));
 
-//        // creation d'un user qui aura le droit de lire les données
-//        OreSiUser reader = authRepository.createUser("UnReader", "xxxxxxxx");
-//        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
-//                appId, ApplicationRight.READER.name(), reader.getId().toString())
-////                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie))
-//                .andExpect(status().isOk());
-//
-//        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
-//                .param("login", "UnReader")
-//                .param("password", "xxxxxxxx"))
-//                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-
-        // restitution de data json
         {
             String expectedJson = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             JSONArray jsonArray = new JSONArray(expectedJson);
@@ -232,7 +268,7 @@ public class OreSiResourcesTest {
             }
 
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                            .cookie(authCookie)
+                            .cookie(monsoreCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.variables").isArray())
@@ -266,7 +302,7 @@ public class OreSiResourcesTest {
             String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
             Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                            .cookie(authCookie)
+                            .cookie(monsoreCookie)
                             .param("downloadDatasetQuery", filter)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -284,7 +320,7 @@ public class OreSiResourcesTest {
         {
             String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.csv")), Charsets.UTF_8);
             String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                            .cookie(authCookie)
+                            .cookie(monsoreCookie)
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     //     .andExpect(content().string(expectedCsv))
@@ -308,7 +344,7 @@ public class OreSiResourcesTest {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
-                            .cookie(authCookie))
+                            .cookie(monsoreCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
@@ -327,24 +363,29 @@ public class OreSiResourcesTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
         final String getSites = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getTypeSites = mockMvc.perform(get("/api/v1/applications/monsore/references/type_de_sites")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getProjet = mockMvc.perform(get("/api/v1/applications/monsore/references/projet")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getPem = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         final String getGrantable = mockMvc.perform(get("/api/v1/applications/monsore/dataType/pem/grantable")
-                        .cookie(authCookie)
+                        .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
@@ -428,7 +469,8 @@ public class OreSiResourcesTest {
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
     }
-    public  void registerFile(String filePath, String jsonContent) throws IOException {
+
+    public void registerFile(String filePath, String jsonContent) throws IOException {
         jsonContent = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonContent);
         File errorsFile = new File(filePath);
         log.debug(errorsFile.getAbsolutePath());
@@ -446,7 +488,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "monsore");
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")
                             .file(configuration)
@@ -474,30 +516,50 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
+        CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
+        String withRigthsUserId = withRightsUserResult.getUserId().toString();
+        Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", "withrigths")
+                        .param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         // ajout de data
         String projet = "manche";
         String plateforme = "plateforme";
         String site = "oir";
         resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
 
+
         // on dépose 3 fois le même fichier sans le publier
         try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
+
+
+            // sans droit dépôt impossible de déposer
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, false))
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(content().string("application inconnue 'monsore'"))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(response);
+
+            String createRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.depot.name(), "plateforme.oir.oir__p1", "1984,1,1", "1984,1,5");
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
             for (int i = 0; i < 3; i++) {
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                                 .file(refFile)
                                 .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, false))
-                                .cookie(authCookie))
+                                .cookie(withRigthsCookie))
                         .andExpect(status().is2xxSuccessful())
                         .andReturn().getResponse().getContentAsString();
+                log.debug(response);
             }
-            log.debug(response);
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                             .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
-                            .cookie(authCookie))
+                            .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$", Matchers.hasSize(3)))
@@ -516,13 +578,32 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
 
+            // on publie le dernier fichier déposé sans les droits
+
+            final Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+                            .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
+
+            Assert.assertTrue(exception instanceof SiOreIllegalArgumentException);
+            Assert.assertEquals("noRightForPublish", exception.getMessage());
+            Assert.assertEquals("pem", ((SiOreIllegalArgumentException) exception).getParams().get("dataType"));
+            Assert.assertEquals("monsore", ((SiOreIllegalArgumentException) exception).getParams().get("application"));
+
+
+            // on donne les droit publication
+
+
+            createRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.publication.name(), "plateforme.oir.oir__p1", "1984,1,1", "1984,1,6");
+
 
             // on publie le dernier fichier déposé
 
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
-                            .cookie(authCookie))
-                    // .andExpect(status().is2xxSuccessful())
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
 
@@ -530,7 +611,7 @@ public class OreSiResourcesTest {
 
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                             .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
-                            .cookie(authCookie))
+                            .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$", Matchers.hasSize(3)))
@@ -553,26 +634,38 @@ public class OreSiResourcesTest {
         }
         //on publie 4 fichiers
 
-        publishOrDepublish("manche", "plateforme", "scarff", 68, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme", "scarff", 34, true, 1, true);
-        publishOrDepublish("atlantique", "plateforme", "nivelle", 34, true, 1, true);
-        publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 1, true);
+        publishOrDepublish(authCookie, "manche", "plateforme", "scarff", 68, true, 1, true);
+        publishOrDepublish(authCookie, "atlantique", "plateforme", "scarff", 34, true, 1, true);
+        publishOrDepublish(authCookie, "atlantique", "plateforme", "nivelle", 34, true, 1, true);
+        publishOrDepublish(authCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
         //on publie une autre version
-        String fileUUID = publishOrDepublish("manche", "plateforme", "nivelle", 34, true, 2, true);
+        String fileUUID = publishOrDepublish(authCookie, "manche", "plateforme", "nivelle", 34, true, 2, true);
         // on supprime l'application publiée
         response = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/applications/monsore/file/" + fileUUID)
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
-        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 1, fileUUID, false);
+        try {
+            publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
+
+        } catch (SiOreIllegalArgumentException e) {
+            Assert.assertEquals("noRightOnTable", e.getMessage());
+            Assert.assertEquals("binaryfile", e.getParams().get("table"));
+        }
+        final String createRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.publication.name(), "plateforme.nivelle.nivelle__p1", "1984,1,1", "1984,1,6");
+
+        //les droit s de publication permettent aussi le dépôt
+        final String fileUUID2 = publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 2, true);
+
+        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 2, fileUUID2, true);
 
 
-        // on depublie le fichier oir déposé
+        // on depublie le fichier oir déposé (les droits publication valent dépublication
 
         response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                         .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false))
-                        .cookie(authCookie))
+                        .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
@@ -581,7 +674,7 @@ public class OreSiResourcesTest {
 
         response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                         .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
-                        .cookie(authCookie))
+                        .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$", Matchers.hasSize(3)))
@@ -590,20 +683,111 @@ public class OreSiResourcesTest {
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
 
-        // on récupère le data en base
+        // on récupère le data en base si j'ai les droits de publication je peux aussi lire les données avec ces droits
+
+        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .cookie(withRigthsCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.nivelle.nivelle__p1\")].chemin", Matchers.hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.oir.oir__p1\")].chemin", Matchers.hasSize(34)))
+                .andExpect(jsonPath("$.totalRows").value(68))
+                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
+                .andReturn().getResponse().getContentAsString();
 
         response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.totalRows").value(102))
-                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(102)))
+                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.scarff.scarff__p1\")].chemin", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.scarff.scarff__p1\")].chemin", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.nivelle.nivelle__p1\")].chemin", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.oir.oir__p1\")].chemin", Matchers.hasSize(34)))
+                .andExpect(jsonPath("$.totalRows").value(170))
+                .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(170)))
                 .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
-        // on supprime le fic
+        // on supprime le fichier a les droits car à les droits de publication
+        mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
+                        .cookie(withRigthsCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().string(fileUUID2));
+
     }
 
-    private String publishOrDepublish(String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
+    private String getJsonRightsforMonSoererepository(String withRigthsUserId, String role, String localization, String from, String to) throws Exception {
+        final String json = String.format("{\n" +
+                "   \"usersId\":[\"" + withRigthsUserId + "\"],\n" +
+                "   \"applicationNameOrId\":\"monsore\",\n" +
+                "   \"id\": null,\n" +
+                "   \"name\": \"une authorization sur monsore\",\n" +
+                "   \"dataType\":\"pem\",\n" +
+                "   \"authorizations\":{\n" +
+                "   \"%1$s\":[\n" +
+                "      {\n" +
+                "         \"requiredAuthorizations\":{\n" +
+                "            \"projet\":\"projet_manche\",\n" +
+                "            \"localization\":\"%2$s\"\n" +
+                "         },\n" +
+                "         \"datagroups\":[\n" +
+                "            \"all\"\n" +
+                "         ],\n" +
+                "         \"intervalDates\":{\n" +
+                "            \"fromDay\":[%3$s],\n" +
+                "            \"toDay\":[%4$s]\n" +
+                "         }\n" +
+                "      }\n" +
+                "   ]\n" +
+                "}\n" +
+                "}", role, localization, from, to);
+        final MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/dataType/pem/authorization")
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie)
+                .content(json);
+        return mockMvc.perform(createRight)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+    }
+
+
+    private String getJsonRightsForMonsoere(Cookie cookie, String withRigthsUserId, String role) throws Exception {
+        final String json = String.format("{\n" +
+                "   \"usersId\":[\"" + withRigthsUserId + "\"],\n" +
+                "   \"applicationNameOrId\":\"monsore\",\n" +
+                "   \"id\": null,\n" +
+                "   \"name\": \"une authorization sur monsore\",\n" +
+                "   \"dataType\":\"pem\",\n" +
+                "   \"authorizations\":{\n" +
+                "   \"%1$s\":[\n" +
+                "       {" +
+                "        \"dataGroups\": [],\n" +
+                "        \"requiredAuthorizations\": {\n" +
+                "          \"projet\": \"projet_atlantique\"\n" +
+                "        },\n" +
+                "        \"fromDay\": null,\n" +
+                "        \"toDay\": null\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"dataGroups\": [],\n" +
+                "        \"requiredAuthorizations\": {\n" +
+                "          \"projet\": \"projet_manche\"\n" +
+                "        },\n" +
+                "        \"fromDay\": null,\n" +
+                "        \"toDay\": null\n" +
+                "      }" +
+                "   ]\n" +
+                "}\n" +
+                "}", role);
+        final MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/dataType/pem/authorization")
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(cookie)
+                .content(json);
+        return mockMvc.perform(createRight)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+    }
+
+    private String publishOrDepublish(Cookie cookie, String projet, String plateforme, String site, int expected, boolean toPublish, int numberOfVersions, boolean published) throws Exception {
         URL resource;
         String response;
         resource = getClass().getResource(fixtures.getPemRepositoryDataResourceName(projet, site));
@@ -612,18 +796,18 @@ public class OreSiResourcesTest {
             //dépôt et publication d'un fichier projet site__p1
             MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
             refFile.transferTo(Path.of("/tmp/pem.csv"));
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            final MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
                             .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, toPublish))
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            String fileUUID = JsonPath.parse(response).read("$.fileId");
-
-            //liste des fichiers projet/site
-            testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
-            log.debug(StringUtils.abbreviate(response, 50));
-            return fileUUID;
+                            .cookie(cookie))
+                    .andReturn();
+            if (mockResponse.getResponse().getStatus() >= 200 && mockResponse.getResponse().getStatus() < 300) {
+                String fileUUID = JsonPath.parse(mockResponse.getResponse().getContentAsString()).read("$.fileId");
+                testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
+                log.debug(StringUtils.abbreviate(mockResponse.getResponse().getContentAsString(), 50));
+                return fileUUID;
+            }
+            throw mockResponse.getResolvedException();
         }
     }
 
@@ -635,12 +819,12 @@ public class OreSiResourcesTest {
      */
     @Test
     public void testProgressiveYamlWithoutAuthorization() throws Exception {
-
+        String authorizationId;
         URL resource = getClass().getResource(fixtures.getProgressiveYaml().get("yamlWithoutAuthorization"));
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "progressive");
 
             String result = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
@@ -652,7 +836,7 @@ public class OreSiResourcesTest {
         progressiveYamlAddData();
 
         String lambdaUserId = lambdaUser.getUserId().toString();
-        Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+        Cookie readerCookies = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
@@ -660,14 +844,14 @@ public class OreSiResourcesTest {
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
-                    .cookie(authReaderCookie)
+                    .cookie(readerCookies)
             ).andReturn().getResponse().getContentAsString();
             Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("progressive"));
         }
 
         {
             mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite")
-                            .cookie(authReaderCookie)
+                            .cookie(readerCookies)
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().is4xxClientError());
         }
@@ -704,31 +888,59 @@ public class OreSiResourcesTest {
                     "}\n" +
                     "}";
 
+            // L'utilisateur sans droit ne peut voir les applications
+            String response = mockMvc.perform(get("/api/v1/applications")
+                            .cookie(readerCookies)
+                    )
+                    .andExpect(jsonPath("$[*].name", Matchers.hasSize(0)))
+                    .andReturn().getResponse().getContentAsString();
+
+
             MockHttpServletRequestBuilder create = post("/api/v1/applications/progressive/dataType/date_de_visite/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
-            String response = mockMvc.perform(create)
+            response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
+            authorizationId = JsonPath.parse(response).read("$.authorizationId", String.class);
             log.debug(StringUtils.abbreviate(response, 50));
         }
 
         {
+            // Une fois l'accès donné, on doit pouvoir avec l'application dans la liste"
             String response = mockMvc.perform(get("/api/v1/applications")
-                    .cookie(authReaderCookie)
-            ).andReturn().getResponse().getContentAsString();
-            Assert.assertTrue("Une fois l'accès donné, on doit pouvoir avec l'application dans la liste", response.contains("progressive"));
+                            .cookie(readerCookies)
+                    )
+                    .andExpect(jsonPath("$[*].name", Matchers.hasSize(1)))
+                    .andExpect(jsonPath("$[*].name", Matchers.contains("progressive")))
+                    .andReturn().getResponse().getContentAsString();
         }
 
         {
             String json = mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite")
-                            .cookie(authReaderCookie)
+                            .cookie(readerCookies)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.rows[*].values.relevant.numero").value(hasItemInArray(equalTo("125")), String[].class))
                     .andReturn().getResponse().getContentAsString();
         }
+        MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/dataType/date_de_visite/authorization/%s", authorizationId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .cookie(authCookie);
+        mockMvc.perform(delete)
+                .andExpect(status().is2xxSuccessful())
+                .andReturn().getResponse().getContentAsString();
+        // L'utilisateur sans droit ne peut voir les applications
+
+        //TODO
+
+            /*String response = mockMvc.perform(get("/api/v1/applications")
+                            .cookie(readerCookies)
+                    )
+                    .andExpect(jsonPath("$[*].name", Matchers.hasSize(0)))
+                    .andReturn().getResponse().getContentAsString();*/
+
 
     }
 
@@ -739,7 +951,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "progressive");
 
             String result = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
@@ -765,7 +977,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "progressive");
 
             BadApplicationConfigurationException exception = (BadApplicationConfigurationException) mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
@@ -791,7 +1003,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "progressive");
 
             final ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
@@ -810,7 +1022,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "progressive");
 
             final ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
@@ -834,7 +1046,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "progressive");
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/progressive")
                             .file(configuration)
@@ -889,7 +1101,7 @@ public class OreSiResourcesTest {
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
-            authenticationService.addUserRightCreateApplication(userId);
+            addUserRightCreateApplication(authUserId, "recursivite");
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite")
                             .file(configuration)
@@ -905,9 +1117,9 @@ public class OreSiResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))
-                   .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
-                   .andExpect(jsonPath("$.internationalization.references.taxon.internationalizedDynamicColumns['propriétés de taxons'].en", IsEqual.equalTo("Properties of Taxa")))
-                     .andReturn().getResponse().getContentAsString();
+                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
+                    .andExpect(jsonPath("$.internationalization.references.taxon.internationalizedDynamicColumns['propriétés de taxons'].en", IsEqual.equalTo("Properties of Taxa")))
+                    .andReturn().getResponse().getContentAsString();
 
         }
 
@@ -981,8 +1193,7 @@ public class OreSiResourcesTest {
     @Test
     @Category(ACBB_TEST.class)
     public void addApplicationAcbb() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
-
+        addUserRightCreateApplication(authUserId, "acbb");
         URL resource = getClass().getResource(fixtures.getAcbbApplicationConfigurationResourceName());
         assert resource != null;
         try (InputStream in = resource.openStream()) {
@@ -1002,6 +1213,18 @@ public class OreSiResourcesTest {
         addDataFluxTours();
         addDataBiomassProduction();
         addDataSWC();
+    }
+
+    private void addUserRightCreateApplication(UUID userId, String pattern) throws Exception {
+        ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                        .param("userIdOrLogin", userId.toString())
+                        .param("applicationPattern", pattern)
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
+                .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
+                .andExpect(jsonPath("$.authorizations", Matchers.hasItem(pattern)))
+                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
     }
 
     private void addDataSWC() throws Exception {
@@ -1159,7 +1382,7 @@ public class OreSiResourcesTest {
     @Test
     @Category(HAUTE_FREQUENCE_TEST.class)
     public void addApplicationHauteFrequence() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
+        addUserRightCreateApplication(authUserId, "hautefrequence");
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getHauteFrequenceApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/hautefrequence")
@@ -1192,7 +1415,7 @@ public class OreSiResourcesTest {
     @Test
     @Category(OTHERS_TEST.class)
     public void addDuplicatedTest() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
+        addUserRightCreateApplication(authUserId, "duplicated");
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getDuplicatedApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "duplicated.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/duplicated")
@@ -1447,7 +1670,7 @@ on test le dépôt d'un fichier récursif
     @Test
     @Category(OTHERS_TEST.class)
     public void addApplicationOLAC() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
+        addUserRightCreateApplication(authUserId, "olac");
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getOlaApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/olac")
@@ -1535,7 +1758,7 @@ on test le dépôt d'un fichier récursif
     @Test
     @Category(OTHERS_TEST.class)
     public void addApplicationFORET_essai() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
+        addUserRightCreateApplication(authUserId, "foret");
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetEssaiApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "foret_essai.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")
@@ -1567,7 +1790,7 @@ on test le dépôt d'un fichier récursif
 
                 if (entry.getKey().equals("swc_j")) {
                     authenticationService.setRoleAdmin();
-                    final String responseForBuildSynthesis = mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                    final String responseForBuildSynthesis = mockMvc.perform(put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
                                     .cookie(authCookie))
                             .andExpect(jsonPath("$.SWC", Matchers.hasSize(8)))
                             .andReturn().getResponse().getContentAsString();
@@ -1584,7 +1807,7 @@ on test le dépôt d'un fichier récursif
     @Test
     @Category(OTHERS_TEST.class)
     public void addApplicationFORET() throws Exception {
-        authenticationService.addUserRightCreateApplication(userId);
+        addUserRightCreateApplication(authUserId, "foret");
         try (InputStream configurationFile = fixtures.getClass().getResourceAsStream(fixtures.getForetApplicationConfigurationResourceName())) {
             MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
             mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/foret")

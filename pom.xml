@@ -331,6 +331,7 @@
                                 <include>fr/inra/oresing/rest/Migration.java</include>
                                 <include>fr/inra/oresing/rest/MultiYaml.java</include>
                                 <include>fr/inra/oresing/rest/RelationalService.java</include>
+                                <include>fr/inra/oresing/rest/TestReferencesErrors.java</include>
                             </includes>
                         </configuration>
                     </plugin>

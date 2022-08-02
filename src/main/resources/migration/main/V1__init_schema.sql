@@ -2,7 +2,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "ltree";
 
 CREATE OR REPLACE FUNCTION fk_check(targetTable TEXT, uid UUID)
-RETURNS BOOLEAN AS $$
+    RETURNS BOOLEAN AS
+$$
 DECLARE
     result TEXT;
 BEGIN
@@ -21,10 +22,11 @@ CREATE OR REPLACE FUNCTION public.jsonb_count_items(IN json jsonb)
     VOLATILE
     PARALLEL UNSAFE
     COST 100
-
-AS $BODY$
-with elements as (select json->jsonb_object_keys(json) element)
-select sum(jsonb_array_length(element)) from elements
+AS
+$BODY$
+with elements as (select json -> jsonb_object_keys(json) element)
+select sum(jsonb_array_length(element))
+from elements
 $BODY$;
 
 /*-- check les foreign key pour le colonne references de la table data
@@ -41,23 +43,26 @@ $$ language 'plpgsql';*/
 
 --check if all elements of oreSiUser array are users
 CREATE OR REPLACE FUNCTION checks_users(users uuid[])
-    RETURNS BOOLEAN AS $$
+    RETURNS BOOLEAN AS
+$$
 DECLARE
     checked BOOLEAN;
 BEGIN
     select users <@ array_agg(id)::uuid[] into checked from OreSiUser OSU group by users;
     return checked;
 END;
-$$  LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 
 CREATE OR REPLACE FUNCTION name_check(application UUID, targetColumn TEXT, val TEXT)
-RETURNS BOOLEAN AS $$
+    RETURNS BOOLEAN AS
+$$
 DECLARE
     result TEXT;
 BEGIN
-    EXECUTE format('select count(id) > 0 from Application where id=$1 AND $2 = ANY (%s);', targetColumn) INTO result USING application, val;
+    EXECUTE format('select count(id) > 0 from Application where id=$1 AND $2 = ANY (%s);',
+                   targetColumn) INTO result USING application, val;
     RETURN result;
 END;
 $$ language 'plpgsql';
@@ -67,24 +72,29 @@ create domain EntityRef as uuid NOT NULL;
 create domain ListEntityRef as uuid[] NOT NULL;
 create domain DateOrNow as timestamp DEFAULT current_timestamp;
 
-create table OreSiUser (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    login Text UNIQUE NOT NULL,
-    password text NOT NULL
+create table OreSiUser
+(
+    id             EntityId PRIMARY KEY,
+    creationDate   DateOrNow,
+    updateDate     DateOrNow,
+    login          Text UNIQUE NOT NULL,
+    password       text        NOT NULL,-- can be null
+    authorizations TEXT[] default '{}'
 );
+GRANT SELECT on OreSiUser to public;
 
-create table Application (
-    id EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate DateOrNow,
-    name Text,
-    comment TEXT NOT NULL,
+create table Application
+(
+    id            EntityId PRIMARY KEY,
+    creator       name default current_user,
+    creationDate  DateOrNow,
+    updateDate    DateOrNow,
+    name          Text,
+    comment       TEXT NOT NULL,
     referenceType TEXT[], -- liste des types de references existantes
-    dataType TEXT[],      -- liste des types de data existants
+    dataType      TEXT[], -- liste des types de data existants
     configuration jsonb,  -- le fichier de configuration sous forme json
-    configFile uuid CHECK(fk_check(name || '.BinaryFile', configFile))-- can be null
+    configFile    uuid CHECK (fk_check(name || '.BinaryFile', configFile))
 );
 
 CREATE INDEX application_referenceType_gin_idx ON application USING gin (referenceType);
@@ -102,41 +112,46 @@ CREATE ROLE "applicationCreator";
 
 GRANT INSERT, UPDATE ON Application TO "applicationCreator";
 
-GRANT SELECT, UPDATE, DELETE, REFERENCES ON Application TO public;
+GRANT SELECT  ON Application  TO public ;
 
-ALTER TABLE Application ENABLE ROW LEVEL SECURITY;
+GRANT SELECT , UPDATE , DELETE ON OreSiUser TO "superadmin", "applicationCreator";
 
-CREATE POLICY "applicationCreator_Application_insert" ON Application AS PERMISSIVE
-            FOR INSERT TO "applicationCreator"
-            WITH CHECK ( true );
+GRANT SELECT, UPDATE, DELETE, REFERENCES ON Application TO "applicationCreator",superadmin;
 
-CREATE POLICY "applicationCreator_Application_select" ON Application AS PERMISSIVE
-            FOR SELECT TO "applicationCreator"
-            USING ( true );
+ALTER TABLE Application
+    ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "superadmin_Application_insert"
+    ON Application AS PERMISSIVE
+    TO superadmin
+    using (true)
+    with check (true);
+
 
 CREATE AGGREGATE jsonb_object_agg(jsonb) (SFUNC = 'jsonb_concat', STYPE = jsonb, INITCOND = '{}');
 CREATE AGGREGATE aggregate_by_array_concatenation(anyarray) (SFUNC = 'array_cat', STYPE = anyarray, INITCOND = '{}');
 
-create type COMPOSITE_DATE as (
-  datetimestamp           "timestamp",
-  formattedDate           "varchar"
-) ;
+create type COMPOSITE_DATE as
+(
+    datetimestamp "timestamp",
+    formattedDate "varchar"
+);
 CREATE FUNCTION castTextToCompositeDate(Text) RETURNS COMPOSITE_DATE AS
- 'select
-        (substring($1 from 6 for 19)::timestamp,
+'select (substring($1 from 6 for 19)::timestamp,
          substring($1 from 26))::COMPOSITE_DATE;'
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;
 CREATE CAST (TEXT AS COMPOSITE_DATE) WITH FUNCTION castTextToCompositeDate(Text) AS ASSIGNMENT;
 CREATE FUNCTION castCompositeDateToTimestamp(COMPOSITE_DATE) RETURNS TIMESTAMP
-AS 'select ($1).datetimestamp;'
+AS
+'select ($1).datetimestamp;'
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;
 CREATE CAST (COMPOSITE_DATE AS TIMESTAMP) WITH FUNCTION castCompositeDateToTimestamp(COMPOSITE_DATE) AS ASSIGNMENT;
 CREATE FUNCTION castCompositeDateToFormattedDate(COMPOSITE_DATE) RETURNS Text
-AS 'select ($1).formattedDate;'
+AS
+'select ($1).formattedDate;'
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;

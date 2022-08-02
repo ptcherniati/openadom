@@ -1,47 +1,3 @@
-create table BinaryFile
-(
-    id           EntityId PRIMARY KEY,
-    creationDate DateOrNow,
-    updateDate   DateOrNow,
-    application  EntityRef REFERENCES Application (id),
-    name         Text,
-    comment      TEXT NOT NULL,
-    size         INT,
-    data         bytea,
-    params       jsonb
-);
-CREATE INDEX binary_file_params_index ON BinaryFile USING gin (params);
-
-create table ReferenceValue
-(
-    id                    EntityId PRIMARY KEY,
-    creationDate          DateOrNow,
-    updateDate            DateOrNow,
-    application           EntityRef REFERENCES Application (id),
-    referenceType         TEXT CHECK (name_check(application, 'referenceType', referenceType)),
-    hierarchicalKey       ltree NOT NULL,
-    hierarchicalReference ltree NOT NULL,
-    naturalKey            ltree NOT NULL,
-    refsLinkedTo          jsonb ,
-    refValues             jsonb,
-    binaryFile            EntityRef REFERENCES BinaryFile (id),
-
-    CONSTRAINT "hierarchicalKey_uniqueness" UNIQUE (application, referenceType, hierarchicalKey)
-);
-create table Reference_Reference
-(
-    referenceId entityid REFERENCES ReferenceValue(id) ON DELETE CASCADE,
-    referencesBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT "Reference_Reference_PK" PRIMARY KEY (referenceId, referencesBy)
-);
-
-CREATE INDEX ref_refslinkedto_index ON ReferenceValue USING gin (refsLinkedTo);
-CREATE INDEX ref_refvalues_index ON ReferenceValue USING gin (refValues);
-
-
---CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
-CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
-
 CREATE TYPE ${applicationSchema}.requiredAuthorizations AS
 (
     ${requiredAuthorizations}
@@ -49,9 +5,30 @@ CREATE TYPE ${applicationSchema}.requiredAuthorizations AS
 CREATE TYPE ${applicationSchema}."authorization" AS
 (
     requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
-    datagroups              text[],
+    datagroups             text[],
     timescope              tsrange
 );
+
+CREATE OR REPLACE FUNCTION ${applicationSchema}.getAuthorization(params jsonb)
+    RETURNS ${applicationSchema}.authorization AS
+$$
+DECLARE
+    requiredAuthorizations TEXT;
+    result                 TEXT;
+    dates                  tsrange;
+BEGIN
+    select string_agg(value::text, ',')
+    into requiredAuthorizations
+    from jsonb_each(coalesce(params #> '{binaryfiledataset,requiredauthorizations}',params #> '{binaryfiledataset,requiredAuthorizations}'));
+    select tsrange(COALESCE(params #>> '{binaryfiledataset,from}', '-infinity')::date,
+                   COALESCE(params #>> '{binaryfiledataset,to}', '-infinity')::date)
+    into dates;
+    select ('("(' || requiredAuthorizations || ')",,"' || dates || '")') into result;
+    return case
+               when result is null then '(,,)'::${applicationSchema}."authorization"
+               else result::${applicationSchema}.authorization end;
+END;
+$$ language 'plpgsql' IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION ${applicationSchema}.isAuthorized("authorization" ${applicationSchema}."authorization",
                                                              "authorizedArray" ${applicationSchema}."authorization"[])
@@ -79,6 +56,51 @@ CREATE OPERATOR public.@> (
     FUNCTION = ${applicationSchema}.isAuthorized
     );
 
+create table BinaryFile
+(
+    id              EntityId PRIMARY KEY,
+    creationDate    DateOrNow,
+    updateDate      DateOrNow,
+    application     EntityRef REFERENCES Application (id),
+    name            Text,
+    comment         TEXT NOT NULL,
+    size            INT,
+    data            bytea,
+    params          jsonb,
+    "authorization" ${applicationSchema}."authorization" GENERATED ALWAYS AS (${applicationSchema}.getauthorization(params)) STORED
+);
+CREATE INDEX binary_file_params_index ON BinaryFile USING gin (params);
+
+create table ReferenceValue
+(
+    id                    EntityId PRIMARY KEY,
+    creationDate          DateOrNow,
+    updateDate            DateOrNow,
+    application           EntityRef REFERENCES Application (id),
+    referenceType         TEXT CHECK (name_check(application, 'referenceType', referenceType)),
+    hierarchicalKey       ltree NOT NULL,
+    hierarchicalReference ltree NOT NULL,
+    naturalKey            ltree NOT NULL,
+    refsLinkedTo          jsonb,
+    refValues             jsonb,
+    binaryFile            EntityRef REFERENCES BinaryFile (id),
+
+    CONSTRAINT "hierarchicalKey_uniqueness" UNIQUE (application, referenceType, hierarchicalKey)
+);
+create table Reference_Reference
+(
+    referenceId  entityid REFERENCES ReferenceValue (id) ON DELETE CASCADE,
+    referencesBy entityid REFERENCES ReferenceValue (id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT "Reference_Reference_PK" PRIMARY KEY (referenceId, referencesBy)
+);
+
+CREATE INDEX ref_refslinkedto_index ON ReferenceValue USING gin (refsLinkedTo);
+CREATE INDEX ref_refvalues_index ON ReferenceValue USING gin (refValues);
+
+
+--CREATE INDEX referenceType_columnDataMapping_hash_idx ON ReferenceValue USING HASH (columnDataMapping);
+CREATE INDEX referenceType_refValue_gin_idx ON ReferenceValue USING gin (refValues);
+
 create table Data
 (
     id              EntityId PRIMARY KEY,
@@ -87,10 +109,10 @@ create table Data
     application     EntityRef REFERENCES Application (id),
     dataType        TEXT
         constraint name_check CHECK (name_check(application, 'dataType', dataType)),
-    rowId           TEXT                                                             NOT NULL,
+    rowId           TEXT                                                              NOT NULL,
     datagroup       TEXT GENERATED ALWAYS AS (("authorization").datagroups[1]) STORED NOT NULL,
-    "authorization" ${applicationSchema}.authorization    NOT NULL check (("authorization").datagroups[1] is not null),
-    refsLinkedTo    jsonb ,
+    "authorization" ${applicationSchema}.authorization                                NOT NULL check (("authorization").datagroups[1] is not null),
+    refsLinkedTo    jsonb,
     uniqueness      jsonb,
     dataValues      jsonb,
     binaryFile      EntityRef REFERENCES BinaryFile (id),
@@ -99,8 +121,8 @@ create table Data
 
 create table Data_Reference
 (
-    dataId entityid REFERENCES Data(id) ON DELETE CASCADE,
-    referencesBy entityid REFERENCES ReferenceValue(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+    dataId       entityid REFERENCES Data (id) ON DELETE CASCADE,
+    referencesBy entityid REFERENCES ReferenceValue (id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
     CONSTRAINT "Data_Reference_PK" PRIMARY KEY (dataId, referencesBy)
 );
 
@@ -124,18 +146,18 @@ CREATE TABLE OreSiAuthorization
 
 CREATE TABLE oresisynthesis
 (
-    id entityid NOT NULL,
-    updatedate dateornow,
-    application entityref,
-    datatype text COLLATE pg_catalog."default",
-    variable text COLLATE pg_catalog."default",
+    id                     entityid NOT NULL,
+    updatedate             dateornow,
+    application            entityref,
+    datatype               text COLLATE pg_catalog."default",
+    variable               text COLLATE pg_catalog."default",
     requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
-    aggregation text COLLATE pg_catalog."default",
-    ranges tsrange[],
+    aggregation            text COLLATE pg_catalog."default",
+    ranges                 tsrange[],
     CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id),
     CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredAuthorizations, aggregation)
 );
-CREATE INDEX by_datatype_index ON oresisynthesis(application, aggregation,  datatype);
+CREATE INDEX by_datatype_index ON oresisynthesis (application, aggregation, datatype);
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);
 
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
@@ -155,7 +177,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiAuthorization TO public
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiSynthesis TO public;
 
 
---ALTER TABLE BinaryFile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE BinaryFile
+    ENABLE ROW LEVEL SECURITY;
 --ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Data
     ENABLE ROW LEVEL SECURITY;

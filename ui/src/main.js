@@ -5,73 +5,88 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
-  faCircle,
-  faCheck,
-  faCheckCircle,
-  faQuestionCircle,
-  faSquare,
-  faMinusSquare,
-  faCheckSquare,
   faAngleLeft,
   faAngleRight,
-  faFilter,
-  faPenSquare,
-  faSearch,
-  faSearchPlus,
+  faArchive,
   faArrowDown,
+  faArrowLeft,
   faArrowUp,
+  faCalendar,
+  faCalendarDay,
   faCaretDown,
+  faCaretRight,
   faCaretUp,
+  faCheck,
+  faCheckCircle,
+  faCheckSquare,
+  faChevronDown,
+  faChevronUp,
+  faCircle,
   faDownload,
   faDraftingCompass,
+  faEdit,
   faExclamationCircle,
+  faExternalLinkSquareAlt,
   faEye,
   faEyeSlash,
+  faFile,
+  faFilter,
   faGlobe,
+  faInfo,
+  faKey,
+  faMinusSquare,
+  faPaperPlane,
+  faPenSquare,
   faPlus,
   faPoll,
+  faQuestion,
+  faQuestionCircle,
+  faRedo,
+  faSearch,
+  faSearchPlus,
+  faSignInAlt,
   faSignOutAlt,
+  faSortAmountDown,
+  faSortDown,
+  faSortUp,
+  faSquare,
+  faStream,
   faTimes,
+  faTimesCircle,
   faTrashAlt,
   faUpload,
-  faWrench,
-  faVial,
-  faCaretRight,
-  faArrowLeft,
-  faSignInAlt,
-  faUserPlus,
   faUserAstronaut,
-  faKey,
-  faChevronUp,
-  faChevronDown,
-  faCalendarDay,
-  faPaperPlane,
-  faExternalLinkSquareAlt,
-  faCalendar,
-  faRedo,
-  faStream,
-  faSortAmountDown,
-  faSortUp,
-  faSortDown,
-  faArchive,
-  faTimesCircle,
-  faEdit,
-  faInfo,
-  faQuestion,
+  faUserPlus,
+  faVial,
+  faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 import {
-  faCalendarDays as farCalendarDays,
   faCalendar as farCalendar,
-  faSquare as farSquare,
-  faMinusSquare as farMinusSquare,
+  faCalendarDays as farCalendarDays,
   faCheckSquare as farCheckSquare,
+  faFloppyDisk as farFloppyDisk,
+  faMinusSquare as farMinusSquare,
+  faSquare as farSquare,
 } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-library.add(farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare);
+import "@/style/global.scss";
+
+// Translation
+import { UserPreferencesService } from "./services/UserPreferencesService";
+import VueI18n from "vue-i18n";
+import i18n_en from "@/locales/en.json";
+import i18n_fr from "@/locales/fr.json";
+// Validation
+import "vee-validate";
+import { confirmed, required } from "vee-validate/dist/rules";
+import { extend } from "vee-validate";
+
+library.add(farFloppyDisk, farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare);
 library.add(
   faCircle,
   faEye,
   faEyeSlash,
+  faFile,
   faPlus,
   faExclamationCircle,
   faQuestionCircle,
@@ -126,14 +141,6 @@ library.add(
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 
-import "@/style/global.scss";
-
-// Translation
-import { UserPreferencesService } from "./services/UserPreferencesService";
-import VueI18n from "vue-i18n";
-import i18n_en from "@/locales/en.json";
-import i18n_fr from "@/locales/fr.json";
-
 Vue.use(VueI18n);
 const userPreferencesService = UserPreferencesService.INSTANCE;
 export const i18n = new VueI18n({
@@ -144,10 +151,6 @@ export const i18n = new VueI18n({
   },
 });
 
-// Validation
-import "vee-validate";
-import { confirmed, required } from "vee-validate/dist/rules";
-import { extend } from "vee-validate";
 // Ici on surcharge les messages d'erreur de vee-validate.
 // Pour plus de règles :  https://logaretm.github.io/vee-validate/guide/rules.html
 

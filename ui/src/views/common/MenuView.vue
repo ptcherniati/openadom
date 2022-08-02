@@ -63,6 +63,26 @@
               <b-icon icon="sign-out-alt" />
               {{ $t("menu.logout") }}
             </b-dropdown-item>
+            <b-dropdown-item
+              v-if="currentUser.superadmin"
+              @click="showApplicationRightManagement()"
+              @keypress.enter="showApplicationRightManagement()"
+              tabindex="0"
+              aria-role="menuitem"
+            >
+              <b-icon icon="wrench" />
+              {{ $t("menu.authorizations") }}
+            </b-dropdown-item>
+            <b-dropdown-item
+              v-if="!currentUser.superadmin && currentUser.authorizedForApplicationCreation"
+              @click="showApplicationRightManagementForApplicationCreator()"
+              @keypress.enter="showApplicationRightManagementForApplicationCreator()"
+              tabindex="0"
+              aria-role="menuitem"
+            >
+              <b-icon icon="wrench" />
+              {{ $t("menu.authorizations") }}
+            </b-dropdown-item>
           </b-dropdown>
         </b-navbar-item>
       </template>
@@ -104,6 +124,14 @@ export default class MenuView extends Vue {
 
   logout() {
     this.loginService.logout();
+  }
+
+  showApplicationRightManagement() {
+    this.$router.push("/authorizationsManagement");
+  }
+
+  showApplicationRightManagementForApplicationCreator() {
+    this.$router.push("/authorizationsManagementForApplicationCreator");
   }
 
   setUserPrefLocale() {

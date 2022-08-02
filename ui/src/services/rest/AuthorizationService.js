@@ -8,9 +8,11 @@ export class AuthorizationService extends Fetcher {
   }
 
   async getAuthorizations(applicationName, dataTypeId, authorizationId) {
-    return this.get(
-      `applications/${applicationName}/dataType/${dataTypeId}/authorization/${authorizationId}`
-    );
+    return applicationName
+      ? this.get(
+          `applications/${applicationName}/dataType/${dataTypeId}/authorization/${authorizationId}`
+        )
+      : this.get("authorization");
   }
 
   async getDataAuthorizations(applicationName, dataTypeId) {
@@ -27,6 +29,14 @@ export class AuthorizationService extends Fetcher {
       authorizationModel,
       false
     );
+  }
+
+  async createAuthorizedRole(roleName, userIdOrLogin, applicationPattern) {
+    return this.put(`/authorization/${roleName}`, { applicationPattern, userIdOrLogin });
+  }
+
+  async revokeAuthorizedRole(roleName, userIdOrLogin, applicationPattern) {
+    return this.delete(`authorization/${roleName}`, { applicationPattern, userIdOrLogin });
   }
 
   async revokeAuthorization(applicationName, dataTypeId, authorizationId) {
