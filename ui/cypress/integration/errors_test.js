@@ -102,7 +102,7 @@ describe('test create application', () => {
                 }
             }).as('postUserResponse')
         cy.get('.buttons button').contains(" Se connecter ").click()
-        cy.get('.toast >div').contains("L'interval est borné avec la valeur { : les valeurs acceptées sont [,(")
+        cy.get('.toast >div').contains("L'intervalle est borné avec la valeur { : les valeurs acceptées sont [,(")
 
     });
     it('Test badBoundsForInterval', () => {
@@ -124,7 +124,7 @@ describe('test create application', () => {
                 }
             }).as('postUserResponse')
         cy.get('.buttons button').contains(" Se connecter ").click()
-        cy.get('.toast >div').contains("L'intervale lowerBound,upperBound est borné avec la valeur upperBound: les valeurs acceptées sont [,(")
+        cy.get('.toast >div').contains("L'intervalle lowerBound,upperBound est borné avec la valeur upperBound: les valeurs acceptées sont [,(")
 
     });
     it('Test badGroovyExpressionChecker', () => {
@@ -229,7 +229,8 @@ describe('test create application', () => {
                 }
             }).as('postUserResponse')
         cy.get('.buttons button').contains(" Se connecter ").click()
-        cy.get('.toast >div').contains("Une erreur dans une requête sql est servenue ligne 12 colonne 25Message d'erreur sql")
+        cy.get('.toast >div').contains("Une erreur dans une requête sql est survenue ligne 12 colonne 25" )
+        cy.get('.toast >div').contains("Message d'erreur sql" )
 
     });
     it('Test creation site', () => {
