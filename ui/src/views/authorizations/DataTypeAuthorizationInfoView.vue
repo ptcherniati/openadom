@@ -320,7 +320,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       if (!this.repositury) {
         this.columnsVisible.publication = { ...this.columnsVisible.publication, display: false };
       }
-      console.log(this.columnsVisible);
+      //console.log(this.columnsVisible);
       if (this.authorizationId != "new") {
         var authorizations = await this.authorizationService.getAuthorizations(
           this.applicationName,
