@@ -73,7 +73,9 @@
           :data-groups="dataGroups"
           :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
           :authorization="authorization"
+          :isApplicationAdmin="isApplicationAdmin"
           :publicAuthorizations="publicAuthorizations"
+          :ownAuthorizations="ownAuthorizations"
           :current-authorization-scope="{}"
           :is-root="true"
           class="rows"
@@ -150,6 +152,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   userPreferencesService = UserPreferencesService.INSTANCE;
   authorization = {};
   publicAuthorizations = [];
+  ownAuthorizations = [];
   authorizations = [];
   users = [];
   name = null;
@@ -158,6 +161,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   application = new ApplicationResult();
   selectedlabels = [];
   userLabels = [];
+  isApplicationAdmin = false;
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -314,12 +318,35 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           this.applicationName,
           this.dataTypeId
       );
+      let authorizationsForUser;
       ({
         authorizationScopes: this.authorizationScopes,
         dataGroups: this.dataGroups,
         users: this.users,
+        authorizationsForUser: authorizationsForUser
       } = grantableInfos);
-      //console.log("grantableInfos", grantableInfos);
+
+
+      let auths = authorizationsForUser.authorizationResults.admin
+      if (JSON.parse(localStorage.getItem('authenticatedUser'))) {
+        let ownAuthorizations = JSON.parse(localStorage.getItem('authenticatedUser')).authorizations
+        this.isApplicationAdmin = ownAuthorizations.find(a => new RegExp(a).test(this.dataTypeId))
+      }
+      if (!this.isApplicationAdmin){
+        for (const scope in auths) {
+          this.ownAuthorizations = this.ownAuthorizations || []
+          let scopeAuthorizations = auths[scope]
+          let scopeAuthorization = new Authorization(scopeAuthorizations)
+          let path = scopeAuthorization.getPath(this.authorizationScopes.map((a => a.id)));
+          if (this.ownAuthorizations.indexOf(path) === -1) {
+            if (!this.ownAuthorizations.find(pa => path.startWith(pa))) {
+              this.ownAuthorizations = this.ownAuthorizations.filter(pa => !pa.startWith(path))
+              this.ownAuthorizations.push(path);
+            }
+          }
+        }
+      }
+      console.log('ownAuthorizations', this.ownAuthorizations)
       this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription};
       if (!this.repositury) {
         this.columnsVisible.publication = {...this.columnsVisible.publication, display: false};
@@ -342,7 +369,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
               let path = scopeAuthorization.getPath2(this.authorizationScopes.map((a => a.id)));
               if (this.publicAuthorizations[scope].indexOf(path) === -1) {
                 if (!this.publicAuthorizations[scope].find(pa => path.startWith(pa))) {
-                  this.publicAuthorizations[scope] = this.publicAuthorizations[scope].filter(pa =>!pa.startWith(path))
+                  this.publicAuthorizations[scope] = this.publicAuthorizations[scope].filter(pa => !pa.startWith(path))
                   this.publicAuthorizations[scope].push(path);
                 }
               }

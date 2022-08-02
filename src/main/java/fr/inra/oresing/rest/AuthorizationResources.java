@@ -33,6 +33,9 @@ public class AuthorizationResources {
     private UserRepository userRepository;
 
     @Autowired
+    private OreSiApiRequestContext request;
+
+    @Autowired
     private OreSiRepository repo;
     @GetMapping(value = "/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginResult> getAuthorizations(){
@@ -102,7 +105,8 @@ public class AuthorizationResources {
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, dataType);
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
+        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, dataType, authorizationsForUser);
         return ResponseEntity.ok(getGrantableResult);
     }
 

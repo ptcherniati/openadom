@@ -47,7 +47,8 @@
         "invalid-required": "Merci de remplir le champ",
         "invalid-application-name": "Le nom ne doit comporter que des lettresminuscules .",
         "invalid-application-name-length": "Le nom doit être compris en 4 et 20 caractères.",
-        "invalid-confirmed": "Les deux champs ne correspondent pas."
+        "invalid-confirmed": "Les deux champs ne correspondent pas.",
+        "noRightsForThisOPeration": "Vous n'avez pas les droits pour cette opération."
     },
     "alert": {
         "cancel": "Annuler",

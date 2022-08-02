@@ -81,8 +81,8 @@ public class AuthorizationService {
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
 
         authorizationsByType.entrySet().stream()
-                .map(authByTypeEntry ->{
-                    if(isApplicationCreator){
+                .map(authByTypeEntry -> {
+                    if (isApplicationCreator) {
                         return authByTypeEntry.getValue();
                     }
                     final Stream<Authorization> authorizationStream = authorizationsForCurrentUser.stream()
@@ -92,8 +92,8 @@ public class AuthorizationService {
                             .flatMap(List::stream);
                     return authByTypeEntry.getValue().stream()
                             .filter(authorization -> {
-                                        return testCanSetAuthorization(authorization, authorizationStream);
-                                    })
+                                return testCanSetAuthorization(authorization, authorizationStream);
+                            })
                             .collect(Collectors.toList());
                 })
                 .forEach(authByType -> {
@@ -120,19 +120,19 @@ public class AuthorizationService {
 
     private boolean testCanSetAuthorization(Authorization authorization, Stream<Authorization> authorizationStream) {
         return authorizationStream
-                .anyMatch(authorizationAdmin ->  testCanSetAuthorization(authorization,authorizationAdmin));
+                .anyMatch(authorizationAdmin -> testCanSetAuthorization(authorization, authorizationAdmin));
     }
 
     private boolean testCanSetAuthorization(Authorization authorization, Authorization authorizationAdmin) {
         final Map<String, Ltree> requiredAuthorizationsAdmin = authorizationAdmin.getRequiredAuthorizations();
-        if(requiredAuthorizationsAdmin.isEmpty()){
+        if (requiredAuthorizationsAdmin.isEmpty()) {
             return false;
         }
         return authorization.getRequiredAuthorizations().entrySet().stream().allMatch(
                 ltreeEntry -> {
-                    if(!authorizationAdmin.getRequiredAuthorizations().containsKey(ltreeEntry.getKey())){
+                    if (!authorizationAdmin.getRequiredAuthorizations().containsKey(ltreeEntry.getKey())) {
                         return true;
-                    }else{
+                    } else {
                         return ltreeEntry.getValue().getSql().startsWith(authorizationAdmin.getRequiredAuthorizations().get(ltreeEntry.getKey()).getSql());
                     }
                 }
@@ -225,7 +225,7 @@ public class AuthorizationService {
         return transformedAuthorizations;
     }
 
-    public GetGrantableResult getGrantable(String applicationNameOrId, String dataType) {
+    public GetGrantableResult getGrantable(String applicationNameOrId, String dataType, AuthorizationsResult authorizationsForUser) {
         Application application = repository.application().findApplication(applicationNameOrId);
         Configuration configuration = application.getConfiguration();
         Preconditions.checkArgument(configuration.getDataTypes().containsKey(dataType));
@@ -233,7 +233,7 @@ public class AuthorizationService {
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = getDataGroups(application, dataType);
         ImmutableSortedSet<GetGrantableResult.AuthorizationScope> authorizationScopes = getAuthorizationScopes(application, dataType);
         ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> columnDescriptions = getColumnDescripton(configuration, dataType);
-        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions);
+        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions, authorizationsForUser);
     }
 
     private ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> getColumnDescripton(Configuration configuration, String dataType) {
@@ -325,9 +325,10 @@ public class AuthorizationService {
         if (authenticationService.hasRole(OreSiRole.superAdmin())) {
             canAddApplicationCreatorRole = true;
         } else if (authenticationService.hasRole(OreSiRole.applicationCreator())) {
-            final OreSiUser user =  userRepository.findByLogin(oreSiUserRoleApplicationCreator.getUserId()).orElseGet(()->userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId())));;
+            final OreSiUser user = userRepository.findByLogin(oreSiUserRoleApplicationCreator.getUserId()).orElseGet(() -> userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId())));
+            ;
             if (user.getAuthorizations().stream()
-                    .anyMatch(p->Pattern.compile(p)
+                    .anyMatch(p -> Pattern.compile(p)
                             .matcher(oreSiUserRoleApplicationCreator.getApplicationPattern())
                             .matches()
                     )) {
@@ -396,8 +397,8 @@ public class AuthorizationService {
                                                 authorization.getDataGroups(),
                                                 authorization.getRequiredAuthorizations().entrySet().stream()
                                                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSql())),
-                                                authorization.getTimeScope()==null?null:authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
-                                                authorization.getTimeScope()==null?null:authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
+                                                authorization.getTimeScope() == null || !authorization.getTimeScope().getRange().hasLowerBound() ? null : authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
+                                                authorization.getTimeScope() == null || !authorization.getTimeScope().getRange().hasUpperBound() ? null : authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
                                         )).
                                         forEach(authorizationResult -> authorizationMap
                                                 .computeIfAbsent(key, k -> new LinkedList<>())

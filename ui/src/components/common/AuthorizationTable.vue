@@ -6,123 +6,134 @@
     >
       <slot class="row"></slot>
       <div v-for="(scope, index) of authReference" :key="index">
-        <div class="columns" @mouseleave="upHere = false" @mouseover="upHere = true">
-          <div
-              v-for="(column, indexColumn) of columnsVisible"
-              :key="indexColumn"
-              :class="{ hover: upHere && scope.isLeaf }"
-              class="column"
+        <div v-if="isApplicationAdmin || ownAuthorizations.find(oa=>getPath(index).startsWith(oa)||oa.startsWith(getPath(index)))">
+          <div class="columns" @mouseleave="upHere = false" @mouseover="upHere = true"
           >
-            <a
-                v-if="
+            <div
+                v-for="(column, indexColumn) of columnsVisible"
+                :key="indexColumn"
+                :class="{ hover: upHere && scope.isLeaf }"
+                class="column"
+            >
+              <a
+                  v-if="
                 column.display &&
                 indexColumn === 'label' &&
                 (!scope.isLeaf || remainingOption.length)
               "
-                :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
-                :field="indexColumn"
-                style="min-height: 10px; display: table-cell; vertical-align: middle"
-                @click="indexColumn === 'label' && toggle(index)"
-            >
-              {{ localName(scope) }}
-            </a>
-            <p
-                v-else-if="
+                  :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
+                  :field="indexColumn"
+                  style="min-height: 10px; display: table-cell; vertical-align: middle"
+                  @click="indexColumn === 'label' && toggle(index)"
+              >
+                {{ localName(scope) }}
+              </a>
+              <p
+                  v-else-if="
                 column.display &&
                 indexColumn === 'label' &&
                 !(!scope.isLeaf || remainingOption.length)
               "
-                :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
-                :field="indexColumn"
-            >
-              {{ localName(scope) }}
-            </p>
-            <b-field v-else-if="column.display" :field="indexColumn" class="column">
-              <b-icon
-                  :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
-                  pack="far"
-                  size="is-medium"
-                  :type="states[indexColumn][getPath(index)].hasPublicStates?'is-light':'is-primary'"
-                  @click.native="selectCheckbox($event, index, indexColumn)"
-              />
-              <AuthorizationForPeriodDatagroups
-                  v-if="states[indexColumn][getPath(index)].fromAuthorization"
-                  :column="column"
-                  :data-groups="dataGroups"
-                  :state="states[indexColumn][getPath(index)]"
-                  :index="index"
-                  :index-column="indexColumn"
-                  @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
-              />
-              <b-tooltip
-                  position="is-right"
-                  multilined
-                  v-if="
+                  :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
+                  :field="indexColumn"
+              >
+              </p>
+              <b-field v-else-if="column.display" :field="indexColumn" class="column">
+                <b-tooltip
+                    type="is-warning"
+                    :active="!isApplicationAdmin && !ownAuthorizations.find(oa=>getPath(index).startsWith(oa))"
+                    :label="$t('validation.noRightsForThisOPeration')"
+                >
+                  <b-icon
+                      :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                      pack="far"
+                      size="is-medium"
+                      :type="states[indexColumn][getPath(index)].hasPublicStates?'is-light':'is-primary'"
+                      :disabled="!isApplicationAdmin && !ownAuthorizations.find(oa=>getPath(index).startsWith(oa))"
+                      @click.native="!isApplicationAdmin && !ownAuthorizations.find(oa=>getPath(index).startsWith(oa))?index=>i:selectCheckbox($event, index, indexColumn)"
+                  />
+                </b-tooltip>
+                <AuthorizationForPeriodDatagroups
+                    v-if="states[indexColumn][getPath(index)].fromAuthorization"
+                    :column="column"
+                    :data-groups="dataGroups"
+                    :state="states[indexColumn][getPath(index)]"
+                    :index="index"
+                    :index-column="indexColumn"
+                    @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
+                />
+                <b-tooltip
+                    position="is-right"
+                    multilined
+                    v-if="
                   states[indexColumn][getPath(index)].state === 0 ||
                   states[indexColumn][getPath(index)].state === -1
                 "
-              >
-                <b-button
-                    v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-                    disabled
-                    style="border: none; background-color: transparent"
                 >
-                  <b-icon
+                  <b-button
                       v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-                      icon="eye"
-                      size="fa-4x"
-                  ></b-icon>
-                </b-button>
-                <template v-slot:content>
-                  <div v-if="states[indexColumn][getPath(index)].state === 0">
-                    <p>
-                      {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
-                      <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
-                      <span>{{ $t("dataTypeAuthorizations.or") }}</span>
-                      <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
-                      <br/>
-                      {{ $t("dataTypeAuthorizations.select-authorization") }}
-                    </p>
-                  </div>
-                  <div v-else-if="states[indexColumn][getPath(index)].state === -1">
-                    <p>
-                      {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
-                      <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
-                      <span>{{ $t("dataTypeAuthorizations.or") }} </span>
-                      <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
-                      <br/>
-                      {{ $t("dataTypeAuthorizations.select-authorization") }}
-                    </p>
-                    <p class="has-background-white-bis has-text-danger-dark">
-                      {{ $t("dataTypeAuthorizations.warnning-chil-not-null") }}
-                    </p>
-                  </div>
-                </template>
-              </b-tooltip>
-            </b-field>
+                      disabled
+                      style="border: none; background-color: transparent"
+                  >
+                    <b-icon
+                        v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
+                        icon="eye"
+                        size="fa-4x"
+                    ></b-icon>
+                  </b-button>
+                  <template v-slot:content>
+                    <div v-if="states[indexColumn][getPath(index)].state === 0">
+                      <p>
+                        {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
+                        <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
+                        <span>{{ $t("dataTypeAuthorizations.or") }}</span>
+                        <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
+                        <br/>
+                        {{ $t("dataTypeAuthorizations.select-authorization") }}
+                      </p>
+                    </div>
+                    <div v-else-if="states[indexColumn][getPath(index)].state === -1">
+                      <p>
+                        {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
+                        <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
+                        <span>{{ $t("dataTypeAuthorizations.or") }} </span>
+                        <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
+                        <br/>
+                        {{ $t("dataTypeAuthorizations.select-authorization") }}
+                      </p>
+                      <p class="has-background-white-bis has-text-danger-dark">
+                        {{ $t("dataTypeAuthorizations.warnning-chil-not-null") }}
+                      </p>
+                    </div>
+                  </template>
+                </b-tooltip>
+              </b-field>
+            </div>
           </div>
+          <ul
+              v-if="authReference && (!scope.isLeaf || remainingOption.length) && open && open[index]"
+              class="rows"
+          >
+            <AuthorizationTable
+                v-if="authReference"
+                :auth-reference="getNextAuthreference(scope)"
+                :publicAuthorizations="publicAuthorizations"
+                :ownAuthorizations="ownAuthorizations"
+                :authorization="authorization"
+                :columns-visible="columnsVisible"
+                :data-groups="dataGroups"
+                :isApplicationAdmin="isApplicationAdmin"
+                :path="getPath(index)"
+                :remaining-option="getRemainingOption(scope)"
+                :required-authorizations="{}"
+                :authorization-scopes="authorizationScopes"
+                :current-authorization-scope="getCurrentAuthorizationScope(scope)"
+                @setIndetermined="eventSetIndetermined($event, index)"
+                @modifyAuthorization="$emit('modifyAuthorization', $event)"
+                @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
+            />
+          </ul>
         </div>
-        <ul
-            v-if="authReference && (!scope.isLeaf || remainingOption.length) && open && open[index]"
-            class="rows"
-        >
-          <AuthorizationTable
-              v-if="authReference"
-              :auth-reference="getNextAuthreference(scope)"
-              :publicAuthorizations="publicAuthorizations"
-              :authorization="authorization"
-              :columns-visible="columnsVisible"
-              :data-groups="dataGroups"
-              :path="getPath(index)"
-              :remaining-option="getRemainingOption(scope)"
-              :required-authorizations="{}"
-              :authorization-scopes="authorizationScopes"
-              :current-authorization-scope="getCurrentAuthorizationScope(scope)"
-              @setIndetermined="eventSetIndetermined($event, index)"
-              @modifyAuthorization="$emit('modifyAuthorization', $event)"
-              @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
-          />
-        </ul>
       </div>
     </li>
   </div>
@@ -147,9 +158,11 @@ export default class AuthorizationTable extends Vue {
   @Prop({default: false}) isRoot;
   @Prop() dataGroups; // array of the datagroups in  authorization configuration
   @Prop() publicAuthorizations; //the authorizations for public
+  @Prop() ownAuthorizations; //the authorizations for public
   @Prop() authorization; //the authorizations scope from authorization configuration
   @Prop() authorizationScopes; //the authorizationsscope from authorization configuration
   @Prop() currentAuthorizationScope; //the current authorizations scope
+  @Prop() isApplicationAdmin; //if user can admin all rights
   emits = ["modifyAuthorization", "set-indetermined", "registerCurrentAuthorization"];
   name = "AuthorizationTable";
   open = {};

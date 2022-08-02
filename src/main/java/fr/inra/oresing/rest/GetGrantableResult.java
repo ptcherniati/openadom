@@ -14,6 +14,7 @@ public class GetGrantableResult {
     Set<DataGroup> dataGroups;
     Set<AuthorizationScope> authorizationScopes;
     Map<String, ColumnDescription> columnsDescription;
+    AuthorizationsResult authorizationsForUser;
 
     @Value
     public static class User {
