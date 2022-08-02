@@ -19,4 +19,5 @@ public class GetAuthorizationResult {
     String dataType;
     Map<OperationType, List<AuthorizationParsed>> authorizations;
     List< Map<OperationType, List<Authorization>>> publicAuthorizations;
+    AuthorizationsResult authorizationsForUser;
 }

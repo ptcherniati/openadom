@@ -69,7 +69,8 @@ public class AuthorizationResources {
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
-        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
+        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId), authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResult);
     }
 
@@ -98,9 +99,11 @@ public class AuthorizationResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ImmutableSet<GetAuthorizationResult>> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, dataType);
-        return ResponseEntity.ok(getAuthorizationResults);
+    public ResponseEntity<GetAuthorizationResults> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
+        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, dataType, authorizationsForUser);
+        final GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
+        return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)

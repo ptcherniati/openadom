@@ -92,7 +92,7 @@ export class Authorizations {
                 return state;
             } else if (scopeKey.startsWith(path)) {
                 state.state = -1;
-                state.localState = -11;
+                state.localState = -1;
                 return state;
             }
         }

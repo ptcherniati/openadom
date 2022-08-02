@@ -304,6 +304,7 @@
         "to": "to",
         "from": "from",
         "create": "Create authorization",
+        "modify": "Modify authorization",
         "user": "User",
         "data-group": "Data group",
         "data-type": "Data type",

@@ -14,7 +14,7 @@
       }}
     </h1>
     <div class="rows">
-      <div class="row">
+      <div class="row" v-if="canManageRights">
         <div class="columns">
           <div class="column is-offset-10 is-2">
             <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
@@ -251,6 +251,7 @@ export default class DataTypeAuthorizationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   selectedUser = null;
   authorizations = [];
+  canManageRights = false;
   authorizationByUser = {};
   application = new ApplicationResult();
   // pagination
@@ -307,10 +308,13 @@ export default class DataTypeAuthorizationsView extends Vue {
           this.application.dataTypes[this.dataTypeId]
         ),
       };
-      this.authorizations = await this.authorizationService.getDataAuthorizations(
+      let authorizations = await this.authorizationService.getDataAuthorizations(
         this.applicationName,
         this.dataTypeId
       );
+      this.authorizations = authorizations.authorizationResults.filter(auth=>auth.authorizationsForUser.isAdministratorForDatatype || auth.authorizationsForUser.authorizationResults.admin)
+      let authorizationForUser = authorizations.authorizationsForUser
+      this.canManageRights = authorizationForUser.isAdministratorForDatatype || authorizationForUser.authorizationResults.admin
       if (this.authorizations && this.authorizations.length !== 0) {
         this.scopes = Object.keys(this.authorizations[0].authorizations);
       }

@@ -12,19 +12,6 @@
         "jsonDeserializationError": "Impossible de transformer la chaîne json {json} : {message}",
         "requestMapperSerializationError": "Impossible de transformer la chaîne json {requestClient} : {message}"
     },
-    "titles": {
-        "login-page": "Bienvenue sur le SI ORE",
-        "applications-page": "Mes applications",
-        "aide": "Aide à l'écriture du fichier de configuration d'une application.",
-        "references-page": "Référentiels de {applicationName}",
-        "references-data": "Données de {refName}",
-        "application-creation": "Créer une application",
-        "data-types-page": "Type de données de {applicationName}",
-        "data-types-repository": "Gestion des jeux de données de {applicationName}",
-        "data-type-authorizations": "Autorisations de {dataType}",
-        "data-type-new-authorization": "Nouvelle autorisation pour {dataType}",
-    	"authorizations-management": "Gestion des autorisations sur les applications"
-    },
     "login": {
         "signin": "Se connecter",
         "signup": "Créer un compte",
@@ -38,10 +25,23 @@
         "aria-btn-login": "Bouton valider le formulaire de connexion",
         "aria-btn-signup": "Bouton création d'un compte"
     },
+    "titles": {
+        "login-page": "Bienvenue sur le SI ORE",
+        "applications-page": "Mes applications",
+        "aide": "Aide à l'écriture du fichier de configuration d'une application.",
+        "references-page": "Référentiels de {applicationName}",
+        "references-data": "Données de {refName}",
+        "application-creation": "Créer une application",
+        "data-types-page": "Type de données de {applicationName}",
+        "data-types-repository": "Gestion des jeux de données de {applicationName}",
+        "data-type-authorizations": "Autorisations de {dataType}",
+        "data-type-new-authorization": "Nouvelle autorisation pour {dataType}",
+        "authorizations-management": "Gestion des autorisations sur les applications"
+    },
     "validation": {
-        "count-line":"Lignes total : ",
-        "data-empty":"Pas de données",
-        "modal-synthesis-variable-default":"Description : ",
+        "count-line": "Lignes total : ",
+        "data-empty": "Pas de données",
+        "modal-synthesis-variable-default": "Description : ",
         "obligatoire": "Obligatoire",
         "facultatif": "Facultatif",
         "invalid-required": "Merci de remplir le champ",
@@ -49,7 +49,6 @@
         "invalid-application-name-length": "Le nom doit comporter de 4 à 20 caractères.",
         "invalid-confirmed": "Les deux champs ne correspondent pas.",
         "noRightsForThisOPeration": "Vous n'avez pas les droits pour cette opération."
-    },
     },
     "alert": {
         "cancel": "Annuler",
@@ -310,6 +309,7 @@
         "to": "à",
         "from": "de",
         "create": "Créer l'autorisation",
+        "modify": "Modifier l'autorisation",
         "user": "Utilisateur",
         "data-group": "Groupe de données",
         "data-type": "Type de données",

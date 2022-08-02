@@ -102,7 +102,7 @@
             @click="handleSubmit(createAuthorization)"
             style="margin-bottom: 10px"
         >
-          {{ $t("dataTypeAuthorizations.create") }}
+          {{ authorization.uuid?$t("dataTypeAuthorizations.modify"):$t("dataTypeAuthorizations.create") }}
         </b-button>
       </div>
     </ValidationObserver>

@@ -6,7 +6,7 @@
     >
       <slot class="row"></slot>
       <div v-for="(scope, index) of authReference" :key="index">
-        <div v-if="isApplicationAdmin || ownAuthorizations.find(oa=>getPath(index).startsWith(oa)||oa.startsWith(getPath(index)))">
+        <div v-if="canShowLine(index)">
           <div class="columns" @mouseleave="upHere = false" @mouseover="upHere = true"
           >
             <div
@@ -26,7 +26,7 @@
                   style="min-height: 10px; display: table-cell; vertical-align: middle"
                   @click="indexColumn === 'label' && toggle(index)"
               >
-                {{ localName(scope) }}
+               {{ localName(scope) }}
               </a>
               <p
                   v-else-if="
@@ -37,11 +37,12 @@
                   :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
                   :field="indexColumn"
               >
+               {{ localName(scope) }}
               </p>
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
                     type="is-warning"
-                    :active="!isApplicationAdmin && !ownAuthorizations.find(oa=>getPath(index).startsWith(oa))"
+                    :active="canShowWarning(index)"
                     :label="$t('validation.noRightsForThisOPeration')"
                 >
                   <b-icon
@@ -49,8 +50,8 @@
                       pack="far"
                       size="is-medium"
                       :type="states[indexColumn][getPath(index)].hasPublicStates?'is-light':'is-primary'"
-                      :disabled="!isApplicationAdmin && !ownAuthorizations.find(oa=>getPath(index).startsWith(oa))"
-                      @click.native="!isApplicationAdmin && !ownAuthorizations.find(oa=>getPath(index).startsWith(oa))?index=>i:selectCheckbox($event, index, indexColumn)"
+                      :disabled="canShowWarning(index)"
+                      @click.native="canShowWarning(index)?index=>i:selectCheckbox($event, index, indexColumn)"
                   />
                 </b-tooltip>
                 <AuthorizationForPeriodDatagroups
@@ -60,6 +61,7 @@
                     :state="states[indexColumn][getPath(index)]"
                     :index="index"
                     :index-column="indexColumn"
+                    :disabled="canShowWarning(index)"
                     @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
                 />
                 <b-tooltip
@@ -82,7 +84,10 @@
                     ></b-icon>
                   </b-button>
                   <template v-slot:content>
-                    <div v-if="states[indexColumn][getPath(index)].state === 0">
+                    <div v-if="canShowWarning(index)">
+                      {{$t('validation.noRightsForThisOPeration')}}
+                    </div>
+                    <div v-else-if="states[indexColumn][getPath(index)].state === 0">
                       <p>
                         {{ $t("dataTypeAuthorizations.info-limit-taginput") }}
                         <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
@@ -151,7 +156,7 @@ import AuthorizationForPeriodDatagroups from "@/components/common/AuthorizationF
 export default class AuthorizationTable extends Vue {
   STATES = {"-1": "minus-square", 0: "square", 1: "check-square"};
   EXTRACTION = "extraction";
-  @Prop() authReference; //informations about nodes
+  @Prop() authReference; //informations about node
   @Prop() remainingOption; //array of next nodes
   @Prop() columnsVisible; // infos for columns
   @Prop({default: ""}) path;
@@ -208,13 +213,13 @@ export default class AuthorizationTable extends Vue {
     }
     this.states = states;
   }
+  canShowLine(index){
+    return (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)||oa.startsWith(this.getPath(index))))?true:false
+  }
 
-  /*hasPublicAuthorization(scope,index){
-    let path = this.getPath(index);
-    for (const pathKey in path) {
-
-    }
-  }*/
+  canShowWarning(index){
+    return (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)))?false:true
+  }
 
   getScope() {
     return this.authorizationScopes?.[0]?.id;
