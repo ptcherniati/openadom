@@ -667,6 +667,7 @@ export default class DataTypeTableView extends Vue {
           params
         );
         refvalues = reference.referenceValues[0].values;
+        console.log(refvalues)
       }
       const data = Object.entries(refvalues)
         .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))

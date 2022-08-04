@@ -322,7 +322,7 @@ public class OreSiResources {
                 String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
                 for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
-
+                    // TODO renvois null et je ne vois pas pourquoi... LV
                     final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
                             .stream()
                             .findFirst().orElse(null);
