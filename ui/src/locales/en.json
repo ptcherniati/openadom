@@ -47,7 +47,8 @@
         "invalid-required":"Please fill the field",
         "invalid-application-name":"The name must only includes lowercase letters.",
         "invalid-application-name-length":"The name's length should be between 4 and 20 characters.",
-        "invalid-confirmed":"Fields don't match."
+        "invalid-confirmed":"Fields don't match.",
+        "noRightsForThisOPeration": "You do not have the rights for this operation."
     },
     "alert":{
         "cancel":"Cancel",
@@ -303,6 +304,7 @@
         "to": "to",
         "from": "from",
         "create": "Create authorization",
+        "modify": "Modify authorization",
         "user": "User",
         "data-group": "Data group",
         "data-type": "Data type",

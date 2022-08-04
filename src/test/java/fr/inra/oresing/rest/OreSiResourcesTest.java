@@ -8,6 +8,7 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OperationType;
@@ -106,7 +107,7 @@ public class OreSiResourcesTest {
     public void createUser() throws Exception {
         lambdaUser = authenticationService.createUser("lambda", "xxxxxxxx");
         lambdaCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("lambda", "poussin")
+                        .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         final CreateUserResult authUser = authenticationService.createUser("poussin", "xxxxxxxx");
@@ -130,6 +131,8 @@ public class OreSiResourcesTest {
 
         final CreateUserResult monsoereUser = authenticationService.createUser("monsore", "xxxxxxxx");
         UUID monsoreUserId = monsoereUser.getUserId();
+        final OreSiUser publicUser = userRepository.findByLogin("_public_").orElse(null);
+        final UUID publicUserId = publicUser.getId();
         Cookie monsoreCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "monsore")
                         .param("password", "xxxxxxxx"))
@@ -224,12 +227,33 @@ public class OreSiResourcesTest {
                     .andExpect(status().is4xxClientError())
                     .andExpect(content().string("application inconnue 'monsore'"))
                     .andReturn().getResponse().getContentAsString();
-            final String jsonRightsForMonsoere = getJsonRightsForMonsoere(monsoreCookie,withRigthsUserId, OperationType.publication.name());
+            //ajout de droits withRigthsUserId
+            final String jsonRightsForMonsoere = setJsonRightsForMonsoere(monsoreCookie, withRigthsUserId, OperationType.publication.name());
 
             //avec les droits on peut publier
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
                             .cookie(withRigthsCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            log.debug(StringUtils.abbreviate(response, 50));
+
+            //sans droit on ne peut pas
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .cookie(lambdaCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResponse().getContentAsString();
+
+            //ajout de droits public
+            setJsonRightsForMonsoere(monsoreCookie, lambdaUser.getUserId().toString(), OperationType.publication.name());
+
+
+            //avec les droits public on peut publier même sans droit
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .cookie(lambdaCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -750,7 +774,7 @@ public class OreSiResourcesTest {
     }
 
 
-    private String getJsonRightsForMonsoere(Cookie cookie, String withRigthsUserId, String role) throws Exception {
+    private String setJsonRightsForMonsoere(Cookie cookie, String withRigthsUserId, String role) throws Exception {
         final String json = String.format("{\n" +
                 "   \"usersId\":[\"" + withRigthsUserId + "\"],\n" +
                 "   \"applicationNameOrId\":\"monsore\",\n" +

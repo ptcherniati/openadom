@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.Authorization;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.OperationType;
 import lombok.Value;
@@ -17,4 +18,6 @@ public class GetAuthorizationResult {
     UUID application;
     String dataType;
     Map<OperationType, List<AuthorizationParsed>> authorizations;
+    List< Map<OperationType, List<Authorization>>> publicAuthorizations;
+    AuthorizationsResult authorizationsForUser;
 }

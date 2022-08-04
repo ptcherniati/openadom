@@ -11,5 +11,7 @@ public class AuthorizationsResult {
     Map<OperationType,List<AuthorizationParsed>> authorizationResults;
     String applicationName;
     String dataType;
+    Map<OperationType, Map<String, List<AuthorizationParsed>>> authorizationByPath;
+    Boolean isAdministratorForDatatype;
 
 }

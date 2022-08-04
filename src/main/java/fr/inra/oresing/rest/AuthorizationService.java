@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -67,7 +68,7 @@ public class AuthorizationService {
         return authorizationRepository.findAuthorizations(currentUserId, application, dataType);
     }
 
-    public OreSiAuthorization addAuthorization(Application application, String dataType, CreateAuthorizationRequest authorizations, boolean isApplicationCreator) {
+    public OreSiAuthorization addAuthorization(Application application, String dataType, CreateAuthorizationRequest authorizations, List<OreSiAuthorization> authorizationsForCurrentUser, boolean isApplicationCreator) {
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         OreSiAuthorization entity = authorizations.getUuid() == null ?
                 new OreSiAuthorization()
@@ -79,20 +80,28 @@ public class AuthorizationService {
 
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
 
-        authorizationsByType.values()
-                .forEach(authByType -> {
-                    authByType.forEach(authorization -> {
-                        authorization.getDataGroups()
-                                .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
-                        Set<String> labels = Optional.ofNullable(authorizationDescription)
-                                .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
-                                .map(Map::keySet)
-                                .orElseGet(Set::of);
-                        Preconditions.checkArgument(
-                                labels.containsAll(authorization.getRequiredAuthorizations().keySet())
-                        );
-                    });
-                });
+        final List<Authorization> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
+                .map(oreSiAuthorization -> oreSiAuthorization.getAuthorizations())
+                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
+                .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        final Map<OperationType, List<Authorization>> modifiedAuthorizations = authorizationsByType.entrySet().stream()
+                .map(authByTypeEntry -> {
+                    if (!isApplicationCreator) {
+                        removeAuthorizationThatCantBeModified(authByTypeEntry, authorizationListForCurrentUser);
+                    }
+                    return authByTypeEntry;
+                })
+                .map(authByType -> {
+                    testAuthorizationArguments(authorizationDescription, authByType);
+                    return authByType;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (!isApplicationCreator) {
+            addStoredAuthorizationThatCantBeModified(entity, authorizationListForCurrentUser, modifiedAuthorizations);
+        }
         entity.setName(authorizations.getName());
         entity.setOreSiUsers(authorizations.getUsersId());
         entity.setApplication(application.getId());
@@ -100,6 +109,67 @@ public class AuthorizationService {
         entity.setAuthorizations(authorizations.getAuthorizations());
         authorizationRepository.store(entity);
         return entity;
+    }
+
+    private static void testAuthorizationArguments(Configuration.AuthorizationDescription authorizationDescription, Map.Entry<OperationType, List<Authorization>> authByType) {
+        authByType.getValue().forEach(authorization -> {
+            authorization.getDataGroups()
+                    .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
+            Set<String> labels = Optional.ofNullable(authorizationDescription)
+                    .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
+                    .map(Map::keySet)
+                    .orElseGet(Set::of);
+            Preconditions.checkArgument(
+                    labels.containsAll(authorization.getRequiredAuthorizations().keySet())
+            );
+        });
+    }
+
+    private void removeAuthorizationThatCantBeModified(Map.Entry<OperationType, List<Authorization>> authByTypeEntry, List<Authorization> authorizationListForCurrentUser) {
+        final List<Authorization> collect = authByTypeEntry.getValue().stream()
+                .filter(authorization -> {
+                    return testCanSetAuthorization(authorization, authorizationListForCurrentUser);
+                })
+                .collect(Collectors.toList());
+        authByTypeEntry.setValue(collect);
+    }
+
+    private void addStoredAuthorizationThatCantBeModified(OreSiAuthorization entity, List<Authorization> authorizationListForCurrentUser, Map<OperationType, List<Authorization>> modifiedAuthorizations) {
+        Optional.ofNullable(entity)
+                .map(e -> e.getAuthorizations())
+                .ifPresent(a -> a.entrySet().stream()
+                        .forEach(authByTypeEntry -> {
+                            final List<Authorization> collect = authByTypeEntry.getValue().stream()
+                                    .filter(authorization -> {
+                                        return !testCanSetAuthorization(authorization, authorizationListForCurrentUser);
+                                    })
+                                    .collect(Collectors.toList());
+                            modifiedAuthorizations
+                                    .computeIfAbsent(authByTypeEntry.getKey(), k -> new LinkedList<>())
+                                    .addAll(collect);
+                        })
+                );
+    }
+
+    private boolean testCanSetAuthorization(Authorization authorization, List<Authorization> authorizationStream) {
+        return authorizationStream.stream()
+                .anyMatch(authorizationAdmin -> testCanSetAuthorization(authorization, authorizationAdmin));
+    }
+
+    private boolean testCanSetAuthorization(Authorization authorization, Authorization authorizationAdmin) {
+        final Map<String, Ltree> requiredAuthorizationsAdmin = authorizationAdmin.getRequiredAuthorizations();
+        if (requiredAuthorizationsAdmin.isEmpty()) {
+            return false;
+        }
+        return authorization.getRequiredAuthorizations().entrySet().stream().allMatch(
+                ltreeEntry -> {
+                    if (!authorization.getRequiredAuthorizations().containsKey(ltreeEntry.getKey())) {
+                        return true;
+                    } else {
+                        return authorization.getRequiredAuthorizations().get(ltreeEntry.getKey()).getSql().startsWith(ltreeEntry.getValue().getSql());
+                    }
+                }
+        );
     }
 
     private void addOrRemoveAuthorizationForUsers(Set<UUID> previousUsers, Set<UUID> newUsers, OreSiRightOnApplicationRole oreSiRightOnApplicationRole) {
@@ -119,33 +189,40 @@ public class AuthorizationService {
         updateRolesOnManagement.revoke(revokeAuthorizationRequest);
     }
 
-    public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType) {
+    public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType, AuthorizationsResult authorizationsForUser) {
         Application application = repository.application().findApplication(applicationNameOrId);
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         Preconditions.checkArgument(application.getConfiguration().getDataTypes().containsKey(dataType));
+        final List<OreSiAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         ImmutableSet<GetAuthorizationResult> authorizations = authorizationRepository.findByDataType(dataType).stream()
-                .map(this::toGetAuthorizationResult)
+                .map(oreSiAuthorization -> toGetAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
         return authorizations;
     }
 
-    public GetAuthorizationResult getAuthorization(AuthorizationRequest authorizationRequest) {
+    public GetAuthorizationResult getAuthorization(AuthorizationRequest authorizationRequest, AuthorizationsResult authorizationsForUser) {
         Application application = repository.application().findApplication(authorizationRequest.getApplicationNameOrId());
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         UUID authorizationId = authorizationRequest.getAuthorizationId();
+        final List<OreSiAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
-        return toGetAuthorizationResult(oreSiAuthorization);
+        return toGetAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser);
     }
 
-    private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization) {
+    private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization, List<OreSiAuthorization> publicAuthorizations, AuthorizationsResult authorizationsForUser) {
         List<OreSiUser> all = userRepository.findAll();
+        final List<Map<OperationType, List<Authorization>>> collectPublicAuthorizations = publicAuthorizations.stream()
+                .map(pa -> pa.getAuthorizations())
+                .collect(Collectors.toList());
         return new GetAuthorizationResult(
                 oreSiAuthorization.getId(),
                 oreSiAuthorization.getName(),
                 getOreSIUSers(all, oreSiAuthorization.getOreSiUsers()),
                 oreSiAuthorization.getApplication(),
                 oreSiAuthorization.getDataType(),
-                extractTimeRangeToFromAndTo(oreSiAuthorization.getAuthorizations())
+                extractTimeRangeToFromAndTo(oreSiAuthorization.getAuthorizations()),
+                collectPublicAuthorizations,
+                authorizationsForUser
         );
     }
 
@@ -175,14 +252,14 @@ public class AuthorizationService {
                         toDay = null;
                     }
                 }
-                authorizationsParsed.add(new AuthorizationParsed(authorization.getDataGroups(), Maps.transformValues(authorization.getRequiredAuthorizations(), Ltree::getSql), fromDay, toDay));
+                authorizationsParsed.add(new AuthorizationParsed("not setting", authorization.getDataGroups(), Maps.transformValues(authorization.getRequiredAuthorizations(), Ltree::getSql), fromDay, toDay));
                 transformedAuthorizations.put(operationTypeListEntry.getKey(), authorizationsParsed);
             }
         }
         return transformedAuthorizations;
     }
 
-    public GetGrantableResult getGrantable(String applicationNameOrId, String dataType) {
+    public GetGrantableResult getGrantable(String applicationNameOrId, String dataType, AuthorizationsResult authorizationsForUser) {
         Application application = repository.application().findApplication(applicationNameOrId);
         Configuration configuration = application.getConfiguration();
         Preconditions.checkArgument(configuration.getDataTypes().containsKey(dataType));
@@ -190,7 +267,7 @@ public class AuthorizationService {
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = getDataGroups(application, dataType);
         ImmutableSortedSet<GetGrantableResult.AuthorizationScope> authorizationScopes = getAuthorizationScopes(application, dataType);
         ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> columnDescriptions = getColumnDescripton(configuration, dataType);
-        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions);
+        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions, authorizationsForUser);
     }
 
     private ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> getColumnDescripton(Configuration configuration, String dataType) {
@@ -223,7 +300,7 @@ public class AuthorizationService {
         List<OreSiUser> allUsers = userRepository.findAll();
         ImmutableSortedSet<GetGrantableResult.User> users = allUsers.stream()
                 .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::getId)));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::getLabel)));
         return users;
     }
 
@@ -282,9 +359,10 @@ public class AuthorizationService {
         if (authenticationService.hasRole(OreSiRole.superAdmin())) {
             canAddApplicationCreatorRole = true;
         } else if (authenticationService.hasRole(OreSiRole.applicationCreator())) {
-            final OreSiUser user =  userRepository.findByLogin(oreSiUserRoleApplicationCreator.getUserId()).orElseGet(()->userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId())));;
+            final OreSiUser user = userRepository.findByLogin(oreSiUserRoleApplicationCreator.getUserId()).orElseGet(() -> userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId())));
+            ;
             if (user.getAuthorizations().stream()
-                    .anyMatch(p->Pattern.compile(p)
+                    .anyMatch(p -> Pattern.compile(p)
                             .matcher(oreSiUserRoleApplicationCreator.getApplicationPattern())
                             .matches()
                     )) {
@@ -339,10 +417,14 @@ public class AuthorizationService {
         if (user == null) {
             throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userLoginOrId));
         }
+        final boolean isAdministratorForDatatype = user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(dataType).matches());
+
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForRole(user.getId().toString());
         final Application application = repository.application().findApplication(applicationNameOrUuid);
+        final List<OreSiAuthorization> publicAuthorizations = repository.getRepository(application.getId()).authorization().findPublicAuthorizations();
         final List<OreSiAuthorization> authorizations = repository.getRepository(application.getId()).authorization().findAuthorizations(UUID.fromString(rolesForCurrentUser.getCurrentUser()), application, dataType);
         Map<OperationType, List<AuthorizationParsed>> authorizationMap = new HashMap<>();
+        List<String> attributes = application.getConfiguration().getRequiredAuthorizationsAttributes().stream().collect(Collectors.toList());
         authorizations.stream()
                 .forEach(authorizationList -> {
                     authorizationList.getAuthorizations().entrySet()
@@ -350,11 +432,12 @@ public class AuthorizationService {
                                 final OperationType key = entry.getKey();
                                 entry.getValue().stream()
                                         .map(authorization -> new AuthorizationParsed(
+                                                authorization.getPath(attributes),
                                                 authorization.getDataGroups(),
                                                 authorization.getRequiredAuthorizations().entrySet().stream()
                                                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSql())),
-                                                authorization.getTimeScope()==null?null:authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
-                                                authorization.getTimeScope()==null?null:authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
+                                                authorization.getTimeScope() == null || !authorization.getTimeScope().getRange().hasLowerBound() ? null : authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
+                                                authorization.getTimeScope() == null || !authorization.getTimeScope().getRange().hasUpperBound() ? null : authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
                                         )).
                                         forEach(authorizationResult -> authorizationMap
                                                 .computeIfAbsent(key, k -> new LinkedList<>())
@@ -362,6 +445,78 @@ public class AuthorizationService {
 
                             });
                 });
-        return new AuthorizationsResult(authorizationMap, application.getName(), dataType);
+        final Map<OperationType, Map<String, List<AuthorizationParsed>>> authorizationByPath = Stream.concat(publicAuthorizations.stream(), authorizations.stream())
+                .map(OreSiAuthorization::getAuthorizations)
+                .flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .map(authorization -> new AuthorizationParsed(
+                                        authorization.getPath(attributes),
+                                        authorization.getDataGroups(),
+                                        authorization.getRequiredAuthorizations().entrySet().stream()
+                                                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSql())),
+                                        authorization.getTimeScope() == null || !authorization.getTimeScope().getRange().hasLowerBound() ? null : authorization.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
+                                        authorization.getTimeScope() == null || !authorization.getTimeScope().getRange().hasUpperBound() ? null : authorization.getTimeScope().getRange().upperEndpoint().toLocalDate()
+                                ))
+                                .collect(Collectors.toMap(
+                                        AuthorizationParsed::getPath,
+                                        k -> {
+                                            final LinkedList<AuthorizationParsed> authorizationParseds = new LinkedList<>();
+                                            authorizationParseds.add(k);
+                                            return authorizationParseds;
+                                        })),
+                        this::mergeAuthorizationsParsedMap
+                ));
+        return new AuthorizationsResult(authorizationMap, application.getName(), dataType, authorizationByPath, isAdministratorForDatatype);
+    }
+
+    private Map<String, List<AuthorizationParsed>> mergeAuthorizationsParsedMap(Map<String, List<AuthorizationParsed>> a, Map<String, List<AuthorizationParsed>> b) {
+        for (String s : a.keySet()) {
+            if (b.containsKey(s)) {
+                List<AuthorizationParsed> auths = new LinkedList<>();
+                for (AuthorizationParsed authorizationParsedA : a.get(s)) {
+                    for (AuthorizationParsed authorizationParsedB : b.get(s)) {
+                        LocalDate from = null;
+                        LocalDate to = null;
+                        if (authorizationParsedA.getDataGroups().equals(authorizationParsedB.getDataGroups())) {
+                            if (authorizationParsedA.getFromDay() == null) {
+                                if (authorizationParsedA.getToDay() == null) {
+                                    auths.add(authorizationParsedA);
+                                } else if (authorizationParsedB.getFromDay() == null || authorizationParsedB.getFromDay().isBefore(authorizationParsedA.getToDay())) {
+                                    to = authorizationParsedB.getToDay() == null ?
+                                            null :
+                                            (authorizationParsedB.getToDay().isAfter(authorizationParsedA.getToDay()) ? authorizationParsedB.getToDay() : authorizationParsedA.getToDay());
+                                    auths.add(new AuthorizationParsed(s, authorizationParsedA.getDataGroups(), authorizationParsedA.getRequiredAuthorizations(), from, to));
+                                } else {
+                                    auths.add(authorizationParsedA);
+                                    auths.add(authorizationParsedB);
+                                }
+                            } else if (authorizationParsedB.getFromDay() == null) {
+                                if (authorizationParsedB.getToDay() == null) {
+                                    auths.add(authorizationParsedB);
+                                } else if (authorizationParsedA.getFromDay().isBefore(authorizationParsedB.getToDay())) {
+                                    to = authorizationParsedA.getToDay() == null ?
+                                            null :
+                                            (authorizationParsedB.getToDay().isAfter(authorizationParsedA.getToDay()) ? authorizationParsedB.getToDay() : authorizationParsedA.getToDay());
+                                    auths.add(new AuthorizationParsed(s, authorizationParsedA.getDataGroups(), authorizationParsedA.getRequiredAuthorizations(), from, to));
+                                } else {
+                                    auths.add(authorizationParsedA);
+                                    auths.add(authorizationParsedB);
+                                }
+                            } else {
+                                auths.add(authorizationParsedA);
+                                auths.add(authorizationParsedB);
+                            }
+                        }
+                    }
+                }
+                b.put(s, auths);
+            } else {
+                b.put(s, a.get(s));
+            }
+        }
+        return b;
+
     }
 }

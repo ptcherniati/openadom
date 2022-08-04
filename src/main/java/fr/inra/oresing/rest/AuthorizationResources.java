@@ -6,6 +6,7 @@ import fr.inra.oresing.model.OreSiAuthorization;
 import fr.inra.oresing.model.OreSiRoleForUser;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.OperationType;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
@@ -32,6 +33,9 @@ public class AuthorizationResources {
     private UserRepository userRepository;
 
     @Autowired
+    private OreSiApiRequestContext request;
+
+    @Autowired
     private OreSiRepository repo;
     @GetMapping(value = "/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginResult> getAuthorizations(){
@@ -47,14 +51,18 @@ public class AuthorizationResources {
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         final Application application = repo.application().findApplication(nameOrId);
         final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        if (!isApplicationCreator) {
+        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
+        if (!isApplicationCreator && !authorizationsForCurrentUser.stream().anyMatch(
+                a->!a.getAuthorizations().get(OperationType.admin).isEmpty()
+        )) {
             throw new NotApplicationCanSetRightsException(application.getName(), dataType);
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
-        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, isApplicationCreator);
+        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, authorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
-        authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
-        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
+        if(authorization.getUuid()==null){
+            authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+        }
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
         String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authId.toString(), Charset.defaultCharset());
@@ -63,7 +71,8 @@ public class AuthorizationResources {
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
-        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
+        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId), authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResult);
     }
 
@@ -92,14 +101,17 @@ public class AuthorizationResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ImmutableSet<GetAuthorizationResult>> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, dataType);
-        return ResponseEntity.ok(getAuthorizationResults);
+    public ResponseEntity<GetAuthorizationResults> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
+        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, dataType, authorizationsForUser);
+        final GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
+        return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, dataType);
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
+        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, dataType, authorizationsForUser);
         return ResponseEntity.ok(getGrantableResult);
     }
 

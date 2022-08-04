@@ -24,6 +24,13 @@ public class Authorization {
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
     }
+    public String getPath(List<String> attributes){
+        List<String> pathes = new LinkedList<>();
+        return attributes.stream()
+                .filter(attribute->getRequiredAuthorizations().containsKey(attribute))
+                .map(attribute->getRequiredAuthorizations().get(attribute).getSql())
+                .collect(Collectors.joining("."));
+    }
 
     public Authorization() {
     }

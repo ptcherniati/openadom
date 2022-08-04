@@ -8,6 +8,7 @@ import java.util.Map;
 
 @Value
 public class AuthorizationParsed {
+    String path;
     List<String> dataGroups;
     Map<String, String> requiredAuthorizations;
     LocalDate fromDay;

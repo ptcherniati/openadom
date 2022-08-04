@@ -321,14 +321,22 @@ public class OreSiResources {
             for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
                 String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
-                for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
+                /*for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
                     // TODO renvois null et je ne vois pas pourquoi... LV
                     final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
                             .stream()
                             .findFirst().orElse(null);
-                    referenceLineCheckers
-                            .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
-                }
+                    if(referenceValue!=null) {
+                        referenceLineCheckers
+                                .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
+                        break;
+                    }
+                }*/
+
+                referenceLineChecker.getReferenceValues().entrySet()
+                        .stream().filter(e->requiredreferencesValues.containsKey(e.getKey()))
+                        .forEach(e->referenceLineCheckers
+                                .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, requiredreferencesValues.get(e.getKey()).stream().findFirst().orElse(null))));
             }
         }
         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));

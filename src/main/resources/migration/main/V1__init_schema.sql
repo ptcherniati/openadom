@@ -82,6 +82,9 @@ create table OreSiUser
     authorizations TEXT[] default '{}'
 );
 GRANT SELECT on OreSiUser to public;
+-- ajout d'un utilisateur public
+create role "9032ffe5-bfc1-453d-814e-287cd678484a";
+INSERT INTO public.oresiuser(id, login, password, authorizations) VALUES ('9032ffe5-bfc1-453d-814e-287cd678484a', '_public_', '','{}');
 
 create table Application
 (
