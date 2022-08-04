@@ -7,6 +7,7 @@ import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -123,6 +124,19 @@ public class Ltree {
 
     @Override
     public String toString() {
-        return super.toString();
+        return sql;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Ltree ltree = (Ltree) o;
+        return Objects.equals(sql, ltree.sql);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sql);
     }
 }
