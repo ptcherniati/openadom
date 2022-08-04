@@ -90,7 +90,7 @@ public class AuthorizationService {
         final Map<OperationType, List<Authorization>> modifiedAuthorizations = authorizationsByType.entrySet().stream()
                 .map(authByTypeEntry -> {
                     if (!isApplicationCreator) {
-                       removeAuthorizationThatCantBeModified(authByTypeEntry, authorizationListForCurrentUser);
+                        removeAuthorizationThatCantBeModified(authByTypeEntry, authorizationListForCurrentUser);
                     }
                     return authByTypeEntry;
                 })
@@ -125,7 +125,7 @@ public class AuthorizationService {
         });
     }
 
-    private void removeAuthorizationThatCantBeModified(Map.Entry<OperationType, List<Authorization>> authByTypeEntry, List<Authorization> authorizationListForCurrentUser){
+    private void removeAuthorizationThatCantBeModified(Map.Entry<OperationType, List<Authorization>> authByTypeEntry, List<Authorization> authorizationListForCurrentUser) {
         final List<Authorization> collect = authByTypeEntry.getValue().stream()
                 .filter(authorization -> {
                     return testCanSetAuthorization(authorization, authorizationListForCurrentUser);
@@ -135,17 +135,20 @@ public class AuthorizationService {
     }
 
     private void addStoredAuthorizationThatCantBeModified(OreSiAuthorization entity, List<Authorization> authorizationListForCurrentUser, Map<OperationType, List<Authorization>> modifiedAuthorizations) {
-        entity.getAuthorizations().entrySet().stream()
-                .forEach(authByTypeEntry -> {
-                    final List<Authorization> collect = authByTypeEntry.getValue().stream()
-                            .filter(authorization -> {
-                                return !testCanSetAuthorization(authorization, authorizationListForCurrentUser);
-                            })
-                            .collect(Collectors.toList());
-                    modifiedAuthorizations
-                            .computeIfAbsent(authByTypeEntry.getKey(),k->new LinkedList<>())
-                            .addAll(collect);
-                });
+        Optional.ofNullable(entity)
+                .map(e -> e.getAuthorizations())
+                .ifPresent(a -> a.entrySet().stream()
+                        .forEach(authByTypeEntry -> {
+                            final List<Authorization> collect = authByTypeEntry.getValue().stream()
+                                    .filter(authorization -> {
+                                        return !testCanSetAuthorization(authorization, authorizationListForCurrentUser);
+                                    })
+                                    .collect(Collectors.toList());
+                            modifiedAuthorizations
+                                    .computeIfAbsent(authByTypeEntry.getKey(), k -> new LinkedList<>())
+                                    .addAll(collect);
+                        })
+                );
     }
 
     private boolean testCanSetAuthorization(Authorization authorization, List<Authorization> authorizationStream) {
