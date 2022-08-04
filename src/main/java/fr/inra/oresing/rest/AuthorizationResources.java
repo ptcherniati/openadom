@@ -60,7 +60,9 @@ public class AuthorizationResources {
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, authorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
-        authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+        if(authorization.getUuid()==null){
+            authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+        }
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
         String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authId.toString(), Charset.defaultCharset());

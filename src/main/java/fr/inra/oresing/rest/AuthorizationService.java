@@ -80,35 +80,28 @@ public class AuthorizationService {
 
         Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
 
-        authorizationsByType.entrySet().stream()
+        final List<Authorization> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
+                .map(oreSiAuthorization -> oreSiAuthorization.getAuthorizations())
+                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
+                .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        final Map<OperationType, List<Authorization>> modifiedAuthorizations = authorizationsByType.entrySet().stream()
                 .map(authByTypeEntry -> {
-                    if (isApplicationCreator) {
-                        return authByTypeEntry.getValue();
+                    if (!isApplicationCreator) {
+                       removeAuthorizationThatCantBeModified(authByTypeEntry, authorizationListForCurrentUser);
                     }
-                    final Stream<Authorization> authorizationStream = authorizationsForCurrentUser.stream()
-                            .map(oreSiAuthorization -> oreSiAuthorization.getAuthorizations())
-                            .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
-                            .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
-                            .flatMap(List::stream);
-                    return authByTypeEntry.getValue().stream()
-                            .filter(authorization -> {
-                                return testCanSetAuthorization(authorization, authorizationStream);
-                            })
-                            .collect(Collectors.toList());
+                    return authByTypeEntry;
                 })
-                .forEach(authByType -> {
-                    authByType.forEach(authorization -> {
-                        authorization.getDataGroups()
-                                .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
-                        Set<String> labels = Optional.ofNullable(authorizationDescription)
-                                .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
-                                .map(Map::keySet)
-                                .orElseGet(Set::of);
-                        Preconditions.checkArgument(
-                                labels.containsAll(authorization.getRequiredAuthorizations().keySet())
-                        );
-                    });
-                });
+                .map(authByType -> {
+                    testAuthorizationArguments(authorizationDescription, authByType);
+                    return authByType;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (!isApplicationCreator) {
+            addStoredAuthorizationThatCantBeModified(entity, authorizationListForCurrentUser, modifiedAuthorizations);
+        }
         entity.setName(authorizations.getName());
         entity.setOreSiUsers(authorizations.getUsersId());
         entity.setApplication(application.getId());
@@ -118,8 +111,45 @@ public class AuthorizationService {
         return entity;
     }
 
-    private boolean testCanSetAuthorization(Authorization authorization, Stream<Authorization> authorizationStream) {
-        return authorizationStream
+    private static void testAuthorizationArguments(Configuration.AuthorizationDescription authorizationDescription, Map.Entry<OperationType, List<Authorization>> authByType) {
+        authByType.getValue().forEach(authorization -> {
+            authorization.getDataGroups()
+                    .forEach(datagroup -> Preconditions.checkArgument(authorizationDescription.getDataGroups().containsKey(datagroup)));
+            Set<String> labels = Optional.ofNullable(authorizationDescription)
+                    .map(Configuration.AuthorizationDescription::getAuthorizationScopes)
+                    .map(Map::keySet)
+                    .orElseGet(Set::of);
+            Preconditions.checkArgument(
+                    labels.containsAll(authorization.getRequiredAuthorizations().keySet())
+            );
+        });
+    }
+
+    private void removeAuthorizationThatCantBeModified(Map.Entry<OperationType, List<Authorization>> authByTypeEntry, List<Authorization> authorizationListForCurrentUser){
+        final List<Authorization> collect = authByTypeEntry.getValue().stream()
+                .filter(authorization -> {
+                    return testCanSetAuthorization(authorization, authorizationListForCurrentUser);
+                })
+                .collect(Collectors.toList());
+        authByTypeEntry.setValue(collect);
+    }
+
+    private void addStoredAuthorizationThatCantBeModified(OreSiAuthorization entity, List<Authorization> authorizationListForCurrentUser, Map<OperationType, List<Authorization>> modifiedAuthorizations) {
+        entity.getAuthorizations().entrySet().stream()
+                .forEach(authByTypeEntry -> {
+                    final List<Authorization> collect = authByTypeEntry.getValue().stream()
+                            .filter(authorization -> {
+                                return !testCanSetAuthorization(authorization, authorizationListForCurrentUser);
+                            })
+                            .collect(Collectors.toList());
+                    modifiedAuthorizations
+                            .computeIfAbsent(authByTypeEntry.getKey(),k->new LinkedList<>())
+                            .addAll(collect);
+                });
+    }
+
+    private boolean testCanSetAuthorization(Authorization authorization, List<Authorization> authorizationStream) {
+        return authorizationStream.stream()
                 .anyMatch(authorizationAdmin -> testCanSetAuthorization(authorization, authorizationAdmin));
     }
 
@@ -130,10 +160,10 @@ public class AuthorizationService {
         }
         return authorization.getRequiredAuthorizations().entrySet().stream().allMatch(
                 ltreeEntry -> {
-                    if (!authorizationAdmin.getRequiredAuthorizations().containsKey(ltreeEntry.getKey())) {
+                    if (!authorization.getRequiredAuthorizations().containsKey(ltreeEntry.getKey())) {
                         return true;
                     } else {
-                        return ltreeEntry.getValue().getSql().startsWith(authorizationAdmin.getRequiredAuthorizations().get(ltreeEntry.getKey()).getSql());
+                        return authorization.getRequiredAuthorizations().get(ltreeEntry.getKey()).getSql().startsWith(ltreeEntry.getValue().getSql());
                     }
                 }
         );
