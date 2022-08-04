@@ -76,6 +76,7 @@
           :isApplicationAdmin="isApplicationAdmin"
           :publicAuthorizations="publicAuthorizations"
           :ownAuthorizations="ownAuthorizations"
+          :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
           :current-authorization-scope="{}"
           :is-root="true"
           class="rows"
@@ -153,6 +154,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   authorization = {};
   publicAuthorizations = [];
   ownAuthorizations = [];
+  ownAuthorizationsColumnsByPath = {};
   authorizations = [];
   users = [];
   name = null;
@@ -326,7 +328,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         authorizationsForUser: authorizationsForUser
       } = grantableInfos);
 
-
+      console.log('authorizationsForUser', authorizationsForUser)
       let auths = authorizationsForUser.authorizationResults.admin
       if (JSON.parse(localStorage.getItem('authenticatedUser'))) {
         let ownAuthorizations = JSON.parse(localStorage.getItem('authenticatedUser')).authorizations
@@ -346,7 +348,22 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           }
         }
       }
-      console.log('ownAuthorizations', this.ownAuthorizations)
+       for (const path of this.ownAuthorizations) {
+        for (const scopeId in authorizationsForUser.authorizationByPath) {
+         console.log('path', path, 'scope', scopeId, "authorizationResults", authorizationsForUser.authorizationResults[scopeId])
+          console.log('scope', scopeId)
+              if(authorizationsForUser.authorizationByPath[scopeId]){
+                for (const pathKey in authorizationsForUser.authorizationByPath[scopeId]) {
+                  if (pathKey.startsWith(path) || path.startsWith(pathKey)){
+                      let autorizedPath = pathKey.startsWith(path) ? path : pathKey;
+                      this.ownAuthorizationsColumnsByPath[autorizedPath] = this.ownAuthorizationsColumnsByPath[autorizedPath] || []
+                      this.ownAuthorizationsColumnsByPath[autorizedPath].push(scopeId)
+
+                  }
+                }
+              }
+        }
+      }
       this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription};
       if (!this.repositury) {
         this.columnsVisible.publication = {...this.columnsVisible.publication, display: false};

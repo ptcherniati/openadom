@@ -42,16 +42,16 @@
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
                     type="is-warning"
-                    :active="canShowWarning(index)"
+                    :active="canShowWarning(index, indexColumn)"
                     :label="$t('validation.noRightsForThisOPeration')"
                 >
                   <b-icon
                       :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
                       pack="far"
                       size="is-medium"
-                      :type="states[indexColumn][getPath(index)].hasPublicStates?'is-light':'is-primary'"
-                      :disabled="canShowWarning(index)"
-                      @click.native="canShowWarning(index)?index=>i:selectCheckbox($event, index, indexColumn)"
+                      :type="(states[indexColumn][getPath(index)].hasPublicStates || canShowWarning(index, indexColumn))?'is-light':'is-primary'"
+                      :disabled="canShowWarning(index, indexColumn)"
+                      @click.native="canShowWarning(index, indexColumn)?index=>i:selectCheckbox($event, index, indexColumn)"
                   />
                 </b-tooltip>
                 <AuthorizationForPeriodDatagroups
@@ -61,7 +61,7 @@
                     :state="states[indexColumn][getPath(index)]"
                     :index="index"
                     :index-column="indexColumn"
-                    :disabled="canShowWarning(index)"
+                    :disabled="canShowWarning(index, indexColumn)"
                     @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
                 />
                 <b-tooltip
@@ -84,7 +84,7 @@
                     ></b-icon>
                   </b-button>
                   <template v-slot:content>
-                    <div v-if="canShowWarning(index)">
+                    <div v-if="canShowWarning(index, indexColumn)">
                       {{$t('validation.noRightsForThisOPeration')}}
                     </div>
                     <div v-else-if="states[indexColumn][getPath(index)].state === 0">
@@ -124,6 +124,7 @@
                 :auth-reference="getNextAuthreference(scope)"
                 :publicAuthorizations="publicAuthorizations"
                 :ownAuthorizations="ownAuthorizations"
+                :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
                 :authorization="authorization"
                 :columns-visible="columnsVisible"
                 :data-groups="dataGroups"
@@ -163,7 +164,8 @@ export default class AuthorizationTable extends Vue {
   @Prop({default: false}) isRoot;
   @Prop() dataGroups; // array of the datagroups in  authorization configuration
   @Prop() publicAuthorizations; //the authorizations for public
-  @Prop() ownAuthorizations; //the authorizations for public
+  @Prop() ownAuthorizations; //the authorizations for user
+  @Prop() ownAuthorizationsColumnsByPath; //the authorizations by path for user
   @Prop() authorization; //the authorizations scope from authorization configuration
   @Prop() authorizationScopes; //the authorizationsscope from authorization configuration
   @Prop() currentAuthorizationScope; //the current authorizations scope
@@ -217,9 +219,21 @@ export default class AuthorizationTable extends Vue {
     return (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)||oa.startsWith(this.getPath(index))))?true:false
   }
 
-  canShowWarning(index){
-    return (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)))?false:true
+  canShowWarning(index, column){
+    return (
+        (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)))
+        && this.isAuthorizedColumnForPath(index,  column)
+    )?false:true
   }
+  isAuthorizedColumnForPath(index, column){
+    for (const path in this.ownAuthorizationsColumnsByPath) {
+      if (this.getPath(index).startsWith(path) && this.ownAuthorizationsColumnsByPath[path].indexOf(column)>=0){
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   getScope() {
     return this.authorizationScopes?.[0]?.id;
