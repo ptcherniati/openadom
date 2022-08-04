@@ -221,8 +221,8 @@ export default class AuthorizationTable extends Vue {
 
   canShowWarning(index, column){
     return (
-        (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)))
-        && this.isAuthorizedColumnForPath(index,  column)
+        this.isApplicationAdmin || (this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa))
+        && this.isAuthorizedColumnForPath(index,  column))
     )?false:true
   }
   isAuthorizedColumnForPath(index, column){
