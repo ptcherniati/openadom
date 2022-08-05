@@ -162,7 +162,7 @@ public class OreSiResources {
                         final Map<String, Integer> authorizationScope = repositoryDescription.getAuthorizationScope();
                         final ApplicationResult.DataType.TokenDateDescription startDate = Optional.ofNullable(repositoryDescription.getStartDate()).map(sd -> new ApplicationResult.DataType.TokenDateDescription(sd.getToken())).orElse(null);
                         final ApplicationResult.DataType.TokenDateDescription endDate = Optional.ofNullable(repositoryDescription.getEndDate()).map(ed -> new ApplicationResult.DataType.TokenDateDescription(ed.getToken())).orElse(null);
-                        return new ApplicationResult.DataType.Repository(filePattern, authorizationScope,startDate,endDate);
+                        return new ApplicationResult.DataType.Repository(filePattern, authorizationScope, startDate, endDate);
                     })
                     .orElse(null);
             return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations);
@@ -321,21 +321,17 @@ public class OreSiResources {
             for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
                 String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
-                /*for (Map.Entry<Ltree, UUID> ltreeUUIDEntry : referenceLineChecker.getReferenceValues().entrySet()) {
-                    // TODO renvois null et je ne vois pas pourquoi... LV
-                    final ReferenceValue referenceValue = requiredreferencesValues.getOrDefault(ltreeUUIDEntry.getKey(), List.of())
-                            .stream()
-                            .findFirst().orElse(null);
-                    if(referenceValue!=null) {
-                        referenceLineCheckers
-                                .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
-                        break;
-                    }
-                }*/
-
                 referenceLineChecker.getReferenceValues().entrySet()
-                        .stream().filter(e->requiredreferencesValues.containsKey(e.getKey()))
-                        .forEach(e->referenceLineCheckers
+                        .stream()
+                        .filter(e -> requiredreferencesValues.containsKey(e.getKey()))
+                        .filter(e -> list.stream()
+                                .anyMatch(dataRow -> dataRow.getValues()
+                                        .getOrDefault(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable(), Map.of())
+                                        .getOrDefault(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent(), "")
+                                        .equals(e.getKey().getSql())
+                                )
+                        )
+                        .forEach(e -> referenceLineCheckers
                                 .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, requiredreferencesValues.get(e.getKey()).stream().findFirst().orElse(null))));
             }
         }
