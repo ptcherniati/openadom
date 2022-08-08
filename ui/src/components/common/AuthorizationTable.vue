@@ -155,7 +155,7 @@ import AuthorizationForPeriodDatagroups from "@/components/common/AuthorizationF
   components: {FontAwesomeIcon, AuthorizationForPeriodDatagroups},
 })
 export default class AuthorizationTable extends Vue {
-  STATES = {"-1": "minus-square", 0: "square", 1: "check-square"};
+  STATES = {"-1": "square-minus", 0: "square", 1: "square-check"};
   EXTRACTION = "extraction";
   @Prop() authReference; //informations about node
   @Prop() remainingOption; //array of next nodes
