@@ -20,6 +20,7 @@
     "buefy": "^0.9.8",
     "chart.js": "^2.9.4",
     "core-js": "^3.17.1",
+    "cypress-file-upload": "^5.0.7",
     "husky": "^6.0.0",
     "moment": "^2.29.3",
     "sortablejs": "^1.14.0",
