@@ -26,12 +26,17 @@ a {
 // affichage icon uniformisé
 .control.has-icons-right .input.is-small ~ .icon,
 .control.has-icons-left .input.is-small ~ .icon {
-  font-size: 0.5rem;
+  font-size: 0.75rem;
+  top: 0;
+  margin-left: 0;
 }
 .button .icon, .button .icon.is-small, .icon{
   font-size: $size-icon-small;
   align-items: center;
   display: inline-flex;
+}
+.icon.is-medium {
+  font-size: $size-icon-medium;
 }
 
 .inputAuth .control.has-icons-left .icon.is-left{
