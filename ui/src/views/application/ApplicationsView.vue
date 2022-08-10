@@ -357,6 +357,7 @@ export default class ApplicationsView extends Vue {
 
     .card-footer-item {
       border-right: none;
+      padding: 0.5rem;
     }
   }
 }

@@ -90,7 +90,7 @@
             @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
             <span class="file-cta">
-              <b-icon icon="upload" style="font-size: 0.75rem"></b-icon>
+              <b-icon icon="upload"></b-icon>
             </span>
           </b-upload>
         </div>
@@ -105,7 +105,7 @@
               <b-icon
                 class="file-icon"
                 icon="archive"
-                style="font-size: 0.75rem; color: white"
+                style="color: white"
               ></b-icon>
             </span>
           </b-button>

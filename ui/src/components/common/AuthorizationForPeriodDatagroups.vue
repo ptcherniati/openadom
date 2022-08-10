@@ -1,19 +1,19 @@
 <template>
   <span>
     <b-tooltip position="is-right" multilined>
-      <a
+      <b-button
           v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
           class="show-check-details"
           :type="state.state !== 1 ? 'is-grey ' : 'is-primary '"
           @click="showDetail"
-          style="color: #006464ff; margin-left: 10px"
+          style="border: none; background-color: transparent; margin: 0px"
       ><b-icon
           :type="disabled?'is-warning-light':'is-primary'"
           v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
           icon="eye"
           size="fa-4x"
       ></b-icon
-      ></a>
+      ></b-button>
       <template v-slot:content>
                     <div v-if="disabled"
                          class="has-background-warning-light has-text-black-bis">
