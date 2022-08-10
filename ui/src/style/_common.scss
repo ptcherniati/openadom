@@ -38,19 +38,16 @@ a {
 .icon.is-medium {
   font-size: $size-icon-medium;
 }
+.control.has-icons-right .icon.is-right {
+  top: -2px;
+}
+.control.has-icons-left .icon {
+  top: -5px;
+}
 
 .inputAuth .control.has-icons-left .icon.is-left{
-  top: 8px;
-  font-size: 0.5rem;
+  font-size: $size-icon-small;
   align-items: center;
-}
-.control.has-icons-left .icon, .control.has-icons-left .icon.is-left{
-  top: 5px;
-  left: 5px;
-}
-.control.has-icons-right .icon.is-right{
-  top: 5px;
-  right: 15px;
 }
 
 .clickable {
