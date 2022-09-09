@@ -54,7 +54,7 @@ public class TransformerFactory {
             String expression = groovyConfiguration.getExpression();
             StringGroovyExpression groovyExpression = StringGroovyExpression.forExpression(expression);
             Set<String> references = groovyConfiguration.getReferences();
-            ImmutableMap<String, Object> groovyContext = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
+            ImmutableMap<String, Object> groovyContext = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references, null);
             Preconditions.checkState(groovyConfiguration.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
             TransformOneLineElementTransformer transformer = new GroovyExpressionOnOneLineElementTransformer(groovyExpression, groovyContext, target);
             transformersBuilder.add(transformer);

@@ -106,7 +106,8 @@ abstract class ReferenceImporter {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
             ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
-            checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()));
+            boolean allowUnexpectedColumns = referenceImporterContext.allowUnexpectedColumns;
+            checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()), allowUnexpectedColumns);
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading =
@@ -156,10 +157,10 @@ abstract class ReferenceImporter {
         return new RowWithReferenceDatum(rowWithReferenceDatum.getLineNumber(), rowWithDefaults, rowWithReferenceDatum.getRefsLinkedTo());
     }
 
-    private void checkHeader(ImmutableList<String> columns, int headerLineNumber) {
+    private void checkHeader(ImmutableList<String> columns, int headerLineNumber, boolean allowUnexpectedColumns) {
         ImmutableSet<String> expectedHeaders = referenceImporterContext.getExpectedHeaders();
         ImmutableSet<String> mandatoryHeaders = referenceImporterContext.getMandatoryHeaders();
-        InvalidDatasetContentException.checkHeader(expectedHeaders, mandatoryHeaders, ImmutableMultiset.copyOf(columns), headerLineNumber);
+        InvalidDatasetContentException.checkHeader(expectedHeaders, mandatoryHeaders, ImmutableMultiset.copyOf(columns), headerLineNumber, allowUnexpectedColumns);
     }
 
     /**

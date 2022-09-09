@@ -156,6 +156,9 @@ public class Configuration {
         @ApiModelProperty(notes = "The list of validations to perform on this reference.", required = false)
         private LinkedHashMap<String, LineValidationRuleWithColumnsDescription> validations = new LinkedHashMap<>();
 
+        @ApiModelProperty(notes = "Possibility that columns of the file are not described", required = false)
+        private boolean allowUnexpectedColumns = false;
+
         public Set<String> doGetAllColumns() {
             return doGetAllColumnDescriptions().keySet();
         }
@@ -499,6 +502,9 @@ public class Configuration {
 
         @ApiModelProperty(notes = "The description of some values in header to bind to variable component", required = false)
         private List<HeaderConstantDescription> constants = new LinkedList<>();
+
+        @ApiModelProperty(notes = "Possibility that columns of the file are not described", required = false)
+        private boolean allowUnexpectedColumns = false;
     }
 
     @Getter

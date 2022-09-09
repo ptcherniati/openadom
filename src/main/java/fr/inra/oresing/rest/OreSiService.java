@@ -23,6 +23,8 @@ import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfiguration
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.ReferenceValidationCheckResult;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -453,7 +455,7 @@ public class OreSiService {
         final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(app.getName(), dataType, getCurrentUser().getLogin());
 
         assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
-        publishVersion(dataType, authorizationPublicationHelper,errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
+        publishVersion(dataType, authorizationPublicationHelper, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
         unPublishVersions(app, filesToStore, dataType);
@@ -497,6 +499,7 @@ public class OreSiService {
                                 Configuration.FormatDescription formatDescription,
                                 BinaryFileDataset binaryFileDataset) throws IOException {
         try (InputStream csv = new ByteArrayInputStream(storedFile.getData())) {
+            PublishContext publishContext = new PublishContext(binaryFileDataset);
             CSVFormat csvFormat = CSVFormat.DEFAULT
                     .withDelimiter(formatDescription.getSeparator())
                     .withSkipHeaderRecord();
@@ -504,18 +507,18 @@ public class OreSiService {
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
             Datum constantValues = new Datum();
-            readPreHeader(formatDescription, constantValues, linesIterator);
+            readPreHeader(formatDescription, constantValues, linesIterator, publishContext);
 
-            ImmutableList<String> columns = readHeaderRow(linesIterator);
-            readPostHeader(formatDescription, columns, constantValues, linesIterator);
+            ImmutableList<String> columns = readHeaderRow(linesIterator, publishContext);
+            readPostHeader(formatDescription, columns, constantValues, linesIterator, publishContext);
             UniquenessBuilder uniquenessBuilder = new UniquenessBuilder(app, dataType);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
-                    .map(buildCsvRecordToLineAsMapFn(columns))
+                    .map(buildCsvRecordToLineAsMapFn(columns, publishContext))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
-                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType, binaryFileDataset == null ? null : binaryFileDataset.getRequiredAuthorizations()))
-                    .flatMap(buildLineValuesToEntityStreamFn(app, authorizationPublicationHelper,dataType, storedFile.getId(), uniquenessBuilder, errors, binaryFileDataset));
+                    .map(buildReplaceMissingValuesByDefaultValuesFn(app, dataType))
+                    .flatMap(buildLineValuesToEntityStreamFn(app, authorizationPublicationHelper, dataType, storedFile.getId(), uniquenessBuilder, errors, publishContext));
             AtomicLong lines = new AtomicLong();
             final Instant debut = Instant.now();
             final DataRepository dataRepository = repo.getRepository(app).data();
@@ -602,12 +605,12 @@ public class OreSiService {
      * @param uniquenessBuilder
      * @return
      */
-    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, AuthorizationPublicationHelper authorizationPublicationHelper, String dataType, UUID fileId, UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset) {
+    private Function<RowWithData, Stream<Data>> buildLineValuesToEntityStreamFn(Application app, AuthorizationPublicationHelper authorizationPublicationHelper, String dataType, UUID fileId, UniquenessBuilder uniquenessBuilder, List<CsvRowValidationCheckResult> errors, PublishContext publishContext) {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(app, dataType);
         Configuration conf = app.getConfiguration();
         Configuration.DataTypeDescription dataTypeDescription = conf.getDataTypes().get(dataType);
 
-        return buildRowWithDataStreamFunction(app, dataType, fileId, uniquenessBuilder,authorizationPublicationHelper, errors, lineCheckers, dataTypeDescription, binaryFileDataset);
+        return buildRowWithDataStreamFunction(app, dataType, fileId, uniquenessBuilder, authorizationPublicationHelper, errors, lineCheckers, dataTypeDescription, publishContext);
     }
 
     /**
@@ -630,7 +633,7 @@ public class OreSiService {
                                                                                UniquenessBuilder uniquenessBuilder, AuthorizationPublicationHelper authorizationPublicationHelper, List<CsvRowValidationCheckResult> errors,
                                                                                ImmutableSet<LineChecker> lineCheckers,
                                                                                Configuration.DataTypeDescription dataTypeDescription,
-                                                                               BinaryFileDataset binaryFileDataset) {
+                                                                               PublishContext publishContext) {
         final Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
         final boolean haveAuthorizationsDescription = authorization != null;
 
@@ -692,6 +695,7 @@ public class OreSiService {
                     requiredAuthorizations.put(authorizationScope, Ltree.fromSql(requiredAuthorizationsFromDatum));
                 });
             }
+            BinaryFileDataset binaryFileDataset = Optional.ofNullable(publishContext).map(PublishContext::getBinaryFileDataset).orElse(null);
             checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, rowWithData.getLineNumber());
             checkrequiredAuthorizationsInDatasetRange(requiredAuthorizations, errors, binaryFileDataset, rowWithData.getLineNumber());
             // String rowId = Hashing.sha256().hashString(line.toString(), Charsets.UTF_8).toString();
@@ -731,18 +735,18 @@ public class OreSiService {
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
                 }
                 final Authorization authorization1 = new Authorization(List.of(dataGroup), requiredAuthorizations, timeScope);
-                if(!authorizationPublicationHelper.isRepository()&& !authorizationPublicationHelper.isApplicationCreator()){
-                    if(!authorizationPublicationHelper.hasRightForPublishOrUnPublish(authorization1)){
+                if (!authorizationPublicationHelper.isRepository() && !authorizationPublicationHelper.isApplicationCreator()) {
+                    if (!authorizationPublicationHelper.hasRightForPublishOrUnPublish(authorization1)) {
                         errors.add(
                                 new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
                                         "norightforpublish",
                                         ImmutableMap.of(
-                                                "application",app.getName(),
-                                                "dataType",dataType,
-                                                "lineNumber",rowWithData.getLineNumber()
+                                                "application", app.getName(),
+                                                "dataType", dataType,
+                                                "lineNumber", rowWithData.getLineNumber()
                                         )
                                 ),
-                                rowWithData.getLineNumber())
+                                        rowWithData.getLineNumber())
                         );
                     }
                 }
@@ -821,11 +825,11 @@ public class OreSiService {
      * <p>
      * Si des valeurs par défaut ont été définies dans le YAML, la donnée doit les avoir.
      */
-    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType, Map<String, Ltree> requiredAuthorizations) {
-        ComputedValuesContext computedValuesContext = getComputedValuesContext(app, dataType, requiredAuthorizations);
-        ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns = computedValuesContext.getDefaultValueFns();
-        ImmutableSet<VariableComponentKey> replaceEnabled = computedValuesContext.getReplaceEnabled();
+    private Function<RowWithData, RowWithData> buildReplaceMissingValuesByDefaultValuesFn(Application app, String dataType) {
         return rowWithData -> {
+            ComputedValuesContext computedValuesContext = getComputedValuesContext(app, dataType, rowWithData.publishContext);
+            ImmutableMap<VariableComponentKey, Function<Datum, String>> defaultValueFns = computedValuesContext.getDefaultValueFns();
+            ImmutableSet<VariableComponentKey> replaceEnabled = computedValuesContext.getReplaceEnabled();
             Map<VariableComponentKey, String> rowWithDefaults = new LinkedHashMap<>();
             Map<VariableComponentKey, String> rowWithValues = new LinkedHashMap<>(rowWithData.getDatum().asMap());
             defaultValueFns.entrySet()
@@ -842,7 +846,7 @@ public class OreSiService {
                         }
                     });
             rowWithDefaults.putAll(rowWithValues);
-            return new RowWithData(rowWithData.getLineNumber(), new Datum(ImmutableMap.copyOf(rowWithDefaults)));
+            return new RowWithData(rowWithData.getLineNumber(), new Datum(ImmutableMap.copyOf(rowWithDefaults)), rowWithData.publishContext);
         };
     }
 
@@ -860,7 +864,7 @@ public class OreSiService {
                     .putAll(rowWithData.getDatum().asMap())
                     .build();
             Datum datum = new Datum(values);
-            return new RowWithData(rowWithData.getLineNumber(), datum);
+            return new RowWithData(rowWithData.getLineNumber(), datum, rowWithData.publishContext);
         };
     }
 
@@ -871,6 +875,7 @@ public class OreSiService {
         ImmutableSet<String> expectedHeaderColumns = formatDescription.getColumns().stream()
                 .map(Configuration.ColumnBindingDescription::getHeader)
                 .collect(ImmutableSet.toImmutableSet());
+        boolean allowUnexpectedColumns = formatDescription.isAllowUnexpectedColumns();
         int headerLine = formatDescription.getHeaderLine();
         ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
         Function<ParsedCsvRow, ImmutableSet<RowWithData>> lineAsMapToRecordsFn = parsedCsvRow -> {
@@ -878,15 +883,16 @@ public class OreSiService {
             ImmutableMultiset<String> actualHeaderColumns = line.stream()
                     .map(Map.Entry::getKey)
                     .collect(ImmutableMultiset.toImmutableMultiset());
-            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, expectedHeaderColumns, actualHeaderColumns, headerLine);
+            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, expectedHeaderColumns, actualHeaderColumns, headerLine, allowUnexpectedColumns);
             Map<VariableComponentKey, String> record = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : line) {
                 String header = entry.getKey();
                 String value = entry.getValue();
-                Configuration.ColumnBindingDescription bindingDescription = bindingPerHeader.get(header);
-                record.put(bindingDescription.getBoundTo(), value);
+                Optional.ofNullable(bindingPerHeader.get(header))
+                        .map(Configuration.ColumnBindingDescription::getBoundTo)
+                        .ifPresent(boundTo -> record.put(boundTo, value));
             }
-            return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), new Datum(record)));
+            return ImmutableSet.of(new RowWithData(parsedCsvRow.getLineNumber(), new Datum(record), parsedCsvRow.publishContext));
         };
         return lineAsMapToRecordsFn;
     }
@@ -969,7 +975,7 @@ public class OreSiService {
                             .putAll(bodyValues)
                             .build();
                     Datum datum = new Datum(record);
-                    records.add(new RowWithData(parsedCsvRow.getLineNumber(), datum));
+                    records.add(new RowWithData(parsedCsvRow.getLineNumber(), datum, parsedCsvRow.publishContext));
 
                     // et on passe au groupe de colonnes répétées suivant
                     tokenValues.clear();
@@ -999,18 +1005,23 @@ public class OreSiService {
      * build the function that diplay the line in a {@link ParsedCsvRow}
      *
      * @param columns
+     * @param publishContext
      * @return
      */
-    private Function<CSVRecord, ParsedCsvRow> buildCsvRecordToLineAsMapFn(ImmutableList<String> columns) {
+    private Function<CSVRecord, ParsedCsvRow> buildCsvRecordToLineAsMapFn(ImmutableList<String> columns, PublishContext publishContext) {
         return line -> {
             int lineNumber = Ints.checkedCast(line.getRecordNumber());
+            publishContext.setCurrentRowNumber(lineNumber);
             Iterator<String> currentHeader = columns.iterator();
             List<Map.Entry<String, String>> record = new LinkedList<>();
+            List<String> currentRow = new LinkedList<>();
             line.forEach(value -> {
+                currentRow.add(value);
                 String header = currentHeader.next();
                 record.add(Map.entry(header.strip(), value));
             });
-            return new ParsedCsvRow(lineNumber, record);
+            publishContext.setCurrentRow(currentRow);
+            return new ParsedCsvRow(lineNumber, record, publishContext);
         };
     }
 
@@ -1021,20 +1032,23 @@ public class OreSiService {
      * @param constantValues
      * @param linesIterator
      */
-    private void readPreHeader(Configuration.FormatDescription formatDescription, Datum constantValues, Iterator<CSVRecord> linesIterator) {
+    private void readPreHeader(Configuration.FormatDescription formatDescription, Datum constantValues, Iterator<CSVRecord> linesIterator, PublishContext publishContext) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
                 formatDescription.getConstants().stream()
                         .collect(ImmutableSetMultimap.toImmutableSetMultimap(Configuration.HeaderConstantDescription::getRowNumber, Function.identity()));
 
         for (int lineNumber = 1; lineNumber < formatDescription.getHeaderLine(); lineNumber++) {
             CSVRecord row = linesIterator.next();
+            List preHeaderLine = new LinkedList<>();
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber();
                 String value = row.get(columnNumber - 1);
+                preHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
             });
+            publishContext.getPreHeaderRow().add(preHeaderLine);
         }
     }
 
@@ -1042,11 +1056,15 @@ public class OreSiService {
      * read the header row and return the columns
      *
      * @param linesIterator
+     * @param publishContext
      * @return
      */
-    private ImmutableList<String> readHeaderRow(Iterator<CSVRecord> linesIterator) {
+    private ImmutableList<String> readHeaderRow(Iterator<CSVRecord> linesIterator, PublishContext publishContext) {
         CSVRecord headerRow = linesIterator.next();
-        return Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+        final ImmutableList<String> headers = Streams.stream(headerRow)
+                .collect(ImmutableList.toImmutableList());
+        publishContext.setHeaderRow(headers);
+        return headers;
     }
 
     /**
@@ -1054,8 +1072,9 @@ public class OreSiService {
      *
      * @param formatDescription
      * @param linesIterator
+     * @param publishContext
      */
-    private void readPostHeader(Configuration.FormatDescription formatDescription, ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator) {
+    private void readPostHeader(Configuration.FormatDescription formatDescription, ImmutableList<String> headerRow, Datum constantValues, Iterator<CSVRecord> linesIterator, PublishContext publishContext) {
         ImmutableSetMultimap<Integer, Configuration.HeaderConstantDescription> perRowNumberConstants =
                 formatDescription.getConstants().stream()
                         .collect(
@@ -1066,21 +1085,26 @@ public class OreSiService {
                         );
         for (int lineNumber = formatDescription.getHeaderLine() + 1; lineNumber < formatDescription.getFirstRowLine(); lineNumber++) {
             CSVRecord row = linesIterator.next();
+            List postHeaderLine = new LinkedList<>();
+            publishContext.getPostHeaderRow().add(row.getParser().getHeaderNames());
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber(headerRow);
                 String value = row.get(columnNumber - 1);
+                postHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
             });
+            publishContext.getPostHeaderRow().add(postHeaderLine);
         }
     }
 
-    private ComputedValuesContext getComputedValuesContext(Application app, String dataType, Map<String, Ltree> requiredAuthorizations) {
+    private ComputedValuesContext getComputedValuesContext(Application app, String dataType, PublishContext publishContext) {
         Configuration.DataTypeDescription dataTypeDescription = app.getConfiguration().getDataTypes().get(dataType);
         ImmutableMap.Builder<VariableComponentKey, Function<Datum, String>> defaultValueFnsBuilder = ImmutableMap.builder();
         ImmutableSet.Builder<VariableComponentKey> replaceEnabledBuilder = ImmutableSet.builder();
         Set<VariableComponentKey> variableComponentsFromRepository = new LinkedHashSet<>();
+        final Map<String, Ltree> requiredAuthorizations = Optional.ofNullable(publishContext).map(PublishContext::getBinaryFileDataset).map(BinaryFileDataset::getRequiredAuthorizations).orElse(null);
         if (requiredAuthorizations != null) {
             for (Map.Entry<String, Ltree> entry : requiredAuthorizations.entrySet()) {
                 Configuration.AuthorizationScopeDescription authorizationScopeDescription = dataTypeDescription.getAuthorization().getAuthorizationScopes().get(entry.getKey());
@@ -1102,7 +1126,7 @@ public class OreSiService {
                 }
                 Optional.ofNullable(componentDescription)
                         .map(Configuration.VariableComponentWithDefaultValueDescription::getDefaultValue)
-                        .map(defaultValueConfiguration -> getEvaluateGroovyWithContextFunction(app, defaultValueConfiguration))
+                        .map(defaultValueConfiguration -> getEvaluateGroovyWithContextFunction(app, defaultValueConfiguration, publishContext))
                         .ifPresent(computeDefaultValueFn -> defaultValueFnsBuilder.put(variableComponentKey, computeDefaultValueFn));
             }
             for (Map.Entry<String, Configuration.ComputedVariableComponentDescription> computedComponentEntry : variableDescription.getComputedComponents().entrySet()) {
@@ -1115,7 +1139,7 @@ public class OreSiService {
                 Configuration.GroovyConfiguration computation = Optional.ofNullable(componentDescription)
                         .map(Configuration.ComputedVariableComponentDescription::getComputation)
                         .orElseThrow();
-                Function<Datum, String> computeDefaultValueFn = getEvaluateGroovyWithContextFunction(app, computation);
+                Function<Datum, String> computeDefaultValueFn = getEvaluateGroovyWithContextFunction(app, computation, publishContext);
                 defaultValueFnsBuilder.put(variableComponentKey, computeDefaultValueFn);
                 replaceEnabledBuilder.add(variableComponentKey);
             }
@@ -1123,11 +1147,11 @@ public class OreSiService {
         return new ComputedValuesContext(defaultValueFnsBuilder.build(), replaceEnabledBuilder.build());
     }
 
-    private Function<Datum, String> getEvaluateGroovyWithContextFunction(Application app, Configuration.GroovyConfiguration computation) {
+    private Function<Datum, String> getEvaluateGroovyWithContextFunction(Application app, Configuration.GroovyConfiguration computation, PublishContext publishContext) {
         ReferenceValueRepository referenceValueRepository = repo.getRepository(app).referenceValue();
         Expression<String> defaultValueExpression = StringGroovyExpression.forExpression(computation.getExpression());
         Set<String> configurationReferences = computation.getReferences();
-        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, publishContext);
         Preconditions.checkState(computation.getDatatypes().isEmpty(), "à ce stade, on ne gère pas la chargement de données");
         Function<Datum, String> computeDefaultValueFn = datum -> {
             ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
@@ -1447,12 +1471,14 @@ public class OreSiService {
     private static class RowWithData {
         int lineNumber;
         Datum datum;
+        PublishContext publishContext;
     }
 
     @Value
     private static class ParsedCsvRow {
         int lineNumber;
         List<Map.Entry<String, String>> columns;
+        PublishContext publishContext;
     }
 
     protected class UniquenessBuilder {
@@ -1552,6 +1578,21 @@ public class OreSiService {
         @Override
         public int compareTo(UniquenessKeys uniquenessKeys) {
             return this.getKey().compareTo(uniquenessKeys.getKey());
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class PublishContext {
+        BinaryFileDataset binaryFileDataset;
+        List<List<String>> preHeaderRow = new LinkedList<>();
+        List<List<String>> postHeaderRow = new LinkedList<>();
+        List<String> headerRow = new LinkedList<>();
+        List<String> currentRow;
+        long currentRowNumber;
+
+        public PublishContext(BinaryFileDataset binaryFileDataset) {
+            this.binaryFileDataset = binaryFileDataset;
         }
     }
 }

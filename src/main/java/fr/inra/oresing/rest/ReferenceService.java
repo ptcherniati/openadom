@@ -77,6 +77,7 @@ public class ReferenceService {
                 .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
 
         Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
+        boolean allowUnexpectedColumns = referenceDescription.isAllowUnexpectedColumns();
 
         ImmutableSet<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().entrySet().stream()
                 .map(entry -> {
@@ -117,10 +118,6 @@ public class ReferenceService {
                 conf,
                 refType,
                 repo.getRepository(app).referenceValue());
-    /*    final Set<Object> patternColumns = constants.getPatternColumns()
-                .map(pt -> pt.values())
-                .flatMap(Collection::stream)
-                .stream().collect(Collectors.toSet());*/
         Set<String> patternColumns = constants.getPatternColumns()
                 .map(m->m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
                 .orElseGet(HashSet::new);
@@ -141,7 +138,8 @@ public class ReferenceService {
                         lineCheckers,
                         storedReferences,
                         columns,
-                        displayByReferenceAndNaturalKey
+                        displayByReferenceAndNaturalKey,
+                        allowUnexpectedColumns
                 );
         return referenceImporterContext;
     }
@@ -324,7 +322,7 @@ public class ReferenceService {
 
     private ImmutableMap<String, Object> computeGroovyContext(ReferenceValueRepository referenceValueRepository, GroovyDataInjectionConfiguration groovyDataInjectionConfiguration) {
         Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
-        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences);
+        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences,null);
         Preconditions.checkState(groovyDataInjectionConfiguration.getDatatypes().isEmpty(), "à ce stade, on ne gère pas le chargement de données. Les référentiels ne doivent pas dépendre des données expérimentales.");
         return contextForExpression;
     }

@@ -67,7 +67,7 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         return new InvalidDatasetContentException(List.of(csvRowValidationCheckResult));
     }
 
-    public static void checkHeader(ImmutableSet<String> expectedColumns, ImmutableSet<String> mandatoryColumns, ImmutableMultiset<String> actualColumns, int headerLine) {
+    public static void checkHeader(ImmutableSet<String> expectedColumns, ImmutableSet<String> mandatoryColumns, ImmutableMultiset<String> actualColumns, int headerLine, boolean allowUnexpectedColumns) {
         Preconditions.checkArgument(expectedColumns.containsAll(mandatoryColumns), "il y des colonnes obligatoires qui ne font pas parti des colonnes possibles");
         if (actualColumns.contains("")) {
             throw forEmptyHeader(headerLine);
@@ -80,7 +80,7 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
             throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
         }
         ImmutableSet<String> actualColumnsAsSet = actualColumns.elementSet();
-        boolean givenColumnIsUnexpected = !expectedColumns.containsAll(actualColumnsAsSet);
+        boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || expectedColumns.containsAll(actualColumnsAsSet));
         boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
         if (givenColumnIsUnexpected || mandatoryColumnIsMissing) {
             throw forInvalidHeaders(expectedColumns, mandatoryColumns, actualColumnsAsSet, headerLine);

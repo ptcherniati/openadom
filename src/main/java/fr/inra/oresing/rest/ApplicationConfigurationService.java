@@ -263,11 +263,10 @@ public class ApplicationConfigurationService {
             String variable = boundTo.getVariable();
             if (variables.contains(variable)) {
                 String component = boundTo.getComponent();
-                Set<String> components = dataTypeDescription.getData().get(variable).getComponents().keySet();
-                if (components.contains(component)) {
+                if (dataTypeDescription.getData().get(variable).hasComponent(component)) {
                     // OK
                 } else {
-                    builder.csvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, components);
+                    builder.csvBoundToUnknownVariableComponent(columnBindingDescription.getHeader(), variable, component, dataTypeDescription.getData().get(variable).doGetAllComponents());
                 }
             } else {
                 builder.csvBoundToUnknownVariable(columnBindingDescription.getHeader(), variable, variables);

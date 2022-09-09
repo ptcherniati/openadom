@@ -9,3 +9,7 @@ target
 *~
 /ui/cypress/videos/
 /ui/cypress/screenshots/
+/ ui/cypress/fixtures/applications/errors/errors.json
+/ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/grantable.json
+/ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json
+/ui/cypress/fixtures/applications/ore/monsore/monsoere.json

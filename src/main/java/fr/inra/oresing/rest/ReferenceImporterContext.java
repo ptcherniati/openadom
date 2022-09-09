@@ -42,6 +42,8 @@ public class ReferenceImporterContext {
 
     Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey;
 
+    boolean allowUnexpectedColumns = false;
+
     public String getDisplayByReferenceAndNaturalKey(String referencedColumn, String naturalKey, String locale){
         return this.displayByReferenceAndNaturalKey.getOrDefault(referencedColumn, new HashMap<>())
                 .getOrDefault(naturalKey, new HashMap<>())

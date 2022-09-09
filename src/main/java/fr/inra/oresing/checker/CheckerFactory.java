@@ -143,7 +143,7 @@ public class CheckerFactory {
             Set<String> references = configurationDescription.getGroovy().getReferences();
             Set<String> dataTypes = configurationDescription.getGroovy().getDatatypes();
             ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-            ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references);
+            ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references,null);
             DataRepository dataRepository = repository.getRepository(app).data();
             ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
             ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()

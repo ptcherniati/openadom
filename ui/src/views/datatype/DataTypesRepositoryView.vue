@@ -486,8 +486,9 @@ export default class DataTypesRepositoryView extends Vue {
       let ret = {};
       for (let auth in this.authorizations) {
         let vc = this.authorizations[auth];
+        let variables = this.configuration.data[vc.variable];
         var reference =
-          this.configuration.data[vc.variable].components[vc.component].checker.params.refType;
+            ({...variables.components, ...variables.computedComponents})[vc.component].checker.params.refType;
         let ref = await this.getOrLoadReferences(reference);
         ret[auth] = ref;
       }
