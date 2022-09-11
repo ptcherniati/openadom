@@ -19,6 +19,7 @@
       - [<a id="columns" />Description des colonnes columns](#a-idcolumns-description-des-colonnes-columns)
       - [<a id="computedColumns" />Colonnes calculées computed columns](#a-idcomputedcolumns-colonnes-calcul%C3%A9es-computed-columns)
       - [<a id="dynamicColumns" />Colonnes dynamiques dynamic columns](#a-iddynamiccolumns-colonnes-dynamiques-dynamic-columns)
+      - [Colonnes non déclarées](#colonnes-non-d%C3%A9clar%C3%A9es)
       - [On peut poser des contraintes sur les données de référence](#on-peut-poser-des-contraintes-sur-les-donn%C3%A9es-de-r%C3%A9f%C3%A9rence)
         - [Utilisation de vérificateurs checker](#utilisation-de-v%C3%A9rificateurs-checker)
         - [Utilisation de validations portant sur une ou plusieurs colonnnes](#utilisation-de-validations-portant-sur-une-ou-plusieurs-colonnnes)
@@ -410,6 +411,16 @@ On définira le référentiel objet de la manière suivante
         referenceColumnToLookForHeader: nom de la propriété_key # la colonne qui contient  les noms des colonnes dans le référentiels sus désigné.
 ```
 
+#### Colonnes non déclarées
+
+Si le fichier contient des colonnes non déclarées, une erreur est lancée lors du dépôt. Si toutefois on souhaite que le fichier puisse être déposé, on peut rajouter dans references l'information <code>allowUnexpectedColumns:true</code>̀
+
+
+``` yaml
+    references:
+      allowUnexpectedColumns: true
+
+```
 #### On peut poser des contraintes sur les données de référence
 
 ##### [Utilisation de vérificateurs (checker)](#ReferencesChecker)
@@ -1081,6 +1092,16 @@ etc...
 
 Dans l'exemple le variable-component SWC-variable aura pour valeur SWC résultat de la première parenthèse.
 
+##### Colonnes non déclarées
+
+Si le fichier contient des colonnes non déclarées, une erreur est lancée lors du dépôt. Si toutefois on souhaite que le fichier puisse être déposé, on peut rajouter dans format l'information <code>allowUnexpectedColumns:true</code>
+
+``` yaml
+    format:
+      allowUnexpectedColumns: true
+
+```
+
 #### <a id = "authorization" />*authorization* Dans la section __authorization__, on définit les objets sur lesquels porteront les les autorisations d'accès aux données :
 
 Authorization permet de définir des groupes de variables. Une ligne du fichier est découpée en autant de ligne que de
@@ -1309,4 +1330,4 @@ multiyaml.zip
 
 ## lors de l'importation de fichier csv dans l'application:
 
-* ouvrer la console avec F12 dans votre navigateur pour voir l'erreur de téléversement (erreur serveur) plus en détail.
+* ouvrez la console avec F12 dans votre navigateur pour voir l'erreur de téléversement (erreur serveur) plus en détail.
