@@ -405,6 +405,15 @@
                 >
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
+                <span
+                    v-else-if="
+                    row[component.variable][component.computedComponent] &&
+                    component.checker &&
+                    component.checker.pattern
+                  "
+                >
+                  {{ /.{25}(.*$)/.exec(row[component.variable][component.computedComponent])[1] }}
+                </span>
                 <span v-else>
                   <a
                     class="button inTable"
@@ -413,8 +422,11 @@
                   >
                     {{ getDisplay(row, component.variable, component.component) }}
                   </a>
-                  <p v-if="!getRefsLinkedToId(row, component)">
+                  <p v-if="!getRefsLinkedToId(row, component) && row[component.variable][component.component]">
                     {{ row[component.variable][component.component] }}
+                  </p>
+                  <p v-else-if="!getRefsLinkedToId(row, component) && row[component.variable][component.computedComponent]">
+                    {{ row[component.variable][component.computedComponent] }}
                   </p>
                 </span>
               </td>
@@ -639,11 +651,11 @@ export default class DataTypeTableView extends Vue {
   }
 
   getRefsLinkedToId(row, component) {
-    return this.refsLinkedTo[row.rowId][component.variable][component.component];
+    return this.refsLinkedTo[row.rowId][component.variable][component.component] ||this.refsLinkedTo[row.rowId][component.variable][component.computedComponent] ;
   }
 
   getTranslation(row, component) {
-    let translation = row[component.variable][component.component];
+    let translation = row[component.variable][component.component] || row[component.variable][component.computedComponent];
     return translation;
   }
   async getReferenceValues(row, component) {

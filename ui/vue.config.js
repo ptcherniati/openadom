@@ -14,6 +14,7 @@ module.exports = {
   configureWebpack: {
     devtool: "source-map",
   },
+  outputDir:'html',
 
   pluginOptions: {
     i18n: {

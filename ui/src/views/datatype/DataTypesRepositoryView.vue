@@ -430,7 +430,8 @@ export default class DataTypesRepositoryView extends Vue {
     let compositeReferenceDependance = false;
 
     try {
-      refType = this.configuration.data[variable].components[component].checker.params.refType;
+      let variable = this.configuration.data[variable];
+      refType = ({...variable.components, ...variable.compositeComponents})[component].checker.params.refType;
       compositeReferenceDependance = false;
       for (const ref in this.application.references) {
         if (this.application.references[ref].children.length) {
