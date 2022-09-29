@@ -13,7 +13,7 @@
         "requestMapperSerializationError": "Failed to transform json string {requestClient}: {message}"
     },
     "titles":{
-        "login-page":"Welcome to SI-ORE",
+        "login-page":"Welcome to Open ADOM",
         "applications-page":"My applications",
         "aide":"Help writing an application's configuration file.",
         "references-page":"{applicationName} references",

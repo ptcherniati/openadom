@@ -26,7 +26,7 @@
         "aria-btn-signup": "Bouton création d'un compte"
     },
     "titles": {
-        "login-page": "Bienvenue sur le SI ORE",
+        "login-page": "Bienvenue sur Open ADOM",
         "applications-page": "Mes applications",
         "aide": "Aide à l'écriture du fichier de configuration d'une application.",
         "references-page": "Référentiels de {applicationName}",
