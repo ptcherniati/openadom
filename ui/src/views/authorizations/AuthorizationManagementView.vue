@@ -119,7 +119,6 @@ export default class AuthorizationManagementView extends Vue {
   currentPage = 1;
 
   search(user, search) {
-    console.log("search", user, search);
     return user.login.match(search);
   }
 
@@ -188,7 +187,6 @@ export default class AuthorizationManagementView extends Vue {
   }
 
   selectAdmin(isAdmin, user) {
-    console.log("add", this.changes.administrator.add, "remove", this.changes.administrator.remove);
     if (isAdmin) {
       if (this.changes.administrator.remove.find((v) => v === user.id)) {
         this.changes.administrator.remove = this.changes.administrator.remove.filter(
@@ -207,7 +205,6 @@ export default class AuthorizationManagementView extends Vue {
   }
 
   addApplication(value, user) {
-    console.log("adding " + value);
     if (this.changes.applications[user.id]?.remove?.find((v) => v === value)) {
       this.changes.applications[user.id].remove = this.changes.applications[user.id].remove.filter(
         (v) => v !== value
@@ -232,7 +229,6 @@ export default class AuthorizationManagementView extends Vue {
   }
 
   beforeAdding(value) {
-    console.log("before adding " + value);
     return value;
   }
 }

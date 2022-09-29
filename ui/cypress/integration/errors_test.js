@@ -268,7 +268,6 @@ describe('test create application', () => {
                 .invoke('text')
                 .then(function (error) {
                     returnErrors[methodName] = error
-                    console.log("Message d'erreur pour l'erreur " + methodName, error)
                 });
         }
     })

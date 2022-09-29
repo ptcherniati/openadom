@@ -17,7 +17,13 @@ public class ApplicationResult {
     InternationalizationMap internationalization;
     Map<String, Reference> references;
     Map<String, DataType> dataTypes;
+    Map<String, AdditionalFile> additionalFiles;
     List<ReferenceSynthesis> referenceSynthesis;
+
+    @Value
+    public static class AdditionalFile {
+        List<String> fields;
+    }
 
     @Value
     public static class Reference {

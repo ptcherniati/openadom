@@ -6,6 +6,73 @@ application:
     en: SOERE my SOERE with repository
   name: MONSORE
   version: 1
+additionalFiles:
+  fichiers:
+    internationalizationName:
+      fr: Fichiers
+      en: Files
+    format:
+      nom:
+        internationalizationName:
+          fr: Nom
+          en: Name
+        checker:
+          name: RegularExpression
+          params:
+            pattern: "[a-z]*"
+      date:
+        internationalizationName:
+          fr: Date
+          en: Date
+        checker:
+          name: Date
+          params:
+            pattern: "dd/MM/yyyy"
+      age:
+        internationalizationName:
+          fr: Age
+          en: Age
+        checker:
+          name: Integer
+      poids:
+        internationalizationName:
+          fr: Poids
+          en: Weight
+        checker:
+          name: Float
+          params:
+            required: false
+      site:
+        internationalizationName:
+          fr: Site
+          en: Place
+        checker:
+          name: Reference
+          params:
+            refType: sites
+            required: true
+  utilisateurs:
+    internationalizationName:
+      fr: Users
+      en: User
+    format:
+      nom:
+        internationalizationName:
+          fr: Nom
+          en: Name
+        checker:
+          name: RegularExpression
+          params:
+            pattern: "[a-z]*"
+      prenom:
+        internationalizationName:
+          fr: Prénom
+          en: Surname
+        checker:
+          name: RegularExpression
+          params:
+            pattern: "[a-z]*"
+
 compositeReferences:
   sites:
     components:
@@ -365,10 +432,10 @@ dataTypes:
           fr: 'espèce :{esp_nom}'
           en: 'espèce :{esp_nom}'
     repository:
-        filePattern: "(.*)_(.*)_(.*)_(.*).csv"
+        filePattern: "([^_]*_[^_]*)_(.*)_(.*)_(.*).csv"
         authorizationScope: 
-          localization: 1
-          projet: 2
+          localization: 2
+          projet: 1
         startDate: 
           token: 3
         endDate: 

@@ -34,7 +34,6 @@ Cypress.Commands.add('login', (userRole, applications) => {
     localStorage.clear()
     let applicationsResponse = []
     if (applications && applications instanceof Array) {
-        console.log(applications);
         cy.fixture(applications[0]).as("appli").then((app) => {
             applicationsResponse = app
         })
@@ -43,7 +42,6 @@ Cypress.Commands.add('login', (userRole, applications) => {
     cy.fixture('users/users.json').as('users')
     cy.get('@users').then((users) => {
         const user = users[userRole]
-        console.log('users',users, 'userRole',userRole, 'user',user)
         cy.visit(Cypress.env('login_url'))
         cy.get(':nth-child(1) > .field > .control > input').first().type(userRole)
         cy.get(':nth-child(2) > .field > .control > input').first().type("password")

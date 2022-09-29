@@ -267,7 +267,8 @@ public class AuthorizationService {
         ImmutableSortedSet<GetGrantableResult.DataGroup> dataGroups = getDataGroups(application, dataType);
         ImmutableSortedSet<GetGrantableResult.AuthorizationScope> authorizationScopes = getAuthorizationScopes(application, dataType);
         ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> columnDescriptions = getColumnDescripton(configuration, dataType);
-        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions, authorizationsForUser);
+        final List<OreSiAuthorization> publicAuthorizations = repository.getRepository(application).authorization().findPublicAuthorizations();
+        return new GetGrantableResult(users, dataGroups, authorizationScopes, columnDescriptions, authorizationsForUser, publicAuthorizations);
     }
 
     private ImmutableSortedMap<String, GetGrantableResult.ColumnDescription> getColumnDescripton(Configuration configuration, String dataType) {

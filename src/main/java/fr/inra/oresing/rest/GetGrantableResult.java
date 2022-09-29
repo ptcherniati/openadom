@@ -1,8 +1,10 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.OreSiAuthorization;
 import fr.inra.oresing.model.internationalization.Internationalization;
 import lombok.Value;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -15,6 +17,7 @@ public class GetGrantableResult {
     Set<AuthorizationScope> authorizationScopes;
     Map<String, ColumnDescription> columnsDescription;
     AuthorizationsResult authorizationsForUser;
+    List<OreSiAuthorization> publicAuthorizations;
 
     @Value
     public static class User {

@@ -3,12 +3,10 @@
 
 require('cypress-plugin-tab')
 const test1= function (response){
-    console.log('response1', response.request.body)
     Assert.equal('lambda', response.request.body.match('lambda'))
     Assert.equal('pro', response.request.body.match('pro'))
 }
 const test2= function (response){
-    console.log('response2', response.request.body)
     Assert.equal('poussin', response.request.body.match('poussin'))
     Assert.equal('ola', response.request.body.match('ola'))
 }

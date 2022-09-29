@@ -7,11 +7,12 @@ import java.util.Locale;
 import java.util.Map;
 
 public enum OperationType {
-    admin("admin", true,false,false, Map.of("fr","Administration", "en","Administration")),
-    depot("depot", true,false,false, Map.of("fr","Dépôt", "en","Deposit")),
-    delete("delete", true,false,false, Map.of("fr","Suppression", "en","Deletion")),
-    publication("publication", true,false,false, Map.of("fr","Publication", "en","Publication")),
-    extraction("extraction", true,true,true, Map.of("fr","Extraction", "en","Extraction"));
+    admin("admin", true, false, false, Map.of("fr", "Administration", "en", "Administration")),
+    depot("depot", true, false, false, Map.of("fr", "Dépôt", "en", "Deposit")),
+    delete("delete", true, false, false, Map.of("fr", "Suppression", "en", "Deletion")),
+    publication("publication", true, false, false, Map.of("fr", "Publication", "en", "Publication")),
+    extraction("extraction", true, true, true, Map.of("fr", "Extraction", "en", "Extraction")),
+    associate("associate", true, true, true, Map.of("fr", "Association", "en", "Associate"));
 
     public Configuration.AuthorizationColumnsDescription getAuthorizationColumnsDescription() {
         return authorizationColumnsDescription;
@@ -25,7 +26,7 @@ public enum OperationType {
         authorizationColumnsDescription.setTitle(title);
         Internationalization internationalization = new Internationalization();
         ibnternationalizationName.entrySet().stream()
-                .forEach(entry->internationalization.put(Locale.forLanguageTag(entry.getKey()), entry.getValue()));
+                .forEach(entry -> internationalization.put(Locale.forLanguageTag(entry.getKey()), entry.getValue()));
         authorizationColumnsDescription.setInternationalizationName(internationalization);
         authorizationColumnsDescription.setWithPeriods(withPeriods);
         authorizationColumnsDescription.setWithDataGroups(withDataGroups);

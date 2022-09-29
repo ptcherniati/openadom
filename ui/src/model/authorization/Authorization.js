@@ -5,7 +5,7 @@ export class Authorization {
   to = null;
 
   constructor(datagroupsOrAuthorization, requiredAuthorizations, from, to) {
-    if (typeof datagroupsOrAuthorization == "object") {
+    if (datagroupsOrAuthorization && !Array.isArray(datagroupsOrAuthorization)) {
       Object.assign(this, datagroupsOrAuthorization);
     } else {
       this.dataGroups = [...(datagroupsOrAuthorization || [])];

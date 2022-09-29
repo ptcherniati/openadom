@@ -13,6 +13,7 @@
         "requestMapperSerializationError": "Failed to transform json string {requestClient}: {message}"
     },
     "titles":{
+        "additionalFile" : "Additional Files os type: {localName}",
         "login-page":"Welcome to SI-ORE",
         "applications-page":"My applications",
         "aide":"Help writing an application's configuration file.",
@@ -101,6 +102,7 @@
         "creation-date":"Creation date",
         "actions":"Actions",
         "references":"References",
+        "additionalFile": "Additional files",
         "dataset":"Data types",
         "trier":"Sort by",
         "trierA_z":"Name A - z",

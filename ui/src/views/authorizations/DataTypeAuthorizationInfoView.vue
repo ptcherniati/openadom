@@ -327,8 +327,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         users: this.users,
         authorizationsForUser: authorizationsForUser
       } = grantableInfos);
-
-      console.log('authorizationsForUser', authorizationsForUser)
       let auths = authorizationsForUser.authorizationResults.admin
       if (JSON.parse(localStorage.getItem('authenticatedUser'))) {
         let ownAuthorizations = JSON.parse(localStorage.getItem('authenticatedUser')).authorizations
@@ -350,8 +348,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       }
        for (const path of this.ownAuthorizations) {
         for (const scopeId in authorizationsForUser.authorizationByPath) {
-         console.log('path', path, 'scope', scopeId, "authorizationResults", authorizationsForUser.authorizationResults[scopeId])
-          console.log('scope', scopeId)
               if(authorizationsForUser.authorizationByPath[scopeId]){
                 for (const pathKey in authorizationsForUser.authorizationByPath[scopeId]) {
                   if (pathKey.startsWith(path) || path.startsWith(pathKey)){
@@ -385,8 +381,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
               let scopeAuthorization = new Authorization(scopeAuthorizations[scopeAuthorizationsKey])
               let path = scopeAuthorization.getPath2(this.authorizationScopes.map((a => a.id)));
               if (this.publicAuthorizations[scope].indexOf(path) === -1) {
-                if (!this.publicAuthorizations[scope].find(pa => path.startWith(pa))) {
-                  this.publicAuthorizations[scope] = this.publicAuthorizations[scope].filter(pa => !pa.startWith(path))
+                if (!this.publicAuthorizations[scope].find(pa => this.comparePathes(path, pa))) {
+                  this.publicAuthorizations[scope] = this.publicAuthorizations[scope].filter(pa => !this.comparePathes(pa, path))
                   this.publicAuthorizations[scope].push(path);
                 }
               }
@@ -484,6 +480,9 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     } catch (error) {
       this.alertService.toastServerError(error);
     }
+  }
+  comparePathes(path1, path2){
+    return (path1 ||'').startsWith(path2)
   }
 
   getFilteredTags(text) {

@@ -122,6 +122,9 @@ public class OreSiResources {
                 }
             });
         });
+        final Map<String, ApplicationResult.AdditionalFile> additionalfiles = Maps.transformEntries(application.getConfiguration().getAdditionalFiles(),
+                (additionnalFileName, additionalFile) -> new ApplicationResult.AdditionalFile(additionalFile.getFormat().keySet().stream().collect(Collectors.toList()))
+        );
         Map<String, ApplicationResult.Reference> references = Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
@@ -167,7 +170,7 @@ public class OreSiResources {
                     .orElse(null);
             return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations);
         });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, additionalfiles, referenceSynthesis);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -273,6 +276,34 @@ public class OreSiResources {
     public ResponseEntity<List<String>> listDataType(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
         return ResponseEntity.ok(application.getDataType());
+    }
+
+
+    /**
+     * Liste toutes les valeurs possibles pour un type de referenciel
+     *
+     * @param nameOrId           l'id ou le nom de l'application
+     * @param additionalFileName le type du referenciel
+     * @return un tableau de chaine
+     */
+    @GetMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetAdditionalFilesResult> listAdditionalFilesNames(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("additionalFileName") String additionalFileName,
+            @RequestParam(required = false) MultiValueMap<String, String> params) {
+        GetAdditionalFilesResult list = service.findAdditionalFile(nameOrId, additionalFileName, params);
+        return ResponseEntity.ok(list);
+    }
+
+    @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createAdditionalFile(@PathVariable("nameOrId") String nameOrId,
+                                                  @RequestParam(value = "file", required = false) MultipartFile file,
+                                                  @RequestParam(value = "params", required = true) String params) throws IOException {
+        CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
+        UUID fileUUID = service.createOrUpdate(createAdditionalFileRequest, nameOrId, file);
+        return ResponseEntity.ok(fileUUID);
+
+
     }
 
     /**
@@ -407,6 +438,15 @@ public class OreSiResources {
                         .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(datatype));
             }
             return fileOrUUID;
+        } catch (IOException e) {
+            throw new BadFileOrUUIDQuery(e.getMessage());
+        }
+    }
+
+    private CreateAdditionalFileRequest deserialiseAdditionalFileOrUUIDQuery(String params) {
+        try {
+            CreateAdditionalFileRequest createAdditionalFileRequest = params != null && params != "undefined" ? new ObjectMapper().readValue(params, CreateAdditionalFileRequest.class) : null;
+            return createAdditionalFileRequest;
         } catch (IOException e) {
             throw new BadFileOrUUIDQuery(e.getMessage());
         }

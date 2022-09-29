@@ -141,7 +141,6 @@ export default class AuthorizationManagementForApplicationCreatorView extends Vu
   currentPage = 1;
 
   search(user, search) {
-    console.log("search", user, search);
     return user.login.match(search);
   }
 
@@ -163,7 +162,6 @@ export default class AuthorizationManagementForApplicationCreatorView extends Vu
       authorization.authorizations = authorization.authorizations.filter(this.filterAuthorization);
       return authorization;
     });
-    console.log("authorizations", authorizations);
     this.authorizations = authorizations;
   }
 

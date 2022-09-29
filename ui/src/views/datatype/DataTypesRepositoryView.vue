@@ -362,9 +362,9 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   changeFile(file) {
-    console.log("repository", this.repository);
     let pattern = this.repository.filePattern;
     let split = [];
+    let currentNode;
     if (pattern && pattern.length) {
       let matches = new RegExp(pattern).exec(file.name);
       if (matches) {
@@ -373,7 +373,7 @@ export default class DataTypesRepositoryView extends Vue {
             let authorizationScope =
               matches[this.repository.authorizationScope[authorizationScopeKey]];
 
-            var currentNode = this.authReferences[authorizationScopeKey];
+            currentNode = this.authReferences[authorizationScopeKey];
 
             // on teste une naturalKey
             split = authorizationScope.split("__");
@@ -467,7 +467,6 @@ export default class DataTypesRepositoryView extends Vue {
       this.configuration = this.applications
         .filter((a) => a.name === this.applicationName)
         .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
-      console.log("refType", this.getRefType("site", "chemin"));
       this.authorizations = this.configuration.authorization.authorizationScopes;
       let requiredAuthorizations = Object.keys(this.authorizations).reduce((acc, auth) => {
         acc[auth] = null;
@@ -606,9 +605,7 @@ export default class DataTypesRepositoryView extends Vue {
       acc[key] = acc[key] ? acc[key].sql : "";
       return acc;
     }, requiredAuthorizations);
-    console.log("requiredAuthorizations", requiredAuthorizations);
     dataset.params.binaryFiledataset.requiredAuthorizations = requiredAuthorizations;
-    console.log("binaryFiledataset", dataset.params.binaryFiledataset);
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     try {
       var uuid = await this.dataService.addData(
@@ -633,7 +630,6 @@ export default class DataTypesRepositoryView extends Vue {
           for (let i = 0; i < value.length; i++) {
             if (message.length > 0) {
               if (JSON.stringify(value[i]) !== JSON.stringify(value[i - message.length])) {
-                console.log(message)
                 this.errorsList.push(value[i]);
               }
               for (let j = 0; j < message.length; j++) {
@@ -646,7 +642,6 @@ export default class DataTypesRepositoryView extends Vue {
               this.errorsList.push(value[i]);
             }
           }
-          console.log(this.errorsList)
           if (this.errorsList.length !== 0) {
             this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
           } else {
@@ -660,7 +655,6 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   selectAuthorization(key, event) {
-    console.log("key", key, "event", event);
     this.selected.requiredAuthorizations[key] = event.referenceValues.hierarchicalKey;
     this.requiredAuthorizationsObject[key] = event.completeLocalName;
     this.datasets = this.currentDataset = null;

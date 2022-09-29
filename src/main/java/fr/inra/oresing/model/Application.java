@@ -1,6 +1,5 @@
 package fr.inra.oresing.model;
 
-import io.swagger.annotations.Api;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,6 +15,7 @@ public class Application extends OreSiEntity {
     private String comment;
     private List<String> referenceType;
     private List<String> dataType;
+    private List<String> additionalFile;
     private Configuration configuration;
     private UUID configFile; // lien vers un BinaryFile
 }

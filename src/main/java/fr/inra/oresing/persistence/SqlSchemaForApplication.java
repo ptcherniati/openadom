@@ -31,6 +31,10 @@ public class SqlSchemaForApplication implements SqlSchema {
         return new SqlTable(this, "binaryFile");
     }
 
+    public SqlTable additionalBinaryFile() {
+        return new SqlTable(this, "additionalBinaryFile");
+    }
+
     public SqlTable synthesis() {  return new SqlTable(this, "OreSiSynthesis");  }
 
     public SqlTable authorization() {

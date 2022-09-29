@@ -12,6 +12,7 @@ import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
@@ -107,6 +108,9 @@ public class OreSiService {
 
     @Autowired
     private ReferenceService referenceService;
+
+    @Autowired
+    private AdditionalFileService additionalFileService;
 
     /**
      * @deprecated utiliser directement {@link Ltree#escapeToLabel(String)}
@@ -352,6 +356,7 @@ public class OreSiService {
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
+        app.setAdditionalFile(new ArrayList<>(configuration.getAdditionalFiles().keySet()));
         app.setConfiguration(configuration);
         try {
             app = initApplication.apply(app);
@@ -614,8 +619,6 @@ public class OreSiService {
     }
 
     /**
-     * build the function that transform each RowWithData to a stream of data entities
-     *
      * @param app
      * @param dataType
      * @param fileId
@@ -624,7 +627,7 @@ public class OreSiService {
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
-     * @param binaryFileDataset
+     * @param publishContext
      * @return
      */
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
@@ -1300,6 +1303,12 @@ public class OreSiService {
         return referenceService.findReference(nameOrId, refType, params);
     }
 
+    public GetAdditionalFilesResult findAdditionalFile(String nameOrId, String additionalFile, MultiValueMap<String, String> params) {
+        Configuration.AdditionalFileDescription description = getApplication(nameOrId).getConfiguration().getAdditionalFiles().get(additionalFile);
+        final List<AdditionalBinaryFile> additionalFiles = additionalFileService.findAdditionalFile(nameOrId, additionalFile, params);
+        return new GetAdditionalFilesResult(additionalFile, additionalFiles, description);
+    }
+
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
         return referenceService.getReferenceValuesCsv(applicationNameOrId, referenceType, params);
     }
@@ -1459,6 +1468,43 @@ public class OreSiService {
 
     public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Application application, Set<String> listOfDataIds) {
         return repo.getRepository(application).referenceValue().getReferenceDisplaysById(listOfDataIds);
+    }
+
+    public UUID createOrUpdate(CreateAdditionalFileRequest createAdditionalFileRequest, String nameOrId, MultipartFile file) {
+        Application application = getApplication(nameOrId);
+
+        final AdditionalBinaryFile additionalBinaryFile = Optional.of(createAdditionalFileRequest)
+                .map(CreateAdditionalFileRequest::getId)
+                .map(id -> repo.getRepository(application).additionalBinaryFile().findById(id))
+                .orElseGet(AdditionalBinaryFile::new);
+        additionalBinaryFile.setFileInfos(createAdditionalFileRequest.getFields());
+        additionalBinaryFile.setApplication(application.getId());
+        if (file != null) {
+            additionalBinaryFile.setSize(file.getSize());
+            additionalBinaryFile.setFileName(file.getOriginalFilename());
+            try {
+                additionalBinaryFile.setData(file.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        additionalBinaryFile.setFileType(createAdditionalFileRequest.getFileType());
+        additionalBinaryFile.setCreationUser(additionalBinaryFile.getCreationUser() == null ? getCurrentUser().getId() : additionalBinaryFile.getCreationUser());
+        additionalBinaryFile.setUpdateUser(getCurrentUser().getId());
+        additionalBinaryFile.setComment("un commentaire");
+        additionalBinaryFile.setId(additionalBinaryFile.getId() == null ? UUID.randomUUID() : additionalBinaryFile.getId());
+        final List<OreSiAuthorization> authorizations = createAdditionalFileRequest.getAssociates().stream()
+                .map(authorization -> {
+                    final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
+                    oreSiAuthorization.setId(additionalBinaryFile.getId());
+                    oreSiAuthorization.setApplication(application.getId());
+                    oreSiAuthorization.setDataType(authorization.getDataType());
+                    oreSiAuthorization.setAuthorizations(authorization.getAuthorizations());
+                    return oreSiAuthorization;
+                })
+                .collect(Collectors.toList());
+        additionalBinaryFile.setAssociates(authorizations);
+        return repo.getRepository(application).additionalBinaryFile().store(additionalBinaryFile);
     }
 
     @Value

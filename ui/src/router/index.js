@@ -7,6 +7,8 @@ import ApplicationCreationView from "@/views/application/ApplicationCreationView
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
 import ReferenceTable from "@/views/references/ReferenceTableView.vue";
 import DataTypeTableView from "@/views/datatype/DataTypeTableView.vue";
+import AdditionalFilesManagementView from "@/views/additionalfiles/AdditionalFilesManagementView.vue";
+import AdditionalFileInfosView from "@/views/additionalfiles/AdditionalFileInfosView.vue";
 import DataTypesManagementView from "@/views/datatype/DataTypesManagementView.vue";
 import DataTypesRepositoryView from "@/views/datatype/DataTypesRepositoryView.vue";
 import DataTypeAuthorizationsView from "@/views/authorizations/DataTypeAuthorizationsView.vue";
@@ -50,6 +52,18 @@ const routes = [
     path: "/authorizationsManagement",
     name: "Authorizations mangement view",
     component: AuthorizationManagementView,
+  },
+  {
+    path: "/applications/:applicationName/additionalFiles",
+    name: "Additional files management view",
+    component: AdditionalFilesManagementView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/additionalFiles/:additionalFileName/:id",
+    name: "New additional file management view",
+    component: AdditionalFileInfosView,
+    props: true,
   },
   {
     path: "/applications/:applicationName/references",

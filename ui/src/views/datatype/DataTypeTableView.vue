@@ -540,7 +540,6 @@ export default class DataTypeTableView extends Vue {
       this.params.variableComponentFilters.isRegex = !this.isRegExp;
       checkboxes[i].classList.add('active');
     }
-    console.log(this.params.variableComponentFilters.isRegex);
   }*/
 
   async created() {
@@ -679,7 +678,6 @@ export default class DataTypeTableView extends Vue {
           params
         );
         refvalues = reference.referenceValues[0].values;
-        console.log(refvalues)
       }
       const data = Object.entries(refvalues)
         .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))

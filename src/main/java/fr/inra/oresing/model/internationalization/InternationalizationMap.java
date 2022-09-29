@@ -21,5 +21,8 @@ public class InternationalizationMap {
     @Nullable
     @ApiModelProperty(notes = "The internationalization description from section dataTypes", required = false)
     Map<String, InternationalizationDataTypeMap> dataTypes;
+    @Nullable
+    @ApiModelProperty(notes = "The internationalization description from section additional files", required = false)
+    Map<String, InternationalizationAdditonalFilesMap> additionalFiles;
 
 }

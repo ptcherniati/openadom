@@ -71,6 +71,7 @@ create table BinaryFile
 );
 CREATE INDEX binary_file_params_index ON BinaryFile USING gin (params);
 
+
 create table ReferenceValue
 (
     id                    EntityId PRIMARY KEY,
@@ -143,6 +144,25 @@ CREATE TABLE OreSiAuthorization
     dataType       TEXT CHECK (name_check(application, 'dataType', dataType)),
     authorizations jsonb
 );
+
+create table AdditionalBinaryFile
+(
+    id              EntityId PRIMARY KEY,
+    creationDate   DateOrNow,
+    updateDate     DateOrNow,
+    creationUser      EntityId REFERENCES public.OreSiUser (id),
+    updateUser      EntityId REFERENCES public.OreSiUser (id),
+    application     EntityRef REFERENCES Application (id),
+    fileType            Text,
+    fileName            Text,
+    comment         TEXT NOT NULL,
+    size            INT,
+    data            bytea,
+    fileinfos       jsonb,
+    associates ${applicationSchema}.OreSiAuthorization[]
+);
+--CREATE INDEX additional_binary_file_params_index ON AdditionalBinaryFile USING gin (params);
+CREATE INDEX additional_binary_file_info_index ON AdditionalBinaryFile USING gin (fileinfos);
 
 CREATE TABLE oresisynthesis
 (
