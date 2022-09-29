@@ -146,9 +146,9 @@ public class ApplicationConfigurationService {
                 requiredAuthorizationsAttributesBuilder.addAll(authorizationScopesVariableComponentKey.keySet());
 
                 Multiset<String> variableOccurrencesInDataGroups = TreeMultiset.create();
-                verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, variableOccurrencesInDataGroups);
+                verifyDatatypeDataGroupsContainsExistingVariables(builder, dataTypeDescription, variables, dataType, variableOccurrencesInDataGroups);
 
-                verifyDatatypeBindingToExistingVariableComponent(builder, variables, variableOccurrencesInDataGroups);
+                verifyDatatypeBindingToExistingVariableComponent(builder, dataType, variables, variableOccurrencesInDataGroups);
                 verifyDatatypeBindingToExistingVariableComponent(builder, dataTypeDescription, dataType, variables);
                 verifyChartDescription(builder, dataType, dataTypeDescription);
             }
@@ -306,18 +306,18 @@ public class ApplicationConfigurationService {
                 });
     }
 
-    private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, Set<String> variables, Multiset<String> variableOccurrencesInDataGroups) {
+    private void verifyDatatypeBindingToExistingVariableComponent(ConfigurationParsingResult.Builder builder, String dataType, Set<String> variables, Multiset<String> variableOccurrencesInDataGroups) {
         variables.forEach(variable -> {
             int count = variableOccurrencesInDataGroups.count(variable);
             if (count == 0) {
-                builder.undeclaredDataGroupForVariable(variable);
+                builder.undeclaredDataGroupForVariable(variable, dataType);
             } else if (count > 1) {
-                builder.variableInMultipleDataGroup(variable);
+                builder.variableInMultipleDataGroup(variable, dataType);
             }
         });
     }
 
-    private void verifyDatatypeDataGroupsContainsExistingVariables(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables, Multiset<String> variableOccurrencesInDataGroups) {
+    private void verifyDatatypeDataGroupsContainsExistingVariables(ConfigurationParsingResult.Builder builder, Configuration.DataTypeDescription dataTypeDescription, Set<String> variables, String dataType, Multiset<String> variableOccurrencesInDataGroups) {
         final LinkedHashMap<String, Configuration.DataGroupDescription> dataGroups = dataTypeDescription.getAuthorization().getDataGroups();
         if (dataGroups.isEmpty()) {
             final Configuration.DataGroupDescription dataGroupDescription = new Configuration.DataGroupDescription();
@@ -335,7 +335,7 @@ public class ApplicationConfigurationService {
             variableOccurrencesInDataGroups.addAll(dataGroupVariables);
             ImmutableSet<String> unknownVariables = Sets.difference(dataGroupVariables, variables).immutableCopy();
             if (!unknownVariables.isEmpty()) {
-                builder.unknownVariablesInDataGroup(dataGroup, unknownVariables, variables);
+                builder.unknownVariablesInDataGroup(dataGroup, unknownVariables, variables, dataType);
             }
         }
     }

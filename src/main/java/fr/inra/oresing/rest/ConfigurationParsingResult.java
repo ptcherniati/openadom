@@ -116,19 +116,26 @@ public class ConfigurationParsingResult {
                     "references", references));
         }
 
-        public void undeclaredDataGroupForVariable(String variable) {
-            recordError("undeclaredDataGroupForVariable", ImmutableMap.of("variable", variable));
+        public void undeclaredDataGroupForVariable(String variable, String dataType) {
+            recordError("undeclaredDataGroupForVariable", ImmutableMap.of(
+                    "variable", variable,
+                    "dataType", dataType)
+            );
         }
 
-        public void variableInMultipleDataGroup(String variable) {
-            recordError("variableInMultipleDataGroup", ImmutableMap.of("variable", variable));
+        public void variableInMultipleDataGroup(String variable, String dataType) {
+            recordError("variableInMultipleDataGroup", ImmutableMap.of(
+                    "variable", variable,
+                    "dataType", dataType)
+            );
         }
 
-        public void unknownVariablesInDataGroup(String dataGroup, Set<String> unknownVariables, Set<String> variables) {
+        public void unknownVariablesInDataGroup(String dataGroup, Set<String> unknownVariables, Set<String> variables, String dataType) {
             recordError("unknownVariablesInDataGroup", ImmutableMap.of(
                     "dataGroup", dataGroup,
                     "unknownVariables", unknownVariables,
-                    "variables", variables)
+                    "variables", variables,
+                    "dataType", dataType)
             );
         }
 
