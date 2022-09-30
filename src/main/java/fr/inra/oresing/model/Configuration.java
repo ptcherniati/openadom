@@ -69,12 +69,29 @@ public class Configuration {
         for (Map.Entry<String, ReferenceDescription> reference : references.entrySet()) {
             addDependencyNodesForReference(nodes, reference);
         }
+        for (CompositeReferenceDescription compositeReferences : compositeReferences .values()) {
+            addDependencyNodesForCompositeReference(nodes, compositeReferences);
+        }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
         nodes.values().stream()
                 .filter(node -> node.isLeaf || node.dependsOn.contains(node))
                 .sorted((a, b) -> 1)
                 .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
+    }
+
+    private void addDependencyNodesForCompositeReference(Map<String, DependencyNode> nodes, CompositeReferenceDescription compositeReference) {
+        LinkedList<DependencyNode> parentNodes = new LinkedList<>();
+        compositeReference.getComponents().stream()
+                .map(CompositeReferenceComponentDescription::getReference)
+                .forEach(reference->{
+                    DependencyNode dependencyNode = nodes.computeIfAbsent(reference, k -> new DependencyNode(reference));
+                    if(!parentNodes.isEmpty()) {
+                        dependencyNode.addDependance(parentNodes.getLast());
+                    }
+                    parentNodes.add(dependencyNode);
+                });
+
     }
 
     private void addDependencyNodesForReference(Map<String, DependencyNode> nodes, Map.Entry<String, ReferenceDescription> reference) {
@@ -833,6 +850,9 @@ public class Configuration {
         }
 
         void addDependance(DependencyNode dependencyNode) {
+            if(dependencyNode==null){
+                return;
+            }
             dependencyNode.isLeaf = false;
             this.dependsOn.add(dependencyNode);
 
