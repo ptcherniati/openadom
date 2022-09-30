@@ -72,7 +72,7 @@ public class Configuration {
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
         nodes.values().stream()
                 .filter(node -> node.isLeaf || node.dependsOn.contains(node))
-                .sorted((a, b) -> -1)
+                .sorted((a, b) -> 1)
                 .forEach(node -> addRecursively(node, sortedReferences, references));
         return sortedReferences;
     }
