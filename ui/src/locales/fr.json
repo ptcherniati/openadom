@@ -125,7 +125,7 @@
         "csvBoundToUnknownVariable": "Dans le format CSV, l’en-tête <code>{header}</code> est lié à la variable <code>{variable}</code> qui n’est pas connue. Les variables connues sont : <code>{variables}</code>",
         "csvBoundToUnknownVariableComponent": "Dans le format CSV, l’en-tête <code>{header}</code> est lié à la variable <code>{variable}</code> mais elle n’a pas de composant <code>{component}</code>. Les composants connus sont : <code>{components}</code>",
         "duplicatedHeaders": "Les en-têtes suivants sont dupliqués : <code>{duplicatedHeaders}</code>",
-        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
+        "duplicatedLineInDatatype": "Dans le fichier de données {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {duplicatedRows}",
         "duplicatedLineInReference": "Dans le fichier du référentiel {file}, la ligne {lineNumber} a le même identifiant {duplicateKey} que les lignes {otherLines}",
         "emptyFile": "Le fichier est vide",
         "emptyHeader": "Le fichier contient un en-tête de colonne vide à la ligne {headerLine}",
