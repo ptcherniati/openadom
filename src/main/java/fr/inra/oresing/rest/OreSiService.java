@@ -614,7 +614,6 @@ public class OreSiService {
     }
 
     /**
-     * build the function that transform each RowWithData to a stream of data entities
      *
      * @param app
      * @param dataType
@@ -624,7 +623,7 @@ public class OreSiService {
      * @param errors
      * @param lineCheckers
      * @param dataTypeDescription
-     * @param binaryFileDataset
+     * @param publishContext
      * @return
      */
     private Function<RowWithData, Stream<Data>> buildRowWithDataStreamFunction(Application app,
