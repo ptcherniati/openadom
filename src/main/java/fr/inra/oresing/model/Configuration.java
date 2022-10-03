@@ -84,6 +84,7 @@ public class Configuration {
         LinkedList<DependencyNode> parentNodes = new LinkedList<>();
         compositeReference.getComponents().stream()
                 .map(CompositeReferenceComponentDescription::getReference)
+                .filter(Objects::nonNull)
                 .forEach(reference->{
                     DependencyNode dependencyNode = nodes.computeIfAbsent(reference, k -> new DependencyNode(reference));
                     if(!parentNodes.isEmpty()) {
@@ -141,7 +142,9 @@ public class Configuration {
                     .stream().filter(n -> !n.dependsOn.contains(node))
                     .forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
         }
-        sortedReferences.put(node.value, references.get(node.value));
+        if(references.get(node.value)!=null) {
+            sortedReferences.put(node.value, references.get(node.value));
+        }
 
 
     }
