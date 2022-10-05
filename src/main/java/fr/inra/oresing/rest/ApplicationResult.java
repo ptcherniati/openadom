@@ -26,6 +26,7 @@ public class ApplicationResult {
         Set<String> children;
         Map<String, Column> columns;
         Map<String, DynamicColumn> dynamicColumns;
+        Map<String, ComputedColumn> computedColumns;
 
         @Value
         public static class Column {
@@ -43,6 +44,11 @@ public class ApplicationResult {
             String reference;
             String referenceColumnToLookForHeader;
             boolean presenceConstraint;
+        }
+        @Value
+        public static class ComputedColumn {
+            String id;
+            String title;
         }
 
         @Value
