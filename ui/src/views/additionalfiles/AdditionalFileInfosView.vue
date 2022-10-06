@@ -97,7 +97,7 @@
                 class="rows"
             >
               <AdditionalFilesAssociation
-                  v-if="applications.length && grantables[dataType].canShowLine "
+                  v-if="applications.length && (isAdmin ||grantables[dataType].canShowLine) "
                   :additionalFiles="additionalFiles"
                   :ref-values="refValues" :configuration="configuration" :application-name="applicationName"
                   :applications="applications"
@@ -192,6 +192,10 @@
                         type="is-danger is-light"
               />
               <b-button icon-left="pen-square"
+                        size="is-small"
+                        type="is-primary is-light"
+              @click="modifyAssociateFile(file.id)"/>
+              <b-button icon-left="upload"
                         size="is-small"
                         type="is-primary is-light"
               @click="modifyAssociateFile(file.id)"/>
@@ -351,7 +355,16 @@ export default class AdditionalFileInfosView extends Vue {
   }
 
   get canShowForm() {
-    return this.grantables && Object.values(this.grantables).find(grantable => grantable.canShowLine)
+
+    return this.isAdmin || (this.grantables && Object.values(this.grantables).find(grantable => grantable.canShowLine))
+  }
+
+  get userAuthorizations(){
+    return  JSON.parse(localStorage.getItem('authenticatedUser'))?.authorizations || [];
+  }
+
+  get isAdmin() {
+    return this.userAuthorizations.find(auth=>new RegExp(auth).test(this.applicationName));
   }
 
   rules() {
