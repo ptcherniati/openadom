@@ -874,6 +874,10 @@ public class OreSiService {
         ImmutableSet<String> expectedHeaderColumns = formatDescription.getColumns().stream()
                 .map(Configuration.ColumnBindingDescription::getHeader)
                 .collect(ImmutableSet.toImmutableSet());
+        ImmutableSet<String> mandatoryHeaderColumns = formatDescription.getColumns().stream()
+                .filter(columnBindingDescription -> ColumnPresenceConstraint.MANDATORY.equals(columnBindingDescription.getPresenceConstraint()))
+                .map(Configuration.ColumnBindingDescription::getHeader)
+                .collect(ImmutableSet.toImmutableSet());
         boolean allowUnexpectedColumns = formatDescription.isAllowUnexpectedColumns();
         int headerLine = formatDescription.getHeaderLine();
         ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
@@ -882,7 +886,7 @@ public class OreSiService {
             ImmutableMultiset<String> actualHeaderColumns = line.stream()
                     .map(Map.Entry::getKey)
                     .collect(ImmutableMultiset.toImmutableMultiset());
-            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, expectedHeaderColumns, actualHeaderColumns, headerLine, allowUnexpectedColumns);
+            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, mandatoryHeaderColumns, actualHeaderColumns, headerLine, allowUnexpectedColumns);
             Map<VariableComponentKey, String> record = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : line) {
                 String header = entry.getKey();

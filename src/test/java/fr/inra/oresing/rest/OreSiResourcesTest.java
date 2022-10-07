@@ -1234,8 +1234,8 @@ public class OreSiResourcesTest {
         }
 
         addReferences();
-        addDataFluxTours();
         addDataBiomassProduction();
+        addDataFluxTours();
         addDataSWC();
     }
 
