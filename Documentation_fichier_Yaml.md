@@ -122,7 +122,7 @@ Dans un fichier, on définit une ou plusieurs colonnes qui correspondent à la c
 
 ##### code
 
-Pour enregister ces clefs dans la base de données, et pour éviter les erreurs, les clefs sont codées. Le code utilisé n'autorise que les chiffres, les lettres minuscules et majuscules ainsi que le caractère souligné (underscore).
+Pour enregistrer ces clefs dans la base de données, et pour éviter les erreurs, les clefs sont codées. Le code utilisé n'autorise que les chiffres, les lettres minuscules et majuscules ainsi que le caractère souligné (underscore).
 
 Cependant, pour permettre une plus grande souplesse, les accents sont supprimés, les majuscules sont remplacées par les minuscules, les espace et les tirets (-) sont remplacés par des _ et les autres caractères sont remplacés par leur nom ascii en majuscules.
 
@@ -603,7 +603,7 @@ parcelles.
 La [clef naturelle](#keyColumns) permet de distinguer deux lignes distinctes. Elle est juste construite à partir de la concaténation des valeurs de colonnes.
 
 La clef composite rajoute une hiérarchie entre les données de référence. Dans l'exemple ci-dessous pour référencer
-une ligne site, on utilise sa clef naturelle __site1__1__, une clefhiérarchique est aussi créé : __site1.site1__1__
+une ligne site, on utilise sa clef naturelle __site1__1__, une clef hiérarchique est aussi créé : __site1.site1__1__
 
 > :information_source: On peut créer une clef naturelle sur une colonne dont chaque valeur est unique (une colonne clef technique par exemple), que cette colonne soit donnée par le fichier ou bien calculée.
 >
@@ -841,6 +841,29 @@ On décrit un format pour stocker les données sous la forme
 
 <span style="color: orange">*data* est indenté de 2. Les variables sont indentés de 3 et les components le sont de 4.</span>
 
+##### <a id="synthesis" />Synthèse des données
+Il est possible de proposer dans l'interface un graphe de disponibilité des variables
+
+```yaml
+dataTypes:
+  mon_datatype:
+    data:
+      ma_variable:
+        chartDescription: # déclaration de la section de synthèse
+          value: value #composante contenant la valeur
+          aggregation: #composante contenant éventuellement le champs pour 
+                      # réaliser l'aggrégation des données
+            variable: TS
+            component: profondeur
+          unit: "unit" # la composante contenant la valeur de l'unité
+          standardDeviation: sd # la composante contenant l'écart type
+          gap: '1 WEEK' # pour des valeur discrète la duréé
+                        # a à partir de laquelle on admet une discontinuité
+      
+  
+
+```
+
 #### La validation est utilisée pour valider une ligne sur une ou plusieurs colonnes.
 
 Les *variables/components* sont passés dans la map *datum*. On récupère la valeur du component qualité de la variable SWC
@@ -1042,7 +1065,19 @@ Si l'on veut faire référence à des lignes entre la ligne d'en-tête et la pre
             variable: prélèvement
             component: qualité
 ```
-
+Si une colonne présente dans le fichier est facultative, on peut l'indiquer :
+```yaml
+        - header: "qualité"
+          boundTo:
+            variable: prélèvement
+            component: qualité
+          presenceConstraint: OPTIONAL
+```
+LA valeur par défaut est:
+```yaml
+          presenceConstraint: MANDATORY
+```
+Dans ce cas une erreur est lancée si la colonne est manquante.
 ##### <a id ="repeatedColumnsFormat" />Lien avec les colonnes répétées
 IL est possible d'utiliser un template lorsque certaines colonnes de datatype on un format commun.
 Par exemple avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*)
@@ -1218,20 +1253,59 @@ Vous pouvez préciser la durée du timescope dans le params "duration" au format
 <span style="color: orange">*authorization* est indenté de 2. *dataGroups*, *authorizationScopes* et *timeScope* sont
 indenté de 3.</span>
 
-## Lors de l'importation du fichier yaml :
+#### <a id="dataupload" /> Mode de dépôt des données
 
-* mettre le nom de l'application en minuscule,
-* sans espace,
-* sans accent,
-* sans chiffre et
-* sans caractères spéciaux
+Par défaut, lors du dépôt d'un fichier de données, les données contenues dans le fichier sont directement  soit ajoutées, soit mises à jour en tenant compte de la clef d'unicité.
+
+Il est cependant possible de mettre en place un autre mode de dépôt publication :
+- Les fichiers sont déposés sur un *localizationScope* et un *timescope* (correspondants à ceux définis dans la section *authorizations*).
+- Si deux fichiers sont déposés sur le même *localizationScope* et le même *timescope*, on considère que c'est une nouvelle version du fichier.
+- A tout moment, on peut *publier* une version de ce fichier. Si une version de ce même fichier est déjà publiée, elle sera dépubliée préalablement.
+- Une seule version d'un même fichier peut être publiée à un instant donné.
+- Les données d'un fichier sont alors soit publiées, soit dépubliées. La mise à jour se fait donc par remplacement de l'ensemble des données du fichier.
+
+Pour obtenir ce mode de fonctionnement, il suffit de rajouter la section **repository** dans le **datatype**
+
+```yaml
+  dataTypes: 
+    mon_type_de_données:
+      repository: {}
+```
+Il est possible aussi de remplir la section repository pour facilité la gestion des fichiers de données, rendant l'application apte à lire le nom du fichier pour remplir automatiquement les sections *localizationScope* et *timescope* dans l'interface de dépôt.
+
+```yaml
+
+    repository:
+        filePattern: "(.*)_(.*)_(.*)_(.*).csv"
+        authorizationScope: 
+          localization: 1
+          projet: 2
+        startDate: 
+          token: 3
+        endDate: 
+          token: 4
+```
+
+- On fournit une expression régulière (filePattern) pour analyser le nom du fichier.
+- Chaque groupe de l'expression régulière vient remplir le formulaire de l'interface.
+
+Dans l'exemple, les groupes 1 et 2 vont respectivement correspondre à la clef hiérarchique des **authorizationscope** localization et projet. 
+On peut utiliser la clef naturelle si elle correspond à la clef hiérarchique (a__b__c pour a.a__b.a__b__c).
+
+Les groupes 3 et 4 correspondent respectivement à la date de début et de fin des données (date au format _dd-MM-yyyy_, date de fin non comprise).
+
+Le fichier leman_grandlacs_01-01-1980_01-01-1981.csv sera déposé sur l'autorizationscope 
+          localization: leman
+          projet: grandlacs
+
+et le timescope ['1980-01-01,1981-01-01).
 
 ## Internationalisation du fichier yaml:
 Il est possible de faire un fichier international en ajoutant plusieurs parties Internationalisation en précisant la langue.
 
 ### Internationalisation de l'application:
 Dans la partie application ajouter *defaultLanguage* pour préciser la langue par default de l'application.
-Ainsi que *internationalization* qui contient les abbreviations des langues de traduction (ex : *fr* ou *en*)
+Ainsi qu'*internationalization* qui contient les abbreviations des langues de traduction (ex : *fr* ou *en*)
 Ce qui permettra de traduire le nom de l'application.
 
 ``` yaml
@@ -1358,7 +1432,7 @@ multiyaml.zip
   * pas d'accents
   * pas de majuscules
   * pas de caractères spéciaux () , - :
-  * autorisé les _ et les .
+  * autorisé les _ et les.
 * le nom des colonnes doive être le plus court possible
 * le fichier doit être en UTF8 pour que les colonnes soient lisibles (les caractères spéciaux ne passe pas sinon. ex : é, è, ç)
 
