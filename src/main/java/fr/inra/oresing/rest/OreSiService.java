@@ -1050,7 +1050,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber();
-                String value = row.get(columnNumber - 1);
+                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
                 preHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
@@ -1097,7 +1097,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber(headerRow);
-                String value = row.get(columnNumber - 1);
+                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
                 postHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
