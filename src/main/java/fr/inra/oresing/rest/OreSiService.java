@@ -514,6 +514,7 @@ public class OreSiService {
             UniquenessBuilder uniquenessBuilder = new UniquenessBuilder(app, dataType);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
+                    .filter(row->errors.size()<50)
                     .map(buildCsvRecordToLineAsMapFn(columns, publishContext))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
@@ -650,7 +651,10 @@ public class OreSiService {
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
-            lineCheckers.forEach(lineChecker -> {
+            lineCheckers
+                    .stream()
+                    .filter(d->rowErrors.size()<50)
+                    .forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
