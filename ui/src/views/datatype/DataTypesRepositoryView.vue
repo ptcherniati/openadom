@@ -240,9 +240,9 @@
                   </b-tooltip>
                 </td>
                 <td align>{{ dataset.size }}</td>
-                <td align>{{ UTCToString(dataset.params.createdate) }}</td>
+                <td align>{{ formatDate(dataset.params.createdate) }}</td>
                 <td align>{{ dataset.createuser }}</td>
-                <td align>{{ UTCToString(dataset.params.publisheddate) }}</td>
+                <td align>{{ formatDate(dataset.params.publisheddate) }}</td>
                 <td align>{{ dataset.publisheduser }}</td>
                 <td align>
                   <b-field>
@@ -545,7 +545,7 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   formatDate(date) {
-    return moment(date).format("DD/MM/YYYY");
+    return moment(date).format("DD/MM/YYYY HH:mm");
   }
 
   periodeToString(dataset) {
