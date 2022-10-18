@@ -16,4 +16,8 @@ export class FileService extends Fetcher {
   async remove(applicationName, uuid) {
     return this.delete(`applications/${applicationName}/file/${uuid}`);
   }
+
+  async download(applicationName, uuid) {
+    return this.downloadFile(`applications/${applicationName}/file/${uuid}`);
+  }
 }

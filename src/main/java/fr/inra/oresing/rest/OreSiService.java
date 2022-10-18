@@ -1317,6 +1317,12 @@ public class OreSiService {
         return optionalBinaryFile;
     }
 
+    public Optional<BinaryFile> getFileWithData(String name, UUID id) {
+        authenticationService.setRoleForClient();
+        Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindByIdWithData(id);
+        return optionalBinaryFile;
+    }
+
     public boolean removeFile(String name, UUID id) {
         authenticationService.setRoleForClient();
         BinaryFile binaryFile = repo.getRepository(name).binaryFile().findById(id);
