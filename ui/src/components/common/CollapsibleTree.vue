@@ -38,12 +38,19 @@
             @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
             tabindex="0"
           >
-            {{ option.localName || option.label }}
+            <b-tooltip v-if="option.withSynthesis" :label="$t('dataTypesManagement.tooltip_show_authorization')"
+                       position="is-right">
+              {{ option.localName || option.label }}
+            </b-tooltip>
+            <b-tooltip v-else :label="$t('referencesManagement.tooltip_delete_ref')">
+              {{ option.localName || option.label }}
+            </b-tooltip>
+<!--            <p v-else > {{ option.localName || option.label }} </p>-->
           </div>
-          <span class="file-name" v-if="refFile">
+<!--          <span class="file-name" v-if="refFile">
             {{ refFile.name }}
-          </span>
-          <span class="file-name" v-else-if="lineCount > 0">
+          </span>-->
+          <span class="file-name" v-if="lineCount > 0">
             {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
