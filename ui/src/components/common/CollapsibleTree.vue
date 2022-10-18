@@ -38,7 +38,7 @@
             @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
             tabindex="0"
           >
-            <b-tooltip v-if="option.withSynthesis" :label="$t('dataTypesManagement.tooltip_show_authorization')"
+            <b-tooltip v-if="option.withTooltip" :label="$t('dataTypesManagement.tooltip_show_authorization')"
                        position="is-right">
               {{ option.localName || option.label }}
             </b-tooltip>
