@@ -248,8 +248,7 @@
         "download": "Télécharger",
         "delete": "Supprimer",
         "references": "Référentiels",
-        "data": "Données",
-        "tooltip_delete_ref": "Supprimer la référence"
+        "data": "Données"
     },
     "dataTypesManagement": {
         "no_authorization": "Il n'y a pas de gestion des autorisations pour {localName}",
@@ -269,7 +268,7 @@
         "manage-datasets": "Gérer les jeux de données",
         "accepted": "Accepté",
         "refuse": "Refusé",
-        "tooltip_show_authorization": "Consulter les autorisations"
+        "tooltip_show_secondary_menu": "Ouvrir le menu secondaire"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version pour ce jeux de données",

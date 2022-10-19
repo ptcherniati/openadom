@@ -15,42 +15,46 @@
           class="CollapsibleTree-header-infos column"
           :style="`transform:translate(${level * 50}px);`"
         >
+          <b-checkbox
+              v-if="withRadios"
+              v-model="innerOptionChecked"
+              :name="radioName"
+              @click.native="stopPropagation"
+              :native-value="option.id"
+          >
+            {{ option.localName || option.label }}
+          </b-checkbox>
+          <div
+              v-else
+              :class="onClickLabelCb ? 'link' : ''"
+              @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+              @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+              tabindex="0"
+          >
+            <b-tooltip type="is-primary is-light"
+              :label="$t('dataTypesManagement.tooltip_show_secondary_menu')">
+              <b-button
+                  class="is-small"
+                  tabindex="0"
+                  type="is-primary"
+                  outlined
+                  style="margin: 10px;"
+              >
+                <b-icon icon="ellipsis-h" ></b-icon>
+              </b-button>
+            </b-tooltip>
+          </div>
           <FontAwesomeIcon
             v-if="option.children && option.children.length !== 0"
             :icon="displayChildren ? 'caret-down' : 'caret-right'"
             class="clickable mr-3"
             tabindex="0"
           />
-
-          <b-checkbox
-            v-if="withRadios"
-            v-model="innerOptionChecked"
-            :name="radioName"
-            @click.native="stopPropagation"
-            :native-value="option.id"
-          >
-            {{ option.localName || option.label }}
-          </b-checkbox>
-          <div
-            v-else
-            :class="onClickLabelCb ? 'link' : ''"
-            @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-            @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-            tabindex="0"
-          >
-            <b-tooltip v-if="option.withTooltip" :label="$t('dataTypesManagement.tooltip_show_authorization')"
-                       position="is-right">
-              {{ option.localName || option.label }}
-            </b-tooltip>
-            <b-tooltip v-else :label="$t('referencesManagement.tooltip_delete_ref')">
-              {{ option.localName || option.label }}
-            </b-tooltip>
-<!--            <p v-else > {{ option.localName || option.label }} </p>-->
-          </div>
-<!--          <span class="file-name" v-if="refFile">
+          <p > {{ option.localName || option.label }} </p>
+          <span class="file-name" v-if="refFile">
             {{ refFile.name }}
-          </span>-->
-          <span class="file-name" v-if="lineCount > 0">
+          </span>
+          <span class="file-name" v-else-if="lineCount > 0">
             {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
           <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
