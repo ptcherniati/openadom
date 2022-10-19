@@ -102,11 +102,7 @@
             type="is-info"
           >
             <span class="file-cta" style="border-color: transparent; background-color: transparent">
-              <b-icon
-                class="file-icon"
-                icon="archive"
-                style="color: white"
-              ></b-icon>
+              <b-icon class="file-icon" icon="archive" style="color: white"></b-icon>
             </span>
           </b-button>
         </div>

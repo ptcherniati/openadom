@@ -51,18 +51,18 @@
             {{
               this.requiredAuthorizationsObject
                 ? Object.entries(this.requiredAuthorizationsObject)
-                  .filter((e) => e[1])
-                  .map(
-                    (e) =>
-                      internationalisationService.getLocaleforPath(
+                    .filter((e) => e[1])
+                    .map(
+                      (e) =>
+                        internationalisationService.getLocaleforPath(
                           application,
                           getAuthorizationScopePath(e[0]),
                           e[0]
-                      ) +
-                      " : " +
-                      e[1]
-                  )
-                  .join(", ")
+                        ) +
+                        " : " +
+                        e[1]
+                    )
+                    .join(", ")
                 : ""
             }}
           </h1>
@@ -202,13 +202,13 @@
                 <div v-if="errorsMessages.length" style="margin: 10px">
                   <div v-for="msg in errorsMessages" v-bind:key="msg">
                     <b-message
-                        :title="$t('message.data-type-config-error')"
-                        type="is-danger"
-                        has-icon
-                        :aria-close-label="$t('message.close')"
-                        class="mt-4 DataTypesManagementView-message"
+                      :title="$t('message.data-type-config-error')"
+                      type="is-danger"
+                      has-icon
+                      :aria-close-label="$t('message.close')"
+                      class="mt-4 DataTypesManagementView-message"
                     >
-                      <span v-html="msg"/>
+                      <span v-html="msg" />
                     </b-message>
                   </div>
                 </div>
@@ -235,7 +235,7 @@
                       :aria-describedby="dataset.id"
                       tabindex="0"
                       @keypress.enter="changeCss(dataset.id)"
-                    >{{ dataset.id.slice(0, 8) }}</a
+                      >{{ dataset.id.slice(0, 8) }}</a
                     >
                   </b-tooltip>
                 </td>
@@ -295,10 +295,10 @@ import { InternationalisationService } from "@/services/InternationalisationServ
 import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
 import DropDownMenu from "@/components/common/DropDownMenu";
 import moment from "moment";
-import {HttpStatusCodes} from "@/utils/HttpUtils";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
-  components: {DropDownMenu, CollapsibleTree, PageView, SubMenu},
+  components: { DropDownMenu, CollapsibleTree, PageView, SubMenu },
 })
 export default class DataTypesRepositoryView extends Vue {
   @Prop() applicationName;
@@ -352,8 +352,7 @@ export default class DataTypesRepositoryView extends Vue {
     this.subMenuPaths = [
       new SubMenuPath(
         this.dataTypeId.toLowerCase(),
-        () => {
-        },
+        () => {},
         () => this.$router.push(prevPath)
       ),
     ];
@@ -431,7 +430,8 @@ export default class DataTypesRepositoryView extends Vue {
 
     try {
       let variable = this.configuration.data[variable];
-      refType = ({...variable.components, ...variable.compositeComponents})[component].checker.params.refType;
+      refType = { ...variable.components, ...variable.compositeComponents }[component].checker
+        .params.refType;
       compositeReferenceDependance = false;
       for (const ref in this.application.references) {
         if (this.application.references[ref].children.length) {
@@ -488,8 +488,8 @@ export default class DataTypesRepositoryView extends Vue {
       for (let auth in this.authorizations) {
         let vc = this.authorizations[auth];
         let variables = this.configuration.data[vc.variable];
-        var reference =
-            ({...variables.components, ...variables.computedComponents})[vc.component].checker.params.refType;
+        var reference = { ...variables.components, ...variables.computedComponents }[vc.component]
+          .checker.params.refType;
         let ref = await this.getOrLoadReferences(reference);
         ret[auth] = ref;
       }
@@ -633,7 +633,7 @@ export default class DataTypesRepositoryView extends Vue {
           for (let i = 0; i < value.length; i++) {
             if (message.length > 0) {
               if (JSON.stringify(value[i]) !== JSON.stringify(value[i - message.length])) {
-                console.log(message)
+                console.log(message);
                 this.errorsList.push(value[i]);
               }
               for (let j = 0; j < message.length; j++) {
@@ -646,7 +646,7 @@ export default class DataTypesRepositoryView extends Vue {
               this.errorsList.push(value[i]);
             }
           }
-          console.log(this.errorsList)
+          console.log(this.errorsList);
           if (this.errorsList.length !== 0) {
             this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
           } else {
@@ -764,8 +764,8 @@ export default class DataTypesRepositoryView extends Vue {
       let localName = refValues.referenceValues.find((r) => r.naturalKey == key);
       if (localName?.values?.["__display_" + lang]) {
         localName = localName?.values?.["__display_" + lang];
-      }else{
-        localName = localName?.naturalKey
+      } else {
+        localName = localName?.naturalKey;
       }
       if (!localName) {
         localName = key;
