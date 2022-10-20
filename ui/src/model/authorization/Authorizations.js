@@ -18,7 +18,7 @@ export class Authorizations {
   dataType = "";
   name = "";
   users = [];
-  authorizations = this.ROLE;
+  authorizations = this.ROLES;
 
   constructor(authorizations, authorizationsScope) {
     this.#scopesId = authorizationsScope;

@@ -25,7 +25,13 @@
                 style="min-height: 10px; display: table-cell; vertical-align: middle"
                 @click="indexColumn === 'label' && toggle(index)"
               >
-                {{ localName(scope) }}
+                <span style="margin-right: 10px">
+                  <FontAwesomeIcon
+                      :icon="openChild ? 'caret-down' : 'caret-right'"
+                      tabindex="0"
+                  />
+                </span>
+                <span> {{ localName(scope) }} </span>
               </a>
               <p
                 v-else-if="
@@ -38,6 +44,15 @@
               >
                 {{ localName(scope) }}
               </p>
+              <b-field v-else-if="column.display && indexColumn === 'all'" :field="indexColumn" class="column">
+                <b-icon
+                  :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                  pack="far"
+                  size="is-medium"
+                  type="is-warning"
+                  @click.native = "testCheckAll($event, index, indexColumn)"
+                />
+              </b-field>
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
                   type="is-warning"
@@ -186,6 +201,7 @@ export default class AuthorizationTable extends Vue {
   states = {};
   currentAuthorization = null;
   showModal = false;
+  openChild = false;
 
   @Watch("authorization")
   onAuthorizationChanged(auth) {
@@ -281,6 +297,7 @@ export default class AuthorizationTable extends Vue {
     var open = {};
     open[index] = !this.open[index];
     this.open = { ...this.open, ...open };
+    this.openChild = !this.openChild;
   }
 
   select(option) {
@@ -289,6 +306,15 @@ export default class AuthorizationTable extends Vue {
 
   eventSetIndetermined(event, index) {
     this.selectCheckbox(event.event, index, event.indexColumn, event.authorizations);
+  }
+
+  testCheckAll(event, index, indexColumn, authorizations) {
+    this.selectCheckbox(event, index, indexColumn, authorizations);
+    for (let nameColumn in this.columnsVisible) {
+      if(this.states[nameColumn]) {
+        this.selectCheckbox(event, index, nameColumn, authorizations);
+      }
+    }
   }
 
   selectCheckbox(event, index, indexColumn, authorizations) {
