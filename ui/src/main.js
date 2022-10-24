@@ -59,6 +59,7 @@ import {
   faUserPlus,
   faVial,
   faWrench,
+  faEllipsisH,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faCalendar as farCalendar,
@@ -137,7 +138,8 @@ library.add(
   faTimesCircle,
   faEdit,
   faInfo,
-  faQuestion
+  faQuestion,
+  faEllipsisH
 );
 Vue.component("vue-fontawesome", FontAwesomeIcon);
 

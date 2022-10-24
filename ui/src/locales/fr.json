@@ -267,7 +267,8 @@
         "title-modal-date": "Choix de l'interval de date",
         "manage-datasets": "Gérer les jeux de données",
         "accepted": "Accepté",
-        "refuse": "Refusé"
+        "refuse": "Refusé",
+        "tooltip_show_secondary_menu": "Ouvrir le menu secondaire"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version pour ce jeux de données",

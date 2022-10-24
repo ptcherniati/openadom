@@ -262,7 +262,8 @@
         "title-modal-date": "Choice of date range",
         "manage-datasets": "Manage datasets",
         "accepted": "Accepted",
-        "refuse": "Refuse"
+        "refuse": "Refuse",
+        "tooltip_show_secondary_menu": "Open secondary menu"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Drop a version on this dataset",
