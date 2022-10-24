@@ -32,4 +32,9 @@ public class ReferenceLineCheckerDisplay implements LineChecker {
     public LineCheckerConfiguration getConfiguration() {
         return null;
     }
+
+    @Override
+    public ValidationCheckResult checkWithoutTransformation(Datum values) {
+        return check(values);
+    }
 }

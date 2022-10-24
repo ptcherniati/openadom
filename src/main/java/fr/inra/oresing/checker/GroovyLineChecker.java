@@ -42,6 +42,11 @@ public class GroovyLineChecker implements LineChecker<GroovyLineCheckerConfigura
     }
 
     @Override
+    public ValidationCheckResult checkWithoutTransformation(Datum values) {
+        return check(values);
+    }
+
+    @Override
     public ValidationCheckResult check(Datum datum) {
         return doCheck(datum);
     }

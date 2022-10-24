@@ -23,8 +23,12 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
 
     default ValidationCheckResult check(Datum datum) {
         Datum transformedDatum = getTransformer().transform(datum);
+        return checkWithoutTransformation(transformedDatum);
+    }
+
+    default ValidationCheckResult checkWithoutTransformation(Datum datum) {
         VariableComponentKey variableComponentKey = (VariableComponentKey) getTarget();
-        String value = transformedDatum.get(variableComponentKey);
+        String value = datum.get(variableComponentKey);
         ValidationCheckResult validationCheckResult;
         if (Strings.isNullOrEmpty(value)) {
             if (getConfiguration().isRequired()) {

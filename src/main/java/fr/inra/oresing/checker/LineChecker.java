@@ -11,4 +11,6 @@ public interface LineChecker<C extends LineCheckerConfiguration> {
     ValidationCheckResult check(Datum values);
     Set<ValidationCheckResult> checkReference(ReferenceDatum referenceDatum);
     C getConfiguration();
+
+    ValidationCheckResult checkWithoutTransformation(Datum values);
 }

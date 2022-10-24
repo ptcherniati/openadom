@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -229,6 +230,11 @@ public class OreSiService {
         Application application = getApplication(nameOrId);
         UUID uuid = changeApplicationConfiguration(app, configurationFile, Function.identity());
         Configuration newConfiguration = app.getConfiguration();
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final SortedMap oldMap = objectMapper.convertValue(oldConfiguration, SortedMap.class);
+        final SortedMap newMap = objectMapper.convertValue(newConfiguration, SortedMap.class);
+        final SortedMapDifference difference = Maps.difference(oldMap, newMap);
+        final Map<Object, MapDifference.ValueDifference<Object>>  differing = difference.entriesDiffering();
         int oldVersion = oldConfiguration.getApplication().getVersion();
         int newVersion = newConfiguration.getApplication().getVersion();
         Preconditions.checkArgument(newVersion > oldVersion, "l'application " + app.getName() + " est déjà dans la version " + oldVersion);
@@ -316,7 +322,7 @@ public class OreSiService {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getLineCheckers(application, dataType);
         Consumer<Datum> validateRow = line -> {
             lineCheckers.forEach(lineChecker -> {
-                ValidationCheckResult validationCheckResult = lineChecker.check(line);
+                ValidationCheckResult validationCheckResult = lineChecker.checkWithoutTransformation(line);
                 Preconditions.checkState(validationCheckResult.isSuccess(), "erreur de validation d'une donnée stockée " + validationCheckResult);
             });
         };
