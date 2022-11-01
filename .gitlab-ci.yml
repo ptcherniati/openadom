@@ -43,48 +43,80 @@ maven_test_rest_1:
   script: mvn --batch-mode clean test -Ptest_rest_1
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_rest_1_ACBB:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_rest_1_ACBB
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_rest_1_Haute_Frequence:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_rest_1_Haute_Frequence
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_rest_2:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_rest_2
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_rest_others:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_rest_others
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_checker:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_checker
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_model:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_model
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 maven_test_persistence:
   image: maven:3.6.3-openjdk-11
   stage: test
   script: mvn --batch-mode clean test -Ptest_persistence
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 
 maven:
   image: maven:3.6.3-openjdk-11
@@ -92,6 +124,10 @@ maven:
   script: mvn --batch-mode clean package -Dmaven.test.skip=true
   tags:
     - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 
 maven_registry:
   image: maven:3.6.3-openjdk-11
@@ -146,7 +182,7 @@ build_doc:
   stage: build
   script:
     - mkdir public
-    - pandoc documentations/Doc.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
+    - pandoc documentations/DOC.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
     - pandoc documentations/Documentation_fichier_Yaml.md -o public/fichier_de_configuration.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
     - pandoc documentations/Lexique_yaml.md -o public/lexique.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
     - pandoc README.md documentations/doc_addon.md -o public/index.html -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
