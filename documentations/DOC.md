@@ -4,7 +4,7 @@ ore-si-ng
 POC d'implantation sur une base de l'utilisation de Postgresql sans
 Hibernate.
 
-Reste à faire
+Reste à faire 
 =============
 
   - les roles par defaut d'admin
