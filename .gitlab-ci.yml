@@ -43,6 +43,9 @@ maven_test_rest_1:
   script: mvn --batch-mode clean test -Ptest_rest_1
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -53,6 +56,9 @@ maven_test_rest_1_ACBB:
   script: mvn --batch-mode clean test -Ptest_rest_1_ACBB
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -63,6 +69,9 @@ maven_test_rest_1_Haute_Frequence:
   script: mvn --batch-mode clean test -Ptest_rest_1_Haute_Frequence
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -73,6 +82,9 @@ maven_test_rest_2:
   script: mvn --batch-mode clean test -Ptest_rest_2
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -83,6 +95,9 @@ maven_test_rest_others:
   script: mvn --batch-mode clean test -Ptest_rest_others
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -93,6 +108,9 @@ maven_test_checker:
   script: mvn --batch-mode clean test -Ptest_checker
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -103,6 +121,9 @@ maven_test_model:
   script: mvn --batch-mode clean test -Ptest_model
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -113,6 +134,9 @@ maven_test_persistence:
   script: mvn --batch-mode clean test -Ptest_persistence
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -124,6 +148,9 @@ maven:
   script: mvn --batch-mode clean package -Dmaven.test.skip=true
   tags:
     - docker
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     reports:
       junit:
@@ -137,6 +164,9 @@ maven_registry:
     - mvn versions:set -DnewVersion=$CI_COMMIT_BRANCH.$MVN_VERSION
     - mvn versions:commit
     - mvn deploy -Pmia -s ci-settings.xml
+  except:
+    variables:
+      -  $BUILD_DOC == true
 
 npm_test:
   image: cypress/browsers:node17.8.0-chrome99-ff97-slim
@@ -153,6 +183,9 @@ npm_test:
     # run Cypress tests
     - export NODE_OPTIONS=''
     - npx cypress run --browser firefox
+  except:
+    variables:
+      -  $BUILD_DOC == true
   artifacts:
     when: always
     paths:
@@ -168,6 +201,9 @@ npm:
     - cd ui
     - npm ci
     - npm run build
+  except:
+    variables:
+      -  $BUILD_DOC == true
   tags:
     - docker
   artifacts:
@@ -194,12 +230,13 @@ build_doc:
 
   only:
     variables:
-      - $CI_COMMIT_BRANCH == "master"
+      - ($CI_COMMIT_BRANCH == "master" || $BUILD_DOC == true)
     changes:
       - "documentations/*.md"
 
 pages:
   stage: pages
+  needs: ["build_doc"]
   script:
     - ls public
 
@@ -209,6 +246,6 @@ pages:
 
   only:
     variables:
-      - $CI_COMMIT_BRANCH == "master"
+      - ($CI_COMMIT_BRANCH == "master" || $BUILD_DOC == true)
     changes:
       - "documentations/*.md"
