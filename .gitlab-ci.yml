@@ -146,7 +146,7 @@ build_doc:
   stage: build
   script:
     - mkdir public
-    - pandoc documentations/doc.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
+    - pandoc documentations/Doc.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
     - pandoc documentations/Documentation_fichier_Yaml.md -o public/fichier_de_configuration.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
     - pandoc documentations/Lexique_yaml.md -o public/lexique.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
     - pandoc README.md documentations/doc_addon.md -o public/index.html -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
@@ -155,6 +155,12 @@ build_doc:
   artifacts:
     paths:
       - public
+
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == "master"
+    changes:
+      - "documentations/*.md"
 
 pages:
   stage: pages
