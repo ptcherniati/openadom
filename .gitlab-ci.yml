@@ -28,6 +28,7 @@ stages:
   - build
   - test
   - package
+  - pages
 
 maven_build:
   image: maven:3.6.3-openjdk-11
