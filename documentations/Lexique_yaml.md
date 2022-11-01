@@ -1,21 +1,23 @@
 ---
 title: Lexique pour le fichier de configuration OpenADOM
 subtitle: Inventaire des mots clefs du fichier de configuration OpenADOM
-author: 
- - Lucile Varloteaux
-   - Philippe TCHERNIATINSKY
-date: 28/10/2022
+author:
+- VARLOTEAUX Lucile
+- TCHERNIATINSKY Philippe
+
+date: 10/10/2022
+
 lang: fr
 numbersections: true
 documentclass: scrreprt
 toc: true
+toc-depth: 6
+toc-title: "Table des matières"
 fontsize: 12pt
 linestretch: 1
-linkcolor: blue
-documentclass: scrreprt
-pandoc: pandoc Lexique_yaml.md -o ../pdf/lexique.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  --toc -s
----
+linkcolor: black
 
+---
 
 # Lexique
 
