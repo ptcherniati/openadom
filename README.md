@@ -1,4 +1,4 @@
-# Projet de la version V2 de l'application des ORE.
+# [Projet de la version V2 de l'application des ORE](./pages/index.html).
 
 Le projet est constitué de 2 sous projet :
 
