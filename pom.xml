@@ -225,17 +225,17 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
-                <excludes>
-                    <exclude>src/main/resource/application.properties</exclude>
-                </excludes>
-                <filtering>false</filtering>
+                <includes>
+                    <include>**/application.properties</include>
+                </includes>
+                <filtering>true</filtering>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
-                <includes>
-                    <include>src/main/resource/application.properties</include>
-                </includes>
-                <filtering>true</filtering>
+                <excludes>
+                    <exclude>src/main/resource**/application.properties</exclude>
+                </excludes>
+                <filtering>false</filtering>
             </resource>
         </resources>
         <plugins>
