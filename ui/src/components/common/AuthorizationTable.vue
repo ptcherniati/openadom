@@ -45,15 +45,20 @@
               >
                 {{ localName(scope) }}
               </p>
-              <b-field v-else-if="column.display && indexColumn === 'all'" :field="indexColumn" class="column">
-                <b-icon
-                    :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
-                    class="clickable"
-                    pack="far"
-                    size="is-medium"
+              <b-field v-else-if="column.display && indexColumn === 'admin'" :field="indexColumn" class="column">
+                <b-tooltip
                     type="is-warning"
-                    @click.native="selectCheckboxAll($event, index, indexColumn)"
-                />
+                    :label="$t('dataTypeAuthorizations.all-autorisation')"
+                >
+                  <b-icon
+                      :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                      class="clickable"
+                      pack="far"
+                      size="is-medium"
+                      type="is-warning"
+                      @click.native="selectCheckboxAll($event, index, indexColumn)"
+                  />
+                </b-tooltip>
               </b-field>
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
@@ -314,17 +319,15 @@ export default class AuthorizationTable extends Vue {
   }
 
   selectCheckboxAll(event, index, indexColumn, authorizations) {
-    let countCheck = 0;
+    let thisStateElement = this.states[indexColumn][this.getPath(index)];
     this.selectCheckbox(event, index, indexColumn, authorizations);
-    console.log(this.states[indexColumn][this.getPath(index)])
     for (let nameColumn in this.columnsVisible) {
-      if (this.states[nameColumn]) {
-        let stateElement = this.states[nameColumn][this.getPath(index)];
-        if (stateElement.state === 0) {
-          this.selectCheckbox(event, index, nameColumn, authorizations);
-          countCheck++;
-        } else if (stateElement.state === 1 && countCheck === 0) {
-          this.selectCheckbox(event, index, nameColumn, authorizations);
+      if(nameColumn !== "admin") {
+        if (this.states[nameColumn]) {
+          let stateElement = this.states[nameColumn][this.getPath(index)];
+          if (thisStateElement.state === stateElement.state) {
+            this.selectCheckbox(event, index, nameColumn, authorizations);
+          }
         }
       }
     }

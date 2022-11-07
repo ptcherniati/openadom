@@ -381,12 +381,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         }
       }
       this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription};
-      this.columnsVisible.all = {
-        display: true,
-        title: "tous",
-        internationalizationName: {en: "All", fr: "Cocher tout"},
-        order: 0
-      };
       if (!this.repositury) {
         this.columnsVisible.publication = {...this.columnsVisible.publication, display: false};
       }
