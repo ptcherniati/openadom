@@ -262,7 +262,8 @@
         "title-modal-date": "Choice of date range",
         "manage-datasets": "Manage datasets",
         "accepted": "Accepted",
-        "refuse": "Refuse"
+        "refuse": "Refuse",
+        "tooltip_show_secondary_menu": "Open secondary menu"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Drop a version on this dataset",
@@ -277,12 +278,14 @@
         "list-file-data-period": "List of versions for the period",
         "table-file-data-id": "ID",
         "table-file-data-size": "Size",
-        "table-file-data-create": "Create",
-        "table-file-data-create-by": "Create by :",
-        "table-file-data-publish": "Publish",
-        "table-file-data-publish-by": "Publish by :",
+        "table-file-data-create": "Created on",
+        "table-file-data-create-by": "Created by :",
+        "table-file-data-publish": "Published on",
+        "table-file-data-publish-by": "Published by :",
         "table-file-data-publication": "Publication",
+        "table-file-data-action": "Actions",
         "table-file-data-delete": "Delete",
+        "table-file-data-download": "Download",
         "table-file-data-period": "Period"
     },
     "dataTypeAuthorizations": {

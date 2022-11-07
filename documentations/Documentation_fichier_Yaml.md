@@ -15,8 +15,6 @@ toc-title: "Table des matières"
 fontsize: 12pt
 linestretch: 1
 linkcolor: black
-###### Pour générer le pdf lancez la commande suivante
-###### pandoc -F ui/node_modules/.bin/mermaid-filter -f markdown+hard_line_breaks Documentation_fichier_Yaml.md -o Documentation_fichier_Yaml.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=black --number-sections  -V documentclass=scrreprt
 
 ---
 
