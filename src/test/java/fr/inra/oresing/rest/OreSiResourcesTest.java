@@ -378,9 +378,9 @@ public class OreSiResourcesTest {
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("42"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("43"));
             Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("10"));
-            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("141"));
-            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("142"));
-            Assert.assertTrue("Il faut mentionner les lignes en erreur", response.contains("143"));
+            Assert.assertFalse("L'erreur doit être tronquée", response.contains("141"));
+            Assert.assertFalse("L'erreur doit être tronquée", response.contains("142"));
+            Assert.assertFalse("L'erreur doit être tronquée", response.contains("143"));
         }
         final String getMonsoere = mockMvc.perform(get("/api/v1/applications/monsore")
                         .cookie(authCookie)
@@ -1234,8 +1234,8 @@ public class OreSiResourcesTest {
         }
 
         addReferences();
-        addDataFluxTours();
         addDataBiomassProduction();
+        addDataFluxTours();
         addDataSWC();
     }
 

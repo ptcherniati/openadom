@@ -69,7 +69,7 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
-        Optional<BinaryFile> optionalBinaryFile = service.getFile(name, id);
+        Optional<BinaryFile> optionalBinaryFile = service.getFileWithData(name, id);
         if (optionalBinaryFile.isPresent()) {
             BinaryFile binaryFile = optionalBinaryFile.get();
             HttpHeaders headers = new HttpHeaders();

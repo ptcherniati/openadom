@@ -72,6 +72,18 @@
         <jwt.version>0.10.5</jwt.version>
         <flyway-spring-test.version>5.2.1</flyway-spring-test.version>
         <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
+
+
+        <!--Database infos -->
+        <db.host>localhost</db.host>
+        <db.port>5432</db.port>
+        <db.database>ore-si</db.database>
+        <db.user>dbuser</db.user>
+        <db.password>xxxxxxxx</db.password>
+        <db.host_port>${db.host}:${db.port}</db.host_port>
+        <!--Database infos -->
+
+
     </properties>
 
     <dependencies>
@@ -210,6 +222,22 @@
 
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/application.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>src/main/resource**/application.properties</exclude>
+                </excludes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -410,6 +438,12 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>openadom_deploiement</id>
+            <properties>
+                <db.host_port>database</db.host_port>
+            </properties>
         </profile>
     </profiles>
 

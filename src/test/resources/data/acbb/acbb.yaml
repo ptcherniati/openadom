@@ -1504,22 +1504,27 @@ dataTypes:
             variable: HUT
             component: IQ
         - header: "MOR_valeur"
+          presenceConstraint: OPTIONAL
           boundTo:
             variable: MOR
             component: valeur
         - header: "MOR_nb"
+          presenceConstraint: OPTIONAL
           boundTo:
             variable: MOR
             component: nb
         - header: "MOR_et"
+          presenceConstraint: OPTIONAL
           boundTo:
             variable: MOR
             component: et
         - header: "MOR_methode"
+          presenceConstraint: OPTIONAL
           boundTo:
             variable: MOR
             component: methode
         - header: "MOR_IQ"
+          presenceConstraint: OPTIONAL
           boundTo:
             variable: MOR
             component: IQ
