@@ -109,7 +109,7 @@ public class Configuration {
                 });
         reference.getValue().getComputedColumns().values().stream()
                 .filter(Objects::nonNull)
-                .map(ReferenceStaticComputedColumnDescription::getChecker)
+                .map(ReferenceComputedColumnDescription::getChecker)
                 .filter(Objects::nonNull)
                 .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
@@ -168,7 +168,7 @@ public class Configuration {
         private LinkedHashMap<String, ReferenceStaticNotComputedColumnDescription> columns = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "The list of computed columns descriptions. Computed columns are not provided in the CSV but computed line by line when importing.", required = false)
-        private LinkedHashMap<String, ReferenceStaticComputedColumnDescription> computedColumns = new LinkedHashMap<>();
+        private LinkedHashMap<String, ReferenceComputedColumnDescription> computedColumns = new LinkedHashMap<>();
 
         @ApiModelProperty(notes = "The list of dynamic columns descriptions. Dynamic columns names refers to an other reference.", required = true)
         private LinkedHashMap<String, ReferenceDynamicColumnDescription> dynamicColumns = new LinkedHashMap<>();
@@ -191,13 +191,13 @@ public class Configuration {
             Map<String, ReferenceColumnDescription> allColumnDescriptions = new LinkedHashMap<>();
             allColumnDescriptions.putAll(doGetStaticColumnDescriptions());
             allColumnDescriptions.putAll(dynamicColumns);
+            allColumnDescriptions.putAll(computedColumns);
             return allColumnDescriptions;
         }
 
         public Map<String, ReferenceStaticColumnDescription> doGetStaticColumnDescriptions() {
             Map<String, ReferenceStaticColumnDescription> staticColumnDescriptions = new LinkedHashMap<>();
             staticColumnDescriptions.putAll(columns);
-            staticColumnDescriptions.putAll(computedColumns);
             return staticColumnDescriptions;
         }
 
@@ -258,7 +258,7 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class ReferenceStaticComputedColumnDescription extends ReferenceStaticColumnDescription {
+    public static class ReferenceComputedColumnDescription extends ReferenceStaticColumnDescription {
 
         @ApiModelProperty(notes = "Explain how to compute the value for this column given other columns", required = false)
         private GroovyConfiguration computation;

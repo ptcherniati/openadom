@@ -3167,7 +3167,7 @@
           "type": "object",
           "description": "The list of computed columns descriptions. Computed columns are not provided in the CSV but computed line by line when importing.",
           "additionalProperties": {
-            "$ref": "#/definitions/ReferenceStaticComputedColumnDescription"
+            "$ref": "#/definitions/ReferenceComputedColumnDescription"
           }
         },
         "dynamicColumns": {
@@ -3254,7 +3254,7 @@
       },
       "title": "ReferenceDynamicColumnDescription"
     },
-    "ReferenceStaticComputedColumnDescription": {
+    "ReferenceComputedColumnDescription": {
       "type": "object",
       "required": [
         "presenceConstraint"
@@ -3278,7 +3278,7 @@
           ]
         }
       },
-      "title": "ReferenceStaticComputedColumnDescription"
+      "title": "ReferenceComputedColumnDescription"
     },
     "ReferenceStaticNotComputedColumnDescription": {
       "type": "object",

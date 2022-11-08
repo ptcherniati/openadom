@@ -94,7 +94,7 @@ public class ReferenceService {
         ImmutableSet<ReferenceImporterContext.Column> computedColumns = referenceDescription.getComputedColumns().entrySet().stream()
                 .map(entry -> {
                     ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
-                    Configuration.ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription = entry.getValue();
+                    Configuration.ReferenceComputedColumnDescription referenceStaticComputedColumnDescription = entry.getValue();
                     Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
                     return computedColumnDescriptionToColumn(referenceValueRepository, referenceColumn, multiplicity, referenceStaticComputedColumnDescription);
                 }).collect(ImmutableSet.toImmutableSet());
@@ -259,7 +259,7 @@ public class ReferenceService {
         return column;
     }
 
-    private ReferenceImporterContext.Column computedColumnDescriptionToColumn(ReferenceValueRepository referenceValueRepository, ReferenceColumn referenceColumn, Multiplicity multiplicity, Configuration.ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription) {
+    private ReferenceImporterContext.Column computedColumnDescriptionToColumn(ReferenceValueRepository referenceValueRepository, ReferenceColumn referenceColumn, Multiplicity multiplicity, Configuration.ReferenceComputedColumnDescription referenceStaticComputedColumnDescription) {
         ReferenceImporterContext.Column column;
         if (multiplicity == Multiplicity.ONE) {
             column = newComputedColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
@@ -271,7 +271,7 @@ public class ReferenceService {
         return column;
     }
 
-    private ReferenceImporterContext.Column newComputedManyColumn(ReferenceColumn referenceColumn, Configuration.ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription, ReferenceValueRepository referenceValueRepository) {
+    private ReferenceImporterContext.Column newComputedManyColumn(ReferenceColumn referenceColumn, Configuration.ReferenceComputedColumnDescription referenceStaticComputedColumnDescription, ReferenceValueRepository referenceValueRepository) {
         Configuration.GroovyConfiguration computation = referenceStaticComputedColumnDescription.getComputation();
         ImmutableMap<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         Expression<Set<String>> computationExpression = StringSetGroovyExpression.forExpression(computation.getExpression());
@@ -295,7 +295,7 @@ public class ReferenceService {
         };
     }
 
-    private ReferenceImporterContext.Column newComputedColumn(ReferenceColumn referenceColumn, Configuration.ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription, ReferenceValueRepository referenceValueRepository) {
+    private ReferenceImporterContext.Column newComputedColumn(ReferenceColumn referenceColumn, Configuration.ReferenceComputedColumnDescription referenceStaticComputedColumnDescription, ReferenceValueRepository referenceValueRepository) {
         Configuration.GroovyConfiguration computation = referenceStaticComputedColumnDescription.getComputation();
         ImmutableMap<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         Expression<String> computationExpression = StringGroovyExpression.forExpression(computation.getExpression());
