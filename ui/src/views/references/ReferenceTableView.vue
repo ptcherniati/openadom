@@ -321,6 +321,15 @@ export default class ReferenceTableView extends Vue {
           }
           return 0;
         }),
+        ...Object.values(this.reference.computedColumns).sort((c1, c2) => {
+          if (c1.title < c2.title) {
+            return -1;
+          }
+          if (c1.title > c2.title) {
+            return 1;
+          }
+          return 0;
+        }),
       ];
     }
     if (this.referenceValues) {
