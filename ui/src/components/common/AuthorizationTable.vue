@@ -7,38 +7,59 @@
       <slot class="row"></slot>
       <div v-for="(scope, index) of authReference" :key="index">
         <div v-if="canShowLine(index)">
-          <div class="columns" @mouseleave="upHere = false" @mouseover="upHere = true"
-          >
+          <div class="columns" @mouseleave="upHere = false" @mouseover="upHere = true">
             <div
                 v-for="(column, indexColumn) of columnsVisible"
                 :key="indexColumn"
                 :class="{ hover: upHere && scope.isLeaf }"
                 class="column"
+                :style="!column.display ? 'display : contents':''"
             >
               <a
                   v-if="
-                column.display &&
-                indexColumn === 'label' &&
-                (!scope.isLeaf || remainingOption.length)
-              "
+                  column.display &&
+                  indexColumn === 'label' &&
+                  (!scope.isLeaf || remainingOption.length)
+                "
                   :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
                   :field="indexColumn"
                   style="min-height: 10px; display: table-cell; vertical-align: middle"
                   @click="indexColumn === 'label' && toggle(index)"
               >
-               {{ localName(scope) }}
+                <span style="margin-right: 10px">
+                  <FontAwesomeIcon
+                      :icon="openChild ? 'caret-down' : 'caret-right'"
+                      tabindex="0"
+                  />
+                </span>
+                <span> {{ localName(scope) }} </span>
               </a>
               <p
                   v-else-if="
-                column.display &&
-                indexColumn === 'label' &&
-                !(!scope.isLeaf || remainingOption.length)
-              "
+                  column.display &&
+                  indexColumn === 'label' &&
+                  !(!scope.isLeaf || remainingOption.length)
+                "
                   :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
                   :field="indexColumn"
               >
-               {{ localName(scope) }}
+                {{ localName(scope) }}
               </p>
+              <b-field v-else-if="column.display && indexColumn === 'admin'" :field="indexColumn" class="column">
+                <b-tooltip
+                    type="is-warning"
+                    :label="$t('dataTypeAuthorizations.all-autorisation')"
+                >
+                  <b-icon
+                      :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                      class="clickable"
+                      pack="far"
+                      size="is-medium"
+                      type="is-warning"
+                      @click.native="selectCheckboxAll($event, index, indexColumn)"
+                  />
+                </b-tooltip>
+              </b-field>
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
                     type="is-warning"
@@ -47,11 +68,21 @@
                 >
                   <b-icon
                       :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                      class="clickable"
                       pack="far"
                       size="is-medium"
-                      :type="(states[indexColumn][getPath(index)].hasPublicStates || canShowWarning(index, indexColumn))?'is-light':'is-primary'"
+                      :type="
+                      states[indexColumn][getPath(index)].hasPublicStates ||
+                      canShowWarning(index, indexColumn)
+                        ? 'is-light'
+                        : 'is-primary'
+                    "
                       :disabled="canShowWarning(index, indexColumn)"
-                      @click.native="canShowWarning(index, indexColumn)?index=>i:selectCheckbox($event, index, indexColumn)"
+                      @click.native="
+                      canShowWarning(index, indexColumn)
+                        ? (index) => i
+                        : selectCheckbox($event, index, indexColumn)
+                    "
                   />
                 </b-tooltip>
                 <AuthorizationForPeriodDatagroups
@@ -68,9 +99,9 @@
                     position="is-right"
                     multilined
                     v-if="
-                  states[indexColumn][getPath(index)].state === 0 ||
-                  states[indexColumn][getPath(index)].state === -1
-                "
+                    states[indexColumn][getPath(index)].state === 0 ||
+                    states[indexColumn][getPath(index)].state === -1
+                  "
                 >
                   <b-button
                       v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
@@ -85,7 +116,7 @@
                   </b-button>
                   <template v-slot:content>
                     <div v-if="canShowWarning(index, indexColumn)">
-                      {{$t('validation.noRightsForThisOPeration')}}
+                      {{ $t("validation.noRightsForThisOPeration") }}
                     </div>
                     <div v-else-if="states[indexColumn][getPath(index)].state === 0">
                       <p>
@@ -178,6 +209,7 @@ export default class AuthorizationTable extends Vue {
   states = {};
   currentAuthorization = null;
   showModal = false;
+  openChild = false;
 
   @Watch("authorization")
   onAuthorizationChanged(auth) {
@@ -215,25 +247,35 @@ export default class AuthorizationTable extends Vue {
     }
     this.states = states;
   }
-  canShowLine(index){
-    return (this.isApplicationAdmin || this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa)||oa.startsWith(this.getPath(index))))?true:false
+
+  canShowLine(index) {
+    return this.isApplicationAdmin ||
+    this.ownAuthorizations.find(
+        (oa) => this.getPath(index).startsWith(oa) || oa.startsWith(this.getPath(index))
+    )
+        ? true
+        : false;
   }
 
-  canShowWarning(index, column){
-    return (
-        this.isApplicationAdmin || (this.ownAuthorizations.find(oa=>this.getPath(index).startsWith(oa))
-        && this.isAuthorizedColumnForPath(index,  column))
-    )?false:true
+  canShowWarning(index, column) {
+    return this.isApplicationAdmin ||
+    (this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
+        this.isAuthorizedColumnForPath(index, column))
+        ? false
+        : true;
   }
-  isAuthorizedColumnForPath(index, column){
+
+  isAuthorizedColumnForPath(index, column) {
     for (const path in this.ownAuthorizationsColumnsByPath) {
-      if (this.getPath(index).startsWith(path) && this.ownAuthorizationsColumnsByPath[path].indexOf(column)>=0){
+      if (
+          this.getPath(index).startsWith(path) &&
+          this.ownAuthorizationsColumnsByPath[path].indexOf(column) >= 0
+      ) {
         return true;
       }
     }
     return false;
   }
-
 
   getScope() {
     return this.authorizationScopes?.[0]?.id;
@@ -265,6 +307,7 @@ export default class AuthorizationTable extends Vue {
     var open = {};
     open[index] = !this.open[index];
     this.open = {...this.open, ...open};
+    this.openChild = !this.openChild;
   }
 
   select(option) {
@@ -273,6 +316,21 @@ export default class AuthorizationTable extends Vue {
 
   eventSetIndetermined(event, index) {
     this.selectCheckbox(event.event, index, event.indexColumn, event.authorizations);
+  }
+
+  selectCheckboxAll(event, index, indexColumn, authorizations) {
+    let thisStateElement = this.states[indexColumn][this.getPath(index)];
+    this.selectCheckbox(event, index, indexColumn, authorizations);
+    for (let nameColumn in this.columnsVisible) {
+      if(nameColumn !== "admin") {
+        if (this.states[nameColumn]) {
+          let stateElement = this.states[nameColumn][this.getPath(index)];
+          if (thisStateElement.state === stateElement.state) {
+            this.selectCheckbox(event, index, nameColumn, authorizations);
+          }
+        }
+      }
+    }
   }
 
   selectCheckbox(event, index, indexColumn, authorizations) {
