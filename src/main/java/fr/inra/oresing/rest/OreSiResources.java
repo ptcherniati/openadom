@@ -8,11 +8,15 @@ import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceLineCheckerDisplay;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -295,6 +299,19 @@ public class OreSiResources {
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @ApiOperation(value = "Get a additionalFiles with their description using search params", notes = "Returns a zip containing additional files and their description")
+    public ResponseEntity<byte[]> getAdditionalFilesNamesZip(
+            @ApiParam(required = true, value = "The name or uuid of an application")
+            @PathVariable("nameOrId") String nameOrId,
+
+            @ApiParam(required = false, value = "The parameters for filter the search")
+            @RequestParam(value = "params", required = false) String params) throws IOException, BadAdditionalFileParamsSearchException {
+        AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
+        final byte[] body = service.getAdditionalFilesNamesZip(nameOrId, additionalFilesInfos);
+        return ResponseEntity.ok(body);
+    }
+
     @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createAdditionalFile(@PathVariable("nameOrId") String nameOrId,
                                                   @RequestParam(value = "file", required = false) MultipartFile file,
@@ -447,6 +464,15 @@ public class OreSiResources {
         try {
             CreateAdditionalFileRequest createAdditionalFileRequest = params != null && params != "undefined" ? new ObjectMapper().readValue(params, CreateAdditionalFileRequest.class) : null;
             return createAdditionalFileRequest;
+        } catch (IOException e) {
+            throw new BadFileOrUUIDQuery(e.getMessage());
+        }
+    }
+
+    private AdditionalFilesInfos deserialiseAdditionalFilesInfos(String params) {
+        try {
+            AdditionalFilesInfos additionalFilesInfos = params != null && params != "undefined" ? new ObjectMapper().readValue(params, AdditionalFilesInfos.class) : null;
+            return additionalFilesInfos;
         } catch (IOException e) {
             throw new BadFileOrUUIDQuery(e.getMessage());
         }

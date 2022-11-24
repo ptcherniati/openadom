@@ -198,7 +198,7 @@
               <b-button icon-left="upload"
                         size="is-small"
                         type="is-primary is-light"
-              @click="modifyAssociateFile(file.id)"/>
+              @click="download(file.id)"/>
             </td>
           </tr>
           <tr v-if="showFileInfos==file.id">
@@ -504,6 +504,9 @@ export default class AdditionalFileInfosView extends Vue {
     this.fields=fields
     this.$refs.form.$forceUpdate()
     this.authorizations= file?file.associates:[]
+  }
+  async download(id){
+    console.log(id)
   }
 }
 </script>

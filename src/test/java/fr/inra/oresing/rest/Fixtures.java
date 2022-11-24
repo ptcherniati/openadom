@@ -69,18 +69,18 @@ public class Fixtures {
     }
 
     public Map<String, String> getMonsoreReferentielFiles() {
-        Map<String, String> referentielFiles = new HashMap<>();
-        referentielFiles.put("especes", "/data/monsore/refdatas/especes.csv");
-        referentielFiles.put("projet", "/data/monsore/refdatas/projet.csv");
-        referentielFiles.put("sites", "/data/monsore/refdatas/sites.csv");
-        referentielFiles.put("themes", "/data/monsore/refdatas/themes.csv");
-        referentielFiles.put("type de fichiers", "/data/monsore/refdatas/type_de_fichiers.csv");
-        referentielFiles.put("type_de_sites", "/data/monsore/refdatas/type_de_sites.csv");
-        referentielFiles.put("types_de_donnees_par_themes_de_sites_et_projet", "/data/monsore/refdatas/types_de_donnees_par_themes_de_sites_et_projet.csv");
-        referentielFiles.put("unites", "/data/monsore/refdatas/unites.csv");
-        referentielFiles.put("valeurs_qualitatives", "/data/monsore/refdatas/valeurs_qualitatives.csv");
-        referentielFiles.put("variables", "/data/monsore/refdatas/variables.csv");
-        referentielFiles.put("variables_et_unites_par_types_de_donnees", "/data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv");
+        Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("mareferenceespece", "/data/monsore/refdatas/especes.csv");
+        referentielFiles.put("mareferenceprojet", "/data/monsore/refdatas/projet.csv");
+        referentielFiles.put("mareferencetypedesites", "/data/monsore/refdatas/type_de_sites.csv");
+        referentielFiles.put("mareferencesite", "/data/monsore/refdatas/sites.csv");
+        referentielFiles.put("mareferencetheme", "/data/monsore/refdatas/themes.csv");
+        referentielFiles.put("mareferencetypedefichier", "/data/monsore/refdatas/type_de_fichiers.csv");
+        referentielFiles.put("mareferencetypes_de_donnees_par_themes_de_sites_et_projet", "/data/monsore/refdatas/types_de_donnees_par_themes_de_sites_et_projet.csv");
+        referentielFiles.put("mareferenceunites", "/data/monsore/refdatas/unites.csv");
+        referentielFiles.put("mareferencevaleurs_qualitatives", "/data/monsore/refdatas/valeurs_qualitatives.csv");
+        referentielFiles.put("mareferencevariables", "/data/monsore/refdatas/variables.csv");
+        referentielFiles.put("mareferencevariables_et_unites_par_types_de_donnees", "/data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv");
         return referentielFiles;
     }
 
@@ -470,7 +470,7 @@ public class Fixtures {
         // ajout de data
         try (InputStream refStream = getClass().getResourceAsStream(getPemDataResourceName())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());

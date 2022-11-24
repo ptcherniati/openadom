@@ -139,14 +139,10 @@ export default {
       }
     },
     validateRequired(value) {
-      let method = !!value
       if (typeof value == 'string') {
-        return method(value)
+        return !!value
       } else {
-        return value
-            .map(v => !method(v))
-            .filter(v => v == false)
-            .length == 0
+        return value.length>0
       }
     },
     updateValue(event) {

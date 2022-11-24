@@ -9,6 +9,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OperationType;
@@ -182,7 +183,7 @@ public class OreSiResourcesTest {
 
         Assert.assertEquals("commentaire", applicationResult.getComment());
         Assert.assertEquals("monsore", applicationResult.getName());
-        Assert.assertEquals(Set.of("especes", "projet", "sites", "themes", "type de fichiers", "type_de_sites", "types_de_donnees_par_themes_de_sites_et_projet", "unites", "valeurs_qualitatives", "variables", "variables_et_unites_par_types_de_donnees"), applicationResult.getReferences().keySet());
+        Assert.assertEquals(Set.of("mareferenceespece", "mareferenceprojet", "mareferencesite", "mareferencetheme", "mareferencetypedefichier", "mareferencetypedesites", "mareferencetypes_de_donnees_par_themes_de_sites_et_projet", "mareferenceunites", "mareferencevaleurs_qualitatives", "mareferencevariables", "mareferencevariables_et_unites_par_types_de_donnees"), applicationResult.getReferences().keySet());
 //        Assert.assertEquals(List.of("pem"), applicationResult.getDataType());
 
         // Ajout de referentiel
@@ -204,9 +205,9 @@ public class OreSiResourcesTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .cookie(monsoreCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
+                .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='mareferencevaleurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
 
-        String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
+        String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/mareferencesite")
                         .contentType(MediaType.APPLICATION_JSON)
                         .cookie(monsoreCookie))
                 .andExpect(status().isOk())
@@ -221,7 +222,7 @@ public class OreSiResourcesTest {
         try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             // sans droit on ne peut pas
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andExpect(status().is4xxClientError())
@@ -231,7 +232,7 @@ public class OreSiResourcesTest {
             final String jsonRightsForMonsoere = setJsonRightsForMonsoere(monsoreCookie, withRigthsUserId, OperationType.publication.name());
 
             //avec les droits on peut publier
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -240,7 +241,7 @@ public class OreSiResourcesTest {
             log.debug(StringUtils.abbreviate(response, 50));
 
             //sans droit on ne peut pas
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(lambdaCookie))
                     .andExpect(status().is4xxClientError())
@@ -251,7 +252,7 @@ public class OreSiResourcesTest {
 
 
             //avec les droits public on peut publier même sans droit
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(lambdaCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -265,7 +266,7 @@ public class OreSiResourcesTest {
             String wrongData = data.replace("plateforme", "entete_inconnu");
             byte[] bytes = wrongData.getBytes(StandardCharsets.UTF_8);
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", bytes);
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(monsoreCookie))
                     .andExpect(status().isBadRequest())
@@ -291,13 +292,13 @@ public class OreSiResourcesTest {
                 list.add(jsonArray.getString(i));
             }
 
-            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .cookie(monsoreCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.variables").isArray())
                     .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
-                    .andExpect(jsonPath("$.variables").value(Stream.of("date", "projet", "site", "Couleur des individus", "Nombre d'individus", "espece").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.variables").value(Stream.of("mavariabledate", "mavariableprojet", "mavariablesite", "mavariableCouleur", "mavariableNombre d'individus","mavariableespece").collect(Collectors.toList())))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
@@ -305,9 +306,9 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows", Matchers.hasSize(272)))
                     //.andExpect(jsonPath("$.rows.value").value(list))
                     .andExpect(jsonPath("$.totalRows", Is.is(272)))
-                    .andExpect(jsonPath("$.rows[*].values.date.value", Matchers.hasSize(272)))
-                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(272)))
-                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(272)))
+                    .andExpect(jsonPath("$.rows[*].values.mavariabledate.lacomposantejour", Matchers.hasSize(272)))
+                    .andExpect(jsonPath("$.rows[*].values[\"mavariableNombre d'individus\"].lacomposanteunit", Matchers.hasSize(272)))
+                    .andExpect(jsonPath("$.rows[*].values[\"mavariableCouleur\"].lacomposanteunit", Matchers.hasSize(272)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualJson, 50));
         }
@@ -323,18 +324,74 @@ public class OreSiResourcesTest {
          *
          */
         {
-            String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
+            String filter = "{\n" +
+                    "  \"application\": null,\n" +
+                    "  \"applicationNameOrId\": null,\n" +
+                    "  \"dataType\": null,\n" +
+                    "  \"offset\": null,\n" +
+                    "  \"limit\": 15,\n" +
+                    "  \"variableComponentSelects\": [],\n" +
+                    "  \"variableComponentFilters\": [\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"mavariabledate\",\n" +
+                    "        \"component\": \"lacomposantejour\"\n" +
+                    "      },\n" +
+                    "      \"filter\": null,\n" +
+                    "      \"type\": \"date\",\n" +
+                    "      \"format\": \"dd/MM/yyyy\",\n" +
+                    "      \"intervalValues\": {\n" +
+                    "        \"from\": \"1984-01-01\",\n" +
+                    "        \"to\": \"1984-01-01\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"mavariableNombre d'individus\",\n" +
+                    "        \"component\": \"lacomposantenombre\"\n" +
+                    "      },\n" +
+                    "      \"filter\": null,\n" +
+                    "      \"type\": \"numeric\",\n" +
+                    "      \"format\": \"integer\",\n" +
+                    "      \"intervalValues\": {\n" +
+                    "        \"from\": \"20\",\n" +
+                    "        \"to\": \"29\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"mavariableCouleur\",\n" +
+                    "        \"component\": \"lecomposantecouleur\"\n" +
+                    "      },\n" +
+                    "      \"filter\": \"vert\",\n" +
+                    "      \"type\": \"reference\",\n" +
+                    "      \"format\": \"uuid\",\n" +
+                    "      \"intervalValues\": null\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"variableComponentOrderBy\": [\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"mavariablesite\",\n" +
+                    "        \"component\": \"lacomposanteplateforme\"\n" +
+                    "      },\n" +
+                    "      \"order\": \"ASC\",\n" +
+                    "      \"type\": null,\n" +
+                    "      \"format\": null\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
             Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
-            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .cookie(monsoreCookie)
                             .param("downloadDatasetQuery", filter)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.rows", Matchers.hasSize(8)))
-                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == 'date:1984-01-01T00:00:00:01/01/1984')]", Matchers.hasSize(8)))
-                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(8)))
-                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(8)))
-                    .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
+                    .andExpect(jsonPath("$.rows[*].values.mavariabledate[?(@.lacomposantejour == 'date:1984-01-01T00:00:00:01/01/1984')]", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values['mavariableNombre d\\'individus'][?(@.lacomposantenombre ==25)]", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values['mavariableCouleur'][?(@.lecomposantecouleur =='couleur_des_individus__vert')]", Matchers.hasSize(8)))
+                    .andExpect(jsonPath("$.rows[*].values.mavariablesite.lacomposanteplateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualJson, 50));
 
@@ -343,7 +400,7 @@ public class OreSiResourcesTest {
         // restitution de data csv
         {
             String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.csv")), Charsets.UTF_8);
-            String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            String actualCsv = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .cookie(monsoreCookie)
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
@@ -366,7 +423,7 @@ public class OreSiResourcesTest {
                     .replace("projet_manche", "projet_manch")
                     .replace("projet_atlantique", "projet_atlantiqu");
             MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .cookie(monsoreCookie))
                     .andExpect(status().is4xxClientError())
@@ -401,97 +458,23 @@ public class OreSiResourcesTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        final String getPem = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+        final String getPem = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                         .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        final String getGrantable = mockMvc.perform(get("/api/v1/applications/monsore/dataType/pem/grantable")
+        final String getGrantable = mockMvc.perform(get("/api/v1/applications/monsore/dataType/montypededonneespiegeageenmontee/grantable")
                         .cookie(monsoreCookie)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
+        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/montypededonneespiegeageenmontee.json", getPem);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/references/type_de_sites.json", getTypeSites);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/references/sites.json", getSites);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/references/projet.json", getProjet);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/grantable.json", getGrantable);
 
-//        // restitution de data json
-//        resource = getClass().getResource("/data/compare/export.json");
-//        try (InputStream in = resource.openStream()) {
-//            String jsonCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().json(jsonCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-//
-//        // restitution de data csv
-//        resource = getClass().getResource("/data/compare/export.csv");
-//        try (InputStream in = resource.openStream()) {
-//            String csvCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().string(csvCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-
-//        // restitution de data csv
-//        resource = getClass().getResource("/data/compare/exportColumn.csv");
-//        try (InputStream in = resource.openStream()) {
-//            String csvCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().string(csvCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-
-//        // recuperation de l'id du referentiel
-//        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes?esp_nom=LPF")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-//                .andReturn().getResponse().getContentAsString();
-//
-//        ReferenceValue[] refEspeces = objectMapper.readValue(response, ReferenceValue[].class);
-//        UUID refId = Stream.of(refEspeces).map(ReferenceValue::getId).findFirst().orElseThrow();
-//
-//        // creation d'un user qui aura le droit de lire les données mais pas certain referenciel
-//        OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
-//        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
-//                appId, ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie)
-//                .content("[\"" + refId + "\"]"))
-//                .andExpect(status().isOk());
-
-//        Cookie authRestrictedReaderCookie = mockMvc.perform(post("/api/v1/login")
-//                .param("login", "UnPetitReader")
-//                .param("password", "xxxxxxxx"))
-//                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-
-//        // restitution de data csv
-//        resource = getClass().getResource("/data/compare/exportColumnRestrictedReader.csv");
-//        try (InputStream in = resource.openStream()) {
-//            String csvCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
-//                    .cookie(authRestrictedReaderCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().string(csvCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-
-        // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
     }
 
     public void registerFile(String filePath, String jsonContent) throws IOException {
@@ -529,7 +512,7 @@ public class OreSiResourcesTest {
         for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-
+                log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
@@ -559,7 +542,7 @@ public class OreSiResourcesTest {
 
 
             // sans droit dépôt impossible de déposer
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, false))
                             .cookie(withRigthsCookie))
@@ -572,7 +555,7 @@ public class OreSiResourcesTest {
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
             for (int i = 0; i < 3; i++) {
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                                 .file(refFile)
                                 .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, false))
                                 .cookie(withRigthsCookie))
@@ -581,7 +564,7 @@ public class OreSiResourcesTest {
                 log.debug(response);
             }
             //on regarde les versions déposées
-            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/montypededonneespiegeageenmontee")
                             .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -595,7 +578,7 @@ public class OreSiResourcesTest {
             oirFilesUUID = JsonPath.parse(response).read("$[2].id");
 
             // on vérifie l'absence de data
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.totalRows").value(-1))
@@ -604,7 +587,7 @@ public class OreSiResourcesTest {
 
             // on publie le dernier fichier déposé sans les droits
 
-            final Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+            final Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
                             .cookie(withRigthsCookie))
                     .andExpect(status().is4xxClientError())
@@ -612,11 +595,11 @@ public class OreSiResourcesTest {
 
             Assert.assertTrue(exception instanceof SiOreIllegalArgumentException);
             Assert.assertEquals("noRightForPublish", exception.getMessage());
-            Assert.assertEquals("pem", ((SiOreIllegalArgumentException) exception).getParams().get("dataType"));
+            Assert.assertEquals("montypededonneespiegeageenmontee", ((SiOreIllegalArgumentException) exception).getParams().get("dataType"));
             Assert.assertEquals("monsore", ((SiOreIllegalArgumentException) exception).getParams().get("application"));
 
 
-            // on donne les droit publication
+            // on donne les droits publication
 
 
             createRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.publication.name(), "plateforme.oir.oir__p1", "1984,1,1", "1984,1,6");
@@ -624,7 +607,7 @@ public class OreSiResourcesTest {
 
             // on publie le dernier fichier déposé
 
-            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -633,7 +616,7 @@ public class OreSiResourcesTest {
 
             // on récupère la liste des versions déposées
 
-            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/montypededonneespiegeageenmontee")
                             .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -647,12 +630,12 @@ public class OreSiResourcesTest {
 
             // on récupère le data en base
 
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.totalRows").value(34))
                     .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(34)))
-                    .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'plateforme.oir.oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(34)))
+                    .andExpect(jsonPath("$.rows[*].values[? (@.mavariablesite.lacomposantechemin == 'plateforme.oir.oir__p1')][? (@.mavariableprojet.lacomposantenomduprojet == 'projet_manche')]", Matchers.hasSize(34)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
         }
@@ -687,7 +670,7 @@ public class OreSiResourcesTest {
 
         // on depublie le fichier oir déposé (les droits publication valent dépublication
 
-        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                         .param("params", fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false))
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
@@ -696,7 +679,7 @@ public class OreSiResourcesTest {
 
         // on récupère la liste des versions déposées
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+        response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/montypededonneespiegeageenmontee")
                         .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
@@ -709,26 +692,26 @@ public class OreSiResourcesTest {
 
         // on récupère le data en base si j'ai les droits de publication je peux aussi lire les données avec ces droits
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+        response = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.nivelle.nivelle__p1\")].chemin", Matchers.hasSize(34)))
-                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.oir.oir__p1\")].chemin", Matchers.hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values.mavariablesite[?(@.lacomposantechemin==\"plateforme.nivelle.nivelle__p1\")].lacomposantechemin", Matchers.hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values.mavariablesite[?(@.lacomposantechemin==\"plateforme.oir.oir__p1\")].lacomposantechemin", Matchers.hasSize(34)))
                 .andExpect(jsonPath("$.totalRows").value(68))
                 .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[? (@.mavariablesite.lacomposantechemin == 'oir__p1')][? (@.mavariableprojet.lacomposantenomduprojet == 'projet_manche')]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+        response = mockMvc.perform(get("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.scarff.scarff__p1\")].chemin", Matchers.hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.scarff.scarff__p1\")].chemin", Matchers.hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.nivelle.nivelle__p1\")].chemin", Matchers.hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin==\"plateforme.oir.oir__p1\")].chemin", Matchers.hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values.mavariablesite[?(@.lacomposantechemin==\"plateforme.scarff.scarff__p1\")].lacomposantechemin", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values.mavariablesite[?(@.lacomposantechemin==\"plateforme.scarff.scarff__p1\")].lacomposantechemin", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values.mavariablesite[?(@.lacomposantechemin==\"plateforme.nivelle.nivelle__p1\")].lacomposantechemin", Matchers.hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values.mavariablesite[?(@.lacomposantechemin==\"plateforme.oir.oir__p1\")].lacomposantechemin", Matchers.hasSize(34)))
                 .andExpect(jsonPath("$.totalRows").value(170))
                 .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(170)))
-                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", Matchers.hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[? (@.mavariablesite.lacomposantechemin == 'oir__p1')][? (@.lacomposantenomduprojet.lacomposantenomduprojet == 'projet_manche')]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
         // on supprime le fichier a les droits car à les droits de publication
@@ -736,6 +719,43 @@ public class OreSiResourcesTest {
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(fileUUID2));
+
+
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile addFile = new MockMultipartFile("file", "monsoere.yaml", "text/plain", in);
+            mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .file(addFile)
+                    .param("params", "{\"id\":\"\",\"fileType\":\"fichiers\",\"fields\":{\"age\":\"10\",\"nom\":\"dix\",\"date\":\"10/10/1010\",\"site\":\"oir\",\"poids\":\"10.10\"},\"associates\":[]}")
+                    .cookie(authCookie)))
+                    .andExpect(status().is2xxSuccessful());
+
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .cookie(authCookie));
+
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .cookie(withRigthsCookie))
+                    .andExpect(status().is2xxSuccessful());
+
+            String error = mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .cookie(lambdaCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException().getMessage();
+            Assert.assertEquals("application inconnue 'monsore'", error);
+
+            AdditionalFilesInfos additionalFilesInfos = new AdditionalFilesInfos();
+            final AdditionalFilesInfos.AdditionalFileInfos fichier = new AdditionalFilesInfos.AdditionalFileInfos();
+            final AdditionalFilesInfos.FieldFilters fieldFilters = new AdditionalFilesInfos.FieldFilters();
+            fieldFilters.setField("nom");
+            fieldFilters.setType("date");
+            fichier.getFieldFilters().add(fieldFilters);;
+            additionalFilesInfos.getAdditionalFilesInfos().put("fichier", fichier);
+            final String json = new JsonRowMapper().toJson(additionalFilesInfos);
+           /* mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+                            .param("nameOrId", "monsore")
+                            .param("params", json)
+                    .cookie(lambdaCookie))
+                    .andExpect(status().is2xxSuccessful());*/
+        }
 
     }
 
@@ -745,7 +765,7 @@ public class OreSiResourcesTest {
                 "   \"applicationNameOrId\":\"monsore\",\n" +
                 "   \"id\": null,\n" +
                 "   \"name\": \"une authorization sur monsore\",\n" +
-                "   \"dataType\":\"pem\",\n" +
+                "   \"dataType\":\"montypededonneespiegeageenmontee\",\n" +
                 "   \"authorizations\":{\n" +
                 "   \"%1$s\":[\n" +
                 "      {\n" +
@@ -764,7 +784,7 @@ public class OreSiResourcesTest {
                 "   ]\n" +
                 "}\n" +
                 "}", role, localization, from, to);
-        final MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/dataType/pem/authorization")
+        final MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/dataType/montypededonneespiegeageenmontee/authorization")
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authCookie)
                 .content(json);
@@ -780,7 +800,7 @@ public class OreSiResourcesTest {
                 "   \"applicationNameOrId\":\"monsore\",\n" +
                 "   \"id\": null,\n" +
                 "   \"name\": \"une authorization sur monsore\",\n" +
-                "   \"dataType\":\"pem\",\n" +
+                "   \"dataType\":\"piegeageenmontee\",\n" +
                 "   \"authorizations\":{\n" +
                 "   \"%1$s\":[\n" +
                 "       {" +
@@ -802,7 +822,7 @@ public class OreSiResourcesTest {
                 "   ]\n" +
                 "}\n" +
                 "}", role);
-        final MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/dataType/pem/authorization")
+        final MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/dataType/montypededonneespiegeageenmontee/authorization")
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(cookie)
                 .content(json);
@@ -819,8 +839,8 @@ public class OreSiResourcesTest {
 
             //dépôt et publication d'un fichier projet site__p1
             MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
-            refFile.transferTo(Path.of("/tmp/pem.csv"));
-            final MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+            refFile.transferTo(Path.of("/tmp/montypededonneespiegeageenmontee.csv"));
+            final MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/montypededonneespiegeageenmontee")
                             .file(refFile)
                             .param("params", fixtures.getPemRepositoryParams(projet, plateforme, site, toPublish))
                             .cookie(cookie))
@@ -1195,7 +1215,7 @@ public class OreSiResourcesTest {
     }
 
     private void testFilesAndDataOnServer(String plateforme, String projet, String site, int expected, int numberOfVersions, String fileUUID, boolean published) throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/montypededonneespiegeageenmontee")
                         .param("repositoryId", fixtures.getPemRepositoryId(plateforme, projet, site))
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())

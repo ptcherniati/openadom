@@ -102,4 +102,13 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         final SqlParameterSource sqlParameterSource = new MapSqlParameterSource("fileType",additionalFileName);
         return find("fileType=:fileType",sqlParameterSource);
     }
+
+    public List<AdditionalBinaryFile> findByCriteria(AdditionalFileSearchHelper additionalFileSearchHelper) {
+        String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
+                "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
+                "application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
+                "from %s ";
+        String query = String.join(additionalFileSearchHelper.buildRequest(sql, ") t"));
+        return  getNamedParameterJdbcTemplate().query(query, additionalFileSearchHelper.getParamSource() , getJsonRowMapper());
+    }
 }

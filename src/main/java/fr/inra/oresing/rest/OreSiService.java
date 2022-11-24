@@ -13,6 +13,7 @@ import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.additionalfiles.AdditionalBinaryFile;
+import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
@@ -20,6 +21,8 @@ import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.additionalfiles.AdditionalFileParamsParsingResult;
+import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
@@ -206,6 +209,17 @@ public class OreSiService {
                 writerOnApplicationRole,
                 null,
                 "name = '" + app.getName() + "'"
+        ));
+
+
+        db.createPolicy(new SqlPolicy(
+                String.join("_", adminOnApplicationRole.getAsSqlRole(), "addfile", SqlPolicy.Statement.ALL.name()),
+                SqlSchema.forApplication(app).additionalBinaryFile(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                List.of(SqlPolicy.Statement.ALL),
+                adminOnApplicationRole,
+                "true",
+                "true"
         ));
 
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
@@ -1471,6 +1485,7 @@ public class OreSiService {
     }
 
     public UUID createOrUpdate(CreateAdditionalFileRequest createAdditionalFileRequest, String nameOrId, MultipartFile file) {
+        authenticationService.setRoleForClient();
         Application application = getApplication(nameOrId);
 
         final AdditionalBinaryFile additionalBinaryFile = Optional.of(createAdditionalFileRequest)
@@ -1505,6 +1520,41 @@ public class OreSiService {
                 .collect(Collectors.toList());
         additionalBinaryFile.setAssociates(authorizations);
         return repo.getRepository(application).additionalBinaryFile().store(additionalBinaryFile);
+    }
+
+    public byte[] getAdditionalFilesNamesZip(String nameOrId, AdditionalFilesInfos additionalFilesInfos) throws IOException {
+        Application application = getApplication(nameOrId);
+        final AdditionalFileParamsParsingResult additionalFileParamsParsingResult = getAdditionalFileSearchHelper(nameOrId, additionalFilesInfos);
+        BadAdditionalFileParamsSearchException.check(additionalFileParamsParsingResult);
+        AdditionalFileSearchHelper additionalFileSearchHelper = additionalFileParamsParsingResult.getResult();
+        List<AdditionalBinaryFile> additionalBinaryFiles = repo
+                .getRepository(application).additionalBinaryFile()
+                .findByCriteria(additionalFileSearchHelper);
+        return additionalFileSearchHelper.zip(additionalBinaryFiles);
+    }
+
+    public AdditionalFileParamsParsingResult getAdditionalFileSearchHelper(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {
+        Application application = getApplication(nameOrId);
+        AdditionalFileParamsParsingResult.Builder builder = AdditionalFileParamsParsingResult.builder();
+        for (Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry : additionalFilesInfos.getAdditionalFilesInfos().entrySet()) {
+            String additionalFileName = entry.getKey();
+            final Configuration.AdditionalFileDescription additionalFileDescription = application.getConfiguration().getAdditionalFiles().get(additionalFileName);
+            if (additionalFileDescription == null) {
+                builder.unknownAdditionalFilename(additionalFileName, additionalFilesInfos.getAdditionalFilesInfos().keySet());
+            } else {
+                final AdditionalFilesInfos.AdditionalFileInfos value = entry.getValue();
+                if (value != null && !CollectionUtils.isEmpty(value.getFieldFilters())) {
+                    for (AdditionalFilesInfos.FieldFilters filter : value.getFieldFilters()) {
+                        if (additionalFileDescription.getFormat().get(filter.field) == null) {
+                            builder.unknownFieldAdditionalFilename(additionalFileName, filter.field, additionalFileDescription.getFormat().keySet());
+                        }
+                    }
+                }
+            }
+
+        }
+        final AdditionalFileParamsParsingResult build = builder.build(application, additionalFilesInfos);
+        return build;
     }
 
     @Value

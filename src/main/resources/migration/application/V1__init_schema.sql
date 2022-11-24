@@ -181,6 +181,7 @@ CREATE INDEX by_datatype_index ON oresisynthesis (application, aggregation, data
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);
 
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON AdditionalBinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Reference_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
@@ -189,6 +190,7 @@ GRANT ALL PRIVILEGES ON OreSiAuthorization TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON OreSiSynthesis TO "superadmin" WITH GRANT OPTION;
 
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON AdditionalBinaryFile TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Reference_Reference TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
@@ -198,6 +200,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiSynthesis TO public;
 
 
 ALTER TABLE BinaryFile
+    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE AdditionalBinaryFile
     ENABLE ROW LEVEL SECURITY;
 --ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Data
