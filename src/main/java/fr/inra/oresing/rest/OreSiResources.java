@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -309,6 +311,10 @@ public class OreSiResources {
             @RequestParam(value = "params", required = false) String params) throws IOException, BadAdditionalFileParamsSearchException {
         AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
         final byte[] body = service.getAdditionalFilesNamesZip(nameOrId, additionalFilesInfos);
+        final File file = new File("/tmp/fichier.zip");
+        try(FileOutputStream fileOutputStream = new FileOutputStream(file)){
+            fileOutputStream.write(body);
+        }
         return ResponseEntity.ok(body);
     }
 

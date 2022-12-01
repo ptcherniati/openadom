@@ -130,14 +130,103 @@
         </ValidationObserver>
       </article>
       <article class="addNewAdditionalFileList" v-if="id=='consult'">
+
+        <div class="columns">
+          <!--      <div class="column is-5-desktop is-4-tablet">
+                  <b-button
+                    icon-left="sort-amount-down"
+                    :label="$t('applications.trier')"
+                    type="is-dark"
+                    @click="showSort = !showSort"
+                    outlined
+                  ></b-button>
+                </div>-->
+          <div class="column is-5-desktop is-4-tablet">
+            <b-button
+                icon-left="filter"
+                :label="$t('applications.filter')"
+                type="is-light"
+                @click="showFilter = !showFilter"
+                outlined
+                inverted
+            ></b-button>
+          </div>
+          <!--      <div class="column is-2-desktop is-4-tablet">
+                  <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
+                    >{{ $t("dataTypesManagement.réinitialiser") }}
+                    {{ $t("dataTypesManagement.all") }}</b-button
+                  >
+                </div>-->
+        </div>
+        <div v-if="showFilter" class="notification" role="search">
+          <h2>{{ $t("applications.filter") }}</h2>
+          <div class="columns is-multiline">
+            <div
+                class="column is-2-widescreen is-6-desktop is-12-tablet"
+                v-for="(additionalFile, index) in configuration.configuration.additionalFiles[additionalFileName].format"
+                :key="additionalFile.id"
+                :addtionalFile="additionalFile.id"
+            >
+              <h1>index:{{ index }}</h1>
+              <b-collapse
+                  class="card"
+                  animation="slide"
+                  :open="isOpen === index"
+                  @open="isOpen = index"
+              >
+                <template #trigger="props">
+                  <div class="card-header" role="button">
+                    <p class="card-header-title" style="text-transform: capitalize">
+                      <b-field
+                          :label="fieldfilters[index].format.localName"></b-field>
+                    </p>
+                    <a class="card-header-icon">
+                      <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"></b-icon>
+                    </a>
+                  </div>
+                </template>
+                <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
+                    <b-field v-if="'date' === fieldfilters[index].value.type || 'numeric' === fieldfilters[index].value.type">
+                      <CollapsibleInterval
+                          :variable-component="fieldfilters[index].value"
+                          @setting_interval="fieldfilters[index].value.intervalValues = $event.intervalValues;addAdditionalFileFieldSearch(index)"
+                      ></CollapsibleInterval>
+                    </b-field>
+                    <b-input
+                        v-model="fieldfilters[index].value.filter"
+                        icon-right="search"
+                        :placeholder="$t('dataTypeAuthorizations.search')"
+                        type="search"
+                        @blur="addAdditionalFileFieldSearch(index)"
+                        size="is-small"
+                    ></b-input>
+                </div>
+                <b-field>
+                  <b-switch
+                      v-model="fieldfilters[index].value.isRegex"
+                      passive-type="is-dark"
+                      type="is-primary"
+                      :true-value="$t('dataTypesManagement.accepted')"
+                      :false-value="$t('dataTypesManagement.refuse')"
+                  >{{ $t("ponctuation.regEx") }} {{ fieldfilters[index].value.isRegex }}
+                  </b-switch
+                  >
+                </b-field>
+                <b-field>{{additionalFile}}</b-field>
+
+              </b-collapse>
+            </div>
+          </div>
+
+        </div>
         <table
             class="table is-hoverable is-striped is-fullwidth"
             style="text-align: center; vertical-align: center">
           <caption v-if="id=='consult'">
             <b-button icon-left="plus"
-                        size="is-small"
-                        type="is-primary is-light"
-            @click="modifyAssociateFile('new')">
+                      size="is-small"
+                      type="is-primary is-light"
+                      @click="modifyAssociateFile('new')">
               Ajouter un fichier
             </b-button>
           </caption>
@@ -194,11 +283,11 @@
               <b-button icon-left="pen-square"
                         size="is-small"
                         type="is-primary is-light"
-              @click="modifyAssociateFile(file.id)"/>
+                        @click="modifyAssociateFile(file.id)"/>
               <b-button icon-left="upload"
                         size="is-small"
                         type="is-primary is-light"
-              @click="download(file.id)"/>
+                        @click="download(file)"/>
             </td>
           </tr>
           <tr v-if="showFileInfos==file.id">
@@ -243,7 +332,7 @@ import AdditionalFilesAssociation from "@/components/common/provider/AdditionalF
 import {extend, ValidationObserver, ValidationProvider} from "vee-validate";
 import {AlertService} from "@/services/AlertService";
 import {ApplicationService} from "@/services/rest/ApplicationService";
-import {AdditionalFileService} from "@/services/rest/AdditionalFiles";
+import {AdditionalFileService} from "@/services/rest/AdditionalFileService";
 import {AuthorizationService} from "@/services/rest/AuthorizationService";
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
@@ -251,13 +340,20 @@ import {InternationalisationService} from "@/services/InternationalisationServic
 import {ReferenceService} from "@/services/rest/ReferenceService";
 import {Authorization} from "@/model/authorization/Authorization";
 import moment from "moment";
+import {AdditionalFilesInfos} from "@/model/additionalFiles/AdditionalFilesInfos";
+import {AdditionalFileInfos} from "@/model/additionalFiles/AdditionalFileInfos";
+import {FieldFilters} from "@/model/additionalFiles/FieldFilters";
+import CollapsibleInterval from "@/components/common/CollapsibleInterval";
+import {VariableComponentFilters} from "@/model/application/VariableComponentFilters";
+import {VariableComponentKey} from "@/model/application/VariableComponentKey";
+import {IntervalValues} from "@/model/application/IntervalValues";
 
 
 @Component({
   components: {
     PageView, SubMenu, ValidationProvider, ValidationObserver,
     OreInputText, OreInputNumber, OreInputDate, OreInputReference,
-    SubMenuPath, AdditionalFilesAssociation, AuthorizationService
+    SubMenuPath, AdditionalFilesAssociation, AuthorizationService, CollapsibleInterval
   },
 })
 export default class AdditionalFileInfosView extends Vue {
@@ -299,6 +395,12 @@ export default class AdditionalFileInfosView extends Vue {
   selectedFile = null;
   grantables = {}
   showFileInfos = {}
+
+  isOpen =false;
+  format = null;
+  fieldfilters = {}
+  openPanel = false;
+  showFilter = false;
 
   @Watch("id")
   onIdChanged(id) {
@@ -359,12 +461,12 @@ export default class AdditionalFileInfosView extends Vue {
     return this.isAdmin || (this.grantables && Object.values(this.grantables).find(grantable => grantable.canShowLine))
   }
 
-  get userAuthorizations(){
-    return  JSON.parse(localStorage.getItem('authenticatedUser'))?.authorizations || [];
+  get userAuthorizations() {
+    return JSON.parse(localStorage.getItem('authenticatedUser'))?.authorizations || [];
   }
 
   get isAdmin() {
-    return this.userAuthorizations.find(auth=>new RegExp(auth).test(this.applicationName));
+    return this.userAuthorizations.find(auth => new RegExp(auth).test(this.applicationName));
   }
 
   rules() {
@@ -420,6 +522,35 @@ export default class AdditionalFileInfosView extends Vue {
         this.grantables[dataTypeDescription] = grantableInfos;
       }
       this.configuration = this.applications.find(app => app.name == this.applicationName)
+      if (this.configuration.configuration.additionalFiles) {
+        const additionalFileInfos = {}
+        additionalFileInfos[this.additionalFileName] = new AdditionalFileInfos();
+        this.format = new AdditionalFilesInfos(null, null, null, additionalFileInfos)
+        for (const formatName in this.configuration.configuration.additionalFiles[this.additionalFileName].format) {
+          const format = this.configuration.configuration.additionalFiles[this.additionalFileName].format[formatName]
+          this.fieldfilters[formatName] = {}
+          this.fieldfilters[formatName].format = format
+          this.fieldfilters[formatName].format.localName = this.internationalisationService.getLocaleforPath(this.application, 'additionalFiles.' + this.additionalFileName + '.format.' + formatName);
+          this.fieldfilters[formatName].value = new FieldFilters();
+          this.fieldfilters[formatName].value.key = formatName;
+          if (format.checker){
+            if (format.checker.name == 'Date'){
+              this.fieldfilters[formatName].value.type = 'date';
+              this.fieldfilters[formatName].value.format = format.checker.params.pattern
+            } else if (format.checker.name == 'Integer' || format.checker.name == 'Float'){
+              this.fieldfilters[formatName].value.type = 'numeric';
+              this.fieldfilters[formatName].value.format=format.checker.name == 'Integer'?'integer':'float'
+            }else if (format.checker.name == 'Reference' ){
+              this.fieldfilters[formatName].value.type = 'reference';
+            }else if (format.checker.name == 'GroovyExpression' ){
+              this.fieldfilters[formatName].value.type = 'groovy';
+            }else if (format.checker.name == 'RegularExpression' ){
+              this.fieldfilters[formatName].value.type = 'regexp';
+              this.fieldfilters[formatName].value.format = format.checker.params.pattern
+            }
+          }
+        }
+      }
       let localRefName = this.internationalisationService.additionalFilesNames(this.application);
       this.additionalFile = this.convertToNode(localRefName)
       this.additionalFile.fields.forEach(field => this.fields[field] = '')
@@ -429,7 +560,7 @@ export default class AdditionalFileInfosView extends Vue {
     }
   }
 
-  async initAdditionalFiles(){
+  async initAdditionalFiles() {
     let additionalFiles = await this.additionalFileService.getAdditionalFiles(this.applicationName, this.additionalFileName)
     this.additionalFiles = additionalFiles.additionalBinaryFiles
     this.description = additionalFiles.description.format
@@ -441,7 +572,7 @@ export default class AdditionalFileInfosView extends Vue {
         this.refValues[name] = references;
       }
     }
-    if (this.id!='new' && this.id!='consult'){
+    if (this.id != 'new' && this.id != 'consult') {
       this.initForm(this.id)
     }
   }
@@ -490,23 +621,81 @@ export default class AdditionalFileInfosView extends Vue {
     this.showFileInfos = show
     this.$forceUpdate()
   }
-  modifyAssociateFile(id){
-     this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${id}`);
+
+  modifyAssociateFile(id) {
+    this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${id}`);
 
   }
-  initForm(id){
-    let file =this.additionalFiles.find(file=>file.id==id)
+
+  initForm(id) {
+    let file = this.additionalFiles.find(file => file.id == id)
     let fields = this.fields
-    this.file=null;
+    this.file = null;
     for (const fileKey in this.fields) {
-      fields[fileKey] = file?file.fileInfos[fileKey]:''
+      fields[fileKey] = file ? file.fileInfos[fileKey] : ''
     }
-    this.fields=fields
+    this.fields = fields
     this.$refs.form.$forceUpdate()
-    this.authorizations= file?file.associates:[]
+    this.authorizations = file ? file.associates : []
   }
-  async download(id){
-    console.log(id)
+
+  async download(file) {
+    let param = new AdditionalFilesInfos(
+        [file.id]
+    );
+    let data = await this.additionalFileService.getAdditionalFileZip(
+        this.applicationName, param);
+    let blob = new Blob([data], {
+      type: "application/zip, application/octet-stream"
+    });
+    let objectUrl = URL.createObjectURL(blob);
+    let link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = file.fileName + ".zip";
+    link.click();
+    window.URL.revokeObjectURL(link.href);
+    return false;
+  }
+  addAdditionalFileFieldSearch( index) {
+    const value = this.fieldfilters[index].value;
+    new FieldFilters(index, value.field, value.type, value.format, )
+    let isRegExp = this.params.variableComponentFilters.isRegex;
+    let value = this.search[key];
+    this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
+        (c) =>
+            c.variableComponentKey.variable !== variable ||
+            c.variableComponentKey.component !== component
+    );
+    let search = null;
+    if (value && value.length > 0) {
+      search = new VariableComponentFilters({
+        variableComponentKey: new VariableComponentKey({
+          variable: variable,
+          component: component,
+        }),
+        filter: value,
+        type: type,
+        format: format,
+        isRegExp: isRegExp,
+      });
+    }
+    if (field.intervalValues) {
+      search = new VariableComponentFilters({
+        variableComponentKey: new VariableComponentKey({
+          variable: variable,
+          component: component,
+        }),
+        type: type,
+        format: format,
+        isRegExp: isRegExp,
+        intervalValues: field.intervalValues,
+        ...(search ? new IntervalValues(search) : {}),
+      });
+    }
+    if (search) {
+      this.variableSearch.push(search);
+    }
+    this.initDatatype();
   }
 }
 </script>

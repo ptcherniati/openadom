@@ -99,8 +99,8 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public List<AdditionalBinaryFile> findAllByFileType(String additionalFileName) {
-        final SqlParameterSource sqlParameterSource = new MapSqlParameterSource("fileType",additionalFileName);
-        return find("fileType=:fileType",sqlParameterSource);
+        final SqlParameterSource sqlParameterSource = new MapSqlParameterSource("fileType", additionalFileName);
+        return find("fileType=:fileType", sqlParameterSource);
     }
 
     public List<AdditionalBinaryFile> findByCriteria(AdditionalFileSearchHelper additionalFileSearchHelper) {
@@ -108,7 +108,8 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
                 "application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
                 "from %s ";
-        String query = String.join(additionalFileSearchHelper.buildRequest(sql, ") t"));
-        return  getNamedParameterJdbcTemplate().query(query, additionalFileSearchHelper.getParamSource() , getJsonRowMapper());
+        String query = additionalFileSearchHelper.buildRequest(sql, ") t");
+        query = String.format(query, getEntityClass().getName(), getTable().getSqlIdentifier());
+        return getNamedParameterJdbcTemplate().query(query, additionalFileSearchHelper.getParamSource(), getJsonRowMapper());
     }
 }

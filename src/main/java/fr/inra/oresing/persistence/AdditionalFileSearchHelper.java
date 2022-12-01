@@ -11,9 +11,11 @@ import org.testcontainers.shaded.org.apache.commons.lang.StringEscapeUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class AdditionalFileSearchHelper {
@@ -42,22 +44,41 @@ public class AdditionalFileSearchHelper {
 
     String filterBy() {
         List<String> where = new LinkedList<>();
-        where.add(Optional.ofNullable(this.additionalFilesInfos.getUuids())
+        Optional.ofNullable(this.additionalFilesInfos.getUuids())
                 .filter(uuids -> !CollectionUtils.isEmpty(uuids))
-                .orElseGet(LinkedHashSet::new)
-                .stream()
-                .map(this::addArgumentAndReturnSubstitution)
-                .collect(Collectors.joining(",", " (id in (", ")) "))
-        );
-        where.add(Optional.ofNullable(this.additionalFilesInfos.getAdditionalFilesInfos())
+                .ifPresent(list -> {
+                    where.add(list.stream()
+                            .map(this::addArgumentAndReturnSubstitution)
+                            .collect(Collectors.joining(",", " (\nid in (", ")\n) "))
+                    );
+                });
+        Optional.ofNullable(this.additionalFilesInfos.getFileNames())
+                .filter(fileNames -> !CollectionUtils.isEmpty(fileNames))
+                .ifPresent(list -> {
+                    where.add(list.stream()
+                            .map(this::addArgumentAndReturnSubstitution)
+                            .collect(Collectors.joining(",", " (\nfilename in (", ")\n) "))
+                    );
+                });
+        Optional.ofNullable(this.additionalFilesInfos.getAuthorizations())
+                .filter(authorizations -> !CollectionUtils.isEmpty(authorizations))
+                .ifPresent(list -> {
+                    where.add(list.stream()
+                            .map(this::addArgumentAndReturnSubstitution)
+                            .collect(Collectors.joining(",", " (\nassociate @> ARRAY[", "]\n) "))
+                    );
+                });
+        Optional.ofNullable(this.additionalFilesInfos.getAdditionalFilesInfos())
                 .filter(additionalFileInfos -> !CollectionUtils.isEmpty(additionalFileInfos))
-                .orElseGet(LinkedHashMap::new).entrySet().stream()
-                .map(this::whereForAdditionalFileName)
-                .collect(Collectors.joining(" or ", "(",")"))
-        );
-        return where.stream()
+                .ifPresent(list -> {
+                    where.add(list.entrySet().stream()
+                            .map(this::whereForAdditionalFileName)
+                            .collect(Collectors.joining(" or ", "(", ")"))
+                    );
+                });
+        return CollectionUtils.isEmpty(where) ? "" : where.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.joining(" or ","(",")"));
+                .collect(Collectors.joining(" or ", "(", ")"));
     }
 
     private String whereForAdditionalFileName(Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry) {
@@ -67,13 +88,14 @@ public class AdditionalFileSearchHelper {
         final Configuration.AdditionalFileDescription additionalFileDescription = application.getConfiguration().getAdditionalFiles().get(additionalFileName);
         List<String> where = new LinkedList<>();
         where.add("fileType=" + addArgumentAndReturnSubstitution(additionalFileName));
-        where.add(Optional.ofNullable(fieldFilters)
-                .map(filters -> filters.stream()
-                        .map(filter -> whereForField(filter, additionalFileDescription.getFormat().get(filter.field)))
-                        .collect(Collectors.joining(" and ", "(", ")")))
-                .orElse(null)
-        );
-        return where.stream()
+        if (!CollectionUtils.isEmpty(fieldFilters)) {
+            Optional.ofNullable(fieldFilters)
+                    .map(filters -> filters.stream()
+                            .map(filter -> whereForField(filter, additionalFileDescription.getFormat().get(filter.field)))
+                            .collect(Collectors.joining(" and ", "(", ")")))
+                    .ifPresent(whereElement -> where.add(whereElement));
+        }
+        return CollectionUtils.isEmpty(where) ? "" : where.stream()
                 .filter(Objects::nonNull).collect(Collectors
                         .joining(" and ", "(", ")"));
     }
@@ -119,13 +141,18 @@ public class AdditionalFileSearchHelper {
                             )
                     );
                 }
-                filters.add(
-                        String.format("fileinfos #> '{\"%s\"}'@@ ('%s')::jsonpath",
-                                StringEscapeUtils.escapeSql(filter.getField()),
-                                filterList.stream().collect(Collectors.joining(" && "))
-                        )
-                );
+                if (!CollectionUtils.isEmpty(filterList)) {
+                    filters.add(
+                            String.format("fileinfos #> '{\"%s\"}'@@ ('%s')::jsonpath",
+                                    StringEscapeUtils.escapeSql(filter.getField()),
+                                    filterList.stream().collect(Collectors.joining(" && "))
+                            )
+                    );
+                }
             }
+        }
+        if (CollectionUtils.isEmpty(filters)) {
+            return "";
         }
         return filters.stream()
                 .filter(f -> !Strings.isNullOrEmpty(f))
@@ -133,29 +160,73 @@ public class AdditionalFileSearchHelper {
     }
 
     public String buildRequest(String sqlStart, String sqlEnd) {
-        return String.join( "\n ",
-                "where ",
-                String.join(" or ", filterBy()),
+        String filterBy = filterBy();
+        if (!Strings.isNullOrEmpty(filterBy)) {
+            filterBy = String.join("\n", "where ", filterBy);
+        }
+        return String.join("\n ",
+                sqlStart,
+                filterBy,
                 sqlEnd
         );
 
     }
 
-    public byte[] zip(List<AdditionalBinaryFile> additionalBinaryFiles)throws IOException {
+    public byte[] zip(List<AdditionalBinaryFile> additionalBinaryFiles) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try(ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-            /*for (MemoryFile memoryFile : memoryFiles) {
+        List<MemoryFile> memoryFiles = additionalBinaryFiles.stream()
+                .map(this::getMemoriesFiles)
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+            for (MemoryFile memoryFile : memoryFiles) {
                 ZipEntry zipEntry = new ZipEntry(memoryFile.fileName);
                 zipOutputStream.putNextEntry(zipEntry);
                 zipOutputStream.write(memoryFile.contents);
                 zipOutputStream.closeEntry();
-            }*/
+            }
         }
         return byteArrayOutputStream.toByteArray();
+    }
+
+    private List<MemoryFile> getMemoriesFiles(AdditionalBinaryFile additionalBinaryFile) {
+        List<MemoryFile> memoryFiles = new LinkedList<>();
+        memoryFiles.add(formatFileInfos(additionalBinaryFile));
+        memoryFiles.add(fileToMemoryFile(additionalBinaryFile));
+        return memoryFiles;
+    }
+
+    private MemoryFile fileToMemoryFile(AdditionalBinaryFile additionalBinaryFile) {
+        return new MemoryFile(additionalBinaryFile.getFileType(), additionalBinaryFile.getFileName(), additionalBinaryFile.getFileName(), additionalBinaryFile.getData());
+    }
+
+    private MemoryFile formatFileInfos(AdditionalBinaryFile additionalBinaryFile) {
+        try {
+            return new MemoryFile(additionalBinaryFile.getFileType(),
+                    additionalBinaryFile.getFileName(),
+                    additionalBinaryFile.getFileName().replaceAll("\\.[^\\.]*", "") + "_infos.txt",
+                    additionalBinaryFile.getFileInfos().entrySet().stream()
+                            .map(e -> String.format("%s : %s", e.getKey(), e.getValue()))
+                            .collect(Collectors.joining("\n"))
+                            .getBytes("UTF8"));
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     public static class MemoryFile {
         public String fileName;
         public byte[] contents;
+
+        public String buildPath(String fileTypeName, String fileNameForFolder, String fileName) {
+            fileNameForFolder = fileNameForFolder.replaceAll("\\.[^\\.]*", "");
+            return String.format("%s/%s/%s", fileTypeName, fileNameForFolder, fileName);
+        }
+
+        public MemoryFile(String fileTypeName, String fileNameForFolder, String fileName, byte[] contents) {
+            this.fileName = buildPath(fileTypeName, fileNameForFolder, fileName);
+            this.contents = contents;
+        }
     }
 }

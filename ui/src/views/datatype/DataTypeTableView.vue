@@ -275,7 +275,7 @@
                   <b-field v-if="'date' === component.type || 'numeric' === component.type">
                     <CollapsibleInterval
                       :variable-component="component"
-                      @setting_interval="addVariableSearch"
+                      @setting_interval="addVariableSearch(component)"
                     ></CollapsibleInterval>
                   </b-field>
                   <b-input

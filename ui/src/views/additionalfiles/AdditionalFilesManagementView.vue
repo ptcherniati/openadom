@@ -1,10 +1,10 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :root="application.localName || application.title"
-      :paths="subMenuPaths"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :root="application.localName || application.title"
+        :paths="subMenuPaths"
+        role="navigation"
+        :aria-label="$t('menu.aria-sub-menu')"
     />
     <h1 class="title main-title">
       {{
@@ -17,13 +17,13 @@
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" :key="msg">
         <b-message
-          :title="$t('message.data-type-config-error')"
-          type="is-danger"
-          has-icon
-          :aria-close-label="$t('message.close')"
-          class="mt-4 DataTypesManagementView-message"
+            :title="$t('message.data-type-config-error')"
+            type="is-danger"
+            has-icon
+            :aria-close-label="$t('message.close')"
+            class="mt-4 DataTypesManagementView-message"
         >
-          <span v-html="msg" />
+          <span v-html="msg"/>
         </b-message>
       </div>
     </div>
@@ -47,20 +47,20 @@
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {AdditionalFileService} from "@/services/rest/AdditionalFileService";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import { ApplicationResult } from "@/model/ApplicationResult";
-import { Button } from "@/model/Button";
-import { AlertService } from "@/services/AlertService";
-import { HttpStatusCodes } from "@/utils/HttpUtils";
-import { ErrorsService } from "@/services/ErrorsService";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
-import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
+import {ApplicationResult} from "@/model/ApplicationResult";
+import {Button} from "@/model/Button";
+import {AlertService} from "@/services/AlertService";
+import {HttpStatusCodes} from "@/utils/HttpUtils";
+import {ErrorsService} from "@/services/ErrorsService";
+import {InternationalisationService} from "@/services/InternationalisationService";
 import DetailModalCard from "@/components/charts/DetailModalCard";
+import {AdditionalFilesInfos} from "@/model/additionalFiles/AdditionalFilesInfos";
 
 @Component({
   components: {
@@ -68,14 +68,13 @@ import DetailModalCard from "@/components/charts/DetailModalCard";
     CollapsibleTree,
     PageView,
     SubMenu,
-    DataTypeDetailsPanel,
-    AvailablityChart,
   },
 })
 export default class AdditionalFilesManagementView extends Vue {
   @Prop() applicationName;
 
   applicationService = ApplicationService.INSTANCE;
+  additionalFileService = AdditionalFileService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
@@ -84,33 +83,27 @@ export default class AdditionalFilesManagementView extends Vue {
   subMenuPaths = [];
   buttons = [
     new Button(
-      this.$t("referencesManagement.consult"),
-      "eye",
-      (label) => this.consultAdditionalFile(label),
-      "is-dark"
+        this.$t("referencesManagement.consult"),
+        "eye",
+        (label) => this.consultAdditionalFile(label),
+        "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
-      this.downloadDataType(label)
+        this.downloadAdditionalFile(label)
     ),
   ];
 
   additionalFiles = [];
   errorsMessages = [];
   errorsList = [];
-  openPanel = false;
-  openSynthesisDetailPanel = false;
-  currentOptions = {};
-  chosenDataType = null;
-  synthesis = {};
-  synthesisMinMax = {};
-  grantables = {}
+  isOpen = -1;
 
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("additionalFilesmanagement.additionalFilesManagement").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/additionalFiles`),
-        () => this.$router.push(`/applications`)
+          this.$t("additionalFilesmanagement.additionalFilesManagement").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/additionalFiles`),
+          () => this.$router.push(`/applications`)
       ),
     ];
     this.init();
@@ -158,14 +151,15 @@ export default class AdditionalFilesManagementView extends Vue {
       this.alertService.toastServerError();
     }
   }
-  convertToNode(additionalFiles){
+
+  convertToNode(additionalFiles) {
     let result = []
     for (const additionalFilesKey in additionalFiles) {
       let additionalFile = additionalFiles[additionalFilesKey]
       let af = {
-        children:[],
+        children: [],
         fields: additionalFile.fields,
-        id:additionalFilesKey,
+        id: additionalFilesKey,
         label: additionalFile.refNameLocal || additionalFile.name,
         localName: additionalFile.refNameLocal || additionalFile.name,
         name: additionalFile.name,
@@ -175,6 +169,7 @@ export default class AdditionalFilesManagementView extends Vue {
     }
     return result
   }
+
   checkMessageErrors(error) {
     if (error.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
       if (error.content != null) {
@@ -194,6 +189,29 @@ export default class AdditionalFilesManagementView extends Vue {
       this.alertService.toastServerError(error);
     }
   }
+
+  async downloadAdditionalFile(event) {
+    let additionalFileInfos = {}
+    additionalFileInfos[event] = null;
+    let param = new AdditionalFilesInfos(
+        null,
+        null,
+        null,
+        additionalFileInfos
+    );
+    let data = await this.additionalFileService.getAdditionalFileZip(
+        this.applicationName, param);
+    let blob = new Blob([data], {
+      type:"application/zip, application/octet-stream"
+    });
+    let objectUrl = URL.createObjectURL(blob);
+    let link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = "additionalFile.zip";
+    link.click();
+    window.URL.revokeObjectURL(link.href);
+    return false;
+  }
 }
 </script>
 
@@ -204,6 +222,7 @@ export default class AdditionalFilesManagementView extends Vue {
     overflow-wrap: break-word;
   }
 }
+
 .liste {
   margin-bottom: 10px;
   border: 1px solid white;

@@ -41,6 +41,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -1527,10 +1528,14 @@ public class OreSiService {
         final AdditionalFileParamsParsingResult additionalFileParamsParsingResult = getAdditionalFileSearchHelper(nameOrId, additionalFilesInfos);
         BadAdditionalFileParamsSearchException.check(additionalFileParamsParsingResult);
         AdditionalFileSearchHelper additionalFileSearchHelper = additionalFileParamsParsingResult.getResult();
-        List<AdditionalBinaryFile> additionalBinaryFiles = repo
-                .getRepository(application).additionalBinaryFile()
-                .findByCriteria(additionalFileSearchHelper);
-        return additionalFileSearchHelper.zip(additionalBinaryFiles);
+        try {
+            List<AdditionalBinaryFile> additionalBinaryFiles = repo
+                    .getRepository(application).additionalBinaryFile()
+                    .findByCriteria(additionalFileSearchHelper);
+            return additionalFileSearchHelper.zip(additionalBinaryFiles);
+        }catch(DataIntegrityViolationException e){
+            return new byte[0];
+        }
     }
 
     public AdditionalFileParamsParsingResult getAdditionalFileSearchHelper(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {

@@ -1,5 +1,6 @@
 package fr.inra.oresing.model.additionalfiles;
 
+import fr.inra.oresing.model.Authorization;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,10 @@ import java.util.*;
 public class AdditionalFilesInfos {
     @ApiModelProperty(notes = "A list of UUIDS of additionalfiles to find", required = false)
     Set<UUID> uuids = new LinkedHashSet<>();
+    @ApiModelProperty(notes = "A list of filenames of additionalfiles to find", required = false)
+    Set<String> fileNames = new LinkedHashSet<>();
+    @ApiModelProperty(notes = "A list of authorizationss of additionalfiles to find", required = false)
+    Set<Authorization> authorizations = new LinkedHashSet<>();
     @ApiModelProperty(notes = "A map of List of AdditionalFileInfos by additionalFileName ", required = false)
     Map<String, AdditionalFileInfos> additionalFilesInfos = new LinkedHashMap<>();
     @ApiModelProperty(notes = "The locale for result default= fr", required = false, example = "FR")
@@ -25,8 +30,6 @@ public class AdditionalFilesInfos {
     @Getter
     @Setter
     public static class AdditionalFileInfos {
-        @ApiModelProperty(notes = "A list of field to select. The fields are declared in the additionalFiles section of file configuration  ", required = false)
-        Set<String> fieldSelects = new LinkedHashSet<>();
         @ApiModelProperty(notes = "A list of fielter  on fields  ", required = false)
         Set<FieldFilters> fieldFilters = new LinkedHashSet<>();
 

@@ -47,4 +47,11 @@ export class AdditionalFileService extends Fetcher {
             params: JSON.stringify(params),
         });
     }
+
+    async getAdditionalFileZip(applicationName, additionalFilesInfos) {
+        return this.getBlob(`applications/${applicationName}/additionalFiles`, {
+            params: JSON.stringify(additionalFilesInfos),
+        },
+      'blob');
+    }
 }

@@ -71,7 +71,6 @@ create table BinaryFile
 );
 CREATE INDEX binary_file_params_index ON BinaryFile USING gin (params);
 
-
 create table ReferenceValue
 (
     id                    EntityId PRIMARY KEY,
@@ -145,25 +144,6 @@ CREATE TABLE OreSiAuthorization
     authorizations jsonb
 );
 
-create table AdditionalBinaryFile
-(
-    id              EntityId PRIMARY KEY,
-    creationDate   DateOrNow,
-    updateDate     DateOrNow,
-    creationUser      EntityId REFERENCES public.OreSiUser (id),
-    updateUser      EntityId REFERENCES public.OreSiUser (id),
-    application     EntityRef REFERENCES Application (id),
-    fileType            Text,
-    fileName            Text,
-    comment         TEXT NOT NULL,
-    size            INT,
-    data            bytea,
-    fileinfos       jsonb,
-    associates ${applicationSchema}.OreSiAuthorization[]
-);
---CREATE INDEX additional_binary_file_params_index ON AdditionalBinaryFile USING gin (params);
-CREATE INDEX additional_binary_file_info_index ON AdditionalBinaryFile USING gin (fileinfos);
-
 CREATE TABLE oresisynthesis
 (
     id                     entityid NOT NULL,
@@ -181,7 +161,6 @@ CREATE INDEX by_datatype_index ON oresisynthesis (application, aggregation, data
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);
 
 GRANT ALL PRIVILEGES ON BinaryFile TO "superadmin" WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON AdditionalBinaryFile TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON ReferenceValue TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Reference_Reference TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON Data TO "superadmin" WITH GRANT OPTION;
@@ -190,7 +169,6 @@ GRANT ALL PRIVILEGES ON OreSiAuthorization TO "superadmin" WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON OreSiSynthesis TO "superadmin" WITH GRANT OPTION;
 
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON BinaryFile TO public;
-GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON AdditionalBinaryFile TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ReferenceValue TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Reference_Reference TO public;
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON Data TO public;
@@ -200,8 +178,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON OreSiSynthesis TO public;
 
 
 ALTER TABLE BinaryFile
-    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE AdditionalBinaryFile
     ENABLE ROW LEVEL SECURITY;
 --ALTER TABLE ReferenceValue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Data

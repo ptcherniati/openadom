@@ -9,7 +9,6 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OperationType;
@@ -549,7 +548,6 @@ public class OreSiResourcesTest {
                     .andExpect(status().is4xxClientError())
                     .andExpect(content().string("application inconnue 'monsore'"))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
 
             String createRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.depot.name(), "plateforme.oir.oir__p1", "1984,1,1", "1984,1,5");
 
@@ -561,7 +559,6 @@ public class OreSiResourcesTest {
                                 .cookie(withRigthsCookie))
                         .andExpect(status().is2xxSuccessful())
                         .andReturn().getResponse().getContentAsString();
-                log.debug(response);
             }
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/montypededonneespiegeageenmontee")
@@ -573,7 +570,6 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
                     .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
                     .andReturn().getResponse().getContentAsString();
-//            log.debug(response);
             //récupération de l'identifiant de la dernière version déposée
             oirFilesUUID = JsonPath.parse(response).read("$[2].id");
 
@@ -583,7 +579,6 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.totalRows").value(-1))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
 
             // on publie le dernier fichier déposé sans les droits
 
@@ -612,7 +607,6 @@ public class OreSiResourcesTest {
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
 
             // on récupère la liste des versions déposées
 
@@ -626,7 +620,6 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(1)))
                     .andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
 
             // on récupère le data en base
 
@@ -637,7 +630,6 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(34)))
                     .andExpect(jsonPath("$.rows[*].values[? (@.mavariablesite.lacomposantechemin == 'plateforme.oir.oir__p1')][? (@.mavariableprojet.lacomposantenomduprojet == 'projet_manche')]", Matchers.hasSize(34)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
         }
         //on publie 4 fichiers
 
@@ -652,7 +644,6 @@ public class OreSiResourcesTest {
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
         try {
             publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
 
@@ -675,7 +666,6 @@ public class OreSiResourcesTest {
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
 
         // on récupère la liste des versions déposées
 
@@ -688,7 +678,6 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$[*][?(@.params.published == false )]", Matchers.hasSize(3)))
                 .andExpect(jsonPath("$[*][?(@.params.published == true )]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
 
         // on récupère le data en base si j'ai les droits de publication je peux aussi lire les données avec ces droits
 
@@ -713,7 +702,7 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.rows[*]", Matchers.hasSize(170)))
                 .andExpect(jsonPath("$.rows[*].values[? (@.mavariablesite.lacomposantechemin == 'oir__p1')][? (@.lacomposantenomduprojet.lacomposantenomduprojet == 'projet_manche')]", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
+
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
                         .cookie(withRigthsCookie))
@@ -742,19 +731,47 @@ public class OreSiResourcesTest {
                     .andReturn().getResolvedException().getMessage();
             Assert.assertEquals("application inconnue 'monsore'", error);
 
-            AdditionalFilesInfos additionalFilesInfos = new AdditionalFilesInfos();
-            final AdditionalFilesInfos.AdditionalFileInfos fichier = new AdditionalFilesInfos.AdditionalFileInfos();
-            final AdditionalFilesInfos.FieldFilters fieldFilters = new AdditionalFilesInfos.FieldFilters();
-            fieldFilters.setField("nom");
-            fieldFilters.setType("date");
-            fichier.getFieldFilters().add(fieldFilters);;
-            additionalFilesInfos.getAdditionalFilesInfos().put("fichier", fichier);
-            final String json = new JsonRowMapper().toJson(additionalFilesInfos);
-           /* mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+           String json = "{\n" +
+                    "  \"uuids\": [],\n" +
+                    "  \"additionalFilesInfos\": {\n" +
+                    "    \"fichiers\": {\n" +
+                    "      \"fieldFilters\": [\n" +
+                    "        {\n" +
+                    "          \"field\": \"nom\",\n" +
+                    "          \"filter\": \"dix\",\n" +
+                    "          \"type\": \"\",\n" +
+                    "          \"format\": null,\n" +
+                    "          \"intervalValues\": null,\n" +
+                    "          \"isRegExp\": false\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  \"locale\": \"fr_FR\",\n" +
+                    "  \"offset\": 0,\n" +
+                    "  \"limit\": null\n" +
+                    "}";
+           //pas de droits
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
                             .param("params", json)
-                    .cookie(lambdaCookie))
-                    .andExpect(status().is2xxSuccessful());*/
+                            .cookie(lambdaCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException().getMessage();
+
+            Assert.assertEquals("application inconnue 'monsore'", error);
+           //avec droits
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+                            .param("nameOrId", "monsore")
+                            .param("params", json)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+                            .param("nameOrId", "monsore")
+                            .param("params", "{\"uuids\":null,\"fileNames\":null,\"additionalFilesInfos\":{\"fichiers\":{\"fieldFilters\":[]}}}")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+
         }
 
     }
