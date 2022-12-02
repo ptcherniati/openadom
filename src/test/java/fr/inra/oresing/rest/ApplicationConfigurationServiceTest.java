@@ -400,7 +400,7 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
-        Assert.assertEquals(9, onlyError.getMessageParams().get("lineNumber"));
+        Assert.assertEquals(7, onlyError.getMessageParams().get("lineNumber"));
         Assert.assertEquals(3, onlyError.getMessageParams().get("columnNumber"));
         Assert.assertEquals("compositReference", onlyError.getMessageParams().get("unknownPropertyName"));
     }

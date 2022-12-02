@@ -23,10 +23,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -54,6 +57,7 @@ public class ApplicationConfigurationService {
                     .emptyFile()
                     .build();
         }
+        bytes = resolveAliasInYaml(bytes);
         try {
             YAMLMapper mapper = new YAMLMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -102,6 +106,28 @@ public class ApplicationConfigurationService {
             // throw new OreSiTechnicalException("ne peut lire le fichier YAML", e);
         }
         return getConfigurationParsingResultForSyntacticallyValidYaml(configuration);
+    }
+
+    public static byte[] resolveAliasInYaml(byte[] bytes) {
+        try(ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)){
+            Yaml snakeYaml = new Yaml();
+            Object resolvedObject = snakeYaml.load(inputStream);
+            bytes = snakeYaml.dump(resolvedObject).getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return bytes;
+    }
+
+    public static <T> T resolveAliasInYaml(byte[] bytes, Class<T> clazz) {
+        String header = String.format("--- !%s\n",clazz.getCanonicalName() );
+        bytes = ArrayUtils.addAll(header.getBytes(),bytes);
+        try(ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)){
+            Yaml snakeYaml = new Yaml();
+            return snakeYaml.load(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private ConfigurationParsingResult getConfigurationParsingResultForSyntacticallyValidYaml(Configuration configuration) {
