@@ -113,7 +113,8 @@ references:
       esp_definition_en: null
       colonne_homonyme_entre_referentiels: null
   projet:
-    tags: [context]
+    tags: &contexttag 
+      - context
     internationalizationName:
       fr: Projet
       en: Project
@@ -138,7 +139,7 @@ references:
       definition_en: null
       colonne_homonyme_entre_referentiels: null
   sites:
-    tags: [context]
+    tags: *contexttag
     validations:
       typeSitesRef:
         internationalizationName:
@@ -183,7 +184,7 @@ references:
       zet_description_en: null
       zet_chemin_parent: null
   themes:
-    tags: [context]
+    tags: *contexttag
     keyColumns:
       - nom_key
     internationalizationName:
@@ -230,7 +231,7 @@ references:
       description_fr: null
       description_en: null
   type_de_sites:
-    tags: [context]
+    tags: *contexttag
     keyColumns:
       - tze_nom_key
     internationalizationName:
@@ -254,7 +255,7 @@ references:
       tze_definition_fr: null
       tze_definition_en: null
   types_de_donnees_par_themes_de_sites_et_projet:
-    tags: [context]
+    tags: *contexttag
     internationalizationName:
       fr: Types de données par site et projet
       en: Data types by site and project
