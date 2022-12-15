@@ -335,7 +335,8 @@
         "showMore": "Voir plus...",
         "search": "Recherche...",
 	    "save" : "Enregister modification",
-	    "add-application-name": "Ajouter une application"
+	    "add-application-name": "Ajouter une application",
+        "all-autorisation" : "Coche toutes les cases des droits sur la ligne "
     },
     "ponctuation": {
         "semicolon" : ";",
