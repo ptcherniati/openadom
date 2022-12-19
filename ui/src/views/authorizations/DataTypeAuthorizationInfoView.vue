@@ -37,7 +37,6 @@
                 :data="userLabels"
                 :value="userLabels"
                 autocomplete
-                :open-on-focus="true"
                 type="is-dark"
                 :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
                 @typing="getFilteredTags"
