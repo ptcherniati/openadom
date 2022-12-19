@@ -161,6 +161,23 @@
                             >{{ $t("applications.dataset") }}
                           </b-button>
                         </div>
+                        <div class="card-footer-item" v-if="canCreateApplication" >
+                          <b-button
+                              icon-left="pen-square"
+                              type="is-warning"
+                              @click="updateApplication(application.configFile)"
+                          >
+                            Modifier l'application
+                          </b-button>
+                        </div>
+                        <div class="card-footer-item" v-if="canCreateApplication" >
+                          <b-button
+                              icon-left="download"
+                              type="is-primary"
+                              @click="downloadYamlApplication(application)"
+                          > {{ $t("referencesManagement.download") }}
+                          </b-button>
+                        </div>
                       </div>
                     </div>
                   </b-modal>
@@ -296,6 +313,15 @@ export default class ApplicationsView extends Vue {
 
   createApplication() {
     this.$router.push("/applicationCreation");
+  }
+
+  async downloadYamlApplication(application) {
+    await this.fileService.download(application.name, application.configFile);
+    return false;
+  }
+  
+  updateApplication(id) {
+    this.$router.push(`/applicationCreation/${id}`);
   }
 
   displayReferencesManagement(application) {
