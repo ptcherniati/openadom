@@ -68,6 +68,12 @@ public class Fixtures {
         return "/data/monsore/monsore.yaml";
     }
 
+    public Map<String, String> getMonsoreReferentielEspecestoTrimFiles() {
+        Map<String, String> referentielFiles = new HashMap<>();
+        referentielFiles.put("especes", "/data/monsore/refdatas/especesToTrim.csv");
+        return referentielFiles;
+    }
+
     public Map<String, String> getMonsoreReferentielFiles() {
         Map<String, String> referentielFiles = new HashMap<>();
         referentielFiles.put("especes", "/data/monsore/refdatas/especes.csv");
@@ -86,6 +92,10 @@ public class Fixtures {
 
     public String getPemDataResourceName() {
         return "/data/monsore/data-pem.csv";
+    }
+
+    public String getPemDataToTrimResourceName() {
+        return "/data/monsore/data-pem-to-trim.csv";
     }
 
     public String getPemRepositoryDataResourceName(String projet, String site) {
@@ -176,9 +186,11 @@ public class Fixtures {
                 "      \"to\":\"2020-31-12 00:00:00\"\n" +
                 "   }", site);
     }
+
     public String getConditionsPrelevementDataResourceName() {
         return "/data/recursivite/suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv";
     }
+
     public String getConditionsPrelevementRepositoryResourceName(String site) {
         return String.format("/data/recursivite/suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", site);
     }
