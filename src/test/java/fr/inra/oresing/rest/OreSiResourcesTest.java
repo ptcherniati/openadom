@@ -213,35 +213,37 @@ public class OreSiResourcesTest {
                 .andReturn().getResponse().getContentAsString();
 
         // Ajout de referentiel
-        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
-            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+        {
+            for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
+                try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                    MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
-                                .file(refFile)
-                                .cookie(monsoreCookie))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
+                    response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
+                                    .file(refFile)
+                                    .cookie(monsoreCookie))
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                            .andReturn().getResponse().getContentAsString();
 
-                JsonPath.parse(response).read("$.id");
+                    JsonPath.parse(response).read("$.id");
+                }
             }
+            mockMvc.perform(get("/api/v1/applications/{appId}", appId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .cookie(monsoreCookie))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
+
+            String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .cookie(monsoreCookie))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andReturn().getResponse().getContentAsString();
+
+            GetReferenceResult GetReferenceResult = objectMapper.readValue(getReferencesResponse, GetReferenceResult.class);
+            Assert.assertEquals(9, GetReferenceResult.getReferenceValues().size());
         }
-        mockMvc.perform(get("/api/v1/applications/{appId}", appId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(monsoreCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
-
-        String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .cookie(monsoreCookie))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-
-        GetReferenceResult GetReferenceResult = objectMapper.readValue(getReferencesResponse, GetReferenceResult.class);
-        Assert.assertEquals(9, GetReferenceResult.getReferenceValues().size());
 
         // ajout de data
         resource = getClass().getResource(fixtures.getPemDataResourceName());
@@ -286,6 +288,30 @@ public class OreSiResourcesTest {
 
             log.debug(StringUtils.abbreviate(response, 50));
         }
+        // ajout de data avec trim à faire
+        resource = getClass().getResource(fixtures.getPemDataToTrimResourceName());
+        try (InputStream refStream = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+            String actualJson = getPemData(monsoreCookie);
+            log.debug(StringUtils.abbreviate(actualJson, 50));
+        }
+        mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .cookie(monsoreCookie))
+                .andExpect(jsonPath("$.rows[*].values" +
+                                "[?(@.projet.value=='projet_atlantique' )]" +
+                                "[?(@.date.value=='date:1984-01-01T00:00:00:01/01/1984' )]" +
+                                "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
+                                "[?(@.espece.value=='lpf' )]" +
+                                "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
+                                "['Nombre d\\'individus'].value",
+                        Matchers.hasItem("54")));
+
+        //récupération du data
 
         try (InputStream pem = getClass().getResourceAsStream(fixtures.getPemDataResourceName())) {
             String data = IOUtils.toString(Objects.requireNonNull(pem), StandardCharsets.UTF_8);
@@ -318,24 +344,7 @@ public class OreSiResourcesTest {
                 list.add(jsonArray.getString(i));
             }
 
-            String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
-                            .cookie(monsoreCookie)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.variables").isArray())
-                    .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
-                    .andExpect(jsonPath("$.variables").value(Stream.of("date", "projet", "site", "Couleur des individus", "Nombre d'individus", "espece").collect(Collectors.toList())))
-                    .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
-                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
-                    .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
-                    .andExpect(jsonPath("$.rows").isArray())
-                    .andExpect(jsonPath("$.rows", Matchers.hasSize(272)))
-                    //.andExpect(jsonPath("$.rows.value").value(list))
-                    .andExpect(jsonPath("$.totalRows", Is.is(272)))
-                    .andExpect(jsonPath("$.rows[*].values.date.value", Matchers.hasSize(272)))
-                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(272)))
-                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(272)))
-                    .andReturn().getResponse().getContentAsString();
+            String actualJson = getPemData(monsoreCookie);
             log.debug(StringUtils.abbreviate(actualJson, 50));
         }
         /**
@@ -519,6 +528,27 @@ public class OreSiResourcesTest {
 //        }
 
         // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
+    }
+
+    private String getPemData(Cookie monsoreCookie) throws Exception {
+        return mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .cookie(monsoreCookie)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.variables").isArray())
+                .andExpect(jsonPath("$.variables", Matchers.hasSize(6)))
+                .andExpect(jsonPath("$.variables").value(Stream.of("date", "projet", "site", "Couleur des individus", "Nombre d'individus", "espece").collect(Collectors.toList())))
+                .andExpect(jsonPath("$.checkedFormatVariableComponents.DateLineChecker", IsNull.notNullValue()))
+                .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker", IsNull.notNullValue()))
+                .andExpect(jsonPath("$.checkedFormatVariableComponents.IntegerChecker", IsNull.notNullValue()))
+                .andExpect(jsonPath("$.rows").isArray())
+                .andExpect(jsonPath("$.rows", Matchers.hasSize(272)))
+                //.andExpect(jsonPath("$.rows.value").value(list))
+                .andExpect(jsonPath("$.totalRows", Is.is(272)))
+                .andExpect(jsonPath("$.rows[*].values.date.value", Matchers.hasSize(272)))
+                .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", Matchers.hasSize(272)))
+                .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", Matchers.hasSize(272)))
+                .andReturn().getResponse().getContentAsString();
     }
 
     public void registerFile(String filePath, String jsonContent) throws IOException {

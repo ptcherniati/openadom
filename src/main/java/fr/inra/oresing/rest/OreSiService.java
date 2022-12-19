@@ -1023,6 +1023,7 @@ public class OreSiService {
             List<Map.Entry<String, String>> record = new LinkedList<>();
             List<String> currentRow = new LinkedList<>();
             line.forEach(value -> {
+                value= value.trim();
                 currentRow.add(value);
                 String header = currentHeader.next();
                 record.add(Map.entry(header.strip(), value));
@@ -1050,7 +1051,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber();
-                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
+                String value = (row.size()>=columnNumber?row.get(columnNumber - 1):"".trim());
                 preHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
@@ -1069,6 +1070,7 @@ public class OreSiService {
     private ImmutableList<String> readHeaderRow(Iterator<CSVRecord> linesIterator, PublishContext publishContext) {
         CSVRecord headerRow = linesIterator.next();
         final ImmutableList<String> headers = Streams.stream(headerRow)
+                .map(String::trim)
                 .collect(ImmutableList.toImmutableList());
         publishContext.setHeaderRow(headers);
         return headers;
@@ -1097,7 +1099,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber(headerRow);
-                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
+                String value = (row.size()>=columnNumber?row.get(columnNumber - 1):"").trim();
                 postHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);

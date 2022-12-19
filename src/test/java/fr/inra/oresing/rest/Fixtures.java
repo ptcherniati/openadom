@@ -94,6 +94,10 @@ public class Fixtures {
         return "/data/monsore/data-pem.csv";
     }
 
+    public String getPemDataToTrimResourceName() {
+        return "/data/monsore/data-pem-to-trim.csv";
+    }
+
     public String getPemRepositoryDataResourceName(String projet, String site) {
         return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, site);
     }
