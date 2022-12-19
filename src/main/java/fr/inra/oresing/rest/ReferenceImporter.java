@@ -105,13 +105,16 @@ abstract class ReferenceImporter {
             CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
             Iterator<CSVRecord> linesIterator = csvParser.iterator();
             CSVRecord headerRow = linesIterator.next();
-            ImmutableList<String> columns = Streams.stream(headerRow).collect(ImmutableList.toImmutableList());
+            ImmutableList<String> columns = Streams.stream(headerRow)
+                    .map(String::trim)
+                    .collect(ImmutableList.toImmutableList());
             boolean allowUnexpectedColumns = referenceImporterContext.allowUnexpectedColumns;
             checkHeader(columns, Ints.checkedCast(headerRow.getRecordNumber()), allowUnexpectedColumns);
             Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
             Function<CSVRecord, RowWithReferenceDatum> csvRecordToReferenceDatumFn = csvRecord -> csvRecordToRowWithReferenceDatum(columns, csvRecord);
             final Stream<RowWithReferenceDatum> recordStreamBeforePreloading =
-                    csvRecordsStream.map(csvRecordToReferenceDatumFn)
+                    csvRecordsStream
+                            .map(csvRecordToReferenceDatumFn)
                             .map(this::computeComputedColumns);
             final Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
             Stream<ReferenceValue> referenceValuesStream = recordStream
@@ -206,9 +209,10 @@ abstract class ReferenceImporter {
         Iterator<String> currentHeader = columns.iterator();
         ReferenceDatum referenceDatum = new ReferenceDatum();
         SetMultimap<String, UUID> refsLinkedTo = HashMultimap.create();
-        csvRecord.forEach(cellContent -> {
+        csvRecord
+                .forEach(cellContent -> {
             String header = currentHeader.next();
-            referenceImporterContext.pushValue(referenceDatum, header, cellContent, refsLinkedTo);
+            referenceImporterContext.pushValue(referenceDatum, header, cellContent.trim(), refsLinkedTo);
         });
         int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
         return new RowWithReferenceDatum(lineNumber, referenceDatum, ImmutableSetMultimap.copyOf(refsLinkedTo));

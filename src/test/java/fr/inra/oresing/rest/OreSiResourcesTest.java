@@ -186,6 +186,33 @@ public class OreSiResourcesTest {
 //        Assert.assertEquals(List.of("pem"), applicationResult.getDataType());
 
         // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielEspecestoTrimFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(monsoreCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
+        //test de la reference especetoTrim
+        String getEspecesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/especes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(monsoreCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.referenceValues[*][?(@.hierarchicalKey=='lpf')].values.esp_definition_fr", IsNull.notNullValue()))
+                //la colonne "esp_nom" et la colonne "esp_definition_fr"  ont bien été lues sans espaces
+                .andExpect(jsonPath("$.referenceValues[*][?(@.hierarchicalKey=='lpf')].values.esp_definition_fr", Matchers.hasItem("LPF")))
+                //les valeurs de la colonne "esp_definition_fr"  ont bien été lues sans espaces
+                .andReturn().getResponse().getContentAsString();
+
+        // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
