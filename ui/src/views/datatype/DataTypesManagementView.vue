@@ -39,6 +39,7 @@
           synthesis: synthesis[data.id],
           synthesisMinMax: synthesisMinMax[data.id],
           withSynthesis: true,
+          withTooltip: true,
         }"
         :level="0"
         :on-click-label-cb="(event, label) => openDataTypeCb(event, label)"

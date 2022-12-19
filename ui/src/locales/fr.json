@@ -288,7 +288,8 @@
         "title-modal-date": "Choix de l'interval de date",
         "manage-datasets": "Gérer les jeux de données",
         "accepted": "Accepté",
-        "refuse": "Refusé"
+        "refuse": "Refusé",
+        "tooltip_show_secondary_menu": "Ouvrir le menu secondaire"
     },
     "dataTypesRepository":  {
         "card-title-upload-file": "Déposer une version pour ce jeux de données",
@@ -303,12 +304,14 @@
         "list-file-data-period": "Liste des versions pour la période",
         "table-file-data-id": "ID",
         "table-file-data-size": "Taille",
-        "table-file-data-create": "Création",
-        "table-file-data-create-by": "Créer par :",
-        "table-file-data-publish": "Publier",
-        "table-file-data-publish-by": "Publier par :",
+        "table-file-data-create": "Créé le",
+        "table-file-data-create-by": "Créé par :",
+        "table-file-data-publish": "Publié le",
+        "table-file-data-publish-by": "Publié par :",
         "table-file-data-publication": "Publication",
+        "table-file-data-action": "Actions",
         "table-file-data-delete": "Supprimer",
+        "table-file-data-download": "Télécharger",
         "table-file-data-period": "Période"
     },
     "dataTypeAuthorizations": {
@@ -351,7 +354,8 @@
         "showMore": "Voir plus...",
         "search": "Recherche...",
 	    "save" : "Enregister modification",
-	    "add-application-name": "Ajouter une application"
+	    "add-application-name": "Ajouter une application",
+        "all-autorisation" : "Coche toutes les cases des droits sur la ligne "
     },
     "ponctuation": {
         "semicolon" : ";",

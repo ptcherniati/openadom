@@ -91,6 +91,7 @@
                 :field="indexColumn"
                 :label="getColumnTitle(column)"
                 class="column"
+                :style="!column.display ? 'display : contents':''"
             ></b-field>
           </div>
         </div>
@@ -103,7 +104,11 @@
             @click="handleSubmit(createAuthorization)"
             style="margin-bottom: 10px"
         >
-          {{ authorization.uuid?$t("dataTypeAuthorizations.modify"):$t("dataTypeAuthorizations.create") }}
+          {{
+            authorization.uuid
+                ? $t("dataTypeAuthorizations.modify")
+                : $t("dataTypeAuthorizations.create")
+          }}
         </b-button>
       </div>
     </ValidationObserver>
@@ -325,28 +330,28 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         authorizationScopes: this.authorizationScopes,
         dataGroups: this.dataGroups,
         users: this.users,
-        authorizationsForUser: authorizationsForUser
+        authorizationsForUser: authorizationsForUser,
       } = grantableInfos);
       let auths = authorizationsForUser.authorizationResults.admin
       if (JSON.parse(localStorage.getItem('authenticatedUser'))) {
         let ownAuthorizations = JSON.parse(localStorage.getItem('authenticatedUser')).authorizations
         this.isApplicationAdmin = ownAuthorizations.find(a => new RegExp(a).test(this.dataTypeId))
       }
-      if (!this.isApplicationAdmin){
+      if (!this.isApplicationAdmin) {
         for (const scope in auths) {
-          this.ownAuthorizations = this.ownAuthorizations || []
-          let scopeAuthorizations = auths[scope]
-          let scopeAuthorization = new Authorization(scopeAuthorizations)
-          let path = scopeAuthorization.getPath(this.authorizationScopes.map((a => a.id)));
+          this.ownAuthorizations = this.ownAuthorizations || [];
+          let scopeAuthorizations = auths[scope];
+          let scopeAuthorization = new Authorization(scopeAuthorizations);
+          let path = scopeAuthorization.getPath(this.authorizationScopes.map((a) => a.id));
           if (this.ownAuthorizations.indexOf(path) === -1) {
-            if (!this.ownAuthorizations.find(pa => path.startWith(pa))) {
-              this.ownAuthorizations = this.ownAuthorizations.filter(pa => !pa.startWith(path))
+            if (!this.ownAuthorizations.find((pa) => path.startWith(pa))) {
+              this.ownAuthorizations = this.ownAuthorizations.filter((pa) => !pa.startWith(path));
               this.ownAuthorizations.push(path);
             }
           }
         }
       }
-       for (const path of this.ownAuthorizations) {
+      for (const path of this.ownAuthorizations) {
         for (const scopeId in authorizationsForUser.authorizationByPath) {
               if(authorizationsForUser.authorizationByPath[scopeId]){
                 for (const pathKey in authorizationsForUser.authorizationByPath[scopeId]) {
@@ -358,6 +363,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
                   }
                 }
               }
+            }
+          }
         }
       }
       this.columnsVisible = {...this.columnsVisible, ...grantableInfos.columnsDescription};
@@ -371,15 +378,17 @@ export default class DataTypeAuthorizationInfoView extends Vue {
             this.authorizationId
         );
 
-        this.publicAuthorizations = {}
+        this.publicAuthorizations = {};
         for (const authorizationKey in authorizations.publicAuthorizations) {
-          let auths = authorizations.publicAuthorizations[authorizationKey]
+          let auths = authorizations.publicAuthorizations[authorizationKey];
           for (const scope in auths) {
-            this.publicAuthorizations[scope] = this.publicAuthorizations[scope] || []
-            let scopeAuthorizations = auths[scope]
+            this.publicAuthorizations[scope] = this.publicAuthorizations[scope] || [];
+            let scopeAuthorizations = auths[scope];
             for (const scopeAuthorizationsKey in scopeAuthorizations) {
-              let scopeAuthorization = new Authorization(scopeAuthorizations[scopeAuthorizationsKey])
-              let path = scopeAuthorization.getPath2(this.authorizationScopes.map((a => a.id)));
+              let scopeAuthorization = new Authorization(
+                  scopeAuthorizations[scopeAuthorizationsKey]
+              );
+              let path = scopeAuthorization.getPath2(this.authorizationScopes.map((a) => a.id));
               if (this.publicAuthorizations[scope].indexOf(path) === -1) {
                 if (!this.publicAuthorizations[scope].find(pa => this.comparePathes(path, pa))) {
                   this.publicAuthorizations[scope] = this.publicAuthorizations[scope].filter(pa => !this.comparePathes(pa, path))

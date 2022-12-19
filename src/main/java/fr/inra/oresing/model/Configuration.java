@@ -103,7 +103,7 @@ public class Configuration {
                 .filter(Objects::nonNull)
                 .map(LineValidationRuleWithColumnsDescription::getChecker)
                 .filter(Objects::nonNull)
-                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
                     DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -113,7 +113,7 @@ public class Configuration {
                 .filter(Objects::nonNull)
                 .map(ReferenceStaticComputedColumnDescription::getChecker)
                 .filter(Objects::nonNull)
-                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
                     DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -123,7 +123,7 @@ public class Configuration {
                 .filter(Objects::nonNull)
                 .map(ReferenceStaticColumnDescription::getChecker)
                 .filter(Objects::nonNull)
-                .filter(checker -> "Reference".equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
+                .filter(checker -> CheckerType.Reference.equals(checker.getName()) && StringUtils.isNotEmpty(checker.getParams().getRefType()))
                 .forEach(checker -> {
                     final String refType = checker.getParams().getRefType();
                     DependencyNode node = nodes.computeIfAbsent(refType, k -> new DependencyNode(refType));
@@ -234,7 +234,7 @@ public class Configuration {
     @Setter
     public static abstract class ReferenceColumnDescription {
 
-        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues = "MANDATORY,OPTIONAL")
+        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues ="MANDATORY,OPTIONAL,ABSENT")
         private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
@@ -601,6 +601,9 @@ public class Configuration {
 
         @ApiModelProperty(notes = "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component", required = true)
         private VariableComponentKey boundTo;
+
+        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues ="MANDATORY,OPTIONAL,ABSENT")
+        private ColumnPresenceConstraint presenceConstraint  = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter

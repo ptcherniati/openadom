@@ -534,6 +534,7 @@ public class OreSiService {
             UniquenessBuilder uniquenessBuilder = new UniquenessBuilder(app, dataType);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
+                    .filter(row->errors.size()<50)
                     .map(buildCsvRecordToLineAsMapFn(columns, publishContext))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
@@ -669,7 +670,10 @@ public class OreSiService {
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
-            lineCheckers.forEach(lineChecker -> {
+            lineCheckers
+                    .stream()
+                    .filter(d->rowErrors.size()<50)
+                    .forEach(lineChecker -> {
                 ValidationCheckResult validationCheckResult = lineChecker.check(datum);
                 if (validationCheckResult.isSuccess()) {
                     if (validationCheckResult instanceof DateValidationCheckResult) {
@@ -893,6 +897,10 @@ public class OreSiService {
         ImmutableSet<String> expectedHeaderColumns = formatDescription.getColumns().stream()
                 .map(Configuration.ColumnBindingDescription::getHeader)
                 .collect(ImmutableSet.toImmutableSet());
+        ImmutableSet<String> mandatoryHeaderColumns = formatDescription.getColumns().stream()
+                .filter(columnBindingDescription -> ColumnPresenceConstraint.MANDATORY.equals(columnBindingDescription.getPresenceConstraint()))
+                .map(Configuration.ColumnBindingDescription::getHeader)
+                .collect(ImmutableSet.toImmutableSet());
         boolean allowUnexpectedColumns = formatDescription.isAllowUnexpectedColumns();
         int headerLine = formatDescription.getHeaderLine();
         ImmutableMap<String, Configuration.ColumnBindingDescription> bindingPerHeader = Maps.uniqueIndex(formatDescription.getColumns(), Configuration.ColumnBindingDescription::getHeader);
@@ -901,7 +909,7 @@ public class OreSiService {
             ImmutableMultiset<String> actualHeaderColumns = line.stream()
                     .map(Map.Entry::getKey)
                     .collect(ImmutableMultiset.toImmutableMultiset());
-            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, expectedHeaderColumns, actualHeaderColumns, headerLine, allowUnexpectedColumns);
+            InvalidDatasetContentException.checkHeader(expectedHeaderColumns, mandatoryHeaderColumns, actualHeaderColumns, headerLine, allowUnexpectedColumns);
             Map<VariableComponentKey, String> record = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : line) {
                 String header = entry.getKey();
@@ -1061,7 +1069,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber();
-                String value = row.get(columnNumber - 1);
+                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
                 preHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
@@ -1108,7 +1116,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber(headerRow);
-                String value = row.get(columnNumber - 1);
+                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
                 postHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
@@ -1331,6 +1339,12 @@ public class OreSiService {
     public Optional<BinaryFile> getFile(String name, UUID id) {
         authenticationService.setRoleForClient();
         Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindById(id);
+        return optionalBinaryFile;
+    }
+
+    public Optional<BinaryFile> getFileWithData(String name, UUID id) {
+        authenticationService.setRoleForClient();
+        Optional<BinaryFile> optionalBinaryFile = repo.getRepository(name).binaryFile().tryFindByIdWithData(id);
         return optionalBinaryFile;
     }
 

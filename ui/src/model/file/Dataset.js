@@ -13,7 +13,7 @@ export class Dataset {
     this.lastUploadUser = file.params.createuser;
     this.published = file.params.published;
     this.publishDate = file.params.publisheddate;
-    this.publishUser = file.params.publishedhuser;
+    this.publishUser = file.params.publisheduser;
     this.periode = this.periodeToString(
       file.params.binaryFiledataset.from,
       file.params.binaryFiledataset.to
@@ -38,8 +38,10 @@ export class Dataset {
     var dd = String(today.getDate()).padStart(2, "0");
     var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
     var yyyy = today.getFullYear();
+    var HH = today.getHours();
+    var MM = today.getMinutes();
 
-    today = dd + "/" + mm + "/" + yyyy;
+    today = dd + "/" + mm + "/" + yyyy + " " + HH + ":" + MM;
     return today;
   }
   periodeToString(from, to) {
