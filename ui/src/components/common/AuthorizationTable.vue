@@ -110,7 +110,7 @@
                   >
                     <b-icon
                         v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-                        icon="eye"
+                        icon="ellipsis-h"
                         size="fa-4x"
                     ></b-icon>
                   </b-button>
