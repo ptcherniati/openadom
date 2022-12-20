@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "cypress:open": "cypress open",
-    "serve": "export SERVER='development';mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service serve",
-    "build": "export SERVER='production';mkdir -p public/files &&  cp  ../Documentation_fichier_Yaml.pdf public/files/aide.pdf;vue-cli-service build;  ",
+    "serve": "export SERVER='development';mkdir -p public/files ;vue-cli-service serve",
+    "build": "export SERVER='production';mkdir -p public/files;vue-cli-service build;  ",
     "lint": "vue-cli-service lint",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
   },
@@ -31,7 +31,8 @@
     "vue-i18n": "^8.25.0",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.5.2",
-    "vuedraggable": "^2.24.3"
+    "vuedraggable": "^2.24.3",
+    "@babel/plugin-proposal-private-methods": "^7.18.6"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",

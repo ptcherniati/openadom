@@ -188,7 +188,9 @@ export default {
     };
   },
   watch: {
-    innerOptionChecked: (value) => this.$emit("optionChecked", value),
+    innerOptionChecked(value) {
+      return this.$emit("optionChecked", value);
+    }
   },
   methods: {
     onInnerOptionChecked: function (value) {
