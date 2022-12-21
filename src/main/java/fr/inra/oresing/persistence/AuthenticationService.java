@@ -105,7 +105,7 @@ public class AuthenticationService {
         result.setPassword(bcrypted);
         userRepository.store(result);
         OreSiUserRole userRole = getUserRole(result);
-        db.createRole(userRole);
+        db.createRoleWithPublic(userRole);
         return new CreateUserResult(result.getId());
     }
 

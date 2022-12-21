@@ -100,6 +100,11 @@ public class SqlService {
         execute(sql);
     }
 
+    public void createRoleWithPublic(OreSiRoleManagedByApplication roleManagedByApplication) {
+        String sql = "CREATE ROLE " + roleManagedByApplication.getSqlIdentifier() + " in role \"9032ffe5-bfc1-453d-814e-287cd678484a\"";
+        execute(sql);
+    }
+
     public void dropRole(OreSiRoleManagedByApplication roleManagedByApplication) {
         String sql = "DROP ROLE " + roleManagedByApplication.getSqlIdentifier() + "";
         execute(sql);
