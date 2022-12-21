@@ -82,8 +82,11 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Application> getApplications() {
-        return service.getApplications();
+    public List<Application> getApplications(@RequestParam(required = false, defaultValue = "") String[] filter) {
+        List<ApplicationInformation> filters = Arrays.stream(filter)
+                .map(s ->ApplicationInformation.valueOf(s))
+                .collect(Collectors.toList());
+        return service.getApplications(filters);
     }
 
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -104,25 +107,34 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId) {
+    public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId,@RequestParam(required = false, defaultValue = "") String[] filter) {
         Application application = service.getApplication(nameOrId);
-        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = service.getReferenceSynthesis(application);
+        List<ApplicationInformation> filters = Arrays.stream(filter)
+                .map(s ->ApplicationInformation.valueOf(s))
+                .collect(Collectors.toList());
+        boolean withSynthesis = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.SYNTHESIS);
+        boolean withDatatypes = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.DATATYPE);
+        boolean withReferenceType = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE);
+        boolean withConfiguration = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.CONFIGURATION);
+        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withSynthesis?service.getReferenceSynthesis(application):List.of();
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
-        application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
-            ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
-                    .map(Configuration.CompositeReferenceComponentDescription::getReference)
-                    .collect(ImmutableList.toImmutableList());
-            ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
-            sortedReferenceTypes.forEach(reference -> {
-                String child = sortedReferenceTypes.higher(reference);
-                if (child == null) {
-                    // on est sur le dernier élément de la hiérarchie, pas de descendant
-                } else {
-                    childrenPerReferences.put(reference, child);
-                }
+        if(withReferenceType){
+            application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
+                ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
+                        .map(Configuration.CompositeReferenceComponentDescription::getReference)
+                        .collect(ImmutableList.toImmutableList());
+                ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
+                sortedReferenceTypes.forEach(reference -> {
+                    String child = sortedReferenceTypes.higher(reference);
+                    if (child == null) {
+                        // on est sur le dernier élément de la hiérarchie, pas de descendant
+                    } else {
+                        childrenPerReferences.put(reference, child);
+                    }
+                });
             });
-        });
-        Map<String, ApplicationResult.Reference> references = Maps.transformEntries(
+        }
+        Map<String, ApplicationResult.Reference> references = withReferenceType?Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
                     Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
@@ -136,8 +148,8 @@ public class OreSiResources {
                                     dynamicColumnDescription.getPresenceConstraint().isMandatory()));
                     Set<String> children = childrenPerReferences.get(reference);
                     return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns);
-                });
-        Map<String, ApplicationResult.DataType> dataTypes = Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
+                }):Map.of();
+        Map<String, ApplicationResult.DataType> dataTypes = withDatatypes?Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
                 Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.doGetAllComponentDescriptions(), (component, componentDescription) -> {
                     return new ApplicationResult.DataType.Variable.Component(component, component);
@@ -166,8 +178,9 @@ public class OreSiResources {
                     })
                     .orElse(null);
             return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations);
-        });
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis);
+        }):Map.of();
+        Configuration configuration = withConfiguration? application.getConfiguration() : null;
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis, configuration);
         return ResponseEntity.ok(applicationResult);
     }
 

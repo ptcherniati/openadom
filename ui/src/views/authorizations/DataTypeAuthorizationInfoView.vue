@@ -187,7 +187,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
   endDate = null;
-  applications = [];
   configuration = {};
   authReferences = {};
   subMenuPaths = [];
@@ -305,11 +304,8 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   async init() {
     try {
-      this.applications = await this.applicationService.getApplications();
-      this.application = await this.applicationService.getApplication(this.applicationName);
-      this.configuration = this.applications
-          .filter((a) => a.name === this.applicationName)
-          .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
+      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE']);
+      this.configuration = this.application.configuration.dataTypes[this.dataTypeId];
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -333,7 +329,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         authorizationsForUser: authorizationsForUser,
       } = grantableInfos);
 
-      console.log("authorizationsForUser", authorizationsForUser);
       let auths = authorizationsForUser.authorizationResults.admin;
       if (JSON.parse(localStorage.getItem("authenticatedUser"))) {
         let ownAuthorizations = JSON.parse(
@@ -359,15 +354,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       }
       for (const path of this.ownAuthorizations) {
         for (const scopeId in authorizationsForUser.authorizationByPath) {
-          console.log(
-              "path",
-              path,
-              "scope",
-              scopeId,
-              "authorizationResults",
-              authorizationsForUser.authorizationResults[scopeId]
-          );
-          console.log("scope", scopeId);
           if (authorizationsForUser.authorizationByPath[scopeId]) {
             for (const pathKey in authorizationsForUser.authorizationByPath[scopeId]) {
               if (pathKey.startsWith(path) || path.startsWith(pathKey)) {

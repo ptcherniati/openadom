@@ -68,7 +68,7 @@ public class SqlSchemaForApplication implements SqlSchema {
     public String requiredAuthorizationsAttributesComparing(Application app) {
         String requiredAuthorizationsAttributesComparing = app.getConfiguration().getRequiredAuthorizationsAttributes().stream()
                 .map(attribute -> String.format(
-                        "((authorized).requiredAuthorizations.%1$s is null or (COALESCE((authorized).requiredAuthorizations.%1$s, ''::ltree) <@ COALESCE((\"authorization\").requiredAuthorizations.%1$s, ''::ltree)))",
+                        "((authorized).requiredAuthorizations.%1$s is null or (COALESCE((authorized).requiredAuthorizations.%1$s, ''::ltree) @> COALESCE((\"authorization\").requiredAuthorizations.%1$s, ''::ltree)))",
                         attribute
                 ))
                 .collect(Collectors.joining("\n AND "));

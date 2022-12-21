@@ -12,7 +12,7 @@ describe('test authorization application', () => {
         cy.fixture(ola).then(olaContent => {
             cy.intercept(
                 'GET',
-                'http://localhost:8081/api/v1/applications/ola', {
+                'http://localhost:8081/api/v1/applications/ola?filter=CONFIGURATION&filter=REFERENCETYPE', {
                     statusCode: 200,
                     body: olaContent
                 }).as('pageRef')

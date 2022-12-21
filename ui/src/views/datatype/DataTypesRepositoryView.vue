@@ -328,7 +328,6 @@ export default class DataTypesRepositoryView extends Vue {
   getDataTypeDisplay = this.internationalisationService.getDataTypeDisplay;
   subMenuPaths = [];
   application = new ApplicationResult();
-  applications = [];
   configuration = {};
   authorizations = [];
   authReferences = {};
@@ -463,8 +462,7 @@ export default class DataTypesRepositoryView extends Vue {
 
   async init() {
     try {
-      this.applications = await this.applicationService.getApplications();
-      this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE', 'REFERENCETYPE']);
       this.repository = this.application.dataTypes[this.dataTypeId].repository;
       this.application = {
         ...this.application,
@@ -475,10 +473,7 @@ export default class DataTypesRepositoryView extends Vue {
             this.application.dataTypes[this.dataTypeId]
         ),
       };
-      this.configuration = this.applications
-          .filter((a) => a.name === this.applicationName)
-          .map((a) => a.configuration.dataTypes[this.dataTypeId])[0];
-      console.log("refType", this.getRefType("site", "chemin"));
+      this.configuration = this.application.configuration.dataTypes[this.dataTypeId];
       this.authorizations = this.configuration.authorization.authorizationScopes;
       let requiredAuthorizations = Object.keys(this.authorizations).reduce((acc, auth) => {
         acc[auth] = null;
@@ -671,7 +666,6 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   selectAuthorization(key, event) {
-    console.log("key", key, "event", event);
     this.selected.requiredAuthorizations[key] = event.referenceValues.hierarchicalKey;
     this.requiredAuthorizationsObject[key] = event.completeLocalName;
     this.datasets = this.currentDataset = null;

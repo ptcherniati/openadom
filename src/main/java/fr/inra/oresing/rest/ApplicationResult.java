@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class ApplicationResult {
     Map<String, Reference> references;
     Map<String, DataType> dataTypes;
     List<ReferenceSynthesis> referenceSynthesis;
+    Configuration configuration;
 
     @Value
     public static class Reference {

@@ -130,6 +130,7 @@ public class TestReferencesErrors {
 
 
             response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
+                            .param("filter", "ALL")
                             .cookie(recursivityCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))

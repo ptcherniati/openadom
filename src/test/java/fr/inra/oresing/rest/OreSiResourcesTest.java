@@ -171,6 +171,7 @@ public class OreSiResourcesTest {
 
         String response = mockMvc.perform(get("/api/v1/applications/{appId}", appId)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("filter", "ALL")
                         .cookie(monsoreCookie))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -230,6 +231,7 @@ public class OreSiResourcesTest {
             }
             mockMvc.perform(get("/api/v1/applications/{appId}", appId)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .param("filter", "ALL")
                             .cookie(monsoreCookie))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
@@ -1195,6 +1197,7 @@ public class OreSiResourcesTest {
 
 
             response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
+                            .param("filter", "ALL")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))

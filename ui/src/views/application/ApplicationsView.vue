@@ -133,7 +133,7 @@
                               v-html="
                               $t('applications.version', {
                                 applicationName: application.localName,
-                                version: application.configuration.application.version,
+                                version: application.version,
                               })
                             "
                           />
@@ -316,7 +316,7 @@ export default class ApplicationsView extends Vue {
   }
 
   async init() {
-    this.applications = await this.applicationService.getApplications();
+    this.applications = await this.applicationService.getApplications(['DATATYPE', 'REFERENCETYPE']);
     this.selectedApplications = this.applications;
     if (this.checkboxDate === "true")
       this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
