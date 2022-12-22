@@ -321,18 +321,29 @@ public class OreSiResources {
             for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
                 String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
-                referenceLineChecker.getReferenceValues().entrySet()
-                        .stream()
+                if(referenceLineCheckers.get(variableComponentKey) instanceof ReferenceLineCheckerDisplay){
+                    continue;
+                }
+                referenceLineChecker.getReferenceValues().entrySet().stream()
                         .filter(e -> requiredreferencesValues.containsKey(e.getKey()))
-                        .filter(e -> list.stream()
-                                .anyMatch(dataRow -> dataRow.getValues()
-                                        .getOrDefault(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable(), Map.of())
-                                        .getOrDefault(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent(), "")
-                                        .equals(e.getKey().getSql())
-                                )
-                        )
-                        .forEach(e -> referenceLineCheckers
-                                .put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, requiredreferencesValues.get(e.getKey()).stream().findFirst().orElse(null))));
+                        .forEach(e ->
+                                list.stream()
+                                        .limit(1)
+                                        .forEach(dataRow -> {
+                                            UUID refId = dataRow.getRefsLinkedTo().get(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable()).get(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent());
+                                            requiredreferencesValues.values().stream()
+                                                    .map(l ->
+                                                            l.stream()
+                                                                    .filter(referenceValue -> referenceValue.getId().equals(refId))
+                                                                    .findFirst())
+                                                    .filter(Optional::isPresent)
+                                                    .map(Optional::get)
+                                                    .findFirst()
+                                                    .ifPresent(referenceValue -> {
+                                                        referenceLineCheckers.put(variableComponentKey, new ReferenceLineCheckerDisplay(referenceLineChecker, referenceValue));
+                                                    });
+                                        })
+                        );
             }
         }
         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
