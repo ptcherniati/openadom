@@ -61,7 +61,7 @@ public class AuthorizationResources {
         OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, authorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
         if(authorization.getUuid()==null){
-            authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+            final OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
         }
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
@@ -116,8 +116,11 @@ public class AuthorizationResources {
     }
 
     @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> revokeAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
-        authorizationService.revoke(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<UUID> revokeAuthorization(
+            @PathVariable("nameOrId") String applicationNameOrId,
+            @PathVariable("dataType") String dataType,
+            @PathVariable("authorizationId") UUID authorizationId) {
+        final UUID revokeId = authorizationService.revoke(applicationNameOrId, new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
+        return ResponseEntity.ok(revokeId);
     }
 }

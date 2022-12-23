@@ -42,7 +42,7 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
     }
 
     public List<OreSiAuthorization> findByDataType(String dataType) {
-        return findByPropertyEquals("dataType", dataType);
+        return findByPropertyEquals("datatype", dataType);
     }
 
     public List<OreSiAuthorization> findAuthorizations(UUID userId, Application application, String dataType) {

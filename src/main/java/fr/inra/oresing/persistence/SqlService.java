@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.model.PolicyDescription;
 import fr.inra.oresing.persistence.roles.*;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Strings;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -64,13 +67,19 @@ public class SqlService {
         execute("DROP VIEW " + view.getSqlIdentifier());
     }
 
+    public List<PolicyDescription> getPoliciesForRole(OreSiRightOnApplicationRole role) {
+        String sql = "select  policyname, schemaname, tablename from pg_policies " +
+                "where Array[:role::name] @> roles ;";
+        return namedParameterJdbcTemplate.query(sql, Map.of("role", role.getAsSqlRole()), PolicyDescription::convert);
+    }
+
     public void createPolicy(SqlPolicy sqlPolicy) {
         dropPolicy(sqlPolicy);
         String using = "", withCheck = "";
-        if(!Strings.isNullOrEmpty(sqlPolicy.getUsingExpression())){
+        if (!Strings.isNullOrEmpty(sqlPolicy.getUsingExpression())) {
             using = String.format(" USING (%s)", sqlPolicy.getUsingExpression());
         }
-        if(!Strings.isNullOrEmpty(sqlPolicy.getWithCheckExpression())){
+        if (!Strings.isNullOrEmpty(sqlPolicy.getWithCheckExpression())) {
             withCheck = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
         }
         String createPolicySql = String.format(
@@ -123,14 +132,14 @@ public class SqlService {
     private void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd, boolean withAdminOption) {
         String withAdminOptionClause = withAdminOption ? " WITH ADMIN OPTION" : "";
         String sql = "GRANT " + roleToAdd.getSqlIdentifier() + ""
-                     + " TO " + roleToModify.getSqlIdentifier() + ""
-                     + withAdminOptionClause;
+                + " TO " + roleToModify.getSqlIdentifier() + ""
+                + withAdminOptionClause;
         execute(sql);
     }
 
     public void removeUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd) {
         String sql = "REVOKE " + roleToAdd.getSqlIdentifier() + ""
-                     + " FROM " + roleToModify.getSqlIdentifier();
+                + " FROM " + roleToModify.getSqlIdentifier();
         execute(sql);
     }
 
