@@ -260,7 +260,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             //ajout de droits withRigthsUserId
             final String jsonRightsForMonsoere = setJsonRightsForMonsoere(monsoreCookie, withRigthsUserId, OperationType.publication.name());
-
+            final String jsonRightsForMonsoereId = JsonPath.parse(jsonRightsForMonsoere).read("$.authorizationId");
             //avec les droits on peut publier
             response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile)
@@ -278,7 +278,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             //ajout de droits public
-            setJsonRightsForMonsoere(monsoreCookie, lambdaUser.getUserId().toString(), OperationType.publication.name());
+            final String publicRightsId = JsonPath.parse(setJsonRightsForMonsoere(monsoreCookie, "9032ffe5-bfc1-453d-814e-287cd678484a", OperationType.publication.name())).read("$.authorizationId");
 
 
             //avec les droits public on peut publier même sans droit
@@ -286,6 +286,17 @@ public class OreSiResourcesTest {
                             .file(refFile)
                             .cookie(lambdaCookie))
                     .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            // on supprime les droits public
+            mockMvc.perform(delete("/api/v1/applications/monsore/dataType/pem/authorization/"+publicRightsId)
+                            .cookie(monsoreCookie))
+                            .andExpect(status().is2xxSuccessful());
+
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile)
+                            .cookie(lambdaCookie))
+                    .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
 
             log.debug(StringUtils.abbreviate(response, 50));

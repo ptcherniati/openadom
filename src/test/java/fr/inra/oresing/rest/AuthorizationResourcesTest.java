@@ -38,8 +38,7 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = OreSiNg.class)
@@ -451,9 +450,9 @@ public class AuthorizationResourcesTest {
             String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence")
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalRows", equalTo(-1)))
-                    .andReturn().getResponse().getContentAsString();
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(content().string("application inconnue 'hautefrequence'"))
+                    .andReturn().getResolvedException().getMessage();
         }
     }
 

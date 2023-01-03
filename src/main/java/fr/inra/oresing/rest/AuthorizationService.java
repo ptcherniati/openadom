@@ -54,11 +54,20 @@ public class AuthorizationService {
         updateRolesOnManagement.updateRoleForManagement();
     }
 
+    /**
+     * create a role as a reader on application
+     *
+     * @param previousAuthorization The authorization that does not yet have an identifier
+     * @param modifiedAuthorization The new authorization created from the previous Authorization information
+     * @return the existing role for modifiedAuthorization
+     */
     public OreSiRightOnApplicationRole createRoleForAuthorization(CreateAuthorizationRequest previousAuthorization, OreSiAuthorization modifiedAuthorization) {
         UUID created = modifiedAuthorization.getId();
         Application application = repository.application().findApplication(previousAuthorization.getApplicationNameOrId());
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, created);
+        OreSiRightOnApplicationRole readerRoleOnApplication = OreSiRightOnApplicationRole.readerOn(application);
         db.createRole(oreSiRightOnApplicationRole);
+        db.addUserInRole(oreSiRightOnApplicationRole, readerRoleOnApplication);
         return oreSiRightOnApplicationRole;
     }
 
@@ -94,9 +103,13 @@ public class AuthorizationService {
                     }
                     return authByTypeEntry;
                 })
-                .map(authByType -> {
-                    testAuthorizationArguments(authorizationDescription, authByType);
-                    return authByType;
+                .filter(authByType -> {
+                    try {
+                        testAuthorizationArguments(authorizationDescription, authByType);
+                        return true;
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (!isApplicationCreator) {
@@ -184,9 +197,52 @@ public class AuthorizationService {
                 .forEach(user -> db.addUserInRole(user, oreSiRightOnApplicationRole));
     }
 
-    public void revoke(AuthorizationRequest revokeAuthorizationRequest) {
+    public UUID revoke(String applicationNameOrid, AuthorizationRequest revokeAuthorizationRequest) {
         final UpdateRolesOnManagement updateRolesOnManagement = new UpdateRolesOnManagement(repository, db, authenticationService);
-        updateRolesOnManagement.revoke(revokeAuthorizationRequest);
+        final Application application = oreSiService.getApplication(applicationNameOrid);
+        final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
+        final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
+        final String dataType = revokeAuthorizationRequest.getDataType();
+        List<OreSiAuthorization> authorizationsForCurrentUser = findUserAuthorizationsForApplicationAndDataType(application, dataType);
+        if (!isApplicationCreator && !authorizationsForCurrentUser.stream().anyMatch(
+                a -> !a.getAuthorizations().get(OperationType.admin).isEmpty()
+        )) {
+            throw new NotApplicationCanSetRightsException(application.getName(), dataType);
+        }
+        OreSiAuthorization oreSiAuthorization = repository.getRepository(application).authorization().findById(revokeAuthorizationRequest.getAuthorizationId());
+        final List<Authorization> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
+                .map(authorization -> authorization.getAuthorizations())
+                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
+                .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+        Configuration.AuthorizationDescription authorizationDescription = application.getConfiguration().getDataTypes().get(dataType).getAuthorization();
+
+
+        final Map<OperationType, List<Authorization>> filteredAuthorizations = oreSiAuthorization.getAuthorizations().entrySet().stream()
+                .map(authByTypeEntry -> {
+                    if (!isApplicationCreator) {
+                        final boolean canRemoveEntry = authByTypeEntry.getValue().stream()
+                                .allMatch(authorization -> testCanSetAuthorization(authorization, authorizationListForCurrentUser));
+                        if (!canRemoveEntry) {
+                            throw new NotApplicationCanDeleteRightsException(application.getName(), dataType);
+                        }
+                    }
+                    return authByTypeEntry;
+                })
+                .map(authByType -> {
+                    try {
+                        testAuthorizationArguments(authorizationDescription, authByType);
+                    } catch (IllegalArgumentException e) {
+                        throw new NotApplicationCanDeleteRightsException(application.getName(), dataType);
+                    }
+                    return authByType;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (filteredAuthorizations.isEmpty()) {
+            return null;
+        }
+        return updateRolesOnManagement.revoke(revokeAuthorizationRequest);
     }
 
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType, AuthorizationsResult authorizationsForUser) {

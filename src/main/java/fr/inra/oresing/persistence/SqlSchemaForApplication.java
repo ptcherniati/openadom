@@ -37,6 +37,10 @@ public class SqlSchemaForApplication implements SqlSchema {
         return new SqlTable(this, "oreSiAuthorization");
     }
 
+    public SqlTable forTableName(String tableName) {
+        return new SqlTable(this, tableName);
+    }
+
     public String requiredAuthorizationsAttributes(Application app) {
         return app.getConfiguration().getRequiredAuthorizationsAttributes().stream()
                 .map(s -> String.format("%s ltree", s))
