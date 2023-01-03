@@ -1,5 +1,6 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.model;
 
+import fr.inra.oresing.rest.ValidationCheckResult;
 import lombok.Value;
 
 @Value

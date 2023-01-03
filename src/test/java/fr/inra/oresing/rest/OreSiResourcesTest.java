@@ -8,11 +8,15 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
+import fr.inra.oresing.model.CreateUserResult;
+import fr.inra.oresing.model.CsvRowValidationCheckResult;
+import fr.inra.oresing.model.GetReferenceResult;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OperationType;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.exceptions.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import lombok.extern.slf4j.Slf4j;
@@ -155,7 +159,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResolvedException();
             addUserRightCreateApplication(monsoreUserId, "monsore");
-            Assert.assertEquals("monsore", resolvedException.applicationName);
+            Assert.assertEquals("monsore", resolvedException.getApplicationName());
             addUserRightCreateApplication(monsoreUserId, "monsore");
 
             String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore")

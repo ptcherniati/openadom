@@ -1,6 +1,7 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.model;
 
 import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.rest.AuthorizationsResult;
 import lombok.Value;
 
 @Value

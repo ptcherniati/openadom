@@ -1,7 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.model.Application;
-import fr.inra.oresing.rest.NoSuchApplicationException;
+import fr.inra.oresing.rest.exceptions.NoSuchApplicationException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 

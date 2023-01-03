@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.model;
 
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;

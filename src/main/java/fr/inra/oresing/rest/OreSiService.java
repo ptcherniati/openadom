@@ -18,6 +18,7 @@ import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
+import fr.inra.oresing.rest.exceptions.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
@@ -427,8 +428,8 @@ public class OreSiService {
 
         BinaryFile storedFile = authorizationPublicationHelper.loadOrCreateFile(file, params, app);
         if (authorizationPublicationHelper.isRepository()) {
-            if (params != null && !params.topublish) {
-                if (storedFile.getParams() != null && storedFile.getParams().published) {
+            if (params != null && !params.getTopublish()) {
+                if (storedFile.getParams() != null && storedFile.getParams().isPublished()) {
                     storedFile.getParams().published = false;
                     filesToStore.add(storedFile);
                     assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
@@ -455,7 +456,7 @@ public class OreSiService {
         final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(app.getName(), dataType, getCurrentUser().getLogin());
 
         assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
-        publishVersion(dataType, authorizationPublicationHelper, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
+        publishVersion(dataType, authorizationPublicationHelper, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.getBinaryfiledataset());
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
         unPublishVersions(app, filesToStore, dataType);
@@ -542,18 +543,18 @@ public class OreSiService {
     private List<CsvRowValidationCheckResult> findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps) {
         if (params != null) {
             if (searchOverlaps) {
-                List<BinaryFile> overlapingFiles = getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset, true);
+                List<BinaryFile> overlapingFiles = getFilesOnRepository(nameOrId, dataType, params.getBinaryfiledataset(), true);
                 if (!overlapingFiles.isEmpty()) {
                     return List.of(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error(
                             "overlappingpublishedversion",
                             ImmutableMap.of("fileOrUUID", params, "files",
                                     overlapingFiles.stream()
-                                            .map(f -> f.getParams().binaryFiledataset.toString())
+                                            .map(f -> f.getParams().getBinaryFiledataset().toString())
                                             .collect(Collectors.toSet())
                             )), -1));
                 }
             }
-            getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset, false)
+            getFilesOnRepository(nameOrId, dataType, params.getBinaryfiledataset(), false)
                     .stream()
                     .filter(f -> f.getParams().published)
                     .forEach(f -> {
@@ -588,7 +589,7 @@ public class OreSiService {
                         return null;
                     }
                     if (params != null) {
-                        binaryFile.getParams().binaryFiledataset = params.binaryfiledataset;
+                        binaryFile.getParams().binaryFiledataset = params.getBinaryfiledataset();
                     }
                     fileId = repo.getRepository(app).binaryFile().store(binaryFile);
                     return repo.getRepository(app).binaryFile().tryFindByIdWithData(fileId).orElse(null);
@@ -1183,7 +1184,7 @@ public class OreSiService {
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey(),
-                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
+                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DataRepository.Order.ASC)
                 )));
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
         List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()

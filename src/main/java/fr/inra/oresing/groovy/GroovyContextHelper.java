@@ -6,7 +6,7 @@ import fr.inra.oresing.model.ReferenceValue;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.rest.DownloadDatasetQuery;
+import fr.inra.oresing.model.DownloadDatasetQuery;
 import fr.inra.oresing.rest.OreSiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -43,7 +43,7 @@ public class GroovyContextHelper {
         return builder.build();
     }
 
-    public ImmutableMap<String, Object> getGroovyContextForDataTypes(DataRepository dataRepository, Set<String> dataTypes, @Deprecated Application application) {
+    public ImmutableMap<String, Object> getGroovyContextForDataTypes(DataRepository dataRepository, Set<String> dataTypes, Application application) {
         Map<String, List<DataRow>> datatypes = new HashMap<>();
         Map<String, List<Map<String, Map<String, String>>>> datatypesValues = new HashMap<>();
         dataTypes.forEach(dataType -> {

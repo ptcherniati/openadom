@@ -3,7 +3,7 @@ package fr.inra.oresing.checker;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.OreSiTechnicalException;
-import fr.inra.oresing.rest.CsvRowValidationCheckResult;
+import fr.inra.oresing.model.CsvRowValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.rest.ValidationCheckResult;
 import org.apache.commons.lang3.builder.ToStringBuilder;

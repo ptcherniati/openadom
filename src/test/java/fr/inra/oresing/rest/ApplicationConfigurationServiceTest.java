@@ -6,6 +6,7 @@ import com.google.common.collect.Iterables;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.CheckerType;
+import fr.inra.oresing.model.ConfigurationParsingResult;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;

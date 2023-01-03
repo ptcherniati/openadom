@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.model.CreateUserResult;
 import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.SqlService;

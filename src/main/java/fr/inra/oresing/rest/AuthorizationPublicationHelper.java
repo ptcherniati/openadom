@@ -154,7 +154,7 @@ public class AuthorizationPublicationHelper {
                 return null;
             }
             if (params != null) {
-                binaryFile.getParams().binaryFiledataset = params.binaryfiledataset;
+                binaryFile.getParams().binaryFiledataset = params.getBinaryfiledataset();
             }
             fileId = repo.binaryFile().store(binaryFile);
             return repo.binaryFile().tryFindByIdWithData(fileId).orElse(null);

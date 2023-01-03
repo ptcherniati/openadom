@@ -1,11 +1,10 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.model;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.checker.CheckerType;
 import fr.inra.oresing.groovy.GroovyExpression;
-import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.rest.ValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import lombok.Value;
 

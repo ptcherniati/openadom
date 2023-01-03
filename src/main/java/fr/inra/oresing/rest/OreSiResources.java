@@ -12,6 +12,9 @@ import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.rest.exceptions.BadBinaryFileDatasetQuery;
+import fr.inra.oresing.rest.exceptions.BadDownloadDatasetQuery;
+import fr.inra.oresing.rest.exceptions.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -423,7 +426,7 @@ public class OreSiResources {
         try {
             FileOrUUID fileOrUUID = params != null && params != "undefined" ? new ObjectMapper().readValue(params, FileOrUUID.class) : null;
             Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(fileOrUUID)
-                    .map(fileOrUUID1 -> fileOrUUID.binaryfiledataset);
+                    .map(fileOrUUID1 -> fileOrUUID.getBinaryfiledataset());
             if (
                     binaryFileDatasetOpt
                             .map(binaryFileDataset -> binaryFileDataset.getDatatype()).isPresent()) {
@@ -456,7 +459,7 @@ public class OreSiResources {
                                         @RequestParam(value = "params", required = false) String params) throws IOException {
         try {
             FileOrUUID binaryFiledataset = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseFileOrUUIDQuery(dataType, params);
-            Preconditions.checkArgument(file != null || (binaryFiledataset != null && binaryFiledataset.fileid != null), "le fichier ou params.fileid est requis");
+            Preconditions.checkArgument(file != null || (binaryFiledataset != null && binaryFiledataset.getFileid() != null), "le fichier ou params.fileid est requis");
             UUID fileId = service.addData(nameOrId, dataType, file, binaryFiledataset);
             String uri = UriUtils.encodePath(String.format("/applications/%s/file/%s", nameOrId, fileId), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of("fileId", fileId.toString()));

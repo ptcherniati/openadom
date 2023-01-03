@@ -1,6 +1,8 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.model.CreateUserResult;
+import fr.inra.oresing.model.LoginResult;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import org.springframework.beans.factory.annotation.Autowired;

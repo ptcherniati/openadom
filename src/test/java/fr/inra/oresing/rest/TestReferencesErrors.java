@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.model.CreateUserResult;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import lombok.extern.slf4j.Slf4j;

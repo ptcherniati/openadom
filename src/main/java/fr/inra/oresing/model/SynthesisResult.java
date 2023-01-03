@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.model;
 
 import fr.inra.oresing.model.LocalDateTimeRange;
 import fr.inra.oresing.model.chart.OreSiSynthesis;

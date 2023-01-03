@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.exceptions;
 
 import fr.inra.oresing.OreSiTechnicalException;
 import lombok.Getter;

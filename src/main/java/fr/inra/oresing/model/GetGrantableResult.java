@@ -1,6 +1,7 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.model;
 
 import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.rest.AuthorizationsResult;
 import lombok.Value;
 
 import java.util.Map;

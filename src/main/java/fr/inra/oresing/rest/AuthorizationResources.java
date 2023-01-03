@@ -1,16 +1,16 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableSet;
-import fr.inra.oresing.model.Application;
-import fr.inra.oresing.model.OreSiAuthorization;
-import fr.inra.oresing.model.OreSiRoleForUser;
-import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OperationType;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
+import fr.inra.oresing.rest.exceptions.NotApplicationCanSetRightsException;
+import fr.inra.oresing.rest.exceptions.NotApplicationCreatorRightsException;
+import fr.inra.oresing.rest.exceptions.NotSuperAdminException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
