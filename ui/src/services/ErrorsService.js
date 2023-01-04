@@ -131,7 +131,6 @@ export class ErrorsService {
   getErrorsMessages(errors) {
     return errors.map((error) => {
       const func = ERRORS[error.message];
-      console.log("test", error.messageParams.target);
       if (!func) {
         //throw new Error("Il manque la chaine de traduction pour l'erreur : " + error.message);
         return i18n.t("errors.exception");

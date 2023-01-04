@@ -22,7 +22,7 @@ describe('test high authorization application', () => {
         cy.setLocale('fr');
     });
 
-    it.skip('Test authorization ajout', () => {
+    it('Test authorization ajout', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         cy.get('.clickable').click()

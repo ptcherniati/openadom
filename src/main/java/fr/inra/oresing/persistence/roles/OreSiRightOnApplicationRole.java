@@ -29,7 +29,7 @@ public class OreSiRightOnApplicationRole implements OreSiRoleManagedByApplicatio
     }
 
     public static OreSiRightOnApplicationRole managementRole(Application application, UUID uuid) {
-        return new OreSiRightOnApplicationRole(application.getId(), String.format("management_%s", uuid.toString()), uuid);
+        return new OreSiRightOnApplicationRole(application.getId(), String.format("mgt_%s", uuid.toString().substring(0,8)), uuid);
     }
 
     @Override

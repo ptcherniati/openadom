@@ -95,7 +95,7 @@ export default class SignIn extends Vue {
       await this.loginService.signIn(this.login, this.password);
     } catch (error) {
       if (error.httpResponseCode === HttpStatusCodes.FORBIDDEN) {
-        this.alertService.toastError(this.$t("alert.user-unknown"), error);
+        this.alertService.toastError(this.$t("alert.user-unknown"), {});
       } else {
         this.alertService.toastServerError(error);
       }

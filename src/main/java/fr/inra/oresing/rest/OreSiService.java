@@ -514,7 +514,7 @@ public class OreSiService {
             UniquenessBuilder uniquenessBuilder = new UniquenessBuilder(app, dataType);
 
             Stream<Data> dataStream = Streams.stream(csvParser)
-                    .filter(row->errors.size()<50)
+                    .filter(row -> errors.size() < 50)
                     .map(buildCsvRecordToLineAsMapFn(columns, publishContext))
                     .flatMap(lineAsMap -> buildLineAsMapToRecordsFn(formatDescription).apply(lineAsMap).stream())
                     .map(buildMergeLineValuesAndConstantValuesFn(constantValues))
@@ -615,7 +615,6 @@ public class OreSiService {
     }
 
     /**
-     *
      * @param app
      * @param dataType
      * @param fileId
@@ -653,29 +652,29 @@ public class OreSiService {
 
             lineCheckers
                     .stream()
-                    .filter(d->rowErrors.size()<50)
+                    .filter(d -> rowErrors.size() < 50)
                     .forEach(lineChecker -> {
-                ValidationCheckResult validationCheckResult = lineChecker.check(datum);
-                if (validationCheckResult.isSuccess()) {
-                    if (validationCheckResult instanceof DateValidationCheckResult) {
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
-                        dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
-                    }
-                    if (validationCheckResult instanceof ReferenceValidationCheckResult) {
-                        ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
-                        if (configuration.getTransformation().getGroovy() != null) {
-                            datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
+                        ValidationCheckResult validationCheckResult = lineChecker.check(datum);
+                        if (validationCheckResult.isSuccess()) {
+                            if (validationCheckResult instanceof DateValidationCheckResult) {
+                                VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
+                                dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
+                            }
+                            if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                                ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
+                                if (configuration.getTransformation().getGroovy() != null) {
+                                    datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
+                                }
+                                ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
+                                VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
+                                UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
+                                refsLinkedTo.put(variableComponentKey, referenceId);
+                            }
+                        } else {
+                            rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
                         }
-                        ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
-                        VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
-                        UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
-                        refsLinkedTo.put(variableComponentKey, referenceId);
-                    }
-                } else {
-                    rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
-                }
 
-            });
+                    });
 
             if (!rowErrors.isEmpty()) {
                 errors.addAll(rowErrors);
@@ -1023,6 +1022,7 @@ public class OreSiService {
             List<Map.Entry<String, String>> record = new LinkedList<>();
             List<String> currentRow = new LinkedList<>();
             line.forEach(value -> {
+                value = value.trim();
                 currentRow.add(value);
                 String header = currentHeader.next();
                 record.add(Map.entry(header.strip(), value));
@@ -1050,7 +1050,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber();
-                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
+                String value = (row.size() >= columnNumber ? row.get(columnNumber - 1) : "".trim());
                 preHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
@@ -1069,6 +1069,7 @@ public class OreSiService {
     private ImmutableList<String> readHeaderRow(Iterator<CSVRecord> linesIterator, PublishContext publishContext) {
         CSVRecord headerRow = linesIterator.next();
         final ImmutableList<String> headers = Streams.stream(headerRow)
+                .map(String::trim)
                 .collect(ImmutableList.toImmutableList());
         publishContext.setHeaderRow(headers);
         return headers;
@@ -1097,7 +1098,7 @@ public class OreSiService {
             ImmutableSet<Configuration.HeaderConstantDescription> constantDescriptions = perRowNumberConstants.get(lineNumber);
             constantDescriptions.forEach(constant -> {
                 int columnNumber = constant.getColumnNumber(headerRow);
-                String value = row.size()>=columnNumber?row.get(columnNumber - 1):"";
+                String value = (row.size() >= columnNumber ? row.get(columnNumber - 1) : "").trim();
                 postHeaderLine.add(value);
                 VariableComponentKey boundTo = constant.getBoundTo();
                 constantValues.put(boundTo, value);
@@ -1287,10 +1288,12 @@ public class OreSiService {
         return data;
     }
 
-    public List<Application> getApplications() {
+    public List<Application> getApplications(List<ApplicationInformation> filters) {
         authenticationService.setRoleForClient();
         List<Application> result = repo.application().findAll();
-        return result;
+        return result.stream()
+                .map(application -> application.filterFields(filters))
+                .collect(Collectors.toList());
     }
 
     public Application getApplication(String nameOrId) {

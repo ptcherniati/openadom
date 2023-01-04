@@ -585,7 +585,7 @@ export default class DataTypeTableView extends Vue {
   }
 
   async init() {
-    this.application = await this.applicationService.getApplication(this.applicationName);
+    this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE']);
     this.application = {
       ...this.application,
       localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -694,7 +694,6 @@ export default class DataTypeTableView extends Vue {
           params
         );
         refvalues = reference.referenceValues[0].values;
-        console.log(refvalues);
       }
       const data = Object.entries(refvalues)
         .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))

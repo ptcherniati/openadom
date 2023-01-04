@@ -1,5 +1,5 @@
 [
-    {
+  {
     "id": "4591638b-ef8e-412b-b06c-0912e9b73a9d",
     "creationDate": 1651854659679,
     "updateDate": 1651854659679,
@@ -18319,6 +18319,7 @@
         }
       }
     },
-    "configFile": "0918acbc-7a78-457b-90d4-af9f0383c4a4"
+    "configFile": "0918acbc-7a78-457b-90d4-af9f0383c4a4",
+    "version": 1
   }
 ]

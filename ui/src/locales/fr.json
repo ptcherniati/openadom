@@ -1,5 +1,6 @@
 {
     "exceptionMessage": {
+        "undefined": "Impossible de lire le message d'erreur {message}",
         "sqlConvertException": "Une erreur dans une requête sql est survenue ligne {locationLineNumber} colonne {locationColumnNumber}<br/>{message}",
         "badStoreValueType": "Impossible d'obtenir une valeur pour la clef {referenceDatumKey}. Le type de la valeur {storeValueType} n'est pas l'un des types de retour acceptés : {knownStoreValueType} ",
         "badCheckerType": "Le checker de type {checkerType} n'est pas valide. Vous pouvez utiliser l'un de ces checkers : {knownCheckerType} ",
@@ -88,7 +89,7 @@
         "aria-curent-page": "Page actuelle",
         "aria-next-page": "Page suivante",
         "aria-previous-page": "Page précédente",
-    	"authorizations": "Autorisations"
+        "authorizations": "Autorisations"
     },
     "applications": {
         "chose-config": "Choisir une configuration",
@@ -204,7 +205,7 @@
         "timeVariableComponentKeyMissingComponent": "Il faut indiquer le composant de la variable <code>{variable}</code> dans laquelle on recueille la période de temps à laquelle rattacher la donnée pour le gestion des droits jeu de données <code>{dataType}</code>. Valeurs possibles <code>{knownComponents}</code>",
         "timeVariableComponentKeyUnknownComponent": "<code>{component}</code> ne fait pas partie des composants connus pour la variable <code>{variable}</code>. Composants connus : <code>{knownComponents}</code>",
         "timerangeoutofinterval": "La date  <code>{value}</code> est incompatible avec l'intervale de dates du dépôt. Elle doit être comprise entre <code>{from}</code> et <code>{to}</code>.",
-    	"norightforpublish": "Vous n'avez pas les droits sur le type de donnée <code>{dataType}</code> de l'application <code>{application}</code> de publier les valeurs de la ligne  <code>{lineNumber}</code>.",
+        "norightforpublish": "Vous n'avez pas les droits sur le type de donnée <code>{dataType}</code> de l'application <code>{application}</code> de publier les valeurs de la ligne  <code>{lineNumber}</code>.",
         "tooBigRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} le numéro de ligne doit être inférieur    à celui de la ligne de données.",
         "tooLittleRowLineForConstantDescription": "Dans la section format->constant du dataType {dataType} le numéro de ligne doit être positif.",
         "unDeclaredValueForChart": "Pour visualiser correctement le graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, il est nécessaire de déclarer la valeur.<br />  La valeur doit être parmi : <code>{components}</code>",
@@ -236,11 +237,11 @@
         "invalidCapturingGroupForStartDateDatatypeRepositoryDate":"Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}." ,
         "invalidCapturingGroupForEndDateDatatypeRepositoryDate":"Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}." ,
         "exception": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. ",
-	    "invalidPatternForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche est invalide.",
-	    "invalidCapturingGroupForDatatypeRepositoryAuthorizationScope": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> est <code>{scopeToken}</code>; il doit être compris entre 0 et {countGroups}.",
-	    "invalidCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>.",
-	    "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}.",
-	    "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}."
+        "invalidPatternForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche est invalide.",
+        "invalidCapturingGroupForDatatypeRepositoryAuthorizationScope": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> est <code>{scopeToken}</code>; il doit être compris entre 0 et {countGroups}.",
+        "invalidCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>.",
+        "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}.",
+        "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}."
     },
     "referencesManagement": {
         "actions": "Actions",
@@ -279,28 +280,31 @@
         "placeholder-datepicker": "Taper ou sélectionner une date...",
         "placeholder-select": "Sélectionner...",
         "submit": "Envoyer",
-        "list-file-data": "Liste des jeux de données sur ce dépôt",
+        "list-file-data": "Liste des jeux de données associés à votre sélection",
         "list-file-data-period": "Liste des versions pour la période",
         "table-file-data-id": "ID",
         "table-file-data-size": "Taille",
-        "table-file-data-create": "Créé le",
-        "table-file-data-create-by": "Créé par :",
-        "table-file-data-publish": "Publié le",
+        "table-file-data-create": "Dernier dépôt",
+        "table-file-data-create-by": "Dernier dépositaire",
+        "table-file-data-publish": "Date de publication",
         "table-file-data-publish-by": "Publié par :",
         "table-file-data-publication": "Publication",
         "table-file-data-action": "Actions",
         "table-file-data-delete": "Supprimer",
         "table-file-data-download": "Télécharger",
-        "table-file-data-period": "Période"
+        "table-file-data-period": "Période",
+        "version-number": "Nombre de versions",
+        "tooltip-jeux de données": "Sélectionnez un jeu de données pour connaître la liste des fichiers versionnés correspondants (révisions)."
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",
         "sub-menu-data-type-authorizations": "Autorisations de {dataType}",
         "sub-menu-new-authorization": "Nouvelle autorisation",
         "users": "Utilisateurs",
-        "name": "Nom",
+        "name": "Nom de l'autorisation",
         "roles": "Rôles",
-        "users-placeholder": "Choisir les utilisateurs à autoriser",
+        "users-placeholder": "Sélectionner les utilisateurs à autoriser",
+        "name-authorization-placeholder": "Taper le nom de l'autorisation",
         "data-groups": "Groupes de données",
         "data-groups-placeholder": "Choisir les données à autoriser",
         "authorization-scopes": "Périmètres d'autorisation",
@@ -332,8 +336,8 @@
         "localization": "Localisation",
         "showMore": "Voir plus...",
         "search": "Recherche...",
-	    "save" : "Enregister modification",
-	    "add-application-name": "Ajouter une application",
+        "save" : "Enregister modification",
+        "add-application-name": "Ajouter une application",
         "all-autorisation" : "Coche toutes les cases des droits sur la ligne "
     },
     "ponctuation": {

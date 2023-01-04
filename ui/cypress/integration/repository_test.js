@@ -10,14 +10,14 @@ describe('test repository', () => {
          cy.get('@applications').then((foret) => {
              cy.intercept(
                  'GET',
-                 'http://localhost:8081/api/v1/applications',
+                 'http://localhost:8081/api/v1/applications/?filter=DATATYPE&filter=REFERENCETYPE',
                  foret).as('getApplicationsForetResponse')
          })
          cy.fixture('applications/ore/foret/foret.json').as('foret')
          cy.get('@foret').then((foret) => {
              cy.intercept(
                  'GET',
-                 'http://localhost:8081/api/v1/applications/foret',
+                 'http://localhost:8081/api/v1/applications/foret?filter=CONFIGURATION&filter=DATATYPE&filter=REFERENCETYPE',
                  foret).as('getApplicationForetResponse')
          })
          cy.fixture('applications/ore/foret/zone_etude.json').as('zone_etude')

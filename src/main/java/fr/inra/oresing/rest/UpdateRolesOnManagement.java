@@ -43,22 +43,9 @@ public class UpdateRolesOnManagement {
 
     public void updateRoleForManagement() {
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, modifiedAuthorization.getId());
-        db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.readerOn(application));
         addOrRemoveAuthorizationForUsers(previousUsers, newUsers, oreSiRightOnApplicationRole);
-
-        final String expression = String.format("name = '%s'", application.getName());
-        final SqlPolicy sqlPolicy = new SqlPolicy(
-                String.join("_", "application", "reader", oreSiRightOnApplicationRole.getAsSqlRole()),
-                SqlSchema.main().application(),
-                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                List.of(SqlPolicy.Statement.SELECT),
-                oreSiRightOnApplicationRole,
-                expression,
-                null
-        );
-        db.createPolicy(sqlPolicy);
+        dropPolicies(oreSiRightOnApplicationRole);
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
-            db.addUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
             toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
                     .forEach(db::createPolicy);
             toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
@@ -76,6 +63,20 @@ public class UpdateRolesOnManagement {
             toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, List.of(SqlPolicy.Statement.SELECT)).stream()
                     .forEach(db::createPolicy);
         }
+    }
+
+    public void dropPolicies(OreSiRightOnApplicationRole oreSiRightOnApplicationRole) {
+        db.getPoliciesForRole(oreSiRightOnApplicationRole).stream()
+                .map(policyDescription -> new SqlPolicy(
+                        policyDescription.getPolicyname(),
+                        SqlSchema.forApplication(application).forTableName(policyDescription.getTablename()),
+                        null,
+                        null,
+                        oreSiRightOnApplicationRole,
+                        null,
+                        null)
+                )
+                .forEach(db::dropPolicy);
     }
 
 
@@ -105,7 +106,7 @@ public class UpdateRolesOnManagement {
 
         return statements.stream()
                 .map(statement -> new SqlPolicy(
-                        OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString() + "_data_"+statement.name().substring(0,3),
+                        OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString() + "_data_" + statement.name().substring(0, 3),
                         sqlSchemaForApplication.data(),
                         SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                         Collections.singletonList(statement),
@@ -126,12 +127,12 @@ public class UpdateRolesOnManagement {
 
         return statements.stream()
                 .map(statement -> new SqlPolicy(
-                        OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString()+ "_bf_"+statement.name().substring(0,3),
+                        OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString() + "_bf_" + statement.name().substring(0, 3),
                         sqlSchemaForApplication.binaryFile(),
                         SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                         Collections.singletonList(statement),
                         oreSiRightOnApplicationRole,
-                        statement.equals(SqlPolicy.Statement.ALL) || statement.equals(SqlPolicy.Statement.UPDATE) || statement.equals(SqlPolicy.Statement.SELECT) ? /*expression*/ "true": null,
+                        statement.equals(SqlPolicy.Statement.ALL) || statement.equals(SqlPolicy.Statement.UPDATE) || statement.equals(SqlPolicy.Statement.SELECT) ? /*expression*/ "true" : null,
                         statement.equals(SqlPolicy.Statement.ALL) || statement.equals(SqlPolicy.Statement.INSERT) || statement.equals(SqlPolicy.Statement.UPDATE) ? expression : null
                 ))
                 .collect(Collectors.toList());
@@ -177,42 +178,22 @@ public class UpdateRolesOnManagement {
         return usingExpression;
     }
 
-    public void revoke(AuthorizationRequest revokeAuthorizationRequest) {
+    public UUID revoke(AuthorizationRequest revokeAuthorizationRequest) {
         this.application = repository.application().findApplication(revokeAuthorizationRequest.getApplicationNameOrId());
         this.authorizationRepository = repository.getRepository(application).authorization();
         UUID authorizationId = revokeAuthorizationRequest.getAuthorizationId();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
+        dropPolicies(OreSiRightOnApplicationRole.managementRole(application, revokeAuthorizationRequest.getAuthorizationId()));
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
-        final SqlPolicy sqlPolicy = new SqlPolicy(
-                String.join("_", "application", "reader", oreSiRightOnApplicationRole.getAsSqlRole()),
-                SqlSchema.main().application(),
-                null,
-                null,
-                null,
-                null,
-                null
-        );
-        modifiedAuthorization = authorizationRepository.findById(revokeAuthorizationRequest.getAuthorizationId());
-        db.dropPolicy(sqlPolicy);
-        if (oreSiAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
-            db.removeUserInRole(oreSiRightOnApplicationRole, OreSiRightOnApplicationRole.writerOn(application));
-            toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT)).stream()
-                    .forEach(db::dropPolicy);
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
-                    .forEach(db::dropPolicy);
-        }
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
-                    .forEach(db::dropPolicy);
-        }
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.depot)) {
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.depot, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE, SqlPolicy.Statement.INSERT)).stream()
-                    .forEach(db::dropPolicy);
-        }
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.extraction)) {
-            toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, List.of(SqlPolicy.Statement.SELECT)).stream()
-                    .forEach(db::dropPolicy);
-        }
+        authenticationService.setRoleAdmin();
+        oreSiAuthorization.getOreSiUsers().stream()
+                .map(authenticationService::getUserRole)
+                .forEach(user -> db.removeUserInRole(user, oreSiRightOnApplicationRole));
+        authenticationService.setRoleForClient();
         authorizationRepository.delete(authorizationId);
+        authenticationService.setRoleAdmin();
+        db.dropRole(oreSiRightOnApplicationRole);
+        authenticationService.setRoleForClient();
+        return authorizationId;
     }
 }

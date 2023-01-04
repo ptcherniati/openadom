@@ -27,10 +27,10 @@ export class Authorizations {
     this.dataType = authorizations.dataType;
     this.name = authorizations.name;
     this.uuid = authorizations.uuid;
-    this.#initStates(authorizations.authorizations);
+    this.initStates(authorizations.authorizations);
   }
 
-  #initStates(authorizations) {
+  initStates(authorizations) {
     this.authorizations = authorizations || {};
     this.scopes = {};
     for (const scope in authorizations) {

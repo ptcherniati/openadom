@@ -109,7 +109,7 @@ export default class ReferencesManagementView extends Vue {
 
   async init() {
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName);
+      this.application = await this.applicationService.getApplication(this.applicationName,['CONFIGURATION','REFERENCETYPE']);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
