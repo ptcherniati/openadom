@@ -158,7 +158,8 @@
       </div>
       <div v-if="isAuthorisationsSelected()" class="columns">
         <div class="card column">
-          <div class="card-content">
+          <div class="card-content"
+               id="element">
             <table
                 v-if="datasets && Object.keys(datasets).length"
                 class="table is-striped is-fullwidth numberData"
@@ -247,7 +248,6 @@
                 <td align>
                   <b-field>
                     <b-button
-                        ref="element"
                         :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
                         size="is-medium"
                         type="is-primary is-light"
@@ -342,6 +342,7 @@ export default class DataTypesRepositoryView extends Vue {
   currentDataset = null;
   repository = {};
   errorsMessages = [];
+  isFullPage = false;
 
   mounted() {
     this.$on("authorizationChanged", this.updateDatasets);
@@ -608,7 +609,7 @@ export default class DataTypesRepositoryView extends Vue {
   async publish(dataset, pusblished) {
     // TODO : ajout loading en JS
     const loadingComponent = this.$buefy.loading.open({
-      container: this.isFullPage ? null : this.$refs.element.$el
+      container: document.getElementById("element")
     })
     this.errorsMessages = [];
     dataset.params.published = pusblished;
