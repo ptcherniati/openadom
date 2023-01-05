@@ -94,16 +94,8 @@ public class UpdateRolesOnManagement {
 
 
     private List<SqlPolicy> toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, List<SqlPolicy.Statement> statements) {
-        Set<String> usingExpressionElements = new LinkedHashSet<>();
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-
-        String dataType = authorization.getDataType();
-        SqlPolicy sqlPolicy = null;
-        usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
-        usingExpressionElements.add("dataType = '" + dataType + "'");
-        String expression = createExpression(authorization, usingExpressionElements, application, sqlSchemaForApplication, operation);
-        String usingExpression = null, checkExpression = null;
-
+        String expression = createExpression(authorization, application, operation);
         return statements.stream()
                 .map(statement -> new SqlPolicy(
                         OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString() + "_data_" + statement.name().substring(0, 3),
@@ -158,7 +150,14 @@ public class UpdateRolesOnManagement {
         return usingExpression;
     }
 
-    private String createExpression(OreSiAuthorization authorization, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
+    private String createExpression(OreSiAuthorization authorization, Application application, OperationType operation) {
+
+        Set<String> usingExpressionElements = new LinkedHashSet<>();
+        usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
+        usingExpressionElements.add("dataType = '" + authorization.getDataType() + "'");
+
+        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
+
         if (authorization.getAuthorizations().containsKey(operation) &&
                 !authorization.getAuthorizations().get(operation).isEmpty()) {
             usingExpressionElements.add("\"authorization\" @> " +
