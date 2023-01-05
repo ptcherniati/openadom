@@ -2,12 +2,25 @@ package fr.inra.oresing.rest;
 
 import com.google.common.collect.Sets;
 import fr.inra.oresing.model.Application;
+import fr.inra.oresing.model.Authorization;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.OreSiAuthorization;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.AuthorizationRepository;
+import fr.inra.oresing.persistence.OperationType;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.SqlPolicy;
+import fr.inra.oresing.persistence.SqlSchema;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
+import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class UpdateRolesOnManagement {
@@ -95,7 +108,7 @@ public class UpdateRolesOnManagement {
 
     private List<SqlPolicy> toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, List<SqlPolicy.Statement> statements) {
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-        String expression = createExpression(authorization, application, operation);
+        String expression = createExpression(authorization, operation);
         return statements.stream()
                 .map(statement -> new SqlPolicy(
                         OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString() + "_data_" + statement.name().substring(0, 3),
@@ -150,25 +163,21 @@ public class UpdateRolesOnManagement {
         return usingExpression;
     }
 
-    private String createExpression(OreSiAuthorization authorization, Application application, OperationType operation) {
+    private String createExpression(OreSiAuthorization authorization, OperationType operation) {
 
         Set<String> usingExpressionElements = new LinkedHashSet<>();
         usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
         usingExpressionElements.add("dataType = '" + authorization.getDataType() + "'");
 
-        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-
-        if (authorization.getAuthorizations().containsKey(operation) &&
-                !authorization.getAuthorizations().get(operation).isEmpty()) {
-            usingExpressionElements.add("\"authorization\" @> " +
-                    authorization.getAuthorizations().get(operation).stream()
-                            .map(auth -> auth.toSQL(application.getConfiguration().getRequiredAuthorizationsAttributes()))
-                            .filter(auth -> auth != null)
-                            .map(sql -> String.format(sql, sqlSchemaForApplication.getName()))
-                            .collect(Collectors.joining(",", "ARRAY[", "]::" + sqlSchemaForApplication.getName() + ".authorization[]"))
-
-
-            );
+        List<Authorization> auths = authorization.getAuthorizations().getOrDefault(operation, List.of());
+        if (auths.isEmpty()) {
+            // pas de contrainte d'autorisation exprimée, on donne les droits sur tout le type de données
+        } else {
+            String collect = auths.stream()
+                    .map(Authorization::toDataTablePolicyExpression)
+                    .map(statement -> "(" + statement + ")")
+                    .collect(Collectors.joining(" OR "));
+            usingExpressionElements.add(collect);
         }
 
         String usingExpression = usingExpressionElements.stream()

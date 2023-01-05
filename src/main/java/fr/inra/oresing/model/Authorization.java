@@ -6,9 +6,11 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
@@ -91,5 +93,44 @@ public class Authorization {
         sql.add(timescopeToSQL(timeScope));
         return sql.stream()
                 .collect(Collectors.joining(",", "(", ")::%1$s.authorization"));
+    }
+
+    public String toDataTablePolicyExpression() {
+        Set<String> authAsSqlClauses = new LinkedHashSet<>();
+        if (getRequiredAuthorizations() == null || getRequiredAuthorizations().isEmpty()) {
+            throw new IllegalStateException("pas de contraintes d'autorisation exprimées pour " + this);
+        } else {
+            // exemple
+            //     'grand_lac.leman'::ltree <@ COALESCE(("authorization").requiredAuthorizations.localisation_site, ''::ltree)
+            // AND 'suivi_des_lacs'::ltree <@ COALESCE(("authorization").requiredAuthorizations.localisation_projet, ''::ltree)
+            String scopeSqlClause = getRequiredAuthorizations().entrySet().stream().map(entry -> {
+                String scope = entry.getKey();
+                Ltree authorizedScope = entry.getValue();
+                return String.format("'%s'::ltree <@ COALESCE((\"authorization\").requiredAuthorizations.%s, ''::ltree)", authorizedScope.getSql(), scope);
+            }).collect(Collectors.joining(" AND "));
+            authAsSqlClauses.add(scopeSqlClause);
+        }
+        if (getDataGroups() == null || getDataGroups().isEmpty()) {
+            // pas de contrainte sur le groupe de données, on ouvre accès à tous les groupes
+        } else {
+            String dataGroupClause = getDataGroups().stream()
+                    .map(dataGroup -> String.format(String.format("'%s'", dataGroup)))
+                    .collect(Collectors.joining(",", "array[", "]::TEXT[] @> COALESCE((\"authorization\").datagroups, array []::TEXT[])"));
+            authAsSqlClauses.add(dataGroupClause);
+        }
+        if (getTimeScope() == null || getTimeScope().equals(LocalDateTimeRange.always())) {
+            // pas de contrainte sur la fenêtre de temps
+        } else {
+            String timeScopeAsSql = getTimeScope().toSqlExpression();
+            String timeScopeClause = String.format(
+                    "'%s'::tsrange @> COALESCE((\"authorization\").timescope, '(,)'::tsrange)",
+                    timeScopeAsSql
+            );
+            authAsSqlClauses.add(timeScopeClause);
+        }
+        String expression = authAsSqlClauses.stream()
+                .map(statement -> "(" + statement + ")")
+                .collect(Collectors.joining(" AND "));
+        return expression;
     }
 }
