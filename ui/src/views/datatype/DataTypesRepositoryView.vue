@@ -247,6 +247,7 @@
                 <td align>
                   <b-field>
                     <b-button
+                        ref="element"
                         :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
                         size="is-medium"
                         type="is-primary is-light"
@@ -605,6 +606,10 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   async publish(dataset, pusblished) {
+    // TODO : ajout loading en JS
+    const loadingComponent = this.$buefy.loading.open({
+      container: this.isFullPage ? null : this.$refs.element.$el
+    })
     this.errorsMessages = [];
     dataset.params.published = pusblished;
     let requiredAuthorizations = dataset.params.binaryFiledataset.requiredAuthorizations;
@@ -628,6 +633,7 @@ export default class DataTypesRepositoryView extends Vue {
     } catch (error) {
       this.checkMessageErrors(error);
     }
+    loadingComponent.close();
   }
 
   checkMessageErrors(error) {
