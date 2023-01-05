@@ -94,6 +94,11 @@
         </section>
       </div>
       <div class="column is-9-widescreen is-12-desktop">
+        <caption class="columns" v-if="loading">
+          <div class="column loader-wrapper">
+            <div class="loader is-loading"></div>
+          </div>
+        </caption>
         <div class="columns">
           <div
               v-for="(application, index) in selectedApplications"
@@ -272,6 +277,7 @@ export default class ApplicationsView extends Vue {
   checkboxTrieA_z = "false";
   checkboxTrieZ_a = "false";
   checkboxDate = "true";
+  loading = false;
 
   copyOfApplications(application) {
     return [...application];
@@ -318,6 +324,9 @@ export default class ApplicationsView extends Vue {
   async init() {
     this.applications = await this.applicationService.getApplications(['DATATYPE', 'REFERENCETYPE']);
     this.selectedApplications = this.applications;
+    if(this.selectedApplications.length === 0) {
+      this.loading = true
+    }
     if (this.checkboxDate === "true")
       this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate);
   }
@@ -326,8 +335,8 @@ export default class ApplicationsView extends Vue {
     this.$router.push("/applicationCreation");
   }
 
-  updateApplication(id) {
-    this.$router.push(`/applicationCreation/${id}`);
+  updateApplication() {
+    this.$router.push(`/applicationCreation`);
   }
 
   displayReferencesManagement(application) {
@@ -412,5 +421,14 @@ export default class ApplicationsView extends Vue {
 .control.has-icons-right .icon {
   top: 5px;
   left: 5px;
+}
+
+.loader-wrapper {
+  margin: 50px;
+  justify-content: center;
+  .loader {
+    height: 100px;
+    width: 100px;
+  }
 }
 </style>
