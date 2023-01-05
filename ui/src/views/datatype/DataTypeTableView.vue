@@ -298,18 +298,9 @@
           passive-type="is-dark"
           type="is-primary"
           :true-value="$t('dataTypesManagement.accepted')"
-          :false-value="$t('dataTypesManagement.refuse')"
-          >{{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}</b-switch
-        >
-        <!--        <b-button
-                    class="btnRegExp"
-                    type="is-dark"
-                    size="is-small"
-                    @click="testChangeRegEx()"
-                    outlined
-                >
-                  {{ $t("ponctuation.regEx") }}</b-button
-                >-->
+          :false-value="$t('dataTypesManagement.refuse')">
+          {{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}
+        </b-switch>
       </b-field>
       <div class="columns">
         <div class="column is-8-widescreen is-6-desktop">
@@ -355,13 +346,18 @@
       <div class="DataSetTableView-wrapper table-wrapper has-sticky-header" style="height: 690px">
         <table class="table is-striped">
           <caption v-if="variables.length === 0">
-            <div class="columns">
-              {{ $t("alert.dataTypeFiltreEmpty") }}
+            <div v-if="!displayDataTypes" class="loader-wrapper">
+              <div class="loader is-loading"></div>
             </div>
-            <div class="columns">
-              <b-button icon-left="redo" type="is-danger" @click="reInit">{{
-                $t("dataTypesManagement.réinitialiser")
-              }}</b-button>
+            <div v-if="displayDataTypes" class="columns">
+              <div class="column">
+                {{ $t("alert.dataTypeFiltreEmpty") }}
+              </div>
+              <div class="column">
+                <b-button icon-left="redo" type="is-danger" @click="reInit">{{
+                  $t("dataTypesManagement.réinitialiser")
+                }}</b-button>
+              </div>
             </div>
           </caption>
           <thead style="text-transform: capitalize; text-align: center">
@@ -535,23 +531,7 @@ export default class DataTypeTableView extends Vue {
   isOpen = 0;
   variableSearch = [];
   referenceLineCheckers = [];
-  isRegExp = false;
-
-  /*  testChangeRegEx() {
-    let checkboxes = document.querySelector('.btnRegExp');
-    if (this.params.variableComponentFilters.isRegex === true) {
-      this.params.variableComponentFilters.isRegex = false;
-      checkboxes.classList.remove('active');
-    }
-    else if (this.params.variableComponentFilters.isRegex === false) {
-      this.params.variableComponentFilters.isRegex = true;
-      checkboxes[i].classList.add('active');
-    } else {
-      this.params.variableComponentFilters.isRegex = !this.isRegExp;
-      checkboxes[i].classList.add('active');
-    }
-    console.log(this.params.variableComponentFilters.isRegex);
-  }*/
+  displayDataTypes = false;
 
   async created() {
     await this.init();
@@ -605,6 +585,9 @@ export default class DataTypeTableView extends Vue {
       this.dataTypeId,
       this.params
     );
+    if (dataTypes.rows.length === 0) {
+      this.displayDataTypes = true;
+    }
     this.referenceLineCheckers = dataTypes.checkedFormatVariableComponents.ReferenceLineChecker;
 
     this.translations = dataTypes.entitiesTranslations;
@@ -1004,5 +987,13 @@ $row-variable-height: 60px;
 }
 .icon.is-small {
   font-size: 5rem;
+}
+
+.loader-wrapper {
+  margin: 50px;
+  .loader {
+    height: 100px;
+    width: 100px;
+  }
 }
 </style>
