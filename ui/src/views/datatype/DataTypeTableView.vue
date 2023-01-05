@@ -353,11 +353,6 @@
               <div class="column">
                 {{ $t("alert.dataTypeFiltreEmpty") }}
               </div>
-              <div class="column">
-                <b-button icon-left="redo" type="is-danger" @click="reInit">{{
-                  $t("dataTypesManagement.réinitialiser")
-                }}</b-button>
-              </div>
             </div>
           </caption>
           <thead style="text-transform: capitalize; text-align: center">
