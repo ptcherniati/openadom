@@ -41,6 +41,7 @@
           withSynthesis: true,
           withTooltip: true,
         }"
+        :is-loading="isLoading"
         :level="0"
         :on-click-label-cb="(event, label) => openDataTypeCb(event, label)"
         :on-click-label-synthesis-detail-cb="
@@ -110,8 +111,8 @@ export default class DataTypesManagementView extends Vue {
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
-
   application = new ApplicationResult();
+  isLoading = false;
   subMenuPaths = [];
   buttons = [
     new Button(
@@ -167,6 +168,7 @@ export default class DataTypesManagementView extends Vue {
     }
   }
   async initSynthesis() {
+    this.isLoading = true;
     for (const datatype in this.application.dataTypes) {
       let minmaxByDatatypes = [];
       let synthesis = await this.synthesisService.getSynthesis(this.applicationName, datatype);
@@ -233,6 +235,7 @@ export default class DataTypesManagementView extends Vue {
     }
     this.synthesis = { ...this.synthesis };
     this.synthesisMinMax = { ...this.synthesisMinMax };
+    this.isLoading = false;
   }
 
   consultDataType(label) {
