@@ -22,9 +22,29 @@ import java.util.stream.Collectors;
  */
 @Value
 public class LocalDateTimeRange {
-    public static final Set<String> ACCEPTED_START_OF_BOUNDS = Set.of("[","(");
-    public static final Set<String> ACCEPTED_END_OF_BOUNDS = Set.of("]",")");
-    public static SiOreIllegalArgumentException getError( String boundValue, String lowerBound, String upperBound, Set<String> acceptedValues ) {
+
+    public static LocalDateTimeRange getTimeScope(LocalDate fromDay, LocalDate toDay) {
+        LocalDateTimeRange timeScope;
+        if (fromDay == null) {
+            if (toDay == null) {
+                timeScope = LocalDateTimeRange.always();
+            } else {
+                timeScope = LocalDateTimeRange.until(toDay);
+            }
+        } else {
+            if (toDay == null) {
+                timeScope = LocalDateTimeRange.since(fromDay);
+            } else {
+                timeScope = LocalDateTimeRange.between(fromDay, toDay);
+            }
+        }
+        return timeScope;
+    }
+
+    public static final Set<String> ACCEPTED_START_OF_BOUNDS = Set.of("[", "(");
+    public static final Set<String> ACCEPTED_END_OF_BOUNDS = Set.of("]", ")");
+
+    public static SiOreIllegalArgumentException getError(String boundValue, String lowerBound, String upperBound, Set<String> acceptedValues) {
         return new SiOreIllegalArgumentException(
                 "badBoundsForInterval",
                 Map.of(
@@ -105,7 +125,7 @@ public class LocalDateTimeRange {
                 @Override
                 public LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateLineChecker dateLineChecker) {
                     final LocalDate startDate = LocalDate.parse(str, dateTimeFormatter);
-                    if(dateLineChecker.getConfiguration() != null && dateLineChecker.getConfiguration().getDuration() != null){
+                    if (dateLineChecker.getConfiguration() != null && dateLineChecker.getConfiguration().getDuration() != null) {
                         final LocalDateTime date = LocalDateTime.parse(str, DateTimeFormatter.ofPattern(getPattern()));
                         return new Duration(dateLineChecker.getConfiguration().getDuration()).getLocalDateTimeRange(date);
                     }
@@ -188,7 +208,7 @@ public class LocalDateTimeRange {
             } else if (lowerBoundString.startsWith("(")) {
                 range = Range.greaterThan(lowerBound);
             } else {
-                throw getError(lowerBoundString.substring(0,1), lowerBoundString, upperBoundString, ACCEPTED_START_OF_BOUNDS);
+                throw getError(lowerBoundString.substring(0, 1), lowerBoundString, upperBoundString, ACCEPTED_START_OF_BOUNDS);
 
             }
         } else {
@@ -210,7 +230,7 @@ public class LocalDateTimeRange {
                     throw getError(upperBoundString.substring(upperBoundString.length() - 1), lowerBoundString, null, ACCEPTED_END_OF_BOUNDS);
                 }
             } else {
-                throw getError(lowerBoundString.substring(0,1), lowerBoundString, upperBoundString, ACCEPTED_START_OF_BOUNDS);
+                throw getError(lowerBoundString.substring(0, 1), lowerBoundString, upperBoundString, ACCEPTED_START_OF_BOUNDS);
             }
         }
         return range;

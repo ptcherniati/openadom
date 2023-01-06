@@ -376,7 +376,63 @@ public class OreSiResourcesTest {
          *
          */
         {
-            String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
+            String filter = "{\n" +
+                    "  \"application\": null,\n" +
+                    "  \"applicationNameOrId\": null,\n" +
+                    "  \"dataType\": null,\n" +
+                    "  \"offset\": null,\n" +
+                    "  \"limit\": 15,\n" +
+                    "  \"variableComponentSelects\": [],\n" +
+                    "  \"variableComponentFilters\": [\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"date\",\n" +
+                    "        \"component\": \"value\"\n" +
+                    "      },\n" +
+                    "      \"filter\": null,\n" +
+                    "      \"type\": \"date\",\n" +
+                    "      \"format\": \"dd/MM/yyyy\",\n" +
+                    "      \"intervalValues\": {\n" +
+                    "        \"from\": \"1984-01-01\",\n" +
+                    "        \"to\": \"1984-01-01\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"Nombre d'individus\",\n" +
+                    "        \"component\": \"value\"\n" +
+                    "      },\n" +
+                    "      \"filter\": null,\n" +
+                    "      \"type\": \"numeric\",\n" +
+                    "      \"format\": \"integer\",\n" +
+                    "      \"intervalValues\": {\n" +
+                    "        \"from\": \"20\",\n" +
+                    "        \"to\": \"29\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"Couleur des individus\",\n" +
+                    "        \"component\": \"value\"\n" +
+                    "      },\n" +
+                    "      \"filter\": \"vert\",\n" +
+                    "      \"type\": \"reference\",\n" +
+                    "      \"format\": \"uuid\",\n" +
+                    "      \"intervalValues\": null\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"variableComponentOrderBy\": [\n" +
+                    "    {\n" +
+                    "      \"variableComponentKey\": {\n" +
+                    "        \"variable\": \"site\",\n" +
+                    "        \"component\": \"plateforme\"\n" +
+                    "      },\n" +
+                    "      \"order\": \"ASC\",\n" +
+                    "      \"type\": null,\n" +
+                    "      \"format\": null\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
             Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                             .cookie(monsoreCookie)
@@ -388,6 +444,53 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", Matchers.hasSize(8)))
                     .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", Matchers.hasSize(8)))
                     .andExpect(jsonPath("$.rows[*].values.site.plateforme").value(Stream.of("a", "p1", "p1", "p1", "p1", "p1", "p2", "p2").collect(Collectors.toList())))
+                    .andReturn().getResponse().getContentAsString();
+            log.debug(StringUtils.abbreviate(actualJson, 50));
+
+        }
+        /**
+         *  restitution de data json ajout de filtres et de tri
+         * filtre :
+         *  date.value between '01/01/1984' and '01/01/1984'
+         *  projet : projet_manche
+         *  localization:"plateforme.nivelle.nivelle__p1
+         *  based on authorizationDescriptions
+         *
+         */
+        {
+            String filter = "{\n" +
+                    "  \"application\": null,\n" +
+                    "  \"applicationNameOrId\": null,\n" +
+                    "  \"dataType\": null,\n" +
+                    "  \"offset\": null,\n" +
+                    "  \"limit\": 15,\n" +
+                    "  \"variableComponentSelects\": [],\n" +
+                    "  \"variableComponentFilters\": [],\n" +
+                    "  \"authorizationDescriptions\": [\n" +
+                    "    {\n" +
+                    "      \"timeScope\": {\n" +
+                    "        \"from\": \"1984-01-01\",\n" +
+                    "        \"to\": \"1984-01-02\"\n" +
+                    "      },\n" +
+                    "      \"requiredAuthorizations\": [\n" +
+                    "        {\n" +
+                    "          \"projet\": \"projet_manche\",\n" +
+                    "          \"localization\": \"plateforme.nivelle.nivelle__p1\"\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"variableComponentOrderBy\": []\n" +
+                    "}";
+           String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                            .cookie(monsoreCookie)
+                            .param("downloadDatasetQuery", filter)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.rows", Matchers.hasSize(7)))
+                   .andExpect(jsonPath("$.rows[*].values.date[?(@.value == 'date:1984-01-01T00:00:00:01/01/1984')]", Matchers.hasSize(7)))
+                   .andExpect(jsonPath("$.rows[*].values.projet[?(@.value == 'projet_manche')]", Matchers.hasSize(7)))
+                   .andExpect(jsonPath("$.rows[*].values.site[?(@.chemin == 'plateforme.nivelle.nivelle__p1')]", Matchers.hasSize(7)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(actualJson, 50));
 

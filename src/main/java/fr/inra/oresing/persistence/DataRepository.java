@@ -18,6 +18,7 @@ import org.testcontainers.shaded.org.apache.commons.lang.StringEscapeUtils;
 
 import java.sql.PreparedStatement;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Component
@@ -47,10 +48,22 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public List<DataRow> findAllByDataType(DownloadDatasetQuery downloadDatasetQuery) {
-        String toMergeDataGroupsQuery = getSqlToMergeData(downloadDatasetQuery);
-        String query = new DownloadDatasetQueryBuilder(downloadDatasetQuery).buildQuery();
-        List result = getNamedParameterJdbcTemplate().query(query, downloadDatasetQuery.getParamSource(), getJsonRowMapper());
-        return (List<DataRow>) result;
+        final DownloadDatasetQueryBuilder downloadDatasetQueryBuilder = new DownloadDatasetQueryBuilder(downloadDatasetQuery);
+        if (CollectionUtils.isEmpty(downloadDatasetQuery.getAuthorizationDescriptions())) {
+            String query = downloadDatasetQueryBuilder.buildAdvancedSearchQuery();
+            List result = getNamedParameterJdbcTemplate().query(query, downloadDatasetQueryBuilder.getParamSource(), getJsonRowMapper());
+            return (List<DataRow>) result;
+        } else {
+            String query = downloadDatasetQueryBuilder.buildSimpleSearchQuery();
+            downloadDatasetQueryBuilder.getParamSource().addValue("application", downloadDatasetQuery.getApplication().getId());
+            downloadDatasetQueryBuilder.getParamSource().addValue("datatype", downloadDatasetQuery.getDataType());
+            List result = getNamedParameterJdbcTemplate().query(query, downloadDatasetQueryBuilder.getParamSource(), getJsonRowMapper());
+            return (List<DataRow>) result;
+        }
+    }
+
+    final String buildCursorName(String query, String[] parameterNames) {
+        return String.join("_", String.valueOf(query.hashCode()), String.join("_", parameterNames));
     }
 
     public int removeByFileId(UUID fileId) {
@@ -112,11 +125,18 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 , "ON CONFLICT ON CONSTRAINT \"Data_Reference_PK\" DO NOTHING"
         );
         String sql = String.join(";", deleteSql, insertSql);
-        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE-1)
+        Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE - 1)
                 .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
     }
 
     public class DownloadDatasetQueryBuilder {
+        private AtomicInteger atomicInteger = new AtomicInteger();
+
+        public MapSqlParameterSource getParamSource() {
+            return paramSource;
+        }
+
+        private MapSqlParameterSource paramSource = new MapSqlParameterSource();
         DownloadDatasetQuery downloadDatasetQuery;
         Application application;
 
@@ -124,6 +144,14 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
         public DownloadDatasetQueryBuilder(DownloadDatasetQuery downloadDatasetQuery) {
             this.downloadDatasetQuery = downloadDatasetQuery;
+            this.paramSource = new MapSqlParameterSource("applicationId", downloadDatasetQuery.getApplication().getId());
+        }
+
+        public String addArgumentAndReturnSubstitution(Object value) {
+            int i = this.atomicInteger.incrementAndGet();
+            String paramName = String.format("arg%d", i);
+            paramSource.addValue(paramName, value);
+            return String.format(":%s", paramName);
         }
 
         String addOrderBy(String query) {
@@ -190,7 +218,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 "datavalues #> '{\"%s\",\"%s\"}'  @@ ('$ like_regex \"'||%s||'\"')::jsonpath",
                                 StringEscapeUtils.escapeSql(vck.getVariable()),
                                 StringEscapeUtils.escapeSql(vck.getComponent()),
-                                /*String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", */downloadDatasetQuery.addArgumentAndReturnSubstitution(vck.getFilter())//)
+                                /*String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", */addArgumentAndReturnSubstitution(vck.getFilter())//)
                         )
                 );
 
@@ -204,8 +232,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                     "datavalues #> '{\"%1$s\",\"%2$s\"}'@@ ('$ >= \"date:'||%3$s||'\" && $ <= \"date:'||%4$s||'Z\"')::jsonpath",
                                     StringEscapeUtils.escapeSql(vck.getVariable()),
                                     StringEscapeUtils.escapeSql(vck.getComponent()),
-                                    downloadDatasetQuery.addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "0" : vck.intervalValues.from),
-                                    downloadDatasetQuery.addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "9" : vck.intervalValues.to)
+                                    addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.from) ? "0" : vck.intervalValues.from),
+                                    addArgumentAndReturnSubstitution(Strings.isNullOrEmpty(vck.intervalValues.to) ? "9" : vck.intervalValues.to)
                             )
                     );
                 }
@@ -216,14 +244,14 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     if (!Strings.isNullOrEmpty(vck.intervalValues.from)) {
                         filter.add(String.format(
                                         "$. double() >= '||%s||'",
-                                        downloadDatasetQuery.addArgumentAndReturnSubstitution(vck.intervalValues.from)
+                                        addArgumentAndReturnSubstitution(vck.intervalValues.from)
                                 )
                         );
                     }
                     if (!Strings.isNullOrEmpty(vck.intervalValues.to)) {
                         filter.add(String.format(
                                         "$. double() <= '||%s||'",
-                                        downloadDatasetQuery.addArgumentAndReturnSubstitution(vck.intervalValues.to)
+                                        addArgumentAndReturnSubstitution(vck.intervalValues.to)
                                 )
                         );
                     }
@@ -241,7 +269,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     .collect(Collectors.joining(" AND "));
         }
 
-        public String buildQuery() {
+        public String buildAdvancedSearchQuery() {
             String toMergeDataGroupsQuery = getSqlToMergeData(downloadDatasetQuery);
             String query = "WITH my_data AS (\n" + toMergeDataGroupsQuery + "\n)" +
                     "\n SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
@@ -255,13 +283,60 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     + " \nFROM my_data ";
             query = filterBy(query);
             query = addOrderBy(query);
-            if (downloadDatasetQuery.getOffset()  != null && downloadDatasetQuery.getLimit()  >= 0) {
-                query = String.format("%s \ndownloadDatasetQuery.getOffset()  %d ROWS", query, downloadDatasetQuery.getOffset() );
+            if (downloadDatasetQuery.getOffset() != null && downloadDatasetQuery.getLimit() >= 0) {
+                query = String.format("%s \nOFFSET  %d ROWS", query, downloadDatasetQuery.getOffset());
             }
-            if (downloadDatasetQuery.getLimit()  != null && downloadDatasetQuery.getLimit()  >= 0) {
-                query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, downloadDatasetQuery.getLimit() );
+            if (downloadDatasetQuery.getLimit() != null && downloadDatasetQuery.getLimit() >= 0) {
+                query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, downloadDatasetQuery.getLimit());
             }
             return query;
+        }
+
+        public String buildSimpleSearchQuery() {
+            String filter = buildSimpleSearchFilter();
+            String query = "SELECT \n" +
+                    "    '" + DataRow.class.getName() + "' AS \"@class\",\n" +
+                    "    jsonb_build_object(\n" +
+                    "        'rowNumber', row_number() over (),\n" +
+                    "        'totalRows', count(*) over (), \n" +
+                    "        'rowId', rowId, \n" +
+                    "        'values', jsonb_object_agg(dataValues), \n" +
+                    "        'refsLinkedTo', jsonb_object_agg(refsLinkedTo)\n" +
+                    "    ) AS   \"json\" \n" +
+                    "FROM " + getSchema().getSqlIdentifier() + ".data\n" +
+                    "WHERE \n" +
+                    "    application=:application::uuid\n" +
+                    "    AND data.datatype=:datatype\n";
+            query = String.format("%s\n%s\nGROUP BY data.rowid\n", query, filter);
+            if (downloadDatasetQuery.getOffset() != null && downloadDatasetQuery.getLimit() >= 0) {
+                query = String.format("%s \nOFFSET  %d ROWS", query, downloadDatasetQuery.getOffset());
+            }
+            if (downloadDatasetQuery.getLimit() != null && downloadDatasetQuery.getLimit() >= 0) {
+                query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, downloadDatasetQuery.getLimit());
+            }
+            return query;
+        }
+
+        private String buildSimpleSearchFilter() {
+            if (CollectionUtils.isEmpty(downloadDatasetQuery.getAuthorizationDescriptions())) {
+                return "";
+            }
+            String sqlStart = "data.authorization @> ";
+            String sqlEnd = "::" + getSchema().getSqlIdentifier() + ".authorization[]";
+            final String sql = downloadDatasetQuery.getAuthorizationDescriptions().stream()
+                    .map(authorizationdescription -> authorizationdescription.toAuthorization(downloadDatasetQuery.getApplication(), getSchema()))
+                    .filter(authorizations -> !authorizations.isEmpty())
+                    .map(authorizations -> {
+                        String authorizationsSql = authorizations.stream()
+                                .map(authorization -> authorization.toSQL(downloadDatasetQuery.getApplication().getConfiguration().getRequiredAuthorizationsAttributes()))
+                                .map(expression->String.format(expression, getSchema().getSqlIdentifier()))
+                                .collect(Collectors.joining(",", "ARRAY[\n","\n]"));
+                        return new StringBuilder(sqlStart)
+                                .append(authorizationsSql)
+                                .append(sqlEnd);
+                    })
+                    .collect(Collectors.joining(") OR (", "\n(", ")"));
+            return String.format("\nAND (%s) ", sql);
         }
     }
 

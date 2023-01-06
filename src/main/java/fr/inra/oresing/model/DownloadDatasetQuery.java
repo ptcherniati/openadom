@@ -1,19 +1,26 @@
 package fr.inra.oresing.model;
 
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.Ltree;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 import javax.annotation.Nullable;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
+/**
+ *
+ */
 public class DownloadDatasetQuery {
-    private AtomicInteger i = new AtomicInteger();
-    private MapSqlParameterSource paramSource = new MapSqlParameterSource();
 
     Application application;
     String applicationNameOrId;
@@ -29,14 +36,9 @@ public class DownloadDatasetQuery {
     @Nullable
     Set<VariableComponentOrderBy> variableComponentOrderBy;
 
-    public DownloadDatasetQuery() {
-    }
+    Set<AuthorizationDescription> authorizationDescriptions;
 
-    public String addArgumentAndReturnSubstitution(Object value) {
-        int i = this.i.incrementAndGet();
-        String paramName = String.format("arg%d", i);
-        paramSource.addValue(paramName, value);
-        return String.format(":%s", paramName);
+    public DownloadDatasetQuery() {
     }
 
     public DownloadDatasetQuery(Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy) {
@@ -48,11 +50,9 @@ public class DownloadDatasetQuery {
         application = null;
         applicationNameOrId = null;
         dataType = null;
-        this.paramSource = new MapSqlParameterSource("applicationId", getApplication().getId());
-        // .addValue("refType", refType);
     }
 
-    public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
+    public DownloadDatasetQuery(String applicationNameOrId, Application application, Long offset, String dataType, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Set<AuthorizationDescription> authorizationDescriptions, Long limit) {
         this.applicationNameOrId = applicationNameOrId;
         this.dataType = dataType;
         this.offset = offset;
@@ -60,6 +60,7 @@ public class DownloadDatasetQuery {
         this.variableComponentSelects = variableComponentSelects;
         this.variableComponentFilters = variableComponentFilters;
         this.variableComponentOrderBy = variableComponentOrderBy;
+        this.authorizationDescriptions = authorizationDescriptions;
         this.application = application;
 
     }
@@ -68,22 +69,14 @@ public class DownloadDatasetQuery {
         return downloadDatasetQuery == null ?
                 new DownloadDatasetQuery(
                         nameOrId,
-                        dataType,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        application) :
+                        application, null, dataType,
+                        null, null, null, null, null
+                ) :
                 new DownloadDatasetQuery(
                         nameOrId == null ? downloadDatasetQuery.applicationNameOrId : nameOrId,
-                        dataType == null ? downloadDatasetQuery.dataType : dataType,
-                        downloadDatasetQuery.offset,
-                        downloadDatasetQuery.limit,
-                        downloadDatasetQuery.variableComponentSelects,
-                        downloadDatasetQuery.variableComponentFilters,
-                        downloadDatasetQuery.variableComponentOrderBy,
-                        application);
+                        application, downloadDatasetQuery.offset, dataType == null ? downloadDatasetQuery.dataType : dataType,
+                        downloadDatasetQuery.variableComponentSelects, downloadDatasetQuery.variableComponentFilters, downloadDatasetQuery.variableComponentOrderBy, downloadDatasetQuery.authorizationDescriptions, downloadDatasetQuery.limit
+                );
     }
 
     @Getter
@@ -182,6 +175,32 @@ public class DownloadDatasetQuery {
         }
 
         public IntervalValues() {
+        }
+    }
+
+    @Getter
+    @Setter
+    /**
+     *
+     */
+    public static class AuthorizationDescription {
+        private IntervalValues timeScope;
+        private List<Map<String, Ltree>> requiredAuthorizations = new LinkedList<>();
+
+        public List<Authorization> toAuthorization(Application application, SqlSchemaForApplication schema) {
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String sqlStart = schema.getSqlIdentifier() + ".isauthorized(data.authorization, array[";
+            String sqlEnd = "]::" + schema.getSqlIdentifier() + ".authorization[])";
+            return requiredAuthorizations.stream()
+                    .map(ltreemap -> new Authorization(
+                            List.of(),
+                            ltreemap,
+                            timeScope == null ? LocalDateTimeRange.always() : LocalDateTimeRange.getTimeScope(
+                                    (timeScope.from == null ? null : LocalDate.parse(timeScope.from, dateFormatter)),
+                                    (timeScope.to == null ? null : LocalDate.parse(timeScope.to, dateFormatter))
+                            )
+                    ))
+                    .collect(Collectors.toList());
         }
     }
 }

@@ -57,7 +57,7 @@ public class Authorization {
         this.timeScope = timeScope;
     }
 
-    public LocalDateTimeRange getTimeScope(LocalDate fromDay, LocalDate toDay) {
+    public static  LocalDateTimeRange getTimeScope(LocalDate fromDay, LocalDate toDay) {
         LocalDateTimeRange timeScope;
         if (fromDay == null) {
             if (toDay == null) {
