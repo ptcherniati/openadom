@@ -373,7 +373,6 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   changeFile(file) {
-    console.log("repository", this.repository);
     let pattern = this.repository.filePattern;
     let split = [];
     if (pattern && pattern.length) {
@@ -618,9 +617,7 @@ export default class DataTypesRepositoryView extends Vue {
       acc[key] = acc[key] ? acc[key].sql : "";
       return acc;
     }, requiredAuthorizations);
-    console.log("requiredAuthorizations", requiredAuthorizations);
     dataset.params.binaryFiledataset.requiredAuthorizations = requiredAuthorizations;
-    console.log("binaryFiledataset", dataset.params.binaryFiledataset);
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     try {
       var uuid = await this.dataService.addData(
@@ -646,7 +643,6 @@ export default class DataTypesRepositoryView extends Vue {
           for (let i = 0; i < value.length; i++) {
             if (message.length > 0) {
               if (JSON.stringify(value[i]) !== JSON.stringify(value[i - message.length])) {
-                console.log(message);
                 this.errorsList.push(value[i]);
               }
               for (let j = 0; j < message.length; j++) {
@@ -659,7 +655,6 @@ export default class DataTypesRepositoryView extends Vue {
               this.errorsList.push(value[i]);
             }
           }
-          console.log(this.errorsList);
           if (this.errorsList.length !== 0) {
             this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
           } else {
