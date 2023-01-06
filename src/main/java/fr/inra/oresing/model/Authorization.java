@@ -98,7 +98,7 @@ public class Authorization {
     public String toDataTablePolicyExpression() {
         Set<String> authAsSqlClauses = new LinkedHashSet<>();
         if (getRequiredAuthorizations() == null || getRequiredAuthorizations().isEmpty()) {
-            throw new IllegalStateException("pas de contraintes d'autorisation exprimées pour " + this);
+            // pas de contrainte sur le périmètre
         } else {
             // exemple
             //     'grand_lac.leman'::ltree <@ COALESCE(("authorization").requiredAuthorizations.localisation_site, ''::ltree)
@@ -128,9 +128,14 @@ public class Authorization {
             );
             authAsSqlClauses.add(timeScopeClause);
         }
-        String expression = authAsSqlClauses.stream()
-                .map(statement -> "(" + statement + ")")
-                .collect(Collectors.joining(" AND "));
+        String expression;
+        if (authAsSqlClauses.isEmpty()) {
+            expression = "TRUE";
+        } else {
+            expression = authAsSqlClauses.stream()
+                    .map(statement -> "(" + statement + ")")
+                    .collect(Collectors.joining(" AND "));
+        }
         return expression;
     }
 }
