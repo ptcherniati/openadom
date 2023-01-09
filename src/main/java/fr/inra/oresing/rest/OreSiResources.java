@@ -116,7 +116,7 @@ public class OreSiResources {
         boolean withDatatypes = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.DATATYPE);
         boolean withReferenceType = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE);
         boolean withConfiguration = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.CONFIGURATION);
-        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withSynthesis?service.getReferenceSynthesis(application):List.of();
+        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withSynthesis?List.of():service.getReferenceSynthesis(application);
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
         if(withReferenceType){
             application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
