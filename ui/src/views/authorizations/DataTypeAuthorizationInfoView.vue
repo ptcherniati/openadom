@@ -43,22 +43,6 @@
               @typing="getFilteredTags"
             >
             </b-taginput>
-
-            <b-dropdown v-model="selectedlabels" multiple aria-role="list">
-              <template #trigger="{ active }">
-                <b-button type="is-primary" :icon-right="active ? 'chevron-up' : 'chevron-down'">
-                </b-button>
-              </template>
-
-              <b-dropdown-item
-                v-for="user of userLabels"
-                :value="user"
-                :key="user"
-                aria-role="listuser"
-              >
-                <span>{{ user }}</span>
-              </b-dropdown-item>
-            </b-dropdown>
           </b-field>
         </ValidationProvider>
         <ValidationProvider
