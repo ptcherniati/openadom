@@ -35,6 +35,7 @@
             <b-taginput
               expanded
               v-model="selectedlabels"
+              :open-on-focus="openOnFocus"
               :data="userLabels"
               :value="userLabels"
               autocomplete
@@ -43,6 +44,12 @@
               @typing="getFilteredTags"
             >
             </b-taginput>
+            <b-tooltip :label="$t('dataTypeAuthorizations.closeUser')"
+                       position="is-bottom">
+              <b-button v-model="openOnFocus"
+                        icon-left="times-circle">
+              </b-button>
+            </b-tooltip>
           </b-field>
         </ValidationProvider>
         <ValidationProvider
