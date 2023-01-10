@@ -114,7 +114,6 @@ public class Authorization {
             // pas de contrainte sur le groupe de données, on ouvre accès à tous les groupes
         } else {
             String dataGroupClause = getDataGroups().stream()
-                    .map(dataGroup -> String.format(String.format("'%s'", dataGroup)))
                     .collect(Collectors.joining(",", "(\"authorization\").datagroups[1] = ANY ('{", "}'::text[])"));
             authAsSqlClauses.add(dataGroupClause);
         }
