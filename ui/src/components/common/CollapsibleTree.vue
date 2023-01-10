@@ -57,9 +57,6 @@
           <span class="file-name" v-else-if="lineCount > 0">
             {{ $t("validation.count-line") }} {{ lineCount }}
           </span>
-          <span v-else-if="!option.synthesisMinMax" class="nodata has-text-danger">
-            {{ $t("validation.data-empty") }}
-          </span>
         </div>
         <div
           :class="
@@ -82,13 +79,20 @@
                 new Date(option.synthesisMinMax[1]).toLocaleDateString("fr")
               }}
             </b-field>
+            <div v-if="isLoading" class="loader-wrapper">
+              <div class="loader is-loading"></div>
+            </div>
             <availiblity-chart
+              v-else
               class="tile availiblity-chart"
               :show-dates="false"
               :minmax="option.synthesis.minmax"
               :ranges="option.synthesis.ranges"
               :id="option.label"
             />
+          </span>
+          <span v-else class="nodata has-text-danger" style="margin-left: 50px">
+            {{ $t("validation.data-empty") }}
           </span>
         </div>
       </div>
@@ -176,6 +180,7 @@ export default {
       type: Number,
       default: 0,
     },
+    isLoading: Boolean,
     applicationTitle: {
       type: String,
     },

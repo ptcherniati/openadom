@@ -102,6 +102,7 @@
             ></b-field>
           </div>
         </div>
+        <b-loading :is-full-page="null" v-model="isLoading"></b-loading>
       </AuthorizationTable>
 
       <div class="buttons">
@@ -176,7 +177,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   selectedlabels = [];
   userLabels = [];
   isApplicationAdmin = false;
-  openOnFocus = true;
+  isLoading;
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -295,6 +296,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         }
       ),
     ];
+    this.isLoading = false;
   }
 
   mounted() {}
@@ -309,6 +311,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   }
 
   async init() {
+    this.isLoading = true;
     try {
       this.application = await this.applicationService.getApplication(this.applicationName, [
         "CONFIGURATION",
