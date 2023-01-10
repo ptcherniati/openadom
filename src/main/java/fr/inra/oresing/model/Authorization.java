@@ -115,7 +115,7 @@ public class Authorization {
         } else {
             String dataGroupClause = getDataGroups().stream()
                     .map(dataGroup -> String.format(String.format("'%s'", dataGroup)))
-                    .collect(Collectors.joining(",", "array[", "]::TEXT[] @> COALESCE((\"authorization\").datagroups, array []::TEXT[])"));
+                    .collect(Collectors.joining(",", "(\"authorization\").datagroups[1] = ANY ('{", "}'::text[])"));
             authAsSqlClauses.add(dataGroupClause);
         }
         if (getTimeScope() == null || getTimeScope().equals(LocalDateTimeRange.always())) {
