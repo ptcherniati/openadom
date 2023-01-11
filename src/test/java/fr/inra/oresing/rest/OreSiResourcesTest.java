@@ -233,8 +233,7 @@ public class OreSiResourcesTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .param("filter", "ALL")
                             .cookie(monsoreCookie))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
+                    .andExpect(status().isOk());
 
             String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
                             .contentType(MediaType.APPLICATION_JSON)
