@@ -12,6 +12,7 @@ export class DownloadDatasetQuery {
   variableComponentSelects = [];
   variableComponentFilters = [];
   variableComponentOrderBy = [];
+  authorizationDescriptions = [];
   constructor(
     downloadDatasetQueryOrApplication,
     applicationNameOrId,
@@ -21,7 +22,8 @@ export class DownloadDatasetQuery {
     limit = 10,
     variableComponentSelects,
     variableComponentFilters,
-    variableComponentOrderBy
+    variableComponentOrderBy,
+    authorizationDescriptions
   ) {
     if (typeof downloadDatasetQueryOrApplication == "object") {
       Object.keys(this).forEach(
@@ -49,6 +51,7 @@ export class DownloadDatasetQuery {
       for (const orderBy in variableComponentOrderBy) {
         this.variableComponentOrderBy.push(new VariableComponentOrderBy(orderBy));
       }
+      this.authorizationDescriptions = authorizationDescriptions
     }
   }
 }

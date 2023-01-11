@@ -9,10 +9,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -191,14 +188,17 @@ public class DownloadDatasetQuery {
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String sqlStart = schema.getSqlIdentifier() + ".isauthorized(data.authorization, array[";
             String sqlEnd = "]::" + schema.getSqlIdentifier() + ".authorization[])";
+            LocalDateTimeRange localDateTimeRange = timeScope == null ? LocalDateTimeRange.always() : LocalDateTimeRange.getTimeScope(
+                    (timeScope.from == null ? null : LocalDate.parse(timeScope.from, dateFormatter)),
+                    (timeScope.to == null ? null : LocalDate.parse(timeScope.to, dateFormatter)));
+            if(requiredAuthorizations.isEmpty()){
+                requiredAuthorizations.add(new HashMap<>());
+            }
             return requiredAuthorizations.stream()
                     .map(ltreemap -> new Authorization(
                             List.of(),
                             ltreemap,
-                            timeScope == null ? LocalDateTimeRange.always() : LocalDateTimeRange.getTimeScope(
-                                    (timeScope.from == null ? null : LocalDate.parse(timeScope.from, dateFormatter)),
-                                    (timeScope.to == null ? null : LocalDate.parse(timeScope.to, dateFormatter))
-                            )
+                            localDateTimeRange
                     ))
                     .collect(Collectors.toList());
         }

@@ -2,25 +2,25 @@
   <div>
     <details v-if="!option.isLeaf" :open="open" class="selectMenu" @toggle="toggle">
       <summary class="">{{ option.localName }}
-        <b-checkbox v-model="checkbox"
-                    :selected="selectedForCurrentpath"
-            @input="select(option.currentPath, $event)"/>
+        <b-checkbox v-model="selected"
+                    :indeterminate="!selected && indeterminate"
+                    @input="select(option.currentPath, $event)"/>
       </summary>
       <div v-show="open">
         <select-menu
             v-for="(opt, itemKey) in option.referenceValues"
             :key="itemKey"
+            :selected-pathes="value"
+            :auth="auth"
             :option="opt"
-            :selected-pathes="selectedPathes"
-            :auth = "auth"
             @select-menu-item="select($event.path, $event.selected)"
         />
       </div>
     </details>
     <div v-else class="selectMenu">
       {{ option.localName }}
-      <b-checkbox v-model="checkbox"
-                    :selected="selectedForCurrentpath"
+      <b-checkbox v-model="selected"
+                  :indeterminate="!selected && indeterminate"
                   @input="select(option.currentPath, $event)"/>
     </div>
   </div>
@@ -35,14 +35,26 @@ export default {
   components: {SelectMenu},
   props: {
     option: {},
-    selectedPathes:Object,
-    auth: String
+    auth: String,
+    value: Object,
+  },
+
+  watch: {
+    value: {
+      immediate: true,
+      deep: true,
+      handler(value) {
+        this.updateIsSelected(value)
+      }
+    }
   },
   data() {
     return {
       emits: ["select-menu-item"],
       open: null,
       checkbox: false,
+      selected: false,
+      indeterminate: false,
     };
   },
   methods: {
@@ -52,11 +64,28 @@ export default {
     toggle() {
       this.open = this.open ? null : "open";
     },
-  },
-  computed:{
-    selectedForCurrentpath(){
-      return this.selectedPathes[this.auth]  && this.selectedPathes[this.auth].find(a=>this.option.currentPath.startsWith(a))
-    }
+    updateIsSelected(value) {
+      let selected, indeterminate;
+      if (value && value[this.auth]) {
+        selected = value[this.auth].some(a => this.option.currentPath.startsWith(a))
+        indeterminate = value[this.auth].some(a => a != this.option.currentPath && a.startsWith(this.option.currentPath))
+      }
+      let updated = false;
+      if (!!selected != !!this.selected) {
+        this.selected = !!selected;
+        this.indeterminate = !!indeterminate;
+        updated=true;
+      }
+      if (!!this.indeterminate != !!indeterminate) {
+        this.indeterminate = indeterminate
+        updated=true;
+      }
+      if (updated){
+        this.$children
+            .filter(child=>child.updateIsSelected)
+            .forEach(child=>child.updateIsSelected(value))
+      }
+    },
   }
 };
 </script>

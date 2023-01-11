@@ -13,22 +13,55 @@
                 {{ internationalisationService.localeReferenceName({label: key}, application) }}
               </b-button>
             </template>
-            {{key}}
+            {{ key }}
             <SelectMenu
                 v-for="(option) in authReference"
                 :key="option.currentPath"
-                :option="option"
-                :selectedPathes="selectedPathes"
+                v-model="selectedPathes"
                 :auth="key"
+                :option="option"
                 @select-menu-item="selectAuthorization(key, $event.path, $event.selected)"
             />
           </b-dropdown>
         </b-field>
       </div>
     </div>
-    <div class="column">
-      dates
-    </div>
+    <b-field
+        :label="$t('dataTypeAuthorizations.label-datePicker')"
+        class="column"
+        label-position="on-border"
+    >
+      <b-datepicker
+          v-model="startDate"
+          :date-parser="parseDate"
+          :placeholder="
+                $t('dataTypesRepository.placeholder-datepicker') +
+                'dd-MM-YYYY'"
+          editable
+          icon="calendar"
+          pack="far"
+          @input="updateDate($event, 'from')"
+      >
+      </b-datepicker>
+    </b-field>
+    <b-field
+        :label="$t('dataTypeAuthorizations.label-datePicker')"
+        class="column"
+        label-position="on-border"
+    >
+      <b-datepicker
+          v-model="endDate"
+          :date-parser="parseDate"
+          :placeholder="
+                $t('dataTypesRepository.placeholder-datepicker') +
+                'dd-MM-YYYY'"
+          editable
+          icon="calendar"
+          pack="far"
+          @input="updateDate($event, 'to')"
+      >
+      </b-datepicker>
+    </b-field>
   </div>
 </template>
 
@@ -42,23 +75,34 @@ export default {
   components: {SelectMenu},
   data() {
     return {
+      emits: ['input'],
       internationalisationService: InternationalisationService.INSTANCE,
       referenceService: ReferenceService.INSTANCE,
       localName: "",
       references: {},
-      authorizationDescriptions: {
-        timeScope: {
-          from: null,
-          to: null
-        },
-        requiredAuthorizations: []
-      },
-      selectedPathes:{}
+      selectedPathes: {},
+      startDate: null,
+      endDate: null,
     };
   },
   props: {
     application: Object,
-    authReferences: Object
+    authReferences: Object,
+    value: Object
+  },
+  watch: {
+    value: {
+      immediate: true,
+      deep: true,
+      handler(val) {
+        if (val && val.timeScope && val.timeScope.from) {
+          this.startDate = new Date(val.timeScope.from)
+        }
+        if (val && val.timeScope && val.timeScope.to) {
+          this.endDate = new Date(val.timeScope.to)
+        }
+      }
+    }
   },
   methods: {
     async loadedReferences(reference) {
@@ -71,41 +115,94 @@ export default {
       return this.references[reference];
     },
     selectAuthorization(auth, path, selected) {
+      this.findDescriptionForPath(this.authReferences[auth], 'bassin_versant.oir')
+      let authorizationDescriptions = this.value;
       if (selected) {
         //on cherche les authorization obsolètes et on les supprime
-        this.authorizationDescriptions.requiredAuthorizations = this.authorizationDescriptions.requiredAuthorizations
-            .filter(ra => !ra[auth].startsWith(path))
+        authorizationDescriptions.requiredAuthorizations = (authorizationDescriptions.requiredAuthorizations || [])
+            .filter(ra => !(ra[auth] || '').startsWith(path))
         let pathes = path.split('.');
         pathes.pop()
         let current = this.authReferences[auth]
+        let parentpath = path.split('.')
+        parentpath.pop()
+        parentpath = parentpath.join('.')
         if (current) {
-          for (const currentKey in pathes) {
-            current = current[pathes[currentKey]].referenceValues;
-          }
-          let count = current ? Object.keys(current).length : 0;
-          pathes = pathes.reduce((acc, p) => acc == ''?p: acc + '.' + p, "");
-          let count2 = this.authorizationDescriptions.requiredAuthorizations
-              .filter(ra => ra[auth].startsWith(pathes)).length
-          if (count == count2+1){
-            this.authorizationDescriptions.requiredAuthorizations = this.authorizationDescriptions.requiredAuthorizations
-            .filter(ra => !ra[auth].startsWith(pathes))
+          current = this.findDescriptionForPath(current, parentpath)
+          let count = current ? Object.keys(current.referenceValues).length : 0;
+          pathes = pathes.reduce((acc, p) => acc == '' ? p : acc + '.' + p, "");
+          let count2 = authorizationDescriptions.requiredAuthorizations
+              .filter(ra => (ra[auth] || '').startsWith(pathes)).length
+          if (count == count2 + 1 && pathes != '') {
+            authorizationDescriptions.requiredAuthorizations = (authorizationDescriptions.requiredAuthorizations || [])
+                .filter(ra => !(ra[auth] || '').startsWith(pathes))
             path = pathes;
           }
         }
         let authorizationScope = {}
         authorizationScope[auth] = path
-        this.authorizationDescriptions.requiredAuthorizations.push(authorizationScope)
-        console.log('selectAuthorization', {
-          auth,
-          path,
-          selected,
-          authorizationDescriptions: this.authorizationDescriptions
-        });
+        path != '' && authorizationDescriptions.requiredAuthorizations.push(authorizationScope)
+      } else {
+        let authorizationtoDelete = (authorizationDescriptions.requiredAuthorizations || [])
+            .find(ra => ra[auth] == path)
+        if (authorizationtoDelete) {
+          authorizationDescriptions.requiredAuthorizations = (authorizationDescriptions.requiredAuthorizations || [])
+              .filter(ra => ra[auth] != path)
+        } else {
+          let parents = path.split('.');
+          parents.pop();//je supprime le nœud courant
+          while (parents.length) {
+            let current = this.findDescriptionForPath(this.authReferences[auth], parents.join('.'))
+            Object.values(current.referenceValues)
+                .map(v => v.currentPath)
+                .filter(v => !path.startsWith(v))
+                .forEach(v => {
+                  let authorizationScope = {}
+                  authorizationScope[auth] = v
+                  v != '' && authorizationDescriptions.requiredAuthorizations.push(authorizationScope)
+                })
+            if (path.startsWith(current.currentPath)) {
+              authorizationDescriptions.requiredAuthorizations = (authorizationDescriptions.requiredAuthorizations || [])
+                  .filter(ra => (ra[auth] || '') != current.currentPath)
+              break;
+            }
+            parents.pop();
+          }
+        }
       }
-      let selectedPathes = this.selectedPathes
-      selectedPathes[auth] = this.authorizationDescriptions.requiredAuthorizations.map(a=>a[auth])
-      this.selectedPathes = selectedPathes
+      //let selectedPathes = this.selectedPathes
+      this.$set(this.selectedPathes, auth, (authorizationDescriptions.requiredAuthorizations || []).map(a => a[auth]))
+      /*selectedPathes[auth] = (authorizationDescriptions.requiredAuthorizations || []).map(a => a[auth])
+      this.selectedPathes = selectedPathes*/
+      this.$emit('input', authorizationDescriptions)
     },
+    findDescriptionForPath(requiredAuthorizations, path) {
+      if (!requiredAuthorizations) {
+        return null;
+      }
+      return Object.values(requiredAuthorizations).map(v => {
+        if (!v.currentPath) {
+          return null;
+        } else if (v.currentPath == path) {
+          return v;
+        }
+        return this.findDescriptionForPath(v.referenceValues, path)
+      })
+          .flat()
+          .find(vv => !!vv)
+    },
+    updateDate(event, type) {
+      let date = event.toISOString().substring(0, 10)
+      let newValue = this.value;
+      let timescope = newValue.timeScope || {}
+      timescope[type] = date;
+      this.$emit('input', newValue)
+    },
+    parseDate(date) {
+      date =
+          date && date.replace(/(\d{2})\/(\d{2})\/(\d{4})(( \d{2})?(:\d{2})?(:\d{2})?)/, "$3-$2-$1$4");
+      return new Date(date);
+    }
   },
 };
 </script>

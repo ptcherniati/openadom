@@ -1,33 +1,33 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :paths="subMenuPaths"
-      :root="application.localName || application.title"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
     />
 
     <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
-    <div class="columns" v-if="!showSort && !showFilter">
+    <div v-if="!showSort && !showFilter" class="columns">
       <div
-        v-if="
+          v-if="
           this.params.variableComponentOrderBy.length !== 0 ||
           this.params.variableComponentFilters.length !== 0
         "
-        class="column is-5-desktop is-12-tablet"
+          class="column is-5-desktop is-12-tablet"
       >
         {{ $t("dataTypesManagement.sorted") }} {{ $t("ponctuation.colon") }}
-        <b-field grouped group-multiline>
+        <b-field group-multiline grouped>
           <b-taglist>
             <div
-              v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
-              :key="index"
+                v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                :key="index"
             >
               <b-tag
-                type="is-dark"
-                size="is-medium"
-                rounded
-                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                  rounded
+                  size="is-medium"
+                  style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                  type="is-dark"
               >
                 {{ variableComponent.variableComponentKey.variable }}
                 {{ $t("ponctuation.colon") }}
@@ -40,23 +40,23 @@
         </b-field>
       </div>
       <div
-        v-if="
+          v-if="
           this.params.variableComponentOrderBy.length !== 0 ||
           this.params.variableComponentFilters.length !== 0
         "
-        class="column is-5-desktop is-12-tablet"
+          class="column is-5-desktop is-12-tablet"
       >
         {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
-        <b-field grouped group-multiline>
+        <b-field group-multiline grouped>
           <b-taglist>
             <div
-              v-for="(variableComponent, index) in this.params.variableComponentFilters"
-              :key="index"
+                v-for="(variableComponent, index) in this.params.variableComponentFilters"
+                :key="index"
             >
               <b-tag
-                size="is-medium"
-                rounded
-                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                  rounded
+                  size="is-medium"
+                  style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
               >
                 {{ variableComponent.variableComponentKey.variable }}
                 {{ $t("ponctuation.colon") }}
@@ -72,41 +72,41 @@
     <div class="columns">
       <div class="column is-5-desktop is-4-tablet">
         <b-button
-          icon-left="sort-amount-down"
-          :label="$t('applications.trier')"
-          type="is-dark"
-          @click="showSort = !showSort"
-          outlined
+            :label="$t('applications.trier')"
+            icon-left="sort-amount-down"
+            outlined
+            type="is-dark"
+            @click="showSort = !showSort"
         ></b-button>
       </div>
       <div class="column is-5-desktop is-4-tablet">
         <b-button
-          icon-left="filter"
-          :label="$t('applications.filter')"
-          @click="
-            showFilter = false;
-            showAdvancedSearch = !showAdvancedSearch;
-          "
-          type="is-light"
-          outlined
-          inverted
-        ></b-button>
-        <b-tooltip :label="$t('applications.advancedFilter')" position="is-right">
-          <b-button
-            icon-left="ellipsis-h"
+            :label="$t('applications.filter')"
+            icon-left="filter"
+            inverted
+            outlined
             type="is-light"
             @click="
               showFilter = !showFilter;
               showAdvancedSearch = false;
+          "
+        ></b-button>
+        <b-tooltip :label="$t('applications.advancedFilter')" position="is-right">
+          <b-button
+              icon-left="ellipsis-h"
+              inverted
+              outlined
+              type="is-light"
+              @click="
+            showFilter = false;
+            showAdvancedSearch = !showAdvancedSearch;
             "
-            outlined
-            inverted
           ></b-button>
         </b-tooltip>
       </div>
       <div class="column is-2-desktop is-4-tablet">
-        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
-          >{{ $t("dataTypesManagement.réinitialiser") }}
+        <b-button icon-left="redo" outlined type="is-danger" @click="reInit"
+        >{{ $t("dataTypesManagement.réinitialiser") }}
           {{ $t("dataTypesManagement.all") }}
         </b-button>
       </div>
@@ -119,45 +119,45 @@
         <div class="card-content">
           <div class="content is-align-content-center">
             <b-table
-              :columns="currentReferenceDetail.columns"
-              :data="currentReferenceDetail.data"
+                :columns="currentReferenceDetail.columns"
+                :data="currentReferenceDetail.data"
             />
           </div>
         </div>
       </div>
     </b-modal>
     <div
-      v-if="showSort"
-      class="notification"
-      role="search"
-      style="background-color: rgba(0, 163, 166, 0.1)"
+        v-if="showSort"
+        class="notification"
+        role="search"
+        style="background-color: rgba(0, 163, 166, 0.1)"
     >
       <h2>{{ $t("applications.trier") }}</h2>
       <div class="content">
         <div class="columns is-multiline">
           <div class="column is-9-widescreen is-12-desktop">
             <b-tabs
-              v-model="activeTab"
-              :multiline="true"
-              type="is-boxed"
-              position="is-centered"
-              style="text-transform: capitalize; text-decoration: none"
+                v-model="activeTab"
+                :multiline="true"
+                position="is-centered"
+                style="text-transform: capitalize; text-decoration: none"
+                type="is-boxed"
             >
               <template v-for="variable in variables" class="row variableComponent">
                 <b-tab-item
-                  :key="variable.id"
-                  :label="variable.id"
-                  style="text-transform: capitalize"
+                    :key="variable.id"
+                    :label="variable.id"
+                    style="text-transform: capitalize"
                 >
                   <div
-                    v-for="(variableComponent, index) in variableComponentsListToSort"
-                    :key="index"
-                    :class="variableComponent.order"
-                    class="row variableComponent"
+                      v-for="(variableComponent, index) in variableComponentsListToSort"
+                      :key="index"
+                      :class="variableComponent.order"
+                      class="row variableComponent"
                   >
                     <div
-                      v-if="variableComponent.variableComponentKey.variable === variable.id"
-                      class="columns"
+                        v-if="variableComponent.variableComponentKey.variable === variable.id"
+                        class="columns"
                     >
                       <div class="column orderLabel">
                         {{ variableComponent.variableComponentKey.variable }}
@@ -166,20 +166,20 @@
                       </div>
                       <div>
                         <b-button
-                          class="column asc"
-                          style="margin: 10px; border-color: #dbdbdb"
-                          type="is-white"
-                          @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
+                            class="column asc"
+                            style="margin: 10px; border-color: #dbdbdb"
+                            type="is-white"
+                            @click="addVariableComponentToSortedList(variableComponent, 'ASC')"
                         >
                           {{ $t("dataTypesManagement.ASC") }}
                         </b-button>
                       </div>
                       <div style="margin-right: 10px">
                         <b-button
-                          class="column desc"
-                          style="margin: 10px; border-color: #dbdbdb"
-                          type="is-white"
-                          @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
+                            class="column desc"
+                            style="margin: 10px; border-color: #dbdbdb"
+                            type="is-white"
+                            @click="addVariableComponentToSortedList(variableComponent, 'DESC')"
                         >
                           {{ $t("dataTypesManagement.DESC") }}
                         </b-button>
@@ -193,18 +193,18 @@
           <div class="column is-3-widescreen is-12-desktop">
             <draggable class="rows">
               <div
-                v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
-                :key="index"
-                :class="variableComponent.order"
-                class="row"
+                  v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
+                  :key="index"
+                  :class="variableComponent.order"
+                  class="row"
               >
                 <div
-                  class="control column"
-                  style="padding: 6px"
-                  :id="
+                    :id="
                     variableComponent.variableComponentKey.variable +
                     variableComponent.variableComponentKey.component
                   "
+                    class="control column"
+                    style="padding: 6px"
                 >
                   <div class="tags has-addons">
                     <span class="tag is-dark grape" style="font-size: 1rem">
@@ -218,9 +218,9 @@
                       {{ variableComponent.order }}
                     </span>
                     <a
-                      class="tag is-delete is-dark"
-                      style="font-size: 1rem; color: white"
-                      @click="
+                        class="tag is-delete is-dark"
+                        style="font-size: 1rem; color: white"
+                        @click="
                         deleteTag(
                           variableComponent.variableComponentKey.variable,
                           variableComponent.variableComponentKey.component
@@ -234,14 +234,14 @@
             <div class="row">
               <div class="columns">
                 <div class="column">
-                  <b-button icon-left="redo" expanded type="is-danger" @click="clearOrder" outlined
-                    >{{ $t("dataTypesManagement.réinitialiser") }}
+                  <b-button expanded icon-left="redo" outlined type="is-danger" @click="clearOrder"
+                  >{{ $t("dataTypesManagement.réinitialiser") }}
                     {{ $t("dataTypesManagement.tri") }}
                   </b-button>
                 </div>
                 <div class="column">
-                  <b-button icon-left="check" type="is-dark" expanded @click="initDatatype" outlined
-                    >{{ $t("dataTypesManagement.validate") }}
+                  <b-button expanded icon-left="check" outlined type="is-dark" @click="initDatatype"
+                  >{{ $t("dataTypesManagement.validate") }}
                     {{ $t("dataTypesManagement.tri") }}
                   </b-button>
                 </div>
@@ -251,26 +251,34 @@
         </div>
       </div>
     </div>
-    <div v-if="showAdvancedSearch" role="search">
-      <div class="notification columns">
+    <div v-if="showFilter" role="search">
       <h2>{{ $t("applications.filter") }}</h2>
-      <AuthorizationScopesMenu
-        class="column"
-        style="border: black solid 2px"
-        :application="application"
-        :authReferences="authReferences"
-      />
+      <div class="notification is-flex is-flex-direction-column is-fullwidth">
+        <AuthorizationScopesMenu
+            v-for="n in authorizationScopesMenusCount"
+            :key="n"
+            v-model="authorizationDescriptions[n-1]"
+            :application="application"
+            :authReferences="authReferences"
+            class="tile is-3 is-fullwidth"
+            style="border: black solid 2px; width: 100%"
+            @input="updateAuthorizationDescription((n-1), $event)"
+        />
+        <b-button icon-right="plus" size="small" @click="addAuthorizationMenus" class="is-primary"/>
+        <b-button v-if="authorizationScopesMenusCount>1" icon-right="minus" size="small"
+                  class="is-warning"
+                  @click="removeAuthorizationMenus"/>
+      </div>
     </div>
-    </div>
-    <div v-else-if="showFilter" class="columns is-multiline">
+    <div v-else-if="showAdvancedSearch" class="columns is-multiline">
       <h2>{{ $t("applications.advancedFilter") }}</h2>
       <div
-        class="column is-2-widescreen is-6-desktop is-12-tablet"
-        v-for="(variable, index) in variables"
-        :key="variable.id"
-        :variable="variable.id"
+          v-for="(variable, index) in variables"
+          :key="variable.id"
+          :variable="variable.id"
+          class="column is-2-widescreen is-6-desktop is-12-tablet"
       >
-        <b-collapse class="card" animation="slide" :open="isOpen === index" @open="isOpen = index">
+        <b-collapse :open="isOpen === index" animation="slide" class="card" @open="isOpen = index">
           <template #trigger="props">
             <div class="card-header" role="button">
               <p class="card-header-title" style="text-transform: capitalize">
@@ -283,27 +291,27 @@
           </template>
           <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
             <div
-              class="content"
-              v-for="(component, index) in variableComponents"
-              :key="`${index}`"
-              :component="component.component"
-              :variable="component.variable"
-              style="margin-bottom: 10px"
+                v-for="(component, index) in variableComponents"
+                :key="`${index}`"
+                :component="component.component"
+                :variable="component.variable"
+                class="content"
+                style="margin-bottom: 10px"
             >
               <b-field v-if="variable.id === component.variable" :label="component.component">
                 <b-field v-if="'date' === component.type || 'numeric' === component.type">
                   <CollapsibleInterval
-                    :variable-component="component"
-                    @setting_interval="addVariableSearch"
+                      :variable-component="component"
+                      @setting_interval="addVariableSearch"
                   ></CollapsibleInterval>
                 </b-field>
                 <b-input
-                  v-model="search[component.variable + '_' + component.component]"
-                  icon-right="search"
-                  :placeholder="$t('dataTypeAuthorizations.search')"
-                  type="search"
-                  @blur="addVariableSearch(component)"
-                  size="is-small"
+                    v-model="search[component.variable + '_' + component.component]"
+                    :placeholder="$t('dataTypeAuthorizations.search')"
+                    icon-right="search"
+                    size="is-small"
+                    type="search"
+                    @blur="addVariableSearch(component)"
                 ></b-input>
               </b-field>
             </div>
@@ -313,12 +321,12 @@
     </div>
     <b-field>
       <b-switch
-        v-model="params.variableComponentFilters.isRegex"
-        passive-type="is-dark"
-        type="is-primary"
-        :true-value="$t('dataTypesManagement.accepted')"
-        :false-value="$t('dataTypesManagement.refuse')"
-        >{{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}
+          v-model="params.variableComponentFilters.isRegex"
+          :false-value="$t('dataTypesManagement.refuse')"
+          :true-value="$t('dataTypesManagement.accepted')"
+          passive-type="is-dark"
+          type="is-primary"
+      >{{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}
       </b-switch>
       <!--        <b-button
                     class="btnRegExp"
@@ -333,16 +341,16 @@
     <div class="columns">
       <div class="column is-8-widescreen is-6-desktop">
         {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
-        <b-field grouped group-multiline>
+        <b-field group-multiline grouped>
           <b-taglist>
             <div
-              v-for="(variableComponent, index) in this.params.variableComponentFilters"
-              :key="index"
+                v-for="(variableComponent, index) in this.params.variableComponentFilters"
+                :key="index"
             >
               <b-tag
-                size="is-medium"
-                rounded
-                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                  rounded
+                  size="is-medium"
+                  style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
               >
                 {{ variableComponent.variableComponentKey.variable }}
                 {{ $t("ponctuation.colon") }}
@@ -355,15 +363,15 @@
         </b-field>
       </div>
       <div class="column is-2-widescreen is-3-desktop">
-        <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
-          >{{ $t("dataTypesManagement.réinitialiser") }}
+        <b-button expanded icon-left="redo" outlined type="is-danger" @click="clearSearch"
+        >{{ $t("dataTypesManagement.réinitialiser") }}
           {{ $t("dataTypesManagement.filtre") }}
         </b-button>
       </div>
       <div class="column is-2-widescreen is-3-desktop">
         <p class="control">
-          <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
-            >{{ $t("dataTypesManagement.validate") }}
+          <b-button expanded icon-left="check" outlined type="is-dark" @click="addSearch"
+          >{{ $t("dataTypesManagement.validate") }}
             {{ $t("dataTypesManagement.filtre") }}
           </b-button>
         </p>
@@ -378,44 +386,44 @@
             </div>
             <div class="columns">
               <b-button icon-left="redo" type="is-danger" @click="reInit"
-                >{{ $t("dataTypesManagement.réinitialiser") }}
+              >{{ $t("dataTypesManagement.réinitialiser") }}
               </b-button>
             </div>
           </caption>
           <thead style="text-transform: capitalize; text-align: center">
-            <tr class="DataSetTableView-variable-row">
-              <th
+          <tr class="DataSetTableView-variable-row">
+            <th
                 v-for="variable in variables"
                 :key="variable.id"
                 :colspan="Object.values(variable.components).length"
                 :variable="variable.id"
-              >
-                {{ variable.label }}
-              </th>
-            </tr>
-            <tr>
-              <th
+            >
+              {{ variable.label }}
+            </th>
+          </tr>
+          <tr>
+            <th
                 v-for="(comp, index) in variableComponents"
                 :key="`${comp.label}-${index}`"
                 :component="comp.component"
                 :variable="comp.variable"
-              >
-                {{ comp.label }}
-                <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
-              </th>
-            </tr>
+            >
+              {{ comp.label }}
+              <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
+            </th>
+          </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
-              <td
-                style="text-align: center; vertical-align: middle"
+          <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
+            <td
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
                 :component="component.component"
                 :variable="component.variable"
-              >
+                style="text-align: center; vertical-align: middle"
+            >
                 <span
-                  v-if="
+                    v-if="
                     row[component.variable][component.component] &&
                     component.checker &&
                     component.checker.pattern
@@ -423,25 +431,25 @@
                 >
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
-                <span
+              <span
                   v-else-if="
                     row[component.variable][component.computedComponent] &&
                     component.checker &&
                     component.checker.pattern
                   "
-                >
+              >
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.computedComponent])[1] }}
                 </span>
-                <span v-else>
+              <span v-else>
                   <a
-                    class="button inTable"
-                    v-if="getRefsLinkedToId(row, component)"
-                    @click="getReferenceValues(row, component)"
+                      v-if="getRefsLinkedToId(row, component)"
+                      class="button inTable"
+                      @click="getReferenceValues(row, component)"
                   >
                     {{ getDisplay(row, component.variable, component.component) }}
                   </a>
                   <p
-                    v-if="
+                      v-if="
                       !getRefsLinkedToId(row, component) &&
                       row[component.variable][component.component]
                     "
@@ -449,7 +457,7 @@
                     {{ row[component.variable][component.component] }}
                   </p>
                   <p
-                    v-else-if="
+                      v-else-if="
                       !getRefsLinkedToId(row, component) &&
                       row[component.variable][component.computedComponent]
                     "
@@ -457,33 +465,33 @@
                     {{ row[component.variable][component.computedComponent] }}
                   </p>
                 </span>
-              </td>
-            </tr>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
       <b-pagination
-        v-model="currentPage"
-        :per-page="params.limit"
-        :total="totalRows"
-        role="navigation"
-        :aria-label="$t('menu.aria-pagination')"
-        :aria-current-label="$t('menu.aria-curent-page')"
-        :aria-next-label="$t('menu.aria-next-page')"
-        :aria-previous-label="$t('menu.aria-previous-page')"
-        order="is-centered"
-        range-after="3"
-        range-before="3"
-        :rounded="true"
-        @change="changePage"
+          v-model="currentPage"
+          :aria-current-label="$t('menu.aria-curent-page')"
+          :aria-label="$t('menu.aria-pagination')"
+          :aria-next-label="$t('menu.aria-next-page')"
+          :aria-previous-label="$t('menu.aria-previous-page')"
+          :per-page="params.limit"
+          :rounded="true"
+          :total="totalRows"
+          order="is-centered"
+          range-after="3"
+          range-before="3"
+          role="navigation"
+          @change="changePage"
       >
       </b-pagination>
       <div class="buttons" style="margin-top: 16px">
         <b-button
-          type="is-primary"
-          @click.prevent="downloadResultSearch"
-          style="margin-bottom: 15px; float: right"
-          >{{ $t("referencesManagement.download") }}
+            style="margin-bottom: 15px; float: right"
+            type="is-primary"
+            @click.prevent="downloadResultSearch"
+        >{{ $t("referencesManagement.download") }}
         </b-button>
       </div>
     </div>
@@ -491,27 +499,34 @@
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
 import AuthorizationScopesMenu from "@/components/datatype/AuthorizationScopesMenu.vue";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { ApplicationResult } from "@/model/ApplicationResult";
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
-import { DataService } from "@/services/rest/DataService";
-import { AlertService } from "@/services/AlertService";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {ApplicationResult} from "@/model/ApplicationResult";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {DataService} from "@/services/rest/DataService";
+import {AlertService} from "@/services/AlertService";
 import CollapsibleInterval from "@/components/common/CollapsibleInterval.vue";
-import { ReferenceService } from "@/services/rest/ReferenceService";
-import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
-import { VariableComponentFilters } from "@/model/application/VariableComponentFilters";
-import { VariableComponentKey } from "@/model/application/VariableComponentKey";
-import { IntervalValues } from "@/model/application/IntervalValues";
-import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
+import {ReferenceService} from "@/services/rest/ReferenceService";
+import {DownloadDatasetQuery} from "@/model/application/DownloadDatasetQuery";
+import {VariableComponentFilters} from "@/model/application/VariableComponentFilters";
+import {VariableComponentKey} from "@/model/application/VariableComponentKey";
+import {IntervalValues} from "@/model/application/IntervalValues";
+import {VariableComponentOrderBy} from "@/model/application/VariableComponentOrderBy";
 import draggable from "vuedraggable";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
 
+const authorizationDescriptionsModel = {
+  timeScope: {
+    from: null,
+    to: null
+  },
+  requiredAuthorizations: []
+};
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval, AuthorizationScopesMenu, draggable },
+  components: {PageView, SubMenu, CollapsibleInterval, AuthorizationScopesMenu, draggable},
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -539,7 +554,7 @@ export default class DataTypeTableView extends Vue {
     variableComponentSelects: [],
     variableComponentFilters: [],
     variableComponentOrderBy: [],
-    authorizationDescriptions:[]
+    authorizationDescriptions: []
   });
   showDetails = false;
   showSort = false;
@@ -552,7 +567,7 @@ export default class DataTypeTableView extends Vue {
   search = {};
   refsLinkedTo = {};
   loadedReferences = {};
-  currentReferenceDetail = { active: false };
+  currentReferenceDetail = {active: false};
   activeTab = 0;
   isOpen = 0;
   variableSearch = [];
@@ -560,6 +575,9 @@ export default class DataTypeTableView extends Vue {
   isRegExp = false;
 
   authorizationScopesMenus = {};
+  authorizationScopesMenusCount = 1;
+
+  authorizationDescriptions = [authorizationDescriptionsModel]
 
   references = [];
   authReferences = {};
@@ -584,17 +602,29 @@ export default class DataTypeTableView extends Vue {
     await this.init();
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
-        () => this.$router.push(`/applications`)
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+          () => this.$router.push(`/applications`)
       ),
       new SubMenuPath(
-        this.dataTypeId,
-        () =>
-          this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`),
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+          this.dataTypeId,
+          () =>
+              this.$router.push(`/applications/${this.applicationName}/dataTypes/${this.dataTypeId}`),
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
     ];
+  }
+
+  addAuthorizationMenus() {
+    this.authorizationScopesMenusCount++;
+    for (let i = this.authorizationDescriptions.length; i <= this.authorizationScopesMenusCount; i++) {
+      this.authorizationDescriptions.push(authorizationDescriptionsModel)
+    }
+  }
+
+  removeAuthorizationMenus() {
+
+    this.authorizationScopesMenusCount--;
   }
 
   async reInit() {
@@ -607,7 +637,10 @@ export default class DataTypeTableView extends Vue {
       variableComponentSelects: [],
       variableComponentFilters: [],
       variableComponentOrderBy: [],
+      authorizationDescriptions:[]
     });
+    this.authorizationScopesMenusCount = 1
+    this.authorizationDescriptions = [authorizationDescriptionsModel]
     this.initDatatype();
   }
 
@@ -619,10 +652,10 @@ export default class DataTypeTableView extends Vue {
     this.application = {
       ...this.application,
       localName: this.internationalisationService.mergeInternationalization(this.application)
-        .localName,
+          .localName,
       localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-        this.application,
-        this.application.dataTypes[this.dataTypeId]
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
       ),
     };
     await this.initDatatype();
@@ -631,9 +664,9 @@ export default class DataTypeTableView extends Vue {
   async initDatatype() {
     this.showSort = false;
     const dataTypes = await this.dataService.getDataType(
-      this.applicationName,
-      this.dataTypeId,
-      this.params
+        this.applicationName,
+        this.dataTypeId,
+        this.params
     );
     this.referenceLineCheckers = dataTypes.checkedFormatVariableComponents.ReferenceLineChecker;
 
@@ -645,36 +678,36 @@ export default class DataTypeTableView extends Vue {
     }, {});
     this.totalRows = dataTypes.totalRows;
     this.rows = dataTypes.rows.map((r) => {
-      return { rowId: r.rowId, ...r.values };
+      return {rowId: r.rowId, ...r.values};
     });
 
     const variablesModels = this.application.dataTypes[this.dataTypeId].variables;
     this.variables = dataTypes.variables.map((v) => variablesModels[v]);
     this.variableComponents = this.variables
-      .map((v) => {
-        return Object.values(v.components).map((c) =>
-          Object.assign(c, {
-            variable: v.label,
-            component: c.id,
-            ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
-          })
-        );
-      })
-      .flat();
+        .map((v) => {
+          return Object.values(v.components).map((c) =>
+              Object.assign(c, {
+                variable: v.label,
+                component: c.id,
+                ...this.getVariableComponentInfos(v.label, c.id, dataTypes),
+              })
+          );
+        })
+        .flat();
     this.variableComponentsListToSort = this.variables
-      .map((v) => {
-        return Object.keys(v.components).reduce((acc, comp) => {
-          return [
-            ...acc,
-            {
-              variableComponentKey: { variable: v.id, component: comp },
-              order: null,
-              ...this.getVariableComponentInfos(v.id, comp, dataTypes),
-            },
-          ];
-        }, []);
-      })
-      .flat();
+        .map((v) => {
+          return Object.keys(v.components).reduce((acc, comp) => {
+            return [
+              ...acc,
+              {
+                variableComponentKey: {variable: v.id, component: comp},
+                order: null,
+                ...this.getVariableComponentInfos(v.id, comp, dataTypes),
+              },
+            ];
+          }, []);
+        })
+        .flat();
 
     let columnIndex = 0;
     this.variables.forEach((variable, variableIndex) => {
@@ -690,14 +723,21 @@ export default class DataTypeTableView extends Vue {
     });
     this.initAuthorizationScopeMenus();
   }
+
   async getOrLoadReferences(reference) {
     if (!this.references[reference]) {
       this.references[reference] = await this.referenceService.getReferenceValues(
-        this.application.name,
-        reference
+          this.application.name,
+          reference
       );
     }
     return this.references[reference];
+  }
+
+  updateAuthorizationDescription(index, authorizationDescription) {
+    let authorizationDescriptionsList = this.authorizationDescriptions;
+    authorizationDescriptionsList[index] = authorizationDescription;
+    this.authorizationDescriptions = authorizationDescriptionsList;
   }
 
   async initAuthorizationScopeMenus() {
@@ -707,29 +747,29 @@ export default class DataTypeTableView extends Vue {
       for (let auth in dataType.authorization.authorizationScopes) {
         let vc = dataType.authorization.authorizationScopes[auth];
         let variables = dataType.data[vc.variable];
-        var reference = { ...variables.components, ...variables.computedComponents }[vc.component]
-          .checker.params.refType;
+        var reference = {...variables.components, ...variables.computedComponents}[vc.component]
+            .checker.params.refType;
         let ref = await this.getOrLoadReferences(reference);
         ret[auth] = ref;
       }
 
       let refs = Object.values(ret)
-        .reduce(
-          (acc, k) => [
-            ...acc,
-            ...k.referenceValues.reduce(
-              (a, b) => [...a, ...b.hierarchicalReference.split(".")],
-              acc
-            ),
-          ],
-          []
-        )
-        .reduce((a, b) => {
-          if (a.indexOf(b) < 0) {
-            a.push(b);
-          }
-          return a;
-        }, []);
+          .reduce(
+              (acc, k) => [
+                ...acc,
+                ...k.referenceValues.reduce(
+                    (a, b) => [...a, ...b.hierarchicalReference.split(".")],
+                    acc
+                ),
+              ],
+              []
+          )
+          .reduce((a, b) => {
+            if (a.indexOf(b) < 0) {
+              a.push(b);
+            }
+            return a;
+          }, []);
       for (const refsKey in refs) {
         await this.getOrLoadReferences(refs[refsKey]);
       }
@@ -740,17 +780,17 @@ export default class DataTypeTableView extends Vue {
       this.authReferences = ret;
       let authorizationScopesMenus = {};
       let referenceforAuthorizationScope = Object.values(
-        dataType.authorization.authorizationScopes
+          dataType.authorization.authorizationScopes
       ).map(
-        (as) =>
-          (
-            dataType.data[as.variable]?.components[as.component] ||
-            dataType.data[as.variable]?.computedComponent[as.component]
-          ).checker.params.refType
+          (as) =>
+              (
+                  dataType.data[as.variable]?.components[as.component] ||
+                  dataType.data[as.variable]?.computedComponent[as.component]
+              ).checker.params.refType
       );
       this.authorizationScopesMenus = {};
       for (let compositeReference of Object.values(
-        this.application.configuration.compositeReferences
+          this.application.configuration.compositeReferences
       )) {
         let components = [];
         for (let component of compositeReference.components) {
@@ -797,7 +837,7 @@ export default class DataTypeTableView extends Vue {
         localName = key;
       }
       var completeLocalName =
-        typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
+          typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
       completeLocalName = completeLocalName + (completeLocalName === "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
@@ -815,8 +855,8 @@ export default class DataTypeTableView extends Vue {
       var auth = returnValues[returnValuesKey];
       let referenceValueLeaf = auth.referenceValues?.[0];
       if (
-        auth.referenceValues.length <= 1 &&
-        referenceValueLeaf.hierarchicalKey === auth.currentPath
+          auth.referenceValues.length <= 1 &&
+          referenceValueLeaf.hierarchicalKey === auth.currentPath
       ) {
         returnValues[returnValuesKey] = {
           ...auth,
@@ -825,9 +865,9 @@ export default class DataTypeTableView extends Vue {
         };
       } else {
         var r = await this.partitionReferencesValues(
-          auth.referenceValues,
-          auth.currentPath,
-          auth.completeLocalName
+            auth.referenceValues,
+            auth.currentPath,
+            auth.completeLocalName
         );
         returnValues[returnValuesKey] = {
           ...auth,
@@ -841,15 +881,15 @@ export default class DataTypeTableView extends Vue {
 
   getRefsLinkedToId(row, component) {
     return (
-      this.refsLinkedTo[row.rowId][component.variable][component.component] ||
-      this.refsLinkedTo[row.rowId][component.variable][component.computedComponent]
+        this.refsLinkedTo[row.rowId][component.variable][component.component] ||
+        this.refsLinkedTo[row.rowId][component.variable][component.computedComponent]
     );
   }
 
   getTranslation(row, component) {
     let translation =
-      row[component.variable][component.component] ||
-      row[component.variable][component.computedComponent];
+        row[component.variable][component.component] ||
+        row[component.variable][component.computedComponent];
     return translation;
   }
 
@@ -861,26 +901,26 @@ export default class DataTypeTableView extends Vue {
       let refvalues;
       if (this.referenceLineCheckers[key].referenceValues) {
         refvalues =
-          this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum;
+            this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum;
       }
       if (!refvalues) {
-        let params = { _row_id_: [rowId] };
+        let params = {_row_id_: [rowId]};
         if (!refType) {
           params.any = true;
         }
         const reference = await this.referenceService.getReferenceValues(
-          this.applicationName,
-          refType,
-          params
+            this.applicationName,
+            refType,
+            params
         );
         refvalues = reference.referenceValues[0].values;
       }
       const data = Object.entries(refvalues)
-        .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
-        .reduce((acc, entry) => {
-          acc.push(entry);
-          return acc;
-        }, []);
+          .map((entry) => ({colonne: entry[0], valeur: entry[1]}))
+          .reduce((acc, entry) => {
+            acc.push(entry);
+            return acc;
+          }, []);
       const result = {};
       result[rowId] = {
         data: data,
@@ -903,7 +943,7 @@ export default class DataTypeTableView extends Vue {
       };
     }
     let referenceValue = this.loadedReferences[rowId];
-    this.currentReferenceDetail = { ...referenceValue, active: true };
+    this.currentReferenceDetail = {...referenceValue, active: true};
     return referenceValue;
   }
 
@@ -926,22 +966,22 @@ export default class DataTypeTableView extends Vue {
   addVariableComponentToSortedList(variableComponentSorted, order) {
     variableComponentSorted.order = variableComponentSorted.order === order ? null : order;
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
-      (c) =>
-        c.variableComponentKey.variable !== variableComponentSorted.variableComponentKey.variable ||
-        c.variableComponentKey.component !== variableComponentSorted.variableComponentKey.component
+        (c) =>
+            c.variableComponentKey.variable !== variableComponentSorted.variableComponentKey.variable ||
+            c.variableComponentKey.component !== variableComponentSorted.variableComponentKey.component
     );
     if (variableComponentSorted.order) {
       this.params.variableComponentOrderBy.push(
-        new VariableComponentOrderBy(variableComponentSorted)
+          new VariableComponentOrderBy(variableComponentSorted)
       );
     }
   }
 
   deleteTag(variable, component) {
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
-      (c) =>
-        c.variableComponentKey.variable !== variable ||
-        c.variableComponentKey.component !== component
+        (c) =>
+            c.variableComponentKey.variable !== variable ||
+            c.variableComponentKey.component !== component
     );
     this.params.variableComponentOrderBy.delete();
     document.getElementById(variable + component).remove();
@@ -950,31 +990,31 @@ export default class DataTypeTableView extends Vue {
   getSortIcon(variable, component) {
     variable, component, event;
     let icon = this.params.variableComponentOrderBy
-      .filter(
-        (c) =>
-          c.variableComponentKey.variable === variable &&
-          c.variableComponentKey.component === component
-      )
-      .map((vc) => {
-        if (vc.order === "ASC") {
-          return "arrow-down";
-        } else if (vc.order === "DESC") {
-          return "arrow-up";
-        } else {
-          return "";
-        }
-      })[0];
+        .filter(
+            (c) =>
+                c.variableComponentKey.variable === variable &&
+                c.variableComponentKey.component === component
+        )
+        .map((vc) => {
+          if (vc.order === "ASC") {
+            return "arrow-down";
+          } else if (vc.order === "DESC") {
+            return "arrow-up";
+          } else {
+            return "";
+          }
+        })[0];
     return icon ? icon : null;
   }
 
   addVariableSearch(variableComponent) {
-    let { key, variable, component, type, format } = variableComponent;
+    let {key, variable, component, type, format} = variableComponent;
     let isRegExp = this.params.variableComponentFilters.isRegex;
     let value = this.search[key];
     this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
-      (c) =>
-        c.variableComponentKey.variable !== variable ||
-        c.variableComponentKey.component !== component
+        (c) =>
+            c.variableComponentKey.variable !== variable ||
+            c.variableComponentKey.component !== component
     );
     let search = null;
     if (value && value.length > 0) {
@@ -1009,22 +1049,30 @@ export default class DataTypeTableView extends Vue {
   }
 
   addSearch() {
-    this.params.variableComponentFilters = [];
-    for (var i = 0; i < this.variableSearch.length; i++) {
-      if (this.variableSearch[i]) {
-        this.params.variableComponentFilters.push(this.variableSearch[i]);
+    if (this.showAdvancedSearch) {
+      this.params.variableComponentFilters = [];
+      for (var i = 0; i < this.variableSearch.length; i++) {
+        if (this.variableSearch[i]) {
+          this.params.variableComponentFilters.push(this.variableSearch[i]);
+        }
       }
+    } else {
+      this.params.authorizationDescriptions = this.authorizationDescriptions.slice(0, this.authorizationScopesMenusCount)
     }
     this.initDatatype();
     this.showFilter = false;
   }
 
   async downloadResultSearch() {
-    this.params.variableComponentFilters = [];
-    for (var i = 0; i < this.variableSearch.length; i++) {
-      if (this.variableSearch[i]) {
-        this.params.variableComponentFilters.push(this.variableSearch[i]);
+    if (this.showAdvancedSearch) {
+      this.params.variableComponentFilters = [];
+      for (var i = 0; i < this.variableSearch.length; i++) {
+        if (this.variableSearch[i]) {
+          this.params.variableComponentFilters.push(this.variableSearch[i]);
+        }
       }
+    } else {
+      this.params.authorizationDescriptions = this.authorizationDescriptions.slice(0, this.authorizationScopesMenusCount)
     }
     let param = {
       ...this.params,
@@ -1043,10 +1091,27 @@ export default class DataTypeTableView extends Vue {
     return false;
   }
 
-  clearSearch() {
-    for (var i = 0; i < this.variableSearch.length; i++) {
-      this.params.variableComponentFilters = [];
-      this.variableSearch = [];
+  async clearSearch() {
+    if (this.showFilter){
+      this.params = new DownloadDatasetQuery({
+        application: null,
+        applicationNameOrId: this.applicationName,
+        dataType: this.dataTypeId,
+        offset: 0,
+        limit: 15,
+        variableComponentSelects: this.params.variableComponentSelects,
+        variableComponentFilters: this.params.variableComponentFilters,
+        variableComponentOrderBy: this.params.variableComponentOrderBy,
+        authorizationDescriptions:[]
+      });
+      this.authorizationScopesMenusCount = 1
+      this.authorizationDescriptions = [authorizationDescriptionsModel]
+      this.initDatatype();
+    }else {
+      for (var i = 0; i < this.variableSearch.length; i++) {
+        this.params.variableComponentFilters = [];
+        this.variableSearch = [];
+      }
     }
     this.initDatatype();
   }
@@ -1064,11 +1129,11 @@ export default class DataTypeTableView extends Vue {
     var lang = "__display_" + localStorage.getItem("lang");
     if (this.referenceLineCheckers[key]) {
       if (
-        this.referenceLineCheckers[key].referenceValues &&
-        this.referenceLineCheckers[key].referenceValues.refValues
+          this.referenceLineCheckers[key].referenceValues &&
+          this.referenceLineCheckers[key].referenceValues.refValues
       ) {
         var display =
-          this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum[lang];
+            this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum[lang];
         return display ? display : value;
       }
     }
@@ -1082,29 +1147,29 @@ export default class DataTypeTableView extends Vue {
     let key = variableId + "_" + componentId;
     if (dataTypes.checkedFormatVariableComponents) {
       if (
-        dataTypes.checkedFormatVariableComponents.DateLineChecker &&
-        dataTypes.checkedFormatVariableComponents.DateLineChecker[key]
+          dataTypes.checkedFormatVariableComponents.DateLineChecker &&
+          dataTypes.checkedFormatVariableComponents.DateLineChecker[key]
       ) {
         type = "date";
         format = dataTypes.checkedFormatVariableComponents.DateLineChecker[key].pattern;
         checker = dataTypes.checkedFormatVariableComponents.DateLineChecker[key];
       } else if (
-        dataTypes.checkedFormatVariableComponents.IntegerChecker &&
-        dataTypes.checkedFormatVariableComponents.IntegerChecker[key]
+          dataTypes.checkedFormatVariableComponents.IntegerChecker &&
+          dataTypes.checkedFormatVariableComponents.IntegerChecker[key]
       ) {
         type = "numeric";
         format = "integer";
         checker = dataTypes.checkedFormatVariableComponents.IntegerChecker[key];
       } else if (
-        dataTypes.checkedFormatVariableComponents.FloatChecker &&
-        dataTypes.checkedFormatVariableComponents.FloatChecker[key]
+          dataTypes.checkedFormatVariableComponents.FloatChecker &&
+          dataTypes.checkedFormatVariableComponents.FloatChecker[key]
       ) {
         type = "numeric";
         format = "float";
         checker = dataTypes.checkedFormatVariableComponents.FloatChecker[key];
       } else if (
-        dataTypes.checkedFormatVariableComponents.ReferenceLineChecker &&
-        dataTypes.checkedFormatVariableComponents.ReferenceLineChecker[key]
+          dataTypes.checkedFormatVariableComponents.ReferenceLineChecker &&
+          dataTypes.checkedFormatVariableComponents.ReferenceLineChecker[key]
       ) {
         type = "reference";
         format = "uuid";
