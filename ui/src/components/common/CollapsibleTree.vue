@@ -16,31 +16,33 @@
           :style="`transform:translate(${level * 50}px);`"
         >
           <b-checkbox
-              v-if="withRadios"
-              v-model="innerOptionChecked"
-              :name="radioName"
-              @click.native="stopPropagation"
-              :native-value="option.id"
+            v-if="withRadios"
+            v-model="innerOptionChecked"
+            :name="radioName"
+            @click.native="stopPropagation"
+            :native-value="option.id"
           >
             {{ option.localName || option.label }}
           </b-checkbox>
           <div
-              v-else
-              :class="onClickLabelCb ? 'link' : ''"
-              @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-              @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-              tabindex="0"
+            v-else
+            :class="onClickLabelCb ? 'link' : ''"
+            @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            tabindex="0"
           >
-            <b-tooltip type="is-primary is-light"
-              :label="$t('dataTypesManagement.tooltip_show_secondary_menu')">
+            <b-tooltip
+              type="is-primary is-light"
+              :label="$t('dataTypesManagement.tooltip_show_secondary_menu')"
+            >
               <b-button
-                  class="is-small"
-                  tabindex="0"
-                  type="is-primary"
-                  outlined
-                  style="margin: 10px;"
+                class="is-small"
+                tabindex="0"
+                type="is-primary"
+                outlined
+                style="margin: 10px"
               >
-                <b-icon icon="ellipsis-h" ></b-icon>
+                <b-icon icon="ellipsis-h"></b-icon>
               </b-button>
             </b-tooltip>
           </div>
@@ -50,7 +52,7 @@
             class="clickable mr-3"
             tabindex="0"
           />
-          <p > {{ option.localName || option.label }} </p>
+          <p>{{ option.localName || option.label }}</p>
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
@@ -190,7 +192,7 @@ export default {
   watch: {
     innerOptionChecked(value) {
       return this.$emit("optionChecked", value);
-    }
+    },
   },
   methods: {
     onInnerOptionChecked: function (value) {

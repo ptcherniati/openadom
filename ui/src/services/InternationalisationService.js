@@ -52,7 +52,11 @@ export class InternationalisationService extends Fetcher {
       }
       pathItem = pathArray.shift();
     }
-    return navigateConfiguration[localStorage.getItem(LOCAL_STORAGE_LANG)] || defaultValue;
+    return (
+      (navigateConfiguration.internationalisationName || navigateConfiguration)[
+        localStorage.getItem(LOCAL_STORAGE_LANG)
+      ] || defaultValue
+    );
   }
 
   mergeInternationalization(application) {

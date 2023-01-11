@@ -1,4 +1,3 @@
-/* eslint-disable @intlify/vue-i18n/no-raw-text */
 <template>
   <PageView class="with-submenu">
     <SubMenu
@@ -84,17 +83,32 @@
         <b-button
           icon-left="filter"
           :label="$t('applications.filter')"
+          @click="
+            showFilter = false;
+            showAdvancedSearch = !showAdvancedSearch;
+          "
           type="is-light"
-          @click="showFilter = !showFilter"
           outlined
           inverted
         ></b-button>
+        <b-tooltip :label="$t('applications.advancedFilter')" position="is-right">
+          <b-button
+            icon-left="ellipsis-h"
+            type="is-light"
+            @click="
+              showFilter = !showFilter;
+              showAdvancedSearch = false;
+            "
+            outlined
+            inverted
+          ></b-button>
+        </b-tooltip>
       </div>
       <div class="column is-2-desktop is-4-tablet">
         <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
           >{{ $t("dataTypesManagement.réinitialiser") }}
-          {{ $t("dataTypesManagement.all") }}</b-button
-        >
+          {{ $t("dataTypesManagement.all") }}
+        </b-button>
       </div>
     </div>
     <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails">
@@ -222,14 +236,14 @@
                 <div class="column">
                   <b-button icon-left="redo" expanded type="is-danger" @click="clearOrder" outlined
                     >{{ $t("dataTypesManagement.réinitialiser") }}
-                    {{ $t("dataTypesManagement.tri") }}</b-button
-                  >
+                    {{ $t("dataTypesManagement.tri") }}
+                  </b-button>
                 </div>
                 <div class="column">
                   <b-button icon-left="check" type="is-dark" expanded @click="initDatatype" outlined
                     >{{ $t("dataTypesManagement.validate") }}
-                    {{ $t("dataTypesManagement.tri") }}</b-button
-                  >
+                    {{ $t("dataTypesManagement.tri") }}
+                  </b-button>
                 </div>
               </div>
             </div>
@@ -237,71 +251,76 @@
         </div>
       </div>
     </div>
-    <div v-if="showFilter" class="notification" role="search">
+    <div v-if="showAdvancedSearch" role="search">
+      <div class="notification columns">
       <h2>{{ $t("applications.filter") }}</h2>
-      <div class="columns is-multiline">
-        <div
-          class="column is-2-widescreen is-6-desktop is-12-tablet"
-          v-for="(variable, index) in variables"
-          :key="variable.id"
-          :variable="variable.id"
-        >
-          <b-collapse
-            class="card"
-            animation="slide"
-            :open="isOpen === index"
-            @open="isOpen = index"
-          >
-            <template #trigger="props">
-              <div class="card-header" role="button">
-                <p class="card-header-title" style="text-transform: capitalize">
-                  {{ variable.id }}
-                </p>
-                <a class="card-header-icon">
-                  <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"> </b-icon>
-                </a>
-              </div>
-            </template>
-            <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
-              <div
-                class="content"
-                v-for="(component, index) in variableComponents"
-                :key="`${index}`"
-                :component="component.component"
-                :variable="component.variable"
-                style="margin-bottom: 10px"
-              >
-                <b-field v-if="variable.id === component.variable" :label="component.component">
-                  <b-field v-if="'date' === component.type || 'numeric' === component.type">
-                    <CollapsibleInterval
-                      :variable-component="component"
-                      @setting_interval="addVariableSearch"
-                    ></CollapsibleInterval>
-                  </b-field>
-                  <b-input
-                    v-model="search[component.variable + '_' + component.component]"
-                    icon-right="search"
-                    :placeholder="$t('dataTypeAuthorizations.search')"
-                    type="search"
-                    @blur="addVariableSearch(component)"
-                    size="is-small"
-                  ></b-input>
-                </b-field>
-              </div>
+      <AuthorizationScopesMenu
+        class="column"
+        style="border: black solid 2px"
+        :application="application"
+        :authReferences="authReferences"
+      />
+    </div>
+    </div>
+    <div v-else-if="showFilter" class="columns is-multiline">
+      <h2>{{ $t("applications.advancedFilter") }}</h2>
+      <div
+        class="column is-2-widescreen is-6-desktop is-12-tablet"
+        v-for="(variable, index) in variables"
+        :key="variable.id"
+        :variable="variable.id"
+      >
+        <b-collapse class="card" animation="slide" :open="isOpen === index" @open="isOpen = index">
+          <template #trigger="props">
+            <div class="card-header" role="button">
+              <p class="card-header-title" style="text-transform: capitalize">
+                {{ variable.id }}
+              </p>
+              <a class="card-header-icon">
+                <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"></b-icon>
+              </a>
             </div>
-          </b-collapse>
-        </div>
+          </template>
+          <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
+            <div
+              class="content"
+              v-for="(component, index) in variableComponents"
+              :key="`${index}`"
+              :component="component.component"
+              :variable="component.variable"
+              style="margin-bottom: 10px"
+            >
+              <b-field v-if="variable.id === component.variable" :label="component.component">
+                <b-field v-if="'date' === component.type || 'numeric' === component.type">
+                  <CollapsibleInterval
+                    :variable-component="component"
+                    @setting_interval="addVariableSearch"
+                  ></CollapsibleInterval>
+                </b-field>
+                <b-input
+                  v-model="search[component.variable + '_' + component.component]"
+                  icon-right="search"
+                  :placeholder="$t('dataTypeAuthorizations.search')"
+                  type="search"
+                  @blur="addVariableSearch(component)"
+                  size="is-small"
+                ></b-input>
+              </b-field>
+            </div>
+          </div>
+        </b-collapse>
       </div>
-      <b-field>
-        <b-switch
-          v-model="params.variableComponentFilters.isRegex"
-          passive-type="is-dark"
-          type="is-primary"
-          :true-value="$t('dataTypesManagement.accepted')"
-          :false-value="$t('dataTypesManagement.refuse')"
-          >{{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}</b-switch
-        >
-        <!--        <b-button
+    </div>
+    <b-field>
+      <b-switch
+        v-model="params.variableComponentFilters.isRegex"
+        passive-type="is-dark"
+        type="is-primary"
+        :true-value="$t('dataTypesManagement.accepted')"
+        :false-value="$t('dataTypesManagement.refuse')"
+        >{{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}
+      </b-switch>
+      <!--        <b-button
                     class="btnRegExp"
                     type="is-dark"
                     size="is-small"
@@ -310,45 +329,44 @@
                 >
                   {{ $t("ponctuation.regEx") }}</b-button
                 >-->
-      </b-field>
-      <div class="columns">
-        <div class="column is-8-widescreen is-6-desktop">
-          {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
-          <b-field grouped group-multiline>
-            <b-taglist>
-              <div
-                v-for="(variableComponent, index) in this.params.variableComponentFilters"
-                :key="index"
-              >
-                <b-tag
-                  size="is-medium"
-                  rounded
-                  style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
-                >
-                  {{ variableComponent.variableComponentKey.variable }}
-                  {{ $t("ponctuation.colon") }}
-                  {{ variableComponent.variableComponentKey.component }}
-                  {{ $t("ponctuation.arrow-right") }}
-                  {{ variableComponent.filter }}
-                </b-tag>
-              </div>
-            </b-taglist>
-          </b-field>
-        </div>
-        <div class="column is-2-widescreen is-3-desktop">
-          <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
-            >{{ $t("dataTypesManagement.réinitialiser") }}
-            {{ $t("dataTypesManagement.filtre") }}</b-button
-          >
-        </div>
-        <div class="column is-2-widescreen is-3-desktop">
-          <p class="control">
-            <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
-              >{{ $t("dataTypesManagement.validate") }}
-              {{ $t("dataTypesManagement.filtre") }}</b-button
+    </b-field>
+    <div class="columns">
+      <div class="column is-8-widescreen is-6-desktop">
+        {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
+        <b-field grouped group-multiline>
+          <b-taglist>
+            <div
+              v-for="(variableComponent, index) in this.params.variableComponentFilters"
+              :key="index"
             >
-          </p>
-        </div>
+              <b-tag
+                size="is-medium"
+                rounded
+                style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+              >
+                {{ variableComponent.variableComponentKey.variable }}
+                {{ $t("ponctuation.colon") }}
+                {{ variableComponent.variableComponentKey.component }}
+                {{ $t("ponctuation.arrow-right") }}
+                {{ variableComponent.filter }}
+              </b-tag>
+            </div>
+          </b-taglist>
+        </b-field>
+      </div>
+      <div class="column is-2-widescreen is-3-desktop">
+        <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
+          >{{ $t("dataTypesManagement.réinitialiser") }}
+          {{ $t("dataTypesManagement.filtre") }}
+        </b-button>
+      </div>
+      <div class="column is-2-widescreen is-3-desktop">
+        <p class="control">
+          <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
+            >{{ $t("dataTypesManagement.validate") }}
+            {{ $t("dataTypesManagement.filtre") }}
+          </b-button>
+        </p>
       </div>
     </div>
     <div class="b-table">
@@ -359,9 +377,9 @@
               {{ $t("alert.dataTypeFiltreEmpty") }}
             </div>
             <div class="columns">
-              <b-button icon-left="redo" type="is-danger" @click="reInit">{{
-                $t("dataTypesManagement.réinitialiser")
-              }}</b-button>
+              <b-button icon-left="redo" type="is-danger" @click="reInit"
+                >{{ $t("dataTypesManagement.réinitialiser") }}
+              </b-button>
             </div>
           </caption>
           <thead style="text-transform: capitalize; text-align: center">
@@ -465,8 +483,8 @@
           type="is-primary"
           @click.prevent="downloadResultSearch"
           style="margin-bottom: 15px; float: right"
-          >{{ $t("referencesManagement.download") }}</b-button
-        >
+          >{{ $t("referencesManagement.download") }}
+        </b-button>
       </div>
     </div>
   </PageView>
@@ -475,6 +493,7 @@
 <script>
 import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
+import AuthorizationScopesMenu from "@/components/datatype/AuthorizationScopesMenu.vue";
 import { ApplicationService } from "@/services/rest/ApplicationService";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
@@ -489,9 +508,10 @@ import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 import draggable from "vuedraggable";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval, draggable },
+  components: { PageView, SubMenu, CollapsibleInterval, AuthorizationScopesMenu, draggable },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -519,10 +539,12 @@ export default class DataTypeTableView extends Vue {
     variableComponentSelects: [],
     variableComponentFilters: [],
     variableComponentOrderBy: [],
+    authorizationDescriptions:[]
   });
   showDetails = false;
   showSort = false;
   showFilter = false;
+  showAdvancedSearch = false;
   controlPanels = null;
   totalRows = -1;
   currentPage = 1;
@@ -536,6 +558,11 @@ export default class DataTypeTableView extends Vue {
   variableSearch = [];
   referenceLineCheckers = [];
   isRegExp = false;
+
+  authorizationScopesMenus = {};
+
+  references = [];
+  authReferences = {};
 
   /*  testChangeRegEx() {
     let checkboxes = document.querySelector('.btnRegExp');
@@ -585,7 +612,10 @@ export default class DataTypeTableView extends Vue {
   }
 
   async init() {
-    this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE']);
+    this.application = await this.applicationService.getApplication(this.applicationName, [
+      "CONFIGURATION",
+      "DATATYPE",
+    ]);
     this.application = {
       ...this.application,
       localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -658,6 +688,155 @@ export default class DataTypeTableView extends Vue {
         columnIndex++;
       });
     });
+    this.initAuthorizationScopeMenus();
+  }
+  async getOrLoadReferences(reference) {
+    if (!this.references[reference]) {
+      this.references[reference] = await this.referenceService.getReferenceValues(
+        this.application.name,
+        reference
+      );
+    }
+    return this.references[reference];
+  }
+
+  async initAuthorizationScopeMenus() {
+    let dataType = this.application.configuration.dataTypes[this.dataTypeId];
+    if (dataType?.authorization.authorizationScopes) {
+      let ret = {};
+      for (let auth in dataType.authorization.authorizationScopes) {
+        let vc = dataType.authorization.authorizationScopes[auth];
+        let variables = dataType.data[vc.variable];
+        var reference = { ...variables.components, ...variables.computedComponents }[vc.component]
+          .checker.params.refType;
+        let ref = await this.getOrLoadReferences(reference);
+        ret[auth] = ref;
+      }
+
+      let refs = Object.values(ret)
+        .reduce(
+          (acc, k) => [
+            ...acc,
+            ...k.referenceValues.reduce(
+              (a, b) => [...a, ...b.hierarchicalReference.split(".")],
+              acc
+            ),
+          ],
+          []
+        )
+        .reduce((a, b) => {
+          if (a.indexOf(b) < 0) {
+            a.push(b);
+          }
+          return a;
+        }, []);
+      for (const refsKey in refs) {
+        await this.getOrLoadReferences(refs[refsKey]);
+      }
+      for (const [key, value] of Object.entries(ret)) {
+        let partition = await this.partitionReferencesValues(value.referenceValues);
+        ret[key] = partition;
+      }
+      this.authReferences = ret;
+      let authorizationScopesMenus = {};
+      let referenceforAuthorizationScope = Object.values(
+        dataType.authorization.authorizationScopes
+      ).map(
+        (as) =>
+          (
+            dataType.data[as.variable]?.components[as.component] ||
+            dataType.data[as.variable]?.computedComponent[as.component]
+          ).checker.params.refType
+      );
+      this.authorizationScopesMenus = {};
+      for (let compositeReference of Object.values(
+        this.application.configuration.compositeReferences
+      )) {
+        let components = [];
+        for (let component of compositeReference.components) {
+          components.push(component);
+          if (referenceforAuthorizationScope.includes(component.reference)) {
+            authorizationScopesMenus[component.reference] = {
+              refTypeToReturn: component.reference,
+              components,
+            };
+            break;
+          }
+        }
+      }
+      this.authorizationScopesMenus = authorizationScopesMenus;
+    }
+  }
+
+  async partitionReferencesValues(referencesValues, currentPath, currentCompleteLocalName) {
+    let returnValues = {};
+    for (const referenceValue of referencesValues) {
+      var previousKeySplit = currentPath ? currentPath.split(".") : [];
+      var keys = referenceValue.hierarchicalKey.split(".");
+      var references = referenceValue.hierarchicalReference.split(".");
+      if (previousKeySplit.length === keys.length) {
+        continue;
+      }
+      for (let i = 0; i < previousKeySplit.length; i++) {
+        keys.shift();
+        references.shift();
+      }
+      var key = keys.shift();
+      let newCurrentPath = (currentPath ? currentPath + "." : "") + key;
+      var reference = references.shift();
+      let refValues = await this.getOrLoadReferences(reference);
+      this.internationalisationService.getUserPrefLocale();
+      let lang = localStorage.getItem(LOCAL_STORAGE_LANG);
+      let localName = refValues.referenceValues.find((r) => r.naturalKey == key);
+      if (localName?.values?.["__display_" + lang]) {
+        localName = localName?.values?.["__display_" + lang];
+      } else {
+        localName = localName?.naturalKey;
+      }
+      if (!localName) {
+        localName = key;
+      }
+      var completeLocalName =
+        typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
+      completeLocalName = completeLocalName + (completeLocalName === "" ? "" : ",") + localName;
+      let authPartition = returnValues[key] || {
+        key,
+        reference,
+        referenceValues: [],
+        localName,
+        isLeaf: false,
+        currentPath: newCurrentPath,
+        completeLocalName,
+      };
+      authPartition.referenceValues.push(referenceValue);
+      returnValues[key] = authPartition;
+    }
+    for (const returnValuesKey in returnValues) {
+      var auth = returnValues[returnValuesKey];
+      let referenceValueLeaf = auth.referenceValues?.[0];
+      if (
+        auth.referenceValues.length <= 1 &&
+        referenceValueLeaf.hierarchicalKey === auth.currentPath
+      ) {
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: true,
+          referenceValues: referenceValueLeaf,
+        };
+      } else {
+        var r = await this.partitionReferencesValues(
+          auth.referenceValues,
+          auth.currentPath,
+          auth.completeLocalName
+        );
+        returnValues[returnValuesKey] = {
+          ...auth,
+          isLeaf: false,
+          referenceValues: r,
+        };
+      }
+    }
+    return returnValues;
   }
 
   getRefsLinkedToId(row, component) {
@@ -673,6 +852,7 @@ export default class DataTypeTableView extends Vue {
       row[component.variable][component.computedComponent];
     return translation;
   }
+
   async getReferenceValues(row, component) {
     const rowId = this.getRefsLinkedToId(row, component);
     const refType = component.checker.referenceLineChecker.refType;
@@ -756,6 +936,7 @@ export default class DataTypeTableView extends Vue {
       );
     }
   }
+
   deleteTag(variable, component) {
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
       (c) =>
@@ -826,6 +1007,7 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
   }
+
   addSearch() {
     this.params.variableComponentFilters = [];
     for (var i = 0; i < this.variableSearch.length; i++) {
@@ -868,12 +1050,14 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
   }
+
   clearOrder() {
     for (var i = 0; i < this.params.variableComponentOrderBy.length; i++) {
       this.params.variableComponentOrderBy = [];
     }
     this.initDatatype();
   }
+
   getDisplay(row, variable, component) {
     var key = variable + "_" + component;
     var value = row[variable][component];
@@ -964,6 +1148,7 @@ $row-variable-height: 60px;
 .orderLabel {
   flex-grow: 10;
 }
+
 .grape {
   cursor: move;
 }
@@ -971,13 +1156,16 @@ $row-variable-height: 60px;
 .row.variableComponent {
   padding: 0;
 }
+
 .row.variableComponent:hover {
   background-color: rgba(0, 163, 166, 0.2);
 }
+
 .button.is-dark.is-outlined.active {
   background-color: $dark;
   color: #dbdbdb;
 }
+
 .ASC .asc,
 .DESC .desc {
   background-color: $dark;
@@ -993,15 +1181,18 @@ $row-variable-height: 60px;
   background-color: transparent;
   border: transparent;
 }
+
 .button.inTable:hover {
   color: $dark;
   background-color: transparent;
   border: transparent;
   text-decoration: underline;
 }
+
 .columns {
   margin: 0;
 }
+
 .icon.is-small {
   font-size: 5rem;
 }

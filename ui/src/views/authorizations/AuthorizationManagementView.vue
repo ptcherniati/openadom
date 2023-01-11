@@ -205,7 +205,7 @@ export default class AuthorizationManagementView extends Vue {
   }
 
   addApplication(value, user) {
-     if (this.changes.applications[user.id]?.remove?.find((v) => v === value)) {
+    if (this.changes.applications[user.id]?.remove?.find((v) => v === value)) {
       this.changes.applications[user.id].remove = this.changes.applications[user.id].remove.filter(
         (v) => v !== value
       );

@@ -2,10 +2,10 @@
   <div>
     <PageView class="with-submenu">
       <SubMenu
-          :paths="subMenuPaths"
-          :root="application.localName || application.title"
-          role="navigation"
-          :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
+        :aria-label="$t('menu.aria-sub-menu')"
       />
       <h1 class="title main-title">
         {{
@@ -22,24 +22,24 @@
                 <b-dropdown :ref="authKey" expanded>
                   <template #trigger="{ active }">
                     <b-button
-                        expanded
-                        :icon-right="active ? 'chevron-up' : 'chevron-down'"
-                        type="is-primary"
+                      expanded
+                      :icon-right="active ? 'chevron-up' : 'chevron-down'"
+                      type="is-primary"
                     >
                       {{
                         internationalisationService.getLocaleforPath(
-                            application,
-                            getAuthorizationScopePath(authKey),
-                            authKey
+                          application,
+                          getAuthorizationScopePath(authKey),
+                          authKey
                         )
                       }}
                     </b-button>
                   </template>
                   <DropDownMenu
-                      v-for="(option, optionKey) in authReference"
-                      :key="optionKey"
-                      :option="option"
-                      @select-menu-item="selectAuthorization(authKey, $event)"
+                    v-for="(option, optionKey) in authReference"
+                    :key="optionKey"
+                    :option="option"
+                    @select-menu-item="selectAuthorization(authKey, $event)"
                   />
                 </b-dropdown>
               </b-field>
@@ -88,15 +88,15 @@
                     <div class="column">
                       <b-field :label="$t('dataTypesRepository.start-date')" data-cy="dateStart">
                         <b-datepicker
-                            v-model="startDate"
-                            :date-parser="parseDate"
-                            :date-formatter="formatDate"
-                            :placeholder="
+                          v-model="startDate"
+                          :date-parser="parseDate"
+                          :date-formatter="formatDate"
+                          :placeholder="
                             $t('dataTypesRepository.placeholder-datepicker') +
                             ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                           "
-                            editable
-                            icon="calendar"
+                          editable
+                          icon="calendar"
                         >
                         </b-datepicker>
                       </b-field>
@@ -104,32 +104,32 @@
                     <div class="column">
                       <b-field :label="$t('dataTypesRepository.end-date')" data-cy="dateEnd">
                         <b-datepicker
-                            v-model="endDate"
-                            :date-parser="parseDate"
-                            :date-formatter="formatDate"
-                            :placeholder="
+                          v-model="endDate"
+                          :date-parser="parseDate"
+                          :date-formatter="formatDate"
+                          :placeholder="
                             $t('dataTypesRepository.placeholder-datepicker') +
                             ' dd-MM-YYYY, dd-MM-YYYY hh, dd-MM-YYYY hh:mm, dd-MM-YYYY HH:mm:ss'
                           "
-                            editable
-                            icon="calendar"
+                          editable
+                          icon="calendar"
                         >
                         </b-datepicker>
                       </b-field>
                     </div>
                     <div class="column">
                       <b-upload
-                          @input="changeFile"
-                          v-model="file"
-                          class="file-label"
-                          style="margin-top: 30px"
-                          data-cy="changeFileButton"
+                        @input="changeFile"
+                        v-model="file"
+                        class="file-label"
+                        style="margin-top: 30px"
+                        data-cy="changeFileButton"
                       >
                         <span class="file-cta">
                           <b-icon class="file-icon" icon="upload"></b-icon>
                           <span class="file-label">{{
-                              $t("dataTypesRepository.choose-file")
-                            }}</span>
+                            $t("dataTypesRepository.choose-file")
+                          }}</span>
                         </span>
                         <span v-if="file" class="file-name">
                           {{ file.name }}
@@ -148,7 +148,7 @@
                 <div class="column is-10"></div>
                 <div class="column is-2" style="float: right">
                   <b-button type="is-dark" @click="upload" style="float: right" expanded
-                  >{{ $t("dataTypesRepository.submit") }}
+                    >{{ $t("dataTypesRepository.submit") }}
                   </b-button>
                 </div>
               </footer>
@@ -160,9 +160,9 @@
         <div class="card column">
           <div class="card-content">
             <table
-                v-if="datasets && Object.keys(datasets).length"
-                class="table is-striped is-fullwidth numberData"
-                style="text-align: center; vertical-align: center"
+              v-if="datasets && Object.keys(datasets).length"
+              class="table is-striped is-fullwidth numberData"
+              style="text-align: center; vertical-align: center"
             >
               <caption>
                 {{
@@ -175,12 +175,12 @@
                 <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
               </tr>
               <tr
-                  v-for="(dataset, periode) in datasets"
-                  :key="dataset.id"
-                  @click="showDatasets(dataset)"
-                  @keypress.enter="showDatasets(dataset)"
-                  tabindex="0"
-                  style="cursor: pointer"
+                v-for="(dataset, periode) in datasets"
+                :key="dataset.id"
+                @click="showDatasets(dataset)"
+                @keypress.enter="showDatasets(dataset)"
+                tabindex="0"
+                style="cursor: pointer"
               >
                 <td align>{{ periode }}</td>
                 <td align>{{ Object.keys(dataset.datasets).length }}</td>
@@ -188,9 +188,9 @@
               </tr>
             </table>
             <table
-                v-if="currentDataset && currentDataset.length"
-                class="table is-striped is-fullwidth"
-                style="text-align: center; vertical-align: center"
+              v-if="currentDataset && currentDataset.length"
+              class="table is-striped is-fullwidth"
+              style="text-align: center; vertical-align: center"
             >
               <caption>
                 {{
@@ -232,10 +232,10 @@
                       <p>{{ UTCToString(dataset.params.binaryFiledataset.comment) }}</p>
                     </template>
                     <a
-                        :aria-describedby="dataset.id"
-                        tabindex="0"
-                        @keypress.enter="changeCss(dataset.id)"
-                    >{{ dataset.id.slice(0, 8) }}</a
+                      :aria-describedby="dataset.id"
+                      tabindex="0"
+                      @keypress.enter="changeCss(dataset.id)"
+                      >{{ dataset.id.slice(0, 8) }}</a
                     >
                   </b-tooltip>
                 </td>
@@ -247,32 +247,38 @@
                 <td align>
                   <b-field>
                     <b-button
-                        :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
-                        size="is-medium"
-                        type="is-primary is-light"
-                        @click="publish(dataset, !dataset.params.published)"
-                        style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+                      :icon-right="dataset.params.published ? 'check-circle' : 'circle'"
+                      size="is-medium"
+                      type="is-primary is-light"
+                      @click="publish(dataset, !dataset.params.published)"
+                      style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                     />
                   </b-field>
                 </td>
                 <td>
                   <b-field>
-                    <b-tooltip :label="$t('dataTypesRepository.table-file-data-delete')" position="is-left">
+                    <b-tooltip
+                      :label="$t('dataTypesRepository.table-file-data-delete')"
+                      position="is-left"
+                    >
                       <b-button
-                          icon-right="times-circle"
-                          size="is-medium"
-                          type="is-danger is-light"
-                          @click="remove(dataset, dataset.params.published)"
-                          style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+                        icon-right="times-circle"
+                        size="is-medium"
+                        type="is-danger is-light"
+                        @click="remove(dataset, dataset.params.published)"
+                        style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                       />
                     </b-tooltip>
-                    <b-tooltip :label="$t('dataTypesRepository.table-file-data-download')" position="is-left">
+                    <b-tooltip
+                      :label="$t('dataTypesRepository.table-file-data-download')"
+                      position="is-left"
+                    >
                       <b-button
-                          icon-right="download"
-                          size="is-medium"
-                          type="is-primary is-light"
-                          @click="downloadDataTypeVersion(dataset)"
-                          style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
+                        icon-right="download"
+                        size="is-medium"
+                        type="is-primary is-light"
+                        @click="downloadDataTypeVersion(dataset)"
+                        style="height: 1.5em; background-color: transparent; font-size: 1.45rem"
                       />
                     </b-tooltip>
                   </b-field>
@@ -287,23 +293,23 @@
 </template>
 
 <script>
-import {Component, Prop, Vue} from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import {ApplicationService} from "@/services/rest/ApplicationService";
-import {ApplicationResult} from "@/model/ApplicationResult";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import {AlertService} from "@/services/AlertService";
-import {DataService} from "@/services/rest/DataService";
-import {FileService} from "@/services/rest/FileService";
-import {ReferenceService} from "@/services/rest/ReferenceService";
-import {ErrorsService} from "@/services/ErrorsService";
-import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import {BinaryFileDataset} from "@/model/file/BinaryFileDataset";
-import {BinaryFile} from "@/model/file/BinaryFile";
-import {FileOrUUID} from "@/model/file/FileOrUUID";
-import {Dataset} from "@/model/file/Dataset";
-import {InternationalisationService} from "@/services/InternationalisationService";
-import {LOCAL_STORAGE_LANG} from "@/services/Fetcher";
+import { AlertService } from "@/services/AlertService";
+import { DataService } from "@/services/rest/DataService";
+import { FileService } from "@/services/rest/FileService";
+import { ReferenceService } from "@/services/rest/ReferenceService";
+import { ErrorsService } from "@/services/ErrorsService";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { BinaryFileDataset } from "@/model/file/BinaryFileDataset";
+import { BinaryFile } from "@/model/file/BinaryFile";
+import { FileOrUUID } from "@/model/file/FileOrUUID";
+import { Dataset } from "@/model/file/Dataset";
+import { InternationalisationService } from "@/services/InternationalisationService";
+import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
 import DropDownMenu from "@/components/common/DropDownMenu";
 import moment from "moment";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
@@ -380,7 +386,7 @@ export default class DataTypesRepositoryView extends Vue {
         if (this.repository.authorizationScope) {
           for (const authorizationScopeKey in this.repository.authorizationScope) {
             let authorizationScope =
-                matches[this.repository.authorizationScope[authorizationScopeKey]];
+              matches[this.repository.authorizationScope[authorizationScopeKey]];
 
             var currentNode = this.authReferences[authorizationScopeKey];
 
@@ -417,16 +423,16 @@ export default class DataTypesRepositoryView extends Vue {
           }
         }
         if (
-            this.repository.startDate &&
-            this.repository.startDate.token &&
-            matches[this.repository.startDate.token]
+          this.repository.startDate &&
+          this.repository.startDate.token &&
+          matches[this.repository.startDate.token]
         ) {
           this.startDate = moment(matches[this.repository.startDate.token], "DD-MM-YYYY").toDate();
         }
         if (
-            this.repository.endDate &&
-            this.repository.endDate.token &&
-            matches[this.repository.endDate.token]
+          this.repository.endDate &&
+          this.repository.endDate.token &&
+          matches[this.repository.endDate.token]
         ) {
           this.endDate = moment(matches[this.repository.endDate.token], "DD-MM-YYYY").toDate();
         }
@@ -462,15 +468,19 @@ export default class DataTypesRepositoryView extends Vue {
 
   async init() {
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE', 'REFERENCETYPE']);
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "DATATYPE",
+        "REFERENCETYPE",
+      ]);
       this.repository = this.application.dataTypes[this.dataTypeId].repository;
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-            .localName,
+          .localName,
         localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-            this.application,
-            this.application.dataTypes[this.dataTypeId]
+          this.application,
+          this.application.dataTypes[this.dataTypeId]
         ),
       };
       this.configuration = this.application.configuration.dataTypes[this.dataTypeId];
@@ -501,22 +511,22 @@ export default class DataTypesRepositoryView extends Vue {
       }
 
       let refs = Object.values(ret)
-          .reduce(
-              (acc, k) => [
-                ...acc,
-                ...k.referenceValues.reduce(
-                    (a, b) => [...a, ...b.hierarchicalReference.split(".")],
-                    acc
-                ),
-              ],
-              []
-          )
-          .reduce((a, b) => {
-            if (a.indexOf(b) < 0) {
-              a.push(b);
-            }
-            return a;
-          }, []);
+        .reduce(
+          (acc, k) => [
+            ...acc,
+            ...k.referenceValues.reduce(
+              (a, b) => [...a, ...b.hierarchicalReference.split(".")],
+              acc
+            ),
+          ],
+          []
+        )
+        .reduce((a, b) => {
+          if (a.indexOf(b) < 0) {
+            a.push(b);
+          }
+          return a;
+        }, []);
       for (const refsKey in refs) {
         await this.getOrLoadReferences(refs[refsKey]);
       }
@@ -560,10 +570,10 @@ export default class DataTypesRepositoryView extends Vue {
 
   periodeToStringForBinaryFileDataset(binaryFiledataset) {
     return (
-        "du " +
-        this.dateToString(binaryFiledataset.from) +
-        " au " +
-        this.dateToString(binaryFiledataset.to)
+      "du " +
+      this.dateToString(binaryFiledataset.from) +
+      " au " +
+      this.dateToString(binaryFiledataset.to)
     );
   }
 
@@ -578,27 +588,27 @@ export default class DataTypesRepositoryView extends Vue {
   async upload() {
     if (this.file && this.startDate && this.endDate) {
       var fileOrId = new FileOrUUID(
-          null,
-          new BinaryFileDataset(
-              this.dataTypeId,
-              this.selected.requiredAuthorizations,
-              /(.{10})T(.{8}).*/
-                  .exec(new Date(this.startDate).toISOString())
-                  .filter((a, i) => i !== 0)
-                  .join(" "),
-              /(.{10})T(.{8}).*/
-                  .exec(new Date(this.endDate).toISOString())
-                  .filter((a, i) => i !== 0)
-                  .join(" "),
-              this.comment
-          ),
-          false
+        null,
+        new BinaryFileDataset(
+          this.dataTypeId,
+          this.selected.requiredAuthorizations,
+          /(.{10})T(.{8}).*/
+            .exec(new Date(this.startDate).toISOString())
+            .filter((a, i) => i !== 0)
+            .join(" "),
+          /(.{10})T(.{8}).*/
+            .exec(new Date(this.endDate).toISOString())
+            .filter((a, i) => i !== 0)
+            .join(" "),
+          this.comment
+        ),
+        false
       );
       var uuid = await this.dataService.addData(
-          this.applicationName,
-          this.dataTypeId,
-          this.file,
-          fileOrId
+        this.applicationName,
+        this.dataTypeId,
+        this.file,
+        fileOrId
       );
       this.$emit("uploaded", uuid);
     }
@@ -618,10 +628,10 @@ export default class DataTypesRepositoryView extends Vue {
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
     try {
       var uuid = await this.dataService.addData(
-          this.applicationName,
-          this.dataTypeId,
-          null,
-          fileOrId
+        this.applicationName,
+        this.dataTypeId,
+        null,
+        fileOrId
       );
       this.$emit("published", uuid.fileId);
       this.alertService.toastSuccess(this.$t("alert.data-updated"));
@@ -688,7 +698,7 @@ export default class DataTypesRepositoryView extends Vue {
   isAuthorisationsSelected() {
     if (this.selected && this.selected.requiredAuthorizations) {
       return (
-          this.selected && Object.values(this.selected.requiredAuthorizations).every((v) => v?.length)
+        this.selected && Object.values(this.selected.requiredAuthorizations).every((v) => v?.length)
       );
     }
     return false;
@@ -697,9 +707,9 @@ export default class DataTypesRepositoryView extends Vue {
   async updateDatasets(uuid) {
     if (this.isAuthorisationsSelected()) {
       let datasetsList = await this.fileService.getFiles(
-          this.applicationName,
-          this.dataTypeId,
-          this.selected
+        this.applicationName,
+        this.dataTypeId,
+        this.selected
       );
       if (!datasetsList || !datasetsList.length) {
         this.datasets = {};
@@ -724,9 +734,9 @@ export default class DataTypesRepositoryView extends Vue {
     this.datasets = datasetMap;
     if (fileList.uuid) {
       var periode =
-          fileList.uuid &&
-          this.datasets &&
-          Object.values(this.datasets).find((e) => e.findByUUID(fileList.uuid))?.periode;
+        fileList.uuid &&
+        this.datasets &&
+        Object.values(this.datasets).find((e) => e.findByUUID(fileList.uuid))?.periode;
       this.currentDataset = this.datasets?.[periode]?.datasets;
     }
     return this.datasets;
@@ -735,13 +745,12 @@ export default class DataTypesRepositoryView extends Vue {
   remove(dataset, isPublished) {
     this.$buefy.dialog.confirm({
       message:
-          (isPublished
-              ? "<b>La version contient des données publiées.</b><br /> La supprimer entraînera la suppression de ces données.<br /><br />?"
-              : "") + "Etes vous sûr de vouloir supprimer cette version?",
+        (isPublished
+          ? "<b>La version contient des données publiées.</b><br /> La supprimer entraînera la suppression de ces données.<br /><br />?"
+          : "") + "Etes vous sûr de vouloir supprimer cette version?",
       onConfirm: () => this.deleteFile(dataset.id),
     });
   }
-
 
   async downloadDataTypeVersion(event) {
     await this.fileService.download(this.applicationName, event.id);
@@ -782,7 +791,7 @@ export default class DataTypesRepositoryView extends Vue {
         localName = key;
       }
       var completeLocalName =
-          typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
+        typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
       completeLocalName = completeLocalName + (completeLocalName === "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
@@ -800,8 +809,8 @@ export default class DataTypesRepositoryView extends Vue {
       var auth = returnValues[returnValuesKey];
       let referenceValueLeaf = auth.referenceValues?.[0];
       if (
-          auth.referenceValues.length <= 1 &&
-          referenceValueLeaf.hierarchicalKey === auth.currentPath
+        auth.referenceValues.length <= 1 &&
+        referenceValueLeaf.hierarchicalKey === auth.currentPath
       ) {
         returnValues[returnValuesKey] = {
           ...auth,
@@ -810,9 +819,9 @@ export default class DataTypesRepositoryView extends Vue {
         };
       } else {
         var r = await this.partitionReferencesValues(
-            auth.referenceValues,
-            auth.currentPath,
-            auth.completeLocalName
+          auth.referenceValues,
+          auth.currentPath,
+          auth.completeLocalName
         );
         returnValues[returnValuesKey] = {
           ...auth,

@@ -107,6 +107,7 @@
         "trierZ_a":"Name Z - a",
         "trierRecent":"Recent date",
         "filter":"Filter by",
+        "advancedFilter": "Advanced search",
         "change": "Edit app",
         "version" : "The current version of the application <b class=\"has-text-primary\">{applicationName}</b> is <b class=\"has-text-primary\">{version}.</b>",
         "help_config" : "Help PDF configuration",

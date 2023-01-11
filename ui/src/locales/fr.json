@@ -108,6 +108,7 @@
         "trierZ_a": "Nom Z - a",
         "trierRecent": "Date récente",
         "filter": "Filtrer",
+        "advancedFilter": "Recherche avancée",
         "change": "Modifier l'application",
         "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>",
         "help_config" : "PDF d'aide à la configuration",
