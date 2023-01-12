@@ -623,7 +623,6 @@ export default class DataTypeTableView extends Vue {
         }, []);
       })
       .flat();
-
     let columnIndex = 0;
     this.variables.forEach((variable, variableIndex) => {
       Object.values(variable.components).forEach(() => {
@@ -840,6 +839,9 @@ export default class DataTypeTableView extends Vue {
   }
 
   clearSearch() {
+    for (let j = 0; j<document.getElementsByClassName("input").length; j++) {
+      document.getElementsByClassName("input")[j].value = "";
+    }
     for (var i = 0; i < this.variableSearch.length; i++) {
       this.params.variableComponentFilters = [];
       this.variableSearch = [];
