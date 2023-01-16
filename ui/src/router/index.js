@@ -13,6 +13,8 @@ import DataTypeAuthorizationsView from "@/views/authorizations/DataTypeAuthoriza
 import DataTypeAuthorizationInfoView from "@/views/authorizations/DataTypeAuthorizationInfoView.vue";
 import AuthorizationManagementView from "@/views/authorizations/AuthorizationManagementView.vue";
 import AuthorizationManagementForApplicationCreatorView from "@/views/authorizations/AuthorizationManagementForApplicationCreatorView.vue";
+import ApplicationAuthorizationGlobalInfoView from "@/views/authorizations/ApplicationAuthorizationGlobalInfoView.vue";
+import ApplicationAuthorizationsGlobalView from "@/views/authorizations/ApplicationAuthorizationsGlobalView.vue";
 
 Vue.use(VueRouter);
 
@@ -65,6 +67,16 @@ const routes = [
   {
     path: "/applications/:applicationName/dataTypes",
     component: DataTypesManagementView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/dataTypes/authorizationsGlobal",
+    component: ApplicationAuthorizationsGlobalView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/dataTypes/authorizationsGlobal/:authorizationGlobalId",
+    component: ApplicationAuthorizationGlobalInfoView,
     props: true,
   },
   {

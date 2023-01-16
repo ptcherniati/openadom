@@ -1,84 +1,82 @@
 <template>
   <div>
     <li
-        v-if="authReference && !authReference.hierarchicalKey"
-        class="card-content authorizationTable datepicker-row"
+      v-if="authReference && !authReference.hierarchicalKey"
+      class="card-content authorizationTable datepicker-row"
     >
       <slot class="row"></slot>
       <div v-for="(scope, index) of authReference" :key="index">
         <div v-if="canShowLine(index)">
           <div class="columns" @mouseleave="upHere = false" @mouseover="upHere = true">
             <div
-                v-for="(column, indexColumn) of columnsVisible"
-                :key="indexColumn"
-                :class="{ hover: upHere && scope.isLeaf }"
-                class="column"
-                :style="!column.display ? 'display : contents':''"
+              v-for="(column, indexColumn) of columnsVisible"
+              :key="indexColumn"
+              :class="{ hover: upHere && scope.isLeaf }"
+              class="column"
+              :style="!column.display ? 'display : contents' : ''"
             >
               <a
-                  v-if="
+                v-if="
                   column.display &&
                   indexColumn === 'label' &&
                   (!scope.isLeaf || remainingOption.length)
                 "
-                  :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
-                  :field="indexColumn"
-                  style="min-height: 10px; display: table-cell; vertical-align: middle"
-                  @click="indexColumn === 'label' && toggle(index)"
+                :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
+                :field="indexColumn"
+                style="min-height: 10px; display: table-cell; vertical-align: middle"
+                @click="indexColumn === 'label' && toggle(index)"
               >
                 <span style="margin-right: 10px">
-                  <FontAwesomeIcon
-                      :icon="openChild ? 'caret-down' : 'caret-right'"
-                      tabindex="0"
-                  />
+                  <FontAwesomeIcon :icon="openChild ? 'caret-down' : 'caret-right'" tabindex="0" />
                 </span>
                 <span> {{ localName(scope) }} </span>
               </a>
               <p
-                  v-else-if="
+                v-else-if="
                   column.display &&
                   indexColumn === 'label' &&
                   !(!scope.isLeaf || remainingOption.length)
                 "
-                  :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
-                  :field="indexColumn"
+                :class="!scope.isLeaf || remainingOption.length ? 'leaf' : 'folder'"
+                :field="indexColumn"
               >
                 {{ localName(scope) }}
               </p>
-              <b-field v-else-if="column.display && indexColumn === 'admin'" :field="indexColumn" class="column">
-                <b-tooltip
-                    type="is-warning"
-                    :label="$t('dataTypeAuthorizations.all-autorisation')"
-                >
+              <b-field
+                v-else-if="column.display && indexColumn === 'admin'"
+                :field="indexColumn"
+                class="column"
+              >
+                <b-tooltip type="is-warning" :label="$t('dataTypeAuthorizations.all-autorisation')">
                   <b-icon
-                      :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
-                      class="clickable"
-                      pack="far"
-                      size="is-medium"
-                      type="is-warning"
-                      @click.native="selectCheckboxAll($event, index, indexColumn)"
+                    :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                    class="clickable"
+                    pack="far"
+                    size="is-medium"
+                    type="is-warning"
+                    @click.native="selectCheckboxAll($event, index, indexColumn)"
                   />
                 </b-tooltip>
               </b-field>
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
-                    type="is-warning"
-                    :active="canShowWarning(index, indexColumn)"
-                    :label="$t('validation.noRightsForThisOPeration')"
+                  type="is-warning"
+                  :active="canShowWarning(index, indexColumn)"
+                  :label="$t('validation.noRightsForThisOPeration')"
                 >
                   <b-icon
-                      :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
-                      class="clickable"
-                      pack="far"
-                      size="is-medium"
-                      :type="
+                    :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
+                    class="clickable"
+                    pack="far"
+                    size="is-medium"
+                    :type="
                       states[indexColumn][getPath(index)].hasPublicStates ||
                       canShowWarning(index, indexColumn)
                         ? 'is-light'
                         : 'is-primary'
                     "
-                      :disabled="canShowWarning(index, indexColumn)"
-                      @click.native="
+                    :disabled="canShowWarning(index, indexColumn)"
+                    @click.native="
                       canShowWarning(index, indexColumn)
                         ? (index) => i
                         : selectCheckbox($event, index, indexColumn)
@@ -86,32 +84,32 @@
                   />
                 </b-tooltip>
                 <AuthorizationForPeriodDatagroups
-                    v-if="states[indexColumn][getPath(index)].fromAuthorization"
-                    :column="column"
-                    :data-groups="dataGroups"
-                    :state="states[indexColumn][getPath(index)]"
-                    :index="index"
-                    :index-column="indexColumn"
-                    :disabled="canShowWarning(index, indexColumn)"
-                    @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
+                  v-if="states[indexColumn][getPath(index)].fromAuthorization"
+                  :column="column"
+                  :data-groups="dataGroups"
+                  :state="states[indexColumn][getPath(index)]"
+                  :index="index"
+                  :index-column="indexColumn"
+                  :disabled="canShowWarning(index, indexColumn)"
+                  @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
                 />
                 <b-tooltip
-                    position="is-right"
-                    multilined
-                    v-if="
+                  position="is-right"
+                  multilined
+                  v-if="
                     states[indexColumn][getPath(index)].state === 0 ||
                     states[indexColumn][getPath(index)].state === -1
                   "
                 >
                   <b-button
-                      v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-                      disabled
-                      style="border: none; background-color: transparent"
+                    v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
+                    disabled
+                    style="border: none; background-color: transparent"
                   >
                     <b-icon
-                        v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
-                        icon="ellipsis-h"
-                        size="fa-4x"
+                      v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
+                      icon="ellipsis-h"
+                      size="fa-4x"
                     ></b-icon>
                   </b-button>
                   <template v-slot:content>
@@ -124,7 +122,7 @@
                         <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
                         <span>{{ $t("dataTypeAuthorizations.or") }}</span>
                         <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
-                        <br/>
+                        <br />
                         {{ $t("dataTypeAuthorizations.select-authorization") }}
                       </p>
                     </div>
@@ -134,7 +132,7 @@
                         <b>{{ $t("dataTypeAuthorizations.a-period") }} </b>
                         <span>{{ $t("dataTypeAuthorizations.or") }} </span>
                         <b>{{ $t("dataTypeAuthorizations.a-datagroup") }}</b>
-                        <br/>
+                        <br />
                         {{ $t("dataTypeAuthorizations.select-authorization") }}
                       </p>
                       <p class="has-background-white-bis has-text-danger-dark">
@@ -147,27 +145,27 @@
             </div>
           </div>
           <ul
-              v-if="authReference && (!scope.isLeaf || remainingOption.length) && open && open[index]"
-              class="rows"
+            v-if="authReference && (!scope.isLeaf || remainingOption.length) && open && open[index]"
+            class="rows"
           >
             <AuthorizationTable
-                v-if="authReference"
-                :auth-reference="getNextAuthreference(scope)"
-                :publicAuthorizations="publicAuthorizations"
-                :ownAuthorizations="ownAuthorizations"
-                :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
-                :authorization="authorization"
-                :columns-visible="columnsVisible"
-                :data-groups="dataGroups"
-                :isApplicationAdmin="isApplicationAdmin"
-                :path="getPath(index)"
-                :remaining-option="getRemainingOption(scope)"
-                :required-authorizations="{}"
-                :authorization-scopes="authorizationScopes"
-                :current-authorization-scope="getCurrentAuthorizationScope(scope)"
-                @setIndetermined="eventSetIndetermined($event, index)"
-                @modifyAuthorization="$emit('modifyAuthorization', $event)"
-                @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
+              v-if="authReference"
+              :auth-reference="getNextAuthreference(scope)"
+              :publicAuthorizations="publicAuthorizations"
+              :ownAuthorizations="ownAuthorizations"
+              :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
+              :authorization="authorization"
+              :columns-visible="columnsVisible"
+              :data-groups="dataGroups"
+              :isApplicationAdmin="isApplicationAdmin"
+              :path="getPath(index)"
+              :remaining-option="getRemainingOption(scope)"
+              :required-authorizations="{}"
+              :authorization-scopes="authorizationScopes"
+              :current-authorization-scope="getCurrentAuthorizationScope(scope)"
+              @setIndetermined="eventSetIndetermined($event, index)"
+              @modifyAuthorization="$emit('modifyAuthorization', $event)"
+              @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
             />
           </ul>
         </div>
@@ -177,22 +175,22 @@
 </template>
 
 <script>
-import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
-import {Authorization} from "@/model/authorization/Authorization";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { Authorization } from "@/model/authorization/Authorization";
 import AuthorizationForPeriodDatagroups from "@/components/common/AuthorizationForPeriodDatagroups.vue";
 
 @Component({
-  components: {FontAwesomeIcon, AuthorizationForPeriodDatagroups},
+  components: { FontAwesomeIcon, AuthorizationForPeriodDatagroups },
 })
 export default class AuthorizationTable extends Vue {
-  STATES = {"-1": "square-minus", 0: "square", 1: "square-check"};
+  STATES = { "-1": "square-minus", 0: "square", 1: "square-check" };
   EXTRACTION = "extraction";
   @Prop() authReference; //informations about node
   @Prop() remainingOption; //array of next nodes
   @Prop() columnsVisible; // infos for columns
-  @Prop({default: ""}) path;
-  @Prop({default: false}) isRoot;
+  @Prop({ default: "" }) path;
+  @Prop({ default: false }) isRoot;
   @Prop() dataGroups; // array of the datagroups in  authorization configuration
   @Prop() publicAuthorizations; //the authorizations for public
   @Prop() ownAuthorizations; //the authorizations for user
@@ -250,26 +248,26 @@ export default class AuthorizationTable extends Vue {
 
   canShowLine(index) {
     return this.isApplicationAdmin ||
-    this.ownAuthorizations.find(
+      this.ownAuthorizations.find(
         (oa) => this.getPath(index).startsWith(oa) || oa.startsWith(this.getPath(index))
-    )
-        ? true
-        : false;
+      )
+      ? true
+      : false;
   }
 
   canShowWarning(index, column) {
     return this.isApplicationAdmin ||
-    (this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
+      (this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
         this.isAuthorizedColumnForPath(index, column))
-        ? false
-        : true;
+      ? false
+      : true;
   }
 
   isAuthorizedColumnForPath(index, column) {
     for (const path in this.ownAuthorizationsColumnsByPath) {
       if (
-          this.getPath(index).startsWith(path) &&
-          this.ownAuthorizationsColumnsByPath[path].indexOf(column) >= 0
+        this.getPath(index).startsWith(path) &&
+        this.ownAuthorizationsColumnsByPath[path].indexOf(column) >= 0
       ) {
         return true;
       }
@@ -297,16 +295,16 @@ export default class AuthorizationTable extends Vue {
 
   localName(states) {
     return (
-        states.localName ||
-        (this.authReference.authorizationScope && this.authReference.authorizationScope.localName) ||
-        "pas trouve"
+      states.localName ||
+      (this.authReference.authorizationScope && this.authReference.authorizationScope.localName) ||
+      "pas trouve"
     );
   }
 
   toggle(index) {
     var open = {};
     open[index] = !this.open[index];
-    this.open = {...this.open, ...open};
+    this.open = { ...this.open, ...open };
     this.openChild = !this.openChild;
   }
 
@@ -322,7 +320,7 @@ export default class AuthorizationTable extends Vue {
     let thisStateElement = this.states[indexColumn][this.getPath(index)];
     this.selectCheckbox(event, index, indexColumn, authorizations);
     for (let nameColumn in this.columnsVisible) {
-      if(nameColumn !== "admin") {
+      if (nameColumn !== "admin") {
         if (this.states[nameColumn]) {
           let stateElement = this.states[nameColumn][this.getPath(index)];
           if (thisStateElement.state === stateElement.state) {
@@ -340,20 +338,20 @@ export default class AuthorizationTable extends Vue {
     }
     var stateElement = this.states[indexColumn][this.getPath(index)];
     var currentPath = this.getPath(index);
-    authorizations = authorizations || {toDelete: [], toAdd: []};
+    authorizations = authorizations || { toDelete: [], toAdd: [] };
     if (stateElement.state === 1) {
       checkedAuthorization = this.authorization.getCheckedAuthorization(indexColumn, currentPath);
       if (checkedAuthorization.scopeKey === currentPath) {
         authorizations.toDelete.push(checkedAuthorization.auth);
-        eventToEmit = {currentPath, authorizations, index, indexColumn};
+        eventToEmit = { currentPath, authorizations, index, indexColumn };
         this.$emit("modifyAuthorization", eventToEmit);
       } else {
         var indetermined = false;
         var count = 0;
         for (const authReferenceKey in this.authReference) {
           if (authReferenceKey !== index) {
-            authorization = {...checkedAuthorization.auth};
-            requiredAuthorizations = {...this.currentAuthorizationScope};
+            authorization = { ...checkedAuthorization.auth };
+            requiredAuthorizations = { ...this.currentAuthorizationScope };
             authReference = this.authReference[authReferenceKey];
             requiredAuthorizations[authReference.authorizationScope] = authReference.currentPath;
             authorization.requiredAuthorizations = requiredAuthorizations;
@@ -362,7 +360,7 @@ export default class AuthorizationTable extends Vue {
             indetermined = true;
           }
         }
-        eventToEmit = {event, index, indexColumn, authorizations};
+        eventToEmit = { event, index, indexColumn, authorizations };
         if (indetermined || !count) {
           this.$emit("setIndetermined", eventToEmit);
         } else {
@@ -373,19 +371,19 @@ export default class AuthorizationTable extends Vue {
       let reference = this.authReference[index];
       requiredAuthorizations = this.currentAuthorizationScope || {};
       requiredAuthorizations[reference.authorizationScope] = reference.currentPath;
-      let currentAuthorization = new Authorization({requiredAuthorizations});
+      let currentAuthorization = new Authorization({ requiredAuthorizations });
       let currentPath = currentAuthorization.getPath(this.authorizationScopes.map((as) => as.id));
       let dependants = this.authorization.getDependants(indexColumn, currentPath);
       authorizations.toDelete = [...authorizations.toDelete, ...dependants];
       if (
-          Object.values(this.states[indexColumn]).filter((s) => s.state !== 1).length - 1 ||
-          this.isRoot
+        Object.values(this.states[indexColumn]).filter((s) => s.state !== 1).length - 1 ||
+        this.isRoot
       ) {
         authorizations.toAdd.push(currentAuthorization);
-        eventToEmit = {event, index, indexColumn, authorizations};
+        eventToEmit = { event, index, indexColumn, authorizations };
         this.$emit("modifyAuthorization", eventToEmit);
       } else {
-        eventToEmit = {event, index, indexColumn, authorizations};
+        eventToEmit = { event, index, indexColumn, authorizations };
         this.$emit("setIndetermined", eventToEmit);
       }
     }
@@ -394,7 +392,7 @@ export default class AuthorizationTable extends Vue {
   getCurrentAuthorizationScope(scope) {
     var authorizationScope = {};
     authorizationScope[scope.authorizationScope] = scope.currentPath;
-    return {...this.currentAuthorizationScope, ...authorizationScope};
+    return { ...this.currentAuthorizationScope, ...authorizationScope };
   }
 
   getNextAuthreference(states) {
