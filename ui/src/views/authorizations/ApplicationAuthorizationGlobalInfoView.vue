@@ -441,26 +441,6 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
               this.authorizationScopes.map((as) => as.id)
           );
         }
-        let currentAuthorizationUsers = this.authorization.users || [];
-        this.selectedUsers = this.users
-            .filter((user) => {
-              return currentAuthorizationUsers.find((u) => {
-                return u.id === user.id;
-              });
-            })
-            .map((user) => user.id);
-        for (let i = 0; i < this.selectedUsers.length; i++) {
-          for (let j = 0; j < this.users.length; j++) {
-            if (this.selectedUsers[i] === this.users[j].id) {
-              this.selectedlabels.push(this.users[j].label);
-            }
-          }
-        }
-        for (let i = 0; i < this.users.length; i++) {
-          if (!this.selectedlabels.includes(this.users[i].label))
-            this.userLabels.push(this.users[i].label);
-        }
-        this.userLabels.sort();
         grantableInfos.authorizationScopes.reverse();
         let ret = {};
         for (let auth in grantableInfos.authorizationScopes) {
@@ -521,6 +501,26 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
         }
         this.authReferences = remainingAuthorizations;
       }
+      let currentAuthorizationUsers = this.authorization.users || [];
+      this.selectedUsers = this.users
+          .filter((user) => {
+            return currentAuthorizationUsers.find((u) => {
+              return u.id === user.id;
+            });
+          })
+          .map((user) => user.id);
+      for (let i = 0; i < this.selectedUsers.length; i++) {
+        for (let j = 0; j < this.users.length; j++) {
+          if (this.selectedUsers[i] === this.users[j].id) {
+            this.selectedlabels.push(this.users[j].label);
+          }
+        }
+      }
+      for (let i = 0; i < this.users.length; i++) {
+        if (!this.selectedlabels.includes(this.users[i].label))
+          this.userLabels.push(this.users[i].label);
+      }
+      this.userLabels.sort();
     } catch (error) {
       this.alertService.toastServerError(error);
     }
