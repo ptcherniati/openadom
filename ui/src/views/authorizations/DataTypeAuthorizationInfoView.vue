@@ -382,7 +382,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       if (!this.repositury) {
         this.columnsVisible.publication = { ...this.columnsVisible.publication, display: false };
       }
-      if (this.authorizationId != "new") {
+      if (this.authorizationId !== "new") {
         var authorizations = await this.authorizationService.getAuthorizations(
           this.applicationName,
           this.dataTypeId,
@@ -426,7 +426,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.selectedUsers = this.users
         .filter((user) => {
           return currentAuthorizationUsers.find((u) => {
-            return u.id == user.id;
+            return u.id === user.id;
           });
         })
         .map((user) => user.id);

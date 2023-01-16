@@ -69,39 +69,68 @@
           </b-field>
         </ValidationProvider>
       </div>
-      <AuthorizationTable
-          v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
-          :auth-reference="authReferences[0]"
-          :authorization-scopes="authorizationScopes"
-          :columns-visible="columnsVisible"
-          :data-groups="dataGroups"
-          :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
-          :authorization="authorization"
-          :isApplicationAdmin="isApplicationAdmin"
-          :publicAuthorizations="publicAuthorizations"
-          :ownAuthorizations="ownAuthorizations"
-          :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
-          :current-authorization-scope="{}"
-          :is-root="true"
-          class="rows"
-          @modifyAuthorization="modifyAuthorization($event)"
-          @registerCurrentAuthorization="registerCurrentAuthorization($event)"
-      >
-        <div class="row">
-          <div class="columns">
-            <b-field
-                v-for="(column, indexColumn) of columnsVisible"
-                :key="indexColumn"
-                :field="indexColumn"
-                :label="getColumnTitle(column)"
-                class="column"
-                :style="!column.display ? 'display : contents' : ''"
-            ></b-field>
+      <b-collapse
+          v-for="dataType in application && application.dataTypes
+            ? Object.keys(application.dataTypes)
+            : []"
+          :key="dataType"
+          class="card"
+          animation="slide"
+          aria-id="contentIdForA11y3">
+        <template #trigger="props">
+          <div
+              class="card-header"
+              role="button"
+              aria-controls="contentIdForA11y3"
+              :aria-expanded="props.open">
+            <p class="card-header-title">
+              {{ dataType }}
+            </p>
+            <a class="card-header-icon">
+              <b-icon
+                  :icon="props.open ? 'caret-down' : 'caret-up'">
+              </b-icon>
+            </a>
+          </div>
+        </template>
+        <div class="card-content">
+          <div class="content">
+          <AuthorizationTable
+              v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
+              :auth-reference="authReferences[0]"
+              :auth-dataType="authDataTypes[dataType]"
+              :authorization-scopes="authorizationScopes"
+              :columns-visible="columnsVisible"
+              :data-groups="dataGroups"
+              :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
+              :authorization="authorization"
+              :isApplicationAdmin="isApplicationAdmin"
+              :publicAuthorizations="publicAuthorizations"
+              :ownAuthorizations="ownAuthorizations"
+              :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
+              :current-authorization-scope="{}"
+              :is-root="true"
+              class="rows"
+              @modifyAuthorization="modifyAuthorization($event)"
+              @registerCurrentAuthorization="registerCurrentAuthorization($event)"
+          >
+            <div class="row">
+              <div class="columns">
+                <b-field
+                    v-for="(column, indexColumn) of columnsVisible"
+                    :key="indexColumn"
+                    :field="indexColumn"
+                    :label="getColumnTitle(column)"
+                    class="column"
+                    :style="!column.display ? 'display : contents' : ''"
+                ></b-field>
+              </div>
+            </div>
+            <b-loading :is-full-page="null" v-model="isLoading"></b-loading>
+          </AuthorizationTable>
           </div>
         </div>
-        <b-loading :is-full-page="null" v-model="isLoading"></b-loading>
-      </AuthorizationTable>
-
+      </b-collapse>
       <div class="buttons">
         <b-button
             icon-left="plus"
@@ -175,6 +204,7 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
   isApplicationAdmin = false;
   isLoading;
   openOnFocus = true;
+  authDataTypes = [];
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -311,10 +341,12 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
         localName: this.internationalisationService.mergeInternationalization(this.application)
             .localName
       };
-      for (let dataTypeId in this.application.dataTypes ) {
+      this.dataTypeDescriptions = this.internationalisationService.localeDatatypeName(
+        this.application
+      );
+      for (let dataTypeId in this.dataTypeDescriptions ) {
         this.configuration = this.application.configuration.dataTypes[dataTypeId];
         this.authorizations = this.configuration?.authorization?.authorizationScopes || [];
-        console.log(dataTypeId);
         this.repositury = this.application.dataTypes[dataTypeId].repository != null;
         const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
             this.applicationName,
@@ -465,7 +497,9 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
               ret[key]?.references?.referenceValues,
               ret[key]?.authorizationScope
           );
+          this.authDataTypes[dataTypeId] = dataTypeId;
           remainingAuthorizations[key] = partition;
+          //remainingAuthorizations.unshift(this.authDataTypes);
         }
         if (!remainingAuthorizations.length) {
           remainingAuthorizations = [
@@ -516,7 +550,7 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
       var previousKeySplit = currentPath ? currentPath.split(".") : [];
       var keys = referenceValue.hierarchicalKey.split(".");
       var references = referenceValue.hierarchicalReference.split(".");
-      if (previousKeySplit.length == keys.length) {
+      if (previousKeySplit.length === keys.length) {
         continue;
       }
       for (let i = 0; i < previousKeySplit.length; i++) {
@@ -529,7 +563,7 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
       let refValues = await this.getOrLoadReferences(reference);
       this.internationalisationService.getUserPrefLocale();
       let lang = localStorage.getItem(LOCAL_STORAGE_LANG);
-      let localName = refValues.referenceValues.find((r) => r.naturalKey == key);
+      let localName = refValues.referenceValues.find((r) => r.naturalKey === key);
       if (localName?.values?.["__display_" + lang]) {
         localName = localName?.values?.["__display_" + lang];
       } else {
@@ -540,7 +574,7 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
       }
       var completeLocalName =
           typeof currentCompleteLocalName === "undefined" ? "" : currentCompleteLocalName;
-      completeLocalName = completeLocalName + (completeLocalName == "" ? "" : ",") + localName;
+      completeLocalName = completeLocalName + (completeLocalName === "" ? "" : ",") + localName;
       let authPartition = returnValues[key] || {
         key,
         reference,
@@ -559,7 +593,7 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
       let referenceValueLeaf = auth.referenceValues?.[0];
       if (
           auth.referenceValues.length <= 1 &&
-          referenceValueLeaf.hierarchicalKey == auth.currentPath
+          referenceValueLeaf.hierarchicalKey === auth.currentPath
       ) {
         returnValues[returnValuesKey] = {
           ...auth,

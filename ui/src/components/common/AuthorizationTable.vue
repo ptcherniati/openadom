@@ -187,6 +187,7 @@ export default class AuthorizationTable extends Vue {
   STATES = { "-1": "square-minus", 0: "square", 1: "square-check" };
   EXTRACTION = "extraction";
   @Prop() authReference; //informations about node
+  @Prop() authDataType; //informations about node
   @Prop() remainingOption; //array of next nodes
   @Prop() columnsVisible; // infos for columns
   @Prop({ default: "" }) path;
