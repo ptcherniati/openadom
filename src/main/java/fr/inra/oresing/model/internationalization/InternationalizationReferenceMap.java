@@ -13,4 +13,5 @@ public class InternationalizationReferenceMap {
     Map<String, Internationalization> internationalizedDynamicColumns;
     InternationalizationDisplay internationalizationDisplay;
     Map<String, Internationalization> internationalizedValidations;
+    Map<String, Internationalization> internationalizedTags;
 }

@@ -147,7 +147,7 @@ public class OreSiResources {
                                     dynamicColumnDescription.getReferenceColumnToLookForHeader(),
                                     dynamicColumnDescription.getPresenceConstraint().isMandatory()));
                     Set<String> children = childrenPerReferences.get(reference);
-                    return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns);
+                    return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns, referenceDescription.getTags().keySet());
                 }):Map.of();
         Map<String, ApplicationResult.DataType> dataTypes = withDatatypes?Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {

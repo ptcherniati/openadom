@@ -187,6 +187,8 @@ public class Configuration {
             return doGetStaticColumnDescriptions().keySet();
         }
 
+        public Map<String, Internationalization> tags;
+
         public Map<String, ReferenceColumnDescription> doGetAllColumnDescriptions() {
             Map<String, ReferenceColumnDescription> allColumnDescriptions = new LinkedHashMap<>();
             allColumnDescriptions.putAll(doGetStaticColumnDescriptions());
@@ -220,8 +222,9 @@ public class Configuration {
                 internationalizationReferenceMap.put(reference, internationalizationReference);
                 Map<String, Internationalization> internationalizedDynamicColumns =
                         Maps.transformValues(referenceDescription.getDynamicColumns(), ReferenceDynamicColumnDescription::getInternationalizationName);
-
                 internationalizationReference.setInternationalizedDynamicColumns(internationalizedDynamicColumns);
+                Map<String, Internationalization> internationalizedtags = referenceDescription.getTags();
+                internationalizationReference.setInternationalizedTags(internationalizedtags);
                 internationalizationReferenceMap.put(reference, internationalizationReference);
             }
             return internationalizationReferenceMap;

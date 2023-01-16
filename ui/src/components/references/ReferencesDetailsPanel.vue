@@ -5,6 +5,9 @@
     :title="reference && (reference.refNameLocal || reference.label)"
     :close-cb="closeCb"
   >
+    <b-tag v-for="tag in reference.tags" :key="tag" class="is-primary is-light">
+      {{tags[tag].localName}}
+    </b-tag>
     <div class="Panel-buttons">
       <b-button type="is-danger" icon-left="trash-alt" @click="askDeletionConfirmation">{{
         $t("referencesManagement.delete")
@@ -26,6 +29,7 @@ export default class ReferencesDetailsPanel extends Vue {
   @Prop({ default: false }) open;
   @Prop() reference;
   @Prop() closeCb;
+  @Prop() tags;
 
   alertService = AlertService.INSTANCE;
 

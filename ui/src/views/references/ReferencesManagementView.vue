@@ -1,71 +1,81 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :root="application.localName"
-      :paths="subMenuPaths"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName"
+        role="navigation"
     />
     <h1 class="title main-title">
-      {{ $t("titles.references-page", { applicationName: application.localName }) }}
+      {{ $t("titles.references-page", {applicationName: application.localName}) }}
     </h1>
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" :key="msg">
         <b-message
-          :title="$t('message.data-type-config-error')"
-          type="is-danger"
-          has-icon
-          :aria-close-label="$t('message.close')"
-          class="mt-4"
+            :aria-close-label="$t('message.close')"
+            :title="$t('message.data-type-config-error')"
+            class="mt-4"
+            has-icon
+            type="is-danger"
         >
-          <span v-html="msg" />
+          <span v-html="msg"/>
         </b-message>
       </div>
     </div>
-    <div>
+    <b-field class="section">
+      <b-taglist>
+        <b-tag v-for="(tag, index) in tags" :key="index" :icon="tag.selected?'times':'check'"
+               :type="tag.selected?'is-primary':'is-warning'"
+               rounded @click="toggle(index)">
+          {{ tag.localName }}
+        </b-tag>
+      </b-taglist>
+    </b-field>
+    <div class="section">
       <CollapsibleTree
-        class="liste"
-        v-for="(ref, i) in references"
-        :key="ref.id"
-        :option="ref"
-        :level="0"
-        :id="i + 1"
-        :on-click-label-cb="(event, label) => openRefDetails(event, label)"
-        :on-upload-cb="(label, refFile) => uploadReferenceCsv(label, refFile)"
-        :buttons="buttons"
-        :application-title="$t('titles.references-page')"
-        :line-count="lineCount(ref)"
+          v-for="(ref, i) in referencesToBeShown"
+          :id="i + 1"
+          :key="ref.id"
+          :application-title="$t('titles.references-page')"
+          :buttons="buttons"
+          :level="0"
+          :line-count="lineCount(ref)"
+          :on-click-label-cb="(event, label) => openRefDetails(event, label)"
+          :on-upload-cb="(label, refFile) => uploadReferenceCsv(label, refFile)"
+          :option="ref"
+          class="liste"
       >
       </CollapsibleTree>
       <ReferencesDetailsPanel
-        :left-align="false"
-        :open="openPanel"
-        :reference="chosenRef"
-        :close-cb="(newVal) => (openPanel = newVal)"
+          :close-cb="(newVal) => (openPanel = newVal)"
+          :left-align="false"
+          :open="openPanel"
+          :reference="chosenRef"
+          :tags="tags"
       />
     </div>
   </PageView>
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
-import { convertReferencesToTrees } from "@/utils/ConversionUtils";
+import {Component, Prop, Vue} from "vue-property-decorator";
+import {convertReferencesToTrees} from "@/utils/ConversionUtils";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import ReferencesDetailsPanel from "@/components/references/ReferencesDetailsPanel.vue";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import { ReferenceService } from "@/services/rest/ReferenceService";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {ReferenceService} from "@/services/rest/ReferenceService";
 
 import PageView from "../common/PageView.vue";
-import { ApplicationResult } from "@/model/ApplicationResult";
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
-import { AlertService } from "@/services/AlertService";
-import { Button } from "@/model/Button";
-import { HttpStatusCodes } from "@/utils/HttpUtils";
-import { ErrorsService } from "@/services/ErrorsService";
+import {ApplicationResult} from "@/model/ApplicationResult";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {AlertService} from "@/services/AlertService";
+import {Button} from "@/model/Button";
+import {HttpStatusCodes} from "@/utils/HttpUtils";
+import {ErrorsService} from "@/services/ErrorsService";
 
 @Component({
-  components: { CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu },
+  components: {CollapsibleTree, ReferencesDetailsPanel, PageView, SubMenu},
 })
 export default class ReferencesManagementView extends Vue {
   @Prop() applicationName;
@@ -86,40 +96,79 @@ export default class ReferencesManagementView extends Vue {
   errorsList = [];
   buttons = [
     new Button(
-      this.$t("referencesManagement.consult"),
-      "eye",
-      (label) => this.consultReference(label),
-      "is-dark"
+        this.$t("referencesManagement.consult"),
+        "eye",
+        (label) => this.consultReference(label),
+        "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
-      this.downloadReference(label)
+        this.downloadReference(label)
     ),
   ];
+
+  get tags() {
+    let tags = {}
+    for (const reference of this.references) {
+      let currentTags = reference.tags;
+      if (!currentTags) {
+        continue;
+      }
+      for (const tagName of currentTags) {
+        if (tags[tagName]) {
+          continue;
+        }
+        tags[tagName] = {};
+        tags[tagName].selected = true;
+        let locale = this.internationalisationService
+            .getLocaleforPath(this.application, 'references.' + reference.id + '.internationalizedTags.' + tagName, tagName)
+        tags[tagName].localName = locale;
+      }
+      reference.localtags = reference.tags.map(tag=>tags[tag]?.localName || tag)
+    }
+    return tags;
+  }
+
+  get referencesToBeShown() {
+    let selectedTags = Object.keys(this.tags).filter(t => this.tags[t].selected)
+    if (!Object.keys(this.tags).length) {
+      return this.references
+    }
+    return this.references
+        .filter(reference => {
+          return reference.tags.some(t => {
+            return selectedTags.includes(t)
+          })
+        });
+  }
 
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("referencesManagement.references").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/references`),
-        () => this.$router.push(`/applications`)
+          this.$t("referencesManagement.references").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/references`),
+          () => this.$router.push(`/applications`)
       ),
     ];
     this.init();
   }
 
+  toggle(tag) {
+    this.tags[tag] = !this.tags[tag]
+  }
+
   async init() {
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName,['CONFIGURATION','REFERENCETYPE']);
+      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION', 'REFERENCETYPE']);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
       };
       if (!this.application?.id) {
         return;
       }
       this.references = convertReferencesToTrees(
-        Object.values(this.internationalisationService.treeReferenceName(this.application))
+          Object.values(this.internationalisationService.treeReferenceName(this.application))
       );
     } catch (error) {
       this.alertService.toastServerError();
@@ -153,8 +202,8 @@ export default class ReferencesManagementView extends Vue {
           } else {
             for (let j = 0; j < ref.children[n].children.length; j++) {
               if (
-                this.application.referenceSynthesis[i].referenceType ===
-                ref.children[n].children[j].label
+                  this.application.referenceSynthesis[i].referenceType ===
+                  ref.children[n].children[j].label
               ) {
                 ref.children[n].children[j] = {
                   ...ref.children[n].children[j],
@@ -214,6 +263,7 @@ export default class ReferencesManagementView extends Vue {
     var ref = Object.values(this.application.references).find((ref) => ref.label === label);
     return ref;
   }
+
 }
 </script>
 <style lang="scss" scoped>
