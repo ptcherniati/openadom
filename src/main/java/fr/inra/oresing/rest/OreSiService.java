@@ -36,6 +36,7 @@ import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
@@ -66,7 +67,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @Transactional
-public class OreSiService {
+public class OreSiService implements InitializingBean {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -153,16 +154,7 @@ public class OreSiService {
 
     public Application initApplication(Application app) {
         authenticationService.resetRole();
-        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
-        org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
-        flywayConfiguration.setDataSource(dataSource);
-        flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
-        flywayConfiguration.setLocations(new Location("classpath:migration/application"));
-        flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
-        flywayConfiguration.getPlaceholders().put("requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(app));
-        flywayConfiguration.getPlaceholders().put("requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(app));
-        Flyway flyway = new Flyway(flywayConfiguration);
-        flyway.migrate();
+        migrateApplicationSchema(app);
 
         OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
         OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
@@ -204,6 +196,8 @@ public class OreSiService {
                 "name = '" + app.getName() + "'"
         ));
 
+        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
+
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
         db.grantUsage(sqlSchemaForApplication, readerOnApplicationRole);
 
@@ -217,6 +211,26 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         repo.application().store(app);
         return app;
+    }
+
+    private void migrateApplicationSchema(Application app) {
+        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
+        ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
+        flywayConfiguration.setDataSource(dataSource);
+        flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
+        flywayConfiguration.setLocations(new Location("classpath:migration/application"));
+        flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(app));
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(app));
+        flywayConfiguration.getPlaceholders().put("requiredAuthorizationsAttributesIndex", sqlSchemaForApplication.requiredAuthorizationsAttributesIndex(app));
+        Flyway flyway = new Flyway(flywayConfiguration);
+        flyway.migrate();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        List<Application> applications = repo.application().findAll();
+        applications.forEach(this::migrateApplicationSchema);
     }
 
     public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {

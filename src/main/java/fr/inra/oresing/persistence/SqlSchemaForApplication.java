@@ -78,4 +78,11 @@ public class SqlSchemaForApplication implements SqlSchema {
                 .collect(Collectors.joining("\n AND "));
         return requiredAuthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredAuthorizationsAttributesComparing)?"":" AND\n ");
     }
+
+    public String requiredAuthorizationsAttributesIndex(Application app) {
+        String requiredAuthorizationsAttributesIndex = app.getConfiguration().getRequiredAuthorizationsAttributes().stream()
+                .map(attribute -> String.format("COALESCE((data.\"authorization\").requiredauthorizations.%s, ''::ltree),", attribute))
+                .collect(Collectors.joining());
+        return requiredAuthorizationsAttributesIndex;
+    }
 }
