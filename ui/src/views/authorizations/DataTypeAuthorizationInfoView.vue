@@ -179,6 +179,9 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   isApplicationAdmin = false;
   isLoading;
 
+  openOnFocus=true
+
+
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
     TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
