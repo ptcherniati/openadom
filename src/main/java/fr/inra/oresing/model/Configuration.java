@@ -187,7 +187,7 @@ public class Configuration {
             return doGetStaticColumnDescriptions().keySet();
         }
 
-        public Map<String, Internationalization> tags;
+        public Map<String, Internationalization> tags = new HashMap<>();
 
         public Map<String, ReferenceColumnDescription> doGetAllColumnDescriptions() {
             Map<String, ReferenceColumnDescription> allColumnDescriptions = new LinkedHashMap<>();
