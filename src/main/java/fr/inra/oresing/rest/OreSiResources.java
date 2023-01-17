@@ -84,7 +84,7 @@ public class OreSiResources {
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Application> getApplications(@RequestParam(required = false, defaultValue = "") String[] filter) {
         List<ApplicationInformation> filters = Arrays.stream(filter)
-                .map(s ->ApplicationInformation.valueOf(s))
+                .map(s -> ApplicationInformation.valueOf(s))
                 .collect(Collectors.toList());
         return service.getApplications(filters);
     }
@@ -107,18 +107,18 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId,@RequestParam(required = false, defaultValue = "") String[] filter) {
+    public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId, @RequestParam(required = false, defaultValue = "") String[] filter) {
         Application application = service.getApplication(nameOrId);
         List<ApplicationInformation> filters = Arrays.stream(filter)
-                .map(s ->ApplicationInformation.valueOf(s))
+                .map(s -> ApplicationInformation.valueOf(s))
                 .collect(Collectors.toList());
         boolean withSynthesis = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.SYNTHESIS);
         boolean withDatatypes = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.DATATYPE);
         boolean withReferenceType = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE);
         boolean withConfiguration = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.CONFIGURATION);
-        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withSynthesis?List.of():service.getReferenceSynthesis(application);
+        final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withSynthesis ? service.getReferenceSynthesis(application) : List.of();
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
-        if(withReferenceType){
+        if (withReferenceType) {
             application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
                 ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
                         .map(Configuration.CompositeReferenceComponentDescription::getReference)
@@ -134,7 +134,7 @@ public class OreSiResources {
                 });
             });
         }
-        Map<String, ApplicationResult.Reference> references = withReferenceType?Maps.transformEntries(
+        Map<String, ApplicationResult.Reference> references = withReferenceType ? Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
                     Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
@@ -147,9 +147,10 @@ public class OreSiResources {
                                     dynamicColumnDescription.getReferenceColumnToLookForHeader(),
                                     dynamicColumnDescription.getPresenceConstraint().isMandatory()));
                     Set<String> children = childrenPerReferences.get(reference);
-                    return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns);
-                }):Map.of();
-        Map<String, ApplicationResult.DataType> dataTypes = withDatatypes?Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
+                    final Set<String> tags = Optional.ofNullable(referenceDescription.getTags()).map(Map::keySet).orElse(Set.of());
+                    return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns, tags);
+                }) : Map.of();
+        Map<String, ApplicationResult.DataType> dataTypes = withDatatypes ? Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
                 Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.doGetAllComponentDescriptions(), (component, componentDescription) -> {
                     return new ApplicationResult.DataType.Variable.Component(component, component);
@@ -178,8 +179,8 @@ public class OreSiResources {
                     })
                     .orElse(null);
             return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations);
-        }):Map.of();
-        Configuration configuration = withConfiguration? application.getConfiguration() : null;
+        }) : Map.of();
+        Configuration configuration = withConfiguration ? application.getConfiguration() : null;
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis, configuration);
         return ResponseEntity.ok(applicationResult);
     }
@@ -334,7 +335,7 @@ public class OreSiResources {
             for (Map.Entry<String, LineChecker> referenceCheckersByVariableComponentKey : referenceLineCheckers.entrySet()) {
                 String variableComponentKey = referenceCheckersByVariableComponentKey.getKey();
                 ReferenceLineChecker referenceLineChecker = (ReferenceLineChecker) referenceCheckersByVariableComponentKey.getValue();
-                if(referenceLineCheckers.get(variableComponentKey) instanceof ReferenceLineCheckerDisplay){
+                if (referenceLineCheckers.get(variableComponentKey) instanceof ReferenceLineCheckerDisplay) {
                     continue;
                 }
                 referenceLineChecker.getReferenceValues().entrySet().stream()

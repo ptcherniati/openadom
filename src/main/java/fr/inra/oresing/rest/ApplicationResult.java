@@ -2,12 +2,16 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
+import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Value
 public class ApplicationResult {
@@ -28,6 +32,7 @@ public class ApplicationResult {
         Set<String> children;
         Map<String, Column> columns;
         Map<String, DynamicColumn> dynamicColumns;
+        Set<String> tags;
 
         @Value
         public static class Column {
@@ -62,6 +67,7 @@ public class ApplicationResult {
         Map<String, Variable> variables;
         Repository repository;
         boolean hasAuthorizations;
+
         @Value
         public static class Repository {
             String filePattern;
@@ -69,6 +75,7 @@ public class ApplicationResult {
             TokenDateDescription startDate;
             TokenDateDescription endDate;
         }
+
         @Value
         public static class TokenDateDescription {
             Integer token;
