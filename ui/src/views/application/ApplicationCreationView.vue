@@ -180,6 +180,7 @@ export default class ApplicationCreationView extends Vue {
   }
 
   async testApplication() {
+    const loadingComponent = this.$buefy.loading.open();
     this.errorsMessages = [];
     try {
       let response = await this.applicationService.validateConfiguration(this.applicationConfig);
@@ -212,6 +213,7 @@ export default class ApplicationCreationView extends Vue {
     } catch (error) {
       this.checkMessageErrors(error);
     }
+    loadingComponent.close();
   }
 
   checkMessageErrors(error) {

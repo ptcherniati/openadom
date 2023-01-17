@@ -13,6 +13,7 @@
     <div v-if="reference && columns">
       <b-table
         :data="tableValues"
+        :loading="isLoading"
         :striped="true"
         :is-focusable="true"
         :is-hoverable="true"
@@ -137,7 +138,7 @@ export default class ReferenceTableView extends Vue {
   });
   totalRows = -1;
   currentPage = 1;
-
+  isLoading = false;
   application = new ApplicationResult();
   subMenuPaths = [];
   reference = {};
@@ -246,6 +247,7 @@ export default class ReferenceTableView extends Vue {
   }
 
   async init() {
+    this.isLoading = true;
     try {
       this.application = await this.applicationService.getApplication(this.applicationName,['CONFIGURATION','REFERENCETYPE']);
       this.application = {
@@ -276,6 +278,7 @@ export default class ReferenceTableView extends Vue {
     } catch (error) {
       this.alertService.toastServerError();
     }
+    this.isLoading = false;
   }
 
   async setInitialVariables() {
