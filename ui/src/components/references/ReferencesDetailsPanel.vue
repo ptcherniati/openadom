@@ -1,32 +1,37 @@
 <template>
   <SidePanel
-    :open="open"
-    :left-align="leftAlign"
-    :title="reference && (reference.refNameLocal || reference.label)"
-    :close-cb="closeCb"
+      :close-cb="closeCb"
+      :left-align="leftAlign"
+      :open="open"
+      :title="reference && (reference.refNameLocal || reference.label)"
   >
-    <b-tag v-for="tag in reference.tags" :key="tag" class="is-primary is-light">
-      {{tags[tag].localName}}
-    </b-tag>
+    <div v-if="tags">Etiquettes :
+      <b-tag v-for="(tag, index) in tags" :key="index" class="is-primary is-light">
+        <span v-if="tag">
+         {{ tag.localName }}
+        </span>
+      </b-tag>
+    </div>
     <div class="Panel-buttons">
-      <b-button type="is-danger" icon-left="trash-alt" @click="askDeletionConfirmation">{{
-        $t("referencesManagement.delete")
-      }}</b-button>
+      <b-button icon-left="trash-alt" type="is-danger" @click="askDeletionConfirmation">{{
+          $t("referencesManagement.delete")
+        }}
+      </b-button>
     </div>
   </SidePanel>
 </template>
 
 <script>
-import { AlertService } from "@/services/AlertService";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import {AlertService} from "@/services/AlertService";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import SidePanel from "../common/SidePanel.vue";
 
 @Component({
-  components: { SidePanel },
+  components: {SidePanel},
 })
 export default class ReferencesDetailsPanel extends Vue {
-  @Prop({ default: false }) leftAlign;
-  @Prop({ default: false }) open;
+  @Prop({default: false}) leftAlign;
+  @Prop({default: false}) open;
   @Prop() reference;
   @Prop() closeCb;
   @Prop() tags;
@@ -35,11 +40,11 @@ export default class ReferencesDetailsPanel extends Vue {
 
   askDeletionConfirmation() {
     this.alertService.dialog(
-      this.$t("alert.warning"),
-      this.$t("alert.reference-deletion-msg", { label: this.reference.label }),
-      this.$t("alert.delete"),
-      "is-danger",
-      () => this.deleteReference()
+        this.$t("alert.warning"),
+        this.$t("alert.reference-deletion-msg", {label: this.reference.label}),
+        this.$t("alert.delete"),
+        "is-danger",
+        () => this.deleteReference()
     );
   }
 

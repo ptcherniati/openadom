@@ -23,6 +23,7 @@
       </div>
     </div>
     <b-field class="section">
+      Etiquettes :
       <b-taglist>
         <b-tag v-for="(tag, index) in tags" :key="index" :icon="tag.selected?'times':'check'"
                :type="tag.selected?'is-primary':'is-warning'"
@@ -105,8 +106,25 @@ export default class ReferencesManagementView extends Vue {
         this.downloadReference(label)
     ),
   ];
+  tags={};
 
-  get tags() {
+  get referencesToBeShown() {
+    if (!this.tags) {
+      return this.references
+    }
+    let selectedTags = Object.keys(this.tags).filter(t => this.tags[t].selected)
+    if (!Object.keys(this.tags).length) {
+      return this.references
+    }
+    return this.references
+        .filter(reference => {
+          return reference.tags.some(t => {
+            return selectedTags.includes(t)
+          })
+        });
+  }
+
+  buildTags() {
     let tags = {}
     for (const reference of this.references) {
       let currentTags = reference.tags;
@@ -123,22 +141,9 @@ export default class ReferencesManagementView extends Vue {
             .getLocaleforPath(this.application, 'references.' + reference.id + '.internationalizedTags.' + tagName, tagName)
         tags[tagName].localName = locale;
       }
-      reference.localtags = reference.tags.map(tag=>tags[tag]?.localName || tag)
+      reference.localtags = reference.tags.map(tag => tags[tag]?.localName || tag)
     }
-    return tags;
-  }
-
-  get referencesToBeShown() {
-    let selectedTags = Object.keys(this.tags).filter(t => this.tags[t].selected)
-    if (!Object.keys(this.tags).length) {
-      return this.references
-    }
-    return this.references
-        .filter(reference => {
-          return reference.tags.some(t => {
-            return selectedTags.includes(t)
-          })
-        });
+    this.tags= tags;
   }
 
   created() {
@@ -153,7 +158,9 @@ export default class ReferencesManagementView extends Vue {
   }
 
   toggle(tag) {
-    this.tags[tag] = !this.tags[tag]
+    let tags = this.tags
+    tags[tag].selected = !tags[tag].selected
+    this.tags = tags
   }
 
   async init() {
@@ -170,6 +177,7 @@ export default class ReferencesManagementView extends Vue {
       this.references = convertReferencesToTrees(
           Object.values(this.internationalisationService.treeReferenceName(this.application))
       );
+      this.buildTags();
     } catch (error) {
       this.alertService.toastServerError();
     }
