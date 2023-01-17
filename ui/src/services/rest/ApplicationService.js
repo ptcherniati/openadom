@@ -22,6 +22,13 @@ export class ApplicationService extends Fetcher {
     });
   }
 
+  async getAllApplications() {
+    var applications = await this.get("applications/");
+    return applications.map((a) => {
+      return InternationalisationService.INSTANCE.mergeInternationalization(a);
+    });
+  }
+
   async getApplication(name, filter) {
     var application = await this.get("applications/" + name, {filter});
     return InternationalisationService.INSTANCE.mergeInternationalization(application);
