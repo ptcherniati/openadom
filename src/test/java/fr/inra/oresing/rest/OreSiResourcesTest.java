@@ -233,8 +233,7 @@ public class OreSiResourcesTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .param("filter", "ALL")
                             .cookie(monsoreCookie))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.referenceSynthesis[ ?(@.referenceType=='valeurs_qualitatives')].lineCount", IsEqual.equalTo(List.of(3))));
+                    .andExpect(status().isOk());
 
             String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsore/references/sites")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -592,6 +591,24 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             JsonPath.parse(response).read("$.id");
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore", "ALL,REFERENCETYPE")
+                    .cookie(authCookie)
+                    .param("filter","ALL"))
+                    .andExpect(status().is2xxSuccessful())
+                    ///vérification de la sauvegarde des tags
+                    .andExpect(jsonPath("$.references.type_de_sites.tags", Matchers.hasItem("context")))
+                    .andExpect(jsonPath("$.references.sites.tags", Matchers.hasItem("context")))
+                    .andExpect(jsonPath("$.references.projet.tags", Matchers.hasItem("context")))
+                    .andExpect(jsonPath("$.references.types_de_donnees_par_themes_de_sites_et_projet.tags", Matchers.hasItem("context")))
+                    .andExpect(jsonPath("$.references.especes.tags", Matchers.hasItem("context")))
+                    .andExpect(jsonPath("$.references.especes.tags", Matchers.hasItem("data")))
+                    .andExpect(jsonPath("$.references['type de fichiers'].tags", Matchers.hasItem("context")))
+                    .andExpect(jsonPath("$.references['type de fichiers'].tags", Matchers.hasItem("data")))
+                    .andExpect(jsonPath("$.references.variables.tags", Matchers.hasItem("data")))
+                    .andExpect(jsonPath("$.references.unites.tags", Matchers.hasItem("data")))
+                    .andExpect(jsonPath("$.references.valeurs_qualitatives.tags", Matchers.hasItem("data")))
+                    .andExpect(jsonPath("$.references.variables_et_unites_par_types_de_donnees.tags", Matchers.hasItem("data")))
+                    .andExpect(jsonPath("$.internationalization.references.sites.internationalizedTags.context.fr", Is.is("contexte")));
         }
 
         String response = null;

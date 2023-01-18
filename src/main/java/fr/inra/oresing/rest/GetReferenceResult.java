@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.internationalization.Internationalization;
 import lombok.Value;
 
 import java.util.Map;

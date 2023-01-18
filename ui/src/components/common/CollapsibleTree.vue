@@ -54,9 +54,9 @@
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
-          <span class="file-name" v-else-if="lineCount > 0">
+<!--          <span class="file-name" v-else-if="lineCount > 0">
             {{ $t("validation.count-line") }} {{ lineCount }}
-          </span>
+          </span>-->
         </div>
         <div
           :class="
@@ -91,10 +91,16 @@
               :id="option.label"
             />
           </span>
+          <span class="file-name" v-else-if="lineCount > 0">
+            {{ $tc("validation.count-line", lineCount) }}
+          </span>
           <span v-else class="nodata has-text-danger" style="margin-left: 50px">
             {{ $t("validation.data-empty") }}
           </span>
         </div>
+        <b-tag v-for="tag in option.localtags" :key="tag" class="is-primary is-light">
+          {{tag}}
+        </b-tag>
       </div>
       <div class="CollapsibleTree-buttons column is-2">
         <div class="file button is-small is-info" v-if="onUploadCb">
@@ -249,7 +255,7 @@ $row-height: 40px;
     border: none;
     height: 100%;
     display: inherit;
-    border-left: solid 2px;
+    //border-left: solid 2px;
     border-radius: 0;
     padding-left: 0.5em;
     margin-left: 0.5em;

@@ -40,7 +40,7 @@
         "authorizations-management": "Gestion des autorisations sur les applications"
     },
     "validation": {
-        "count-line": "Lignes total : ",
+        "count-line": "Aucun enregistrement.|Une ligne.|{count} lignes.",
         "data-empty": "Pas de données",
         "modal-synthesis-variable-default": "Description : ",
         "obligatoire": "Obligatoire",
