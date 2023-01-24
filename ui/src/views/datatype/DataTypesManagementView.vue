@@ -14,6 +14,14 @@
       }}
     </h1>
 
+    <div class="columns">
+      <div class="column is-offset-10 is-2">
+        <b-button icon-left="plus" type="is-primary is-right" @click="addAuthorization">
+          {{ $t("dataTypeAuthorizations.add-auhtorization") }}
+        </b-button>
+      </div>
+    </div>
+
     <AvailablityChart v-if="false" />
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" :key="msg">
@@ -146,6 +154,10 @@ export default class DataTypesManagementView extends Vue {
     ];
 
     this.init();
+  }
+
+  addAuthorization() {
+    this.$router.push(`/applications/${this.applicationName}/dataTypes/authorizationsGlobal`);
   }
 
   async init() {
