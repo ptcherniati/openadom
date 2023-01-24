@@ -38,6 +38,10 @@
         "aria-btn-login": "Validate login form button",
         "aria-btn-signup": "Create an account button"
     },
+    "tags": {
+         "no-tag": "No tag",
+         "tag": "Tags"
+     },
     "validation":{
         "count-line":"Total rows : ",
         "data-empty":"Data empty",
@@ -161,6 +165,7 @@
         "invalidPatternForVariableComponentDateChecker": "The date pattern <code>{pattern}</code> defined for component <code>{component}</code> of variable <code>{variable}</code> of data type <code>{dataType}</code> is incorrect",
         "invalidPatternForVariableComponentRegularExpressionChecker": "The regular expression pattern <code>{pattern}</code> defined for the component <code>{component}</code> of variable <code>{variable}</code> of data type <code>{dataType}</code> is incorrect",
         "invalidReference": "For the identified component: <code> {target} </code> the value <code> {value} </code> does not exist in the reference <code> {refType} </code>. Expected values ​​<code> {referenceValues} </code>. ",
+        "missingTagDeclaration": "In the repository {referenceName}, the tag {tagName} is not declared.<br/>. It must belong to the list of tags {declaredTag}",
         "invalidReferenceWithColumn": "For column: <code> {target} </code> the value <code> {value} </code> does not exist in the reference <code> {refType} </code>. Values expected <code> {referenceValues} </code>. ",
         "missingAggregationComponentForChart": "In the graph description of variable <code>{variable}</code> of data type <code>{dataType}</code>, component <code>{aggregationComponent}</code> of the aggregation variable <code>{aggregationVariable}</code> is not declared.<br /> Expected Values ​​<code>{components}</code>",
         "missingAggregationVariableForChart": "In the chart description of variable <code>{variable}</code> of data type <code>{dataType}</code>, aggregation variable <code>{aggregationVariable}< /code> is not declared.<br /> Expected Values ​​<code>{variables}</code>",

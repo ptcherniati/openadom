@@ -99,7 +99,7 @@
           </span>
         </div>
         <b-tag v-for="tag in option.localtags" :key="tag" class="is-primary is-light">
-          {{tag}}
+          {{tag=='no-tag'?$t('tags.no-tag'):tag}}
         </b-tag>
       </div>
       <div class="CollapsibleTree-buttons column is-2">

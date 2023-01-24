@@ -22,11 +22,11 @@
         </b-message>
       </div>
     </div>
-    <b-field class="section">
-      Etiquettes :
+    <b-field class="section" v-if="tags && Object.keys(tags).length>1">
+      {{$t('tags.tag')}}
       <b-taglist>
-        <b-tag v-for="(tag, index) in tags" :key="index" :icon="tag.selected?'times':'check'"
-               :type="tag.selected?'is-primary':'is-warning'"
+        <b-tag v-for="(tag, index) in tags" :key="index" :icon="tag.selected?'check':''"
+               :type="tag.selected?'is-primary':'is-white'"
                rounded @click="toggle(index)">
           {{ tag.localName }}
         </b-tag>
@@ -138,7 +138,7 @@ export default class ReferencesManagementView extends Vue {
         tags[tagName] = {};
         tags[tagName].selected = true;
         let locale = this.internationalisationService
-            .getLocaleforPath(this.application, 'references.' + reference.id + '.internationalizedTags.' + tagName, tagName)
+            .getLocaleforPath(this.application, 'internationalizedTags.' + tagName, tagName)
         tags[tagName].localName = locale;
       }
       reference.localtags = reference.tags.map(tag => tags[tag]?.localName || tag)

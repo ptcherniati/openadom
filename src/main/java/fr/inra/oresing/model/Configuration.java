@@ -38,6 +38,10 @@ public class Configuration {
     @ApiModelProperty(notes = "An Application description", required = true)
     private ApplicationDescription application;
 
+    @ApiModelProperty(notes = "A description of tags.\n" +
+            "Labels can be used in the document to identify groups and enable filters or groupings.", required = false)
+    public Map<String, Internationalization> tags = new HashMap<>();
+
     @ApiModelProperty(notes = "A list of references indexed by name. A reference is used to describe other references or data..", required = true)
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
 
@@ -54,6 +58,7 @@ public class Configuration {
         internationalizationMap.setApplication(Optional.ofNullable(application).map(ApplicationDescription::getInternationalization).orElse(null));
         internationalizationMap.setDataTypes(Optional.ofNullable(dataTypes).map(DataTypeDescription::getInternationalization).orElse(null));
         internationalizationMap.setReferences(Optional.ofNullable(references).map(ReferenceDescription::getInternationalization).orElse(null));
+        internationalizationMap.setInternationalizedTags(tags);
         return internationalizationMap;
     }
 
@@ -187,7 +192,7 @@ public class Configuration {
             return doGetStaticColumnDescriptions().keySet();
         }
 
-        public Map<String, Internationalization> tags = new HashMap<>();
+        public List<String> tags = new LinkedList<>();
 
         public Map<String, ReferenceColumnDescription> doGetAllColumnDescriptions() {
             Map<String, ReferenceColumnDescription> allColumnDescriptions = new LinkedHashMap<>();
@@ -223,8 +228,6 @@ public class Configuration {
                 Map<String, Internationalization> internationalizedDynamicColumns =
                         Maps.transformValues(referenceDescription.getDynamicColumns(), ReferenceDynamicColumnDescription::getInternationalizationName);
                 internationalizationReference.setInternationalizedDynamicColumns(internationalizedDynamicColumns);
-                Map<String, Internationalization> internationalizedtags = referenceDescription.getTags();
-                internationalizationReference.setInternationalizedTags(internationalizedtags);
                 internationalizationReferenceMap.put(reference, internationalizationReference);
             }
             return internationalizationReferenceMap;

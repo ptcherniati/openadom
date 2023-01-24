@@ -5,10 +5,13 @@
       :open="open"
       :title="reference && (reference.refNameLocal || reference.label)"
   >
-    <div v-if="tags">Etiquettes :
-      <b-tag v-for="(tag, index) in tags" :key="index" class="is-primary is-light">
-        <span v-if="tag">
-         {{ tag.localName }}
+    <div v-if="tags">{{ $t('tags.tag') }} :
+      <b-tag v-for="(tag) in reference.tags" :key="tag" class="is-primary is-light">
+        <span v-if="tag=='no-tag'">
+         {{ $t('tags.no-tag') }}
+        </span>
+        <span v-else>
+          {{(tags[tag] && tags[tag].localName)|| tag}}
         </span>
       </b-tag>
     </div>

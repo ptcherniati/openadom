@@ -14,10 +14,7 @@ import com.google.common.collect.TreeMultiset;
 import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.GroovyExpression;
 import fr.inra.oresing.model.*;
-import fr.inra.oresing.model.internationalization.InternationalizationDataTypeMap;
-import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
-import fr.inra.oresing.model.internationalization.InternationalizationMap;
-import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
+import fr.inra.oresing.model.internationalization.*;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.Getter;
 import lombok.Setter;
@@ -119,6 +116,7 @@ public class ApplicationConfigurationService {
             verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
             verifyReferenceColumnsDeclarations(builder, referenceEntry, references);
             verifyReferenceValidationRules(builder, referenceEntry, references);
+            verifyReferencetagsDefined(builder, referenceEntry, configuration.tags);
         }
 
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
@@ -156,6 +154,14 @@ public class ApplicationConfigurationService {
         configuration.setRequiredAuthorizationsAttributes(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
 
         return builder.build(configuration);
+    }
+
+    private void verifyReferencetagsDefined(ConfigurationParsingResult.Builder builder, Map.Entry<String, Configuration.ReferenceDescription> referenceEntry, Map<String, Internationalization> tags) {
+        referenceEntry.getValue().tags.stream().forEach(tag -> {
+            if(!tags.containsKey(tag)){
+                builder.missingTagDeclaration(referenceEntry.getKey(), tag, tags.keySet());
+            }
+        } );
     }
 
     private void verifyChartDescription(ConfigurationParsingResult.Builder builder, String datatype, Configuration.DataTypeDescription dataTypeDescription) {

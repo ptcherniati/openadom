@@ -772,5 +772,13 @@ public class ConfigurationParsingResult {
                     "dataType", dataType
             ));
         }
+
+        public void missingTagDeclaration(String referenceName, String tagName, Set<String> declaredTags) {
+            recordError("missingTagDeclaration",ImmutableMap.of(
+                    "referenceName",referenceName,
+                    "tagName",tagName,
+                    "declaredTag",declaredTags)
+            );
+        }
     }
 }

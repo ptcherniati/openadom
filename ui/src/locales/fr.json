@@ -39,6 +39,10 @@
         "data-type-new-authorization": "Nouvelle autorisation pour {dataType}",
         "authorizations-management": "Gestion des autorisations sur les applications"
     },
+    "tags": {
+        "no-tag": "Sans étiquette",
+        "tag": "Etiquettes"
+    },
     "validation": {
         "count-line": "Aucun enregistrement.|Une ligne.|{count} lignes.",
         "data-empty": "Pas de données",
@@ -162,6 +166,7 @@
         "invalidPatternForVariableComponentDateChecker": "Le format de date <code>{pattern}</code> défini pour le composant <code>{component}</code> de la variable <code>{variable}</code> du type de données <code>{dataType}</code> est incorrect",
         "invalidPatternForVariableComponentRegularExpressionChecker": "L'expression régulière <code>{pattern}</code> défini pour le composant <code>{component}</code> de la variable <code>{variable}</code> du type de données <code>{dataType}</code> est incorrect",
         "invalidReference": "Pour le composant identifié : <code>{target}</code> la valeur <code>{value}</code> n'existe pas dans la référence <code>{refType}</code>. Valeurs attendues <code>{referenceValues}</code>.",
+        "missingTagDeclaration": "Dans le referentiel {referenceName}, l'étiquette {tagName} n'est pas déclarée.<br/>. Elle doit appartenir à la liste des étiquettes {declaredTag}",
         "invalidReferenceWithColumn": "Pour la colonne : <code>{target}</code>  la valeur <code>{value}</code> n'existe pas dans la référence <code>{refType}</code>. Valeurs attendues <code>{referenceValues}</code>.",
         "missingAggregationComponentForChart": "Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, le componsant <code> {aggregationComponent}</code> de la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{components}</code>",
         "missingAggregationVariableForChart": "Dans la description du graphe de la variable <code> {variable} </code> du type de données <code> {dataType} </code>, la variable d'aggrégation <code> {aggregationVariable}</code> n'est pas déclarée.<br />  Valeurs attendues <code>{variables}</code>",
