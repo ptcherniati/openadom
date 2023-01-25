@@ -172,7 +172,7 @@
               </caption>
               <tr>
                 <th align>{{ $t("dataTypesRepository.table-file-data-period") }}</th>
-                <th align>{{ $t("ponctuation.star") }}</th>
+                <th align>{{ $t("dataTypesRepository.version-number") }}</th>
                 <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
               </tr>
               <tr
@@ -194,12 +194,8 @@
                 style="text-align: center; vertical-align: center"
             >
               <caption>
-                {{
-                  $t("dataTypesRepository.list-file-data-period")
-                }}
-                {{
-                  currentDataset[0].periode
-                }}
+                {{ $t("dataTypesRepository.list-file-data-period") }}
+                {{ currentDataset[0].periode }}
                 <div v-if="errorsMessages.length" style="margin: 10px">
                   <div v-for="msg in errorsMessages" v-bind:key="msg">
                     <b-message
@@ -216,6 +212,7 @@
               </caption>
 
               <tr>
+                <th align>{{ $t("dataTypesRepository.table-file-data-version") }}</th>
                 <th align>{{ $t("dataTypesRepository.table-file-data-id") }}</th>
                 <th align>{{ $t("dataTypesRepository.table-file-data-size") }}</th>
                 <th align>{{ $t("dataTypesRepository.table-file-data-create") }}</th>
@@ -225,7 +222,8 @@
                 <th align>{{ $t("dataTypesRepository.table-file-data-publication") }}</th>
                 <th align>{{ $t("dataTypesRepository.table-file-data-action") }}</th>
               </tr>
-              <tr v-for="dataset in currentDataset" :key="dataset.id">
+              <tr v-for="(dataset, index) in currentDataset" :key="dataset.id">
+                <td align>{{ index + 1 }}</td>
                 <td align>
                   <b-tooltip type="is-dark" :id="dataset.id" multilined role="tooltip">
                     <template v-slot:content>
@@ -236,15 +234,18 @@
                         :aria-describedby="dataset.id"
                         tabindex="0"
                         @keypress.enter="changeCss(dataset.id)"
-                    >{{ dataset.id.slice(0, 8) }}</a
                     >
+                      {{ dataset.id.slice(0, 8) }}
+                    </a>
                   </b-tooltip>
                 </td>
-                <td align>{{ dataset.size }}</td>
+                <td align>{{ dataset.size / 1000 }} {{ $t("dataTypesRepository.table-file-data-size-unit") }}</td>
                 <td align>{{ formatDate(dataset.params.createdate) }}</td>
                 <td align>{{ dataset.createuser }}</td>
-                <td align>{{ formatDate(dataset.params.publisheddate) }}</td>
-                <td align>{{ dataset.publisheduser }}</td>
+                <td align v-if="dataset.params.published">{{ formatDate(dataset.params.publisheddate) }}</td>
+                <td align v-else></td>
+                <td align v-if="dataset.params.published">{{ dataset.publisheduser }}</td>
+                <td align v-else></td>
                 <td align>
                   <b-field>
                     <b-button
@@ -256,7 +257,7 @@
                     />
                   </b-field>
                 </td>
-                <td>
+                <td align>
                   <b-field>
                     <b-tooltip :label="$t('dataTypesRepository.table-file-data-delete')" position="is-left">
                       <b-button
@@ -606,7 +607,7 @@ export default class DataTypesRepositoryView extends Vue {
   }
 
   async publish(dataset, pusblished) {
-    // TODO : ajout loading en JS
+    // ajout loading en JS
     const loadingComponent = this.$buefy.loading.open({
       container: document.getElementById("element")
     })
@@ -619,6 +620,7 @@ export default class DataTypesRepositoryView extends Vue {
     }, requiredAuthorizations);
     dataset.params.binaryFiledataset.requiredAuthorizations = requiredAuthorizations;
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
+    console.log(dataset)
     try {
       var uuid = await this.dataService.addData(
           this.applicationName,
