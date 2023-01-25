@@ -79,25 +79,54 @@
           aria-id="contentIdForA11y3">
         <template #trigger="props">
           <div
-              class="card-header"
-              role="button"
+              class="card-header columns"
               aria-controls="contentIdForA11y3"
-              :aria-expanded="props.open">
-            <p class="card-header-title">
-              {{ dataType }}
-            </p>
-            <a class="card-header-icon">
+          >
+            <span class="card-header-title column">
+              <div class="columns">
+                <b-field
+                    v-for="(column, indexColumn) of columnsVisible"
+                    :key="indexColumn"
+                    :field="indexColumn"
+                    :label="getColumnTitle(column)"
+                    class="column"
+                >
+                </b-field>
+              </div>
+              <div class="columns">
+                <p class="column">
+                  {{ dataType }}
+                </p>
+                <b-icon
+                    icon="square"
+                    class="clickable column"
+                    pack="far"
+                    size="is-medium"
+                    type="is-primary"
+                />
+              </div>
+            </span>
+            <span class="column is-1 card-header-icon"
+                 role="button"
+                 :aria-expanded="props.open">
               <b-icon
-                  :icon="props.open ? 'caret-down' : 'caret-up'">
+                  :icon="props.open ? 'caret-down' : 'caret-up'" tabindex="0" >
               </b-icon>
-            </a>
+            </span>
           </div>
         </template>
         <div class="card-content">
           <div class="content">
+      <div>
+        application {{dataType}} : {{application.dataTypes[dataType]}}
+      </div>
+      <div>
+        authorization  {{dataType}}: {{authorization[dataType]}}
+      </div>
             <AuthorizationTable
               v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
               :auth-reference="authReferences[0]"
+              :dataType="dataType+':'+(authorization[dataType] && authorization[dataType].toString())"
               :authorization-scopes="authorizationScopes"
               :columns-visible="columnsVisible"
               :data-groups="dataGroups"
@@ -113,18 +142,6 @@
               @modifyAuthorization="modifyAuthorization($event, dataType)"
               @registerCurrentAuthorization="registerCurrentAuthorization($event, dataType)"
           >
-            <div class="row">
-              <div class="columns">
-                <b-field
-                    v-for="(column, indexColumn) of columnsVisible"
-                    :key="indexColumn"
-                    :field="indexColumn"
-                    :label="getColumnTitle(column)"
-                    class="column"
-                    :style="!column.display ? 'display : contents' : ''"
-                ></b-field>
-              </div>
-            </div>
             <b-loading :is-full-page="null" v-model="isLoading"></b-loading>
           </AuthorizationTable>
           </div>
@@ -207,6 +224,7 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
   isLoading;
   openOnFocus = true;
   authDataTypes = [];
+  STATES = { "-1": "square-minus", 0: "square", 1: "square-check" };
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
@@ -660,8 +678,9 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
 
   async createAuthorization() {
     try {
+      let authorizationToSend = [];
       for (let dataTypeId in this.application.dataTypes ){
-        let authorizationToSend = {
+        authorizationToSend[dataTypeId] = {
           ...this.authorization[dataTypeId],
           dataType: dataTypeId,
           applicationNameOrId: this.applicationName,
@@ -673,9 +692,9 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
             }
           }
         }
-        authorizationToSend.usersId = this.selectedUsers;
-        for (const scope in authorizationToSend.authorizations) {
-          authorizationToSend.authorizations[scope] = authorizationToSend.authorizations[scope].map(
+        authorizationToSend[dataTypeId].usersId = this.selectedUsers;
+        for (const scope in authorizationToSend[dataTypeId].authorizations) {
+          authorizationToSend[dataTypeId].authorizations[scope] = authorizationToSend[dataTypeId].authorizations[scope].map(
               (auth) => {
                 var returnedAuth = new Authorization(auth);
                 returnedAuth.intervalDates = {
@@ -690,11 +709,11 @@ export default class ApplicationAuthorizationGlobalInfoView extends Vue {
         await this.authorizationService.createAuthorization(
             this.applicationName,
             dataTypeId,
-            authorizationToSend
+            authorizationToSend[dataTypeId]
         );
         this.alertService.toastSuccess(this.$t("alert.create-authorization"));
         this.$router.push(
-            `/applications/${this.applicationName}/dataTypes/${dataTypeId}/authorizations`
+            `/applications/${this.applicationName}/dataTypes/authorizationsGlobal`
         );
       }
     } catch (error) {
@@ -783,5 +802,9 @@ ul li.card-content {
 
 a {
   color: $dark;
+}
+
+div.card-header.columns {
+  margin: 0;
 }
 </style>

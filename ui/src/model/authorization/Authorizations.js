@@ -49,7 +49,7 @@ export class Authorizations {
     if (this.authorizations[scope]) {
       return this.authorizations[scope].filter((auth) => {
         let pathToCompare = new Authorization(auth).getPath(this.#scopesId);
-        if (pathToCompare.startsWith(path) && pathToCompare != path) {
+        if (pathToCompare.startsWith(path) && pathToCompare !== path) {
           return true;
         }
         return false;
