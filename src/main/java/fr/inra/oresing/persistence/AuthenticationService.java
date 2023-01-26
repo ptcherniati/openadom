@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.roles.*;
 import fr.inra.oresing.rest.*;
+import fr.inra.oresing.rest.exceptions.authentication.NotSuperAdminException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

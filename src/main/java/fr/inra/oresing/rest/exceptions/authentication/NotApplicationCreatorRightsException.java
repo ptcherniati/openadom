@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.exceptions.authentication;
 
 import fr.inra.oresing.OreSiTechnicalException;
 
@@ -6,8 +6,8 @@ import java.util.List;
 
 public class NotApplicationCreatorRightsException extends OreSiTechnicalException {
     public final static String NO_RIGHT_FOR_APPLICATION_CREATION = "NO_RIGHT_FOR_APPLICATION_CREATION";
-    String applicationName;
-    List<String> applicationRestrictions;
+    public String applicationName;
+    public List<String> applicationRestrictions;
     public NotApplicationCreatorRightsException(String applicationName) {
         super(NO_RIGHT_FOR_APPLICATION_CREATION);
         this.applicationName = applicationName;

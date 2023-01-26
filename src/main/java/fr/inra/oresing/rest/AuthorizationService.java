@@ -8,7 +8,12 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.*;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanSetRightsException;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
+import fr.inra.oresing.rest.exceptions.authentication.NotSuperAdminException;
+import fr.inra.oresing.rest.exceptions.role.BadRoleException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -54,6 +59,12 @@ public class AuthorizationService {
         updateRolesOnManagement.updateRoleForManagement();
     }
 
+    public void updateRoleForReferenceManagement(Set<UUID> previousUsers, OreSiReferenceAuthorization modifiedAuthorization) {
+        final UpdateRolesOnReferencesManagement updateRolesOnManagement = new UpdateRolesOnReferencesManagement(repository, db, authenticationService);
+        updateRolesOnManagement.init(previousUsers, modifiedAuthorization);
+        updateRolesOnManagement.updateRoleForManagement();
+    }
+
     /**
      * create a role as a reader on application
      *
@@ -71,10 +82,33 @@ public class AuthorizationService {
         return oreSiRightOnApplicationRole;
     }
 
+    /**
+     * create a role as a reader on application
+     *
+     * @param previousAuthorization The authorization that does not yet have an identifier
+     * @param modifiedAuthorization The new authorization created from the previous Authorization information
+     * @return the existing role for modifiedAuthorization
+     */
+    public OreSiRightOnApplicationRole createRoleForAuthorization(CreateReferenceAuthorizationRequest previousAuthorization, OreSiReferenceAuthorization modifiedAuthorization) {
+        UUID created = modifiedAuthorization.getId();
+        Application application = repository.application().findApplication(previousAuthorization.getApplicationNameOrId());
+        OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, created);
+        OreSiRightOnApplicationRole readerRoleOnApplication = OreSiRightOnApplicationRole.readerOn(application);
+        db.createRole(oreSiRightOnApplicationRole);
+        db.addUserInRole(oreSiRightOnApplicationRole, readerRoleOnApplication);
+        return oreSiRightOnApplicationRole;
+    }
+
     public List<OreSiAuthorization> findUserAuthorizationsForApplicationAndDataType(Application application, String dataType) {
         final UUID currentUserId = request.getRequestClient().getId();
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         return authorizationRepository.findAuthorizations(currentUserId, application, dataType);
+    }
+
+    public List<OreSiReferenceAuthorization> findUserReferencesAuthorizationsForApplicationAndDataType(Application application) {
+        final UUID currentUserId = request.getRequestClient().getId();
+        AuthorizationReferencesRepository authorizationRepository = repository.getRepository(application).authorizationReferences();
+        return authorizationRepository.findAuthorizations(currentUserId, application);
     }
 
     public OreSiAuthorization addAuthorization(Application application, String dataType, CreateAuthorizationRequest authorizations, List<OreSiAuthorization> authorizationsForCurrentUser, boolean isApplicationCreator) {
@@ -124,6 +158,46 @@ public class AuthorizationService {
         return entity;
     }
 
+    public OreSiReferenceAuthorization addAuthorization(Application application,  CreateReferenceAuthorizationRequest authorizations, List<OreSiReferenceAuthorization> authorizationsForCurrentUser, boolean isApplicationCreator) {
+        AuthorizationReferencesRepository authorizationReferencesRepository = repository.getRepository(application).authorizationReferences();
+        OreSiReferenceAuthorization entity = authorizations.getUuid() == null ?
+                new OreSiReferenceAuthorization()
+                : authorizationReferencesRepository.findById(authorizations.getUuid());
+
+        Map<OperationReferenceType, List<String>> authorizationsByType = authorizations.getReferences();
+
+        for (List<String> references : authorizationsByType.values()) {
+            for (String reference : references) {
+                Preconditions.checkArgument(application.getConfiguration().getReferences().containsKey(reference));
+            }
+        }
+
+        final Set<String> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
+                .map(oreSiAuthorization -> oreSiAuthorization.getReferences())
+                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationReferenceType.admin))
+                .map(operationTypeListMap -> operationTypeListMap.get(OperationReferenceType.admin))
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+
+        final Map<OperationReferenceType, List<String>> modifiedAuthorizations = authorizationsByType.entrySet().stream()
+                .map(authByTypeEntry -> {
+                    if (!isApplicationCreator) {
+                        removeAuthorizationReferencesThatCantBeModified(authByTypeEntry, authorizationListForCurrentUser);
+                    }
+                    return authByTypeEntry;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (!isApplicationCreator) {
+            addStoredAuthorizationReferencesThatCantBeModified(entity, authorizationListForCurrentUser, modifiedAuthorizations);
+        }
+        entity.setName(authorizations.getName());
+        entity.setOreSiUsers(authorizations.getUsersId());
+        entity.setApplication(application.getId());
+        entity.setReferences(authorizations.getReferences());
+        authorizationReferencesRepository.store(entity);
+        return entity;
+    }
+
     private static void testAuthorizationArguments(Configuration.AuthorizationDescription authorizationDescription, Map.Entry<OperationType, List<Authorization>> authByType) {
         authByType.getValue().forEach(authorization -> {
             authorization.getDataGroups()
@@ -147,6 +221,13 @@ public class AuthorizationService {
         authByTypeEntry.setValue(collect);
     }
 
+    private void removeAuthorizationReferencesThatCantBeModified(Map.Entry<OperationReferenceType, List<String>> authByTypeEntry, Set<String> authorizationListForCurrentUser) {
+        final List<String> collect = authByTypeEntry.getValue().stream()
+                .filter(reference -> authorizationListForCurrentUser.contains(reference))
+                .collect(Collectors.toList());
+        authByTypeEntry.setValue(collect);
+    }
+
     private void addStoredAuthorizationThatCantBeModified(OreSiAuthorization entity, List<Authorization> authorizationListForCurrentUser, Map<OperationType, List<Authorization>> modifiedAuthorizations) {
         Optional.ofNullable(entity)
                 .map(e -> e.getAuthorizations())
@@ -156,6 +237,21 @@ public class AuthorizationService {
                                     .filter(authorization -> {
                                         return !testCanSetAuthorization(authorization, authorizationListForCurrentUser);
                                     })
+                                    .collect(Collectors.toList());
+                            modifiedAuthorizations
+                                    .computeIfAbsent(authByTypeEntry.getKey(), k -> new LinkedList<>())
+                                    .addAll(collect);
+                        })
+                );
+    }
+
+    private void addStoredAuthorizationReferencesThatCantBeModified(OreSiReferenceAuthorization entity, Set<String> authorizationListForCurrentUser, Map<OperationReferenceType, List<String>> modifiedAuthorizations) {
+        Optional.ofNullable(entity)
+                .map(e -> e.getReferences())
+                .ifPresent(a -> a.entrySet().stream()
+                        .forEach(authByTypeEntry -> {
+                            final List<String> collect = authByTypeEntry.getValue().stream()
+                                    .filter(authorizationListForCurrentUser::contains)
                                     .collect(Collectors.toList());
                             modifiedAuthorizations
                                     .computeIfAbsent(authByTypeEntry.getKey(), k -> new LinkedList<>())

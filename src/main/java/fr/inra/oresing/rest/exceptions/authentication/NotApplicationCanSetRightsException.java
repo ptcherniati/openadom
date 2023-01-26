@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.exceptions.authentication;
 
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.Authorization;

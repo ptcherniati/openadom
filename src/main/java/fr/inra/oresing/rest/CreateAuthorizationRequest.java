@@ -22,22 +22,4 @@ public class CreateAuthorizationRequest {
     String dataType;
 
     Map<OperationType, List<Authorization>> authorizations;
-
-    /*public LocalDateTimeRange getTimeScope() {
-        LocalDateTimeRange timeScope;
-        if (getFromDay() == null) {
-            if (getToDay() == null) {
-                timeScope = LocalDateTimeRange.always();
-            } else {
-                timeScope = LocalDateTimeRange.until(getToDay());
-            }
-        } else {
-            if (getToDay() == null) {
-                timeScope = LocalDateTimeRange.since(getFromDay());
-            } else {
-                timeScope = LocalDateTimeRange.between(getFromDay(), getToDay());
-            }
-        }
-        return timeScope;
-    }*/
 }

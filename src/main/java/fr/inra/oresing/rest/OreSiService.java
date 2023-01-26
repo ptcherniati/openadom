@@ -19,6 +19,8 @@ import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
@@ -37,6 +39,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -1351,9 +1354,13 @@ public class OreSiService {
                             .map(BinaryFileDataset::getDatatype)
                             .orElse(null)
             );
+            try {
+                boolean deleted = repo.getRepository(name).binaryFile().delete(id);
+            }catch (DataIntegrityViolationException dive){
+                throw new NotApplicationCanDeleteRightsException(app.getName(), binaryFile.getParams().getBinaryFiledataset().getDatatype());
+            }
         }
-        boolean deleted = repo.getRepository(name).binaryFile().delete(id);
-        return deleted;
+        return repo.getRepository(name).binaryFile().delete(id);
     }
 
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {
