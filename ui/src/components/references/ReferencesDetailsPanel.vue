@@ -5,15 +5,15 @@
       :open="open"
       :title="reference && (reference.refNameLocal || reference.label)"
   >
-    <div v-if="tags">{{ $t('tags.tag') }} :
-      <b-tag v-for="(tag) in reference.tags" :key="tag" class="is-primary is-light">
-        <span v-if="tag=='no-tag'">
-         {{ $t('tags.no-tag') }}
-        </span>
-        <span v-else>
-          {{(tags[tag] && tags[tag].localName)|| tag}}
-        </span>
-      </b-tag>
+    <div v-if="tags" class="columns">
+      <h3 class="column">{{ $t('tags.tag') }}</h3>
+      <div class="column">
+        <b-tag v-for="(tag) in reference.tags" :key="tag" class="is-dark">
+          <span>
+            {{(tags[tag].localName === 'no-tag' ? $t('tags.no-tag') : tags[tag] && tags[tag].localName) || tag}}
+          </span>
+        </b-tag>
+      </div>
     </div>
     <div class="Panel-buttons">
       <b-button icon-left="trash-alt" type="is-danger" @click="askDeletionConfirmation">{{
