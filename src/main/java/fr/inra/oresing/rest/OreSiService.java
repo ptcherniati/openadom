@@ -173,6 +173,7 @@ public class OreSiService {
         db.createRole(writerOnApplicationRole);
         db.addUserInRole(writerOnApplicationRole, readerOnApplicationRole);
 
+        //add  policies to adminOnApplicationRole for application
         db.createPolicy(new SqlPolicy(
                 String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
                 SqlSchema.main().application(),
@@ -202,6 +203,16 @@ public class OreSiService {
                 writerOnApplicationRole,
                 null,
                 "name = '" + app.getName() + "'"
+        ));
+
+        db.createPolicy(new SqlPolicy(
+                String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
+                SqlSchema.forApplication(app).referenceValue(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                List.of(SqlPolicy.Statement.SELECT),
+                readerOnApplicationRole,
+                "application = '" + app.getId().toString() + "'::uuid",
+                null
         ));
 
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
