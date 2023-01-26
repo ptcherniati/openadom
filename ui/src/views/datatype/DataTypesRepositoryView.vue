@@ -620,7 +620,6 @@ export default class DataTypesRepositoryView extends Vue {
     }, requiredAuthorizations);
     dataset.params.binaryFiledataset.requiredAuthorizations = requiredAuthorizations;
     var fileOrId = new FileOrUUID(dataset.id, dataset.params.binaryFiledataset, pusblished);
-    console.log(dataset)
     try {
       var uuid = await this.dataService.addData(
           this.applicationName,

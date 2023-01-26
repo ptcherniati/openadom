@@ -1,5 +1,6 @@
 {
     "exceptionMessage": {
+        "undefined": "Unable to read error message : {message}",
         "sqlConvertException": "An error in a sql query is served row {locationLineNumber} column {locationColumnNumber}<br/>{message}",
         "badStoreValueType": "Failed to get a value for key {referenceDatumKey}. Value type {storeValueType} is not one of the accepted return types: {knownStoreValueType}",
         "badCheckerType": "The checker type {checkerType} is not valid. You can use one of these checkers: {knownCheckerType}",
@@ -276,8 +277,10 @@
         "submit": "Submit",
         "list-file-data": "List of datasets on this repository",
         "list-file-data-period": "List of versions for the period",
+        "table-file-data-version": "Version number",
         "table-file-data-id": "ID",
-        "table-file-data-size": "Size",
+        "table-file-data-size": "File size",
+        "table-file-data-size-unit" : "ko",
         "table-file-data-create": "Created on",
         "table-file-data-create-by": "Created by :",
         "table-file-data-publish": "Published on",
@@ -286,7 +289,9 @@
         "table-file-data-action": "Actions",
         "table-file-data-delete": "Delete",
         "table-file-data-download": "Download",
-        "table-file-data-period": "Period"
+        "table-file-data-period": "Period",
+        "version-number": "Version number",
+        "tooltip-jeux de données": "Select a dataset to see the list of corresponding versioned files (revisions)."
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Add an authorization",
@@ -330,7 +335,8 @@
         "showMore": "Show more...",
         "search": "Search...",
         "save" : "Save change",
-        "add-application-name": "Add an app"
+        "add-application-name": "Add an app",
+        "all-autorisation" : "Check all the rights boxes on the line "
     },
     "ponctuation": {
         "semicolon" : ";",

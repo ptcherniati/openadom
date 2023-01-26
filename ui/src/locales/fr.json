@@ -1,6 +1,6 @@
 {
     "exceptionMessage": {
-        "undefined": "Impossible de lire le message d'erreur {message}",
+        "undefined": "Impossible de lire le message d'erreur : {message}",
         "sqlConvertException": "Une erreur dans une requête sql est survenue ligne {locationLineNumber} colonne {locationColumnNumber}<br/>{message}",
         "badStoreValueType": "Impossible d'obtenir une valeur pour la clef {referenceDatumKey}. Le type de la valeur {storeValueType} n'est pas l'un des types de retour acceptés : {knownStoreValueType} ",
         "badCheckerType": "Le checker de type {checkerType} n'est pas valide. Vous pouvez utiliser l'un de ces checkers : {knownCheckerType} ",
@@ -280,7 +280,7 @@
         "table-file-data-version": "N° version",
         "table-file-data-id": "ID",
         "table-file-data-size": "Taille du fichier",
-        "table-file-data-size-unit" : "Ko",
+        "table-file-data-size-unit" : "ko",
         "table-file-data-create": "Dernier dépôt",
         "table-file-data-create-by": "Dernier dépositaire",
         "table-file-data-publish": "Date de publication",
