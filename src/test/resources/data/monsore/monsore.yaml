@@ -6,6 +6,14 @@ application:
     en: SOERE my SOERE with repository
   name: MONSORE
   version: 1
+
+tags:
+  context:
+    fr: contexte
+    en: context
+  data:
+    fr: données
+    en: data
 compositeReferences:
   sites:
     components:
@@ -18,13 +26,7 @@ compositeReferences:
       - reference: projet
 references:
   especes:
-    tags:
-      context:
-        fr: contexte
-        en: context
-      data:
-        fr: données
-        en: data
+    tags: [data]
     internationalizationName:
       fr: Espèces
       en: Species
@@ -44,10 +46,7 @@ references:
       esp_definition_en: null
       colonne_homonyme_entre_referentiels: null
   projet:
-    tags:
-      context:
-        fr: contexte
-        en: context
+    tags: [context]
     internationalizationName:
       fr: Projet
       en: Project
@@ -72,10 +71,7 @@ references:
       definition_en: null
       colonne_homonyme_entre_referentiels: null
   sites:
-    tags:
-      context:
-        fr: contexte
-        en: context
+    tags: [context]
     validations:
       typeSitesRef:
         internationalizationName:
@@ -120,10 +116,7 @@ references:
       zet_description_en: null
       zet_chemin_parent: null
   themes:
-    tags:
-      context:
-        fr: contexte
-        en: context
+    tags: [context]
     keyColumns:
       - nom_key
     internationalizationName:
@@ -147,13 +140,6 @@ references:
       description_fr: null
       description_en: null
   type de fichiers:
-    tags:
-      context:
-        fr: contexte
-        en: context
-      data:
-        fr: données
-        en: data
     keyColumns:
       - nom_key
     internationalizationName:
@@ -177,10 +163,7 @@ references:
       description_fr: null
       description_en: null
   type_de_sites:
-    tags:
-      context:
-        fr: contexte
-        en: context
+    tags: [context]
     keyColumns:
       - tze_nom_key
     internationalizationName:
@@ -204,10 +187,7 @@ references:
       tze_definition_fr: null
       tze_definition_en: null
   types_de_donnees_par_themes_de_sites_et_projet:
-    tags:
-      context:
-        fr: contexte
-        en: context
+    tags: [context]
     internationalizationName:
       fr: Types de données par site et projet
       en: Data types by site and project
@@ -268,10 +248,7 @@ references:
       nom du thème: null
       nom du type de données: null
   unites:
-    tags:
-      data:
-        fr: données
-        en: data
+    tags: [data]
     keyColumns:
       - nom_key
     internationalizationName:
@@ -296,10 +273,7 @@ references:
       nom_fr: null
       nom_en: null
   valeurs_qualitatives:
-    tags:
-      data:
-        fr: données
-        en: data
+    tags: [data]
     keyColumns:
       - nom_key
       - valeur_key
@@ -325,10 +299,7 @@ references:
       valeur_fr: null
       valeur_en: null
   variables:
-    tags:
-      data:
-        fr: données
-        en: data
+    tags: [data]
     keyColumns:
       - nom_key
     internationalizationName:
@@ -353,10 +324,7 @@ references:
       definition_en: null
       isQualitative: null
   variables_et_unites_par_types_de_donnees:
-    tags:
-      data:
-        fr: données
-        en: data
+    tags: [data]
     validations:
       variableRef:
         internationalizationName:
