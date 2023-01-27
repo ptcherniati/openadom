@@ -181,7 +181,11 @@ public class OreSiResources {
                         return new ApplicationResult.DataType.Repository(filePattern, authorizationScope, startDate, endDate);
                     })
                     .orElse(null);
-            return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations);
+            final Set<String> tags = Optional.ofNullable(dataTypeDescription.getTags())
+                    .filter(list->!list.isEmpty())
+                    .map(t->new HashSet(t))
+                    .orElse(new HashSet(List.of("no-tag")));
+            return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations, tags);
         }) : Map.of();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
         ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis, configuration);

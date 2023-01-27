@@ -22,39 +22,42 @@
         </b-message>
       </div>
     </div>
-    <b-collapse v-if="tags && Object.keys(tags).length>1"
-        class="card"
-        animation="slide"
-        aria-id="contentIdForA11y3">
-      <template #trigger="props">
-        <div
-            class="card-header"
-            role="button"
-            aria-controls="contentIdForA11y3"
-            :aria-expanded="props.open">
-          <p class="card-header-title">
-            {{$t('tags.tag')}}
-          </p>
-          <a class="card-header-icon">
-            <b-icon
-                :icon="props.open ? 'chevron-down' : 'chevron-up'">
-            </b-icon>
-          </a>
+    <div class="column is-offset-one-third is-one-third">
+      <b-collapse v-if="tags && Object.keys(tags).length>1"
+                  class="card"
+                  :open="isOpen"
+                  animation="slide"
+                  aria-id="contentIdForA11y3">
+        <template #trigger="props">
+          <div
+              class="card-header"
+              role="button"
+              aria-controls="contentIdForA11y3"
+              :aria-expanded="props.open">
+            <p class="card-header-title">
+              {{$t('tags.tag')}}
+            </p>
+            <a class="card-header-icon">
+              <b-icon
+                  :icon="props.open ? 'chevron-down' : 'chevron-up'">
+              </b-icon>
+            </a>
+          </div>
+        </template>
+        <div class="card-content">
+          <div class="content columns">
+            <b-field class="column is-narrow" v-for="(tag, index) in tags" :key="index" >
+              <b-switch
+                  v-model="tag.selected"
+                  passive-type='is-light'
+                  type='is-dark'>
+                {{ tag.localName === 'no-tag' ? $t('tags.no-tag') : tag.localName }}
+              </b-switch>
+            </b-field>
+          </div>
         </div>
-      </template>
-      <div class="card-content">
-        <div class="content columns">
-          <b-field class="column is-narrow" v-for="(tag, index) in tags" :key="index" >
-            <b-switch
-                v-model="tag.selected"
-                passive-type='is-light'
-                type='is-dark'>
-              {{ tag.localName === 'no-tag' ? $t('tags.no-tag') : tag.localName }}
-            </b-switch>
-          </b-field>
-        </div>
-      </div>
-    </b-collapse>
+      </b-collapse>
+    </div>
     <div class="section">
       <CollapsibleTree
           v-for="(ref, i) in referencesToBeShown"
@@ -112,8 +115,9 @@ export default class ReferencesManagementView extends Vue {
 
   references = [];
   currentPage = 1;
+  isOpen = false;
   openPanel = false;
-  chosenRef = null;
+  chosenRef = {};
   application = new ApplicationResult();
   subMenuPaths = [];
   errorsMessages = [];
@@ -146,7 +150,6 @@ export default class ReferencesManagementView extends Vue {
           })
         });
   }
-
   buildTags() {
     let tags = {}
     for (const reference of this.references) {

@@ -374,6 +374,7 @@ references:
       nom de l'unité: null
 dataTypes:
   pem:
+    tags: [context]
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent
