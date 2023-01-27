@@ -81,7 +81,7 @@ public class AuthorizationResources {
         final GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
-    @GetMapping(value = "/{applicationNameOrId}/authorization/{dataType}/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/applications/{applicationNameOrId}/authorization/{dataType}/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "dataType") String dataType, @PathVariable(name = "userLoginOrId") String userLoginOrId){
         return authorizationService.getAuthorizationsForUser(applicationNameOrId, dataType,userLoginOrId);
     }
@@ -115,6 +115,18 @@ public class AuthorizationResources {
         authorizationService.updateRoleForReferenceManagement(previousUsers, oreSiAuthorization);
         String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/references/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
+    }
+
+    @GetMapping(value = "/applications/{nameOrId}/references/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetAuthorizationReferencesResults> getReferencesAuthorizations(@PathVariable("nameOrId") String applicationNameOrId) {
+        final AuthorizationsReferencesResult authorizationsForUser = getReferencesAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        ImmutableSet<GetAuthorizationReferencesResult> getAuthorizationResults = authorizationService.getReferencesAuthorizations(applicationNameOrId, authorizationsForUser);
+        final GetAuthorizationReferencesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationReferencesResults(getAuthorizationResults, authorizationsForUser);
+        return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
+    }
+    @GetMapping(value = "/applications/{applicationNameOrId}/references/authorization/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId") String userLoginOrId){
+        return authorizationService.getReferencesAuthorizationsForUser(applicationNameOrId, userLoginOrId);
     }
 
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)

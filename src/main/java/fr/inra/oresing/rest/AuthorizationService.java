@@ -8,7 +8,7 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.rest.exceptions.*;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanSetRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
@@ -158,7 +158,7 @@ public class AuthorizationService {
         return entity;
     }
 
-    public OreSiReferenceAuthorization addAuthorization(Application application,  CreateReferenceAuthorizationRequest authorizations, List<OreSiReferenceAuthorization> authorizationsForCurrentUser, boolean isApplicationCreator) {
+    public OreSiReferenceAuthorization addAuthorization(Application application, CreateReferenceAuthorizationRequest authorizations, List<OreSiReferenceAuthorization> authorizationsForCurrentUser, boolean isApplicationCreator) {
         AuthorizationReferencesRepository authorizationReferencesRepository = repository.getRepository(application).authorizationReferences();
         OreSiReferenceAuthorization entity = authorizations.getUuid() == null ?
                 new OreSiReferenceAuthorization()
@@ -352,6 +352,16 @@ public class AuthorizationService {
         return authorizations;
     }
 
+    public ImmutableSet<GetAuthorizationReferencesResult> getReferencesAuthorizations(String applicationNameOrId, AuthorizationsReferencesResult authorizationsForUser) {
+        Application application = repository.application().findApplication(applicationNameOrId);
+        AuthorizationReferencesRepository authorizationRepository = repository.getRepository(application).authorizationReferences();
+        final List<OreSiReferenceAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
+        ImmutableSet<GetAuthorizationReferencesResult> authorizations = authorizationRepository.findAll().stream()
+                .map(oreSiAuthorization -> toGetReferencesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
+                .collect(ImmutableSet.toImmutableSet());
+        return authorizations;
+    }
+
     public GetAuthorizationResult getAuthorization(AuthorizationRequest authorizationRequest, AuthorizationsResult authorizationsForUser) {
         Application application = repository.application().findApplication(authorizationRequest.getApplicationNameOrId());
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
@@ -373,6 +383,30 @@ public class AuthorizationService {
                 oreSiAuthorization.getApplication(),
                 oreSiAuthorization.getDataType(),
                 extractTimeRangeToFromAndTo(oreSiAuthorization.getAuthorizations()),
+                collectPublicAuthorizations,
+                authorizationsForUser
+        );
+    }
+
+    private GetAuthorizationReferencesResult toGetReferencesAuthorizationResult(OreSiReferenceAuthorization oreSiAuthorization, List<OreSiReferenceAuthorization> publicAuthorizations, AuthorizationsReferencesResult authorizationsForUser) {
+        List<OreSiUser> all = userRepository.findAll();
+        final Map<OperationReferenceType, List<String>> collectPublicAuthorizations = new HashMap<>();
+        for (OreSiReferenceAuthorization publicAuthorization : publicAuthorizations) {
+            publicAuthorization.getReferences().entrySet()
+                    .forEach(operationReferenceTypeListEntry -> {
+                        final List<String> authorizations = collectPublicAuthorizations
+                                .computeIfAbsent(operationReferenceTypeListEntry.getKey(), k -> new ArrayList<>());
+                        operationReferenceTypeListEntry.getValue().stream()
+                                .filter(s -> !authorizations.contains(s))
+                                .forEach(s -> authorizations.add(s));
+                    });
+        }
+        return new GetAuthorizationReferencesResult(
+                oreSiAuthorization.getId(),
+                oreSiAuthorization.getName(),
+                getOreSIUSers(all, oreSiAuthorization.getOreSiUsers()),
+                oreSiAuthorization.getApplication(),
+                authorizationsForUser.getAuthorizationResults(),
                 collectPublicAuthorizations,
                 authorizationsForUser
         );
@@ -621,6 +655,33 @@ public class AuthorizationService {
                         this::mergeAuthorizationsParsedMap
                 ));
         return new AuthorizationsResult(authorizationMap, application.getName(), dataType, authorizationByPath, isAdministratorForDatatype);
+    }
+
+
+    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(String applicationNameOrUuid, String userLoginOrId) {
+        final OreSiUser user = userRepository.findByLogin(userLoginOrId).orElseGet(() -> userRepository.findById(UUID.fromString(userLoginOrId)));
+        if (user == null) {
+            throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userLoginOrId));
+        }
+        final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForRole(user.getId().toString());
+        final Application application = repository.application().findApplication(applicationNameOrUuid);
+        final List<OreSiReferenceAuthorization> publicAuthorizations = repository.getRepository(application.getId()).authorizationReferences().findPublicAuthorizations();
+        final List<OreSiReferenceAuthorization> authorizations = repository.getRepository(application.getId()).authorizationReferences().findAuthorizations(UUID.fromString(rolesForCurrentUser.getCurrentUser()), application);
+        Map<OperationReferenceType, List<String>> authorizationMap = new HashMap<>();
+        List<String> attributes = application.getConfiguration().getRequiredAuthorizationsAttributes().stream().collect(Collectors.toList());
+        authorizations.stream()
+                .forEach(authorizationList -> {
+                    authorizationList.getReferences().entrySet()
+                            .forEach(entry -> {
+                                final OperationReferenceType key = entry.getKey();
+                                entry.getValue().stream().
+                                        forEach(authorizationResult -> authorizationMap
+                                                .computeIfAbsent(key, k -> new LinkedList<>())
+                                                .add(authorizationResult));
+
+                            });
+                });
+        return new AuthorizationsReferencesResult(authorizationMap, application.getName());
     }
 
     private Map<String, List<AuthorizationParsed>> mergeAuthorizationsParsedMap(Map<String, List<AuthorizationParsed>> a, Map<String, List<AuthorizationParsed>> b) {
