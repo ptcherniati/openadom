@@ -19,7 +19,7 @@ public class UpdateRolesOnReferencesManagement {
     SqlService db;
     AuthenticationService authenticationService;
     private Application application;
-    private AuthorizationRepository authorizationRepository;
+    private AuthorizationReferencesRepository authorizationReferencesRepository;
 
     public UpdateRolesOnReferencesManagement(OreSiRepository repository, SqlService db, AuthenticationService authenticationService) {
         this.repository = repository;
@@ -32,7 +32,7 @@ public class UpdateRolesOnReferencesManagement {
         this.newUsers = modifiedAuthorization.getOreSiUsers();
         this.modifiedAuthorization = modifiedAuthorization;
         this.application = repository.application().findApplication(modifiedAuthorization.getApplication());
-        this.authorizationRepository = repository.getRepository(application).authorization();
+        this.authorizationReferencesRepository = repository.getRepository(application).authorizationReferences();
 
     }
 
@@ -133,19 +133,18 @@ public class UpdateRolesOnReferencesManagement {
         return "";
     }
 
-    public UUID revoke(AuthorizationRequest revokeAuthorizationRequest) {
-        this.application = repository.application().findApplication(revokeAuthorizationRequest.getApplicationNameOrId());
-        this.authorizationRepository = repository.getRepository(application).authorization();
-        UUID authorizationId = revokeAuthorizationRequest.getAuthorizationId();
-        OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
-        dropPolicies(OreSiRightOnApplicationRole.managementRole(application, revokeAuthorizationRequest.getAuthorizationId()));
+    public UUID revoke(Application application, UUID authorizationId) {
+        this.application = application;
+        this.authorizationReferencesRepository = repository.getRepository(application).authorizationReferences();
+        OreSiReferenceAuthorization oreSiAuthorization = authorizationReferencesRepository.findById(authorizationId);
+        dropPolicies(OreSiRightOnApplicationRole.managementRole(application, authorizationId));
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
         authenticationService.setRoleAdmin();
         oreSiAuthorization.getOreSiUsers().stream()
                 .map(authenticationService::getUserRole)
                 .forEach(user -> db.removeUserInRole(user, oreSiRightOnApplicationRole));
         authenticationService.setRoleForClient();
-        authorizationRepository.delete(authorizationId);
+        authorizationReferencesRepository.delete(authorizationId);
         authenticationService.setRoleAdmin();
         db.dropRole(oreSiRightOnApplicationRole);
         authenticationService.setRoleForClient();

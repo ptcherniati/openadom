@@ -633,6 +633,7 @@ public class OreSiResourcesTest {
         }
 
         String referencesRight = getJsonReferenceRightsforMonSoererepository(withRigthsUserId, "manage");
+        referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
 
         response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/authorization")
                         .cookie(withRigthsCookie))
@@ -889,6 +890,18 @@ public class OreSiResourcesTest {
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(fileUUID2));
+
+        // on supprime l'authorization'
+        mockMvc.perform(delete("/api/v1/applications/monsore/references/authorization/{authorizationId}" , referencesRight)
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().string(referencesRight));
+        response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/authorization")
+                        .cookie(withRigthsCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.authorizationResults",Matchers.hasSize(0) ))
+                .andReturn().getResponse().getContentAsString();
+        log.debug(response);
 
     }
 

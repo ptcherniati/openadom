@@ -129,6 +129,14 @@ public class AuthorizationResources {
         return authorizationService.getReferencesAuthorizationsForUser(applicationNameOrId, userLoginOrId);
     }
 
+
+    @DeleteMapping(value = "/applications/{applicationNameOrId}/references/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> revokeReferencesAuthorization(
+            @PathVariable("applicationNameOrId") String applicationNameOrId,
+            @PathVariable("authorizationId") String authorizationId) {
+        final UUID revokeId = authorizationService.revokeReferencesAuthorization(applicationNameOrId, UUID.fromString(authorizationId));
+        return ResponseEntity.ok(revokeId.toString());
+    }
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OreSiUser> addAuthorization(
             @PathVariable(name = "role", required = true) String role,

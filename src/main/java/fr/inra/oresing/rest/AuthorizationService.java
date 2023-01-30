@@ -9,10 +9,7 @@ import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
-import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanSetRightsException;
-import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
-import fr.inra.oresing.rest.exceptions.authentication.NotSuperAdminException;
+import fr.inra.oresing.rest.exceptions.authentication.*;
 import fr.inra.oresing.rest.exceptions.role.BadRoleException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,6 +100,12 @@ public class AuthorizationService {
         final UUID currentUserId = request.getRequestClient().getId();
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         return authorizationRepository.findAuthorizations(currentUserId, application, dataType);
+    }
+
+    public List<OreSiReferenceAuthorization> findUserReferencesAuthorizationsForApplication(Application application) {
+        final UUID currentUserId = request.getRequestClient().getId();
+        AuthorizationReferencesRepository authorizationRepository = repository.getRepository(application).authorizationReferences();
+        return authorizationRepository.findAuthorizations(currentUserId, application);
     }
 
     public List<OreSiReferenceAuthorization> findUserReferencesAuthorizationsForApplicationAndDataType(Application application) {
@@ -339,6 +342,44 @@ public class AuthorizationService {
             return null;
         }
         return updateRolesOnManagement.revoke(revokeAuthorizationRequest);
+    }
+
+    public UUID revokeReferencesAuthorization(String applicationNameOrId, UUID authorizationId) {
+        final UpdateRolesOnReferencesManagement updateRolesOnManagement = new UpdateRolesOnReferencesManagement(repository, db, authenticationService);
+        final Application application = oreSiService.getApplication(applicationNameOrId);
+        final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
+        final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
+        final UUID requestUserId = request.getRequestUserId();
+        List<OreSiReferenceAuthorization> authorizationsForCurrentUser = findUserReferencesAuthorizationsForApplication(application);
+        if (!isApplicationCreator && !authorizationsForCurrentUser.stream().anyMatch(
+                a -> !a.getReferences().get(OperationType.admin).isEmpty()
+        )) {
+            throw new NotApplicationCanSetRightsReferencesException(application.getName());
+        }
+        OreSiReferenceAuthorization oreSiAuthorization = repository.getRepository(application).authorizationReferences().findById(authorizationId);
+        final List<String> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
+                .map(authorization -> authorization.getReferences())
+                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
+                .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        final Map<OperationReferenceType, List<String>> filteredAuthorizations = oreSiAuthorization.getReferences().entrySet().stream()
+                .map(authByTypeEntry -> {
+                    if (!isApplicationCreator) {
+                        final boolean canRemoveEntry = authByTypeEntry.getValue().stream()
+                                .allMatch(authorization -> authorizationListForCurrentUser.contains(authorization));
+                        if (!canRemoveEntry) {
+                            throw new NotApplicationCanDeleteReferencesRightsException(application.getName(), authorizationListForCurrentUser);
+                        }
+                    }
+                    return authByTypeEntry;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (filteredAuthorizations.isEmpty()) {
+            return null;
+        }
+        return updateRolesOnManagement.revoke(application, authorizationId);
     }
 
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(String applicationNameOrId, String dataType, AuthorizationsResult authorizationsForUser) {
