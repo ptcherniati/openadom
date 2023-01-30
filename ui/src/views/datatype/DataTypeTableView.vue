@@ -279,12 +279,14 @@
                     ></CollapsibleInterval>
                   </b-field>
                   <b-input
-                    v-model="search[component.variable + '_' + component.component]"
-                    icon-right="search"
-                    :placeholder="$t('dataTypeAuthorizations.search')"
-                    type="search"
-                    @blur="addVariableSearch(component)"
-                    size="is-small"
+                      class="is-primary"
+                      v-model="search[component.variable + '_' + component.component]"
+                      icon="search"
+                      :placeholder="$t('dataTypeAuthorizations.search')"
+                      type="search"
+                      autocomplete="off"
+                      @blur="addVariableSearch(component)"
+                      size="is-small"
                   ></b-input>
                 </b-field>
               </div>
@@ -556,6 +558,7 @@ export default class DataTypeTableView extends Vue {
       variableComponentFilters: [],
       variableComponentOrderBy: [],
     });
+    window.location.reload();
     this.initDatatype();
   }
 
@@ -623,7 +626,6 @@ export default class DataTypeTableView extends Vue {
         }, []);
       })
       .flat();
-
     let columnIndex = 0;
     this.variables.forEach((variable, variableIndex) => {
       Object.values(variable.components).forEach(() => {
@@ -840,9 +842,13 @@ export default class DataTypeTableView extends Vue {
   }
 
   clearSearch() {
+    for (let j = 0; j<document.getElementsByClassName("input").length; j++) {
+      document.getElementsByClassName("input")[j].value = "";
+    }
     for (var i = 0; i < this.variableSearch.length; i++) {
       this.params.variableComponentFilters = [];
       this.variableSearch = [];
+      this.search = {};
     }
     this.initDatatype();
   }
