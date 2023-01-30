@@ -285,7 +285,7 @@ public class OreSiService {
                 }
             }
 
-            validateStoredData(new DownloadDatasetQuery(nameOrId, dataType, null, null, null, null, null, app));
+            validateStoredData(new DownloadDatasetQuery(nameOrId, dataType, null, null, null, null, null, app, PaginationStrategy.NO_PAGINATION, null));
         }
 
         // on supprime l'ancien fichier vu que tout c'est bien passé

@@ -45,7 +45,7 @@ public class DownloadDatasetQuery {
     @Nullable
     Set<VariableComponentOrderBy> variableComponentOrderBy;
     private PaginationStrategy paginationStrategy = PaginationStrategy.LIMIT_OFFSET;
-    private String seekAfterRowId;
+    private UUID seekAfterRowId;
 
     public DownloadDatasetQuery() {
     }
@@ -70,7 +70,7 @@ public class DownloadDatasetQuery {
         // .addValue("refType", refType);
     }
 
-    public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
+    public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application, PaginationStrategy paginationStrategy, UUID seekAfterRowId) {
         this.applicationNameOrId = applicationNameOrId;
         this.dataType = dataType;
         this.offset = offset;
@@ -79,7 +79,8 @@ public class DownloadDatasetQuery {
         this.variableComponentFilters = variableComponentFilters;
         this.variableComponentOrderBy = variableComponentOrderBy;
         this.application = application;
-
+        this.paginationStrategy = paginationStrategy;
+        this.seekAfterRowId = seekAfterRowId;
     }
 
     public static final DownloadDatasetQuery buildDownloadDatasetQuery(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, Application application) {
@@ -92,7 +93,9 @@ public class DownloadDatasetQuery {
                         null,
                         null,
                         null,
-                        application) :
+                        application,
+                        PaginationStrategy.LIMIT_OFFSET,
+                        null) :
                 new DownloadDatasetQuery(
                         nameOrId == null ? downloadDatasetQuery.applicationNameOrId : nameOrId,
                         dataType == null ? downloadDatasetQuery.dataType : dataType,
@@ -101,7 +104,9 @@ public class DownloadDatasetQuery {
                         downloadDatasetQuery.variableComponentSelects,
                         downloadDatasetQuery.variableComponentFilters,
                         downloadDatasetQuery.variableComponentOrderBy,
-                        application);
+                        application,
+                        downloadDatasetQuery.paginationStrategy,
+                        downloadDatasetQuery.seekAfterRowId);
     }
 
     String addOrderBy(String query) {
@@ -224,6 +229,19 @@ public class DownloadDatasetQuery {
         if (getPaginationStrategy() == PaginationStrategy.SEEK) {
             Preconditions.checkArgument(offset == null, "avec la méthode " + PaginationStrategy.SEEK + ", on ne doit pas préciser d'offset");
             Preconditions.checkArgument(CollectionUtils.isEmpty(variableComponentOrderBy), "avec la méthode " + PaginationStrategy.SEEK + ", on ne peut pas choisir l'ordre");
+            Set<String> havingClauseElements = new LinkedHashSet<>();
+            if (!Strings.isNullOrEmpty(filterClause)) {
+                havingClauseElements.add(filterClause);
+            }
+            if (seekAfterRowId != null) {
+                havingClauseElements.add("rowId::uuid > '\" + seekAfterRowId.toString() + \"'::uuid");
+            }
+            String havingClause;
+            if (havingClauseElements.isEmpty()) {
+                havingClause = "";
+            } else {
+                havingClause = "HAVING " + String.join(" AND ", havingClauseElements) + "\n";
+            }
             query = "SELECT\n" +
                     "        '" + DataRow.class.getName() + "' AS \"@class\",\n" +
                     "        jsonb_build_object(\n" +
@@ -234,8 +252,7 @@ public class DownloadDatasetQuery {
                     "FROM " + dataTable.getSqlIdentifier() + "\n" +
                     "WHERE application = '" + applicationId.toString() + "'::uuid AND dataType = '" + dataType + "'\n" +
                     "GROUP BY rowId\n" +
-                    "HAVING rowId::uuid > '" + seekAfterRowId + "'::uuid\n" +
-                            (Strings.isNullOrEmpty(filterClause) ? "" : " AND " + filterClause) +
+                    havingClause +
                     "ORDER BY rowId\n" +
                     "FETCH FIRST " + limit + " ROW ONLY";
         } else {
