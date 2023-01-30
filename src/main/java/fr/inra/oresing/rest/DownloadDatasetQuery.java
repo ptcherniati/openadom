@@ -139,7 +139,6 @@ public class DownloadDatasetQuery {
     }
 
     String filterBy(String query) {
-        Set<VariableComponentFilters> variableComponentKeySet = new LinkedHashSet<>();
         String filter = Optional.ofNullable(variableComponentFilters)
                 .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(LinkedHashSet::new)
