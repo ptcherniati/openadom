@@ -234,7 +234,7 @@ public class DownloadDatasetQuery {
                 havingClauseElements.add(filterClause);
             }
             if (seekAfterRowId != null) {
-                havingClauseElements.add("rowId::uuid > '\" + seekAfterRowId.toString() + \"'::uuid");
+                havingClauseElements.add("rowId::uuid > '" + seekAfterRowId.toString() + "'::uuid");
             }
             String havingClause;
             if (havingClauseElements.isEmpty()) {
