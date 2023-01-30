@@ -5,15 +5,23 @@ import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.PaginationStrategy;
+import fr.inra.oresing.persistence.SqlTable;
 import lombok.Getter;
 import lombok.Setter;
+import org.assertj.core.util.Preconditions;
 import org.assertj.core.util.Strings;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.CollectionUtils;
 import org.testcontainers.shaded.org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -36,6 +44,8 @@ public class DownloadDatasetQuery {
     Set<VariableComponentFilters> variableComponentFilters;
     @Nullable
     Set<VariableComponentOrderBy> variableComponentOrderBy;
+    private PaginationStrategy paginationStrategy = PaginationStrategy.LIMIT_OFFSET;
+    private String seekAfterRowId;
 
     public DownloadDatasetQuery() {
     }
@@ -138,7 +148,7 @@ public class DownloadDatasetQuery {
         return Strings.isNullOrEmpty(orderBy) ? query : String.format("%s \nORDER by %s", query, orderBy);
     }
 
-    String filterBy(String query) {
+    private String getFilterClause() {
         String filter = Optional.ofNullable(variableComponentFilters)
                 .filter(vck -> !CollectionUtils.isEmpty(vck))
                 .orElseGet(LinkedHashSet::new)
@@ -146,7 +156,7 @@ public class DownloadDatasetQuery {
                 .map(vck -> getFormat(vck))
                 .filter(f -> !Strings.isNullOrEmpty(f))
                 .collect(Collectors.joining(" AND "));
-        return Strings.isNullOrEmpty(filter) ? query : String.format("%s \nWHERE %s", query, filter);
+        return filter;
     }
 
     private String getFormat(VariableComponentFilters vck) {
@@ -208,24 +218,47 @@ public class DownloadDatasetQuery {
                 .collect(Collectors.joining(" AND "));
     }
 
-    public String buildQuery(String toMergeDataGroupsQuery) {
-        String query = "WITH my_data AS (\n" + toMergeDataGroupsQuery + "\n)" +
-                "\n SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
-                "\njsonb_build_object(" +
-                "\n\t'rowNumber', row_number() over (), " +
-                "\n\t'totalRows', count(*) over (), " +
-                "\n\t'rowId', rowId, " +
-                "\n\t'values', dataValues, " +
-                "\n\t'refsLinkedTo', refsLinkedTo" +
-                "\n) AS json"
-                + " \nFROM my_data ";
-        query = filterBy(query);
-        query = addOrderBy(query);
-        if (offset != null && limit >= 0) {
-            query = String.format("%s \nOFFSET %d ROWS", query, offset);
-        }
-        if (limit != null && limit >= 0) {
-            query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, limit);
+    public String buildQuery(String toMergeDataGroupsQuery, UUID applicationId, SqlTable dataTable) {
+        String query;
+        String filterClause = getFilterClause();
+        if (getPaginationStrategy() == PaginationStrategy.SEEK) {
+            Preconditions.checkArgument(offset == null, "avec la méthode " + PaginationStrategy.SEEK + ", on ne doit pas préciser d'offset");
+            Preconditions.checkArgument(CollectionUtils.isEmpty(variableComponentOrderBy), "avec la méthode " + PaginationStrategy.SEEK + ", on ne peut pas choisir l'ordre");
+            query = "SELECT\n" +
+                    "        '" + DataRow.class.getName() + "' AS \"@class\",\n" +
+                    "        jsonb_build_object(\n" +
+                    "                'rowId', rowId,\n" +
+                    "                'values', jsonb_object_agg(datavalues),\n" +
+                    "                'refsLinkedTo', jsonb_object_agg(refsLinkedTo)\n" +
+                    "        ) AS \"json\"\n" +
+                    "FROM " + dataTable.getSqlIdentifier() + "\n" +
+                    "WHERE application = '" + applicationId.toString() + "'::uuid AND dataType = '" + dataType + "'\n" +
+                    "GROUP BY rowId\n" +
+                    "HAVING rowId::uuid > '" + seekAfterRowId + "'::uuid\n" +
+                            (Strings.isNullOrEmpty(filterClause) ? "" : " AND " + filterClause) +
+                    "ORDER BY rowId\n" +
+                    "FETCH FIRST " + limit + " ROW ONLY";
+        } else {
+            query = "WITH my_data AS (\n" + toMergeDataGroupsQuery + "\n)" +
+                    "\n SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
+                    "\njsonb_build_object(" +
+                    "\n\t'rowNumber', row_number() over (), " +
+                    "\n\t'totalRows', count(*) over (), " +
+                    "\n\t'rowId', rowId, " +
+                    "\n\t'values', dataValues, " +
+                    "\n\t'refsLinkedTo', refsLinkedTo" +
+                    "\n) AS json"
+                    + " \nFROM my_data ";
+            query = Strings.isNullOrEmpty(filterClause) ? query : String.format("%s \nWHERE %s", query, filterClause);
+            query = addOrderBy(query);
+            if (paginationStrategy == PaginationStrategy.LIMIT_OFFSET) {
+                if (offset != null && limit >= 0) {
+                    query = String.format("%s \nOFFSET %d ROWS", query, offset);
+                }
+                if (limit != null && limit >= 0) {
+                    query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, limit);
+                }
+            }
         }
         return query;
     }
