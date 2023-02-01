@@ -8,7 +8,7 @@
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
-      <div class="CollapsibleTree-header-infos column is-half" >
+      <div class="CollapsibleTree-header-infos column is-two-thirds" >
         <div class="CollapsibleTree-header-infos column is-narrow"
           :style="`transform:translate(${level * 50}px);`"
         >
@@ -41,15 +41,17 @@
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
-        </div>
-        <div v-if="option.localtags" class="column is-one-fifth">
-          <b-tag v-for="tag in option.localtags" :key="tag" class="is-primary is-light">
-            {{tag === 'no-tag' ? $t('tags.no-tag') : tag}}
-          </b-tag>
+          <div v-if="option.localtags" class="column">
+            <div v-for="tag in option.localtags" :key="tag" >
+              <b-tag v-if="tag !== 'no-tag'" class="is-primary is-light">
+                {{ tag }}
+              </b-tag>
+            </div>
+          </div>
         </div>
         <div :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
-              ? 'tile synthesis-details link column is-narrow'
+              ? 'tile synthesis-details link column is-full'
               : 'tile synthesis-details column'
           "
           @click="
@@ -59,7 +61,7 @@
               onClickLabelSynthesisDetailCb(event, option)
           "
         >
-          <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark">
+          <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark column is-full">
             <b-field v-show="false">
               {{
                 new Date(option.synthesisMinMax[0]).toLocaleDateString("fr") +

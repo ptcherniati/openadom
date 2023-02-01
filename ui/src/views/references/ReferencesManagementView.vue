@@ -86,7 +86,6 @@ export default class ReferencesManagementView extends Vue {
 
   references = [];
   currentPage = 1;
-  isOpen = false;
   openPanel = false;
   chosenRef = {};
   application = new ApplicationResult();
@@ -133,12 +132,11 @@ export default class ReferencesManagementView extends Vue {
         }
         tags[tagName] = {};
         tags[tagName].selected = true;
-        let locale = this.internationalisationService.getLocaleforPath(
-          this.application,
-          "internationalizedTags." + tagName,
-          tagName
+        tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+            this.application,
+            "internationalizedTags." + tagName,
+            tagName
         );
-        tags[tagName].localName = locale;
       }
       reference.localtags = reference.tags.map((tag) => tags[tag]?.localName || tag);
     }

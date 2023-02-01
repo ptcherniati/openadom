@@ -64,6 +64,7 @@
         :data-type="chosenDataType"
         :close-cb="(newVal) => (openPanel = newVal)"
         :application-name="applicationName"
+        :tags="tags"
       />
       <b-modal class="modalByAgrégation" v-model="openSynthesisDetailPanel" width="100rem">
         <DetailModalCard
@@ -139,7 +140,7 @@ export default class DataTypesManagementView extends Vue {
   openPanel = false;
   openSynthesisDetailPanel = false;
   currentOptions = {};
-  chosenDataType = null;
+  chosenDataType = {};
   synthesis = {};
   synthesisMinMax = {};
   tags = {};
@@ -171,12 +172,11 @@ export default class DataTypesManagementView extends Vue {
         }
         tags[tagName] = {};
         tags[tagName].selected = true;
-        let locale = this.internationalisationService.getLocaleforPath(
-          this.application,
-          "internationalizedTags." + tagName,
-          tagName
+        tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+            this.application,
+            "internationalizedTags." + tagName,
+            tagName
         );
-        tags[tagName].localName = locale;
       }
       dataType.localtags = dataType.tags.map((tag) => tags[tag]?.localName || tag);
     }
@@ -218,8 +218,8 @@ export default class DataTypesManagementView extends Vue {
       this.dataTypes = Object.values(
         this.internationalisationService.localeDatatypeName(this.application)
       );
-      await this.initSynthesis();
       this.buildTags();
+      await this.initSynthesis();
     } catch (error) {
       this.alertService.toastServerError();
     }

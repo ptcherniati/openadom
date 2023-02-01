@@ -5,6 +5,18 @@
     :title="dataType && (dataType.localName || dataType.label)"
     :close-cb="closeCb"
   >
+    <div class="columns">
+      <caption>
+        {{ $t('tags.tag') }} {{ $t('ponctuation.colon')}}
+      </caption>
+      <div v-for="(tag) in dataType.tags" :key="tag" style="margin: 5px">
+        <b-tag class="is-primary">
+          <span>
+            {{(tags[tag].localName === 'no-tag' ? $t('tags.no-tag') : tags[tag] && tags[tag].localName) || tag}}
+          </span>
+        </b-tag>
+      </div>
+    </div>
     <div class="Panel-buttons">
       <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{
         $t("dataTypesManagement.consult-authorization")
@@ -26,6 +38,7 @@ export default class DataTypeDetailsPanel extends Vue {
   @Prop() dataType;
   @Prop() closeCb;
   @Prop() applicationName;
+  @Prop() tags;
 
   consultAuthorization() {
     this.$router.push(
