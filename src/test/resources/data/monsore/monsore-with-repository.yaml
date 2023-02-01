@@ -5,7 +5,7 @@ application:
     fr: SOERE mon SOERE avec dépôt
     en: SOERE my SOERE with repository
   name: MONSORE
-  version: 3
+  version: 1
 
 tags:
   context:
@@ -14,6 +14,9 @@ tags:
   data:
     fr: données
     en: data
+  test:
+    fr: test
+    en: test
 compositeReferences:
   sites:
     components:
@@ -46,7 +49,7 @@ references:
       esp_definition_en: null
       colonne_homonyme_entre_referentiels: null
   projet:
-    tags: [context, data]
+    tags: [context, data, test]
     internationalizationName:
       fr: Projet
       en: Project
@@ -374,7 +377,7 @@ references:
       nom de l'unité: null
 dataTypes:
   pem:
-    tags: [context, data]
+    tags: [context, data, test]
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent

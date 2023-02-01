@@ -42,17 +42,17 @@
             {{ refFile.name }}
           </span>
           <div v-if="option.localtags" class="column">
-            <div v-for="tag in option.localtags" :key="tag" >
+            <span v-for="tag in option.localtags" :key="tag" style="margin-left: 5px">
               <b-tag v-if="tag !== 'no-tag'" class="is-primary is-light">
                 {{ tag }}
               </b-tag>
-            </div>
+            </span>
           </div>
         </div>
         <div :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
-              ? 'tile synthesis-details link column is-full'
-              : 'tile synthesis-details column'
+              ? 'tile synthesis-details link column is-four-fifths'
+              : 'tile synthesis-details column is-full'
           "
           @click="
             (event) =>
