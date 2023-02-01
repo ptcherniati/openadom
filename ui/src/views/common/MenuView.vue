@@ -90,7 +90,7 @@
 
     <FontAwesomeIcon
       @click="open = !open"
-      :icon="open ? 'caret-up' : 'caret-down'"
+      :icon="open ? 'chevron-up' : 'chevron-down'"
       class="clickable mr-3 menu-view-collapsible-icon"
     />
   </div>

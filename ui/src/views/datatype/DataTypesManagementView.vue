@@ -14,6 +14,12 @@
       }}
     </h1>
 
+    <div class="column is-offset-one-third is-one-third">
+      <TagsCollapse
+        v-if="tags && Object.keys(tags).length > 1"
+        :tags="tags"
+      />
+    </div>
     <AvailablityChart v-if="false" />
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" :key="msg">
@@ -31,7 +37,7 @@
     <div>
       <CollapsibleTree
         class="liste"
-        v-for="(data, i) in dataTypes"
+        v-for="(data, i) in dataTypesToBeShown"
         :id="i + 1"
         :key="data.id"
         :option="{
@@ -91,6 +97,7 @@ import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
 import DetailModalCard from "@/components/charts/DetailModalCard";
 import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
+import TagsCollapse from "@/components/common/TagsCollapse.vue";
 
 @Component({
   components: {
@@ -100,6 +107,7 @@ import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
     SubMenu,
     DataTypeDetailsPanel,
     AvailablityChart,
+    TagsCollapse,
   },
 })
 export default class DataTypesManagementView extends Vue {
@@ -125,7 +133,6 @@ export default class DataTypesManagementView extends Vue {
       this.downloadDataType(label)
     ),
   ];
-
   dataTypes = [];
   errorsMessages = [];
   errorsList = [];
@@ -135,6 +142,51 @@ export default class DataTypesManagementView extends Vue {
   chosenDataType = null;
   synthesis = {};
   synthesisMinMax = {};
+  tags = {};
+
+  get dataTypesToBeShown() {
+    if (!this.tags) {
+      return this.dataTypes;
+    }
+    let selectedTags = Object.keys(this.tags).filter((t) => this.tags[t].selected);
+    if (!Object.keys(this.tags).length) {
+      return this.dataTypes;
+    }
+    return this.dataTypes.filter((dataType) => {
+      return dataType.tags.some((t) => {
+        return selectedTags.includes(t);
+      });
+    });
+  }
+  buildTags() {
+    let tags = {};
+    for (const dataType of this.dataTypes) {
+      let currentTags = dataType.tags;
+      if (!currentTags) {
+        continue;
+      }
+      for (const tagName of currentTags) {
+        if (tags[tagName]) {
+          continue;
+        }
+        tags[tagName] = {};
+        tags[tagName].selected = true;
+        let locale = this.internationalisationService.getLocaleforPath(
+          this.application,
+          "internationalizedTags." + tagName,
+          tagName
+        );
+        tags[tagName].localName = locale;
+      }
+      dataType.localtags = dataType.tags.map((tag) => tags[tag]?.localName || tag);
+    }
+    this.tags = tags;
+  }
+  toggle(tag) {
+    let tags = this.tags;
+    tags[tag].selected = !tags[tag].selected;
+    this.tags = tags;
+  }
 
   created() {
     this.subMenuPaths = [
@@ -150,7 +202,11 @@ export default class DataTypesManagementView extends Vue {
 
   async init() {
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE', 'SYNTHESIS']);
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "DATATYPE",
+        "SYNTHESIS",
+      ]);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -163,6 +219,7 @@ export default class DataTypesManagementView extends Vue {
         this.internationalisationService.localeDatatypeName(this.application)
       );
       await this.initSynthesis();
+      this.buildTags();
     } catch (error) {
       this.alertService.toastServerError();
     }

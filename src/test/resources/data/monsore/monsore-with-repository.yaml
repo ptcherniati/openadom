@@ -5,7 +5,7 @@ application:
     fr: SOERE mon SOERE avec dépôt
     en: SOERE my SOERE with repository
   name: MONSORE
-  version: 1
+  version: 2
 
 tags:
   context:
@@ -374,7 +374,7 @@ references:
       nom de l'unité: null
 dataTypes:
   pem:
-    tags: [context]
+    tags: [context, data]
     internationalizationName:
       fr: Piégeage en Montée
       en: Trap in ascent
