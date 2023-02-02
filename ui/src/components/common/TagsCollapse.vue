@@ -21,7 +21,7 @@
       </div>
     </template>
     <div class="card-content">
-      <div class="content columns">
+      <div class="content columns" style="display: flex; flex-wrap: wrap;">
         <b-field class="column is-narrow" v-for="(tag, index) in tags" :key="index">
           <b-switch v-model="tag.selected" passive-type="is-light" type="is-dark">
             {{ tag.localName === "no-tag" ? $t("tags.no-tag") : tag.localName }}

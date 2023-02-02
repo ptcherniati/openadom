@@ -10,9 +10,9 @@
         {{ $t('tags.tag') }} {{ $t('ponctuation.colon')}}
       </caption>
       <div v-for="(tag) in dataType.tags" :key="tag" style="margin: 5px">
-        <b-tag class="is-primary">
+        <b-tag class="is-primary" v-if="tags[tag].localName !== 'no-tag'">
           <span>
-            {{(tags[tag].localName === 'no-tag' ? $t('tags.no-tag') : tags[tag] && tags[tag].localName) || tag}}
+            {{ tags[tag].localName }}
           </span>
         </b-tag>
       </div>
