@@ -52,6 +52,7 @@
           :left-align="false"
           :open="openPanel"
           :reference="chosenRef"
+          :application-name=" application.name"
           :tags="tags"
       />
     </div>

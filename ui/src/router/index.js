@@ -6,6 +6,8 @@ import ApplicationsView from "@/views/application/ApplicationsView.vue";
 import ApplicationCreationView from "@/views/application/ApplicationCreationView.vue";
 import ReferencesManagementView from "@/views/references/ReferencesManagementView.vue";
 import ReferenceTable from "@/views/references/ReferenceTableView.vue";
+import AuthorizationReferencesManagement from "@/views/authorizations/AuthorizationReferencesManagement.vue";
+import ReferencesAuthorizationInfoView from "@/views/authorizations/ReferencesAuthorizationInfoView.vue";
 import DataTypeTableView from "@/views/datatype/DataTypeTableView.vue";
 import DataTypesManagementView from "@/views/datatype/DataTypesManagementView.vue";
 import DataTypesRepositoryView from "@/views/datatype/DataTypesRepositoryView.vue";
@@ -58,6 +60,12 @@ const routes = [
     props: true,
   },
   {
+    path: "/applications/:applicationName/references/authorizations",
+    name: "Authorization references management view",
+    component: AuthorizationReferencesManagement,
+    props: true,
+  },
+  {
     path: "/applications/:applicationName/references/:refId",
     component: ReferenceTable,
     props: true,
@@ -85,6 +93,11 @@ const routes = [
   {
     path: "/applications/:applicationName/dataTypes/:dataTypeId/authorizations/:authorizationId",
     component: DataTypeAuthorizationInfoView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/references/authorizations/:authorizationId",
+    component: ReferencesAuthorizationInfoView,
     props: true,
   },
 ];

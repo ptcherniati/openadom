@@ -52,6 +52,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.NestedServletException;
 
 import javax.servlet.http.Cookie;
@@ -635,16 +637,33 @@ public class OreSiResourcesTest {
         String referencesRight = getJsonReferenceRightsforMonSoererepository(withRigthsUserId, "manage");
         referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
 
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("userId", withRigthsUserId);
+        params.add("offset", "0");
+        params.add("limit", "1");
         response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/authorization")
+                        .params(params)
                         .cookie(withRigthsCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.authorizationResults[*].users[*].login", Matchers.hasItem("withrigths")))
+                .andExpect(jsonPath("$.authorizationResults[*].users[*].id", Matchers.hasItem(withRightsUserResult.getUserId().toString())))
+                .andExpect(jsonPath("$.authorizationResults[*].authorizations.manage", Matchers.hasSize(0)))
+                .andExpect(jsonPath("$.authorizationsForUser.applicationName", Is.is("monsore")))
+                .andExpect(jsonPath("$.authorizationsForUser.authorizationResults.manage", Matchers.hasSize(2)))
+                .andExpect(jsonPath("$.authorizationsForUser.authorizationResults.manage", Matchers.hasItem("sites")))
+                .andExpect(jsonPath("$.authorizationsForUser.authorizationResults.manage", Matchers.hasItem("type_de_sites")))
+                .andReturn()
+                .getResponse().getContentAsString();
+        response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/authorization")
+                        .params(params)
+                        .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.authorizationResults[*].users[*].login", Matchers.hasItem("withrigths")))
                 .andExpect(jsonPath("$.authorizationResults[*].users[*].id", Matchers.hasItem(withRightsUserResult.getUserId().toString())))
                 .andExpect(jsonPath("$.authorizationResults[*].authorizations.manage[*]", Matchers.hasItem("type_de_sites")))
                 .andExpect(jsonPath("$.authorizationResults[*].authorizations.manage[*]", Matchers.hasItem("sites")))
-                .andExpect(jsonPath("$.authorizationResults[*].authorizationsForUser.applicationName", Matchers.hasItem("monsore")))
-                .andExpect(jsonPath("$.authorizationResults[*].authorizations.manage[*]", Matchers.hasItem("type_de_sites")))
-                .andExpect(jsonPath("$.authorizationResults[*].authorizationsForUser.authorizationResults.manage[*]", Matchers.hasItem("sites")))
+                .andExpect(jsonPath("$.authorizationsForUser.applicationName", Is.is("monsore")))
+                .andExpect(jsonPath("$.authorizationsForUser.authorizationResults[*]", Matchers.hasSize(0)))
                 .andReturn()
                 .getResponse().getContentAsString();
         final String read = JsonPath.parse(response).read("$.authorizationResults[0].uuid");
@@ -892,14 +911,14 @@ public class OreSiResourcesTest {
                 .andExpect(content().string(fileUUID2));
 
         // on supprime l'authorization'
-        mockMvc.perform(delete("/api/v1/applications/monsore/references/authorization/{authorizationId}" , referencesRight)
+        mockMvc.perform(delete("/api/v1/applications/monsore/references/authorization/{authorizationId}", referencesRight)
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(referencesRight));
         response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/authorization")
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.authorizationResults",Matchers.hasSize(0) ))
+                .andExpect(jsonPath("$.authorizationResults", Matchers.hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
         log.debug(response);
 

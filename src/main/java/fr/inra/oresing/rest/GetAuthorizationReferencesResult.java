@@ -16,6 +16,4 @@ public class GetAuthorizationReferencesResult {
     Set<OreSiUser> users;
     UUID application;
     Map<OperationReferenceType, List<String>> authorizations;
-    Map<OperationReferenceType, List<String>> publicAuthorizations;
-    AuthorizationsReferencesResult authorizationsForUser;
 }

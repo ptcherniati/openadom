@@ -21,6 +21,11 @@
         }}
       </b-button>
     </div>
+    <div class="Panel-buttons">
+      <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{
+        $t("dataTypesManagement.consult-authorization")
+      }}</b-button>
+    </div>
   </SidePanel>
 </template>
 
@@ -36,6 +41,7 @@ export default class ReferencesDetailsPanel extends Vue {
   @Prop({default: false}) leftAlign;
   @Prop({default: false}) open;
   @Prop() reference;
+  @Prop() applicationName;
   @Prop() closeCb;
   @Prop() tags;
 
@@ -53,6 +59,12 @@ export default class ReferencesDetailsPanel extends Vue {
 
   deleteReference() {
     console.log("DELETE", this.reference);
+  }
+
+  consultAuthorization() {
+    this.$router.push(
+        `/applications/${this.applicationName}/references/authorizations`
+    );
   }
 }
 </script>

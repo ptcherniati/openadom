@@ -16,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -39,8 +41,9 @@ public class AuthorizationResources {
 
     @Autowired
     private OreSiRepository repo;
+
     @GetMapping(value = "/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<LoginResult> getAuthorizations(){
+    public List<LoginResult> getAuthorizations() {
         return authenticationService.getAuthorizations();
     }
 
@@ -51,14 +54,14 @@ public class AuthorizationResources {
         final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
         List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
         if (!isApplicationCreator && !authorizationsForCurrentUser.stream().anyMatch(
-                a->!a.getAuthorizations().get(OperationType.admin).isEmpty()
+                a -> !a.getAuthorizations().get(OperationType.admin).isEmpty()
         )) {
             throw new NotApplicationCanSetRightsException(application.getName(), dataType);
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, authorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
-        if(authorization.getUuid()==null){
+        if (authorization.getUuid() == null) {
             final OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
         }
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
@@ -81,9 +84,10 @@ public class AuthorizationResources {
         final GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
+
     @GetMapping(value = "/applications/{applicationNameOrId}/authorization/{dataType}/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "dataType") String dataType, @PathVariable(name = "userLoginOrId") String userLoginOrId){
-        return authorizationService.getAuthorizationsForUser(applicationNameOrId, dataType,userLoginOrId);
+    public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "dataType") String dataType, @PathVariable(name = "userLoginOrId") String userLoginOrId) {
+        return authorizationService.getAuthorizationsForUser(applicationNameOrId, dataType, userLoginOrId);
     }
 
     @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -102,14 +106,14 @@ public class AuthorizationResources {
         final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
         List<OreSiReferenceAuthorization> referencesAuthorizationsForCurrentUser = authorizationService.findUserReferencesAuthorizationsForApplicationAndDataType(application);
         if (!isApplicationCreator && referencesAuthorizationsForCurrentUser.stream().noneMatch(
-                a-> CollectionUtils.isEmpty(a.getReferences().get(OperationType.admin))
+                a -> CollectionUtils.isEmpty(a.getReferences().get(OperationType.admin))
         )) {
             throw new NotApplicationCanManageReferenceRightsException(application.getName());
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         OreSiReferenceAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, authorization, referencesAuthorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
-        if(authorization.getUuid()==null){
+        if (authorization.getUuid() == null) {
             final OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
         }
         authorizationService.updateRoleForReferenceManagement(previousUsers, oreSiAuthorization);
@@ -118,14 +122,23 @@ public class AuthorizationResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationReferencesResults> getReferencesAuthorizations(@PathVariable("nameOrId") String applicationNameOrId) {
+    public ResponseEntity<GetAuthorizationReferencesResults> getReferencesAuthorizations(
+            @PathVariable("nameOrId") String applicationNameOrId,
+            @RequestParam MultiValueMap<String, String> params
+    ) {
         final AuthorizationsReferencesResult authorizationsForUser = getReferencesAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        ImmutableSet<GetAuthorizationReferencesResult> getAuthorizationResults = authorizationService.getReferencesAuthorizations(applicationNameOrId, authorizationsForUser);
-        final GetAuthorizationReferencesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationReferencesResults(getAuthorizationResults, authorizationsForUser);
+        ImmutableSet<GetAuthorizationReferencesResult> getAuthorizationResults = authorizationService.getReferencesAuthorizations(applicationNameOrId, authorizationsForUser, params);
+        Set<GetGrantableResult.User> users = authorizationService.getGrantableUsers()
+                .stream()
+                .filter(user ->!"_public_".equals(user.getLabel()))
+                .collect(Collectors.toSet());
+
+        final GetAuthorizationReferencesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationReferencesResults(getAuthorizationResults, authorizationsForUser,users);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
+
     @GetMapping(value = "/applications/{applicationNameOrId}/references/authorization/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId") String userLoginOrId){
+    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId") String userLoginOrId) {
         return authorizationService.getReferencesAuthorizationsForUser(applicationNameOrId, userLoginOrId);
     }
 
@@ -137,6 +150,7 @@ public class AuthorizationResources {
         final UUID revokeId = authorizationService.revokeReferencesAuthorization(applicationNameOrId, UUID.fromString(authorizationId));
         return ResponseEntity.ok(revokeId.toString());
     }
+
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OreSiUser> addAuthorization(
             @PathVariable(name = "role", required = true) String role,

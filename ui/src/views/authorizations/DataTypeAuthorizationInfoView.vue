@@ -204,6 +204,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   subMenuPaths = [];
   repositury = null;
   selectedUsers = [];
+  filteredTags = [];
 
   getColumnTitle(column) {
     if (column.display) {

@@ -10,5 +10,6 @@ import java.util.Map;
 public class AuthorizationsReferencesResult {
     Map<OperationReferenceType,List<String>> authorizationResults;
     String applicationName;
+    Boolean isAdministrator;
 
 }

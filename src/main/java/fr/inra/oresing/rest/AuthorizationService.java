@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
 import java.time.LocalDate;
@@ -393,11 +394,38 @@ public class AuthorizationService {
         return authorizations;
     }
 
-    public ImmutableSet<GetAuthorizationReferencesResult> getReferencesAuthorizations(String applicationNameOrId, AuthorizationsReferencesResult authorizationsForUser) {
+    public ImmutableSet<GetAuthorizationReferencesResult> getReferencesAuthorizations(String applicationNameOrId, AuthorizationsReferencesResult authorizationsForUser, MultiValueMap<String, String> params) {
         Application application = repository.application().findApplication(applicationNameOrId);
+        ImmutableSortedSet<GetGrantableResult.User> users = getGrantableUsers();
         AuthorizationReferencesRepository authorizationRepository = repository.getRepository(application).authorizationReferences();
         final List<OreSiReferenceAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
+        long offset = Optional.ofNullable(params)
+                .map(map -> map.get("offset"))
+                .map(l -> l.isEmpty() ? "0" : l.get(0))
+                .map(os -> Long.parseLong(os))
+                .orElse(0l);
+        long limit = Optional.ofNullable(params)
+                .map(map -> map.get("limit"))
+                .map(l -> l.isEmpty()  ?Long.MAX_VALUE :Long.parseLong( l.get(0)))
+                .orElse(Long.MAX_VALUE);
+        String user = Optional.ofNullable(params)
+                .map(map -> map.get("userId"))
+                .map(l -> l.isEmpty()  ? (String)    null : l.get(0))
+                .filter(s -> !"null".equals(s))
+                .orElse( (String) null);
+        String authorizationId = Optional.ofNullable(params)
+                .map(map -> map.get("authorizationId"))
+                .map(l -> l.isEmpty() ? null : l.get(0))
+                .filter(s -> !"null".equals(s))
+                .orElse( (String) null);
+
         ImmutableSet<GetAuthorizationReferencesResult> authorizations = authorizationRepository.findAll().stream()
+                .skip(offset)
+                .limit(limit)
+                .filter(oreSiReferenceAuthorization ->
+                        (user==null || oreSiReferenceAuthorization.getOreSiUsers().stream().anyMatch(uuid ->uuid.toString().equals(user)))
+                        && (authorizationId==null|| oreSiReferenceAuthorization.getId().toString().equals(authorizationId))
+                )
                 .map(oreSiAuthorization -> toGetReferencesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
         return authorizations;
@@ -431,25 +459,17 @@ public class AuthorizationService {
 
     private GetAuthorizationReferencesResult toGetReferencesAuthorizationResult(OreSiReferenceAuthorization oreSiAuthorization, List<OreSiReferenceAuthorization> publicAuthorizations, AuthorizationsReferencesResult authorizationsForUser) {
         List<OreSiUser> all = userRepository.findAll();
-        final Map<OperationReferenceType, List<String>> collectPublicAuthorizations = new HashMap<>();
-        for (OreSiReferenceAuthorization publicAuthorization : publicAuthorizations) {
-            publicAuthorization.getReferences().entrySet()
-                    .forEach(operationReferenceTypeListEntry -> {
-                        final List<String> authorizations = collectPublicAuthorizations
-                                .computeIfAbsent(operationReferenceTypeListEntry.getKey(), k -> new ArrayList<>());
-                        operationReferenceTypeListEntry.getValue().stream()
-                                .filter(s -> !authorizations.contains(s))
-                                .forEach(s -> authorizations.add(s));
-                    });
-        }
+        final Map<OperationReferenceType, List<String>> userReferences = authorizationsForUser.getAuthorizationResults();
+        final boolean isAdministrator = authorizationsForUser.getIsAdministrator();
+        final Map<OperationReferenceType, List<String>> references = oreSiAuthorization.getReferences().entrySet().stream()
+                .filter(operationReferenceTypeListEntry -> isAdministrator || userReferences.containsKey(OperationReferenceType.admin))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new GetAuthorizationReferencesResult(
                 oreSiAuthorization.getId(),
                 oreSiAuthorization.getName(),
                 getOreSIUSers(all, oreSiAuthorization.getOreSiUsers()),
                 oreSiAuthorization.getApplication(),
-                authorizationsForUser.getAuthorizationResults(),
-                collectPublicAuthorizations,
-                authorizationsForUser
+                references
         );
     }
 
@@ -523,7 +543,7 @@ public class AuthorizationService {
         return dataGroups;
     }
 
-    private ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {
+    public ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {
         List<OreSiUser> allUsers = userRepository.findAll();
         ImmutableSortedSet<GetGrantableResult.User> users = allUsers.stream()
                 .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
@@ -644,10 +664,10 @@ public class AuthorizationService {
         if (user == null) {
             throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userLoginOrId));
         }
-        final boolean isAdministratorForDatatype = user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(dataType).matches());
+        final Application application = repository.application().findApplication(applicationNameOrUuid);
+        final boolean isAdministrator = user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(application.getName()).matches());
 
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForRole(user.getId().toString());
-        final Application application = repository.application().findApplication(applicationNameOrUuid);
         final List<OreSiAuthorization> publicAuthorizations = repository.getRepository(application.getId()).authorization().findPublicAuthorizations();
         final List<OreSiAuthorization> authorizations = repository.getRepository(application.getId()).authorization().findAuthorizations(UUID.fromString(rolesForCurrentUser.getCurrentUser()), application, dataType);
         Map<OperationType, List<AuthorizationParsed>> authorizationMap = new HashMap<>();
@@ -695,7 +715,7 @@ public class AuthorizationService {
                                         })),
                         this::mergeAuthorizationsParsedMap
                 ));
-        return new AuthorizationsResult(authorizationMap, application.getName(), dataType, authorizationByPath, isAdministratorForDatatype);
+        return new AuthorizationsResult(authorizationMap, application.getName(), dataType, authorizationByPath, isAdministrator);
     }
 
 
@@ -704,12 +724,15 @@ public class AuthorizationService {
         if (user == null) {
             throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userLoginOrId));
         }
-        final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForRole(user.getId().toString());
         final Application application = repository.application().findApplication(applicationNameOrUuid);
+        final boolean isAdministrator = user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(application.getName()).matches());
+
+        final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForRole(user.getId().toString());
         final List<OreSiReferenceAuthorization> publicAuthorizations = repository.getRepository(application.getId()).authorizationReferences().findPublicAuthorizations();
         final List<OreSiReferenceAuthorization> authorizations = repository.getRepository(application.getId()).authorizationReferences().findAuthorizations(UUID.fromString(rolesForCurrentUser.getCurrentUser()), application);
         Map<OperationReferenceType, List<String>> authorizationMap = new HashMap<>();
         List<String> attributes = application.getConfiguration().getRequiredAuthorizationsAttributes().stream().collect(Collectors.toList());
+
         authorizations.stream()
                 .forEach(authorizationList -> {
                     authorizationList.getReferences().entrySet()
@@ -722,7 +745,7 @@ public class AuthorizationService {
 
                             });
                 });
-        return new AuthorizationsReferencesResult(authorizationMap, application.getName());
+        return new AuthorizationsReferencesResult(authorizationMap, application.getName(),isAdministrator);
     }
 
     private Map<String, List<AuthorizationParsed>> mergeAuthorizationsParsedMap(Map<String, List<AuthorizationParsed>> a, Map<String, List<AuthorizationParsed>> b) {
