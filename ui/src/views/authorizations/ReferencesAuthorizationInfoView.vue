@@ -251,7 +251,7 @@ export default class ReferencesAuthorizationInfoView extends Vue {
       let configuration = Object.values(this.internationalisationService.treeReferenceName(this.application));
       let references = {}
       for (const configurationCode in configuration) {
-        if (authorizationForUser.isAdministrator || (authorizationForUser.authorizationResults?.admin?.[configurationCode])) {
+        if (authorizationForUser.isAdministrator || (authorizationForUser.authorizationResults?.admin?.includes(configuration[configurationCode].label))) {
           let isAdmin = this.authorization && (this.authorization?.authorizations?.admin || []).includes(configuration[configurationCode].label)
           let isManage = this.authorization && (this.authorization?.authorizations?.manage || []).includes(configuration[configurationCode].label)
           references[configurationCode] = {
