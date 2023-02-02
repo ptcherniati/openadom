@@ -360,6 +360,8 @@ public class Configuration {
         @ApiModelProperty(notes = "If this section exists, the data file will be store on a repository tree", required = false)
         private RepositoryDescription repository = null;
 
+        public List<String> tags = new LinkedList<>();
+
         public static Map<String, InternationalizationDataTypeMap> getInternationalization(LinkedHashMap<String, DataTypeDescription> dataTypeDescriptionMap) {
             Map<String, InternationalizationDataTypeMap> internationalizationDataTypeMapMap = new HashMap<>();
             for (Map.Entry<String, DataTypeDescription> entry : dataTypeDescriptionMap.entrySet()) {

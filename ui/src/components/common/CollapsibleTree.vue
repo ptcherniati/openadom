@@ -8,24 +8,11 @@
       @click="displayChildren = !displayChildren"
       @keypress.enter="displayChildren = !displayChildren"
     >
-      <div
-        class="CollapsibleTree-header-infos column is-variable is-half-desktop is-three-quarters-widescreen"
-      >
-        <div
-          class="CollapsibleTree-header-infos column"
+      <div class="CollapsibleTree-header-infos column is-two-thirds" >
+        <div class="CollapsibleTree-header-infos column is-narrow"
           :style="`transform:translate(${level * 50}px);`"
         >
-          <b-checkbox
-              v-if="withRadios"
-              v-model="innerOptionChecked"
-              :name="radioName"
-              @click.native="stopPropagation"
-              :native-value="option.id"
-          >
-            {{ option.localName || option.label }}
-          </b-checkbox>
           <div
-              v-else
               :class="onClickLabelCb ? 'link' : ''"
               @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
               @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
@@ -50,19 +37,22 @@
             class="clickable mr-3"
             tabindex="0"
           />
-          <p > {{ option.localName || option.label }} </p>
+          <p> {{ option.localName || option.label }} </p>
           <span class="file-name" v-if="refFile">
             {{ refFile.name }}
           </span>
-<!--          <span class="file-name" v-else-if="lineCount > 0">
-            {{ $t("validation.count-line") }} {{ lineCount }}
-          </span>-->
+          <div v-if="option.localtags" class="column">
+            <span v-for="tag in option.localtags" :key="tag" style="margin-left: 5px">
+              <b-tag v-if="tag !== 'no-tag'" class="is-primary is-light">
+                {{ tag }}
+              </b-tag>
+            </span>
+          </div>
         </div>
-        <div
-          :class="
+        <div :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
-              ? 'tile synthesis-details link column is-variable is-10-desktop is-8-widescreen'
-              : 'tile synthesis-details column'
+              ? 'tile synthesis-details link column is-four-fifths'
+              : 'tile synthesis-details column is-full'
           "
           @click="
             (event) =>
@@ -71,7 +61,7 @@
               onClickLabelSynthesisDetailCb(event, option)
           "
         >
-          <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark">
+          <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark column is-full">
             <b-field v-show="false">
               {{
                 new Date(option.synthesisMinMax[0]).toLocaleDateString("fr") +
@@ -98,17 +88,15 @@
             {{ $t("validation.data-empty") }}
           </span>
         </div>
-        <b-tag v-for="tag in option.localtags" :key="tag" class="is-primary is-light">
-          {{tag=='no-tag'?$t('tags.no-tag'):tag}}
-        </b-tag>
       </div>
-      <div class="CollapsibleTree-buttons column is-2">
+      <div class="CollapsibleTree-buttons column  is-narrow">
         <div class="file button is-small is-info" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
             class="file-label ml-1"
             accept=".csv"
             @input="() => onUploadCb(option.label, refFile) && showChildren()"
+            style="padding: 0px"
           >
             <span class="file-cta">
               <b-icon icon="upload"></b-icon>

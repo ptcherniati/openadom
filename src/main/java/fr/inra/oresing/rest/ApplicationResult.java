@@ -67,6 +67,7 @@ public class ApplicationResult {
         Map<String, Variable> variables;
         Repository repository;
         boolean hasAuthorizations;
+        Set<String> tags;
 
         @Value
         public static class Repository {
