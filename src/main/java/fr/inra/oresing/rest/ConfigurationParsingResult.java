@@ -773,8 +773,8 @@ public class ConfigurationParsingResult {
             ));
         }
 
-        public void missingTagDeclaration(String referenceName, String tagName, Set<String> declaredTags) {
-            recordError("missingTagDeclaration",ImmutableMap.of(
+        public void missingTagDeclaration(String referenceName, String tagName, Set<String> declaredTags, String message) {
+            recordError(message,ImmutableMap.of(
                     "referenceName",referenceName,
                     "tagName",tagName,
                     "declaredTag",declaredTags)

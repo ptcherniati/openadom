@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 @ToString
 public class Configuration {
 
+    public final static String HIDDEN_TAG = "__hidden__";
+    public final static String NO_TAG = "no-tag";
     @ApiModelProperty(notes = "The set of requiredAuthorizations of data.authorization section. Fill by aplication", required = false, hidden = true)
     private List<String> requiredAuthorizationsAttributes;
 
@@ -240,6 +242,10 @@ public class Configuration {
 
         @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues ="MANDATORY,OPTIONAL,ABSENT")
         private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
+
+        @ApiModelProperty(notes = "Some tags for the column", required = false, example = "variable")
+        private Set<String> tags = Set.of("no-tag");
+        //public List<String> tags = new LinkedList<>();
     }
 
     @Getter
@@ -617,6 +623,10 @@ public class Configuration {
         @ApiModelProperty(notes = "A description to create disponibilité charts", required = false)
         private Chart chartDescription;
 
+        @ApiModelProperty(notes = "Some tags for the variable description", required = false, example = "variable")
+        private Set<String> tags = Set.of("no-tag");
+        //public List<String> tags = new LinkedList<>();
+
         @ApiModelProperty(notes = "The list of components for this variable", required = true)
         private LinkedHashMap<String, VariableComponentWithDefaultValueDescription> components = new LinkedHashMap<>();
 
@@ -696,6 +706,10 @@ public class Configuration {
 
         @ApiModelProperty(notes = "A checker description", required = false)
         private CheckerDescription checker;
+
+        @ApiModelProperty(notes = "Some tags for the variable component description", required = false, example = "variable")
+        //public List<String> tags = new LinkedList<>();
+        private Set<String> tags = Set.of("no-tag");
     }
 
     @Getter

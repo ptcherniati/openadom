@@ -5,7 +5,7 @@ application:
     fr: SOERE mon SOERE avec dépôt
     en: SOERE my SOERE with repository
   name: MONSORE
-  version: 1
+  version: 6
 
 tags:
   context:
@@ -44,10 +44,17 @@ references:
     keyColumns:
       - esp_nom
     columns:
-      esp_nom: null
+      esp_nom:
+        tags: [test]
       esp_definition_fr: null
       esp_definition_en: null
       colonne_homonyme_entre_referentiels: null
+    computedColumns:
+      myComputedColumn:
+        tags: [test]
+        computation:
+          expression: >
+            return "my value";
   projet:
     tags: [context, data, test]
     internationalizationName:
@@ -397,8 +404,10 @@ dataTypes:
           token: 4
     data:
       projet:
+        tags: [test]
         components:
           value:
+            tags: [test]
             checker:
               name: Reference
               params:

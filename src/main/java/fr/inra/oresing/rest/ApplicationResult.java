@@ -40,6 +40,7 @@ public class ApplicationResult {
             String title;
             boolean key;
             String linkedTo;
+            Set<String> tags;
         }
 
         @Value
@@ -50,6 +51,7 @@ public class ApplicationResult {
             String reference;
             String referenceColumnToLookForHeader;
             boolean presenceConstraint;
+            Set<String> tags ;
         }
 
         @Value
@@ -88,11 +90,13 @@ public class ApplicationResult {
             String label;
             Map<String, Component> components;
             Chart chartDescription;
+            Set<String> tags;
 
             @Value
             public static class Component {
                 String id;
                 String label;
+                Set<String> tags;
             }
 
             @Value
