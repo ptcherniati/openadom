@@ -1593,6 +1593,203 @@
       "dynamicColumns": {}
     }
   },
+  "authorizationReferencesRights": {
+    "authorizations": {
+
+      "stade_développement_zoo": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "valeurs_qualitative": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "niveau_taxon": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "propriete_taxon": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "taxon_phytoplancton": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "data_type": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "controle_coherence": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "taxon_zooplancton":  {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "file_type": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "variable_group": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "variable_norm": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "variable": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "thematic":  {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "site_type": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "site":  {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "platform_type": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "platform": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "project": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "unit":  {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "tool_type": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      },
+      "tool": {
+        "ADMIN": true,
+        "UPLOAD": false,
+        "PUBLICATION": false,
+        "READ": true,
+        "ANY": true,
+        "DOWNLOAD": true,
+        "DELETE": false
+      }
+    },
+    "applicationName": "olac",
+    "isAdministrator": true,
+    "userId": "ee9c00ff-c20d-412e-a374-fd63a806dbf6"
+  },
   "dataTypes": {
     "physico-chimie": {
       "id": "physico-chimie",

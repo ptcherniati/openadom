@@ -1908,6 +1908,12 @@ on test le dépôt d'un fichier récursif
                             .cookie(authCookie))
                     .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         }
+        final String contentAsString = mockMvc.perform(get("/api/v1/applications/olac", "ALL,REFERENCETYPE")
+                        .cookie(authCookie)
+                        .param("filter", "ALL"))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn()
+                .getResponse().getContentAsString();
 
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getOlaReferentielFiles().entrySet()) {
