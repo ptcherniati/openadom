@@ -49,6 +49,9 @@ public class OreSiResources {
     @Autowired
     private OreSiService service;
 
+    @Autowired
+    private OreSiApiRequestContext request;
+
     @DeleteMapping(value = "/applications/{name}/file/{id}")
     public ResponseEntity<String> removeFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
         Optional<BinaryFile> optionalBinaryFile = service.getFile(name, id);
@@ -115,7 +118,6 @@ public class OreSiResources {
         List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(s -> ApplicationInformation.valueOf(s))
                 .collect(Collectors.toList());
-        boolean withSynthesis = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.SYNTHESIS);
         boolean withDatatypes = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.DATATYPE);
         boolean withReferenceType = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE);
         boolean withConfiguration = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.CONFIGURATION);
@@ -190,8 +192,10 @@ public class OreSiResources {
                     .orElse(new HashSet(List.of("no-tag")));
             return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations, tags);
         }) : Map.of();
+        final AuthorizationsForUserResult authorizationReferencesRights = service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet());
+
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, dataTypes, referenceSynthesis, configuration);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references,  authorizationReferencesRights, dataTypes, referenceSynthesis, configuration);
         return ResponseEntity.ok(applicationResult);
     }
 

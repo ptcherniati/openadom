@@ -1315,6 +1315,47 @@ public class OreSiService {
         return repo.application().findApplication(nameOrId);
     }
 
+    public AuthorizationsForUserResult getAuthorizationsReferencesRights(String nameOrId, String userID, Set<String> references) {
+        final AuthorizationsReferencesResult referencesAuthorizationsForUser = authorizationService.getReferencesAuthorizationsForUser(nameOrId, userID);
+        Map<String, Map<AuthorizationsForUserResult.Roles,Boolean>> authorizations = new HashMap<>();
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = Map.of(
+                AuthorizationsForUserResult.Roles.DOWNLOAD, true,
+                AuthorizationsForUserResult.Roles.READ, true,
+                AuthorizationsForUserResult.Roles.DELETE, false,
+                AuthorizationsForUserResult.Roles.UPLOAD, false,
+                AuthorizationsForUserResult.Roles.ADMIN, false
+        );
+        references.stream().forEach(ref->authorizations.put(
+                ref,
+                new HashMap<>(roles)));
+        referencesAuthorizationsForUser.getAuthorizationResults().entrySet().stream()
+                .forEach(entry->{
+                    final List<String> referencesList = entry.getValue();
+                    switch (entry.getKey()){
+                        case manage:
+                            referencesList.stream().forEach(ref->{
+                                final Map<AuthorizationsForUserResult.Roles, Boolean> roleForRef = authorizations.get(ref);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE,true);
+                                authorizations.put(ref, roleForRef);
+                            });
+                            break;
+                        case admin:
+                            referencesList.stream().forEach(ref->{
+                                final Map<AuthorizationsForUserResult.Roles, Boolean> roleForRef = authorizations.get(ref);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.ADMIN,true);
+                                authorizations.put(ref, roleForRef);
+                            });
+                            break;
+                    }
+                });
+        return new AuthorizationsForUserResult(authorizations, nameOrId, referencesAuthorizationsForUser.getIsAdministrator(), userID);
+    }
+
     public Optional<Application> tryFindApplication(String nameOrId) {
         authenticationService.setRoleForClient();
         return repo.application().tryFindApplication(nameOrId);

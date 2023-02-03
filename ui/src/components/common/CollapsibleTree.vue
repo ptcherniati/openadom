@@ -1,44 +1,44 @@
 <template>
   <div>
     <div
-      :class="`columns CollapsibleTree-header ${
+        :class="`columns CollapsibleTree-header ${
         option.children && option.children.length !== 0 ? 'clickable' : ''
       } ${option.children && option.children.length !== 0 && displayChildren ? '' : 'mb-1'}`"
-      :style="`margin:0px;`"
-      @click="displayChildren = !displayChildren"
-      @keypress.enter="displayChildren = !displayChildren"
+        :style="`margin:0px;`"
+        @click="displayChildren = !displayChildren"
+        @keypress.enter="displayChildren = !displayChildren"
     >
-      <div class="CollapsibleTree-header-infos column is-two-thirds" >
-        <div class="CollapsibleTree-header-infos column is-narrow"
-          :style="`transform:translate(${level * 50}px);`"
+      <div class="CollapsibleTree-header-infos column is-two-thirds">
+        <div :style="`transform:translate(${level * 50}px);`"
+             class="CollapsibleTree-header-infos column is-narrow"
         >
           <div
               :class="onClickLabelCb ? 'link' : ''"
+              tabindex="0"
               @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
               @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-              tabindex="0"
           >
-            <b-tooltip type="is-primary is-light"
-              :label="$t('dataTypesManagement.tooltip_show_secondary_menu')">
+            <b-tooltip :label="$t('dataTypesManagement.tooltip_show_secondary_menu')"
+                       type="is-primary is-light">
               <b-button
                   class="is-small"
-                  tabindex="0"
-                  type="is-primary"
                   outlined
                   style="margin: 10px;"
+                  tabindex="0"
+                  type="is-primary"
               >
-                <b-icon icon="ellipsis-h" ></b-icon>
+                <b-icon icon="ellipsis-h"></b-icon>
               </b-button>
             </b-tooltip>
           </div>
           <FontAwesomeIcon
-            v-if="option.children && option.children.length !== 0"
-            :icon="displayChildren ? 'caret-down' : 'caret-right'"
-            class="clickable mr-3"
-            tabindex="0"
+              v-if="option.children && option.children.length !== 0"
+              :icon="displayChildren ? 'caret-down' : 'caret-right'"
+              class="clickable mr-3"
+              tabindex="0"
           />
           <p> {{ option.localName || option.label }} </p>
-          <span class="file-name" v-if="refFile">
+          <span v-if="refFile" class="file-name">
             {{ refFile.name }}
           </span>
           <div v-if="option.localtags" class="column">
@@ -54,7 +54,7 @@
               ? 'tile synthesis-details link column is-four-fifths'
               : 'tile synthesis-details column is-full'
           "
-          @click="
+             @click="
             (event) =>
               option.synthesisMinMax &&
               onClickLabelSynthesisDetailCb &&
@@ -73,15 +73,15 @@
               <div class="loader is-loading"></div>
             </div>
             <availiblity-chart
-              v-else
-              class="tile availiblity-chart"
-              :show-dates="false"
-              :minmax="option.synthesis.minmax"
-              :ranges="option.synthesis.ranges"
-              :id="option.label"
+                v-else
+                :id="option.label"
+                :minmax="option.synthesis.minmax"
+                :ranges="option.synthesis.ranges"
+                :show-dates="false"
+                class="tile availiblity-chart"
             />
           </span>
-          <span class="file-name" v-else-if="lineCount > 0">
+          <span v-else-if="lineCount > 0" class="file-name">
             {{ $tc("validation.count-line", lineCount) }}
           </span>
           <span v-else class="nodata has-text-danger" style="margin-left: 50px">
@@ -90,26 +90,28 @@
         </div>
       </div>
       <div class="CollapsibleTree-buttons column  is-narrow">
-        <div :class="'file button is-small'+(option.canUpload?' is-info':'is-light')" v-if="onUploadCb">
+        <div v-if="onUploadCb" :class="'file button is-small'+(option.canUpload?' is-info':'is-light')"
+             :disabled="!option.canUpload">
           <b-upload
-            v-model="refFile"
-            :disabled="!option.canUpload"
-            class="file-label ml-1"
-            accept=".csv"
-            @input="() => onUploadCb(option.label, refFile) && showChildren()"
-            style="padding: 0px"
+              v-model="refFile"
+              :disabled="!option.canUpload"
+              accept=".csv"
+              class="file-label ml-1"
+              style="padding: 0px"
+              @input="() => onUploadCb(option.label, refFile) && showChildren()"
           >
-            <span class="file-cta">
+            <span class="file-cta"
+              :disabled="!option.canUpload">
               <b-icon icon="upload"></b-icon>
             </span>
           </b-upload>
         </div>
         <div v-else>
           <b-button
-            size="is-small"
-            class="ml-1"
-            @click="repositoryRedirect(option.label)"
-            :type="(option.canUpload?'is-info':'is-light')"
+              :type="(option.canUpload?'is-info':'is-light')"
+              class="ml-1"
+              size="is-small"
+              @click="repositoryRedirect(option.label)"
           >
             <span class="file-cta" style="border-color: transparent; background-color: transparent">
               <b-icon class="file-icon" icon="archive" style="color: white"></b-icon>
@@ -118,44 +120,46 @@
         </div>
         <div v-for="button in buttons" :key="button.id">
           <b-button
-            :icon-left="button.iconName"
-            size="is-small"
-            @click="button.clickCb(option.label)"
-            class="ml-1"
-            :type="button.type"
+              :icon-left="button.iconName"
+              :type="button.type"
+              class="ml-1"
+              size="is-small"
+              @click="button.clickCb(option.label)"
           >
-            {{ button.label }}</b-button
+            {{ button.label }}
+          </b-button
           >
         </div>
       </div>
     </div>
     <CollapsibleTree
-      v-for="child in option.children"
-      :key="child.id"
-      :option="child"
-      :level="level + 1"
-      :on-click-label-cb="onClickLabelCb"
-      :on-upload-cb="onUploadCb"
-      :buttons="buttons"
-      :class="displayChildren ? '' : 'hide'"
-      :with-radios="withRadios"
-      :radio-name="radioName"
-      @optionChecked="onInnerOptionChecked"
-      :application-title="applicationTitle"
-      :line-count="child.lineCountChild"
+        v-for="child in option.children"
+        :key="child.id"
+        :application-title="applicationTitle"
+        :buttons="buttons"
+        :class="displayChildren ? '' : 'hide'"
+        :level="level + 1"
+        :line-count="child.lineCountChild"
+        :on-click-label-cb="onClickLabelCb"
+        :on-upload-cb="onUploadCb"
+        :option="child"
+        :radio-name="radioName"
+        :with-radios="withRadios"
+        @optionChecked="onInnerOptionChecked"
     />
   </div>
 </template>
 
 <script>
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import AvailiblityChart from "../charts/AvailiblityChart.vue";
+
 export default {
   name: "CollapsibleTree",
-  components: { FontAwesomeIcon, AvailiblityChart },
+  components: {FontAwesomeIcon, AvailiblityChart},
   props: {
     applicationName: String,
-    canUpload:{
+    canUpload: {
       type: Boolean,
       default: true,
     },
@@ -215,24 +219,29 @@ $row-height: 40px;
 .synthesisDetails {
   margin-left: 10px;
 }
+
 .availiblity-chart canvas {
   width: 900px;
 }
+
 .synthesis-infos {
   width: 900px;
   display: flex;
   align-items: center;
   padding: 0.75rem;
 }
+
 .synthesis-details {
   width: auto;
   display: flex;
   align-items: center;
   padding: 0.75rem;
 }
+
 .CollapsibleTree-header.clickable {
   border-bottom: 0.35rem solid white;
 }
+
 .CollapsibleTree-header {
   display: flex;
   align-items: center;
@@ -281,6 +290,7 @@ $row-height: 40px;
   height: 100%;
   border-color: transparent;
 }
+
 .nodata {
   margin-left: auto;
   margin-right: 50px;

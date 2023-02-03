@@ -65,8 +65,6 @@ import ReferencesDetailsPanel from "@/components/references/ReferencesDetailsPan
 import {ApplicationService} from "@/services/rest/ApplicationService";
 import {InternationalisationService} from "@/services/InternationalisationService";
 import {ReferenceService} from "@/services/rest/ReferenceService";
-import {AuthorizationService} from "@/services/rest/AuthorizationService";
-
 import PageView from "../common/PageView.vue";
 import {ApplicationResult} from "@/model/ApplicationResult";
 import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
@@ -84,7 +82,6 @@ export default class ReferencesManagementView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
-  authorizationService = AuthorizationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
 
@@ -94,8 +91,6 @@ export default class ReferencesManagementView extends Vue {
   chosenRef = {};
   application = new ApplicationResult();
   subMenuPaths = [];
-
-  ownAuthorizations = {};
   errorsMessages = [];
   errorsList = [];
   buttons = [
@@ -173,7 +168,6 @@ export default class ReferencesManagementView extends Vue {
         "CONFIGURATION",
         "REFERENCETYPE",
       ]);
-      this.ownAuthorizations = await this.authorizationService.getReferencesAuthorizationsForUser(this.applicationName)
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -185,13 +179,19 @@ export default class ReferencesManagementView extends Vue {
       this.references = convertReferencesToTrees(
           Object.values(this.internationalisationService.treeReferenceName(this.application))
               .map(ref => {
-                let canManage = this.ownAuthorizations.isAdministrator || (this.ownAuthorizations.authorizationResults.manage || []).includes(ref.label)
+                    let isAdmin = this.application.authorizationReferencesRights.isAdministrator || this.application.authorizationReferencesRights.authorizations[ref.label].ADMIN;
+                    let canUpload = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].UPLOAD;
+                    let canRead = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].UPLOAD;
+                    let canDownload = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].DOWNLOAD;
+                    let canDdelete = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].DELETE;
                     return {
                       ...ref,
-                      canUpload:canManage,
-                      canRead:true,
-                      canDownload:true,
-                      canDdelete:canManage
+                      autorizations: this.application.authorizationReferencesRights.authorizations[ref],
+                      canUpload: canUpload,
+                      canRead :canRead,
+                      canDownload :canDownload,
+                      canDdelete :canDdelete,
+                      isAdmin :isAdmin
                     }
                   }
               )

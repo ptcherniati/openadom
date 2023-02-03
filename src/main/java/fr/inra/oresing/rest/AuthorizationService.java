@@ -719,10 +719,10 @@ public class AuthorizationService {
     }
 
 
-    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(String applicationNameOrUuid, String userLoginOrId) {
-        final OreSiUser user = userRepository.findByLogin(userLoginOrId).orElseGet(() -> userRepository.findById(UUID.fromString(userLoginOrId)));
+    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(String applicationNameOrUuid, String userId) {
+        final OreSiUser user = userRepository.findByLogin(userId).orElseGet(() -> userRepository.findById(UUID.fromString(userId)));
         if (user == null) {
-            throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userLoginOrId));
+            throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userId));
         }
         final Application application = repository.application().findApplication(applicationNameOrUuid);
         final boolean isAdministrator = user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(application.getName()).matches());

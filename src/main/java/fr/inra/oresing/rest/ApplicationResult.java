@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Configuration;
 import fr.inra.oresing.model.VariableComponentKey;
-import fr.inra.oresing.model.internationalization.Internationalization;
 import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +20,7 @@ public class ApplicationResult {
     String comment;
     InternationalizationMap internationalization;
     Map<String, Reference> references;
+    AuthorizationsForUserResult authorizationReferencesRights;
     Map<String, DataType> dataTypes;
     List<ReferenceSynthesis> referenceSynthesis;
     Configuration configuration;
