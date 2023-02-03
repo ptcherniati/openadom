@@ -244,8 +244,8 @@ public class Configuration {
         private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
 
         @ApiModelProperty(notes = "Some tags for the column", required = false, example = "variable")
-        private Set<String> tags = Set.of("no-tag");
-        //public List<String> tags = new LinkedList<>();
+        //private Set<String> tags = Set.of("no-tag");
+        private List<String> tags = new LinkedList<>();
     }
 
     @Getter
@@ -624,8 +624,8 @@ public class Configuration {
         private Chart chartDescription;
 
         @ApiModelProperty(notes = "Some tags for the variable description", required = false, example = "variable")
-        private Set<String> tags = Set.of("no-tag");
-        //public List<String> tags = new LinkedList<>();
+        //private Set<String> tags = Set.of("no-tag");
+        private List<String> tags = new LinkedList<>();
 
         @ApiModelProperty(notes = "The list of components for this variable", required = true)
         private LinkedHashMap<String, VariableComponentWithDefaultValueDescription> components = new LinkedHashMap<>();
@@ -708,8 +708,8 @@ public class Configuration {
         private CheckerDescription checker;
 
         @ApiModelProperty(notes = "Some tags for the variable component description", required = false, example = "variable")
-        //public List<String> tags = new LinkedList<>();
-        private Set<String> tags = Set.of("no-tag");
+        private List<String> tags = new LinkedList<>();
+        //private Set<String> tags = Set.of("no-tag");
     }
 
     @Getter

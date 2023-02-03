@@ -137,29 +137,45 @@ public class OreSiResources {
         Map<String, ApplicationResult.Reference> references = withReferenceType?Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
-                    Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) ->
-                            new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null, columnDescription==null?null:columnDescription.getTags()));
-                    Map<String, ApplicationResult.Reference.DynamicColumn> dynamicColumns = Maps.transformEntries(referenceDescription.getDynamicColumns(), (dynamicColumnName, dynamicColumnDescription) ->
-                            new ApplicationResult.Reference.DynamicColumn(
-                                    dynamicColumnName,
-                                    dynamicColumnName,
-                                    dynamicColumnDescription.getHeaderPrefix(),
-                                    dynamicColumnDescription.getReference(),
-                                    dynamicColumnDescription.getReferenceColumnToLookForHeader(),
-                                    dynamicColumnDescription.getPresenceConstraint().isMandatory(),
-                                    dynamicColumnDescription.getTags()
-                            ));
+                    Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> {
+                        final Set<String> tags = Optional.ofNullable(columnDescription)
+                                .map(Configuration.ReferenceStaticColumnDescription::getTags)
+                                .filter(list -> !list.isEmpty())
+                                .map(t -> new HashSet(t))
+                                .orElse(new HashSet(List.of(Configuration.NO_TAG)));
+                        return new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null, tags);
+                    });
+                    Map<String, ApplicationResult.Reference.DynamicColumn> dynamicColumns = Maps.transformEntries(referenceDescription.getDynamicColumns(), (dynamicColumnName, dynamicColumnDescription) -> {
+                        final Set<String> tags = Optional.ofNullable(dynamicColumnDescription.getTags())
+                                .filter(list -> !list.isEmpty())
+                                .map(t -> new HashSet(t))
+                                .orElse(new HashSet(List.of(Configuration.NO_TAG)));
+                        return new ApplicationResult.Reference.DynamicColumn(
+                                dynamicColumnName,
+                                dynamicColumnName,
+                                dynamicColumnDescription.getHeaderPrefix(),
+                                dynamicColumnDescription.getReference(),
+                                dynamicColumnDescription.getReferenceColumnToLookForHeader(),
+                                dynamicColumnDescription.getPresenceConstraint().isMandatory(),
+                                tags
+                        );
+                    });
                     Set<String> children = childrenPerReferences.get(reference);
                     final Set<String> tags = Optional.ofNullable(referenceDescription.getTags())
-                            .filter(list->!list.isEmpty())
-                            .map(t->new HashSet(t))
+                            .filter(list -> !list.isEmpty())
+                            .map(t -> new HashSet(t))
                             .orElse(new HashSet(List.of(Configuration.NO_TAG)));
                     return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns, tags);
                 }) : Map.of();
         Map<String, ApplicationResult.DataType> dataTypes = withDatatypes ? Maps.transformEntries(application.getConfiguration().getDataTypes(), (dataType, dataTypeDescription) -> {
             Map<String, ApplicationResult.DataType.Variable> variables = Maps.transformEntries(dataTypeDescription.getData(), (variable, variableDescription) -> {
                 Map<String, ApplicationResult.DataType.Variable.Component> components = Maps.transformEntries(variableDescription.doGetAllComponentDescriptions(), (component, componentDescription) -> {
-                    return new ApplicationResult.DataType.Variable.Component(component, component, componentDescription==null?null:componentDescription.getTags());
+                    final Set<String> tags = Optional.ofNullable(componentDescription)
+                            .map(Configuration.VariableComponentDescription::getTags)
+                            .filter(list -> !list.isEmpty())
+                            .map(t -> new HashSet(t))
+                            .orElse(new HashSet(List.of(Configuration.NO_TAG)));
+                    return new ApplicationResult.DataType.Variable.Component(component, component, tags);
                 });
                 Configuration.Chart chartDescription = variableDescription.getChartDescription();
                 ApplicationResult.DataType.Variable.Chart chartDescriptionResult = null;
@@ -171,7 +187,11 @@ public class OreSiResources {
                     String standardDeviation = chartDescription.getStandardDeviation();
                     chartDescriptionResult = new ApplicationResult.DataType.Variable.Chart(value, unit, gap, standardDeviation, aggregation);
                 }
-                return new ApplicationResult.DataType.Variable(variable, variable, components, chartDescriptionResult, variableDescription==null?null:variableDescription.getTags());
+                final Set<String> tags = Optional.ofNullable(variableDescription.getTags())
+                        .filter(list -> !list.isEmpty())
+                        .map(t -> new HashSet(t))
+                        .orElse(new HashSet(List.of(Configuration.NO_TAG)));
+                return new ApplicationResult.DataType.Variable(variable, variable, components, chartDescriptionResult, tags);
             });
             Configuration.RepositoryDescription repository = dataTypeDescription.getRepository();
             final boolean hasAuthorizations = repository != null;

@@ -609,6 +609,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.references.variables_et_unites_par_types_de_donnees.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.dataTypes.pem.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.dataTypes.pem.variables.projet.tags", Matchers.hasItem("test")))
+                    .andExpect(jsonPath("$.dataTypes.pem.variables.espece.tags", Matchers.hasItem("no-tag")))
                     .andExpect(jsonPath("$.dataTypes.pem.variables.projet.components.value.tags", Matchers.hasItem("test")))
                     .andExpect(jsonPath("$.internationalization.internationalizedTags.context.fr", Is.is("contexte")));
         }
