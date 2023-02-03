@@ -217,7 +217,17 @@ export default class DataTypesManagementView extends Vue {
       }
       this.dataTypes = Object.values(
         this.internationalisationService.localeDatatypeName(this.application)
-      );
+      ).map(dty => {
+                //let canManage = this.ownAuthorizations.isAdministrator || (this.ownAuthorizations.authorizationResults.manage || []).includes(ref.label)
+                    return {
+                      ...dty,
+                      canUpload: true,
+                      canRead: true,
+                      canDownload: true,
+                      canDdelete: true
+                    }
+                  }
+              );
       this.buildTags();
       await this.initSynthesis();
     } catch (error) {

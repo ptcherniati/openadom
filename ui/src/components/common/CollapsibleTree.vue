@@ -90,9 +90,10 @@
         </div>
       </div>
       <div class="CollapsibleTree-buttons column  is-narrow">
-        <div class="file button is-small is-info" v-if="onUploadCb">
+        <div :class="'file button is-small'+(option.canUpload?' is-info':'is-light')" v-if="onUploadCb">
           <b-upload
             v-model="refFile"
+            :disabled="!option.canUpload"
             class="file-label ml-1"
             accept=".csv"
             @input="() => onUploadCb(option.label, refFile) && showChildren()"
@@ -108,7 +109,7 @@
             size="is-small"
             class="ml-1"
             @click="repositoryRedirect(option.label)"
-            type="is-info"
+            :type="(option.canUpload?'is-info':'is-light')"
           >
             <span class="file-cta" style="border-color: transparent; background-color: transparent">
               <b-icon class="file-icon" icon="archive" style="color: white"></b-icon>
@@ -154,6 +155,10 @@ export default {
   components: { FontAwesomeIcon, AvailiblityChart },
   props: {
     applicationName: String,
+    canUpload:{
+      type: Boolean,
+      default: true,
+    },
     option: Object,
     level: {
       type: Number,

@@ -138,7 +138,8 @@ public class AuthorizationResources {
     }
 
     @GetMapping(value = "/applications/{applicationNameOrId}/references/authorization/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId") String userLoginOrId) {
+    public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId", required = false) String userLoginOrId) {
+        userLoginOrId = userLoginOrId==null || "null".equals(userLoginOrId)?request.getRequestUserId().toString():userLoginOrId;
         return authorizationService.getReferencesAuthorizationsForUser(applicationNameOrId, userLoginOrId);
     }
 

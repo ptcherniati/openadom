@@ -364,8 +364,8 @@
         "card-header-extraction": "Paramètre de droit d'extraction",
         "select-authorization": "Veuillez d'abord sélectionner le droit.",
         "warnning-chil-not-null": "Des limitations sont en cours sur des enfants, elles seront remplacées.",
-        "showMore": "Voir plus...",
         "search": "Recherche...",
+        "showMore": "Voir plus...",
         "save" : "Enregister modification",
         "add-application-name": "Ajouter une application",
         "all-autorisation" : "Coche toutes les cases des droits sur la ligne "

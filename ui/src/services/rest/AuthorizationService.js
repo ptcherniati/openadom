@@ -23,6 +23,10 @@ export class AuthorizationService extends Fetcher {
         return this.get(`applications/${applicationName}/references/authorization`, params);
     }
 
+    async getReferencesAuthorizationsForUser(applicationName, userId) {
+        return this.get(`applications/${applicationName}/references/authorization/${userId?userId:'null'}/`);
+    }
+
     async revokeReferenceAuthorization(applicationName, id) {
         return this.delete(`applications/${applicationName}/references/authorization/${id}`);
     }
