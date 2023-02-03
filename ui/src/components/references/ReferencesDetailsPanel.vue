@@ -18,13 +18,15 @@
       </div>
     </div>
     <div class="Panel-buttons">
-      <b-button icon-left="trash-alt" type="is-danger" @click="askDeletionConfirmation">{{
+      <b-button icon-left="trash-alt" type="is-danger" @click="askDeletionConfirmation"
+                :disabled="reference && !reference.canDelete">{{
           $t("referencesManagement.delete")
         }}
       </b-button>
     </div>
     <div class="Panel-buttons">
-      <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{
+      <b-button type="is-dark" icon-left="key" @click="consultAuthorization"
+                :disabled="reference && !reference.isAdmin">{{
         $t("dataTypesManagement.consult-authorization")
       }}</b-button>
     </div>

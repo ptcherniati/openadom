@@ -22,6 +22,7 @@ public class ApplicationResult {
     Map<String, Reference> references;
     AuthorizationsForUserResult authorizationReferencesRights;
     Map<String, DataType> dataTypes;
+    Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights;
     List<ReferenceSynthesis> referenceSynthesis;
     Configuration configuration;
 

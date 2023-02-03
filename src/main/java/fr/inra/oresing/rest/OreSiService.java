@@ -1317,43 +1317,67 @@ public class OreSiService {
 
     public AuthorizationsForUserResult getAuthorizationsReferencesRights(String nameOrId, String userID, Set<String> references) {
         final AuthorizationsReferencesResult referencesAuthorizationsForUser = authorizationService.getReferencesAuthorizationsForUser(nameOrId, userID);
-        Map<String, Map<AuthorizationsForUserResult.Roles,Boolean>> authorizations = new HashMap<>();
-        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = Map.of(
-                AuthorizationsForUserResult.Roles.DOWNLOAD, true,
-                AuthorizationsForUserResult.Roles.READ, true,
-                AuthorizationsForUserResult.Roles.DELETE, false,
-                AuthorizationsForUserResult.Roles.UPLOAD, false,
-                AuthorizationsForUserResult.Roles.ADMIN, false
-        );
-        references.stream().forEach(ref->authorizations.put(
-                ref,
-                new HashMap<>(roles)));
+        Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizations = new HashMap<>();
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = AuthorizationsForUserResult.DEFAULT_REFERENCE_ROLES;
+        references.stream().forEach(ref -> {
+            final HashMap<AuthorizationsForUserResult.Roles, Boolean> r = new HashMap<>(roles);
+            if (referencesAuthorizationsForUser.getIsAdministrator()) {
+                r.put(AuthorizationsForUserResult.Roles.ADMIN, true);
+            }
+            authorizations.put(
+                    ref,
+                    r);
+        });
         referencesAuthorizationsForUser.getAuthorizationResults().entrySet().stream()
-                .forEach(entry->{
+                .forEach(entry -> {
                     final List<String> referencesList = entry.getValue();
-                    switch (entry.getKey()){
+                    switch (entry.getKey()) {
                         case manage:
-                            referencesList.stream().forEach(ref->{
+                            referencesList.stream().forEach(ref -> {
                                 final Map<AuthorizationsForUserResult.Roles, Boolean> roleForRef = authorizations.get(ref);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD,true);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD,true);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE, true);
                                 authorizations.put(ref, roleForRef);
                             });
                             break;
                         case admin:
-                            referencesList.stream().forEach(ref->{
+                            referencesList.stream().forEach(ref -> {
                                 final Map<AuthorizationsForUserResult.Roles, Boolean> roleForRef = authorizations.get(ref);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD,true);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD,true);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE,true);
-                                roleForRef.put(AuthorizationsForUserResult.Roles.ADMIN,true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.ADMIN, true);
                                 authorizations.put(ref, roleForRef);
                             });
                             break;
                     }
                 });
         return new AuthorizationsForUserResult(authorizations, nameOrId, referencesAuthorizationsForUser.getIsAdministrator(), userID);
+    }
+
+    public Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(String nameOrId, Set<String> datatypes) {
+        return datatypes.stream()
+                .map(dty -> getAuthorizationsDatatypesRights(nameOrId, dty, request.getRequestUserId().toString()))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    }
+
+    private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(String nameOrId, String datatype, String userId) {
+        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(nameOrId, datatype, userId);
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = new HashMap<>(AuthorizationsForUserResult.DEFAULT_ROLES);
+        Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();
+        final Set<OperationType> rolesSetted = authorizationsForUser.getAuthorizationResults().keySet();
+        final boolean isAdmin = authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.admin);
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.ADMIN, isAdmin);
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.UPLOAD, isAdmin || rolesSetted.contains(OperationType.depot) || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.DELETE, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.delete));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.DOWNLOAD, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.READ, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.PUBLICATION, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.ANY, authorizationsForUser.getIsAdministrator() || !rolesSetted.isEmpty());
+        new AuthorizationsForUserResult(Map.of(datatype, roleForDatatype), nameOrId, authorizationsForUser.getIsAdministrator(), userId);
+
+        return new AbstractMap.SimpleEntry<String, Map<AuthorizationsForUserResult.Roles, Boolean>>(datatype, roleForDatatype);
     }
 
     public Optional<Application> tryFindApplication(String nameOrId) {
@@ -1397,7 +1421,7 @@ public class OreSiService {
             );
             try {
                 boolean deleted = repo.getRepository(name).binaryFile().delete(id);
-            }catch (DataIntegrityViolationException dive){
+            } catch (DataIntegrityViolationException dive) {
                 throw new NotApplicationCanDeleteRightsException(app.getName(), binaryFile.getParams().getBinaryFiledataset().getDatatype());
             }
         }

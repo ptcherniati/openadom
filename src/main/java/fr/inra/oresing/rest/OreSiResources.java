@@ -12,10 +12,10 @@ import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
-import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.rest.exceptions.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
+import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -139,7 +139,7 @@ public class OreSiResources {
                 });
             });
         }
-        Map<String, ApplicationResult.Reference> references = withReferenceType?Maps.transformEntries(
+        Map<String, ApplicationResult.Reference> references = withReferenceType ? Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
                     Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
@@ -153,8 +153,8 @@ public class OreSiResources {
                                     dynamicColumnDescription.getPresenceConstraint().isMandatory()));
                     Set<String> children = childrenPerReferences.get(reference);
                     final Set<String> tags = Optional.ofNullable(referenceDescription.getTags())
-                            .filter(list->!list.isEmpty())
-                            .map(t->new HashSet(t))
+                            .filter(list -> !list.isEmpty())
+                            .map(t -> new HashSet(t))
                             .orElse(new HashSet(List.of("no-tag")));
                     return new ApplicationResult.Reference(reference, reference, children, columns, dynamicColumns, tags);
                 }) : Map.of();
@@ -187,15 +187,15 @@ public class OreSiResources {
                     })
                     .orElse(null);
             final Set<String> tags = Optional.ofNullable(dataTypeDescription.getTags())
-                    .filter(list->!list.isEmpty())
-                    .map(t->new HashSet(t))
+                    .filter(list -> !list.isEmpty())
+                    .map(t -> new HashSet(t))
                     .orElse(new HashSet(List.of("no-tag")));
             return new ApplicationResult.DataType(dataType, dataType, variables, repositoryResult, hasAuthorizations, tags);
         }) : Map.of();
-        final AuthorizationsForUserResult authorizationReferencesRights = service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet());
-
+        final AuthorizationsForUserResult authorizationReferencesRights = withReferenceType ? service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet()) : new AuthorizationsForUserResult(new HashMap<>(), nameOrId, false, null);
+        final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references,  authorizationReferencesRights, dataTypes, referenceSynthesis, configuration);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, dataTypes, authorizationsDatatypesRights, referenceSynthesis, configuration);
         return ResponseEntity.ok(applicationResult);
     }
 

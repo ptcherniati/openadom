@@ -108,18 +108,21 @@
         </div>
         <div v-else>
           <b-button
-              :type="(option.canUpload?'is-info':'is-light')"
+              :type="(option.canUpload || option.canPublish || option.canDelete)?'is-info':'is-light'"
+              :disabled="!(option.canUpload || option.canPublish || option.canDelete)"
               class="ml-1"
               size="is-small"
               @click="repositoryRedirect(option.label)"
           >
-            <span class="file-cta" style="border-color: transparent; background-color: transparent">
+            <span class="file-cta" style="border-color: transparent; background-color: transparent"
+              :disabled="!(option.canUpload || option.canPublish || option.canDelete)">
               <b-icon class="file-icon" icon="archive" style="color: white"></b-icon>
             </span>
           </b-button>
         </div>
         <div v-for="button in buttons" :key="button.id">
           <b-button
+              :disabled="button.disabled"
               :icon-left="button.iconName"
               :type="button.type"
               class="ml-1"

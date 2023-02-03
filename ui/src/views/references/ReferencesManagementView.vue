@@ -179,19 +179,21 @@ export default class ReferencesManagementView extends Vue {
       this.references = convertReferencesToTrees(
           Object.values(this.internationalisationService.treeReferenceName(this.application))
               .map(ref => {
-                    let isAdmin = this.application.authorizationReferencesRights.isAdministrator || this.application.authorizationReferencesRights.authorizations[ref.label].ADMIN;
+                    let isAdmin = this.application.authorizationReferencesRights.authorizations[ref.label].ADMIN;
                     let canUpload = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].UPLOAD;
                     let canRead = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].UPLOAD;
                     let canDownload = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].DOWNLOAD;
-                    let canDdelete = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].DELETE;
+                    let canDelete = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].DELETE;
+                    let any = isAdmin || this.application.authorizationReferencesRights.authorizations[ref.label].ANY;
                     return {
                       ...ref,
                       autorizations: this.application.authorizationReferencesRights.authorizations[ref],
                       canUpload: canUpload,
-                      canRead :canRead,
-                      canDownload :canDownload,
-                      canDdelete :canDdelete,
-                      isAdmin :isAdmin
+                      canRead: canRead,
+                      canDownload: canDownload,
+                      canDelete: canDelete,
+                      isAdmin: isAdmin,
+                      canShow: any
                     }
                   }
               )
@@ -287,7 +289,7 @@ export default class ReferencesManagementView extends Vue {
   }
 
   findReferenceByLabel(label) {
-    var ref = Object.values(this.application.references).find((ref) => ref.label === label);
+    var ref = this.referencesToBeShown.find((ref) => ref.label === label);
     return ref;
   }
 }
