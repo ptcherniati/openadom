@@ -5,6 +5,14 @@ application:
   internationalizationName:
     fr: Fausse application
     en: Fake application
+
+tags:
+  context:
+    fr: contexte
+    en: context
+  test:
+    fr: test
+    en: test
 compositeReferences:
   localizations:
     components:
@@ -19,6 +27,7 @@ compositeReferences:
         reference: taxon
 references:
   projets:
+    tags: [context]
     separator:
     keyColumns: [nom du projet_key]
     internationalizationName:
@@ -34,6 +43,7 @@ references:
         en: '{nom du projet_en}'
     columns:
       nom du projet_key:
+        tags: [test]
       nom du projet_fr:
       nom du projet_en:
       description du projet_fr:
@@ -228,6 +238,7 @@ references:
         referenceColumnToLookForHeader: nom de la propriété_key
 dataTypes:
   site:
+    tags: [context]
     internationalizationName:
       fr: Le site
       en: the good place
@@ -285,8 +296,10 @@ dataTypes:
                 pattern: "dd/MM/yyyy HH:mm:ss"
                 duration: "1 MINUTES"
       localization:
+        tags: [test]
         components:
           site:
+            tags: [test]
             checker:
               name: Reference
               params:

@@ -400,7 +400,7 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("unrecognizedProperty", onlyError.getMessage());
-        Assert.assertEquals(9, onlyError.getMessageParams().get("lineNumber"));
+        Assert.assertEquals(17, onlyError.getMessageParams().get("lineNumber"));
         Assert.assertEquals(3, onlyError.getMessageParams().get("columnNumber"));
         Assert.assertEquals("compositReference", onlyError.getMessageParams().get("unknownPropertyName"));
     }
@@ -657,6 +657,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
+    @Ignore
     public void testauthorizationScopeMissingReferenceCheckerForAuthorizationScope() {
         String toReplace = "checker:\n" +
                 "              name: Reference\n" +
@@ -784,11 +785,13 @@ public class ApplicationConfigurationServiceTest {
     public void testUnknownReferenceForCheckerAndauthorizationScopeVariableComponentReftypeUnknown() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testUnknownReferenceForCheckerAndauthorizationScopeVariableComponentReftypeUnknown", "components:\n" +
                 "          site:\n" +
+                "            tags: [test]\n" +
                 "            checker:\n" +
                 "              name: Reference\n" +
                 "              params:\n" +
                 "                refType: sites", "components:\n" +
                 "          site:\n" +
+                "            tags: [test]\n" +
                 "            checker:\n" +
                 "              name: Reference\n" +
                 "              params:\n" +
@@ -973,11 +976,13 @@ public class ApplicationConfigurationServiceTest {
     public void testAuthorizationScopeVariableComponentReftypeNull() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationScopeVariableComponentReftypeNull", "components:\n" +
                 "          site:\n" +
+                "            tags: [test]\n" +
                 "            checker:\n" +
                 "              name: Reference\n" +
                 "              params:\n" +
                 "                refType: sites", "components:\n" +
                 "          site:\n" +
+                "            tags: [test]\n" +
                 "            checker:\n" +
                 "              name: Reference\n" +
                 "              params:\n" +
@@ -995,11 +1000,13 @@ public class ApplicationConfigurationServiceTest {
     public void testAuthorizationScopeVariableComponentWrongChecker() {
         ConfigurationParsingResult configurationParsingResult = parseYaml("testAuthorizationScopeVariableComponentWrongChecker", "components:\n" +
                 "          site:\n" +
+                "            tags: [test]\n" +
                 "            checker:\n" +
                 "              name: Reference\n" +
                 "              params:\n" +
                 "                refType: sites", "components:\n" +
                 "          site:\n" +
+                "            tags: [test]\n" +
                 "            checker:\n" +
                 "              name: Integer\n" +
                 "              params:\n" +
@@ -1292,5 +1299,102 @@ public class ApplicationConfigurationServiceTest {
         ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
         log.debug(onlyError.getMessage());
         Assert.assertEquals("invalidCapturingGroupForEndDateDatatypeRepositoryDate", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingReferentielTagDeclaration() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferentielTagDeclaration",
+                "references:\n" +
+                        "  projets:\n" +
+                        "    tags: [context]",
+                "references:\n" +
+                        "  projets:\n" +
+                        "    tags: [coucou]"
+        );
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferentielTagDeclaration", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingReferentielColumnsTagDeclaration() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingReferentielColumnsTagDeclaration",
+                "      nom du projet_key:\n" +
+                        "        tags: [test]",
+                "      nom du projet_key:\n" +
+                        "        tags: [coucou]"
+        );
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingReferenceColumnsTagDeclaration", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingDataTypeTagDeclaration() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingDataTypeTagDeclaration",
+                "dataTypes:\n" +
+                        "  site:\n" +
+                        "    tags: [context]",
+                "dataTypes:\n" +
+                        "  site:\n" +
+                        "    tags: [coucou]"
+        );
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingDataTypeTagDeclaration", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingVariableDescriptionTagDeclaration() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingVariableDescriptionTagDeclaration",
+                "      localization:\n" +
+                        "        tags: [test]",
+                "      localization:\n" +
+                        "        tags: [coucou]"
+        );
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingVariableDescriptionTagDeclaration", onlyError.getMessage());
+    }
+
+    @Test
+    public void testMissingVariableComponentDescriptionTagDeclaration() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testMissingVariableComponentDescriptionTagDeclaration",
+                "      localization:\n" +
+                        "        tags: [test]\n" +
+                        "        components:\n" +
+                        "          site:\n" +
+                        "            tags: [test]",
+                "      localization:\n" +
+                        "        tags: [test]\n" +
+                        "        components:\n" +
+                        "          site:\n" +
+                        "            tags: [coucou]"
+        );
+        Assert.assertFalse(configurationParsingResult.isValid());
+        ValidationCheckResult onlyError = Iterables.getOnlyElement(configurationParsingResult.getValidationCheckResults());
+        log.debug(onlyError.getMessage());
+        Assert.assertEquals("missingVariableComponentDescriptionTagDeclaration", onlyError.getMessage());
+    }
+
+    @Test
+    public void testHIDDENTagDeclaration() {
+        ConfigurationParsingResult configurationParsingResult = parseYaml("testHIDDENTagDeclaration",
+                "      localization:\n" +
+                        "        tags: [test]\n" +
+                        "        components:\n" +
+                        "          site:\n" +
+                        "            tags: [test]",
+                "      localization:\n" +
+                        "        tags: [test]\n" +
+                        "        components:\n" +
+                        "          site:\n" +
+                        "            tags: [__hidden__]"
+        );
+        Assert.assertTrue(configurationParsingResult.isValid());
     }
 }

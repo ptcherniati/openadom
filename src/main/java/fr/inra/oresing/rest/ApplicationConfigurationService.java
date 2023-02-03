@@ -116,7 +116,7 @@ public class ApplicationConfigurationService {
             verifyInternationalizedColumnsExistsForPattern(configuration, builder, referenceEntry);
             verifyReferenceColumnsDeclarations(builder, referenceEntry, references, configuration);
             verifyReferenceValidationRules(builder, referenceEntry, references);
-            verifytagsDefined(builder, referenceEntry.getKey(), referenceEntry.getValue().getTags(), configuration.tags, "missingReferentielTagDeclaration");
+            verifytagsDefined(builder, referenceEntry.getKey(), null, null, referenceEntry.getValue().getTags(), configuration.tags, "missingReferentielTagDeclaration");
         }
 
         for (Map.Entry<String, Configuration.DataTypeDescription> entry : configuration.getDataTypes().entrySet()) {
@@ -127,7 +127,7 @@ public class ApplicationConfigurationService {
             verifyInternationalizedColumnsExistsForPatternInDatatype(configuration, builder, dataType);
             verifyUniquenessComponentKeysInDatatype(dataType, dataTypeDescription, builder);
             verifyDatatypeRepository(dataType, dataTypeDescription, builder);
-            verifytagsDefined(builder, entry.getKey(), dataTypeDescription.getTags(), configuration.tags, "missingDataTypeTagDeclaration");
+            verifytagsDefined(builder, entry.getKey(), null, null, dataTypeDescription.getTags(), configuration.tags, "missingDataTypeTagDeclaration");
 
             Configuration.AuthorizationDescription authorization = dataTypeDescription.getAuthorization();
             Set<String> variables = dataTypeDescription.getData().keySet();
@@ -157,10 +157,16 @@ public class ApplicationConfigurationService {
         return builder.build(configuration);
     }
 
-    private void verifytagsDefined(ConfigurationParsingResult.Builder builder, String key, List<String> tags, Map<String, Internationalization> registerTags, String messageName) {
+    private void verifytagsDefined(ConfigurationParsingResult.Builder builder, String key, String variable, String compenent, List<String> tags, Map<String, Internationalization> registerTags, String messageName) {
         tags.stream().forEach(tag -> {
             if(!registerTags.containsKey(tag) && !Configuration.HIDDEN_TAG.equals(tag)){
-                builder.missingTagDeclaration(key, tag, registerTags.keySet(), messageName);
+                if(compenent != null) {
+                    builder.missingTagDeclaration(key, variable, compenent, tag, registerTags.keySet(), messageName);
+                } else if (variable != null) {
+                    builder.missingTagDeclaration(key, variable, tag, registerTags.keySet(), messageName);
+                } else {
+                    builder.missingTagDeclaration(key, tag, registerTags.keySet(), messageName);
+                }
             }
         } );
     }
@@ -553,12 +559,12 @@ public class ApplicationConfigurationService {
         for (Map.Entry<String, Configuration.VariableDescription> dataEntry : dataTypeDescription.getData().entrySet()) {
             String datum = dataEntry.getKey();
             Configuration.VariableDescription datumDescription = dataEntry.getValue();
-            //verifytagsDefined(builder, datum, datumDescription.getTags(), configuration.tags, "missingVariableDescriptionTagDeclaration");
+            verifytagsDefined(builder, dataType, datum, null, datumDescription.getTags(), configuration.tags, "missingVariableDescriptionTagDeclaration");
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : datumDescription.doGetAllComponentDescriptions().entrySet()) {
                 String component = componentEntry.getKey();
                 Configuration.VariableComponentDescription variableComponentDescription = componentEntry.getValue();
                 if (variableComponentDescription != null) {
-                    //verifytagsDefined(builder, component, variableComponentDescription.getTags(), configuration.tags, "missingVariableComponentDescriptionTagDeclaration");
+                    verifytagsDefined(builder, dataType, datum, component, variableComponentDescription.getTags(), configuration.tags, "missingVariableComponentDescriptionTagDeclaration");
                     Configuration.CheckerDescription checkerDescription = variableComponentDescription.getChecker();
                     if (checkerDescription != null) {
                         CheckerOnOneTargetValidationContext validationContext = new CheckerOnOneTargetValidationContext() {
@@ -616,7 +622,7 @@ public class ApplicationConfigurationService {
             String column = columnEntry.getKey();
             Configuration.ReferenceStaticColumnDescription referenceStaticColumnDescription = columnEntry.getValue();
             if (referenceStaticColumnDescription != null) {
-                //verifytagsDefined(builder, column, referenceStaticColumnDescription.getTags(), configuration.tags, "missingReferenceColumnsTagDeclaration");
+                verifytagsDefined(builder, referenceToValidate, column, null, referenceStaticColumnDescription.getTags(), configuration.tags, "missingReferenceColumnsTagDeclaration");
                 Configuration.CheckerDescription checkerDescription = referenceStaticColumnDescription.getChecker();
                 if (checkerDescription != null) {
                     CheckerOnOneTargetValidationContext validationContext = new CheckerOnOneTargetValidationContext() {

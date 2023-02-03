@@ -773,9 +773,28 @@ public class ConfigurationParsingResult {
             ));
         }
 
-        public void missingTagDeclaration(String referenceName, String tagName, Set<String> declaredTags, String message) {
+        public void missingTagDeclaration(String sectionName, String variableName, String compenentName, String tagName, Set<String> declaredTags, String message) {
             recordError(message,ImmutableMap.of(
-                    "referenceName",referenceName,
+                    "sectionName",sectionName,
+                    "variableName",variableName,
+                    "compenentName",compenentName,
+                    "tagName",tagName,
+                    "declaredTag",declaredTags)
+            );
+        }
+
+        public void missingTagDeclaration(String sectionName, String variableName, String tagName, Set<String> declaredTags, String message) {
+            recordError(message,ImmutableMap.of(
+                    "sectionName",sectionName,
+                    "variableName",variableName,
+                    "tagName",tagName,
+                    "declaredTag",declaredTags)
+            );
+        }
+
+        public void missingTagDeclaration(String sectionName, String tagName, Set<String> declaredTags, String message) {
+            recordError(message,ImmutableMap.of(
+                    "sectionName",sectionName,
                     "tagName",tagName,
                     "declaredTag",declaredTags)
             );
